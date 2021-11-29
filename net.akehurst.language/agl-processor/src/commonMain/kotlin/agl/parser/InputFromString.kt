@@ -51,7 +51,7 @@ internal class InputFromString(
         val forText = this.text.substring(startIndex, position)
         val aftText = this.text.substring(position, endIndex)
         val startOfLine = forText.lastIndexOfAny(listOf("\n", "\r"))
-        val s = if (-1==startOfLine) {
+        val s = if (-1 == startOfLine) {
             0
         } else {
             startOfLine + 1
@@ -238,6 +238,10 @@ internal class InputFromString(
         val line = before.count { it == '\n' } + 1
         val column = startPosition - before.lastIndexOf('\n')
         return InputLocation(startPosition, column, line, length)
+    }
+
+    fun textFromUntil(startPosition: Int, nextInputPosition: Int): String {
+        return this.text.substring(startPosition, nextInputPosition)
     }
 
 }

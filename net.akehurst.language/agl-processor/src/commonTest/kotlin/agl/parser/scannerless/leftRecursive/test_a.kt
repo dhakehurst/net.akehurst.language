@@ -52,7 +52,6 @@ internal class  test_a : test_ScanOnDemandParserAbstract() {
         )
     }
 
-
     @Test
     fun aa() {
         val goal = "S"

@@ -32,15 +32,15 @@ internal class ParserState(
             val previousRp = gn.currentState.rulePositions.first() //FIXME:
             val runtimeRule = gn.runtimeRules.first()
             when {
-                previousRp.isAtEnd -> gn.children.numberNonSkip + 1 >= runtimeRule.rhs.multiMin
+                previousRp.isAtEnd -> gn.numNonSkipChildren + 1 >= runtimeRule.rhs.multiMin
                 previousRp.position == RulePosition.POSITION_MULIT_ITEM -> {
                     //if the to state creates a complete node then min must be >= multiMin
                     if (this.to.rulePositions.first().isAtEnd) {
-                        val minSatisfied = gn.children.numberNonSkip + 1 >= runtimeRule.rhs.multiMin
-                        val maxSatisfied = -1 == runtimeRule.rhs.multiMax || gn.children.numberNonSkip + 1 <= runtimeRule.rhs.multiMax
+                        val minSatisfied = gn.numNonSkipChildren + 1 >= runtimeRule.rhs.multiMin
+                        val maxSatisfied = -1 == runtimeRule.rhs.multiMax || gn.numNonSkipChildren + 1 <= runtimeRule.rhs.multiMax
                         minSatisfied && maxSatisfied
                     } else {
-                        -1 == runtimeRule.rhs.multiMax || gn.children.numberNonSkip + 1 <= runtimeRule.rhs.multiMax
+                        -1 == runtimeRule.rhs.multiMax || gn.numNonSkipChildren + 1 <= runtimeRule.rhs.multiMax
                     }
 
                 }
@@ -51,25 +51,25 @@ internal class ParserState(
             val previousRp = gn.currentState.rulePositions.first() //FIXME:
             val runtimeRule = gn.runtimeRules.first()
             when {
-                previousRp.isAtEnd -> (gn.children.numberNonSkip / 2) + 1 >= runtimeRule.rhs.multiMin
+                previousRp.isAtEnd -> (gn.numNonSkipChildren / 2) + 1 >= runtimeRule.rhs.multiMin
                 previousRp.position == RulePosition.POSITION_SLIST_ITEM -> {
                     //if the to state creates a complete node then min must be >= multiMin
                     if (this.to.rulePositions.first().isAtEnd) {
-                        val minSatisfied = (gn.children.numberNonSkip / 2) + 1 >= runtimeRule.rhs.multiMin
-                        val maxSatisfied = -1 == runtimeRule.rhs.multiMax || (gn.children.numberNonSkip / 2) + 1 <= runtimeRule.rhs.multiMax
+                        val minSatisfied = (gn.numNonSkipChildren / 2) + 1 >= runtimeRule.rhs.multiMin
+                        val maxSatisfied = -1 == runtimeRule.rhs.multiMax || (gn.numNonSkipChildren / 2) + 1 <= runtimeRule.rhs.multiMax
                         minSatisfied && maxSatisfied
                     } else {
-                        -1 == runtimeRule.rhs.multiMax || (gn.children.numberNonSkip / 2) + 1 <= runtimeRule.rhs.multiMax
+                        -1 == runtimeRule.rhs.multiMax || (gn.numNonSkipChildren / 2) + 1 <= runtimeRule.rhs.multiMax
                     }
                 }
                 previousRp.position == RulePosition.POSITION_SLIST_SEPARATOR -> {
                     //if the to state creates a complete node then min must be >= multiMin
                     if (this.to.rulePositions.first().isAtEnd) {
-                        val minSatisfied = (gn.children.numberNonSkip / 2) + 1 >= runtimeRule.rhs.multiMin
-                        val maxSatisfied = -1 == runtimeRule.rhs.multiMax || (gn.children.numberNonSkip / 2) + 1 < runtimeRule.rhs.multiMax
+                        val minSatisfied = (gn.numNonSkipChildren / 2) + 1 >= runtimeRule.rhs.multiMin
+                        val maxSatisfied = -1 == runtimeRule.rhs.multiMax || (gn.numNonSkipChildren / 2) + 1 < runtimeRule.rhs.multiMax
                         minSatisfied && maxSatisfied
                     } else {
-                        -1 == runtimeRule.rhs.multiMax || (gn.children.numberNonSkip / 2) + 1 < runtimeRule.rhs.multiMax
+                        -1 == runtimeRule.rhs.multiMax || (gn.numNonSkipChildren / 2) + 1 < runtimeRule.rhs.multiMax
                     }
                 }
                 else -> true
@@ -91,12 +91,9 @@ internal class ParserState(
     val runtimeRulesSet: Set<RuntimeRule> by lazy {
         this.rulePositions.map { it.runtimeRule }.toSet()
     }
-    val positions: List<Int> by lazy {
-        this.rulePositions.map { it.position }.toList()
-    }
-    val priority: List<Int> by lazy {
-        this.rulePositions.map { it.priority }.toList()
-    }
+    val options: List<Int> by lazy { this.rulePositions.map { it.option } }
+    val positions: List<Int> by lazy { this.rulePositions.map { it.position }.toList() }
+    val priority: List<Int> by lazy { this.rulePositions.map { it.priority }.toList() }
     val choiceKind: List<RuntimeRuleChoiceKind> by lazy {
         this.rulePositions.mapNotNull {
             when { //TODO: do we actually need this check or can we assume won't be called unless ok?
@@ -106,13 +103,16 @@ internal class ParserState(
             }
         }.toSet().toList()
     }
+    val isChoice: Boolean by lazy { this.choiceKind.isNotEmpty() } // it should be empty if not a choice
 
-    val terminalRule = runtimeRules.first()
+    val firstRule get() = runtimeRules.first()
+
+    val isLeaf: Boolean get() = this.firstRule.kind == RuntimeRuleKind.TERMINAL
 
     val isAtEnd: Boolean = this.rulePositions.first().isAtEnd //either all are atEnd or none are
 
-    val isGoal = this.runtimeRules.first().kind == RuntimeRuleKind.GOAL
-    val isUserGoal = this.runtimeRules.first() == this.stateSet.userGoalRule
+    val isGoal = this.firstRule.kind == RuntimeRuleKind.GOAL
+    val isUserGoal = this.firstRule == this.stateSet.userGoalRule
 
     fun firstOf(ifReachedEnd: LookaheadSet): Set<RuntimeRule> = this.rulePositions.flatMap {
         stateSet.buildCache.firstOf(it, ifReachedEnd)
@@ -439,7 +439,6 @@ internal class ParserState(
         __transitions.addAll(__embeddedTransitions)
         return __transitions.toSet()
     }
-
 
     private fun createWidthTransition(rp: RulePosition, lookaheadSet: LookaheadSet): Transition {
         val toRp = RulePosition(rp.runtimeRule, rp.option, RulePosition.END_OF_RULE) //TODO: is this not passed in ? //assumes rp is a terminal

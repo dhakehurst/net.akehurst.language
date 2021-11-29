@@ -23,51 +23,24 @@ import net.akehurst.language.api.sppt.SPPTNode
 
 internal class GrowingNode(
     val graph: ParseGraph,
-    val currentState: ParserState,
-    val runtimeLookahead: LookaheadSet,
-    val startPosition:Int,
-    val nextInputPosition: Int,
-    val numNonSkipChildren: Int
+    val index:GrowingNodeIndex,
+    val numNonSkipChildren:Int
 ) {
-    companion object {
-        fun indexForGrowingNode(gn:GrowingNode) = indexFromGrowingChildren(gn.currentState, gn.runtimeLookahead, gn.startPosition, gn.nextInputPosition, gn.numNonSkipChildren)
-
-        fun indexFromGrowingChildren(state: ParserState, lhs: LookaheadSet, startPosition: Int, nextInputPosition: Int, numNonSkipChildren:Int): GrowingNodeIndex {
-            val listSize = listSize(state.runtimeRules.first(), numNonSkipChildren)
-            return GrowingNodeIndex(state.runtimeRules,state.positions, lhs.number, startPosition, nextInputPosition, listSize)
-        }
-
-        // used for start and leaf
-        //fun index(state: ParserState, lhs: LookaheadSet, startPosition: Int, nextInputPosition: Int, listSize: Int): GrowingNodeIndex {
-        //    return GrowingNodeIndex(state.runtimeRules,state.positions, lhs.number, startPosition, nextInputPosition, listSize)
-        //}
-
-        // used to augment the GrowingNodeIndex (GSS node identity) for MULTI and SEPARATED_LIST
-        // needed because the 'RulePosition' does not capture the 'position' in the list
-        fun listSize(runtimeRule: RuntimeRule, childrenSize: Int): Int = when (runtimeRule.kind) {
-            RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.itemsKind) {
-                RuntimeRuleRhsItemsKind.EMPTY -> -1
-                RuntimeRuleRhsItemsKind.CONCATENATION -> -1
-                RuntimeRuleRhsItemsKind.CHOICE -> -1
-                RuntimeRuleRhsItemsKind.LIST -> when (runtimeRule.rhs.listKind) {
-                    RuntimeRuleListKind.MULTI -> childrenSize
-                    RuntimeRuleListKind.SEPARATED_LIST -> childrenSize
-                    else -> TODO()
-                }
-            }
-            else -> -1
-        }
-    }
 
     //FIXME: shouldn't really do this, shouldn't store these in sets!!
     private val hashCode_cache = arrayOf(this.currentState, this.startPosition).contentHashCode()
+
+    val currentState: ParserState get() = index.state
+    val runtimeLookahead: LookaheadSet get() = index.runtimeLookaheadSet
+    val startPosition:Int get() = index.startPosition
+    val nextInputPosition: Int get() = index.nextInputPosition
 
     //val location: InputLocation get() = children.location
     val matchedTextLength: Int = this.nextInputPosition - this.startPosition
     val runtimeRules = currentState.runtimeRulesSet
     val terminalRule = runtimeRules.first()
 
-    var skipNodes: List<SPPTNode>? = null
+    var skipData: TreeData? = null
 /*
 val lastLocation
     get() = when (this.runtimeRules.first().kind) {
@@ -113,14 +86,14 @@ val lastLocation
 
     fun addPrevious(info: PreviousInfo) {
         val gn = info.node
-        val gi = GrowingNode.indexForGrowingNode(gn)
+        val gi = GrowingNodeIndex.indexForGrowingNode(gn)
         this.previous.put(gi, info)
         info.node.addNext(this)
     }
 
     fun addPrevious(previousNode: GrowingNode) {
         val info = PreviousInfo(previousNode)
-        val gi = GrowingNode.indexForGrowingNode(previousNode)
+        val gi = GrowingNodeIndex.indexForGrowingNode(previousNode)
         this.previous.put(gi, info)
         previousNode.addNext(this)
     }

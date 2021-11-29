@@ -17,7 +17,12 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.ParserState
+import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleListKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
 
 
 /*
@@ -29,19 +34,45 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
   - size of a list ( only relevant for MULTI and SEPARATED_LIST)
  */
 internal data class GrowingNodeIndex(
-    //val state: ParserState,
-    val runtimeRules: List<RuntimeRule>,
-    val positions:List<Int>,
-    val lhsNumber:Int,
+    val state: ParserState,
+    val runtimeLookaheadSet:LookaheadSet,
     val startPosition: Int,
     val nextInputPosition: Int,
     val listSize:Int //for use with MULTI and SEPARATED_LIST
 //        val priority: Int
 ) {
 
+    companion object {
+        fun indexForGrowingNode(gn:GrowingNode) = indexFromGrowingChildren(gn.currentState, gn.runtimeLookahead, gn.startPosition, gn.nextInputPosition, gn.numNonSkipChildren)
+
+        fun indexFromGrowingChildren(state: ParserState, lhs: LookaheadSet, startPosition: Int, nextInputPosition: Int, numNonSkipChildren:Int): GrowingNodeIndex {
+            val listSize = listSize(state.runtimeRules.first(), numNonSkipChildren)
+            return GrowingNodeIndex(state, lhs, startPosition, nextInputPosition, listSize)
+        }
+
+        // used for start and leaf
+        //fun index(state: ParserState, lhs: LookaheadSet, startPosition: Int, nextInputPosition: Int, listSize: Int): GrowingNodeIndex {
+        //    return GrowingNodeIndex(state.runtimeRules,state.positions, lhs.number, startPosition, nextInputPosition, listSize)
+        //}
+
+        // used to augment the GrowingNodeIndex (GSS node identity) for MULTI and SEPARATED_LIST
+        // needed because the 'RulePosition' does not capture the 'position' in the list
+        fun listSize(runtimeRule: RuntimeRule, childrenSize: Int): Int = when (runtimeRule.kind) {
+            RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.itemsKind) {
+                RuntimeRuleRhsItemsKind.EMPTY -> -1
+                RuntimeRuleRhsItemsKind.CONCATENATION -> -1
+                RuntimeRuleRhsItemsKind.CHOICE -> -1
+                RuntimeRuleRhsItemsKind.LIST -> when (runtimeRule.rhs.listKind) {
+                    RuntimeRuleListKind.MULTI -> childrenSize
+                    RuntimeRuleListKind.SEPARATED_LIST -> childrenSize
+                    else -> TODO()
+                }
+            }
+            else -> -1
+        }
+    }
 
     override fun toString(): String {
-        val x = runtimeRules.mapIndexed { index, runtimeRule -> "${runtimeRule.tag}[${positions[index]}]" }
-        return "{rp=$x,lhs=$lhsNumber,startPos=${startPosition}, nextPos=$nextInputPosition, listSize=$listSize}"
+        return "{state=$state,lhs=$runtimeLookaheadSet,startPos=${startPosition}, nextPos=$nextInputPosition, listSize=$listSize}"
     }
 }

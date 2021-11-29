@@ -24,6 +24,7 @@ import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.sppt.SPPTFromTreeData
 import net.akehurst.language.agl.sppt.SharedPackedParseTreeDefault
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
@@ -74,9 +75,11 @@ internal class ScanOnDemandParser(
         // e.g. leftRecursive.test_aa
         // e.g. test_a1bOa2.ambiguous_a
 
-        val match = rp.longestMatch(seasons, maxNumHeads, false)
-        return if (match != null) {
-            val sppt = SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
+        //val match = rp.longestMatch(seasons, maxNumHeads, false)
+        val match = rp.graph.treeData
+        return if (match.root != null) {
+            //val sppt = SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
+            val sppt = SPPTFromTreeData(match, input, seasons, maxNumHeads)
             Pair(sppt, emptyList())
         } else {
             val nextExpected = this.findNextExpectedAfterError(rp, rp.graph, input) //this possibly modifies rp and hence may change the longestLastGrown
@@ -93,9 +96,6 @@ internal class ScanOnDemandParser(
         seasons: Int,
         maxNumHeads: Int
     ): LanguageIssue {
-        val llg = rp.longestLastGrown
-            ?: throw ParseFailedException("Nothing parsed", null, InputLocation(0, 0, 1, 0), emptySet(),"")
-
         val lastLocation = nextExpected.first
         val exp = nextExpected.second
         val expected = exp.map { it.tag }.toSet()
@@ -105,8 +105,6 @@ internal class ScanOnDemandParser(
 
         val contextInText = rp.graph.input.contextInText(location.position)
         return LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, location, contextInText, expected)
-        //throw ParseFailedException("Could not match goal", SharedPackedParseTreeDefault(llg, seasons, maxNumHeads), location, expected, )
-
     }
 
     private fun findNextExpectedAfterError(rp: RuntimeParser, graph: ParseGraph, input: InputFromString): Pair<InputLocation, Set<RuntimeRule>> {

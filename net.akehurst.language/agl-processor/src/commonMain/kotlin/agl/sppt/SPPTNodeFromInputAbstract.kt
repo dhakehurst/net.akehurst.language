@@ -32,7 +32,7 @@ import net.akehurst.language.api.sppt.*
     override val option: Int,
     final override val startPosition: Int,
     override val nextInputPosition: Int,
-    override val priority: Int                      //not needed as part of the SPPTNode, but needed for the parsing algorithm
+    override val priority: Int               //TODO: no longer needed I think       //not needed as part of the SPPTNode, but needed for the parsing algorithm
 ) : SPPTNode {
 
     var embeddedIn: String? = null
@@ -48,7 +48,6 @@ import net.akehurst.language.api.sppt.*
     override val runtimeRuleSetNumber: Int get() = this.identity.runtimeRuleSetNumber
 
     override val runtimeRuleNumber: Int get() = this.identity.runtimeRuleNumber
-
 
     override val name: String get() = this.runtimeRule.tag
 
