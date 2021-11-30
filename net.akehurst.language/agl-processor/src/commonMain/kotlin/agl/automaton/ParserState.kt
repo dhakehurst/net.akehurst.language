@@ -85,31 +85,34 @@ internal class ParserState(
 
     val rulePositionIdentity = rulePositions.map { it.identity }.toSet()
 
-    val runtimeRules: List<RuntimeRule> by lazy {
-        this.rulePositions.map { it.runtimeRule }.toList()
-    }
-    val runtimeRulesSet: Set<RuntimeRule> by lazy {
-        this.rulePositions.map { it.runtimeRule }.toSet()
-    }
-    val options: List<Int> by lazy { this.rulePositions.map { it.option } }
-    val positions: List<Int> by lazy { this.rulePositions.map { it.position }.toList() }
-    val priority: List<Int> by lazy { this.rulePositions.map { it.priority }.toList() }
-    val choiceKind: List<RuntimeRuleChoiceKind> by lazy {
+    //TODO: fast at runtime if not lazy
+    val runtimeRules: List<RuntimeRule> by lazy { this.rulePositions.map { it.runtimeRule }.toList() }
+    val runtimeRulesSet: Set<RuntimeRule> by lazy { this.rulePositions.map { it.runtimeRule }.toSet() }
+    val optionList: List<Int> by lazy { this.rulePositions.map { it.option } }
+    val positionList: List<Int> by lazy { this.rulePositions.map { it.position }.toList() }
+    val priorityList: List<Int> by lazy { this.rulePositions.map { it.priority }.toList() }
+    val choiceKindList: List<RuntimeRuleChoiceKind> by lazy {
         this.rulePositions.mapNotNull {
-            when { //TODO: do we actually need this check or can we assume won't be called unless ok?
+            when {
                 it.runtimeRule.kind != RuntimeRuleKind.NON_TERMINAL -> null
                 it.runtimeRule.rhs.itemsKind != RuntimeRuleRhsItemsKind.CHOICE -> null
                 else -> it.runtimeRule.rhs.choiceKind
             }
         }.toSet().toList()
     }
-    val isChoice: Boolean by lazy { this.choiceKind.isNotEmpty() } // it should be empty if not a choice
+    val isChoice: Boolean by lazy { this.choiceKindList.isNotEmpty() } // it should be empty if not a choice
+
+    val firstRuleChoiceKind by lazy {
+        check(1 == this.choiceKindList.size)
+        this.choiceKindList[0]
+    }
 
     val firstRule get() = runtimeRules.first()
 
-    val isLeaf: Boolean get() = this.firstRule.kind == RuntimeRuleKind.TERMINAL
+    val isLeaf: Boolean get() = this.firstRule.kind == RuntimeRuleKind.TERMINAL //should only be one RP if it is a leaf
 
-    val isAtEnd: Boolean = this.rulePositions.first().isAtEnd //either all are atEnd or none are
+    val isAnyAtEnd: Boolean = this.rulePositions.any { it.isAtEnd } //a subset of RPs could be atEnd
+    val isAnyNotAtEnd: Boolean = this.rulePositions.any { it.isAtEnd.not() } //a subset of RPs could be atEnd
 
     val isGoal = this.firstRule.kind == RuntimeRuleKind.GOAL
     val isUserGoal = this.firstRule == this.stateSet.userGoalRule

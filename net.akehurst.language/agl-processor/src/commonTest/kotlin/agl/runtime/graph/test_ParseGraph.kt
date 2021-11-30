@@ -34,7 +34,7 @@ class test_ParseGraph {
         val text = ""
         val input = InputFromString(rrs.terminalRules.size,text)
 
-        val sut = ParseGraph(input, 10,10)
+        val sut = ParseGraph(input, 0,10,10)
 
         assertNotNull(sut)
     }
@@ -45,7 +45,7 @@ class test_ParseGraph {
         val goalRule = RuntimeRule(rrs.number, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
         val text = ""
         val input = InputFromString(rrs.terminalRules.size,text)
-        val sut = ParseGraph(input, 10,10)
+        val sut = ParseGraph(input, 0,10,10)
 
         val actual = sut.canGrow
 
@@ -59,11 +59,11 @@ class test_ParseGraph {
         val userGoalRule = RuntimeRule(rrs.number, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
         val text = "a"
         val input = InputFromString(rrs.terminalRules.size,text)
-        val sut = ParseGraph(input, 10,10)
+        val sut = ParseGraph(input, 0,10,10)
 
         val gr = RuntimeRuleSet.createGoalRule(userGoalRule)
         val startState = rrs.fetchStateSetFor(userGoalRule, AutomatonKind.LOOKAHEAD_1).startState
-        sut.start(startState,0, startState.stateSet.createLookaheadSet(setOf(RuntimeRuleSet.END_OF_TEXT)))
+        sut.start(startState, 0, startState.stateSet.createLookaheadSet(setOf(RuntimeRuleSet.END_OF_TEXT)), null)
 
         val actual = sut.canGrow
 

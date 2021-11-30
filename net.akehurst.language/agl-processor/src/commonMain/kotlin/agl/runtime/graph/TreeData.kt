@@ -17,40 +17,46 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.ParserState
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
 
-internal class TreeData {
-
-    class ChildData(
-        val state: ParserState,
-        val startPosition: Int,
-        val nextInputPosition: Int,
-        val numNonSkipChildren: Int
-    )
+internal class TreeData(
+    val forStateSetNumber:Int
+) {
 
     // child --> parent
     private val _parent = mutableMapOf<GrowingNodeIndex, GrowingNodeIndex>()
 
-    private val _growing = mutableMapOf<GrowingNodeIndex, MutableList<GrowingNodeIndex>>()
+    private val _growing = mutableMapOf<GrowingNodeIndex, MutableList<CompleteNodeIndex>>()
 
     // (state,startPosition) --> listOf<child> //maybe optimise because only ambiguous choice nodes have multiple child options
-    private val _complete = mutableMapOf<GrowingNodeIndex, MutableList<GrowingNodeIndex>>()
+    private val _complete = mutableMapOf<CompleteNodeIndex, MutableList<CompleteNodeIndex>>()
+    private val _parentFor = mutableMapOf<CompleteNodeIndex, GrowingNodeIndex>()
 
-    var root: GrowingNodeIndex? = null; private set
+    val completeChildren: Map<CompleteNodeIndex, List<CompleteNodeIndex>> = this._complete
+    val completedByParent: Map<CompleteNodeIndex, GrowingNodeIndex> = _parentFor
+    var root: CompleteNodeIndex? = null; private set
+    var initialSkip: TreeData? = null; private set
 
     // needed when parsing embedded sentences and skip
+    val startPosition: Int? get() = root?.startPosition
     val nextInputPosition: Int? get() = root?.nextInputPosition
 
-    fun childrenFor(runtimeRule: RuntimeRule, option:Int, startPosition: Int): Set<List<GrowingNodeIndex>> {
+    fun indexForGrowingNode(gn: GrowingNode) = createGrowingNodeIndex(gn.currentState, gn.runtimeLookahead, gn.startPosition, gn.nextInputPosition, gn.numNonSkipChildren)
+
+    fun createGrowingNodeIndex(state: ParserState, lhs: LookaheadSet, startPosition: Int, nextInputPosition: Int, numNonSkipChildren: Int): GrowingNodeIndex {
+        val listSize = GrowingNodeIndex.listSize(state.runtimeRules.first(), numNonSkipChildren)
+        return GrowingNodeIndex(this, state, lhs, startPosition, nextInputPosition, listSize)
+    }
+
+    fun childrenFor(runtimeRule: RuntimeRule, option: Int, startPosition: Int, nextInputPosition: Int): Set<List<CompleteNodeIndex>> {
         val keys = this._complete.keys.filter {
             it.startPosition == startPosition
-                    && it.state.options.contains( option)
-                    && it.state.runtimeRules.contains(runtimeRule) }
+                    && it.nextInputPosition == nextInputPosition
+                    //&& it.state.options.contains(option)
+                    && it.runtimeRules.contains(runtimeRule)
+        }
         return when (keys.size) {
             0 -> emptySet()
             1 -> setOf(this._complete[keys[0]]!!)
@@ -58,45 +64,81 @@ internal class TreeData {
         }
     }
 
-    fun setInitialSkip(treeData: TreeData?) {
+    fun hasComplete(node: GrowingNodeIndex): Boolean = this._complete.containsKey(node.complete)
 
+    fun setRoot(root: GrowingNodeIndex) {
+        this.root = root.complete
     }
 
-    fun setRoot(root:GrowingNodeIndex) {
-        this.root = root
-    }
-
-
-    fun start(key: GrowingNodeIndex) {
-        val growing = mutableListOf<GrowingNodeIndex>()
+    fun start(key: GrowingNodeIndex, initialSkipData: TreeData?) {
+        val growing = mutableListOf<CompleteNodeIndex>()
         this._growing[key] = growing
+        this.initialSkip = initialSkipData
     }
 
-    fun setFirstChild(parent: GrowingNodeIndex,child:GrowingNodeIndex) {
-        if (parent.state.isAtEnd) {
-            var complete = this._complete[parent]
-            if (null == complete) {
-                complete = mutableListOf(child)
-                this._complete[parent] = complete
+    fun setFirstChild(parent: GrowingNodeIndex, child: GrowingNodeIndex, skipData: TreeData?) {
+        val skipChildren = skipData?.let {
+            val userGoal = skipData.completeChildren[skipData.root]!!.get(0)
+            val m = skipData.completeChildren[userGoal]!!.get(0)
+            val c = skipData.completeChildren[m]!!.get(0)  //TODO: multiple skips at start
+            listOf(c)
+        }
+        if (parent.state.isAnyAtEnd) {
+            var completeChildren = this._complete[parent.complete]
+            if (null == completeChildren) { //TODO: handle childrenAlternatives ?
+                completeChildren = mutableListOf(child.complete)
+                if (null != skipChildren) completeChildren.addAll(skipChildren)
+                this._complete[parent.complete] = completeChildren
+                this._parentFor[parent.complete] = parent
+            } else {
+                // replacing first child
+                completeChildren = mutableListOf(child.complete)
+                if (null != skipChildren) completeChildren.addAll(skipChildren)
+                this._complete[parent.complete] = completeChildren
+                this._parentFor[parent.complete] = parent
             }
-        } else {
+        }
+        // due to States containing multiple RPs...a state could mark the end and not the end for different RPs
+        if (parent.state.isAnyNotAtEnd) {
             var growing = this._growing[parent]
             if (null == growing) {
-                growing = mutableListOf(child)
+                growing = mutableListOf(child.complete)
+                if (null != skipChildren) growing.addAll(skipChildren)
                 this._growing[parent] = growing
             }
         }
     }
 
-    fun appendChild(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, nextChild: GrowingNodeIndex) {
-        val children = this._growing[oldParent]!! //should never be null
-        if (newParent.state.isAtEnd) {
-            this._complete[newParent] = children
-        } else {
-            this._growing[newParent] = children
+    fun appendChild(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, nextChild: GrowingNodeIndex, skipData: TreeData?) {
+        val skipChildren = skipData?.let {
+            val userGoal = skipData.completeChildren[skipData.root]!!.get(0)
+            val m = skipData.completeChildren[userGoal]!!.get(0)
+            val c = skipData.completeChildren[m]!!.get(0)  //TODO: multiple skips at start
+            listOf(c)
         }
-        children.add(nextChild)  // should never be null
+        val children = this._growing[oldParent]!! //should never be null
+        if (newParent.state.isAnyAtEnd) {
+            //clone children so the other can keep growing if need be
+            //TODO: performance don't want to copy
+            val cpy = children.toMutableList()
+            cpy.add(nextChild.complete)
+            if (null != skipChildren) cpy.addAll(skipChildren)
+            this._complete[newParent.complete] = cpy
+            this._parentFor[newParent.complete] = newParent
+        }
+        if (newParent.state.isAnyNotAtEnd) {
+            //TODO: performance don't want to copy
+            val cpy = children.toMutableList()
+            cpy.add(nextChild.complete)
+            if (null != skipChildren) cpy.addAll(skipChildren)
+            this._growing[newParent] = cpy
+        }
     }
 
+    fun setUserGoalChildrentAfterInitialSkip(nug: CompleteNodeIndex, userGoalChildren: List<CompleteNodeIndex>) {
+        this._complete[nug] = userGoalChildren.toMutableList()
+    }
+
+    override fun toString(): String = "TreeData{${forStateSetNumber}}"
 
 }

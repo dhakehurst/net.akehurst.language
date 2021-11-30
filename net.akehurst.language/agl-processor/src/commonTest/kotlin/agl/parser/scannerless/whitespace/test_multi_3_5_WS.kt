@@ -17,10 +17,15 @@
 package net.akehurst.language.parser.scanondemand.whitespace
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.parser.scanondemand.multi.test_multi01
+import net.akehurst.language.parser.scanondemand.multi.test_multi_3_5_literal
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
-internal class test_multi_a_WS : test_ScanOnDemandParserAbstract() {
+internal class test_multi_3_5_WS : test_ScanOnDemandParserAbstract() {
 
     // skip WS = "\s+" ;
     // S = a* ;
@@ -28,35 +33,32 @@ internal class test_multi_a_WS : test_ScanOnDemandParserAbstract() {
     private companion object {
         val rrs = runtimeRuleSet {
             skip("WS") { pattern("\\s+") }
-            multi("S",0,-1,"a")
+            multi("S",3,5,"a")
             concatenation("a") { literal("a") }
         }
         val goal = "S"
     }
 
     @Test
-    fun a() {
+    fun a_fails() {
         val sentence = "a"
 
-        val expected = """
-            S { a { 'a' } }
-        """.trimIndent()
-
-        super.test(rrs, goal, sentence, 1, expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(1,2,1,1),"a^",setOf("'a'"))
+        ),issues)
     }
 
     @Test
-    fun WSa() {
+    fun WSa_fails() {
         val sentence = " a"
 
-        val expected = """
-            S {
-                WS { "\s+" : ' ' }
-                a { 'a' }
-            }
-        """.trimIndent()
-
-        super.test(rrs, goal, sentence, 1, expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(2,3,1,1)," a^",setOf("'a'"))
+        ),issues)
     }
 
     @Test
@@ -138,4 +140,14 @@ internal class test_multi_a_WS : test_ScanOnDemandParserAbstract() {
         //super.test(rrb, goal, sentence, expected) //fails ?
     }
 
+    @Test
+    fun WSaWSaWSaWSaWSaWSa_fails() {
+        val sentence = " a a a a a a "
+
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(11,12,1,1)," a a a a a ^a ",setOf("<EOT>"))
+        ),issues)
+    }
 }

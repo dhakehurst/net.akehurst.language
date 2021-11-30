@@ -92,12 +92,12 @@ internal class test_hiddenRight3 : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -115,12 +115,12 @@ internal class test_hiddenRight3 : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -141,12 +141,12 @@ internal class test_hiddenRight3 : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -161,13 +161,16 @@ internal class test_hiddenRight3 : test_ScanOnDemandParserAbstract() {
                 'b'
                 oC { C {
                     'c'
-                    oA|1 { eA { §empty } }
+                    oA { A {
+                        'a'
+                        oB|1 { eB { §empty } }
+                      } }
                   } }
               } }
           } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

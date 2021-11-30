@@ -39,12 +39,12 @@ import net.akehurst.language.api.sppt.*
     // --- SPPTBranch ---
 
     override val childrenAlternatives: Set<List<SPPTNode>> by lazy {
-        val alternatives = this._treeData.childrenFor(runtimeRule, option, startPosition)
+        val alternatives = this._treeData.childrenFor(runtimeRule, option, startPosition,nextInputPosition)
         alternatives.map {
             it.map {
                 when {
-                    it.state.isLeaf -> SPPTLeafFromInput(this.input, it.state.firstRule, it.startPosition, it.nextInputPosition, -1)
-                    else -> SPPTBranchFromTreeData(this._treeData, this.input, it.state.firstRule, it.state.rulePositions.first().option, it.startPosition, it.nextInputPosition, -1)
+                    it.isLeaf -> SPPTLeafFromInput(this.input, it.firstRule, it.startPosition, it.nextInputPosition, -1)
+                    else -> SPPTBranchFromTreeData(it.treeData, this.input, it.firstRule, it.completedBy!!.state.optionList[0], it.startPosition, it.nextInputPosition, -1)
                 }
             }
         }.toSet()

@@ -18,11 +18,6 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleListKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
 
 
 /*
@@ -34,22 +29,19 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
   - size of a list ( only relevant for MULTI and SEPARATED_LIST)
  */
 internal data class GrowingNodeIndex(
+    val treeData: TreeData,
     val state: ParserState,
-    val runtimeLookaheadSet:LookaheadSet,
+    val runtimeLookaheadSet: LookaheadSet,
     val startPosition: Int,
     val nextInputPosition: Int,
-    val listSize:Int //for use with MULTI and SEPARATED_LIST
+    val listSize: Int //for use with MULTI and SEPARATED_LIST
 //        val priority: Int
 ) {
 
+    //TODO: don't store data twice..but also prefer not to create 2 objects!
+    val complete = CompleteNodeIndex(treeData, state.runtimeRulesSet,startPosition,nextInputPosition)
+
     companion object {
-        fun indexForGrowingNode(gn:GrowingNode) = indexFromGrowingChildren(gn.currentState, gn.runtimeLookahead, gn.startPosition, gn.nextInputPosition, gn.numNonSkipChildren)
-
-        fun indexFromGrowingChildren(state: ParserState, lhs: LookaheadSet, startPosition: Int, nextInputPosition: Int, numNonSkipChildren:Int): GrowingNodeIndex {
-            val listSize = listSize(state.runtimeRules.first(), numNonSkipChildren)
-            return GrowingNodeIndex(state, lhs, startPosition, nextInputPosition, listSize)
-        }
-
         // used for start and leaf
         //fun index(state: ParserState, lhs: LookaheadSet, startPosition: Int, nextInputPosition: Int, listSize: Int): GrowingNodeIndex {
         //    return GrowingNodeIndex(state.runtimeRules,state.positions, lhs.number, startPosition, nextInputPosition, listSize)
@@ -60,7 +52,7 @@ internal data class GrowingNodeIndex(
         fun listSize(runtimeRule: RuntimeRule, childrenSize: Int): Int = when (runtimeRule.kind) {
             RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.itemsKind) {
                 RuntimeRuleRhsItemsKind.EMPTY -> -1
-                RuntimeRuleRhsItemsKind.CONCATENATION -> -1
+                RuntimeRuleRhsItemsKind.CONCATENATION -> childrenSize
                 RuntimeRuleRhsItemsKind.CHOICE -> -1
                 RuntimeRuleRhsItemsKind.LIST -> when (runtimeRule.rhs.listKind) {
                     RuntimeRuleListKind.MULTI -> childrenSize
@@ -76,3 +68,17 @@ internal data class GrowingNodeIndex(
         return "{state=$state,lhs=$runtimeLookaheadSet,startPos=${startPosition}, nextPos=$nextInputPosition, listSize=$listSize}"
     }
 }
+
+internal data class CompleteNodeIndex(
+    val treeData: TreeData,
+    val runtimeRules: Set<RuntimeRule>, //TODO: maybe encode as an (StateSet,Int)!
+    val startPosition: Int,
+    val nextInputPosition: Int
+) {
+    val firstRule:RuntimeRule get() = runtimeRules.first()
+    val isLeaf:Boolean get() = firstRule.kind== RuntimeRuleKind.TERMINAL //should only be one if true
+
+    val completedBy get() = this.treeData.completedByParent[this]
+
+}
+

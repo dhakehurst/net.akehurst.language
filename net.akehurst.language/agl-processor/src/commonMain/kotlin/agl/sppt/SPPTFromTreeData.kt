@@ -17,7 +17,9 @@
 package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
+import net.akehurst.language.agl.runtime.graph.CompleteNodeIndex
 import net.akehurst.language.agl.runtime.graph.TreeData
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -31,13 +33,31 @@ internal class SPPTFromTreeData(
 
     override val root: SPPTNode
         get() {
+            val rootstate = _treeData.root!!.completedBy!!.state
             val goalChildren = _treeData.childrenFor(
-                _treeData.root!!.state.firstRule,
-                _treeData.root!!.state.options.first(),
-                _treeData.root!!.startPosition
+                _treeData.root!!.firstRule,
+                rootstate.optionList.first(),
+                _treeData.root!!.startPosition,
+                _treeData.root!!.nextInputPosition
             )
             val userGoal = goalChildren.first().first()
-            return SPPTBranchFromTreeData(_treeData, _input, userGoal.state.firstRule, userGoal.state.rulePositions.first().option, userGoal.startPosition, userGoal.nextInputPosition, -1)
+            val userGoalState = userGoal.completedBy!!.state
+            //TODO: if goal is a leaf !
+
+            val startPositionBeforeInitialSkip = _treeData.initialSkip?.startPosition ?: userGoal.startPosition
+            //TODO: much of this code should move to TreeData I think
+            val userGoalAfterSkip = _treeData.initialSkip?.let {
+                val sg = it.completeChildren[it.root]!!.get(0)
+                val m = it.completeChildren[sg]!!.get(0)
+                val c = it.completeChildren[m]!!.get(0) //TODO: multiple skips at start
+                val skipChildren = listOf(c)
+                val nug = CompleteNodeIndex(_treeData, userGoal.runtimeRules, startPositionBeforeInitialSkip, userGoal.nextInputPosition)
+                val userGoalChildren = skipChildren + _treeData.completeChildren[userGoal]!!
+                _treeData.setUserGoalChildrentAfterInitialSkip(nug, userGoalChildren)
+                nug
+            } ?: userGoal
+
+            return SPPTBranchFromTreeData(_treeData, _input, userGoal.firstRule, userGoalState.optionList[0], startPositionBeforeInitialSkip, userGoalAfterSkip.nextInputPosition, -1)
         }
 
     override fun contains(other: SharedPackedParseTree): Boolean {

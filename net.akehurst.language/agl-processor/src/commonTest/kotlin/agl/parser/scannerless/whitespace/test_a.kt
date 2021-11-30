@@ -32,7 +32,7 @@ internal class test_a : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun S_S_a() {
+    fun a() {
         val goal = "S"
         val sentence = "a"
 
@@ -40,12 +40,12 @@ internal class test_a : test_ScanOnDemandParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -58,12 +58,12 @@ internal class test_a : test_ScanOnDemandParserAbstract() {
             S { WS { "\s+" : ' ' } 'a' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -76,12 +76,12 @@ internal class test_a : test_ScanOnDemandParserAbstract() {
             S { 'a' WS { "\s+" : ' ' } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -94,12 +94,12 @@ internal class test_a : test_ScanOnDemandParserAbstract() {
             S { WS { "\s+" : ' ' } 'a' WS { "\s+" : ' ' } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 

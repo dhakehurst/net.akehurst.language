@@ -73,12 +73,12 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
             S|1 { 'a' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 2,//TODO can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -94,12 +94,12 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 3,//TODO can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -115,12 +115,12 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 2,//TODO can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -140,12 +140,12 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 }

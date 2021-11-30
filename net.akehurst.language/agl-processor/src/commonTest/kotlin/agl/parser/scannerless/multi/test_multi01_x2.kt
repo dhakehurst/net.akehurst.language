@@ -65,12 +65,12 @@ internal class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -87,12 +87,12 @@ internal class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 2, //TODO can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -109,12 +109,12 @@ internal class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -131,12 +131,12 @@ internal class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
     @Test
@@ -152,12 +152,12 @@ internal class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 }
