@@ -16,12 +16,9 @@
 
 package net.akehurst.language.agl.collections
 
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
+import kotlin.test.*
 
-class test_BinaryHeap {
+class test_BinaryHeapMin {
 
     lateinit var sut: BinaryHeap<Int, String>
 
@@ -302,7 +299,7 @@ class test_BinaryHeap {
     fun _10_element_peekOneOf_isAKey() {
         insert_10()
 
-        assertEquals("J1", sut.peekOneOf(10))
+        assertTrue(setOf("J1","J2").contains(sut.peekOneOf(10)))
     }
 
     @Test
@@ -316,7 +313,7 @@ class test_BinaryHeap {
     fun _10_element_peekAll_isAKey() {
         insert_10()
 
-        assertEquals(listOf("J1","J2"), sut.peekAll(10))
+        assertEquals(setOf("J1","J2"), sut.peekAll(10).toSet())
     }
 
     @Test
@@ -522,7 +519,7 @@ class test_BinaryHeap {
 
         assertEquals("C", actual)
         assertEquals(10, sut.size)
-        assertEquals(listOf("I","I2"), sut[9])
+        assertEquals(setOf("I","I2"), sut[9].toSet())
         assertEquals(emptyList(), sut[3])
         assertEquals("D", sut.peekRoot)
     }
@@ -535,7 +532,7 @@ class test_BinaryHeap {
 
         assertEquals("C", actual)
         assertEquals(10, sut.size)
-        assertEquals(listOf("M","M2"), sut[13])
+        assertEquals(setOf("M","M2"), sut[13].toSet())
         assertEquals(emptyList(), sut[3])
         assertEquals("D", sut.peekRoot)
     }
@@ -548,8 +545,8 @@ class test_BinaryHeap {
 
         assertEquals("C", actual)
         assertEquals(10, sut.size)
-        assertEquals(listOf("M"), sut[13])
-        assertEquals(listOf("Z"), sut[26])
+        assertEquals(setOf("M"), sut[13].toSet())
+        assertEquals(setOf("Z"), sut[26].toSet())
         assertEquals(emptyList(), sut[3])
         assertEquals("D", sut.peekRoot)
     }
@@ -576,7 +573,7 @@ class test_BinaryHeap {
                 11 to "K",
                 12 to "L",
                 13 to "M",
-                10 to "J1"
+                10 to "J2"
             ), sut.entries
         )
     }

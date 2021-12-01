@@ -131,10 +131,10 @@ internal class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
 
     @ExperimentalTime
     @Test
-    fun a10000() {
+    fun a2000() {
 
         val goal = "S"
-        val text = "a".repeat(10000)
+        val text = "a".repeat(2000)
 
         // warm up the processors
         println("warmup")

@@ -16,15 +16,34 @@
 
 package net.akehurst.language.agl.collections
 
-fun <K : Comparable<K>, V> binaryHeapMin(): BinaryHeap<K, V> = binaryHeap { parent, child -> parent < child }
+fun <K : Comparable<K>, V> binaryHeapMin(): BinaryHeap<K, V> = binaryHeap { parent, child ->
+    when {
+        parent < child -> 1
+        parent > child -> -1
+        else -> 0
+    }
+}
 
-fun <K : Comparable<K>, V> binaryHeapMax(): BinaryHeap<K, V> = binaryHeap { parent, child -> parent > child }
+fun <K : Comparable<K>, V> binaryHeapMax(): BinaryHeap<K, V> = binaryHeap { parent, child ->
+    when {
+        parent > child -> 1
+        parent < child -> -1
+        else -> 0
+    }
+}
 
-fun <K : Comparable<K>, V> binaryHeap(comparator: (parent: K, child: K) -> Boolean): BinaryHeap<K, V> = BinaryHeapComparable(comparator)
+/**
+ * comparator: parent,child -> when {
+ *   1 -> move parent up
+ *  -1 -> move child up
+ *   0 -> do nothing
+ * }
+ */
+fun <K, V> binaryHeap(comparator: Comparator<K>): BinaryHeap<K, V> = BinaryHeapComparable(comparator)
 
 infix fun <K, V> K.to(that: V): BinaryHeap.Entry<K, V> = BinaryHeapComparable.Entry(this, that)
 
-interface BinaryHeap<K : Comparable<K>, V> : Iterable<V> {
+interface BinaryHeap<K, V> : Iterable<V> {
 
     interface Entry<K, V> {
         val key: K
@@ -48,6 +67,7 @@ interface BinaryHeap<K : Comparable<K>, V> : Iterable<V> {
 
     /**
      * peek(key)
+     * order is not predictable, but faster to return a list than a set
      */
     operator fun get(key: K): List<V>
 
@@ -63,14 +83,14 @@ interface BinaryHeap<K : Comparable<K>, V> : Iterable<V> {
     fun clear()
 }
 
-class BinaryHeapComparable<K : Comparable<K>, V>(
-    val comparator: (parent: K, child: K) -> Boolean
+class BinaryHeapComparable<K, V>(
+    val comparator: Comparator<K> //(parent: K, child: K) -> Boolean
 ) : BinaryHeap<K, V> {
 
     class Entry<K, V>(override val key: K, override val value: V) : BinaryHeap.Entry<K, V> {
         override fun hashCode(): Int = (key.hashCode() * 31) + value.hashCode()
-        override fun equals(other: Any?): Boolean = when {
-            other !is BinaryHeap.Entry<*, *> -> false
+        override fun equals(other: Any?): Boolean = when (other) {
+            !is BinaryHeap.Entry<*, *> -> false
             else -> this.key == other.key && this.value == other.value
         }
 
@@ -112,12 +132,12 @@ class BinaryHeapComparable<K : Comparable<K>, V>(
     }
 
     override fun extractRootAndThenInsert(key: K, value: V): V? {
-        return when {
-            0 == this.size -> {
+        return when (this.size) {
+            0 -> {
                 this._elements.add(Entry(key, value))
                 null
             }
-            1 == this.size -> {
+            1 -> {
                 val oldRoot = this._elements[0]
                 this._elements[0] = Entry(key, value)
                 oldRoot.value
@@ -135,7 +155,7 @@ class BinaryHeapComparable<K : Comparable<K>, V>(
     override fun insertAndThenExtractRoot(key: K, value: V): V {
         return when {
             0 == this.size -> value
-            this.comparator(key, this._elements[0].key) -> value
+            0 < this.comparator.compare(key, this._elements[0].key) -> value
             else -> {
                 val oldRoot = this._elements[0]
                 this._elements[0] = Entry(key, value)
@@ -164,7 +184,7 @@ class BinaryHeapComparable<K : Comparable<K>, V>(
         return when {
             startEntryIndex >= this._elements.size -> elements
             key == this._elements[startEntryIndex].key -> elements + this._elements[startEntryIndex].value + searchSubTreeFor(left, key) + searchSubTreeFor(right, key)
-            this.comparator(key, this._elements[startEntryIndex].key) -> elements
+            0 < this.comparator.compare(key, this._elements[startEntryIndex].key) -> elements
             else -> elements + searchSubTreeFor(left, key) + searchSubTreeFor(right, key)
         }
     }
@@ -176,7 +196,7 @@ class BinaryHeapComparable<K : Comparable<K>, V>(
         var elementIndex = index
         var parentIndex = parentIndexOf(elementIndex)
         var parentKey = this._elements[parentIndex].key
-        while (this.comparator(elementKey, parentKey)) {
+        while (0 > this.comparator.compare(parentKey, elementKey)) {
             swap(parentIndex, elementIndex)
             elementIndex = parentIndex
             parentIndex = parentIndexOf(elementIndex)
@@ -193,10 +213,10 @@ class BinaryHeapComparable<K : Comparable<K>, V>(
         val rightChildIndex = rightChildIndexOf(index)
         var smallest = index
 
-        if (leftChildIndex < this._elements.size && this.comparator(this._elements[leftChildIndex].key, this._elements[smallest].key)) {
+        if (leftChildIndex < this._elements.size && 0 < this.comparator.compare(this._elements[leftChildIndex].key, this._elements[smallest].key)) {
             smallest = leftChildIndex
         }
-        if (rightChildIndex < this._elements.size && this.comparator(this._elements[rightChildIndex].key, this._elements[smallest].key)) {
+        if (rightChildIndex < this._elements.size && 0 < this.comparator.compare(this._elements[rightChildIndex].key, this._elements[smallest].key)) {
             smallest = rightChildIndex
         }
 
@@ -216,12 +236,15 @@ class BinaryHeapComparable<K : Comparable<K>, V>(
 
     // --- Iterable<V> ---
     override fun iterator(): Iterator<V> = object : Iterator<V> {
-        private var _sorted = this@BinaryHeapComparable._elements.sortedBy { it.key }
+        private var _sorted = this@BinaryHeapComparable._elements.sortedWith { a, b -> this@BinaryHeapComparable.comparator.compare(b.key, a.key) }
         private var _nextIndex = 0
         override fun hasNext(): Boolean = _nextIndex < _sorted.size
         override fun next(): V = _sorted[_nextIndex].value.also { _nextIndex++ }
     }
 
 
-    override fun toString(): String = this._elements.joinToString(separator = "\n") { it.toString() }
+    override fun toString(): String = when(this.size) {
+        0 -> "{}"
+        else -> this._elements.joinToString(separator = "\n") { it.toString() }
+    }
 }

@@ -118,8 +118,8 @@ internal class RuntimeParser(
     //to find error locations
     fun tryGrowWidthOnce() {
         this.startPass()
-        val currentMaxNextInputPosition = this.graph.growingHeadMaxNextInputPosition
-        while (this.graph.hasNextHead && this.graph.nextHeadNextInputPosition <= currentMaxNextInputPosition) {
+        val currentStartPosition = this.graph.nextHeadStartPosition
+        while (this.graph.hasNextHead && this.graph.nextHeadStartPosition <= currentStartPosition) {
             val gn = this.graph.nextHead()
             checkInterrupt()
             val previous = this.graph.pop(gn)
@@ -210,8 +210,8 @@ internal class RuntimeParser(
         this.startPass()
         var steps = 0
         val doneEmpties = mutableSetOf<ParserState>()
-        val currentMaxNextInputPosition = this.graph.growingHeadMaxNextInputPosition
-        while (this.graph.hasNextHead && this.graph.nextHeadNextInputPosition <= currentMaxNextInputPosition) {
+        val currentStartPosition = this.graph.nextHeadStartPosition
+        while (this.graph.hasNextHead && this.graph.nextHeadStartPosition <= currentStartPosition) {
             checkInterrupt()
             val gn = this.graph.nextHead()
             if (gn.isEmptyMatch && doneEmpties.contains(gn.currentState)) {

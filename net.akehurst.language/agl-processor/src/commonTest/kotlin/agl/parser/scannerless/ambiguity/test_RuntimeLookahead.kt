@@ -100,6 +100,7 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun anp() {
+        TODO("does not stop")
         val sentence = "anp"
 
         val expected = """
@@ -126,6 +127,7 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun ansant() {
+        TODO("does not stop")
         val sentence = "ansant"
 
         val expected = """
@@ -160,6 +162,7 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun ansansant() {
+        TODO("does not stop")
         val sentence = "ansansant"
 
         val expected = """

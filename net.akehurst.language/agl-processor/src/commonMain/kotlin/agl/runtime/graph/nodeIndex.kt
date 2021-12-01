@@ -39,7 +39,7 @@ internal data class GrowingNodeIndex(
 ) {
 
     //TODO: don't store data twice..but also prefer not to create 2 objects!
-    val complete = CompleteNodeIndex(treeData, state.runtimeRulesSet,startPosition,nextInputPosition)
+    val complete = CompleteNodeIndex(treeData, state.runtimeRulesSet, startPosition, nextInputPosition, this.state.optionList, this)
 
     companion object {
         // used for start and leaf
@@ -65,20 +65,38 @@ internal data class GrowingNodeIndex(
     }
 
     override fun toString(): String {
-        return "{state=$state,lhs=$runtimeLookaheadSet,startPos=${startPosition}, nextPos=$nextInputPosition, listSize=$listSize}"
+        return "GNI{state=$state,lhs=${runtimeLookaheadSet.content.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }},startPos=${startPosition}, nextPos=$nextInputPosition, listSize=$listSize}"
     }
+
 }
 
-internal data class CompleteNodeIndex(
+// Because of embedded grammars and skipnodes (as embedded)
+// this must also contain the id of the TreeData...or rather an id of the grammar/ParserStateSet that it belongs to
+// also the treeData object is needed when getting children of a node in the conversion to SPPT
+internal class CompleteNodeIndex(
     val treeData: TreeData,
     val runtimeRules: Set<RuntimeRule>, //TODO: maybe encode as an (StateSet,Int)!
     val startPosition: Int,
-    val nextInputPosition: Int
+    val nextInputPosition: Int,
+    val optionList: List<Int>, // need this info in order to resolve priorities, but it should not be part of identity
+    val gni:GrowingNodeIndex? // the GNI used to create this, TODO: remove it...just for debug
 ) {
-    val firstRule:RuntimeRule get() = runtimeRules.first()
-    val isLeaf:Boolean get() = firstRule.kind== RuntimeRuleKind.TERMINAL //should only be one if true
+    private val hashCode_cache = arrayOf(treeData, runtimeRules, startPosition, nextInputPosition).contentHashCode()
 
-    val completedBy get() = this.treeData.completedByParent[this]
+    val firstRule: RuntimeRule get() = runtimeRules.first()
+    val isLeaf: Boolean get() = firstRule.kind == RuntimeRuleKind.TERMINAL //should only be one if true
 
+    val priorityList get() = optionList //TODO: if priority is different to option this must change
+
+    override fun hashCode(): Int = this.hashCode_cache
+    override fun equals(other: Any?): Boolean = when {
+        other !is CompleteNodeIndex -> false
+        other.treeData != this.treeData -> false
+        other.startPosition != this.startPosition -> false
+        other.nextInputPosition != this.nextInputPosition -> false
+        other.runtimeRules != this.runtimeRules -> false
+        else -> true
+    }
+    override fun toString(): String = "CNI{(SS=${this.treeData.forStateSetNumber}) sp=$startPosition,np=$nextInputPosition,R=${runtimeRules.joinToString { it.tag }}}"
 }
 

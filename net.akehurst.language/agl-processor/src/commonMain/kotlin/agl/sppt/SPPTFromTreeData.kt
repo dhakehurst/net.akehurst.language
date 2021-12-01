@@ -33,15 +33,15 @@ internal class SPPTFromTreeData(
 
     override val root: SPPTNode
         get() {
-            val rootstate = _treeData.root!!.completedBy!!.state
+            val rootOptionList = _treeData.root!!.optionList
             val goalChildren = _treeData.childrenFor(
                 _treeData.root!!.firstRule,
-                rootstate.optionList.first(),
+                rootOptionList.first(), //TODO: will ther ever by more than 1 element?
                 _treeData.root!!.startPosition,
                 _treeData.root!!.nextInputPosition
             )
             val userGoal = goalChildren.first().first()
-            val userGoalState = userGoal.completedBy!!.state
+            val userGoalOptionList = userGoal.optionList //TODO: will ther ever by more than 1 element?
             //TODO: if goal is a leaf !
 
             val startPositionBeforeInitialSkip = _treeData.initialSkip?.startPosition ?: userGoal.startPosition
@@ -51,13 +51,13 @@ internal class SPPTFromTreeData(
                 val m = it.completeChildren[sg]!!.get(0)
                 val c = it.completeChildren[m]!!.get(0) //TODO: multiple skips at start
                 val skipChildren = listOf(c)
-                val nug = CompleteNodeIndex(_treeData, userGoal.runtimeRules, startPositionBeforeInitialSkip, userGoal.nextInputPosition)
+                val nug = CompleteNodeIndex(_treeData, userGoal.runtimeRules, startPositionBeforeInitialSkip, userGoal.nextInputPosition,userGoalOptionList,null)
                 val userGoalChildren = skipChildren + _treeData.completeChildren[userGoal]!!
                 _treeData.setUserGoalChildrentAfterInitialSkip(nug, userGoalChildren)
                 nug
             } ?: userGoal
 
-            return SPPTBranchFromTreeData(_treeData, _input, userGoal.firstRule, userGoalState.optionList[0], startPositionBeforeInitialSkip, userGoalAfterSkip.nextInputPosition, -1)
+            return SPPTBranchFromTreeData(_treeData, _input, userGoal.firstRule, userGoalOptionList[0], startPositionBeforeInitialSkip, userGoalAfterSkip.nextInputPosition, -1)
         }
 
     override fun contains(other: SharedPackedParseTree): Boolean {

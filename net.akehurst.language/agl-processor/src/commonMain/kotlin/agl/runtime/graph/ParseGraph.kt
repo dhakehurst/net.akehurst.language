@@ -18,6 +18,7 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.collections.BinaryHeap
+import net.akehurst.language.agl.collections.binaryHeap
 import net.akehurst.language.agl.collections.binaryHeapMin
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.*
@@ -43,7 +44,17 @@ internal class ParseGraph(
     var treeData = TreeData(stateSetNumber)
 
     //val growingHead: MutableMap<GrowingNodeIndex, GrowingNode> = mutableMapOf()
-    val growingHead: BinaryHeap<Int, GrowingNode> = binaryHeapMin()
+    val growingHead: BinaryHeap<GrowingNodeIndex, GrowingNode> = binaryHeap() { parent, child ->
+        when {
+            parent.startPosition < child.startPosition -> 1
+            parent.startPosition > child.startPosition -> -1
+            else -> when {
+                parent.state.priorityList[0] > child.state.priorityList[0] -> 1 //TODO: can we be sure only one priority?
+                parent.state.priorityList[0] < child.state.priorityList[0] -> -1
+                else -> 0
+            }
+        }
+    }
 
     val canGrow: Boolean get() = !this.growingHead.isEmpty()
 
@@ -53,8 +64,8 @@ internal class ParseGraph(
 
     val hasNextHead: Boolean get() = this.growingHead.isNotEmpty()
 
-    val nextHeadNextInputPosition: Int get() = this.growingHead.peekRoot?.nextInputPosition ?: Int.MAX_VALUE
-    val growingHeadMaxNextInputPosition: Int get() = this.growingHead.toList().lastOrNull()?.nextInputPosition ?: -1 //TODO: cache rather than compute
+    val nextHeadStartPosition: Int get() = this.growingHead.peekRoot?.startPosition ?: Int.MAX_VALUE
+    //val growingHeadMaxNextInputPosition: Int get() = this.growingHead.toList().lastOrNull()?.nextInputPosition ?: -1 //TODO: cache rather than compute
 
     /**
      * extract head with min nextInputPosition
@@ -174,12 +185,12 @@ internal class ParseGraph(
 
     fun addGrowingHead(gn: GrowingNode) {
         this.addGrowing(gn)
-        this.growingHead[gn.nextInputPosition] = gn
+        this.growingHead[gn.index] = gn
     }
 
     fun addGrowingHead(gnindex: GrowingNodeIndex, gn: GrowingNode) {
         this.addGrowing(gnindex, gn)
-        this.growingHead[gn.nextInputPosition] = gn
+        this.growingHead[gn.index] = gn
     }
 
     private fun addAndRegisterGrowingPrevious(gn: GrowingNode, previous: Iterable<PreviousInfo>) {
@@ -665,11 +676,16 @@ internal class ParseGraph(
     }
 */
 
+    private fun dropCurrentHead() {
+        //TODO: probably something to clean up here!
+        val i=0
+    }
+
     /**
      * oldParent should be null if first child
      */
     fun merge(
-        existing: GrowingNodeIndex,
+        existing: CompleteNodeIndex,
         oldParent: GrowingNodeIndex?,
         newParent: GrowingNodeIndex,
         newChild: GrowingNodeIndex,
@@ -679,6 +695,7 @@ internal class ParseGraph(
     ) {
         when {
             newParent.state.isChoice -> {
+                check(newParent.state.choiceKindList.size==1) //TODO: could remove this check if always passes
                 when (newParent.state.firstRuleChoiceKind) {
                     RuntimeRuleChoiceKind.NONE -> error("should never happen")
                     RuntimeRuleChoiceKind.LONGEST_PRIORITY -> {
@@ -703,10 +720,11 @@ internal class ParseGraph(
                                 TODO("this never happens because nextInputPosition is part of the index")
                             }
                             else -> {
-                                val existingPriority = existing.state.priorityList[0] //TODO: is there definitely only 1 ?
+                                val existingPriority = existing.priorityList[0] //TODO: is there definitely only 1 ?
                                 val newPriority = newParent.state.priorityList[0]
                                 when {
                                     newPriority > existingPriority -> {
+                                        error("should not happen if high priority heads processed first")
                                         val nn = this.createGrowingNode(newParent, newNumNonSkipChildren)
                                         this.addAndRegisterGrowingPrevious(nn, previous)
                                         this.addGrowingHead(nn)
@@ -720,24 +738,28 @@ internal class ParseGraph(
                                         //do nothing, drop current head
                                         // because lengths are the same and existing priority is higher and already done
                                         // as defined by the grammar
+                                        dropCurrentHead() //TODO: are we sure that previous is the same?
                                     }
                                     else -> {
                                         //do nothing, drop current head
                                         // because length and priority are the same
                                         //TODO: maybe raise a warning or info that this has happened
+                                        dropCurrentHead() //TODO: are we sure that previous is the same?
                                     }
                                 }
                             }
                         }
                     }
                     RuntimeRuleChoiceKind.PRIORITY_LONGEST -> {
-                        val existingPriority = existing.state.priorityList[0] //TODO: is there definitely only 1 ?
+                        val existingPriority = existing.priorityList[0] //TODO: is there definitely only 1 ?
                         val newPriority = newParent.state.priorityList[0]
                         when {
                             newPriority > existingPriority -> {
+                                //error("should not happen if high priority heads processed first")
                                 val nn = this.createGrowingNode(newParent, newNumNonSkipChildren)
                                 this.addAndRegisterGrowingPrevious(nn, previous)
                                 this.addGrowingHead(nn)
+                                //TODO: new to remove all parents and up of existing !!
                                 if (null == oldParent) {
                                     this.treeData.setFirstChild(newParent, newChild, skipData)
                                 } else {
@@ -746,14 +768,41 @@ internal class ParseGraph(
                             }
                             existingPriority > newPriority -> {
                                 //do nothing, drop current head
+                                dropCurrentHead()
                             }
-                            else -> error("should never happen")
+                            else -> {
+                                //2 diff heads parse same thing at same place same length, same priority !
+                                //TODO: not sure...can we drop the second head?
+                                // it possibly has different runtimeLookahead!
+
+                                //doing nothing would mean keep existing and drop new - think we need to keep the new head, so
+
+                                // keep new head, but don't update tree! as no new data added - TODO: maybe optionList is different?
+                                val nn = this.createGrowingNode(newParent, newNumNonSkipChildren)
+                                this.addAndRegisterGrowingPrevious(nn, previous)
+                                this.addGrowingHead(nn)
+                            }
                         }
                     }
                     RuntimeRuleChoiceKind.AMBIGUOUS -> TODO()
                 }
             }
-            else -> TODO()
+            else -> {
+                //2 diff heads parse same thing at same place but it is not a choice
+                //TODO: not sure...can we drop the second head?
+                // it possibly has different runtimeLookahead!
+
+                //doing nothing would mean keep existing and drop new - think we need to keep the new head, so
+                if (existing.gni == newParent) {
+                    //drop head
+                    dropCurrentHead() //TODO: are we sure that previous is the same?
+                } else {
+                    // keep new head, but don't update tree! as no new data added - TODO: maybe optionList is different?
+                    val nn = this.createGrowingNode(newParent, newNumNonSkipChildren)
+                    this.addAndRegisterGrowingPrevious(nn, previous)
+                    this.addGrowingHead(nn)
+                }
+            }
         }
     }
 
@@ -805,14 +854,41 @@ internal class ParseGraph(
         val child = this.treeData.createGrowingNodeIndex(childState, childRuntimeLookaheadSet, startPosition, nextInputPosition, childNumNonSkipChildren)
         //this.mergeOrCreateGrowingNode(parent, child, 1, previous)
 
-        val existing = this.treeData.completedByParent[parent.complete]
-        if (parent.state.isAnyAtEnd && null != existing) {
-            this.merge(existing, null, parent, child, childNumNonSkipChildren, previous, skipData)
+        val existingComplete = this.treeData.completedBy[parent.complete]
+        if (parent.state.isAnyAtEnd && null != existingComplete) {
+            this.merge(existingComplete, null, parent, child, childNumNonSkipChildren, previous, skipData)
         } else {
-            val nn = this.createGrowingNode(parent, childNumNonSkipChildren)
-            this.addAndRegisterGrowingPrevious(nn, previous)
-            this.addGrowingHead(nn)
-            this.treeData.setFirstChild(parent, child, skipData)
+            // there could be an existing head that has already set the first child using a lower priority child
+            // ideally find the head and drop it...but how?
+            // if heads are processed in order by:
+            // - 'startPosition' in the sentence so all heads at same start position are processed before heads at later positions
+            // - and heads with higher priority are done first, then when lower head is processed it can be dropped
+            //       and we know that a lower one has not already been done
+
+            val existingGrowing = this.treeData.growing[parent]
+            if (null!=existingGrowing) {
+                // some other head has already added the first child
+                //TODO: check priority of child and replace or drop this head - or use GrowingChildren graph rather than list!
+                val existingPriority = existingGrowing[0].priorityList[0]
+                val newPriority = child.state.priorityList[0]
+                when {
+                    existingPriority > newPriority -> {
+                        dropCurrentHead()
+                    }
+                    newPriority > existingPriority -> {
+                        val nn = this.createGrowingNode(parent, childNumNonSkipChildren)
+                        this.addAndRegisterGrowingPrevious(nn, previous)
+                        this.addGrowingHead(nn)
+                        this.treeData.setFirstChild(parent, child, skipData)
+                    }
+                    else -> TODO()
+                }
+            } else {
+                val nn = this.createGrowingNode(parent, childNumNonSkipChildren)
+                this.addAndRegisterGrowingPrevious(nn, previous)
+                this.addGrowingHead(nn)
+                this.treeData.setFirstChild(parent, child, skipData)
+            }
         }
     }
 
@@ -835,7 +911,7 @@ internal class ParseGraph(
         val child = nextChildNode.index
         //this.mergeOrCreateGrowingNode(newParent, child, newNumNonSkipChildren, previous.values.toSet()) //FIXME: don't convert to set
 
-        val existing = this.treeData.completedByParent[newParent.complete]
+        val existing = this.treeData.completedBy[newParent.complete]
         if (newParent.state.isAnyAtEnd && null != existing) {
             this.merge(existing, oldParent, newParent, child, newParentNumNonSkipChildren, previous.values.toSet(), skipData) //FIXME: don't convert to set
         } else {

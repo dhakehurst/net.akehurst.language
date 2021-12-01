@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.ParserState
-import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 
@@ -32,10 +31,11 @@ internal class TreeData(
 
     // (state,startPosition) --> listOf<child> //maybe optimise because only ambiguous choice nodes have multiple child options
     private val _complete = mutableMapOf<CompleteNodeIndex, MutableList<CompleteNodeIndex>>()
-    private val _parentFor = mutableMapOf<CompleteNodeIndex, GrowingNodeIndex>()
+    private val _completedBy = mutableMapOf<CompleteNodeIndex, CompleteNodeIndex>()
 
     val completeChildren: Map<CompleteNodeIndex, List<CompleteNodeIndex>> = this._complete
-    val completedByParent: Map<CompleteNodeIndex, GrowingNodeIndex> = _parentFor
+    val completedBy: Map<CompleteNodeIndex, CompleteNodeIndex> = _completedBy
+    val growing:Map<GrowingNodeIndex, List<CompleteNodeIndex>> = _growing
     var root: CompleteNodeIndex? = null; private set
     var initialSkip: TreeData? = null; private set
 
@@ -89,19 +89,24 @@ internal class TreeData(
                 completeChildren = mutableListOf(child.complete)
                 if (null != skipChildren) completeChildren.addAll(skipChildren)
                 this._complete[parent.complete] = completeChildren
-                this._parentFor[parent.complete] = parent
+                this.setCompletedBy(parent)
             } else {
                 // replacing first child
                 completeChildren = mutableListOf(child.complete)
                 if (null != skipChildren) completeChildren.addAll(skipChildren)
                 this._complete[parent.complete] = completeChildren
-                this._parentFor[parent.complete] = parent
+                this.setCompletedBy(parent)
             }
         }
         // due to States containing multiple RPs...a state could mark the end and not the end for different RPs
         if (parent.state.isAnyNotAtEnd) {
             var growing = this._growing[parent]
             if (null == growing) {
+                growing = mutableListOf(child.complete)
+                if (null != skipChildren) growing.addAll(skipChildren)
+                this._growing[parent] = growing
+            } else {
+                // replacing first child
                 growing = mutableListOf(child.complete)
                 if (null != skipChildren) growing.addAll(skipChildren)
                 this._growing[parent] = growing
@@ -124,7 +129,7 @@ internal class TreeData(
             cpy.add(nextChild.complete)
             if (null != skipChildren) cpy.addAll(skipChildren)
             this._complete[newParent.complete] = cpy
-            this._parentFor[newParent.complete] = newParent
+            this.setCompletedBy(newParent)
         }
         if (newParent.state.isAnyNotAtEnd) {
             //TODO: performance don't want to copy
@@ -139,6 +144,14 @@ internal class TreeData(
         this._complete[nug] = userGoalChildren.toMutableList()
     }
 
+    override fun hashCode(): Int = this.forStateSetNumber
+    override fun equals(other: Any?): Boolean = when {
+        other !is TreeData -> false
+        else -> other.forStateSetNumber==this.forStateSetNumber
+    }
     override fun toString(): String = "TreeData{${forStateSetNumber}}"
 
+    private fun setCompletedBy(parent: GrowingNodeIndex) {
+        this._completedBy[parent.complete] = parent.complete
+    }
 }
