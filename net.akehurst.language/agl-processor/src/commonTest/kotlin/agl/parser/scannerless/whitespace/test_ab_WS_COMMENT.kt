@@ -20,7 +20,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-internal class test_a_WS_COMMENT : test_ScanOnDemandParserAbstract() {
+internal class test_ab_WS_COMMENT : test_ScanOnDemandParserAbstract() {
 
     // skip WS = "\s+" ;
     // skip COMMENT = "//[^\n]*$"
@@ -30,104 +30,171 @@ internal class test_a_WS_COMMENT : test_ScanOnDemandParserAbstract() {
         val rrs = runtimeRuleSet {
             pattern("WS", "\\s+", true)
             pattern("COMMENT", "//[^\\n\\r]*", true)
-            concatenation("S") { literal("a") }
+            concatenation("S") { literal("a"); literal("b") }
         }
         val goal = "S"
     }
 
     @Test
-    fun a() {
-        val sentence = "a"
+    fun ab() {
+        val sentence = "ab"
 
         val expected = """
-            S { 'a' }
+            S { 'a' 'b' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
-    fun WSa() {
+    fun WS_ab() {
         val goal = "S"
-        val sentence = " a"
+        val sentence = " ab"
 
         val expected = """
-            S { WS : ' ' 'a' }
+            S { WS : ' ' 'a' 'b' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
-    fun COMMENTa() {
+    fun COMMENT_WS_ab() {
         val goal = "S"
         val sentence = """
             // comment
-            a
+            ab
         """.trimIndent()
 
         val expected = """
             S {
                 COMMENT : '// comment'
                 WS : '⏎'
-                'a'
+                'a' 'b'
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
-    fun aWS() {
+    fun ab_WS() {
         val goal = "S"
-        val sentence = "a "
+        val sentence = "ab "
 
         val expected = """
-            S { 'a' WS : ' ' }
+            S { 'a' 'b' WS : ' ' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
-    fun WSaWS() {
+    fun WS_ab_WS() {
         val goal = "S"
-        val sentence = " a "
+        val sentence = " ab "
 
         val expected = """
-            S { WS : ' '  'a' WS : ' ' }
+            S { WS : ' ' 'a' 'b' WS : ' ' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun a_WS_b() {
+        val goal = "S"
+        val sentence = "a b"
+
+        val expected = """
+            S { 'a' WS : ' ' 'b' }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun a_WS_COMMENT_WS_b() {
+        val goal = "S"
+        val sentence = """
+            a //comment
+            b
+        """.trimIndent()
+
+        val expected = """
+            S {
+              'a'
+              WS : ' '
+              COMMENT : '//comment'
+              WS : '⏎'
+              'b'
+            }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun ab_WS_COMMENT() {
+        val goal = "S"
+        val sentence = "ab //comment"
+
+        val expected = """
+            S {
+              'a' 'b'
+              WS : ' '
+              COMMENT : '//comment'
+            }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 

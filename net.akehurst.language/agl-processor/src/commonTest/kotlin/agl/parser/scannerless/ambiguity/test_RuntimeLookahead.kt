@@ -66,12 +66,12 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             }
         """
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -89,18 +89,17 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             }
         """
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun anp() {
-        TODO("does not stop")
         val sentence = "anp"
 
         val expected = """
@@ -115,19 +114,18 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             }
         """
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 2,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
 
     @Test
     fun ansant() {
-        TODO("does not stop")
         val sentence = "ansant"
 
         val expected = """
@@ -151,18 +149,17 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             }
         """
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 2,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun ansansant() {
-        TODO("does not stop")
         val sentence = "ansansant"
 
         val expected = """
@@ -193,12 +190,12 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             }
         """
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 2,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 }

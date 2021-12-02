@@ -52,7 +52,7 @@ val lastLocation
     var previous: MutableMap<GrowingNodeIndex, PreviousInfo> = mutableMapOf()
     val next: MutableSet<GrowingNode> = mutableSetOf() //TODO: do we actually need this?
     val isLeaf: Boolean get()= this.runtimeRules.first().kind == RuntimeRuleKind.TERMINAL
-    val isEmptyMatch: Boolean get() = this.currentState.isAnyAtEnd && this.startPosition == this.nextInputPosition
+    val isEmptyMatch: Boolean get() = this.currentState.isAtEnd && this.startPosition == this.nextInputPosition
 
     /*
     val asCompletedNodes: List<SPPTNode> by lazy {
@@ -106,7 +106,7 @@ val lastLocation
 
     fun toStringTree(withChildren: Boolean, withPrevious: Boolean): String {
         var r = "$currentState,$startPosition,$nextInputPosition,"
-        r += if (this.currentState.isAnyAtEnd) "C" else this.currentState.rulePositions.first().position
+        r += if (this.currentState.isAtEnd) "C" else this.currentState.rulePositions.first().position
         r+= this.runtimeLookahead.content.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }
         //val name = this.currentState.runtimeRules.joinToString(prefix = "[", separator = ",", postfix = "]") { "${it.tag}(${it.number})" }
         //r += ":" + name

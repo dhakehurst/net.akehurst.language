@@ -213,6 +213,7 @@ internal class RuntimeParser(
         val currentStartPosition = this.graph.nextHeadStartPosition
         while (this.graph.hasNextHead && this.graph.nextHeadStartPosition <= currentStartPosition) {
             checkInterrupt()
+            val graph = this.graph //TODO: remove..for debug only
             val gn = this.graph.nextHead()
             if (gn.isEmptyMatch && doneEmpties.contains(gn.currentState)) {
                 //don't do it again

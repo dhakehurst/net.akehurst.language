@@ -26,7 +26,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_RuntimeParser_parse_concatenation_nonTerms : test_ScanOnDemandParserAbstract() {
+internal class test_nonTerms : test_ScanOnDemandParserAbstract() {
 
     // S = a b c;
     // a = 'a' ;

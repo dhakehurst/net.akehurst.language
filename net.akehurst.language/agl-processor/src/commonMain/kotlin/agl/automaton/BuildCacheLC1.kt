@@ -225,7 +225,7 @@ internal class BuildCacheLC1(
     //for graft, previous must match prevGuard, for height must not match
     private fun calcHeightOrGraftInto(from: List<RuntimeRule>, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
         // upCls is the closure down from prev
-        var grouped = mutableListOf<HeightGraftInfo>()
+        val grouped = mutableListOf<HeightGraftInfo>()
         for (fromRp in from) {
             val upFilt = upCls.filter { fromRp == it.rulePosition.item }
             val res = upFilt.flatMap { clsItem ->
@@ -239,9 +239,11 @@ internal class BuildCacheLC1(
                     HeightGraftInfo(ancestors,listOf(parent), listOf(parentNext), lhs, upLhs)
                 }
             }
-            val grpd = res.groupBy { it.ancestors}//, it.lhs) }
+            // the HeightGraftInfo in res will always have 1 element in parentNext, see above
+            // so we can groupBy the first element of parentNext, as it is the only one
+            val grpd = res.groupBy { Pair(it.ancestors, it.parentNext[0].isAtEnd) }//, it.lhs) }
                 .map {
-                    val ancestors = it.key as List<RuntimeRule>
+                    val ancestors = it.key.first as List<RuntimeRule>
                     val parentNext = it.value.flatMap { it.parentNext }.toSet().toList()
                     val parent = it.value.flatMap { it.parent }.toSet().toList()
                     val lhs = createLookaheadSet(it.value.flatMap { it.lhs.content }.toSet())
@@ -250,6 +252,7 @@ internal class BuildCacheLC1(
                 }
             grouped.addAll(grpd)
         }
+        //TODO: need atEnd and notAtEnd to be separate states
        // val grouped2 = grouped.groupBy { listOf(it.parent.first().runtimeRule.kind == RuntimeRuleKind.GOAL, it.lhs, it.upLhs) }
        //     .map {
        //         val parent = it.value.flatMap { it.parent }.toSet().toList()

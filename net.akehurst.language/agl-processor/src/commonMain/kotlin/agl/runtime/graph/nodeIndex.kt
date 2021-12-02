@@ -38,6 +38,8 @@ internal data class GrowingNodeIndex(
 //        val priority: Int
 ) {
 
+    val nextPositionOfInterest = if (state.isAtEnd) startPosition else nextInputPosition
+
     //TODO: don't store data twice..but also prefer not to create 2 objects!
     val complete = CompleteNodeIndex(treeData, state.runtimeRulesSet, startPosition, nextInputPosition, this.state.optionList, this)
 
@@ -65,7 +67,7 @@ internal data class GrowingNodeIndex(
     }
 
     override fun toString(): String {
-        return "GNI{state=$state,lhs=${runtimeLookaheadSet.content.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }},startPos=${startPosition}, nextPos=$nextInputPosition, listSize=$listSize}"
+        return "GNI{state=$state,lhs=${runtimeLookaheadSet.content.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }},sp=${startPosition}, np=$nextInputPosition, len=$listSize}"
     }
 
 }

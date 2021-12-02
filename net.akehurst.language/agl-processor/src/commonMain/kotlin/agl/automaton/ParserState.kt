@@ -100,7 +100,9 @@ internal class ParserState(
             }
         }.toSet().toList()
     }
-    val isChoice: Boolean by lazy { this.choiceKindList.isNotEmpty() } // it should be empty if not a choice
+    val isChoice: Boolean by lazy {
+        this.choiceKindList.isNotEmpty()
+    } // it should be empty if not a choice
 
     val firstRuleChoiceKind by lazy {
         check(1 == this.choiceKindList.size)
@@ -111,8 +113,8 @@ internal class ParserState(
 
     val isLeaf: Boolean get() = this.firstRule.kind == RuntimeRuleKind.TERMINAL //should only be one RP if it is a leaf
 
-    val isAnyAtEnd: Boolean = this.rulePositions.any { it.isAtEnd } //a subset of RPs could be atEnd
-    val isAnyNotAtEnd: Boolean = this.rulePositions.any { it.isAtEnd.not() } //a subset of RPs could be atEnd
+    val isAtEnd: Boolean = this.rulePositions.any { it.isAtEnd } //all in state should be either atEnd or notAtEnd
+    val isNotAtEnd: Boolean = this.rulePositions.any { it.isAtEnd.not() } //all in state should be either atEnd or notAtEnd
 
     val isGoal = this.firstRule.kind == RuntimeRuleKind.GOAL
     val isUserGoal = this.firstRule == this.stateSet.userGoalRule

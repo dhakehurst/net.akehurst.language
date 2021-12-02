@@ -59,7 +59,7 @@ internal class LookaheadSet(
         else -> false
     }
 
-    override fun toString(): String = "LookaheadSet{$number,${content}}"
+    override fun toString(): String = "LookaheadSet{$number,${content.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }}}"
 
 
 }

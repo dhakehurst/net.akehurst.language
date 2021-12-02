@@ -369,6 +369,26 @@ class test_AglGrammar_item {
     }
 
     @Test
+    fun slist_literal() {
+        val actual = parse("separatedList", "['a'/',']*")
+        val expected = this.sppt(
+            """
+            separatedList {
+              '['
+              simpleItem { terminal { LITERAL : '\'a\'' } }
+              '/'
+              simpleItem { terminal { LITERAL : '\',\'' } }
+              ']'
+              multiplicity { '*' }
+            }
+        """.trimIndent()
+        )
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+        assertEquals(1, actual.maxNumHeads)
+    }
+
+    @Test
     fun concatenationItem_literal() {
         val actual = parse("concatenationItem", "'a'")
         val expected = this.sppt(
@@ -553,7 +573,67 @@ class test_AglGrammar_item {
     @Test
     fun group1() {
         val gstr = """
-            s = a (b c?) ;
+            s=(b);
+        """.trimIndent()
+        val actual = parse("rules", gstr)
+        val expected = this.sppt(
+            """
+            rules { rule {
+                ruleTypeLabels {
+                    isOverride|1 { §empty }
+                    isSkip|1 { §empty }
+                    isLeaf|1 { §empty }
+                }
+                IDENTIFIER : 's'
+                '='
+                rhs|1 { concatenation { concatenationItem { simpleItem|2 { group {
+                '('
+                    groupedContent { concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' } } } } } }
+                ')'
+                } } } } }
+                ';'
+            } }
+        """.trimIndent()
+        )
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+        assertEquals(1, actual.maxNumHeads)
+    }
+
+    @Test
+    fun group2() {
+        val gstr = """
+            s=(b c);
+        """.trimIndent()
+        val actual = parse("rules", gstr)
+        val expected = this.sppt(
+            """
+            rules { rule {
+                ruleTypeLabels {
+                    isOverride|1 { §empty }
+                    isSkip|1 { §empty }
+                    isLeaf|1 { §empty }
+                }
+                IDENTIFIER : 's'
+                '='
+                rhs|1 { concatenation { concatenationItem { simpleItem|2 { group {
+                '('
+                    groupedContent { concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' } } } } } }
+                ')'
+                } } } } }
+                ';'
+            } }
+        """.trimIndent()
+        )
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+        assertEquals(1, actual.maxNumHeads)
+    }
+
+    @Test
+    fun group3() {
+        val gstr = """
+            s=a(b c?);
         """.trimIndent()
         val actual = parse("rules", gstr)
         val expected = this.sppt(
@@ -586,7 +666,7 @@ class test_AglGrammar_item {
     }
 
     @Test
-    fun group2() {
+    fun group4() {
         val gstr = """
             s = (a b | c?) ;
         """.trimIndent()
@@ -759,6 +839,68 @@ class test_AglGrammar_item {
                 ';'
             }
         """.trimIndent()
+        )
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+        assertEquals(2, actual.maxNumHeads)
+    }
+
+    @Test
+    fun multi_rule() {
+        val sentence = """
+            list = a* ;
+        """.trimIndent()
+        val actual = parse("rule", sentence)
+        val expected = this.sppt(
+            """
+              rule {
+                ruleTypeLabels {
+                  isOverride|1 { §empty }
+                  isSkip|1 { §empty }
+                  isLeaf|1 { §empty }
+                }
+                IDENTIFIER : 'list' WHITESPACE : ' '
+                '=' WHITESPACE : ' '
+                rhs|1 { concatenation { concatenationItem|1 { listOfItems { simpleList {
+                  simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } }
+                  multiplicity { '*' WHITESPACE : ' ' }
+                } } } } }
+                ';'
+              }
+        """.trimIndent()
+        )
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+        assertEquals(1, actual.maxNumHeads)
+    }
+
+    @Test
+    fun slist_rule() {
+        val sentence = """
+            list=[a/c]*;
+        """.trimIndent()
+        val actual = parse("rule", sentence)
+        val expected = this.sppt(
+            """
+              rule {
+                ruleTypeLabels {
+                  isOverride|1 { §empty }
+                  isSkip|1 { §empty }
+                  isLeaf|1 { §empty }
+                }
+                IDENTIFIER : 'list'
+                '='
+                rhs|1 { concatenation { concatenationItem|1 { listOfItems|1 { separatedList {
+                  '['
+                  simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } }
+                  '/'
+                  simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } }
+                  ']'
+                  multiplicity { '*'}
+                } } } } }
+                ';'
+              }
+            """.trimIndent()
         )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)

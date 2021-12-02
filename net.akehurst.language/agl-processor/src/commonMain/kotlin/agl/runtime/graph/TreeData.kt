@@ -78,12 +78,13 @@ internal class TreeData(
 
     fun setFirstChild(parent: GrowingNodeIndex, child: GrowingNodeIndex, skipData: TreeData?) {
         val skipChildren = skipData?.let {
-            val userGoal = skipData.completeChildren[skipData.root]!!.get(0)
-            val m = skipData.completeChildren[userGoal]!!.get(0)
-            val c = skipData.completeChildren[m]!!.get(0)  //TODO: multiple skips at start
-            listOf(c)
+            val sr = skipData.completeChildren[skipData.root]!!.get(0)
+            val c = skipData.completeChildren[sr]!!.map {
+                skipData.completeChildren[it]!!.get(0)
+            }
+            c
         }
-        if (parent.state.isAnyAtEnd) {
+        if (parent.state.isAtEnd) {
             var completeChildren = this._complete[parent.complete]
             if (null == completeChildren) { //TODO: handle childrenAlternatives ?
                 completeChildren = mutableListOf(child.complete)
@@ -99,7 +100,7 @@ internal class TreeData(
             }
         }
         // due to States containing multiple RPs...a state could mark the end and not the end for different RPs
-        if (parent.state.isAnyNotAtEnd) {
+        if (parent.state.isNotAtEnd) {
             var growing = this._growing[parent]
             if (null == growing) {
                 growing = mutableListOf(child.complete)
@@ -116,13 +117,14 @@ internal class TreeData(
 
     fun appendChild(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, nextChild: GrowingNodeIndex, skipData: TreeData?) {
         val skipChildren = skipData?.let {
-            val userGoal = skipData.completeChildren[skipData.root]!!.get(0)
-            val m = skipData.completeChildren[userGoal]!!.get(0)
-            val c = skipData.completeChildren[m]!!.get(0)  //TODO: multiple skips at start
-            listOf(c)
+            val sr = skipData.completeChildren[skipData.root]!!.get(0)
+            val c = skipData.completeChildren[sr]!!.map {
+                skipData.completeChildren[it]!!.get(0)
+            }
+            c
         }
         val children = this._growing[oldParent]!! //should never be null
-        if (newParent.state.isAnyAtEnd) {
+        if (newParent.state.isAtEnd) {
             //clone children so the other can keep growing if need be
             //TODO: performance don't want to copy
             val cpy = children.toMutableList()
@@ -131,7 +133,7 @@ internal class TreeData(
             this._complete[newParent.complete] = cpy
             this.setCompletedBy(newParent)
         }
-        if (newParent.state.isAnyNotAtEnd) {
+        if (newParent.state.isNotAtEnd) {
             //TODO: performance don't want to copy
             val cpy = children.toMutableList()
             cpy.add(nextChild.complete)

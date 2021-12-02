@@ -128,7 +128,7 @@ import net.akehurst.language.api.sppt.*
 
     override val lastLeaf: SPPTLeaf get() = children.last().lastLeaf
 
-    override val location: InputLocation get() = TODO("not implemented")
+//    override val location: InputLocation get() = TODO("not implemented")
 
     // --- Object ---
     override fun toString(): String {

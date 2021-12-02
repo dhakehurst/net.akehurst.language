@@ -20,7 +20,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-internal class test_RuntimeParser_parse_concatenation_nonTerm_literal : test_ScanOnDemandParserAbstract() {
+internal class test_nonTerm_literal : test_ScanOnDemandParserAbstract() {
 
     // S = ab 'c';
     // ab = 'a' 'b' ;
