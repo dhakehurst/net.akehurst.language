@@ -19,10 +19,10 @@ import com.github.gmazzo.gradle.plugins.BuildConfigExtension
 
 plugins {
     kotlin("multiplatform") version ("1.6.0") apply false
-    id("org.jetbrains.dokka") version ("1.4.32") apply false
+    id("org.jetbrains.dokka") version ("1.6.0") apply false
     id("com.github.gmazzo.buildconfig") version("3.0.0") apply false
-    id("nu.studer.credentials") version ("2.1")
-    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version("1.4.0-1.6.0-RC") apply false
+    id("nu.studer.credentials") version ("3.0")
+    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version("1.6.0") apply false
 }
 
 allprojects {
@@ -92,9 +92,6 @@ subprojects {
         //}
 
         sourceSets {
-            val commonMain by getting {
-                kotlin.srcDir("$buildDir/generated/kotlin")
-            }
             all {
                 languageSettings.optIn("kotlin.ExperimentalStdlibApi")
             }
@@ -118,7 +115,7 @@ subprojects {
     fun getProjectProperty(s: String) = project.findProperty(s) as String?
 
     val creds = project.properties["credentials"] as nu.studer.gradle.credentials.domain.CredentialsContainer
-    val sonatype_pwd = creds.propertyMissing("SONATYPE_PASSWORD") as String?
+    val sonatype_pwd = creds.forKey("SONATYPE_PASSWORD") as String?
         ?: getProjectProperty("SONATYPE_PASSWORD")
         ?: error("Must set project property with Sonatype Password (-P SONATYPE_PASSWORD=<...> or set in ~/.gradle/gradle.properties)")
     project.ext.set("signing.password", sonatype_pwd)

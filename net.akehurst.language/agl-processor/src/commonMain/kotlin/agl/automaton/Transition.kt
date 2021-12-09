@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.graph.GrowingNode
+import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.collections.Stack
@@ -28,7 +29,7 @@ internal class Transition(
         val lookaheadGuard: LookaheadSet,
         val upLookahead: LookaheadSet,
         val prevGuard: List<RulePosition>?,
-        val runtimeGuard: Transition.(current:GrowingNode, previous:List<RulePosition>?)->Boolean
+        val runtimeGuard: Transition.(current:GrowingNodeIndex, previous:List<RulePosition>?)->Boolean
 ) {
 
     internal  enum class ParseAction {

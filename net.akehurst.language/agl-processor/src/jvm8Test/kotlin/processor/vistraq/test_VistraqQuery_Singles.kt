@@ -180,7 +180,7 @@ class test_VistraqQuery_Singles {
         Assert.assertEquals(queryStr, resultStr)
     }
 
-    @Test(timeout = 5000)
+    @Test//(timeout = 5000)
     fun expression_long_11() {
         val queryStr = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p AND g.p AND h.p AND i.p AND j.p AND k.p AND l.p"
 
@@ -260,9 +260,8 @@ class test_VistraqQuery_Singles {
 
     @Test(timeout = 5000)
     fun query1() {
-        val queryStr = """
-   MATCH A WHERE a == b AND a == b AND true RETURN TABLE COLUMN a CONTAINING a
-        """.trimIndent()
+        //val queryStr = "MATCH A WHERE a == b AND a == b AND true RETURN TABLE COLUMN a CONTAINING a"
+        val queryStr = "MATCH A  RETURN 1"
 
         val (sppt, issues) = processor.parse(queryStr, "query")
         assertNotNull(sppt)

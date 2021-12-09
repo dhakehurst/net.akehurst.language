@@ -59,14 +59,14 @@ internal class ScanOnDemandParser(
 
         rp.start(0, LookaheadSet.EOT)
         var seasons = 1
-        var maxNumHeads = rp.graph.growingHead.size
+        var maxNumHeads = rp.graph.numberOfHeads
         var totalWork = maxNumHeads
 
         while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
             val steps = rp.grow3(false)
             seasons += steps
-            maxNumHeads = max(maxNumHeads, rp.graph.growingHead.size)
-            totalWork += rp.graph.growingHead.size
+            maxNumHeads = max(maxNumHeads, rp.graph.numberOfHeads)
+            totalWork += rp.graph.numberOfHeads
         }
 
         //TODO: when parsing an ambiguous grammar,
@@ -148,7 +148,7 @@ internal class ScanOnDemandParser(
                     val x = lg.previous.values.flatMap { it ->
                         val prev = it.node
                         val trs = lg.currentState.transitions(prev.currentState)
-                            .filter { it.runtimeGuard(it, prev, prev.currentState.rulePositions) }
+                            .filter { it.runtimeGuard(it, prev.index, prev.currentState.rulePositions) }
                         val exp = trs.flatMap { tr ->
                             when (tr.action) {
                                 Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()

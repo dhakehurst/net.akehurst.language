@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.graph.GrowingNode
+import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.processor.AutomatonKind
 
@@ -28,9 +29,9 @@ internal class ParserState(
 ) {
 
     companion object {
-        val multiRuntimeGuard: Transition.(GrowingNode) -> Boolean = { gn: GrowingNode ->
-            val previousRp = gn.currentState.rulePositions.first() //FIXME:
-            val runtimeRule = gn.runtimeRules.first()
+        val multiRuntimeGuard: Transition.(GrowingNodeIndex) -> Boolean = { gn: GrowingNodeIndex ->
+            val previousRp = gn.state.rulePositions.first() //FIXME: first rule may not be correct
+            val runtimeRule = gn.state.firstRule //FIXME:
             when {
                 previousRp.isAtEnd -> gn.numNonSkipChildren + 1 >= runtimeRule.rhs.multiMin
                 previousRp.position == RulePosition.POSITION_MULIT_ITEM -> {
@@ -47,9 +48,9 @@ internal class ParserState(
                 else -> true
             }
         }
-        val sListRuntimeGuard: Transition.(GrowingNode) -> Boolean = { gn: GrowingNode ->
-            val previousRp = gn.currentState.rulePositions.first() //FIXME:
-            val runtimeRule = gn.runtimeRules.first()
+        val sListRuntimeGuard: Transition.(GrowingNodeIndex) -> Boolean = { gn: GrowingNodeIndex ->
+            val previousRp = gn.state.rulePositions.first() //FIXME: first rule may not be correct
+            val runtimeRule = gn.state.firstRule //FIXME:
             when {
                 previousRp.isAtEnd -> (gn.numNonSkipChildren / 2) + 1 >= runtimeRule.rhs.multiMin
                 previousRp.position == RulePosition.POSITION_SLIST_ITEM -> {
@@ -468,7 +469,7 @@ internal class ParserState(
     }
 
     private fun createGraftTransition3(hg: HeightGraftInfo): Transition {
-        val runtimeGuard: Transition.(GrowingNode, List<RulePosition>?) -> Boolean = { gn, previous ->
+        val runtimeGuard: Transition.(GrowingNodeIndex, List<RulePosition>?) -> Boolean = { gn, previous ->
             if (null == previous) {
                 true
             } else {

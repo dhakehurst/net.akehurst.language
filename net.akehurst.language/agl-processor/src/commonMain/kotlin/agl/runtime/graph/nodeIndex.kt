@@ -34,8 +34,7 @@ internal data class GrowingNodeIndex(
     val runtimeLookaheadSet: LookaheadSet,
     val startPosition: Int,
     val nextInputPosition: Int,
-    val listSize: Int //for use with MULTI and SEPARATED_LIST
-//        val priority: Int
+    val numNonSkipChildren: Int //for use with MULTI and SEPARATED_LIST
 ) {
 
     val nextPositionOfInterest = if (state.isAtEnd) startPosition else nextInputPosition
@@ -51,23 +50,28 @@ internal data class GrowingNodeIndex(
 
         // used to augment the GrowingNodeIndex (GSS node identity) for MULTI and SEPARATED_LIST
         // needed because the 'RulePosition' does not capture the 'position' in the list
-        fun listSize(runtimeRule: RuntimeRule, childrenSize: Int): Int = when (runtimeRule.kind) {
+        fun listSize(runtimeRule: RuntimeRule, numNonSkipChildren: Int): Int = when (runtimeRule.kind) {
             RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.itemsKind) {
-                RuntimeRuleRhsItemsKind.EMPTY -> -1
-                RuntimeRuleRhsItemsKind.CONCATENATION -> childrenSize
-                RuntimeRuleRhsItemsKind.CHOICE -> -1
+                RuntimeRuleRhsItemsKind.EMPTY -> 0
+                RuntimeRuleRhsItemsKind.CONCATENATION -> numNonSkipChildren
+                RuntimeRuleRhsItemsKind.CHOICE -> 1
                 RuntimeRuleRhsItemsKind.LIST -> when (runtimeRule.rhs.listKind) {
-                    RuntimeRuleListKind.MULTI -> childrenSize
-                    RuntimeRuleListKind.SEPARATED_LIST -> childrenSize
-                    else -> TODO()
+                    RuntimeRuleListKind.MULTI -> numNonSkipChildren
+                    RuntimeRuleListKind.SEPARATED_LIST -> numNonSkipChildren
+                    RuntimeRuleListKind.NONE -> TODO()
+                    RuntimeRuleListKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
+                    RuntimeRuleListKind.LEFT_ASSOCIATIVE_LIST -> TODO()
+                    RuntimeRuleListKind.UNORDERED -> TODO()
                 }
             }
-            else -> -1
+            RuntimeRuleKind.TERMINAL -> 0
+            RuntimeRuleKind.EMBEDDED -> 0
+            RuntimeRuleKind.GOAL -> 1
         }
     }
 
     override fun toString(): String {
-        return "GNI{state=$state,lhs=${runtimeLookaheadSet.content.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }},sp=${startPosition}, np=$nextInputPosition, len=$listSize}"
+        return "GNI{state=$state,lhs=${runtimeLookaheadSet.content.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }},sp=${startPosition}, np=$nextInputPosition, len=$numNonSkipChildren}"
     }
 
 }

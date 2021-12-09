@@ -21,8 +21,7 @@ import net.akehurst.language.agl.runtime.structure.*
 
 internal class GrowingNode(
     val graph: ParseGraph,
-    val index:GrowingNodeIndex,
-    val numNonSkipChildren:Int
+    val index:GrowingNodeIndex
 ) {
 
     //FIXME: shouldn't really do this, shouldn't store these in sets!!
@@ -32,6 +31,7 @@ internal class GrowingNode(
     val runtimeLookahead: LookaheadSet get() = index.runtimeLookaheadSet
     val startPosition:Int get() = index.startPosition
     val nextInputPosition: Int get() = index.nextInputPosition
+    val numNonSkipChildren:Int get() = index.numNonSkipChildren
 
     //val location: InputLocation get() = children.location
     val matchedTextLength: Int = this.nextInputPosition - this.startPosition
@@ -89,11 +89,19 @@ val lastLocation
         info.node.addNext(this)
     }
 
-    fun addPrevious(previousNode: GrowingNode) {
-        val info = PreviousInfo(previousNode)
-        val gi = previousNode.index
-        this.previous.put(gi, info)
-        previousNode.addNext(this)
+    fun addPrevious(gn: GrowingNode) {
+        val info = PreviousInfo(gn)
+        val gi = gn.index
+        val existing = this.previous[gi]
+        if (null==existing) {
+            this.previous.put(gi, info)
+            gn.addNext(this)
+        } else {
+            //merge previouses
+            for (p in gn.previous) {
+                existing.node.addPrevious(p.value)
+            }
+        }
     }
 
     fun addNext(value: GrowingNode) {
