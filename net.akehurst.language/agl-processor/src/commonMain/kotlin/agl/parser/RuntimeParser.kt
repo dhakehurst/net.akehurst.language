@@ -49,11 +49,12 @@ internal class RuntimeParser(
 
     // copy of graph growing head for each iteration, cached to that we can find best match in case of error
     private var grownInLastPass = mutableListOf<GrowingNode>()
-    internal var grownInLastPassPrevious = mutableMapOf<GrowingNode, Collection<PreviousInfo>>()
+    internal var grownInLastPassPrevious = mutableMapOf<GrowingNode, Set<GrowingNodeIndex>>()
     private var interruptedMessage: String? = null
 
     private val readyForShift = mutableListOf<GrowingNode>()
     private val readyForShiftPrevious = mutableMapOf<GrowingNode, MutableSet<GrowingNodeIndex>>()
+    private val _skip_cache = mutableMapOf<Int,TreeData?>()
 
     fun reset() {
         this.graph.reset()
@@ -85,7 +86,18 @@ internal class RuntimeParser(
     }
 
     fun resetGraphToLastGrown() {
-            this.graph.replaceHeads(this.lastGrown)
+           // this.graph.replaceHeads(this.lastGrown)
+        this.lastGrown.forEach { gn ->
+            val prv = this.grownInLastPassPrevious[gn]!!
+            if (prv.isEmpty()) {
+                this.graph._gss.root(gn.index)
+                this.graph._growingHeadHeap[gn.index]=gn
+            } else {
+                prv.forEach { prev ->
+                    this.graph.addGrowingHead(prev, gn)
+                }
+            }
+        }
     }
 
     fun startPass() {
@@ -98,11 +110,11 @@ internal class RuntimeParser(
         this.startPass()
         val currentStartPosition = this.graph.nextHeadStartPosition
         while (this.graph.hasNextHead && this.graph.nextHeadStartPosition <= currentStartPosition) {
-            val gn = this.graph.nextHead()
+            val (gn,previous) = this.graph.nextHead()
             checkInterrupt()
-            val previous = this.graph.previousOf(gn.index)
             //store gn so we can use ti to determine errors
             this.grownInLastPass.add(gn)
+            this.grownInLastPassPrevious[gn] = previous
             //val merged = this.graph.tryMergeWithExistingHead(gn, previous)
             //if (null == merged)
 
@@ -114,11 +126,11 @@ internal class RuntimeParser(
         this.startPass()
         // try height or graft
         while ((this.canGrow && this.graph.goals.isEmpty())) {
-            val gn = this.graph.nextHead()
+            val (gn,previous) = this.graph.nextHead()
             checkInterrupt()
-            val previous = this.graph.previousOf(gn.index)
             //store gn so we can use ti to determine errors
             this.grownInLastPass.add(gn)
+            this.grownInLastPassPrevious[gn] = previous
             //val merged = this.graph.tryMergeWithExistingHead(gn, previous)
             //if (null == merged)
 
@@ -190,17 +202,18 @@ internal class RuntimeParser(
         while (this.graph.hasNextHead && this.graph.nextHeadStartPosition <= currentStartPosition) {
             checkInterrupt()
             val graph = this.graph //TODO: remove..for debug only
-            val gn = this.graph.nextHead()
+            val (gn,previous) = this.graph.nextHead()
             if (gn.isEmptyMatch && doneEmpties.contains(gn.currentState)) {
                 //don't do it again
             } else {
                 if (gn.isEmptyMatch) doneEmpties.add(gn.currentState)
                 //store gn so we can use ti to determine errors
                 this.grownInLastPass.add(gn)
+                this.grownInLastPassPrevious[gn] = previous
                 //val merged = this.graph.tryMergeWithExistingHead(gn, previous)
                 //if (null == merged)
 
-                this.growNode(gn, noLookahead)
+                this.growNode(gn, previous, noLookahead)
                 steps++
             }
         }
@@ -314,12 +327,12 @@ internal class RuntimeParser(
         return userGoalNode
     }
 
-    internal fun growNode(gn: GrowingNode, noLookahead: Boolean) {
+    internal fun growNode(gn: GrowingNode, previous: Set<GrowingNodeIndex>, noLookahead: Boolean) {
         when (gn.runtimeRules.first().kind) {//FIXME
             RuntimeRuleKind.GOAL -> this.growGoalNode(gn, noLookahead)
-            RuntimeRuleKind.TERMINAL -> this.growNormal(gn, noLookahead)
-            RuntimeRuleKind.NON_TERMINAL -> this.growNormal(gn, noLookahead)
-            RuntimeRuleKind.EMBEDDED -> this.growNormal(gn, noLookahead)
+            RuntimeRuleKind.TERMINAL -> this.growNormal(gn, previous, noLookahead)
+            RuntimeRuleKind.NON_TERMINAL -> this.growNormal(gn, previous, noLookahead)
+            RuntimeRuleKind.EMBEDDED -> this.growNormal(gn, previous, noLookahead)
         }
     }
 
@@ -369,8 +382,7 @@ internal class RuntimeParser(
         }
     }
 
-    private fun growNormal(gn: GrowingNode, noLookahead: Boolean) {
-        val previous = this.graph.previousOf(gn.index)
+    private fun growNormal(gn: GrowingNode, previous: Set<GrowingNodeIndex>, noLookahead: Boolean) {
         for (prev in previous) {
             this.growWithPrev(gn, prev, noLookahead)
         }
@@ -630,9 +642,17 @@ internal class RuntimeParser(
 */
 
     private fun tryParseSkipUntilNone(lookaheadSet: LookaheadSet, startPosition: Int, noLookahead: Boolean): TreeData? {
-        return when (skipParser) {
-            null -> null
-            else -> tryParseSkip(lookaheadSet, startPosition, noLookahead)
+        val existing = _skip_cache[startPosition] //TODO: do we need to index by lookaheadSet also?
+        return if (_skip_cache.containsKey(startPosition)) {
+            // can cache null as a valid result
+            _skip_cache[startPosition]
+        } else {
+            val skipData= when (skipParser) {
+                null -> null
+                else -> tryParseSkip(lookaheadSet, startPosition, noLookahead)
+            }
+            _skip_cache[startPosition] = skipData
+            skipData
         }
     }
 

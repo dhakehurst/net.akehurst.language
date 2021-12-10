@@ -18,6 +18,7 @@ package net.akehurst.language.agl.parser
 
 import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.GrowingNode
+import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.PreviousInfo
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
@@ -145,17 +146,17 @@ internal class ScanOnDemandParser(
                     Pair(lg, exp)
                 }
                 else -> {
-                    val x = lg.previous.values.flatMap { it ->
-                        val prev = it.node
-                        val trs = lg.currentState.transitions(prev.currentState)
-                            .filter { it.runtimeGuard(it, prev.index, prev.currentState.rulePositions) }
+                    val prevs = rp.grownInLastPassPrevious[lg] ?: emptySet() //graph.previousOf(lg.index)
+                    val x = prevs.flatMap { prev ->
+                        val trs = lg.currentState.transitions(prev.state)
+                            .filter { it.runtimeGuard(it, prev, prev.state.rulePositions) }
                         val exp = trs.flatMap { tr ->
                             when (tr.action) {
                                 Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
                                 Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.runtimeLookahead)
                                 Transition.ParseAction.EMBED -> lg.currentState.firstOf(lg.runtimeLookahead)
                                 Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard, lg.runtimeLookahead).content
-                                Transition.ParseAction.GRAFT -> rp.stateSet.createWithParent(tr.lookaheadGuard, prev.runtimeLookahead).content
+                                Transition.ParseAction.GRAFT -> rp.stateSet.createWithParent(tr.lookaheadGuard, prev.runtimeLookaheadSet).content
        //                         Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                             }
                         }
@@ -174,7 +175,7 @@ internal class ScanOnDemandParser(
         return Pair(maxLastLocation, res)
     }
 
-    private fun findNextExpected(rp: RuntimeParser, graph: ParseGraph, input: InputFromString, gns: List<Pair<GrowingNode, Collection<PreviousInfo>?>>): Set<RuntimeRule> {
+    private fun findNextExpected(rp: RuntimeParser, graph: ParseGraph, input: InputFromString, gns: List<Pair<GrowingNode, Set<GrowingNodeIndex>?>>): Set<RuntimeRule> {
         // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
 
         val matches = gns.toMutableList()
@@ -187,7 +188,7 @@ internal class ScanOnDemandParser(
                 if (input.isEnd(gn.nextInputPosition)) {
                     // lastGrown is combination of growing and toGrow
                     //  the previous of groowing is on the node, of toGrow is in the Map
-                    val prev = rp.grownInLastPassPrevious[gn] ?: gn.previous.values
+                    val prev = rp.grownInLastPassPrevious[gn] ?: emptySet()
                     matches.add(Pair(gn, prev))
                 }
             }
@@ -201,7 +202,7 @@ internal class ScanOnDemandParser(
 
         val trans_lh_pairs = matches.flatMap { gn_prev ->
             val gn = gn_prev.first
-            val prev = gn_prev.second?.map { it.node.currentState }
+            val prev = gn_prev.second?.map { it.state }
             val trans = rp.transitionsEndingInNonEmptyFrom(gn.currentState, prev?.toSet())
             trans.map { tr ->
                 val lh = tr.lookaheadGuard.resolve(gn.runtimeLookahead)
@@ -236,7 +237,7 @@ internal class ScanOnDemandParser(
         rp.start(0, LookaheadSet.EOT)
         var seasons = 1
 
-        val matches = mutableListOf<Pair<GrowingNode, Collection<PreviousInfo>?>>()
+        val matches = mutableListOf<Pair<GrowingNode, Set<GrowingNodeIndex>?>>()
         do {
             rp.grow3(false)
             for (gn in rp.lastGrown) {

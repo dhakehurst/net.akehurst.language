@@ -18,29 +18,66 @@ package net.akehurst.language.agl.collections
 
 class GraphStructuredStack<E> {
 
-    private val _previous = mutableMapOf<E,MutableSet<E>>()
+    private val _previous = mutableMapOf<E, MutableSet<E>>()
+    private val _count = mutableMapOf<E, Int>()
 
     fun clear() {
         this._previous.clear()
     }
 
-    fun root(head:E) {
+    fun root(head: E) {
         _previous[head] = mutableSetOf()
+        _count[head] = 0
     }
 
-    fun push(head:E, next:E) {
+    /**
+     * returns true if added a new head
+     */
+    fun push(head: E, next: E): Boolean {
         var set = _previous[next]
-        if (null==set) {
+        val newHead = if (null == set) {
             set = mutableSetOf()
             _previous[next] = set
+            _count[next] = 0
+            true
+        } else {
+            false
         }
         set.add(head)
+        val hc = this._count[head]
+        if (null==hc) {
+            _previous[head] = mutableSetOf()
+            this._count[head] = 1
+        } else {
+            this._count[head] = hc+1
+        }
+        return newHead
     }
 
-    fun peek(head:E): Set<E> = _previous[head] ?: emptySet()
+    fun peek(head: E): Set<E> = _previous[head] ?: emptySet()
 
-    fun pop(head:E): Set<E> = _previous.remove(head) ?: emptySet()
+    fun pop(head: E): Set<E> {
+        val count = this._count[head]
+        return if (null == count) {
+            emptySet()
+        } else {
+            if (count==0) {
+                _count.remove(head)
+                val prev = _previous.remove(head)!!
+                prev.forEach {
+                    val c = this._count[it]!!
+                    this._count[it] = c - 1
+                }
+                prev
+            } else {
+                _previous[head]!!
+            }
+        }
+    }
 
+    override fun toString(): String {
+        return this._count.entries.filter { it.value==0 }.joinToString{it.key.toString()}
+    }
 
 }
 

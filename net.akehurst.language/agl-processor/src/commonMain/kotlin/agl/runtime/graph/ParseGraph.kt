@@ -39,8 +39,10 @@ internal class ParseGraph(
     // to keep track of the stack and get 'previous' nodes
     val _gss = GraphStructuredStack<GrowingNodeIndex>()
 
+    //TODO: is the fifo version faster ? it might help with processing heads in a better order!
     // to order the heads efficiently so we grow them in the required order
     val _growingHeadHeap: BinaryHeap<GrowingNodeIndex, GrowingNode> = binaryHeap() { parent, child ->
+        //val _growingHeadHeap: BinaryHeapFifo<GrowingNodeIndex, GrowingNode> = binaryHeapFifo() { parent, child ->
         // Ordering rules:
         // 1) nextInputPosition lower number first
         // 2) shift before reduce (reduce happens if state.isAtEnd)
@@ -96,9 +98,11 @@ internal class ParseGraph(
      * extract head with min nextInputPosition
      * assumes there is one - check with hasNextHead
      */
-    fun nextHead(): GrowingNode {
+    fun nextHead(): Pair<GrowingNode, Set<GrowingNodeIndex>> {
         val gn = this._growingHeadHeap.extractRoot()!!
-        return gn
+        //val previous = this._gss.peek(gn.index)
+        val previous = this._gss.pop(gn.index)
+        return Pair(gn, previous)
     }
 
     fun reset() {
@@ -112,22 +116,32 @@ internal class ParseGraph(
         this.treeData = TreeData(stateSetNumber)
     }
 
-    fun createGrowingNode(gnindex: GrowingNodeIndex): GrowingNode {
+    private fun createGrowingNode(gnindex: GrowingNodeIndex): GrowingNode {
         return GrowingNode(this, gnindex)
     }
 
-    private fun addGrowingHead(oldHead: GrowingNodeIndex, next: GrowingNode) {
+    internal fun addGrowingHead(oldHead: GrowingNodeIndex, next: GrowingNode) {
         this._nodes[next.index] = next
-        this._gss.push(oldHead, next.index)
-        this._growingHeadHeap[next.index] = next
+        val new = this._gss.push(oldHead, next.index)
+        if (new) {
+            this._growingHeadHeap[next.index] = next
+        }
     }
 
     private fun addGrowingHead(oldHead: Set<GrowingNodeIndex>, next: GrowingNode) {
         this._nodes[next.index] = next
-        for (oh in oldHead) {
-            this._gss.push(oh, next.index)
+        if (oldHead.isEmpty()) {
+            this._gss.root(next.index)
+            this._growingHeadHeap[next.index] = next
+        } else {
+            var new = false
+            for (oh in oldHead) {
+                new = new || this._gss.push(oh, next.index)
+            }
+            if (new) {
+                this._growingHeadHeap[next.index] = next
+            }
         }
-        this._growingHeadHeap[next.index] = next
     }
 
     private fun dropCurrentHead() {
@@ -135,7 +149,6 @@ internal class ParseGraph(
         val i = 0
     }
 
-    //TODO: combine next 3 methods!
     private fun findOrCreateGrowingLeafOrEmbeddedNode(
         newState: ParserState,
         lookahead: LookaheadSet,
@@ -153,7 +166,7 @@ internal class ParseGraph(
         } else {
             // preserve the relationship to previous, but no need for a new head
             existing.skipData = skipData //should we do this..I think skip should always already have been set !
-            if (null != previous) this._gss.push(previous, oldHead.index)
+            if (null != previous) this._gss.push(previous, gnindex)
         }
     }
 
@@ -290,6 +303,7 @@ internal class ParseGraph(
         previous: GrowingNodeIndex?,
         skipData: TreeData?
     ) {
+        if (null != previous) this._gss.push(previous, oldHead.index)
         this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, startPosition, nextInputPosition, numNonSkipChildren, oldHead, previous, skipData)
     }
 
@@ -343,23 +357,26 @@ internal class ParseGraph(
                         dropCurrentHead()
                     }
                     newPriority > existingPriority -> {
-                        val nn = this.createGrowingNode(parent)
-                        this.addGrowingHead(previous, nn)
+                        //val nn = this.createGrowingNode(parent)
+                        //this.addGrowingHead(previous, nn)
                         this.treeData.setFirstChild(parent, child, skipData)
                     }
                     else -> {
                         //TODO: something else here maybe
-                        val nn = this.createGrowingNode(parent)
-                        this.addGrowingHead(previous, nn)
+                        //val nn = this.createGrowingNode(parent)
+                        //this.addGrowingHead(previous, nn)
                         this.treeData.setFirstChild(parent, child, skipData)
                     }
                 }
             } else {
-                val nn = this.createGrowingNode(parent)
-                this.addGrowingHead(previous, nn)
+                //val nn = this.createGrowingNode(parent)
+                // this.addGrowingHead(previous, nn)
                 this.treeData.setFirstChild(parent, child, skipData)
             }
         }
+        val nn = this.createGrowingNode(parent)
+        this.addGrowingHead(previous, nn)
+
     }
 
     fun growNextChild(
@@ -384,10 +401,12 @@ internal class ParseGraph(
         if (newParent.state.isAtEnd && null != existing) {
             this.merge(existing, oldParent, newParent, child, skipData) //FIXME: don't convert to set
         } else {
-            val nn = this.createGrowingNode(newParent)
-            this.addGrowingHead(previous, nn)
+            //val nn = this.createGrowingNode(newParent)
+            //this.addGrowingHead(previous, nn)
             this.treeData.appendChild(oldParent, newParent, child, skipData)
         }
+        val nn = this.createGrowingNode(newParent)
+        this.addGrowingHead(previous, nn)
     }
 
     fun isLookingAt(lookaheadGuard: LookaheadSet, runtimeLookahead: LookaheadSet?, nextInputPosition: Int): Boolean {
