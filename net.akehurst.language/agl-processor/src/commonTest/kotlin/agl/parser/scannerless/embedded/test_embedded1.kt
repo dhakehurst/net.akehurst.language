@@ -70,12 +70,12 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = Sn,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -132,17 +132,20 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               'a'
-              gb { B.B { 'b' } }
+              gB { B.B { 'b' } }
               'a'
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test2(
                 rrs = S,
+            embeddedRuntimeRuleSets = mapOf(
+                "B" to B
+            ),
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 }

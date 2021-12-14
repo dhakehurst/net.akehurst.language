@@ -31,10 +31,21 @@ import kotlin.test.assertEquals
 internal abstract class test_ScanOnDemandParserAbstract {
 
     fun test(rrs: RuntimeRuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int, vararg expectedTrees: String): SharedPackedParseTree? {
+        return this.test2(
+            rrs,
+            emptyMap(),
+            goal,
+            sentence,
+            expectedNumGSSHeads,
+            *expectedTrees
+        )
+    }
+
+    fun test2(rrs: RuntimeRuleSet, embeddedRuntimeRuleSets:Map<String,RuntimeRuleSet>, goal: String, sentence: String, expectedNumGSSHeads: Int, vararg expectedTrees: String): SharedPackedParseTree? {
         val parser = ScanOnDemandParser(rrs)
         val (actual, issues) = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
 
-        val sppt = SPPTParserDefault(rrs)
+        val sppt = SPPTParserDefault(rrs, embeddedRuntimeRuleSets)
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
         assertEquals(expected.toStringAllWithIndent("  "), actual?.toStringAllWithIndent("  "))

@@ -54,7 +54,7 @@ internal class RuntimeParser(
 
     private val readyForShift = mutableListOf<GrowingNode>()
     private val readyForShiftPrevious = mutableMapOf<GrowingNode, MutableSet<GrowingNodeIndex>>()
-    private val _skip_cache = mutableMapOf<Int,TreeData?>()
+    private val _skip_cache = mutableMapOf<Pair<Int,LookaheadSet>,TreeData?>()
 
     fun reset() {
         this.graph.reset()
@@ -642,16 +642,16 @@ internal class RuntimeParser(
 */
 
     private fun tryParseSkipUntilNone(lookaheadSet: LookaheadSet, startPosition: Int, noLookahead: Boolean): TreeData? {
-        val existing = _skip_cache[startPosition] //TODO: do we need to index by lookaheadSet also?
-        return if (_skip_cache.containsKey(startPosition)) {
+        val key = Pair(startPosition,lookaheadSet)
+        return if (_skip_cache.containsKey(key)) {
             // can cache null as a valid result
-            _skip_cache[startPosition]
+            _skip_cache[key]
         } else {
             val skipData= when (skipParser) {
                 null -> null
                 else -> tryParseSkip(lookaheadSet, startPosition, noLookahead)
             }
-            _skip_cache[startPosition] = skipData
+            _skip_cache[key] = skipData
             skipData
         }
     }
@@ -706,7 +706,7 @@ internal class RuntimeParser(
             val skipData = this.tryParseSkipUntilNone(skipLh, ni, noLookahead)//, lh) //TODO: does the result get reused?
             val nextInput = skipData?.nextInputPosition ?: ni
             val numNonSkipChildren = 0 // terminals never have children
-            this.graph.pushEmbeddedToStackOf(transition.to, curGn.runtimeLookahead, startPosition, nextInput, numNonSkipChildren, curGn, previous, skipData)
+            this.graph.pushEmbeddedToStackOf(transition.to, curGn.runtimeLookahead, startPosition, nextInput, numNonSkipChildren, curGn, previous, match, skipData)
             //SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
         } else {
             // do nothing, could not parse embedded

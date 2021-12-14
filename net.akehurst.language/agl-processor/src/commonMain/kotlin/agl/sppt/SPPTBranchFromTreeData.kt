@@ -44,6 +44,7 @@ import net.akehurst.language.api.sppt.*
             it.map {
                 when {
                     it.isLeaf -> SPPTLeafFromInput(this.input, it.firstRule, it.startPosition, it.nextInputPosition, -1)
+                    it.isEmbedded -> SPPTBranchFromTreeData(it.treeData, this.input, it.firstRule, it.optionList[0], it.startPosition, it.nextInputPosition, -1)
                     else -> SPPTBranchFromTreeData(it.treeData, this.input, it.firstRule, it.optionList[0], it.startPosition, it.nextInputPosition, -1)
                 }
             }

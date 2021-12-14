@@ -24,12 +24,13 @@ import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.MutableStack
 
 internal class SPPTParserDefault(
-        val runtimeRuleSet: RuntimeRuleSet
+    val rootRuntimeRuleSet: RuntimeRuleSet,
+    val embeddedRuntimeRuleSets: Map<String, RuntimeRuleSet> = emptyMap()
 ) : SPPTParser {
 
     private val WS = regexMatcher("\\s+")
     private val EMPTY = regexMatcher("§empty")
-    private val NAME = regexMatcher("[a-zA-Z_§][a-zA-Z_0-9§]*")
+    private val QNAME = regexMatcher("[a-zA-Z_§][.a-zA-Z_0-9§]*")
     private val OPTION = regexMatcher("[|][0-9]+")
     private val LITERAL = regexMatcher("'([^'\\\\]|\\\\.)*'")
     private val PATTERN = regexMatcher("\"([^\"\\\\]|\\\\.)*\"")
@@ -37,6 +38,7 @@ internal class SPPTParserDefault(
     private val CHILDREN_START = regexMatcher("[{]")
     private val CHILDREN_END = regexMatcher("[}]")
 
+    private var runtimeRuleSetInUse = MutableStack<RuntimeRuleSet>()
     private val node_cache: MutableMap<Pair<SPPTNodeIdentity, Int>, SPPTNode> = mutableMapOf()
 
     var root: SPPTNode? = null
@@ -47,29 +49,34 @@ internal class SPPTParserDefault(
             return SharedPackedParseTreeDefault(root, -1, -1)
         }
 
-    private data class NodeStart(
-            val name: String,
-            val option: Int,
-            val sentenceStartPosition: Int,
-            val sentenceNextInputPosition: Int
-    ) {
-
+    private data class QName(val full: String) {
+        val isQualified get() = this.full.contains(".")
+        val name get() = this.full.substringAfter(".", this.full)
+        val qualifier get() = this.full.substringBefore(".", "")
     }
 
+    private data class NodeStart(
+        val qname: QName,
+        val option: Int,
+        val sentenceStartPosition: Int,
+        val sentenceNextInputPosition: Int
+    )
 
     class SPPTParserException(message: String) : Exception(message) {}
 
     private class SimpleScanner(private val input: CharSequence) {
         var position: Int = 0
 
-        val line:Int get() {
-            val parsed = input.subSequence(0,position)
-            return parsed.count { it=='\n' }
-        }
-        val column:Int get() {
-            val parsed = input.subSequence(0,position)
-            return parsed.length - parsed.lastIndexOf('\n')
-        }
+        val line: Int
+            get() {
+                val parsed = input.subSequence(0, position)
+                return parsed.count { it == '\n' }
+            }
+        val column: Int
+            get() {
+                val parsed = input.subSequence(0, position)
+                return parsed.length - parsed.lastIndexOf('\n')
+            }
 
         fun hasMore(): Boolean {
             return this.position < this.input.length
@@ -110,13 +117,14 @@ internal class SPPTParserDefault(
         return n?.asBranch
     }
 
-    override fun parse(treeAsString: String, addTree:Boolean) : SharedPackedParseTree {
+    override fun parse(treeAsString: String, addTree: Boolean): SharedPackedParseTree {
         if (addTree) {
             //do not reset cache
         } else {
             this.node_cache.clear()
         }
-        val input = InputFromString(runtimeRuleSet.terminalRules.size, "") //TODO: not sure we should reuse this here? maybe ok
+        this.runtimeRuleSetInUse.push(rootRuntimeRuleSet)
+        val input = InputFromString(runtimeRuleSetInUse.peek().terminalRules.size, "") //TODO: not sure we should reuse this here? maybe ok
         val scanner = SimpleScanner(treeAsString)
         val nodeNamesStack = MutableStack<NodeStart>()
         val childrenStack = MutableStack<MutableList<SPPTNode>>()
@@ -134,11 +142,19 @@ internal class SPPTParserDefault(
                     //val location = InputLocation(sentenceLocation.position, sentenceLocation.column, sentenceLocation.line, 0)
                     sentenceStartPosition = sentenceNextInputPosition
                     //sentenceNextInputPosition = sentenceNextInputPosition + 0
-                    val emptyNode = this.emptyLeaf(ruleStartThatIsEmpty.name, input, sentenceStartPosition, sentenceNextInputPosition)
+                    val emptyNode = this.emptyLeaf(ruleStartThatIsEmpty.qname.name, input, sentenceStartPosition, sentenceNextInputPosition)
                     childrenStack.peek().add(emptyNode)
                 }
-                scanner.hasNext(NAME) -> {
-                    val name = scanner.next(NAME)
+                scanner.hasNext(QNAME) -> {
+                    val scanned = scanner.next(QNAME)
+                    val qname = QName(scanned)
+                    if (qname.isQualified) {
+                        val gname = qname.qualifier
+                        val embrrs = this.embeddedRuntimeRuleSets[gname] ?: error("No embedded RuntimeRuleSet with name '${gname}' passed to SPPTParser")
+                        this.runtimeRuleSetInUse.push(embrrs)
+                    } else {
+                        // do nothing
+                    }
                     val option = if (scanner.hasNext(OPTION)) {
                         val optionStr = scanner.next(OPTION)
                         val num = optionStr.substring(1).toInt()
@@ -146,7 +162,7 @@ internal class SPPTParserDefault(
                     } else {
                         0
                     }
-                    nodeNamesStack.push(NodeStart(name, option, sentenceStartPosition, sentenceNextInputPosition))
+                    nodeNamesStack.push(NodeStart(qname, option, sentenceStartPosition, sentenceNextInputPosition))
                 }
                 scanner.hasNext(CHILDREN_START) -> {
                     scanner.next(CHILDREN_START)
@@ -215,24 +231,31 @@ internal class SPPTParserDefault(
                     while (scanner.hasNext(WS)) {
                         scanner.next(WS)
                     }
-                    val name = nodeNamesStack.pop().name
+                    val qname = nodeNamesStack.pop().qname
                     val newText = scanner.next(LITERAL)
                     val newText2 = newText.substring(1, newText.length - 1) // remove ' from begin and end
                     val newText3 = newText2.replace("\\'", "'") // substitute excape chars
                     //val location = InputLocation(sentenceLocation.position, sentenceLocation.column, sentenceLocation.line, newText3.length)
                     sentenceStartPosition = sentenceNextInputPosition
                     sentenceNextInputPosition += newText3.length
-                    val leaf = this.leaf(name, newText3, input, sentenceStartPosition, sentenceNextInputPosition)
+                    val leaf = this.leaf(qname.name, newText3, input, sentenceStartPosition, sentenceNextInputPosition)
                     //sentenceLocation = input.nextLocation(location, leaf.matchedText.length)
                     childrenStack.peek().add(leaf)
                 }
                 scanner.hasNext(CHILDREN_END) -> {
                     scanner.next(CHILDREN_END)
-                    check(nodeNamesStack.isEmpty.not()) {"Error parsing tree at position line:${scanner.line},column:${scanner.column}"}
+                    check(nodeNamesStack.isEmpty.not()) { "Error parsing tree at position line:${scanner.line},column:${scanner.column}" }
                     val lastNodeStart = nodeNamesStack.pop()
 
                     val children = childrenStack.pop()
-                    val node = this.branch(input,lastNodeStart.name, lastNodeStart.option, children)
+                    val qname = lastNodeStart.qname
+                    val node = if (qname.isQualified) {
+                        val embNode = this.embedded(input, qname.name, lastNodeStart.option, children)
+                        this.runtimeRuleSetInUse.pop()
+                        embNode
+                    } else {
+                        this.branch(input, qname.name, lastNodeStart.option, children)
+                    }
                     childrenStack.peek().add(node)
                 }
                 else -> {
@@ -247,8 +270,8 @@ internal class SPPTParserDefault(
         return this.tree
     }
 
-    fun emptyLeaf(ruleNameThatIsEmpty: String, input: InputFromString, startPosition: Int, nextInputPosition: Int): SPPTLeaf {
-        val ruleThatIsEmpty = this.runtimeRuleSet.findRuntimeRule(ruleNameThatIsEmpty)
+    internal fun emptyLeaf(ruleNameThatIsEmpty: String, input: InputFromString, startPosition: Int, nextInputPosition: Int): SPPTLeaf {
+        val ruleThatIsEmpty = this.runtimeRuleSetInUse.peek().findRuntimeRule(ruleNameThatIsEmpty)
         val terminalRule = ruleThatIsEmpty.emptyRuleItem
         //val n = SPPTLeafDefault(terminalRule, location, true, "", 0)
         val n = SPPTLeafFromInput(input, terminalRule, startPosition, nextInputPosition, 0)
@@ -261,9 +284,9 @@ internal class SPPTParserDefault(
         return existing
     }
 
-    fun leaf(pattern: String, text: String, input: InputFromString, startPosition: Int, nextInputPosition: Int): SPPTLeaf {
+    internal fun leaf(pattern: String, text: String, input: InputFromString, startPosition: Int, nextInputPosition: Int): SPPTLeaf {
         input.append(text)
-        val terminalRule = this.runtimeRuleSet.findTerminalRule(pattern)
+        val terminalRule = this.runtimeRuleSetInUse.peek().findTerminalRule(pattern)
         //val n = SPPTLeafDefault(terminalRule, location, false, text, 0)
         val n = SPPTLeafFromInput(input, terminalRule, startPosition, nextInputPosition, 0)
         n.eolPositions = Regex("\n", setOf(RegexOption.MULTILINE)).findAll(text).toList().map { it.range.first }
@@ -276,8 +299,26 @@ internal class SPPTParserDefault(
         return existing
     }
 
-    fun branch(input: InputFromString, ruleName: String, option: Int, children: List<SPPTNode>): SPPTBranch {
-        val rr = this.runtimeRuleSet.findRuntimeRule(ruleName)
+    internal fun embedded(input: InputFromString, ruleName: String, option: Int, children: List<SPPTNode>): SPPTBranch {
+        val rr = this.runtimeRuleSetInUse.peek().findRuntimeRule(ruleName)
+        val startPosition = children.firstOrNull()?.startPosition ?: 0
+        val nextInputPosition = children.lastOrNull()?.nextInputPosition ?: 0
+        val n = SPPTBranchFromInput(input, rr, option, startPosition, nextInputPosition, 0)
+        n.childrenAlternatives.add(children)
+
+        var existing: SPPTBranch? = this.findBranch(n.identity, n.matchedTextLength)
+        if (null == existing) {
+            this.cacheNode(n)
+            existing = n
+        } else {
+            (existing as SPPTBranchFromInput).childrenAlternatives.add(n.children)
+        }
+
+        return existing
+    }
+
+    internal fun branch(input: InputFromString, ruleName: String, option: Int, children: List<SPPTNode>): SPPTBranch {
+        val rr = this.runtimeRuleSetInUse.peek().findRuntimeRule(ruleName)
         val startPosition = children.firstOrNull()?.startPosition ?: 0
         val nextInputPosition = children.lastOrNull()?.nextInputPosition ?: 0
         val n = SPPTBranchFromInput(input, rr, option, startPosition, nextInputPosition, 0)

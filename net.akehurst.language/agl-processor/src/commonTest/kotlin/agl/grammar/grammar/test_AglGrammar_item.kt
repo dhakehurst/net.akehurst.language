@@ -601,7 +601,70 @@ class test_AglGrammar_item {
     }
 
     @Test
-    fun group2() {
+    fun group_group2() {
+        val gstr = "(b c)"
+        val actual = parse("group", gstr)
+        val expected = this.sppt(
+            """
+            group {
+              '('
+              groupedContent { concatenation {
+                concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } }
+                concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } }
+              } }
+              ')'
+            }
+        """.trimIndent()
+        )
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+        assertEquals(1, actual.maxNumHeads)
+    }
+
+    @Test
+    fun concatenation_group2() {
+        val gstr = "(b c)"
+        val actual = parse("concatenation", gstr)
+        val expected = this.sppt(
+            """
+            concatenation { concatenationItem { simpleItem { group {
+              '('
+              groupedContent { concatenation {
+                concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } }
+                concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } }
+              } }
+              ')'
+            } } } }
+        """.trimIndent()
+        )
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+        assertEquals(1, actual.maxNumHeads)
+    }
+
+    @Test
+    fun rhs_group2() {
+        val gstr = "(b c)"
+        val actual = parse("rhs", gstr)
+        val expected = this.sppt(
+            """
+            rhs { concatenation { concatenationItem { simpleItem { group {
+              '('
+              groupedContent { concatenation {
+                concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } }
+                concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } }
+              } }
+              ')'
+            } } } } }
+        """.trimIndent()
+        )
+        assertNotNull(actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+        assertEquals(1, actual.maxNumHeads)
+    }
+
+    @Test
+    fun rules_group2() {
         val gstr = """
             s=(b c);
         """.trimIndent()

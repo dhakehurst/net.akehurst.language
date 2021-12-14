@@ -89,8 +89,12 @@ internal class CompleteNodeIndex(
 ) {
     private val hashCode_cache = arrayOf(treeData, runtimeRules, startPosition, nextInputPosition).contentHashCode()
 
+    val highestPriorityRule get() {
+        val hp = optionList.m
+    }
     val firstRule: RuntimeRule get() = runtimeRules.first()
     val isLeaf: Boolean get() = firstRule.kind == RuntimeRuleKind.TERMINAL //should only be one if true
+    val isEmbedded: Boolean get() = firstRule.kind == RuntimeRuleKind.EMBEDDED //should only be one if true
 
     val priorityList get() = optionList //TODO: if priority is different to option this must change
 

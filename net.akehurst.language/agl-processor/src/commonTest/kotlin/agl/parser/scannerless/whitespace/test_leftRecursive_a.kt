@@ -39,6 +39,23 @@ internal class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
+    fun a() {
+        val sentence = "a"
+
+        val expected = """
+            S { 'a' }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
     fun WSaWS() {
         val sentence = " a "
 
@@ -46,12 +63,32 @@ internal class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
             S { WS { "\s+" : ' ' } 'a' WS { "\s+" : ' ' } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun aa() {
+        val sentence = "aa"
+
+        val expected = """
+            S { S1 {
+                S { 'a' }
+                'a'
+              } }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -63,14 +100,38 @@ internal class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
             S|1 { S1 { S { 'a' WS { "\s+" : ' ' } } 'a' } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
+
+    @Test
+    fun aaa() {
+        val sentence = "aaa"
+
+        val expected = """
+            S { S1 {
+                S { S1 {
+                    S { 'a' }
+                    'a'
+                  } }
+                'a'
+              } }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
+
 
     @Test
     fun aWSaWSa() {
@@ -88,12 +149,12 @@ internal class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -115,12 +176,12 @@ internal class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -130,12 +191,12 @@ internal class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
 
         val expected = "S { S1 { ".repeat(499) + "S { 'a' WS { \"\\s+\" : ' ' } }" + "'a' WS { \"\\s+\" : ' ' } } }".repeat(499)
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 

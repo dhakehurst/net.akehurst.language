@@ -74,6 +74,24 @@ internal class TreeData(
         this.initialSkip = initialSkipData
     }
 
+    fun setEmbeddedChild(parent: GrowingNodeIndex, child: CompleteNodeIndex) {
+        if (parent.state.isAtEnd) {
+            var completeChildren = this._complete[parent.complete]
+            if (null == completeChildren) { //TODO: handle childrenAlternatives ?
+                completeChildren = mutableListOf(child)
+                this._complete[parent.complete] = completeChildren
+                this.setCompletedBy(parent)
+            } else {
+                // replacing first child
+                completeChildren = mutableListOf(child)
+                this._complete[parent.complete] = completeChildren
+                this.setCompletedBy(parent)
+            }
+        } else {
+            error("Internal error: should not happen")
+        }
+    }
+
     fun setFirstChild(parent: GrowingNodeIndex, child: GrowingNodeIndex, skipData: TreeData?) {
         val skipChildren = skipData?.let {
             val sr = skipData.completeChildren[skipData.root]!!.get(0)

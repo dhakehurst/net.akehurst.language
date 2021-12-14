@@ -17,9 +17,7 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.ParserState
-import net.akehurst.language.agl.collections.BinaryHeap
-import net.akehurst.language.agl.collections.GraphStructuredStack
-import net.akehurst.language.agl.collections.binaryHeap
+import net.akehurst.language.agl.collections.*
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
@@ -41,8 +39,8 @@ internal class ParseGraph(
 
     //TODO: is the fifo version faster ? it might help with processing heads in a better order!
     // to order the heads efficiently so we grow them in the required order
-    val _growingHeadHeap: BinaryHeap<GrowingNodeIndex, GrowingNode> = binaryHeap() { parent, child ->
-        //val _growingHeadHeap: BinaryHeapFifo<GrowingNodeIndex, GrowingNode> = binaryHeapFifo() { parent, child ->
+    val _growingHeadHeap: BinaryHeap<GrowingNodeIndex, GrowingNode> = binaryHeap { parent, child ->
+    //val _growingHeadHeap: BinaryHeapFifo<GrowingNodeIndex, GrowingNode> = binaryHeapFifo { parent, child ->
         // Ordering rules:
         // 1) nextInputPosition lower number first
         // 2) shift before reduce (reduce happens if state.isAtEnd)
@@ -136,7 +134,8 @@ internal class ParseGraph(
         } else {
             var new = false
             for (oh in oldHead) {
-                new = new || this._gss.push(oh, next.index)
+                val r = this._gss.push(oh, next.index)
+                new = new || r
             }
             if (new) {
                 this._growingHeadHeap[next.index] = next
@@ -150,23 +149,20 @@ internal class ParseGraph(
     }
 
     private fun findOrCreateGrowingLeafOrEmbeddedNode(
-        newState: ParserState,
-        lookahead: LookaheadSet,
-        startPosition: Int, nextInputPosition: Int, numNonSkipChildren: Int,
+        newHead:GrowingNodeIndex,
         oldHead: GrowingNode,
         previous: GrowingNodeIndex?,
         skipData: TreeData?
     ) {
-        val gnindex = this.treeData.createGrowingNodeIndex(newState, lookahead, startPosition, nextInputPosition, numNonSkipChildren)
-        val existing = this._nodes[gnindex]
+        val existing = this._nodes[newHead]
         if (null == existing) {
-            val nn = this.createGrowingNode(gnindex)
+            val nn = this.createGrowingNode(newHead)
             nn.skipData = skipData
             this.addGrowingHead(oldHead.index, nn)
         } else {
             // preserve the relationship to previous, but no need for a new head
             existing.skipData = skipData //should we do this..I think skip should always already have been set !
-            if (null != previous) this._gss.push(previous, gnindex)
+            if (null != previous) this._gss.push(previous, newHead)
         }
     }
 
@@ -304,7 +300,8 @@ internal class ParseGraph(
         skipData: TreeData?
     ) {
         if (null != previous) this._gss.push(previous, oldHead.index)
-        this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, startPosition, nextInputPosition, numNonSkipChildren, oldHead, previous, skipData)
+        val newHead = this.treeData.createGrowingNodeIndex(newState, lookahead, startPosition, nextInputPosition, numNonSkipChildren)
+        this.findOrCreateGrowingLeafOrEmbeddedNode(newHead, oldHead, previous, skipData)
     }
 
     // for embedded segments
@@ -316,10 +313,16 @@ internal class ParseGraph(
         numNonSkipChildren: Int,
         oldHead: GrowingNode,
         previous: GrowingNodeIndex,
+        embeddedTreeData: TreeData,
         skipData: TreeData?
     ) {
+        if (null != previous) this._gss.push(previous, oldHead.index)
         //TODO: something different for embedded ?
-        this.findOrCreateGrowingLeafOrEmbeddedNode(newState, lookahead, startPosition, nextInputPosition, numNonSkipChildren, oldHead, previous, skipData)
+        val newHead = this.treeData.createGrowingNodeIndex(newState, lookahead, startPosition, nextInputPosition, numNonSkipChildren)
+        this.findOrCreateGrowingLeafOrEmbeddedNode(newHead, oldHead, previous, skipData)
+        val embGoal = embeddedTreeData.root!!
+        val child = embeddedTreeData.childrenFor(embGoal.firstRule,embGoal.optionList.first(),startPosition,nextInputPosition)
+        this.treeData.setEmbeddedChild(newHead, child.first().first())
         //TODO: do we need to check for longest ?
     }
 
@@ -463,5 +466,26 @@ internal class ParseGraph(
         this.goalMatchedAll = this.input.isEnd(goal.nextInputPosition)
     }
 
-    override fun toString(): String = this._growingHeadHeap.toString()
+    private fun prevOfToString(n:GrowingNodeIndex) : String {
+        val prev = this._gss.peek(n).toList()
+        return when {
+            prev.isEmpty() -> ""
+            1==prev.size -> {
+                val p = prev.first()
+                " --> $p${this.prevOfToString(p)}"
+            }
+            else -> {
+                val p = prev.first()
+                " -${prev.size}-> $p${this.prevOfToString(p)}"
+            }
+        }
+    }
+
+    override fun toString(): String {
+        val heads = this._growingHeadHeap.toList()
+        return heads.joinToString(separator = "\n") { h->
+            val p = this.prevOfToString(h.index)
+            "$h$p"
+        }
+    }
 }
