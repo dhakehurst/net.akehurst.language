@@ -31,6 +31,7 @@ internal class GrowingNode(
     val runtimeLookahead: LookaheadSet get() = index.runtimeLookaheadSet
     val startPosition:Int get() = index.startPosition
     val nextInputPosition: Int get() = index.nextInputPosition
+    val nextInputPositionAfterSkip: Int get() = index.nextInputPositionAfterSkip
     val numNonSkipChildren:Int get() = index.numNonSkipChildren
 
     //val location: InputLocation get() = children.location
@@ -38,7 +39,6 @@ internal class GrowingNode(
     val runtimeRules = currentState.runtimeRulesSet
     val terminalRule = runtimeRules.first()
 
-    var skipData: TreeData? = null
 /*
 val lastLocation
     get() = when (this.runtimeRules.first().kind) {

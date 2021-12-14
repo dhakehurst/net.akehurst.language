@@ -34,13 +34,12 @@ internal data class GrowingNodeIndex(
     val runtimeLookaheadSet: LookaheadSet,
     val startPosition: Int,
     val nextInputPosition: Int,
+    val nextInputPositionAfterSkip: Int,
     val numNonSkipChildren: Int //for use with MULTI and SEPARATED_LIST
 ) {
 
-    val nextPositionOfInterest = if (state.isAtEnd) startPosition else nextInputPosition
-
     //TODO: don't store data twice..but also prefer not to create 2 objects!
-    val complete = CompleteNodeIndex(treeData, state.runtimeRulesSet, startPosition, nextInputPosition, this.state.optionList, this)
+    val complete = CompleteNodeIndex(treeData, state.rulePositions, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)
 
     companion object {
         // used for start and leaf
@@ -66,12 +65,18 @@ internal data class GrowingNodeIndex(
             }
             RuntimeRuleKind.TERMINAL -> 0
             RuntimeRuleKind.EMBEDDED -> 0
-            RuntimeRuleKind.GOAL -> 1
+            RuntimeRuleKind.GOAL -> numNonSkipChildren
         }
     }
 
     override fun toString(): String {
-        return "GNI{state=$state,lhs=${runtimeLookaheadSet.content.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }},sp=${startPosition}, np=$nextInputPosition, len=$numNonSkipChildren}"
+        return "GNI{state=$state,lhs=${
+            runtimeLookaheadSet.content.joinToString(
+                prefix = "[",
+                postfix = "]",
+                separator = ","
+            ) { it.tag }
+        },sp=${startPosition}, np=$nextInputPosition, len=$numNonSkipChildren}"
     }
 
 }
@@ -81,22 +86,26 @@ internal data class GrowingNodeIndex(
 // also the treeData object is needed when getting children of a node in the conversion to SPPT
 internal class CompleteNodeIndex(
     val treeData: TreeData,
-    val runtimeRules: Set<RuntimeRule>, //TODO: maybe encode as an (StateSet,Int)!
+    // only RuntimeRules are needed for comparisons, but priority needed in order to resolve priorities, but it should not be part of identity
+    val rulePositions: List<RulePosition>,
     val startPosition: Int,
     val nextInputPosition: Int,
-    val optionList: List<Int>, // need this info in order to resolve priorities, but it should not be part of identity
-    val gni:GrowingNodeIndex? // the GNI used to create this, TODO: remove it...just for debug
+    val nextInputPositionAfterSkip: Int,
+    val gni: GrowingNodeIndex? // the GNI used to create this, TODO: remove it...just for debug
 ) {
-    private val hashCode_cache = arrayOf(treeData, runtimeRules, startPosition, nextInputPosition).contentHashCode()
 
-    val highestPriorityRule get() {
-        val hp = optionList.m
-    }
-    val firstRule: RuntimeRule get() = runtimeRules.first()
+    val runtimeRulesSet: Set<RuntimeRule> by lazy { this.rulePositions.map { it.runtimeRule }.toSet() }
+
+    private val hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode()
+
+    val highestPriorityRule get() = this.rulePositions.maxByOrNull { it.priority }!!.runtimeRule
+    val firstRule: RuntimeRule by lazy { this.rulePositions[0].runtimeRule }
     val isLeaf: Boolean get() = firstRule.kind == RuntimeRuleKind.TERMINAL //should only be one if true
     val isEmbedded: Boolean get() = firstRule.kind == RuntimeRuleKind.EMBEDDED //should only be one if true
+    val hasSkipData:Boolean get() = this.nextInputPosition!=nextInputPositionAfterSkip
 
-    val priorityList get() = optionList //TODO: if priority is different to option this must change
+    val optionList: List<Int> by lazy { this.rulePositions.map { it.option } }
+    val priorityList: List<Int> by lazy { this.rulePositions.map { it.priority } }
 
     override fun hashCode(): Int = this.hashCode_cache
     override fun equals(other: Any?): Boolean = when {
@@ -104,9 +113,10 @@ internal class CompleteNodeIndex(
         other.treeData != this.treeData -> false
         other.startPosition != this.startPosition -> false
         other.nextInputPosition != this.nextInputPosition -> false
-        other.runtimeRules != this.runtimeRules -> false
+        other.runtimeRulesSet != this.runtimeRulesSet -> false
         else -> true
     }
-    override fun toString(): String = "CNI{(SS=${this.treeData.forStateSetNumber}) sp=$startPosition,np=$nextInputPosition,R=${runtimeRules.joinToString { it.tag }}}"
+
+    override fun toString(): String = "CNI{(${this.treeData.forStateSetNumber}),R=${runtimeRulesSet.joinToString { it.tag }},sp=$startPosition,np=$nextInputPosition}"
 }
 

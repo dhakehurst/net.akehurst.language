@@ -19,33 +19,76 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.TreeData
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 
 //TODO: currently this has to be public, because otherwise kotlin does not
 // use the non-mangled names for properties
 /*internal */ class SPPTBranchFromTreeData internal constructor(
     private val _treeData: TreeData,
-    input:InputFromString,
+    input: InputFromString,
     runtimeRule: RuntimeRule,
     option: Int,
     startPosition: Int,               // can't use children.first.startPosition, there may not be any children
     nextInputPosition: Int,          // don't use children.sumBy { it.matchedTextLength }, it requires unwanted iteration
     priority: Int
 ) : SPPTNodeFromInputAbstract(
-        input, runtimeRule, option, startPosition, nextInputPosition, priority
+    input, runtimeRule, option, startPosition, nextInputPosition, priority
 ), SPPTBranch {
 
     // --- SPPTBranch ---
 
     override val childrenAlternatives: Set<List<SPPTNode>> by lazy {
-        val alternatives = this._treeData.childrenFor(runtimeRule, option, startPosition,nextInputPosition)
-        alternatives.map {
-            it.map {
+        val alternatives = this._treeData.childrenFor(runtimeRule, startPosition, nextInputPosition)
+        alternatives.map { alts ->
+            alts.flatMapIndexed{ chIndx, ch ->
                 when {
-                    it.isLeaf -> SPPTLeafFromInput(this.input, it.firstRule, it.startPosition, it.nextInputPosition, -1)
-                    it.isEmbedded -> SPPTBranchFromTreeData(it.treeData, this.input, it.firstRule, it.optionList[0], it.startPosition, it.nextInputPosition, -1)
-                    else -> SPPTBranchFromTreeData(it.treeData, this.input, it.firstRule, it.optionList[0], it.startPosition, it.nextInputPosition, -1)
+                    ch.isLeaf -> when {
+                        ch.hasSkipData -> {
+                            val skipData= this._treeData.skipChildrenAfter(ch)
+                            val skipChildren = skipData?.let {
+                                val sr = skipData.completeChildren[skipData.root]!!.get(0)
+                                val c = skipData.completeChildren[sr]!!.map {
+                                    skipData.completeChildren[it]!!.get(0)
+                                }
+                                c
+                            }?: emptyList()
+                            val skipNodes = skipChildren.map{ skch->
+                                when{
+                                    skch.isLeaf -> SPPTLeafFromInput(this.input, skch.firstRule, skch.startPosition, skch.nextInputPosition, -1)
+                                    else -> SPPTBranchFromTreeData(skch.treeData, this.input, skch.firstRule, skch.optionList[0], skch.startPosition, skch.nextInputPosition, -1)
+                                }
+                            }
+                            listOf(SPPTLeafFromInput(this.input, ch.firstRule, ch.startPosition, ch.nextInputPosition, -1))+skipNodes
+                        }
+                        else -> listOf(SPPTLeafFromInput(this.input, ch.firstRule, ch.startPosition, ch.nextInputPosition, -1))
+                    }
+                    ch.isEmbedded -> listOf(SPPTBranchFromTreeData(ch.treeData, this.input, ch.firstRule, ch.optionList[0], ch.startPosition, ch.nextInputPosition, -1))
+                    else -> when (ch.rulePositions.size) {
+                        1 -> listOf(SPPTBranchFromTreeData(ch.treeData, this.input, ch.firstRule, ch.optionList[0], ch.startPosition, ch.nextInputPosition, -1))
+                        else -> {
+                            val possChildren = this.runtimeRule.rulePositionsAt[chIndx].filter { it.option==this.option }
+                            when (possChildren.size) {
+                                0 -> error("Internal error: should never happen")
+                                1 -> {
+                                    check(ch.runtimeRulesSet.contains(possChildren[0].item))
+                                    listOf(
+                                        SPPTBranchFromTreeData(
+                                            ch.treeData,
+                                            this.input,
+                                            possChildren[0].item!!,
+                                            ch.optionList[0],
+                                            ch.startPosition,
+                                            ch.nextInputPosition,
+                                            -1
+                                        )
+                                    )
+                                }
+                                else ->{
+                                    TODO()
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }.toSet()
@@ -66,7 +109,7 @@ import net.akehurst.language.api.sppt.*
     override fun branchChild(index: Int): SPPTBranch = this.branchNonSkipChildren[index]
 
     // --- SPPTNode ---
-    override val matchedText: String get() = this.input.textFromUntil(this.startPosition,this.nextInputPosition)
+    override val matchedText: String get() = this.input.textFromUntil(this.startPosition, this.nextInputPosition)
 
     override val nonSkipMatchedText: String get() = this.nonSkipChildren.map { it.nonSkipMatchedText }.joinToString("")
 

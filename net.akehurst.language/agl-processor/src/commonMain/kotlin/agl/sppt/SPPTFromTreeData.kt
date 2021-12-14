@@ -33,10 +33,8 @@ internal class SPPTFromTreeData(
 
     override val root: SPPTNode
         get() {
-            val rootOptionList = _treeData.root!!.optionList
             val goalChildren = _treeData.childrenFor(
                 _treeData.root!!.firstRule,
-                rootOptionList.first(), //TODO: will ther ever by more than 1 element?
                 _treeData.root!!.startPosition,
                 _treeData.root!!.nextInputPosition
             )
@@ -51,13 +49,13 @@ internal class SPPTFromTreeData(
                 val skipChildren = td.completeChildren[sg]!!.map {
                     td.completeChildren[it]!!.get(0)
                 }
-                val nug = CompleteNodeIndex(_treeData, userGoal.runtimeRules, startPositionBeforeInitialSkip, userGoal.nextInputPosition,userGoalOptionList,null)
+                val nug = CompleteNodeIndex(_treeData, userGoal.rulePositions, startPositionBeforeInitialSkip, userGoal.nextInputPosition,td.nextInputPosition!!,null)
                 val userGoalChildren = skipChildren + _treeData.completeChildren[userGoal]!!
                 _treeData.setUserGoalChildrentAfterInitialSkip(nug, userGoalChildren)
                 nug
             } ?: userGoal
 
-            return SPPTBranchFromTreeData(_treeData, _input, userGoal.firstRule, userGoalOptionList[0], startPositionBeforeInitialSkip, userGoalAfterSkip.nextInputPosition, -1)
+            return SPPTBranchFromTreeData(_treeData, _input, userGoal.highestPriorityRule, userGoalOptionList[0], startPositionBeforeInitialSkip, userGoalAfterSkip.nextInputPosition, -1)
         }
 
     override fun contains(other: SharedPackedParseTree): Boolean {
