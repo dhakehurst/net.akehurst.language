@@ -99,6 +99,36 @@ internal class  test_a : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
+    fun aaaaa() {
+        val goal = "S"
+        val sentence = "aaaaa"
+
+        val expected = """
+             S { S1 {
+                S { S1 {
+                    S { S1 {
+                        S { S1 {
+                            S { 'a' }
+                            'a'
+                          } }
+                        'a'
+                      } }
+                    'a'
+                  } }
+                'a'
+              } }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
     fun a50() {
         val goal = "S"
         val sentence = "a".repeat(50)

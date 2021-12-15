@@ -97,12 +97,12 @@ class test_TreeData {
             sut.createGrowingNodeIndex(state_S1, LookaheadSet.ANY, 0, 1, 1,1),
             sut.createGrowingNodeIndex(state_a, LookaheadSet.ANY, 0, 1, 1,0)
         )
-        sut.appendChild(
+        sut.setInGrowingParentChildAt(
             sut.createGrowingNodeIndex(state_S1, LookaheadSet.ANY, 0, 1, 1,1),
             sut.createGrowingNodeIndex(state_S2, LookaheadSet.ANY, 0, 2, 2,2),
             sut.createGrowingNodeIndex(state_b, LookaheadSet.ANY, 1, 2, 2,0)
         )
-        sut.appendChild(
+        sut.setInGrowingParentChildAt(
             sut.createGrowingNodeIndex(state_S2, LookaheadSet.ANY, 0, 2,2, 2),
             sut.createGrowingNodeIndex(state_S3, LookaheadSet.ANY, 0, 3, 3,3),
             sut.createGrowingNodeIndex(state_c, LookaheadSet.ANY, 2, 3, 3,0)

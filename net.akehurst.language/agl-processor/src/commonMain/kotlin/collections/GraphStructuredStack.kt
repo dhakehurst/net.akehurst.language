@@ -54,6 +54,8 @@ class GraphStructuredStack<E> {
         return newHead
     }
 
+    fun contains(node:E):Boolean = _previous.containsKey(node)
+
     fun peek(head: E): Set<E> = _previous[head] ?: emptySet()
 
     fun pop(head: E): Set<E> {

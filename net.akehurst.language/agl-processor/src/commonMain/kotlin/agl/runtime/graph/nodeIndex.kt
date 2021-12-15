@@ -38,9 +38,6 @@ internal data class GrowingNodeIndex(
     val numNonSkipChildren: Int //for use with MULTI and SEPARATED_LIST
 ) {
 
-    //TODO: don't store data twice..but also prefer not to create 2 objects!
-    val complete = CompleteNodeIndex(treeData, state.rulePositions, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)
-
     companion object {
         // used for start and leaf
         //fun index(state: ParserState, lhs: LookaheadSet, startPosition: Int, nextInputPosition: Int, listSize: Int): GrowingNodeIndex {
@@ -68,6 +65,9 @@ internal data class GrowingNodeIndex(
             RuntimeRuleKind.GOAL -> numNonSkipChildren
         }
     }
+
+    //TODO: don't store data twice..also prefer not to create 2 objects!
+    val complete = CompleteNodeIndex(treeData, state.rulePositions, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)
 
     override fun toString(): String {
         return "GNI{state=$state,lhs=${
@@ -98,6 +98,9 @@ internal class CompleteNodeIndex(
 
     private val hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode()
 
+    //TODO: don't store data twice..also prefer not to create 2 objects!
+    val preferred = PreferredChildIndex(runtimeRulesSet, startPosition)
+
     val highestPriorityRule get() = this.rulePositions.maxByOrNull { it.priority }!!.runtimeRule
     val firstRule: RuntimeRule by lazy { this.rulePositions[0].runtimeRule }
     val isLeaf: Boolean get() = firstRule.kind == RuntimeRuleKind.TERMINAL //should only be one if true
@@ -120,3 +123,9 @@ internal class CompleteNodeIndex(
     override fun toString(): String = "CNI{(${this.treeData.forStateSetNumber}),R=${runtimeRulesSet.joinToString { it.tag }},sp=$startPosition,np=$nextInputPosition}"
 }
 
+internal data class PreferredChildIndex(
+    val runtimeRulesSet: Set<RuntimeRule>,
+    val startPosition: Int,
+) {
+    override fun toString(): String = "PI{R=${runtimeRulesSet.joinToString { it.tag }},sp=$startPosition"
+}

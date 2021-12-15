@@ -194,6 +194,44 @@ internal class RuntimeParser(
     }
     */
 
+    var debugCount=0
+    fun debugOutput() {
+        fun GrowingNodeIndex.asString() = "(s${state.number.value},${startPosition}-${nextInputPosition}{${numNonSkipChildren}}${
+            state.rulePositions.joinToString()
+        }${
+            runtimeLookaheadSet.content.joinToString(
+                prefix = "[",
+                postfix = "]",
+                separator = ","
+            ) { it.tag }
+        })"
+        fun GrowingNodeIndex.chains() :List<List<GrowingNodeIndex>>{
+            val prevs = this@RuntimeParser.graph.previousOf(this)
+            return when {
+                prevs.isEmpty() -> listOf(listOf(this))
+                else -> prevs.flatMap { prev->
+                    val chains = prev.chains()
+                    val r:List<List<GrowingNodeIndex>> = chains.map{ chain ->
+                        listOf(this) + chain
+                    }
+                    r
+                }
+            }
+        }
+        if (true) {
+            println("--- ${debugCount++} --------------------------------------------------------")
+            this.graph._growingHeadHeap.forEach {
+                val chains = it.index.chains()
+                chains.forEach { chain->
+                    val str = chain.joinToString(separator = "-->") {
+                        it.asString()
+                    }
+                    println(str)
+                }
+            }
+        }
+    }
+
     fun grow3(noLookahead: Boolean): Int {
         this.startPass()
         var steps = 0
@@ -202,6 +240,7 @@ internal class RuntimeParser(
         while (this.graph.hasNextHead && this.graph.nextHeadStartPosition <= currentStartPosition) {
             checkInterrupt()
             val graph = this.graph //TODO: remove..for debug only
+            //debugOutput()
             val (gn,previous) = this.graph.nextHead()
             if (gn.isEmptyMatch && doneEmpties.contains(gn.currentState)) {
                 //don't do it again

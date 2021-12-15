@@ -30,12 +30,13 @@ internal class TreeData(
     private val _growing = mutableMapOf<GrowingNodeIndex, MutableList<CompleteNodeIndex>>()
 
     // (state,startPosition) --> listOf<child> //maybe optimise because only ambiguous choice nodes have multiple child options
-    private val _complete = mutableMapOf<CompleteNodeIndex, MutableList<CompleteNodeIndex>>()
-    private val _completedBy = mutableMapOf<CompleteNodeIndex, CompleteNodeIndex>()
+    private val _complete = mutableMapOf<CompleteNodeIndex, List<CompleteNodeIndex>>()
+    private val _preferred = mutableMapOf<PreferredChildIndex, CompleteNodeIndex>()
+    //private val _completedBy = mutableMapOf<CompleteNodeIndex, CompleteNodeIndex>()
     private val _skipDataAfter = mutableMapOf<CompleteNodeIndex, TreeData>()
 
     val completeChildren: Map<CompleteNodeIndex, List<CompleteNodeIndex>> = this._complete
-    val completedBy: Map<CompleteNodeIndex, CompleteNodeIndex> = _completedBy
+    //val completedBy: Map<CompleteNodeIndex, CompleteNodeIndex> = _completedBy
     val growing: Map<GrowingNodeIndex, List<CompleteNodeIndex>> = _growing
     var root: CompleteNodeIndex? = null; private set
     var initialSkip: TreeData? = null; private set
@@ -69,7 +70,7 @@ internal class TreeData(
         }
     }
 
-    fun hasComplete(node: GrowingNodeIndex): Boolean = this._complete.containsKey(node.complete)
+    fun completedBy(node: CompleteNodeIndex): CompleteNodeIndex? = this._preferred[node.preferred]
 
     fun setRoot(root: GrowingNodeIndex) {
         this.root = root.complete
@@ -83,7 +84,7 @@ internal class TreeData(
 
     fun remove(node:CompleteNodeIndex) {
         this._complete.remove(node)
-        this._completedBy.remove(node)
+        this._preferred.remove(node.preferred)
         this._skipDataAfter.remove(node)
     }
 
@@ -92,13 +93,11 @@ internal class TreeData(
             var completeChildren = this._complete[parent.complete]
             if (null == completeChildren) { //TODO: handle childrenAlternatives ?
                 completeChildren = mutableListOf(child)
-                this._complete[parent.complete] = completeChildren
-                this.setCompletedBy(parent)
+                this.setCompletedBy(parent,completeChildren)
             } else {
                 // replacing first child
                 completeChildren = mutableListOf(child)
-                this._complete[parent.complete] = completeChildren
-                this.setCompletedBy(parent)
+                this.setCompletedBy(parent,completeChildren)
             }
         } else {
             error("Internal error: should not happen")
@@ -110,13 +109,11 @@ internal class TreeData(
             var completeChildren = this._complete[parent.complete]
             if (null == completeChildren) { //TODO: handle childrenAlternatives ?
                 completeChildren = mutableListOf(child.complete) //TODO: arrayOfNulls<CompleteNodeIndex>( parent.numChildren )
-                this._complete[parent.complete] = completeChildren
-                this.setCompletedBy(parent)
+                this.setCompletedBy(parent,completeChildren)
             } else {
                 // replacing first child
                 completeChildren = mutableListOf(child.complete)
-                this._complete[parent.complete] = completeChildren
-                this.setCompletedBy(parent)
+                this.setCompletedBy(parent,completeChildren)
             }
         }
         // due to States containing multiple RPs...a state could mark the end and not the end for different RPs
@@ -133,6 +130,7 @@ internal class TreeData(
         }
     }
 
+    /*
     fun appendChild(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, nextChild: GrowingNodeIndex) {
         val children = this._growing[oldParent]!! //should never be null
         if (newParent.state.isAtEnd) {
@@ -140,8 +138,7 @@ internal class TreeData(
             //TODO: performance don't want to copy
             val cpy = children.toMutableList()
             cpy.add(nextChild.complete)
-            this._complete[newParent.complete] = cpy
-            this.setCompletedBy(newParent)
+            this.setCompletedBy(newParent, cpy)
         }
         if (newParent.state.isNotAtEnd) {
             //TODO: performance don't want to copy
@@ -150,8 +147,12 @@ internal class TreeData(
             this._growing[newParent] = cpy
         }
     }
+    */
 
-    fun setChildAt(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, nextChild: GrowingNodeIndex) {
+    /**
+     * if this completes the parent, record complete parent
+     */
+    fun setInGrowingParentChildAt(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, nextChild: GrowingNodeIndex) {
         val nextChildIndex = newParent.numNonSkipChildren-1
         val children = this._growing[oldParent]!! //should never be null
         if (newParent.state.isAtEnd) {
@@ -163,8 +164,7 @@ internal class TreeData(
                 cpy.size ==nextChildIndex-> cpy.add( nextChild.complete)
                 else -> error("Internal error: should never happen")
             }
-            this._complete[newParent.complete] = cpy
-            this.setCompletedBy(newParent)
+            this.setCompletedBy(newParent,cpy)
         }
         if (newParent.state.isNotAtEnd) {
             //TODO: performance don't want to copy
@@ -178,8 +178,8 @@ internal class TreeData(
         }
     }
 
-    fun childAt(parent: CompleteNodeIndex, childIndex: Int): CompleteNodeIndex? {
-        val children = this._complete[parent]
+    fun inGrowingParentChildAt(parent: GrowingNodeIndex, childIndex: Int): CompleteNodeIndex? {
+        val children = this._growing[parent]
         return if (null == children) {
             null
         } else {
@@ -210,7 +210,10 @@ internal class TreeData(
 
     override fun toString(): String = "TreeData{${forStateSetNumber}}"
 
-    private fun setCompletedBy(parent: GrowingNodeIndex) {
-        this._completedBy[parent.complete] = parent.complete
+    private fun setCompletedBy(parent: GrowingNodeIndex, children:List<CompleteNodeIndex>) {
+        this._complete[parent.complete] = children
+        //this._completedBy[parent.complete] = parent.complete
+        this._preferred[parent.complete.preferred]= parent.complete
     }
+
 }
