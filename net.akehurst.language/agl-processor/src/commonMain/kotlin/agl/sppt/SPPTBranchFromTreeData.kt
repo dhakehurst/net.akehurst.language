@@ -17,9 +17,13 @@
 package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
+import net.akehurst.language.agl.runtime.graph.CompleteNodeIndex
 import net.akehurst.language.agl.runtime.graph.TreeData
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.api.sppt.*
+import net.akehurst.language.api.sppt.SPPTBranch
+import net.akehurst.language.api.sppt.SPPTException
+import net.akehurst.language.api.sppt.SPPTLeaf
+import net.akehurst.language.api.sppt.SPPTNode
 
 //TODO: currently this has to be public, because otherwise kotlin does not
 // use the non-mangled names for properties
@@ -38,35 +42,65 @@ import net.akehurst.language.api.sppt.*
     // --- SPPTBranch ---
 
     override val childrenAlternatives: Set<List<SPPTNode>> by lazy {
-        val alternatives = this._treeData.childrenFor(runtimeRule, startPosition, nextInputPosition)
-        alternatives.map { alts ->
-            alts.flatMapIndexed{ chIndx, ch ->
-                when {
-                    ch.isLeaf -> when {
-                        ch.hasSkipData -> {
-                            val skipData= this._treeData.skipChildrenAfter(ch)
-                            val skipChildren = skipData?.let {
-                                val sr = skipData.completeChildren[skipData.root]!!.get(0)
-                                val c = skipData.completeChildren[sr]!!.map {
-                                    skipData.completeChildren[it]!!.get(0)
-                                }
-                                c
-                            }?: emptyList()
-                            val skipNodes = skipChildren.map{ skch->
-                                when{
-                                    skch.isLeaf -> SPPTLeafFromInput(this.input, skch.firstRule, skch.startPosition, skch.nextInputPosition, -1)
-                                    else -> SPPTBranchFromTreeData(skch.treeData, this.input, skch.firstRule, skch.optionList[0], skch.startPosition, skch.nextInputPosition, -1)
-                                }
-                            }
-                            listOf(SPPTLeafFromInput(this.input, ch.firstRule, ch.startPosition, ch.nextInputPosition, -1))+skipNodes
+        fun extractAlts(list: List<CompleteNodeIndex>): List<List<CompleteNodeIndex>> {
+            val head = list[0].rulePositions.map {
+                CompleteNodeIndex(list[0].treeData, listOf(it), list[0].startPosition, list[0].nextInputPosition, list[0].nextInputPositionAfterSkip, list[0].gni)
+            }
+            return when (list.size) {
+                1 -> listOf(head)
+                else -> {
+                    val lists = extractAlts(list.drop(1))
+                    lists.flatMap { l ->
+                        head.map { h ->
+                            listOf(h) + l
                         }
-                        else -> listOf(SPPTLeafFromInput(this.input, ch.firstRule, ch.startPosition, ch.nextInputPosition, -1))
                     }
-                    ch.isEmbedded -> listOf(SPPTBranchFromTreeData(ch.treeData, this.input, ch.firstRule, ch.optionList[0], ch.startPosition, ch.nextInputPosition, -1))
-                    else -> when (ch.rulePositions.size) {
-                        1 -> listOf(SPPTBranchFromTreeData(ch.treeData, this.input, ch.firstRule, ch.optionList[0], ch.startPosition, ch.nextInputPosition, -1))
+                }
+            }
+        }
+
+        val alternatives = this._treeData.childrenFor(runtimeRule, startPosition, nextInputPosition)
+        val alts: List<List<CompleteNodeIndex>> = alternatives.flatMap {
+            extractAlts(it)
+        }
+        alts.map { alt ->
+            alt.flatMapIndexed { childIndx, child ->
+                val possChildren = this.runtimeRule.rulePositionsAt[childIndx].filter { it.option == this.option }
+                child.rulePositions.flatMap { rp ->
+                    when {
+                        rp.isLeaf -> when {
+                            child.hasSkipData -> {
+                                val skipData = this._treeData.skipChildrenAfter(child)
+                                val skipChildren = skipData?.let {
+                                    val sr = skipData.completeChildren[skipData.root]!!.get(0)
+                                    val c = skipData.completeChildren[sr]!!.map {
+                                        skipData.completeChildren[it]!!.get(0)
+                                    }
+                                    c
+                                } ?: emptyList()
+                                val skipNodes = skipChildren.map { skch ->
+                                    when {
+                                        skch.isLeaf -> SPPTLeafFromInput(this.input, skch.firstRule, skch.startPosition, skch.nextInputPosition, -1)
+                                        else -> SPPTBranchFromTreeData(
+                                            skch.treeData,
+                                            this.input,
+                                            skch.firstRule,
+                                            skch.optionList[0],
+                                            skch.startPosition,
+                                            skch.nextInputPosition,
+                                            -1
+                                        )
+                                    }
+                                }
+                                listOf(SPPTLeafFromInput(this.input, rp.runtimeRule, child.startPosition, child.nextInputPosition, -1)) + skipNodes
+                            }
+                            else -> listOf(SPPTLeafFromInput(this.input, rp.runtimeRule, child.startPosition, child.nextInputPosition, -1))
+                        }
+                        child.isEmbedded -> listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.runtimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
+                        else -> listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.runtimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
+                        /*
                         else -> {
-                            val possChildren = this.runtimeRule.rulePositionsAt[chIndx].filter { it.option==this.option }
+                            val possChildren = this.runtimeRule.rulePositionsAt[chIndx].filter { it.option == this.option }
                             when (possChildren.size) {
                                 0 -> error("Internal error: should never happen")
                                 1 -> {
@@ -83,11 +117,12 @@ import net.akehurst.language.api.sppt.*
                                         )
                                     )
                                 }
-                                else ->{
+                                else -> {
                                     TODO()
                                 }
                             }
                         }
+                         */
                     }
                 }
             }

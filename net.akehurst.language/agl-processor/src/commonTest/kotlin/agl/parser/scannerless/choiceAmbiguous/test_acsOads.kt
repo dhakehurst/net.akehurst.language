@@ -77,12 +77,12 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
             } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -102,12 +102,12 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
             }}
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -123,12 +123,12 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
             S { ambig|1 { ads { 'a' } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 2, //TODO can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected1,expected2)
+                expectedTrees = arrayOf(expected1,expected2)
         )
     }
 }

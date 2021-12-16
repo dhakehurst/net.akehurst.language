@@ -96,7 +96,8 @@ internal class CompleteNodeIndex(
 
     val runtimeRulesSet: Set<RuntimeRule> by lazy { this.rulePositions.map { it.runtimeRule }.toSet() }
 
-    private val hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode()
+    //private val hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode()
+    private val hashCode_cache = arrayOf(treeData, rulePositions, startPosition, nextInputPosition).contentHashCode()
 
     //TODO: don't store data twice..also prefer not to create 2 objects!
     val preferred = PreferredChildIndex(runtimeRulesSet, startPosition)
@@ -116,11 +117,12 @@ internal class CompleteNodeIndex(
         other.treeData != this.treeData -> false
         other.startPosition != this.startPosition -> false
         other.nextInputPosition != this.nextInputPosition -> false
-        other.runtimeRulesSet != this.runtimeRulesSet -> false
+        other.rulePositions != this.rulePositions -> false
+        //other.runtimeRulesSet != this.runtimeRulesSet -> false
         else -> true
     }
 
-    override fun toString(): String = "CNI{(${this.treeData.forStateSetNumber}),R=${runtimeRulesSet.joinToString { it.tag }},sp=$startPosition,np=$nextInputPosition}"
+    override fun toString(): String = "CNI{(${this.treeData.forStateSetNumber}),R=${rulePositions.joinToString()},sp=$startPosition,np=$nextInputPosition}"
 }
 
 internal data class PreferredChildIndex(

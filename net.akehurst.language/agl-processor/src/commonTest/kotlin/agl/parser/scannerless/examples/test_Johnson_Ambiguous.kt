@@ -75,12 +75,12 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
             S|2 { 'a' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -97,12 +97,12 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -130,12 +130,12 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
               } }
         """
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected1, expected2)
+                expectedTrees = arrayOf(expected1, expected2)
         )
     }
 
@@ -156,12 +156,12 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -179,12 +179,12 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 

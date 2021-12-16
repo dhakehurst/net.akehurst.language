@@ -32,6 +32,28 @@ internal class ParseGraph(
     numNonTerminalRules: Int
 ) {
 
+    enum class MergeOptions {
+        /**
+         * New head provides NON preferable parse due to higher priority or longer match
+         */
+        PREFER_EXISTING,
+
+        /**
+         * New head provides preferable parse due to higher priority or longer match
+         */
+        PREFER_NEW,
+
+        /**
+         * Cannot decide between new head and existing based on priority and length
+         */
+        UNDECIDABLE,
+
+        /**
+         * Ambiguous choice defined in grammar so keep both
+         */
+        KEEP_BOTH_AS_ALTERNATIVES,
+    }
+
     internal val _goals: MutableSet<GrowingNode> = mutableSetOf()
 
     //should be all the nodes that are in _gss
@@ -146,13 +168,23 @@ internal class ParseGraph(
         }
     }
 
-    private fun addNewPreferredTreeData(existing: CompleteNodeIndex, oldParent: GrowingNodeIndex?, newParent: GrowingNodeIndex, newChild: GrowingNodeIndex) {
+    private fun addNewPreferredTreeData(oldParent: GrowingNodeIndex?, newParent: GrowingNodeIndex, newChild: GrowingNodeIndex) {
+        if (null == oldParent) {
+            // should not remove existing, because it can be part of newParent sub tree
+            // setting the child will also reset the preferred
+            this.treeData.setFirstChild(newParent, newChild,false)
+        } else {
+            this.treeData.setInGrowingParentChildAt(oldParent, newParent, newChild,false)
+        }
+    }
+
+    private fun addAlternativeTreeData(existing: CompleteNodeIndex, oldParent: GrowingNodeIndex?, newParent: GrowingNodeIndex, newChild: GrowingNodeIndex) {
         if (null == oldParent) {
             // should not remove existing, because it can be part of newParent
             // setting the child will also reset the preferred
-            this.treeData.setFirstChild(newParent, newChild)
+            this.treeData.setFirstChild(newParent, newChild, true)
         } else {
-            this.treeData.setInGrowingParentChildAt(oldParent, newParent, newChild)
+            this.treeData.setInGrowingParentChildAt(oldParent, newParent, newChild, true)
         }
     }
 
@@ -163,7 +195,7 @@ internal class ParseGraph(
         this.addGrowingHead(previous, nn)
     }
 
-    private fun createNewHeadAndKeepExisting(existing: CompleteNodeIndex, newHead: GrowingNodeIndex, previous: GrowingNodeIndex) {
+    private fun createNewHeadAndKeepExisting(newHead: GrowingNodeIndex, previous: GrowingNodeIndex) {
         val nn = this.createGrowingNode(newHead)
         this.addGrowingHead(previous, nn)
     }
@@ -180,7 +212,7 @@ internal class ParseGraph(
         this.addGrowingHead(previous, nn)
     }
 
-    private fun createNewHeadAndKeepExisting(existing: CompleteNodeIndex, newHead: GrowingNodeIndex, previous: Set<GrowingNodeIndex>) {
+    private fun createNewHeadAndKeepExisting(newHead: GrowingNodeIndex, previous: Set<GrowingNodeIndex>) {
         val nn = this.createGrowingNode(newHead)
         this.addGrowingHead(previous, nn)
     }
@@ -217,7 +249,7 @@ internal class ParseGraph(
         oldParent: GrowingNodeIndex?,
         newParent: GrowingNodeIndex,
         newChild: GrowingNodeIndex
-    ): Int {
+    ): MergeOptions {
         return when {
             newParent.state.isChoice -> {
                 check(newParent.state.choiceKindList.size == 1) //TODO: could remove this check if always passes
@@ -227,36 +259,21 @@ internal class ParseGraph(
                         val existingLength = existing.nextInputPosition - existing.startPosition
                         val newLength = newParent.nextInputPosition - newParent.startPosition
                         when {
-                            newLength > existingLength -> {
-                                1
-                            }
-                            existingLength > newLength -> {
-                                //do nothing, drop current head
-                                // because existing length > new length
-                                // as defined by the grammar
-                                //TODO("this never happens because nextInputPosition is part of the index")
-                                -1
-                            }
+                            newLength > existingLength -> MergeOptions.PREFER_NEW
+                            existingLength > newLength -> MergeOptions.PREFER_EXISTING
                             else -> {
                                 val existingPriority = existing.priorityList[0] //TODO: is there definitely only 1 ?
                                 val newPriority = newParent.state.priorityList[0]
                                 when {
-                                    newPriority > existingPriority -> {
-                                        1
-                                    }
-                                    existingPriority > newPriority -> {
-                                        //do nothing, drop current head
-                                        // because lengths are the same and existing priority is higher and already done
-                                        // as defined by the grammar
-                                        //TODO: are we sure that previous is the same?
-                                        -1
-                                    }
+                                    newPriority > existingPriority -> MergeOptions.PREFER_NEW
+                                    existingPriority > newPriority -> MergeOptions.PREFER_EXISTING
+                                    //TODO: are we sure that previous is the same?
                                     else -> {
                                         //do nothing, drop current head
                                         // because length and priority are the same
                                         //TODO: maybe raise a warning or info that this has happened
-                                        //dropCurrentHead() //TODO: are we sure that previous is the same?
-                                        0
+                                        //TODO: are we sure that previous is the same?
+                                        MergeOptions.UNDECIDABLE
                                     }
                                 }
                             }
@@ -266,28 +283,23 @@ internal class ParseGraph(
                         val existingPriority = existing.priorityList[0] //TODO: is there definitely only 1 ?
                         val newPriority = newParent.state.priorityList[0]
                         when {
-                            newPriority > existingPriority -> {
-                                //error("should not happen if high priority heads processed first")
-                                //TODO: new to remove all parents and up of existing !!
-                                1
-                            }
-                            existingPriority > newPriority -> {
-                                //do nothing, drop current head
-                                -1
-                            }
+                            newPriority > existingPriority -> MergeOptions.PREFER_NEW
+                            //TODO: new to remove all parents and up of existing !!
+                            existingPriority > newPriority -> MergeOptions.PREFER_EXISTING
                             else -> {
-                                //2 diff heads parse same thing at same place same length, same priority !
+                                val existingLength = existing.nextInputPosition - existing.startPosition
+                                val newLength = newParent.nextInputPosition - newParent.startPosition
                                 //TODO: not sure...can we drop the second head?
                                 // it possibly has different runtimeLookahead!
-
-                                //doing nothing would mean keep existing and drop new - think we need to keep the new head, so
-
-                                // keep new head, but don't update tree! as no new data added - TODO: maybe optionList is different?
-                                0
+                                when {
+                                    newLength > existingLength -> MergeOptions.PREFER_NEW
+                                    existingLength > newLength -> MergeOptions.PREFER_EXISTING
+                                    else -> MergeOptions.UNDECIDABLE
+                                }
                             }
                         }
                     }
-                    RuntimeRuleChoiceKind.AMBIGUOUS -> TODO()
+                    RuntimeRuleChoiceKind.AMBIGUOUS -> MergeOptions.KEEP_BOTH_AS_ALTERNATIVES
                 }
             }
             else -> {
@@ -298,20 +310,9 @@ internal class ParseGraph(
                 val existingLength = existing.nextInputPosition - existing.startPosition
                 val newLength = newParent.nextInputPosition - newParent.startPosition
                 when {
-                    newLength > existingLength -> {
-                        1
-                    }
-                    existingLength > newLength -> {
-                        //do nothing, drop current head
-                        // because existing length > new length
-                        // as defined by the grammar
-                        //TODO("this never happens because nextInputPosition is part of the index")
-                        -1
-                    }
-                    else -> {
-                        //TODO:should we keep both ?
-                        0
-                    }
+                    newLength > existingLength -> MergeOptions.PREFER_NEW
+                    existingLength > newLength -> MergeOptions.PREFER_EXISTING
+                    else -> MergeOptions.UNDECIDABLE
                 }
             }
         }
@@ -402,12 +403,21 @@ internal class ParseGraph(
             if (null != existingComplete) {
                 val shouldDrop = this.mergeWithExistingComplete(existingComplete, null, parent, child)
                 when (shouldDrop) {
-                    1 -> {
+                    MergeOptions.PREFER_NEW -> {
                         createNewHeadAndDropExisting(existingComplete, parent, previous)
-                        addNewPreferredTreeData(existingComplete, null, parent, child)
+                        addNewPreferredTreeData(null, parent, child)
                     }
-                    0 -> createNewHeadAndKeepExisting(existingComplete, parent, previous)
-                    -1 -> dropNewHeadAndKeepExisting(existingComplete, parent, previous)
+                    MergeOptions.PREFER_EXISTING -> {
+                        dropNewHeadAndKeepExisting(existingComplete, parent, previous)
+                    }
+                    MergeOptions.KEEP_BOTH_AS_ALTERNATIVES -> {
+                        createNewHeadAndKeepExisting(parent, previous)
+                        addAlternativeTreeData(existingComplete, null, parent, child)
+                    }
+                    MergeOptions.UNDECIDABLE -> {
+                        createNewHeadAndKeepExisting(parent, previous)
+                        //addNewPreferredTreeData(existingComplete, null, parent, child)
+                    }
                 }
             } else {
                 val existingGrowing = this.treeData.growing[parent]
@@ -417,28 +427,21 @@ internal class ParseGraph(
                     val existingPriority = existingGrowing[0].priorityList[0]
                     val newPriority = child.state.priorityList[0]
                     when {
-                        existingPriority > newPriority -> {
-                            //dropNewHeadAndKeepExisting()
-                        }
                         newPriority > existingPriority -> {
-                            //val nn = this.createGrowingNode(parent)
-                            //this.addGrowingHead(previous, nn)
-                            this.treeData.setFirstChild(parent, child)
+                            createNewHeadAndDropExisting(existingGrowing[0], parent, previous)
+                            addNewPreferredTreeData(null, parent, child)
+                        }
+                        existingPriority > newPriority -> {
+                            dropNewHeadAndKeepExisting(existingGrowing[0], parent, previous)
                         }
                         else -> {
-                            //TODO: something else here maybe
-                            //val nn = this.createGrowingNode(parent)
-                            //this.addGrowingHead(previous, nn)
-                            this.treeData.setFirstChild(parent, child)
+                            createNewHeadAndKeepExisting(parent, previous)
                         }
                     }
                 } else {
-                    //val nn = this.createGrowingNode(parent)
-                    // this.addGrowingHead(previous, nn)
-                    this.treeData.setFirstChild(parent, child)
+                    createNewHeadAndKeepExisting(parent, previous)
+                    addNewPreferredTreeData(null, parent, child)
                 }
-                val nn = this.createGrowingNode(parent)
-                this.addGrowingHead(previous, nn)
             }
         } else {
             // there could be an existing head that has already set the first child using a lower priority child
@@ -455,30 +458,22 @@ internal class ParseGraph(
                 val existingPriority = existingGrowing[0].priorityList[0]
                 val newPriority = child.state.priorityList[0]
                 when {
-                    existingPriority > newPriority -> {
-                        //dropNewHeadAndKeepExisting(ex)
-                    }
                     newPriority > existingPriority -> {
-                        //val nn = this.createGrowingNode(parent)
-                        //this.addGrowingHead(previous, nn)
-                        this.treeData.setFirstChild(parent, child)
+                        createNewHeadAndDropExisting(existingGrowing[0], parent, previous)
+                        addNewPreferredTreeData(null, parent, child)
+                    }
+                    existingPriority > newPriority -> {
+                        dropNewHeadAndKeepExisting(existingGrowing[0], parent, previous)
                     }
                     else -> {
-                        //TODO: something else here maybe
-                        //val nn = this.createGrowingNode(parent)
-                        //this.addGrowingHead(previous, nn)
-                        this.treeData.setFirstChild(parent, child)
+                        createNewHeadAndKeepExisting(parent, previous)
                     }
                 }
             } else {
-                //val nn = this.createGrowingNode(parent)
-                // this.addGrowingHead(previous, nn)
-                this.treeData.setFirstChild(parent, child)
+                createNewHeadAndKeepExisting(parent, previous)
+                addNewPreferredTreeData(null, parent, child)
             }
-            val nn = this.createGrowingNode(parent)
-            this.addGrowingHead(previous, nn)
         }
-
     }
 
     fun growNextChild(
@@ -506,36 +501,65 @@ internal class ParseGraph(
             if (null != existingComplete) {
                 val shouldDrop = this.mergeWithExistingComplete(existingComplete, oldParent, newParent, child) //FIXME: don't convert to set
                 when (shouldDrop) {
-                    1 -> {
+                    MergeOptions.PREFER_NEW -> {
                         createNewHeadAndDropExisting(existingComplete, newParent, previous)
-                        addNewPreferredTreeData(existingComplete, oldParent, newParent, child)
+                        addNewPreferredTreeData(oldParent, newParent, child)
                     }
-                    0 -> createNewHeadAndKeepExisting(existingComplete, newParent, previous)
-                    -1 -> dropNewHeadAndKeepExisting(existingComplete, newParent, previous)
+                    MergeOptions.PREFER_EXISTING -> {
+                        dropNewHeadAndKeepExisting(existingComplete, newParent, previous)
+                    }
+                    MergeOptions.KEEP_BOTH_AS_ALTERNATIVES -> {
+                        createNewHeadAndKeepExisting(newParent, previous)
+                        addAlternativeTreeData(existingComplete, oldParent, newParent, child)
+                    }
+                    MergeOptions.UNDECIDABLE -> {
+                        createNewHeadAndKeepExisting(newParent, previous)
+                        //addNewPreferredTreeData(existingComplete, oldParent, newParent, child)
+                    }
                 }
             } else {
                 val existingChild = this.treeData.inGrowingParentChildAt(newParent, newParentNumNonSkipChildren - 1)
-                when {
-                    null == existingChild -> this.treeData.setInGrowingParentChildAt(oldParent, newParent, child)
-                    else -> {
-                        TODO()
+                if (null != existingChild) {
+                    val existingPriority = existingChild.priorityList[0]
+                    val newPriority = child.state.priorityList[0]
+                    when {
+                        newPriority > existingPriority -> {
+                            createNewHeadAndDropExisting(existingChild, newParent, previous)
+                            addNewPreferredTreeData(null, newParent, child)
+                        }
+                        existingPriority > newPriority -> {
+                            dropNewHeadAndKeepExisting(existingChild, newParent, previous)
+                        }
+                        else -> {
+                            createNewHeadAndKeepExisting(newParent, previous)
+                        }
                     }
+                } else {
+                    createNewHeadAndKeepExisting(newParent, previous)
+                    addNewPreferredTreeData(oldParent, newParent, child)
                 }
-                //this.treeData.appendChild(oldParent, newParent, child)
-                val nn = this.createGrowingNode(newParent)
-                this.addGrowingHead(previous, nn)
             }
         } else {
             val existingChild = this.treeData.inGrowingParentChildAt(newParent, newParentNumNonSkipChildren - 1)
-            when {
-                null == existingChild -> this.treeData.setInGrowingParentChildAt(oldParent, newParent, child)
-                else -> {
-                    this.treeData.setInGrowingParentChildAt(oldParent, newParent, child) //TODO()
+            if (null != existingChild) {
+                val existingPriority = existingChild.priorityList[0]
+                val newPriority = child.state.priorityList[0]
+                when {
+                    newPriority > existingPriority -> {
+                        createNewHeadAndDropExisting(existingChild, newParent, previous)
+                        addNewPreferredTreeData(null, newParent, child)
+                    }
+                    existingPriority > newPriority -> {
+                        dropNewHeadAndKeepExisting(existingChild, newParent, previous)
+                    }
+                    else -> {
+                        createNewHeadAndKeepExisting(newParent, previous)
+                    }
                 }
+            } else {
+                createNewHeadAndKeepExisting(newParent, previous)
+                addNewPreferredTreeData(oldParent, newParent, child)
             }
-            //this.treeData.appendChild(oldParent, newParent, child)
-            val nn = this.createGrowingNode(newParent)
-            this.addGrowingHead(previous, nn)
         }
 
     }

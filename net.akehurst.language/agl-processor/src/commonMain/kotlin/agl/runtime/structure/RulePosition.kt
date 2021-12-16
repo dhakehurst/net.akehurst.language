@@ -53,6 +53,8 @@ internal class RulePosition(
 
     val isAtStart = position == START_OF_RULE
     val isAtEnd = position == END_OF_RULE
+    val isLeaf = runtimeRule.kind == RuntimeRuleKind.TERMINAL
+    val isEmbedded = runtimeRule.kind == RuntimeRuleKind.EMBEDDED
 
     val items: List<RuntimeRule>
         get() = if (END_OF_RULE == position) {
