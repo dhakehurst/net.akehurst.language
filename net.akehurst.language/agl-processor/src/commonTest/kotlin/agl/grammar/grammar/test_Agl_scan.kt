@@ -101,7 +101,7 @@ internal class test_Agl_scan {
 
     @Test
     fun scan_ab_aba() {
-        val sut = Agl.processorFromString("namespace test grammar Test { a = 'a';", "b = 'b';}")
+        val sut = Agl.processorFromString("namespace test grammar Test { a = 'a'; b = 'b'; }")
         val tokens = sut.scan("aba")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")

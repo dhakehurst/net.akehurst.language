@@ -244,26 +244,24 @@ internal class ParseGraph(
      *    -1 -> keep existing, drop new
      * }
      */
-    private fun mergeWithExistingComplete(
-        existing: CompleteNodeIndex,
-        oldParent: GrowingNodeIndex?,
-        newParent: GrowingNodeIndex,
-        newChild: GrowingNodeIndex
+    private fun mergeDecision(
+        existingNode: CompleteNodeIndex,
+        newNode: GrowingNodeIndex,
     ): MergeOptions {
         return when {
-            newParent.state.isChoice -> {
-                check(newParent.state.choiceKindList.size == 1) //TODO: could remove this check if always passes
-                when (newParent.state.firstRuleChoiceKind) {
+            newNode.state.isChoice -> {
+                check(newNode.state.choiceKindList.size == 1) //TODO: could remove this check if always passes
+                when (newNode.state.firstRuleChoiceKind) {
                     RuntimeRuleChoiceKind.NONE -> error("should never happen")
                     RuntimeRuleChoiceKind.LONGEST_PRIORITY -> {
-                        val existingLength = existing.nextInputPosition - existing.startPosition
-                        val newLength = newParent.nextInputPosition - newParent.startPosition
+                        val existingLength = existingNode.nextInputPosition - existingNode.startPosition
+                        val newLength = newNode.nextInputPosition - newNode.startPosition
                         when {
                             newLength > existingLength -> MergeOptions.PREFER_NEW
                             existingLength > newLength -> MergeOptions.PREFER_EXISTING
                             else -> {
-                                val existingPriority = existing.priorityList[0] //TODO: is there definitely only 1 ?
-                                val newPriority = newParent.state.priorityList[0]
+                                val existingPriority = existingNode.priorityList[0] //TODO: is there definitely only 1 ?
+                                val newPriority = newNode.state.priorityList[0]
                                 when {
                                     newPriority > existingPriority -> MergeOptions.PREFER_NEW
                                     existingPriority > newPriority -> MergeOptions.PREFER_EXISTING
@@ -280,15 +278,15 @@ internal class ParseGraph(
                         }
                     }
                     RuntimeRuleChoiceKind.PRIORITY_LONGEST -> {
-                        val existingPriority = existing.priorityList[0] //TODO: is there definitely only 1 ?
-                        val newPriority = newParent.state.priorityList[0]
+                        val existingPriority = existingNode.priorityList[0] //TODO: is there definitely only 1 ?
+                        val newPriority = newNode.state.priorityList[0]
                         when {
                             newPriority > existingPriority -> MergeOptions.PREFER_NEW
                             //TODO: new to remove all parents and up of existing !!
                             existingPriority > newPriority -> MergeOptions.PREFER_EXISTING
                             else -> {
-                                val existingLength = existing.nextInputPosition - existing.startPosition
-                                val newLength = newParent.nextInputPosition - newParent.startPosition
+                                val existingLength = existingNode.nextInputPosition - existingNode.startPosition
+                                val newLength = newNode.nextInputPosition - newNode.startPosition
                                 //TODO: not sure...can we drop the second head?
                                 // it possibly has different runtimeLookahead!
                                 when {
@@ -307,8 +305,8 @@ internal class ParseGraph(
                 //TODO: not sure...can we drop the second head?
                 // it possibly has different runtimeLookahead!
 
-                val existingLength = existing.nextInputPosition - existing.startPosition
-                val newLength = newParent.nextInputPosition - newParent.startPosition
+                val existingLength = existingNode.nextInputPosition - existingNode.startPosition
+                val newLength = newNode.nextInputPosition - newNode.startPosition
                 when {
                     newLength > existingLength -> MergeOptions.PREFER_NEW
                     existingLength > newLength -> MergeOptions.PREFER_EXISTING
@@ -383,8 +381,9 @@ internal class ParseGraph(
         }
         this.findOrCreateGrowingLeafOrEmbeddedNode(newHead, oldHead, previous)
         val embGoal = embeddedTreeData.root!!
-        val child = embeddedTreeData.childrenFor(embGoal.firstRule, startPosition, nextInputPosition)
-        this.treeData.setEmbeddedChild(newHead, child.first().first())
+        val children = embeddedTreeData.childrenFor(embGoal.firstRule, startPosition, nextInputPosition)
+        val child = children.first().second[0]
+        this.treeData.setEmbeddedChild(newHead, child)
         //TODO: do we need to check for longest ?
     }
 
@@ -399,9 +398,9 @@ internal class ParseGraph(
         val child = childNode.index
 
         if (parent.state.isAtEnd) {
-            val existingComplete = this.treeData.completedBy(parent.complete)
+            val existingComplete = this.treeData.preferred(parent.complete)
             if (null != existingComplete) {
-                val shouldDrop = this.mergeWithExistingComplete(existingComplete, null, parent, child)
+                val shouldDrop = this.mergeDecision(existingComplete, parent)
                 when (shouldDrop) {
                     MergeOptions.PREFER_NEW -> {
                         createNewHeadAndDropExisting(existingComplete, parent, previous)
@@ -416,7 +415,6 @@ internal class ParseGraph(
                     }
                     MergeOptions.UNDECIDABLE -> {
                         createNewHeadAndKeepExisting(parent, previous)
-                        //addNewPreferredTreeData(existingComplete, null, parent, child)
                     }
                 }
             } else {
@@ -454,19 +452,23 @@ internal class ParseGraph(
             val existingGrowing = this.treeData.growing[parent]
             if (null != existingGrowing) {
                 // some other head has already added the first child
-                //TODO: check priority of child and replace or drop this head - or use GrowingChildren graph rather than list!
-                val existingPriority = existingGrowing[0].priorityList[0]
-                val newPriority = child.state.priorityList[0]
-                when {
-                    newPriority > existingPriority -> {
-                        createNewHeadAndDropExisting(existingGrowing[0], parent, previous)
+                val existingFirstChild = existingGrowing[0]
+                val m = this.mergeDecision(existingFirstChild, child)
+                when (m) {
+                    MergeOptions.PREFER_NEW -> {
+                        createNewHeadAndDropExisting(existingFirstChild, parent, previous)
                         addNewPreferredTreeData(null, parent, child)
                     }
-                    existingPriority > newPriority -> {
-                        dropNewHeadAndKeepExisting(existingGrowing[0], parent, previous)
+                    MergeOptions.PREFER_EXISTING -> {
+                        dropNewHeadAndKeepExisting(existingFirstChild, parent, previous)
                     }
-                    else -> {
+                    MergeOptions.KEEP_BOTH_AS_ALTERNATIVES -> {
                         createNewHeadAndKeepExisting(parent, previous)
+                        addAlternativeTreeData(existingFirstChild, null, parent, child)
+                    }
+                    MergeOptions.UNDECIDABLE -> {
+                        createNewHeadAndKeepExisting(parent, previous)
+                        //addNewPreferredTreeData(existingComplete, null, parent, child)
                     }
                 }
             } else {
@@ -497,9 +499,9 @@ internal class ParseGraph(
         val child = nextChildNode.index
 
         if (newParent.state.isAtEnd) {
-            val existingComplete = this.treeData.completedBy(newParent.complete)
+            val existingComplete = this.treeData.preferred(newParent.complete)
             if (null != existingComplete) {
-                val shouldDrop = this.mergeWithExistingComplete(existingComplete, oldParent, newParent, child) //FIXME: don't convert to set
+                val shouldDrop = this.mergeDecision(existingComplete,  newParent)
                 when (shouldDrop) {
                     MergeOptions.PREFER_NEW -> {
                         createNewHeadAndDropExisting(existingComplete, newParent, previous)

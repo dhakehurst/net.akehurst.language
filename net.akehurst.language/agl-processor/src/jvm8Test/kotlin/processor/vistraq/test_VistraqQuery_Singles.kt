@@ -26,6 +26,7 @@ import org.junit.Assert
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.fail
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
@@ -55,7 +56,7 @@ class test_VistraqQuery_Singles {
     fun REAL_0() {
 
         val (sppt, issues) = processor.parse("0", "REAL")
-        assertNotNull(sppt)
+        assertNull(sppt)
         assertEquals(listOf(
             LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"")
         ), issues)
@@ -64,7 +65,7 @@ class test_VistraqQuery_Singles {
     @Test
     fun REAL_p0() {
         val (sppt, issues) = processor.parse(".0", "REAL")
-        assertNotNull(sppt)
+        assertNull(sppt)
         assertEquals(listOf(
             LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"")
         ), issues)
@@ -271,7 +272,7 @@ class test_VistraqQuery_Singles {
     }
 
     @ExperimentalTime
-    @Test//(timeout = 5000)
+    @Test(timeout = 10000)
     fun fromBlog() {
         val queryStr = """
 FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month

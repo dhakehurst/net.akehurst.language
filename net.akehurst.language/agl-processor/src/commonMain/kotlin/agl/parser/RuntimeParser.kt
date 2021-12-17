@@ -245,8 +245,8 @@ internal class RuntimeParser(
             val (gn,previous) = this.graph.nextHead()
             if (gn.isEmptyMatch && doneEmpties.contains(gn.currentState)) {
                 //don't do it again
+                doneEmpties.add(gn.currentState)
             } else {
-                if (gn.isEmptyMatch) doneEmpties.add(gn.currentState)
                 //store gn so we can use ti to determine errors
                 this.grownInLastPass.add(gn)
                 this.grownInLastPassPrevious[gn] = previous

@@ -65,24 +65,24 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun S_S_a() {
+    fun a() {
         val sentence = "a"
 
         val expected = """
             S { 'a' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
-    fun S_S_aa() {
+    fun aa() {
         val sentence = "aa"
 
         val expected1 = """
@@ -106,7 +106,7 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun S_S_aab() {
+    fun aab() {
         TODO("does not stop")
         val sentence = "aab"
 
@@ -142,7 +142,7 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun S_S_aabb() {
+    fun aabb() {
         TODO("does not stop")
         val sentence = "aabb"
 
@@ -167,7 +167,7 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun S_S_aaabb() {
+    fun aaabb() {
         TODO("does not stop")
         val sentence = "aaabb"
 

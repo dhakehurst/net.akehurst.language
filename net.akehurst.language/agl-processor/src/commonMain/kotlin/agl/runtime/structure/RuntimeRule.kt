@@ -63,10 +63,12 @@ internal class RuntimeRule(
             }
         }
 
-    val isEmptyRule: Boolean
-        get() {
-            return this.kind == RuntimeRuleKind.TERMINAL && null != this.rhsOpt && this.rhs.itemsKind == RuntimeRuleRhsItemsKind.EMPTY
-        }
+    val isEmptyRule get() = this.kind == RuntimeRuleKind.TERMINAL && null != this.rhsOpt && this.rhs.itemsKind == RuntimeRuleRhsItemsKind.EMPTY
+    val isNonTerminal get() = this.kind == RuntimeRuleKind.NON_TERMINAL && null != this.rhsOpt
+    val isChoice get()  = isNonTerminal && this.rhs.itemsKind == RuntimeRuleRhsItemsKind.CHOICE
+    val isChoiceLongest get() = this.isChoice && this.rhs.choiceKind == RuntimeRuleChoiceKind.LONGEST_PRIORITY
+    val isChoicePriority get() = this.isChoice && this.rhs.choiceKind == RuntimeRuleChoiceKind.PRIORITY_LONGEST
+    val isChoiceAmbiguous get() = this.isChoice && this.rhs.choiceKind == RuntimeRuleChoiceKind.AMBIGUOUS
 
     internal val patternAtStart = if (this.isPattern) {
 //        check(this.value.startsWith("^").not(), { "Must not start with ^ in a pattern" })

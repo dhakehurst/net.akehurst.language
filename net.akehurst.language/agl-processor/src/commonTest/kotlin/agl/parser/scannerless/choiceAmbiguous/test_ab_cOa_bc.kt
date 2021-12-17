@@ -121,12 +121,12 @@ internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 2,//TODO can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected1,expected2)
+                expectedTrees = arrayOf(expected1,expected2)
         )
     }
 

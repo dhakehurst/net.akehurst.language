@@ -681,7 +681,10 @@ class test_AglGrammar_item {
                 '='
                 rhs|1 { concatenation { concatenationItem { simpleItem|2 { group {
                 '('
-                    groupedContent { concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' } } } } } }
+                    groupedContent { concatenation {
+                        concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } }
+                        concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } }
+                    } }
                 ')'
                 } } } } }
                 ';'
@@ -703,10 +706,10 @@ class test_AglGrammar_item {
             """
             rules { rule {
                 ruleTypeLabels { isOverride|1 { §empty } isSkip|1 { §empty } isLeaf|1 { §empty } }
-                IDENTIFIER : 's' WHITESPACE : ' '
-                '=' WHITESPACE : ' '
+                IDENTIFIER : 's'
+                '='
                 rhs|1 { concatenation {
-                    concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' WHITESPACE : ' ' } } } }
+                    concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } } }
                     concatenationItem { simpleItem|2 { group {
                         '('
                         groupedContent { concatenation {
@@ -716,7 +719,7 @@ class test_AglGrammar_item {
                             multiplicity|2 { '?' }
                         } } }
                         } }
-                        ')' WHITESPACE : ' '
+                        ')'
                     } } }
                 } }
                 ';'

@@ -84,6 +84,13 @@ internal data class GrowingNodeIndex(
 // Because of embedded grammars and skipnodes (as embedded)
 // this must also contain the id of the TreeData...or rather an id of the grammar/ParserStateSet that it belongs to
 // also the treeData object is needed when getting children of a node in the conversion to SPPT
+/**
+ * Identity of a node that has been completed - i.e. all children parsed/found
+ * Identity based on:
+ *  - runtimeRules - rather than RulePosition, as same runtimeRule can have alternatives
+ *  - startPosition
+ *  - nextInputPosition
+ */
 internal class CompleteNodeIndex(
     val treeData: TreeData,
     // only RuntimeRules are needed for comparisons, but priority needed in order to resolve priorities, but it should not be part of identity
@@ -96,8 +103,8 @@ internal class CompleteNodeIndex(
 
     val runtimeRulesSet: Set<RuntimeRule> by lazy { this.rulePositions.map { it.runtimeRule }.toSet() }
 
-    //private val hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode()
-    private val hashCode_cache = arrayOf(treeData, rulePositions, startPosition, nextInputPosition).contentHashCode()
+    private val hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode()
+    //private val hashCode_cache = arrayOf(treeData, rulePositions, startPosition, nextInputPosition).contentHashCode()
 
     //TODO: don't store data twice..also prefer not to create 2 objects!
     val preferred = PreferredChildIndex(runtimeRulesSet, startPosition)
@@ -117,12 +124,12 @@ internal class CompleteNodeIndex(
         other.treeData != this.treeData -> false
         other.startPosition != this.startPosition -> false
         other.nextInputPosition != this.nextInputPosition -> false
-        other.rulePositions != this.rulePositions -> false
-        //other.runtimeRulesSet != this.runtimeRulesSet -> false
+        //other.rulePositions != this.rulePositions -> false
+        other.runtimeRulesSet != this.runtimeRulesSet -> false
         else -> true
     }
 
-    override fun toString(): String = "CNI{(${this.treeData.forStateSetNumber}),R=${rulePositions.joinToString()},sp=$startPosition,np=$nextInputPosition}"
+    override fun toString(): String = "CNI{(${this.treeData.forStateSetNumber}),$startPosition-$nextInputPosition,R=${runtimeRulesSet.joinToString(prefix = "[", postfix = "]", separator = ","){it.tag}}}"
 }
 
 internal data class PreferredChildIndex(

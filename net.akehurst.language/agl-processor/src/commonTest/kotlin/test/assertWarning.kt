@@ -14,4 +14,5 @@ fun assertTrueWarning(lazyMessage: () -> String?, actual: Boolean): Unit {
 
 fun fail(message: String?) {
     println("WARN: $message")
+    //kotlin.test.fail(message)
 }

@@ -39,12 +39,12 @@ internal class test_empty : test_ScanOnDemandParserAbstract() {
          S { §empty }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2,
-            expectedTrees = *arrayOf(expected)
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
