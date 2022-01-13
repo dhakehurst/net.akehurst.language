@@ -16,6 +16,9 @@
 
 package net.akehurst.language.agl.automaton
 
+import agl.automaton.AutomatonTest
+import agl.automaton.automaton
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
@@ -54,11 +57,11 @@ internal class test_sList_compositeMulti : test_AutomatonAbstract() {
         val i = rrs.findRuntimeRule("SMI")
         val n = rrs.findRuntimeRule("N")
 
-        val lhs_n = SM.createLookaheadSet(setOf(n))
-        val lhs_c = SM.createLookaheadSet(setOf(c))
-        val lhs_i = SM.createLookaheadSet(setOf(i))
-        val lhs_nU = SM.createLookaheadSet(setOf(n, UP))
-        val lhs_ciU = SM.createLookaheadSet(setOf(c, i, UP))
+        val lhs_n = SM.createLookaheadSet(false, false, false,setOf(n))
+        val lhs_c = SM.createLookaheadSet(false,false, false,setOf(c))
+        val lhs_i = SM.createLookaheadSet(false,false, false,setOf(i))
+        val lhs_nU = SM.createLookaheadSet(true,false, false, setOf(n))
+        val lhs_ciU = SM.createLookaheadSet(true, false, false,setOf(c, i))
 
         val s0 = SM.startState
         val s1 = SM.states[listOf(RP(n, 0, EOR))]
@@ -68,24 +71,24 @@ internal class test_sList_compositeMulti : test_AutomatonAbstract() {
     @Test
     override fun firstOf() {
         listOf(
-            Triple(RP(G, 0, SOR), lhs_U, setOf(n, UP)), // G = . S
-            Triple(RP(G, 0, EOR), lhs_U, setOf(UP)),        // G = S .
-            Triple(RP(S, OLI, SOR), lhs_U, setOf(UP)),          // So0 = . [nl . / ';']*
-            Triple(RP(S, OLS, PLS), lhs_U, setOf(UP)),          // So0 =  nl . [nl . / ';']*
-            Triple(RP(S, OLI, PLI), lhs_U, setOf(UP)),          // So0 = nl ';' . [nl . / ';']*
-            Triple(RP(S, OLI, EOR), lhs_U, setOf(UP)),          // So0 = [nl . / ';']* .
-            Triple(RP(S, OLE, SOR), lhs_U, setOf(UP)),          // So2 = . E
-            Triple(RP(S, OLE, EOR), lhs_U, setOf(UP)),          // So2 = E .
-            Triple(RP(nl, 0, SOR), lhs_U, setOf(n)),        // nl = . N cmn
-            Triple(RP(nl, 0, 1), lhs_U, setOf(UP)),    // nl = N . cnm
-            Triple(RP(cnm, OMI, SOR), lhs_U, setOf(UP)),      // cnm = . cn*
-            Triple(RP(cnm, OMI, PMI), lhs_U, setOf(UP)),      // cnm = cn . cn*
-            Triple(RP(cnm, OMI, EOR), lhs_U, setOf(UP)),      // cnm = cn* .
-            Triple(RP(cnm, OME, SOR), lhs_U, setOf(UP)),      // cnm = . E
-            Triple(RP(cnm, OME, SOR), lhs_U, setOf(UP)),      // cnm = E .
-            Triple(RP(cn, 0, SOR), lhs_U, setOf(UP))        // cn = . ',' N
+            Triple(RP(G, 0, SOR), lhs_U, LHS(n, UP)), // G = . S
+            Triple(RP(G, 0, EOR), lhs_U, LHS(UP)),        // G = S .
+            Triple(RP(S, OLI, SOR), lhs_U, LHS(UP)),          // So0 = . [nl . / ';']*
+            Triple(RP(S, OLS, PLS), lhs_U, LHS(UP)),          // So0 =  nl . [nl . / ';']*
+            Triple(RP(S, OLI, PLI), lhs_U, LHS(UP)),          // So0 = nl ';' . [nl . / ';']*
+            Triple(RP(S, OLI, EOR), lhs_U, LHS(UP)),          // So0 = [nl . / ';']* .
+            Triple(RP(S, OLE, SOR), lhs_U, LHS(UP)),          // So2 = . E
+            Triple(RP(S, OLE, EOR), lhs_U, LHS(UP)),          // So2 = E .
+            Triple(RP(nl, 0, SOR), lhs_U, LHS(n)),        // nl = . N cmn
+            Triple(RP(nl, 0, 1), lhs_U, LHS(UP)),    // nl = N . cnm
+            Triple(RP(cnm, OMI, SOR), lhs_U, LHS(UP)),      // cnm = . cn*
+            Triple(RP(cnm, OMI, PMI), lhs_U, LHS(UP)),      // cnm = cn . cn*
+            Triple(RP(cnm, OMI, EOR), lhs_U, LHS(UP)),      // cnm = cn* .
+            Triple(RP(cnm, OME, SOR), lhs_U, LHS(UP)),      // cnm = . E
+            Triple(RP(cnm, OME, SOR), lhs_U, LHS(UP)),      // cnm = E .
+            Triple(RP(cn, 0, SOR), lhs_U, LHS(UP))        // cn = . ',' N
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs)
+            val actual = SM.buildCache.firstOf(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }
@@ -96,8 +99,8 @@ internal class test_sList_compositeMulti : test_AutomatonAbstract() {
         val actual = s0.widthInto(null).toList()
 
         val expected = listOf(
-            WidthInfo(RP(n, 0, EOR), lhs_ciU),
-            WidthInfo(RP(Se, 0, EOR), lhs_U)
+            WidthInfo(RP(n, 0, EOR), lhs_ciU.part),
+            WidthInfo(RP(Se, 0, EOR), lhs_U.part)
         )
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {
@@ -107,10 +110,10 @@ internal class test_sList_compositeMulti : test_AutomatonAbstract() {
 
     @Test
     fun calcClosure_G_0_0() {
-        val cl_G = ClosureItemLC1(null, RP(G, 0, 0), RP(G, 0, 0), lhs_U)
-        val cl_G_So0 = ClosureItemLC1(cl_G, RP(S, 0, 0), RP(S, OLS, PLS), lhs_i)
-        val cl_G_So0_nl = ClosureItemLC1(cl_G_So0, RP(nl, 0, 0), RP(nl, 0, 1), lhs_i)
-        val cl_G_So1 = ClosureItemLC1(cl_G, RP(S, 1, 0), RP(G, 0, 0), lhs_U)
+        val cl_G = ClosureItemLC1(null, RP(G, 0, 0), RP(G, 0, 0), lhs_U.part)
+        val cl_G_So0 = ClosureItemLC1(cl_G, RP(S, 0, 0), RP(S, OLS, PLS), lhs_i.part)
+        val cl_G_So0_nl = ClosureItemLC1(cl_G_So0, RP(nl, 0, 0), RP(nl, 0, 1), lhs_i.part)
+        val cl_G_So1 = ClosureItemLC1(cl_G, RP(S, 1, 0), RP(G, 0, 0), lhs_U.part)
 TODO()
         //val actual = SM.buildCache.calcClosure(ClosureItemLC1(null, RP(G, 0, 0), null, lhs_U))
        // val expected = setOf(
@@ -142,8 +145,8 @@ TODO()
                 HeightGraftInfo(emptyList(),
                     listOf(RP(S, 0, 0)),
                     listOf(RP(S, 0, EOR)),
-                    lhs_U,
-                    lhs_U
+                    lhs_U.part,
+                    lhs_U.part
                 )
         )
         assertEquals(expected, actual)
@@ -164,4 +167,28 @@ TODO()
         }
     }
 
+    @Test
+    fun parse_aba() {
+        val parser = ScanOnDemandParser(rrs)
+        parser.parseForGoal("S", "aba", AutomatonKind.LOOKAHEAD_1)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+
+
+        }
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun buildFor() {
+        val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
+    }
 }

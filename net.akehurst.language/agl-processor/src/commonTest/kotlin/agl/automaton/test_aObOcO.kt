@@ -16,6 +16,9 @@
 
 package net.akehurst.language.agl.automaton
 
+import agl.automaton.AutomatonTest
+import agl.automaton.automaton
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
@@ -55,25 +58,25 @@ internal class test_aObOcO : test_AutomatonAbstract() {
         val s1 = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]
         val s2 = SM.states[listOf(RulePosition(aOpt_E, 0, RulePosition.END_OF_RULE))]
 
-        val lhs_bcU = SM.createLookaheadSet(setOf(b, c, UP))
+        val lhs_bcU = SM.createLookaheadSet(true, false, false,setOf(b, c))
     }
     @Test
     override fun firstOf() {
         listOf(
-            Triple(RulePosition(cOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, setOf(UP)), // cOpt = . empty
-            Triple(RulePosition(cOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, setOf(c)),        // cOpt = . c
-            Triple(RulePosition(bOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, setOf(UP)), // bOpt = . empty
-            Triple(RulePosition(bOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, setOf(b)),        // bOpt = . b
-            Triple(RulePosition(aOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, setOf(UP)), // aOpt = . empty
-            Triple(RulePosition(aOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, setOf(a)),        // aOpt = . a
-            Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),              // S = a? b? c? .
-            Triple(RulePosition(S, 0, 2), lhs_U, setOf(c, UP)),                           // S = a? b? . c?
-            Triple(RulePosition(S, 0, 1), lhs_U, setOf(b, c, UP)),                        // S = a? . b? c?
-            Triple(RulePosition(S, 0, 0), lhs_U, setOf(a, b, c, UP)),                     // S = a? . b? c?
-            Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),               // G = S .
-            Triple(RulePosition(G, 0, 0), lhs_U, setOf(a, b, c, UP))                      // G = . S
+            Triple(RulePosition(cOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, LHS(UP)), // cOpt = . empty
+            Triple(RulePosition(cOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, LHS(c)),        // cOpt = . c
+            Triple(RulePosition(bOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, LHS(UP)), // bOpt = . empty
+            Triple(RulePosition(bOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, LHS(b)),        // bOpt = . b
+            Triple(RulePosition(aOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, LHS(UP)), // aOpt = . empty
+            Triple(RulePosition(aOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, LHS(a)),        // aOpt = . a
+            Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, LHS(UP)),              // S = a? b? c? .
+            Triple(RulePosition(S, 0, 2), lhs_U, LHS(c, UP)),                           // S = a? b? . c?
+            Triple(RulePosition(S, 0, 1), lhs_U, LHS(b, c, UP)),                        // S = a? . b? c?
+            Triple(RulePosition(S, 0, 0), lhs_U, LHS(a, b, c, UP)),                     // S = a? . b? c?
+            Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, LHS(UP)),               // G = S .
+            Triple(RulePosition(G, 0, 0), lhs_U, LHS(a, b, c, UP))                      // G = . S
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs)
+            val actual = SM.buildCache.firstOf(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }
@@ -84,8 +87,8 @@ internal class test_aObOcO : test_AutomatonAbstract() {
         val actual = s0.widthInto(null).toList()
 
         val expected =  listOf(
-            WidthInfo(RP(a, 0, EOR), lhs_bcU),
-            WidthInfo(RP(aOpt_E, 0, EOR), lhs_bcU)
+            WidthInfo(RP(a, 0, EOR), lhs_bcU.part),
+            WidthInfo(RP(aOpt_E, 0, EOR), lhs_bcU.part)
         )
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {
@@ -109,9 +112,34 @@ internal class test_aObOcO : test_AutomatonAbstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraftInfo(emptyList(), listOf(RP(aOpt, 0, 0)), listOf(RP(aOpt, 0, EOR)), lhs_bcU, lhs_bcU)
+                HeightGraftInfo(emptyList(), listOf(RP(aOpt, 0, 0)), listOf(RP(aOpt, 0, EOR)), lhs_bcU.part, lhs_bcU.part)
         )
         assertEquals(expected, actual)
 
+    }
+
+    @Test
+    fun parse_a() {
+        val parser = ScanOnDemandParser(rrs)
+        parser.parseForGoal("S", "a", AutomatonKind.LOOKAHEAD_1)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+
+
+        }
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun buildFor() {
+        val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
     }
 }

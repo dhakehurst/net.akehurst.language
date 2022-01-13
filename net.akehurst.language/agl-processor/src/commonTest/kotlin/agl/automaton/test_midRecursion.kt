@@ -53,24 +53,24 @@ internal class test_midRecursion : test_AutomatonAbstract() {
         val b = rrs.findRuntimeRule("'b'")
         val c = rrs.findRuntimeRule("'c'")
 
-        val lhs_ab = SM.createLookaheadSet(setOf(a, b))
+        val lhs_ab = SM.createLookaheadSet(false,false, false,setOf(a, b))
     }
 
     @Test
     override fun firstOf() {
         listOf(
-            Triple(RP(G, 0, SOR), lhs_U, setOf(a, b)),     // G = . S
-            Triple(RP(G, 0, EOR), lhs_U, setOf(UP)),      // G = S .
-            Triple(RP(S, 0, SOR), lhs_U, setOf(b)),       // S = . b
-            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),      // S = b .
-            Triple(RP(S, 1, SOR), lhs_U, setOf(a)),       // S = . S1
-            Triple(RP(S, 1, EOR), lhs_U, setOf(UP)),      // S = S1 .
-            Triple(RP(S1, 0, SOR), lhs_U, setOf(a)),      // S1 = . a S c
-            Triple(RP(S1, 0, 1), lhs_U, setOf(a, b)), // S1 = a . S c
-            Triple(RP(S1, 0, 2), lhs_U, setOf(c)),   // S1 = a S . c
-            Triple(RP(S1, 0, EOR), lhs_U, setOf(UP))      // S1 = a S c .
+            Triple(RP(G, 0, SOR), lhs_U, LHS(a, b)),     // G = . S
+            Triple(RP(G, 0, EOR), lhs_U, LHS(UP)),      // G = S .
+            Triple(RP(S, 0, SOR), lhs_U, LHS(b)),       // S = . b
+            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),      // S = b .
+            Triple(RP(S, 1, SOR), lhs_U, LHS(a)),       // S = . S1
+            Triple(RP(S, 1, EOR), lhs_U, LHS(UP)),      // S = S1 .
+            Triple(RP(S1, 0, SOR), lhs_U, LHS(a)),      // S1 = . a S c
+            Triple(RP(S1, 0, 1), lhs_U, LHS(a, b)), // S1 = a . S c
+            Triple(RP(S1, 0, 2), lhs_U, LHS(c)),   // S1 = a S . c
+            Triple(RP(S1, 0, EOR), lhs_U, LHS(UP))      // S1 = a S c .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs)
+            val actual = SM.buildCache.firstOf(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }
@@ -81,8 +81,8 @@ internal class test_midRecursion : test_AutomatonAbstract() {
         val actual = s0.widthInto(null).toList()
 
         val expected = listOf(
-            WidthInfo(RP(b, 0, EOR), lhs_U),
-            WidthInfo(RP(a, 0, EOR), lhs_ab)
+            WidthInfo(RP(b, 0, EOR), lhs_U.part),
+            WidthInfo(RP(a, 0, EOR), lhs_ab.part)
         )
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {
@@ -148,5 +148,17 @@ internal class test_midRecursion : test_AutomatonAbstract() {
 
         AutomatonTest.assertEquals(expected, actual)
 
+    }
+
+    @Test
+    fun buildFor() {
+        val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
     }
 }

@@ -16,13 +16,55 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+
+internal data class LookaheadSetPart(
+    val includesUP: Boolean,
+    val includesEOT:Boolean,
+    val matchANY:Boolean,
+    val content: Set<RuntimeRule>
+) {
+    companion object {
+        val EMPTY = LookaheadSetPart(false, false, false, emptySet())
+        val UP = LookaheadSetPart(true, false, false, emptySet())
+        val ANY = LookaheadSetPart(false, false, true, emptySet())
+        val EOT = LookaheadSetPart(false, true, false,emptySet())
+    }
+
+    val regex by lazy {
+        val str = this.content.joinToString(prefix = "(", separator = ")|(", postfix = ")") {
+            if (it.isPattern) it.value else "\\Q${it.value}\\E"
+        }
+        Regex(str)
+    }
+
+    val fullContent:Set<RuntimeRule> get() {
+        val cont = mutableSetOf<RuntimeRule>()
+        if (this.includesUP) cont.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+        if (this.includesEOT) cont.add(RuntimeRuleSet.END_OF_TEXT)
+        if (this.matchANY) cont.add(RuntimeRuleSet.ANY_LOOKAHEAD)
+        cont.addAll(this.content)
+        return cont
+    }
+
+    fun union(lhs: LookaheadSetPart) = when {
+        this.matchANY -> ANY
+        lhs.matchANY -> ANY
+        else -> LookaheadSetPart(
+            this.includesUP || lhs.includesUP,
+            this.includesEOT || lhs.includesEOT,
+            false,
+            this.content.union(lhs.content)
+        )
+    }
+
+}
 
 internal data class FirstOfResult(
     val needsNext: Boolean,
-    val result: Set<RuntimeRule>
+    val result: LookaheadSetPart
 )
 
 internal data class StateInfo(
@@ -31,21 +73,31 @@ internal data class StateInfo(
 )
 
 internal data class WidthInfo(
-    val to:RulePosition,
-    val lookaheadSet: LookaheadSet
+    val to: RulePosition,
+    val lookaheadSet: LookaheadSetPart
 )
 
 internal data class HeightGraftInfo(
     val ancestors: List<RuntimeRule>,
     val parent: List<RulePosition>,
     val parentNext: List<RulePosition>, // to state
-    val lhs: LookaheadSet,
-    val upLhs: LookaheadSet
+    val lhs: LookaheadSetPart,
+    val upLhs: LookaheadSetPart
 ) {
     override fun toString(): String {
         val ancestorsStr = ancestors.joinToString(prefix = "[", postfix = "]", separator = "-") { it.tag }
-        val lhsStr = lhs.content.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }
-        val upLhsStr = upLhs.content.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }
+        val cont1 = mutableSetOf<RuntimeRule>()
+        if (lhs.includesUP) cont1.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+        if (lhs.includesEOT) cont1.add(RuntimeRuleSet.END_OF_TEXT)
+        if (lhs.matchANY) cont1.add(RuntimeRuleSet.ANY_LOOKAHEAD)
+        cont1.addAll(lhs.content)
+        val cont2 = mutableSetOf<RuntimeRule>()
+        if (upLhs.includesUP) cont2.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+        if (upLhs.includesEOT) cont2.add(RuntimeRuleSet.END_OF_TEXT)
+        if (upLhs.matchANY) cont2.add(RuntimeRuleSet.ANY_LOOKAHEAD)
+        cont2.addAll(upLhs.content)
+        val lhsStr = cont1.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }
+        val upLhsStr = cont2.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }
         return "HeightGraftInfo(ancestors=$ancestorsStr, parent=$parent, parentNext=$parentNext, lhs=$lhsStr, upLhs=$upLhsStr)"
     }
 }

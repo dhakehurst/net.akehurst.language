@@ -16,6 +16,8 @@
 
 package net.akehurst.language.agl.automaton
 
+import agl.automaton.AutomatonTest
+import agl.automaton.automaton
 import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
@@ -57,23 +59,23 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
         val s0 = SM.startState
         val G = s0.runtimeRules.first()
 
-        val lhs_IDENTIFIER = SM.createLookaheadSet(setOf(T_IDENTIFIER))
+        val lhs_IDENTIFIER = LookaheadSetPart(false,false, false,setOf(T_IDENTIFIER))
     }
 
     @Test
     override fun firstOf() {
         listOf(
-            Triple(RP(R_grammarDefinition, 0, SOR), lhs_U, setOf(T_namespace)), // grammarDefinition = . namespace grammars
-            Triple(RP(R_grammarDefinition, 0, 1), lhs_U, setOf(T_grammar)), // grammarDefinition = namespace . grammars
-            Triple(RP(R_grammarDefinition, 0, EOR), lhs_U, setOf(UP)),          // grammarDefinition = namespace grammars .
-            Triple(RP(R_namespace, 0, SOR), lhs_U, setOf(UP)), // namespace = . 'namespace' qualifiedName
-            Triple(RP(R_namespace, 0, 1), lhs_U, setOf(UP)), // namespace = 'namespace' . qualifiedName
-            Triple(RP(R_namespace, 0, EOR), lhs_U, setOf(UP)), // namespace = 'namespace' qualifiedName .
+            Triple(RP(R_grammarDefinition, 0, SOR), lhs_U, LHS(T_namespace)), // grammarDefinition = . namespace grammars
+            Triple(RP(R_grammarDefinition, 0, 1), lhs_U, LHS(T_grammar)), // grammarDefinition = namespace . grammars
+            Triple(RP(R_grammarDefinition, 0, EOR), lhs_U, LHS(UP)),          // grammarDefinition = namespace grammars .
+            Triple(RP(R_namespace, 0, SOR), lhs_U, LHS(UP)), // namespace = . 'namespace' qualifiedName
+            Triple(RP(R_namespace, 0, 1), lhs_U, LHS(UP)), // namespace = 'namespace' . qualifiedName
+            Triple(RP(R_namespace, 0, EOR), lhs_U, LHS(UP)), // namespace = 'namespace' qualifiedName .
 //TODO
-            Triple(RP(G, 0, SOR), lhs_U, setOf(T_namespace)), // G = . grammarDefinition
-            Triple(RP(G, 0, EOR), lhs_U, setOf(UP))        // G = grammarDefinition .
+            Triple(RP(G, 0, SOR), lhs_U, LHS(T_namespace)), // G = . grammarDefinition
+            Triple(RP(G, 0, EOR), lhs_U, LHS(UP))        // G = grammarDefinition .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs)
+            val actual = SM.buildCache.firstOf(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }
@@ -109,4 +111,16 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
 
     }
 
+    @Test
+    fun parse_xxx() {
+        val parser = ScanOnDemandParser(rrs)
+        parser.parseForGoal("S", "namespace test grammar Test { r = 'a' ; }", AutomatonKind.LOOKAHEAD_1)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(R_grammarDefinition, AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+
+
+        }
+        AutomatonTest.assertEquals(expected, actual)
+    }
 }

@@ -16,6 +16,9 @@
 
 package net.akehurst.language.agl.automaton
 
+import agl.automaton.AutomatonTest
+import agl.automaton.automaton
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -57,18 +60,18 @@ internal class test_embedded : test_AutomatonAbstract() {
     @Test
     override fun firstOf() {
         listOf(
-            Triple(RP(G, 0, SOR), lhs_U, setOf(a)),      // G = . S
-            Triple(RP(G, 0, EOR), lhs_U, setOf(UP)),     // G = S .
-            Triple(RP(S, 0, SOR), lhs_U, setOf(a)),      // S = . a gB a
-            Triple(RP(S, 0, 1), lhs_U, setOf(b_)),  // S = a . gB a
-            Triple(RP(S, 0, 2), lhs_U, setOf(a)),   // S = a gB . a
-            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),     // S = a gB a .
-            Triple(RP(gB, 0, SOR), lhs_U, setOf(UP)),     // gB = . grammar B
-            Triple(RP(gB, 0, EOR), lhs_U, setOf(a)),     // gB = grammar B .
-            Triple(RP(B, 0, SOR), lhs_U, setOf(UP)),     // B = . b
-            Triple(RP(B, 0, EOR), lhs_U, setOf(a))      // B = b .
+            Triple(RP(G, 0, SOR), lhs_U, LHS(a)),      // G = . S
+            Triple(RP(G, 0, EOR), lhs_U, LHS(UP)),     // G = S .
+            Triple(RP(S, 0, SOR), lhs_U, LHS(a)),      // S = . a gB a
+            Triple(RP(S, 0, 1), lhs_U, LHS(b_)),  // S = a . gB a
+            Triple(RP(S, 0, 2), lhs_U, LHS(a)),   // S = a gB . a
+            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),     // S = a gB a .
+            Triple(RP(gB, 0, SOR), lhs_U, LHS(UP)),     // gB = . grammar B
+            Triple(RP(gB, 0, EOR), lhs_U, LHS(a)),     // gB = grammar B .
+            Triple(RP(B, 0, SOR), lhs_U, LHS(UP)),     // B = . b
+            Triple(RP(B, 0, EOR), lhs_U, LHS(a))      // B = b .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs)
+            val actual = SM.buildCache.firstOf(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }
@@ -78,5 +81,28 @@ internal class test_embedded : test_AutomatonAbstract() {
         TODO("not implemented")
     }
 
+    @Test
+    fun parse_aba() {
+        val parser = ScanOnDemandParser(rrs)
+        parser.parseForGoal("S", "aba", AutomatonKind.LOOKAHEAD_1)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
 
+
+        }
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun buildFor() {
+        val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
+    }
 }

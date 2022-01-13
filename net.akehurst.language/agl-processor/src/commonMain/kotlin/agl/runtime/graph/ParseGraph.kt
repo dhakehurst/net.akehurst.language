@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.runtime.graph
 
+import net.akehurst.language.agl.automaton.LookaheadSetPart
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.collections.BinaryHeap
 import net.akehurst.language.agl.collections.GraphStructuredStack
@@ -23,7 +24,6 @@ import net.akehurst.language.agl.collections.binaryHeap
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 
 internal class ParseGraph(
     val input: InputFromString,
@@ -172,9 +172,9 @@ internal class ParseGraph(
         if (null == oldParent) {
             // should not remove existing, because it can be part of newParent sub tree
             // setting the child will also reset the preferred
-            this.treeData.setFirstChild(newParent, newChild,false)
+            this.treeData.setFirstChild(newParent, newChild, false)
         } else {
-            this.treeData.setInGrowingParentChildAt(oldParent, newParent, newChild,false)
+            this.treeData.setInGrowingParentChildAt(oldParent, newParent, newChild, false)
         }
     }
 
@@ -501,7 +501,7 @@ internal class ParseGraph(
         if (newParent.state.isAtEnd) {
             val existingComplete = this.treeData.preferred(newParent.complete)
             if (null != existingComplete) {
-                val shouldDrop = this.mergeDecision(existingComplete,  newParent)
+                val shouldDrop = this.mergeDecision(existingComplete, newParent)
                 when (shouldDrop) {
                     MergeOptions.PREFER_NEW -> {
                         createNewHeadAndDropExisting(existingComplete, newParent, previous)
@@ -567,49 +567,32 @@ internal class ParseGraph(
     }
 
     fun isLookingAt(lookaheadGuard: LookaheadSet, runtimeLookahead: LookaheadSet?, nextInputPosition: Int): Boolean {
-        //TODO: use regex.lookingAt
+        //runtimeLookahead should never includeUP
         return when {
-            LookaheadSet.UP == runtimeLookahead -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
-            LookaheadSet.ANY == lookaheadGuard -> true
-            null == runtimeLookahead -> {
-                var result = false
-                for (rr in lookaheadGuard.content) {
-                    val l = this.input.findOrTryCreateLeaf(rr, nextInputPosition)
-                    if (null != l) {
-                        result = true
-                        break
-                    }
+            null != runtimeLookahead && runtimeLookahead.includesUP -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
+            lookaheadGuard.matchANY -> true
+            null == runtimeLookahead -> lookaheadGuard.content.any { this.input.isLookingAt(nextInputPosition,it) } //this.input.isLookingAt(nextInputPosition, lookaheadGuard.regex)
+            LookaheadSet.UP == lookaheadGuard -> when {
+                runtimeLookahead.matchANY -> true
+                LookaheadSet.EOT == runtimeLookahead -> this.input.isEnd(nextInputPosition)
+                else -> when {
+                    runtimeLookahead.includesEOT && this.input.isEnd(nextInputPosition)->true
+                    runtimeLookahead.content.isEmpty() -> false
+                    else -> runtimeLookahead.content.any { this.input.isLookingAt(nextInputPosition,it) }
                 }
-                result
-            }
-            LookaheadSet.UP == lookaheadGuard -> {
-                var result = false
-                for (rr in runtimeLookahead.content) {
-                    val l = this.input.findOrTryCreateLeaf(rr, nextInputPosition)
-                    if (null != l) {
-                        result = true
-                        break
-                    }
-                }
-                result
             }
             else -> {
-                var result = false
-                for (rr in lookaheadGuard.content) {
-                    if (RuntimeRuleSet.USE_PARENT_LOOKAHEAD == rr) {
-                        if (isLookingAt(runtimeLookahead, null, nextInputPosition)) {
-                            result = true
-                            break
-                        }
-                    } else {
-                        val l = this.input.findOrTryCreateLeaf(rr, nextInputPosition)
-                        if (null != l) {
-                            result = true
-                            break
-                        }
+                val lhs = lookaheadGuard.resolveUP(runtimeLookahead)
+                when {
+                    lhs.matchANY -> true
+                    LookaheadSetPart.EOT == lhs -> this.input.isEnd(nextInputPosition)
+                    else -> when {
+                        lhs.includesEOT && this.input.isEnd(nextInputPosition)->true
+                        lhs.content.isEmpty() -> false
+                        else -> lhs.content.any { this.input.isLookingAt(nextInputPosition,it) }
                     }
                 }
-                result
+
             }
         }
     }

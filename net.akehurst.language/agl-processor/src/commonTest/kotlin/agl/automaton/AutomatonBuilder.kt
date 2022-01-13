@@ -3,6 +3,7 @@ package agl.automaton
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.automaton.Transition
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -58,8 +59,18 @@ internal class AutomatonBuilder(
         upLookaheadContent: Set<RuntimeRule>,
         prevGuard: List<RulePosition>?
     ): Transition {
-        val lookaheadGuard = result.createLookaheadSet(lookaheadGuardContent)
-        val upLookahead = result.createLookaheadSet(upLookaheadContent)
+        val lookaheadGuard = result.createLookaheadSet(
+            lookaheadGuardContent.contains(RuntimeRuleSet.USE_PARENT_LOOKAHEAD),
+            lookaheadGuardContent.contains(RuntimeRuleSet.END_OF_TEXT),
+            lookaheadGuardContent.contains(RuntimeRuleSet.ANY_LOOKAHEAD),
+            lookaheadGuardContent.minus(RuntimeRuleSet.USE_PARENT_LOOKAHEAD).minus(RuntimeRuleSet.END_OF_TEXT).minus(RuntimeRuleSet.ANY_LOOKAHEAD)
+        )
+        val upLookahead = result.createLookaheadSet(
+            upLookaheadContent.contains(RuntimeRuleSet.USE_PARENT_LOOKAHEAD),
+            upLookaheadContent.contains(RuntimeRuleSet.END_OF_TEXT),
+            upLookaheadContent.contains(RuntimeRuleSet.ANY_LOOKAHEAD),
+            upLookaheadContent.minus(RuntimeRuleSet.USE_PARENT_LOOKAHEAD).minus(RuntimeRuleSet.END_OF_TEXT).minus(RuntimeRuleSet.ANY_LOOKAHEAD)
+        )
         val trans = Transition(from, to, action, lookaheadGuard, upLookahead, prevGuard) { _, _ -> true }
         return from.outTransitions.addTransition(previousStates, trans)
     }

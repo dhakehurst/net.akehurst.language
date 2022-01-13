@@ -16,6 +16,14 @@
 
 package net.akehurst.language.collections
 
+internal fun <T> mutableStackOf(vararg elements:T):MutableStack<T> {
+    val stack = MutableStack<T>()
+    elements.forEach {
+        stack.push(it)
+    }
+    return stack
+}
+
 internal class Stack<T>(
         val items : List<T> = emptyList()
 ) {

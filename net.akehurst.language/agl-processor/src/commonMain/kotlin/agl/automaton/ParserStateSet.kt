@@ -19,9 +19,7 @@ package net.akehurst.language.agl.automaton
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.collections.MutableQueue
-import net.akehurst.language.collections.Stack
 import net.akehurst.language.collections.lazyMapNonNull
-import kotlin.reflect.KProperty
 
 internal class ParserStateSet(
     val number: Int,
@@ -181,16 +179,24 @@ internal class ParserStateSet(
     //internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet = this.runtimeRuleSet.createLookaheadSet(content) //TODO: Maybe cache here rather than in rrs
     //fun createWithParent(upLhs: LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet = this.runtimeRuleSet.createWithParent(upLhs, parentLookahead)
 
-    internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet {
+    internal fun createLookaheadSet(includeUP: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet {
         return when {
-            content.isEmpty() -> LookaheadSet.EMPTY
-            LookaheadSet.EOT.content == content -> LookaheadSet.EOT
-            LookaheadSet.UP.content == content -> LookaheadSet.UP
+            content.isEmpty() -> when {
+                includeUP && includeEOT.not() && matchAny.not() -> LookaheadSet.UP
+                includeUP.not() && includeEOT && matchAny.not() -> LookaheadSet.EOT
+                includeUP.not() && includeEOT.not() && matchAny -> LookaheadSet.ANY
+                else -> LookaheadSet.EMPTY
+            }
             else -> {
-                val existing = this.lookaheadSets.firstOrNull { it.content == content }
+                val existing = this.lookaheadSets.firstOrNull {
+                    it.includesUP == includeUP &&
+                            it.includesEOT == includeEOT &&
+                            it.matchANY == matchAny &&
+                            it.content == content  //TODO: slow
+                }
                 if (null == existing) {
                     val num = this.nextLookaheadSetId++
-                    val lhs = LookaheadSet(num, content)
+                    val lhs = LookaheadSet(num, includeUP, includeEOT, matchAny, content)
                     this.lookaheadSets.add(lhs)
                     lhs
                 } else {
@@ -199,17 +205,30 @@ internal class ParserStateSet(
             }
         }
     }
-    fun createWithParent(upLhs: LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet {
-        val newContent = mutableSetOf<RuntimeRule>()
-        for (rr in upLhs.content) {
-            if (RuntimeRuleSet.USE_PARENT_LOOKAHEAD == rr) {
-                newContent.addAll(parentLookahead.content)
+
+    private val createWithParent_cache = mutableMapOf<Pair<Int,Int>, LookaheadSet>()
+    fun createWithParent(upLhs: LookaheadSet, runtimeLookahead: LookaheadSet): LookaheadSet {
+             return if (upLhs.includesUP) {
+                val res = createWithParent_cache[Pair(upLhs.number,runtimeLookahead.number)]
+                if (null == res) {
+                    val lhs = when {
+                        LookaheadSet.UP == upLhs -> runtimeLookahead
+                        else -> {
+                            val content = if (upLhs.includesUP) upLhs.content.union(runtimeLookahead.content) else upLhs.content
+                            val eol = upLhs.includesEOT || (upLhs.includesUP && runtimeLookahead.includesEOT)
+                            val ma = upLhs.matchANY || (upLhs.includesUP && runtimeLookahead.matchANY)
+                            this.createLookaheadSet(false, eol, ma, content)
+                        }
+                    }
+                    this.createWithParent_cache[Pair(upLhs.number,runtimeLookahead.number)] = lhs
+                    lhs
+                } else {
+                    res
+                }
             } else {
-                newContent.add(rr)
+                 upLhs
             }
         }
-        return this.createLookaheadSet(newContent)
-    }
 
     fun build(): ParserStateSet {
         println("Build not yet implemented")
@@ -271,7 +290,7 @@ internal class ParserStateSet(
                         val newTrans = newNode.state.transitions(newNode.prev?.state)
                         newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
                     }
-     //               Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
+                    //               Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                     Transition.ParseAction.GOAL -> null;//buildAndTraverse(nextState, prevStack, done)
                 }
             }

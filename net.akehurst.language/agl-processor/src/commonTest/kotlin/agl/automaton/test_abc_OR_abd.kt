@@ -56,31 +56,31 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
         //val s2 = SM.states[listOf(RP(S, 0, RulePosition.POSITION_MULIT_ITEM))]
         //val s3 = SM.states[listOf(RP(S, 0, RulePosition.END_OF_RULE))]
 
-        val lhs_a = SM.createLookaheadSet(setOf(a))
-        val lhs_b = SM.createLookaheadSet(setOf(b))
-        val lhs_aU = SM.createLookaheadSet(setOf(a, UP))
-        val lhs_aT = SM.createLookaheadSet(setOf(a, EOT))
+        val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
+        val lhs_b = SM.createLookaheadSet(false, false, false,setOf(b))
+        val lhs_aU = SM.createLookaheadSet(true, false, false,setOf(a))
+        val lhs_aT = SM.createLookaheadSet(false, true, false,setOf(a))
     }
 
     @Test
     override fun firstOf() {
         listOf(
-            Triple(RP(G, 0, SOR), lhs_U, setOf(a)),       // G = . S
-            Triple(RP(G, 0, EOR), lhs_U, setOf(UP)),      // G = S .
-            Triple(RP(S, 0, SOR), lhs_U, setOf(a)),       // S = . ABC
-            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),      // S = ABC .
-            Triple(RP(S, 1, SOR), lhs_U, setOf(a)),       // S = . ABD
-            Triple(RP(S, 1, EOR), lhs_U, setOf(UP)),      // S = ABD .
-            Triple(RP(ABC, 0, SOR), lhs_U, setOf(a)),     // ABC = . a b c
-            Triple(RP(ABC, 0, 1), lhs_U, setOf(b)),  // ABC = a . b c
-            Triple(RP(ABC, 0, 2), lhs_U, setOf(c)),  // ABC = a b . c
-            Triple(RP(ABC, 0, EOR), lhs_U, setOf(UP)),    // ABC = a b c .
-            Triple(RP(ABD, 0, SOR), lhs_U, setOf(a)),     // ABD = . a b d
-            Triple(RP(ABD, 0, 1), lhs_U, setOf(b)),  // ABD = a . b d
-            Triple(RP(ABD, 0, 2), lhs_U, setOf(d)),  // ABD = a b . d
-            Triple(RP(ABD, 0, EOR), lhs_U, setOf(UP))     // ABD = a b d .
+            Triple(RP(G, 0, SOR), lhs_U, LHS(a)),       // G = . S
+            Triple(RP(G, 0, EOR), lhs_U, LHS(UP)),      // G = S .
+            Triple(RP(S, 0, SOR), lhs_U, LHS(a)),       // S = . ABC
+            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),      // S = ABC .
+            Triple(RP(S, 1, SOR), lhs_U, LHS(a)),       // S = . ABD
+            Triple(RP(S, 1, EOR), lhs_U, LHS(UP)),      // S = ABD .
+            Triple(RP(ABC, 0, SOR), lhs_U, LHS(a)),     // ABC = . a b c
+            Triple(RP(ABC, 0, 1), lhs_U, LHS(b)),  // ABC = a . b c
+            Triple(RP(ABC, 0, 2), lhs_U, LHS(c)),  // ABC = a b . c
+            Triple(RP(ABC, 0, EOR), lhs_U, LHS(UP)),    // ABC = a b c .
+            Triple(RP(ABD, 0, SOR), lhs_U, LHS(a)),     // ABD = . a b d
+            Triple(RP(ABD, 0, 1), lhs_U, LHS(b)),  // ABD = a . b d
+            Triple(RP(ABD, 0, 2), lhs_U, LHS(d)),  // ABD = a b . d
+            Triple(RP(ABD, 0, EOR), lhs_U, LHS(UP))     // ABD = a b d .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs)
+            val actual = SM.buildCache.firstOf(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }
@@ -91,7 +91,7 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
         val actual = s0.widthInto(null).toList()
 
         val expected = listOf(
-            WidthInfo(RP(a, 0, EOR), lhs_b)
+            WidthInfo(RP(a, 0, EOR), lhs_b.part)
         )
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {
@@ -105,12 +105,13 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-            HeightGraftInfo(emptyList(),
-                    listOf(RP(ABC, 0, SOR),RP(ABD, 0, SOR)),
-                    listOf(RP(ABC, 0, 1),RP(ABD, 0, 1)),
-                    lhs_b,
-                    lhs_U
-                )
+            HeightGraftInfo(
+                emptyList(),
+                listOf(RP(ABC, 0, SOR), RP(ABD, 0, SOR)),
+                listOf(RP(ABC, 0, 1), RP(ABD, 0, 1)),
+                lhs_b.part,
+                lhs_U.part
+            )
         )
         assertEquals(expected, actual)
 
@@ -120,8 +121,8 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
     fun s0_transitions() {
         val actual = s0.transitions(null)
         val expected = listOf<Transition>(
-        //    Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY, null) { _, _ -> true },
-        //    Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY, null) { _, _ -> true }
+            //    Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY, null) { _, _ -> true },
+            //    Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY, null) { _, _ -> true }
         )
         assertEquals(expected, actual)
     }
@@ -131,21 +132,46 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
         val parser = ScanOnDemandParser(rrs)
         parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-println(rrs.usedAutomatonToString("S"))
+        println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
-            /* G = . S   */ val s0 = state(RP(G, 0, SOR))
-            /* a .       */ val s1 = state(RP(a, 0, EOR))
-            /* S = ABC . */ val s2 = state(RP(S, 0, 1)); error("Should be no position 1 ??")
-            /* S = ABC . */ val s3 = state(RP(a, 0, EOR))
-            /* S = ABC . */ val s4 = state(RP(a, 0, EOR))
-            /* S = ABC . */ val s5 = state(RP(a, 0, EOR))
-            /* S = ABC . */ val s6 = state(RP(a, 0, EOR))
+            val s0 = state(RP(G, 0, SOR))     /* G = . S   */
+            val s1 = state(RP(a, 0, EOR))     /* a .       */
+            val s2 = state(RP(S, 0, 1)); /* S = ABC . */ //error("Should be no position 1 ??")
+            val s3 = state(RP(a, 0, EOR))     /* S = ABC . */
+            val s4 = state(RP(a, 0, EOR))     /* S = ABC . */
+            val s5 = state(RP(a, 0, EOR))     /* S = ABC . */
+            val s6 = state(RP(a, 0, EOR))     /* S = ABC . */
 
             transition(null, s0, s1, WIDTH, setOf(UP), setOf(), null)
             transition(null, s0, s2, WIDTH, setOf(a, b), setOf(), null)
             transition(s0, s1, s3, HEIGHT, setOf(UP), setOf(UP), listOf(RP(S, 0, SOR)))
             transition(s0, s3, s4, GRAFT, setOf(UP), setOf(UP), listOf(RP(G, 0, SOR)))
             transition(null, s4, s4, GOAL, setOf(), setOf(), null)
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun parse_abd() {
+        val parser = ScanOnDemandParser(rrs)
+        parser.parseForGoal("S", "abd", AutomatonKind.LOOKAHEAD_1)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+
+
+        }
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun buildFor() {
+        val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+
         }
 
         AutomatonTest.assertEquals(expected, actual)

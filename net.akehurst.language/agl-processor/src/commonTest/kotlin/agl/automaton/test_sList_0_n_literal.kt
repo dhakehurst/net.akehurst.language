@@ -16,6 +16,9 @@
 
 package net.akehurst.language.agl.automaton
 
+import agl.automaton.AutomatonTest
+import agl.automaton.automaton
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
@@ -41,7 +44,7 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
 
         val s0 = SM.startState
 
-        val lhs_a = LookaheadSet(1, setOf(a))
+        val lhs_a = SM.createLookaheadSet(false, false, false,setOf(a))
     }
 
     @Test
@@ -54,7 +57,7 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
         val actual = s0.widthInto(null).toList()
 
         val expected = listOf(
-            WidthInfo(RulePosition(a, 0, 0), lhs_T)
+            WidthInfo(RulePosition(a, 0, 0), lhs_T.part)
         )
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {
@@ -77,4 +80,28 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
         }
     }
 
+    @Test
+    fun parse_aba() {
+        val parser = ScanOnDemandParser(rrs)
+        parser.parseForGoal("S", "aba", AutomatonKind.LOOKAHEAD_1)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+
+
+        }
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun buildFor() {
+        val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
+    }
 }

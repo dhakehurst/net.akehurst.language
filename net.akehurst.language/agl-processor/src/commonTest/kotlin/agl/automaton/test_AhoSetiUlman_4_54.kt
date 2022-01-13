@@ -18,6 +18,7 @@ package net.akehurst.language.agl.automaton
 
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
@@ -55,26 +56,26 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
         val s1 = SM.states[listOf(RP(T_c, 0, EOR))]
         val s2 = SM.states[listOf(RP(T_d, 0, EOR))]
 
-        val lhs_cd = LookaheadSet(0, setOf(T_c, T_d))
+        val lhs_cd = SM.createLookaheadSet(false, false, false,setOf(T_c, T_d))
     }
 
     @Test
     override fun firstOf() {
         listOf(
-            Triple(RP(C1, 0, SOR), lhs_U, setOf(T_c)),          // C1 = . c C
-            Triple(RP(C1, 0, 1), lhs_U, setOf(T_c, T_d)),  // C1 = c . C
-            Triple(RP(C1, 0, EOR), lhs_U, setOf(UP)),           // C1 = c C .
-            Triple(RP(C, 1, SOR), lhs_U, setOf(T_d)),           // C = . d
-            Triple(RP(C, 1, EOR), lhs_U, setOf(UP)),            // C = d .
-            Triple(RP(C, 0, SOR), lhs_U, setOf(T_c)),           // C = . C1
-            Triple(RP(C, 0, EOR), lhs_U, setOf(UP)),            // C = C1 .
-            Triple(RP(S, 0, SOR), lhs_U, setOf(T_c, T_d)),      // S = . C C
-            Triple(RP(S, 0, 1), lhs_U, setOf(T_c, T_d)),   // S = C . C
-            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),            // S = C C .
-            Triple(RP(G, 0, SOR), lhs_U, setOf(T_c, T_d)),      // G = . S
-            Triple(RP(G, 0, EOR), lhs_U, setOf(UP))             // G = S .
+            Triple(RP(C1, 0, SOR), lhs_U, LHS(T_c)),          // C1 = . c C
+            Triple(RP(C1, 0, 1), lhs_U, LHS(T_c, T_d)),  // C1 = c . C
+            Triple(RP(C1, 0, EOR), lhs_U, LHS(UP)),           // C1 = c C .
+            Triple(RP(C, 1, SOR), lhs_U, LHS(T_d)),           // C = . d
+            Triple(RP(C, 1, EOR), lhs_U, LHS(UP)),            // C = d .
+            Triple(RP(C, 0, SOR), lhs_U, LHS(T_c)),           // C = . C1
+            Triple(RP(C, 0, EOR), lhs_U, LHS(UP)),            // C = C1 .
+            Triple(RP(S, 0, SOR), lhs_U, LHS(T_c, T_d)),      // S = . C C
+            Triple(RP(S, 0, 1), lhs_U, LHS(T_c, T_d)),   // S = C . C
+            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),            // S = C C .
+            Triple(RP(G, 0, SOR), lhs_U, LHS(T_c, T_d)),      // G = . S
+            Triple(RP(G, 0, EOR), lhs_U, LHS(UP))             // G = S .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs)
+            val actual = SM.buildCache.firstOf(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }
@@ -84,8 +85,8 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
         val actual = s0.widthInto(null).toList()
 
         val expected = listOf(
-            WidthInfo(RP(T_c, 0, EOR), lhs_cd),
-            WidthInfo(RP(T_d, 0, EOR), lhs_cd)
+            WidthInfo(RP(T_c, 0, EOR), lhs_cd.part),
+            WidthInfo(RP(T_d, 0, EOR), lhs_cd.part)
         )
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {
@@ -100,8 +101,8 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
         val actual = s0.transitions(null)
 
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, LookaheadSet(0, setOf(T_c, T_d)), lhs_E, null) { _, _ -> true },
-                Transition(s0, s2, Transition.ParseAction.WIDTH, LookaheadSet(0, setOf(T_c, T_d)), lhs_E, null) { _, _ -> true }
+                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_cd, lhs_E, null) { _, _ -> true },
+                Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_cd, lhs_E, null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {
@@ -109,6 +110,18 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
         }
     }
 
+    @Test
+    fun parse_dd() {
+        val parser = ScanOnDemandParser(rrs)
+        parser.parseForGoal("S", "dd", AutomatonKind.LOOKAHEAD_1)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+
+
+        }
+        AutomatonTest.assertEquals(expected, actual)
+    }
 
     @Test
     fun buildFor() {

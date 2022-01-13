@@ -16,6 +16,9 @@
 
 package net.akehurst.language.agl.automaton
 
+import agl.automaton.AutomatonTest
+import agl.automaton.automaton
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
@@ -52,24 +55,24 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
         val s5 = SM.states[listOf(RulePosition(G, 0, RulePosition.END_OF_RULE))]
         val s6 = SM.states[listOf(RulePosition(S, 1, RulePosition.END_OF_RULE))]
 
-        val lhs_a = SM.createLookaheadSet(setOf(a))
-        val lhs_aU = SM.createLookaheadSet(setOf(a, UP))
+        val lhs_a = SM.createLookaheadSet(false, false, false,setOf(a))
+        val lhs_aU = SM.createLookaheadSet(true, false, false,setOf(a))
     }
 
     @Test
     override fun firstOf() {
         listOf(
-            Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // G = . S
-            Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // G = S .
-            Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S = . a
-            Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // S = a .
-            Triple(RulePosition(S, 1, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S = . S1
-            Triple(RulePosition(S, 1, RulePosition.END_OF_RULE), lhs_U, setOf(UP)), // S = S1 .
-            Triple(RulePosition(S1, 0, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S1 = . a S
-            Triple(RulePosition(S1, 1, RulePosition.START_OF_RULE), lhs_U, setOf(a)), // S1 = a . S
-            Triple(RulePosition(S1, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)) // S1 = a S .
+            Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, LHS(a)), // G = . S
+            Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, LHS(UP)), // G = S .
+            Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_U, LHS(a)), // S = . a
+            Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, LHS(UP)), // S = a .
+            Triple(RulePosition(S, 1, RulePosition.START_OF_RULE), lhs_U, LHS(a)), // S = . S1
+            Triple(RulePosition(S, 1, RulePosition.END_OF_RULE), lhs_U, LHS(UP)), // S = S1 .
+            Triple(RulePosition(S1, 0, RulePosition.START_OF_RULE), lhs_U, LHS(a)), // S1 = . a S
+            Triple(RulePosition(S1, 1, RulePosition.START_OF_RULE), lhs_U, LHS(a)), // S1 = a . S
+            Triple(RulePosition(S1, 0, RulePosition.END_OF_RULE), lhs_U, LHS(UP)) // S1 = a S .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs)
+            val actual = SM.buildCache.firstOf(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }
@@ -80,7 +83,7 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
         val actual = s0.widthInto(null).toList()
 
         val expected = listOf(
-            WidthInfo(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_aU)
+            WidthInfo(RulePosition(a, 0, RulePosition.END_OF_RULE), lhs_aU.part)
         )
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {
@@ -109,14 +112,14 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
             HeightGraftInfo(emptyList(),
                 listOf(RulePosition(S, 0, 0)),
                 listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
-                lhs_U,
-                lhs_U
+                lhs_U.part,
+                lhs_U.part
             ),
             HeightGraftInfo(emptyList(),
                 listOf(RulePosition(S1, 0, 0)),
                 listOf(RulePosition(S1, 0, 1)),
-                lhs_a,
-                lhs_U
+                lhs_a.part,
+                lhs_U.part
             )
         )
         assertEquals(expected, actual)
@@ -147,8 +150,8 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
             HeightGraftInfo(emptyList(),
                 listOf(RulePosition(G, 0, 0)),
                 listOf(RulePosition(G, 0, RulePosition.END_OF_RULE)),
-                lhs_U,
-                lhs_U
+                lhs_U.part,
+                lhs_U.part
             )
         )
         assertEquals(expected, actual)
@@ -163,8 +166,8 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
             HeightGraftInfo(emptyList(),
                 listOf(RulePosition(S1, 0, 1)),
                 listOf(RulePosition(S1, 0, RulePosition.END_OF_RULE)),
-                lhs_U,
-                lhs_U
+                lhs_U.part,
+                lhs_U.part
             )
         )
         assertEquals(expected, actual)
@@ -198,8 +201,8 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
             HeightGraftInfo(emptyList(),
                 listOf(RulePosition(S, 1, 0)),
                 listOf(RulePosition(S, 1, RulePosition.END_OF_RULE)),
-                lhs_U,
-                lhs_U
+                lhs_U.part,
+                lhs_U.part
             )
         )
         assertEquals(expected, actual)
@@ -260,5 +263,30 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
         for (i in actual.indices) {
             assertEquals(expected[i], actual[i])
         }
+    }
+
+    @Test
+    fun parse_aba() {
+        val parser = ScanOnDemandParser(rrs)
+        parser.parseForGoal("S", "aba", AutomatonKind.LOOKAHEAD_1)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+
+
+        }
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun buildFor() {
+        val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
     }
 }

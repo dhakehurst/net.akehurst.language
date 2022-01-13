@@ -18,8 +18,8 @@ package net.akehurst.language.agl.collections
 
 class GraphStructuredStack<E> {
 
-    private val _previous = mutableMapOf<E, MutableSet<E>>()
-    private val _count = mutableMapOf<E, Int>()
+    private val _previous = hashMapOf<E, MutableSet<E>>() //no need to preserve insertion order
+    private val _count = hashMapOf<E, Int>() //no need to preserve insertion order
 
     fun clear() {
         this._previous.clear()

@@ -365,7 +365,7 @@ public class BadBinaryLiterals {
         assertEquals(sentence, resultStr)
     }
 
-    @Test//(timeout = 5000)
+    @Test(timeout = 10000)
     fun long_concatenation() {
 
         val sentence = """

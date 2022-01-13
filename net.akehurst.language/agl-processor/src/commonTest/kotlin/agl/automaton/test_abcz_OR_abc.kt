@@ -57,32 +57,32 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
         //val s2 = SM.states[listOf(RP(S, 0, RulePosition.POSITION_MULIT_ITEM))]
         //val s3 = SM.states[listOf(RP(S, 0, RulePosition.END_OF_RULE))]
 
-        val lhs_a = SM.createLookaheadSet(setOf(a))
-        val lhs_b = SM.createLookaheadSet(setOf(b))
-        val lhs_aU = SM.createLookaheadSet(setOf(a, UP))
-        val lhs_aT = SM.createLookaheadSet(setOf(a, EOT))
+        val lhs_a = SM.createLookaheadSet(false,false, false,setOf(a))
+        val lhs_b = SM.createLookaheadSet(false,false, false,setOf(b))
+        val lhs_aU = SM.createLookaheadSet(true,false, false,setOf(a))
+        val lhs_aT = SM.createLookaheadSet(false,true, false,setOf(a))
     }
 
     @Test
     override fun firstOf() {
         listOf(
-            Triple(RP(G, 0, SOR), lhs_U, setOf(a)),       // G = . S
-            Triple(RP(G, 0, EOR), lhs_U, setOf(UP)),      // G = S .
-            Triple(RP(S, 0, SOR), lhs_U, setOf(a)),       // S = . ABCZ
-            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),      // S = ABCZ .
-            Triple(RP(S, 1, SOR), lhs_U, setOf(a)),       // S = . ABCY
-            Triple(RP(S, 1, EOR), lhs_U, setOf(UP)),      // S = ABCY .
-            Triple(RP(ABCZ, 0, SOR), lhs_U, setOf(a)),     // ABCZ = . a b c z
-            Triple(RP(ABCZ, 0, 1), lhs_U, setOf(b)),  // ABCZ = a . b c z
-            Triple(RP(ABCZ, 0, 2), lhs_U, setOf(c)),  // ABCZ = a b . c z
-            Triple(RP(ABCZ, 0, 3), lhs_U, setOf(z)),  // ABCZ = a b c . z
-            Triple(RP(ABCZ, 0, EOR), lhs_U, setOf(UP)),    // ABCZ = a b c z .
-            Triple(RP(ABC, 0, SOR), lhs_U, setOf(a)),     // ABCY = . a b c
-            Triple(RP(ABC, 0, 1), lhs_U, setOf(b)),  // ABCY = a . b c
-            Triple(RP(ABC, 0, 2), lhs_U, setOf(c)),  // ABCY = a b . c
-            Triple(RP(ABC, 0, EOR), lhs_U, setOf(UP))     // ABCY = a b c .
+            Triple(RP(G, 0, SOR), lhs_U, LHS(a)),       // G = . S
+            Triple(RP(G, 0, EOR), lhs_U, LHS(UP)),      // G = S .
+            Triple(RP(S, 0, SOR), lhs_U, LHS(a)),       // S = . ABCZ
+            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),      // S = ABCZ .
+            Triple(RP(S, 1, SOR), lhs_U, LHS(a)),       // S = . ABCY
+            Triple(RP(S, 1, EOR), lhs_U, LHS(UP)),      // S = ABCY .
+            Triple(RP(ABCZ, 0, SOR), lhs_U, LHS(a)),     // ABCZ = . a b c z
+            Triple(RP(ABCZ, 0, 1), lhs_U, LHS(b)),  // ABCZ = a . b c z
+            Triple(RP(ABCZ, 0, 2), lhs_U, LHS(c)),  // ABCZ = a b . c z
+            Triple(RP(ABCZ, 0, 3), lhs_U, LHS(z)),  // ABCZ = a b c . z
+            Triple(RP(ABCZ, 0, EOR), lhs_U, LHS(UP)),    // ABCZ = a b c z .
+            Triple(RP(ABC, 0, SOR), lhs_U, LHS(a)),     // ABCY = . a b c
+            Triple(RP(ABC, 0, 1), lhs_U, LHS(b)),  // ABCY = a . b c
+            Triple(RP(ABC, 0, 2), lhs_U, LHS(c)),  // ABCY = a b . c
+            Triple(RP(ABC, 0, EOR), lhs_U, LHS(UP))     // ABCY = a b c .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs)
+            val actual = SM.buildCache.firstOf(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }
@@ -93,7 +93,7 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
         val actual = s0.widthInto(null).toList()
 
         val expected = listOf(
-            WidthInfo(RP(a, 0, EOR), lhs_b)
+            WidthInfo(RP(a, 0, EOR), lhs_b.part)
         )
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {
@@ -111,8 +111,8 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
                 listOf(G, S),
                 listOf(RP(ABCZ, 0, SOR), RP(ABC, 0, SOR)),
                 listOf(RP(ABCZ, 0, 1), RP(ABC, 0, 1)),
-                lhs_b,
-                lhs_U
+                lhs_b.part,
+                lhs_U.part
             )
         )
         assertEquals(expected, actual)
@@ -151,6 +151,18 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
             transition(s0, s4, s5, WIDTH, setOf(z), setOf(), null)
             transition(s4, s5, s6, GRAFT, setOf(z), setOf(UP), listOf(RP(ABCZ,0,2), RP(ABC,0,2)))
             transition(s0, s6, s7, WIDTH, setOf(UP), setOf(), null)
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun buildFor() {
+        val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+
         }
 
         AutomatonTest.assertEquals(expected, actual)

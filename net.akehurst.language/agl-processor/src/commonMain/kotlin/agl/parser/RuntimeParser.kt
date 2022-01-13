@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.parser
 
+import net.akehurst.language.agl.automaton.LookaheadSetPart
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.automaton.Transition
@@ -65,8 +66,8 @@ internal class RuntimeParser(
         val initialSkipData = if (this.stateSet.isSkip) {
             null
         } else {
-            val skipLhc = gState.rulePositions.flatMap { this.stateSet.buildCache.firstOf(it, LookaheadSet.EOT) }.toSet()
-            val endOfSkipLookaheadSet = this.stateSet.createLookaheadSet(skipLhc)
+            val skipLhsp = gState.rulePositions.map { this.stateSet.buildCache.firstOf(it, LookaheadSetPart.EOT) }.fold(LookaheadSetPart.EMPTY) {acc,e->acc.union(e) }
+            val endOfSkipLookaheadSet = this.stateSet.createLookaheadSet(skipLhsp.includesUP, skipLhsp.includesEOT, skipLhsp.matchANY, skipLhsp.content)
             this.tryParseSkipUntilNone(endOfSkipLookaheadSet, startPosition,true) //TODO: think this might allow some wrong things, might be a better way
         }
         this.graph.start(gState, startPosition, possibleEndOfText, initialSkipData) //TODO: remove LH
@@ -692,8 +693,8 @@ internal class RuntimeParser(
         val embeddedSkipStateSet = embeddedRuntimeRuleSet.skipParserStateSet
         val embeddedParser = RuntimeParser(embeddedS0.stateSet, embeddedSkipStateSet, embeddedStartRule, this.input)
         val startPosition = curGn.nextInputPosition
-        val embeddedPossibleEOT = embeddedS0.stateSet.createLookaheadSet(
-            transition.lookaheadGuard.content.union(
+        val embeddedPossibleEOT = embeddedS0.stateSet.createLookaheadSet(false, false, false,
+            transition.lookaheadGuard.content.union( //TODO: what if transition.lookaheadGuard.includesUP ??
                 this.skipStateSet?.runtimeRuleSet?.firstTerminals?.flatMap { it }?.toSet() ?: emptySet()
             )
         )

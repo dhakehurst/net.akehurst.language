@@ -25,7 +25,7 @@ internal class ClosureItemLC1(
     val parentItem: ClosureItemLC1?, //needed for height/graft
     val rulePosition: RulePosition,
     val next: RulePosition?,
-    val lookaheadSet: LookaheadSet
+    val lookaheadSet: LookaheadSetPart
 ) {
     val allPrev: Set<ClosureItemLC1> = if (null == parentItem) mutableSetOf() else parentItem.allPrev + parentItem
 
@@ -64,7 +64,7 @@ internal class ClosureItemLC1(
                 other.next == this.next &&
                 other.lookaheadSet == this.lookaheadSet &&
                 other.parentItem?.lookaheadSet == this.parentItem?.lookaheadSet
-                && other.allPrev==this.allPrev
+                && other.allPrev == this.allPrev
         else -> false
     }
 
@@ -101,7 +101,7 @@ internal class BuildCacheLC1(
         val done = mutableMapOf<Pair<RulePosition?, LookaheadSet>, Boolean>()
 
         //traverse down and collect closure
-        val cls = this.traverseRulePositions(ClosureItemLC1(null, G_0_0, null, LookaheadSet.UP))
+        val cls = this.traverseRulePositions(ClosureItemLC1(null, G_0_0, null, LookaheadSetPart.UP))
         //calcAndCacheWidthInfo(listOf(G_0_0), cls)
         cacheStateInfo(listOf(G_0_0.atEnd()), listOf())
     }
@@ -116,14 +116,14 @@ internal class BuildCacheLC1(
 
     override fun widthInto(fromStateRulePositions: List<RulePosition>): Set<WidthInfo> {
         return if (this._cacheOff) {
-            val dnCls = fromStateRulePositions.flatMap { this.dnClosureLC1(it, LookaheadSet.UP) }.toSet()
+            val dnCls = fromStateRulePositions.flatMap { this.dnClosureLC1(it, LookaheadSetPart.UP) }.toSet()
             //val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
             //val bottomTerminals = filt.map { it.rulePosition.item!! }.toSet()
             val calc = calcAndCacheWidthInfo(fromStateRulePositions, dnCls)
             calc
         } else {
             this._widthInto[fromStateRulePositions]?.values?.toSet() ?: run {
-                val dnCls = fromStateRulePositions.flatMap { this.dnClosureLC1(it, LookaheadSet.UP) }.toSet()
+                val dnCls = fromStateRulePositions.flatMap { this.dnClosureLC1(it, LookaheadSetPart.UP) }.toSet()
                 //val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
                 //val bottomTerminals = filt.map { it.rulePosition.item!! }.toSet()
                 val calc = calcAndCacheWidthInfo(fromStateRulePositions, dnCls)
@@ -137,13 +137,13 @@ internal class BuildCacheLC1(
             // have to ensure somehow that from grows into prev
             // have to do closure down from prev,
             // upCls is the closure down from prev
-            val upCls = prevStateRulePositions.flatMap { this.dnClosureLC1(it, LookaheadSet.UP) }.toSet()
+            val upCls = prevStateRulePositions.flatMap { this.dnClosureLC1(it, LookaheadSetPart.UP) }.toSet()
             val calc = calcAndCacheHeightOrGraftInto(prevStateRulePositions, fromStateRuntimeRules, upCls)
             calc
         } else {
             val key = Pair(prevStateRulePositions, fromStateRuntimeRules)
             this._heightOrGraftInto[key]?.values?.toSet() ?: run {
-                val upCls = prevStateRulePositions.flatMap { this.dnClosureLC1(it, LookaheadSet.UP) }.toSet()
+                val upCls = prevStateRulePositions.flatMap { this.dnClosureLC1(it, LookaheadSetPart.UP) }.toSet()
                 val calc = calcAndCacheHeightOrGraftInto(prevStateRulePositions, fromStateRuntimeRules, upCls)
                 calc
             }
@@ -172,8 +172,7 @@ internal class BuildCacheLC1(
         val grouped = filt.groupBy { it.rulePosition.item!! }.map {
             val rr = it.key
             val rp = RulePosition(rr, 0, RulePosition.END_OF_RULE)
-            val lhsc = it.value.flatMap { it.lookaheadSet.content }.toSet()
-            val lhs = this.createLookaheadSet(lhsc)
+            val lhs = it.value.fold(LookaheadSetPart.EMPTY) {acc,e-> acc.union(e.lookaheadSet) }
             WidthInfo(rp, lhs)
         }.toSet()
         //don't group them, because we need the info on the lookahead for the runtime calc of next lookaheads
@@ -181,7 +180,7 @@ internal class BuildCacheLC1(
     }
 
     private fun cacheWidthInfo(fromRulePositions: List<RulePosition>, wis: Set<WidthInfo>) {
-        var map = this._widthInto[fromRulePositions] ?: run {
+        val map = this._widthInto[fromRulePositions] ?: run {
             val x = mutableMapOf<RuntimeRule, WidthInfo>()
             this._widthInto[fromRulePositions] = x
             x
@@ -191,7 +190,7 @@ internal class BuildCacheLC1(
             if (null == existing) {
                 map[wi.to.runtimeRule] = wi
             } else {
-                val lhs = this.createLookaheadSet(wi.lookaheadSet.content.union(existing.lookaheadSet.content))
+                val lhs = wi.lookaheadSet.union(existing.lookaheadSet)
                 map[wi.to.runtimeRule] = WidthInfo(wi.to, lhs)
             }
         }
@@ -215,8 +214,8 @@ internal class BuildCacheLC1(
             if (null == existing) {
                 map[hg.parent] = hg
             } else {
-                val lhs = this.createLookaheadSet(hg.lhs.content.union(existing.lhs.content))
-                val upLhs = this.createLookaheadSet(hg.upLhs.content.union(existing.upLhs.content))
+                val lhs = hg.lhs.union(existing.lhs)
+                val upLhs = hg.upLhs.union(existing.upLhs)
                 map[hg.parent] = HeightGraftInfo(hg.ancestors, hg.parent, hg.parentNext, lhs, upLhs)
             }
         }
@@ -231,12 +230,11 @@ internal class BuildCacheLC1(
             val res = upFilt.flatMap { clsItem ->
                 val ancestors = clsItem.allPrev.map { it.rulePosition.runtimeRule }
                 val parent = clsItem.rulePosition
-                val upLhs = clsItem.parentItem?.lookaheadSet ?: LookaheadSet.UP
+                val upLhs = clsItem.parentItem?.lookaheadSet ?: LookaheadSetPart.UP
                 val pns = parent.next()
                 pns.map { parentNext ->
-                    val lhsc = this.stateSet.buildCache.firstOf(parentNext, upLhs)// this.stateSet.expectedAfter(parentNext)
-                    val lhs = this.createLookaheadSet(lhsc)
-                    HeightGraftInfo(ancestors,listOf(parent), listOf(parentNext), lhs, upLhs)
+                    val lhs = this.stateSet.buildCache.firstOf(parentNext, upLhs)// this.stateSet.expectedAfter(parentNext)
+                    HeightGraftInfo(ancestors, listOf(parent), listOf(parentNext), lhs, upLhs)
                 }
             }
             // the HeightGraftInfo in res will always have 1 element in parentNext, see above
@@ -246,21 +244,21 @@ internal class BuildCacheLC1(
                     val ancestors = it.key.first as List<RuntimeRule>
                     val parentNext = it.value.flatMap { it.parentNext }.toSet().toList()
                     val parent = it.value.flatMap { it.parent }.toSet().toList()
-                    val lhs = createLookaheadSet(it.value.flatMap { it.lhs.content }.toSet())
-                    val upLhs = createLookaheadSet(it.value.flatMap { it.upLhs.content }.toSet())
+                    val lhs = it.value.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e.lhs) }
+                    val upLhs = it.value.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e.upLhs) }
                     HeightGraftInfo(ancestors, (parent), (parentNext), lhs, upLhs)
                 }
             grouped.addAll(grpd)
         }
         //TODO: need atEnd and notAtEnd to be separate states
-       // val grouped2 = grouped.groupBy { listOf(it.parent.first().runtimeRule.kind == RuntimeRuleKind.GOAL, it.lhs, it.upLhs) }
-       //     .map {
-       //         val parent = it.value.flatMap { it.parent }.toSet().toList()
-       //         val parentNext = it.value.flatMap { it.parentNext }.toSet().toList()
-       //         val lhs = it.key[1] as LookaheadSet
-       //         val upLhs = it.key[2] as LookaheadSet
-       //         HeightGraftInfo(parent, parentNext, lhs, upLhs)
-       //     }
+        // val grouped2 = grouped.groupBy { listOf(it.parent.first().runtimeRule.kind == RuntimeRuleKind.GOAL, it.lhs, it.upLhs) }
+        //     .map {
+        //         val parent = it.value.flatMap { it.parent }.toSet().toList()
+        //         val parentNext = it.value.flatMap { it.parentNext }.toSet().toList()
+        //         val lhs = it.key[1] as LookaheadSet
+        //         val upLhs = it.key[2] as LookaheadSet
+        //         HeightGraftInfo(parent, parentNext, lhs, upLhs)
+        //     }
         //return grouped2.toSet() //TODO: returns wrong because for {A,B}-H->{C,D} maybe only A grows into C & B into D
         return grouped.toSet() //TODO: gives too many heads in some cases where can be grouped2
     }
@@ -297,8 +295,7 @@ internal class BuildCacheLC1(
                                 else -> {
                                     val nexts = rp.next()
                                     for (next in nexts) {
-                                        val lhsc = firstOf(next, parent.lookaheadSet)
-                                        val lhs = createLookaheadSet(lhsc)
+                                        val lhs = firstOf(next, parent.lookaheadSet)
                                         val ci = ClosureItemLC1(parent, rp, next, lhs)
                                         val dnCls = traverseRulePositions(ci)
                                         result.addAll(dnCls)
@@ -402,18 +399,14 @@ internal class BuildCacheLC1(
         }
     }
 
-    private fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet = this.stateSet.createLookaheadSet(content) //TODO: Maybe cache here rather than in rrs
-
-    private fun dnClosureLC1(rp: RulePosition, upLhs: LookaheadSet): Set<ClosureItemLC1> {
+    private fun dnClosureLC1(rp: RulePosition, upLhs: LookaheadSetPart): Set<ClosureItemLC1> {
         return if (_cacheOff) {
-            val lhsc = calcLookaheadDown(rp, upLhs)
-            val lhs = this.stateSet.createLookaheadSet(lhsc)
+            val lhs = calcLookaheadDown(rp, upLhs)
             val ci = ClosureItemLC1(null, rp, null, lhs)
             calcDnClosureLC1(ci, mutableSetOf())
         } else {
             _dnClosure[rp] ?: run {
-                val lhsc = calcLookaheadDown(rp, upLhs)
-                val lhs = this.stateSet.createLookaheadSet(lhsc)
+                val lhs = calcLookaheadDown(rp, upLhs)
                 val ci = ClosureItemLC1(null, rp, null, lhs)
                 val v = calcDnClosureLC1(ci, mutableSetOf())
                 _dnClosure[rp] = v
@@ -422,14 +415,16 @@ internal class BuildCacheLC1(
         }
     }
 
-    private fun calcLookaheadDown(rulePosition: RulePosition, ifReachEnd: LookaheadSet): Set<RuntimeRule> {
+    private fun calcLookaheadDown(rulePosition: RulePosition, ifReachEnd: LookaheadSetPart): LookaheadSetPart {
         return when {
-            rulePosition.isAtEnd -> ifReachEnd.content
+            rulePosition.isAtEnd -> ifReachEnd
             else -> {
                 val next = rulePosition.next()
-                next.flatMap {
+                next.map {
                     firstOf(it, ifReachEnd)
-                }.toSet()
+                }.fold(LookaheadSetPart.EMPTY) { acc, it ->
+                    acc.union(it)
+                }
             }
         }
     }
@@ -462,8 +457,7 @@ internal class BuildCacheLC1(
                             for (chRp in chRps) {
                                 val chNext = chRp.next()
                                 for (chNx in chNext) {
-                                    val lh = firstOf(chNx, item.lookaheadSet)
-                                    val lhs = this.stateSet.createLookaheadSet(lh)
+                                    val lhs = firstOf(chNx, item.lookaheadSet)
                                     val ci = ClosureItemLC1(item, chRp, chNx, lhs)
                                     calcDnClosureLC1(ci, items)
                                 }

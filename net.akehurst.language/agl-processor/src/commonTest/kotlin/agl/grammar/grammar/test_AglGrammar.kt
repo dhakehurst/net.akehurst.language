@@ -895,7 +895,9 @@ class test_AglGrammar {
 
         val (actual1, issues1) = p.parse("a")
         assertEquals(null, actual1)
-        assertEquals(emptyList(), issues1)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(1,2,1,1),"a^",setOf("','"))
+        ), issues1)
 
         val (actual2, issues2) = p.parse("a,a");
         val expected2 = p.spptParser.parse(

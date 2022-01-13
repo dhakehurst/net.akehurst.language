@@ -31,8 +31,7 @@ internal class TreeData(
     private val _complete = mutableMapOf<CompleteNodeIndex, MutableMap<List<Int>,List<CompleteNodeIndex>>>()
     private val _preferred = mutableMapOf<PreferredChildIndex, CompleteNodeIndex>()
 
-    //private val _completedBy = mutableMapOf<CompleteNodeIndex, CompleteNodeIndex>()
-    private val _skipDataAfter = mutableMapOf<CompleteNodeIndex, TreeData>()
+    private val _skipDataAfter = hashMapOf<CompleteNodeIndex, TreeData>()
 
     val completeChildren: Map<CompleteNodeIndex, Map<List<Int>,List<CompleteNodeIndex>>> = this._complete
 

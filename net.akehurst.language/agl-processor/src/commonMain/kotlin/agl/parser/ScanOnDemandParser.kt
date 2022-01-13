@@ -20,15 +20,12 @@ import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
-import net.akehurst.language.agl.runtime.graph.PreviousInfo
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
-import net.akehurst.language.agl.sppt.SharedPackedParseTreeDefault
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -53,7 +50,7 @@ internal class ScanOnDemandParser(
     override fun parseForGoal(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): Pair<SharedPackedParseTree?, List<LanguageIssue>> {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, inputText)
-        val s0 = runtimeRuleSet.fetchStateSetFor(goalRule,automatonKind).startState
+        val s0 = runtimeRuleSet.fetchStateSetFor(goalRule, automatonKind).startState
         val skipStateSet = runtimeRuleSet.skipParserStateSet
         val rp = RuntimeParser(s0.stateSet, skipStateSet, goalRule, input)
         this.runtimeParser = rp
@@ -102,7 +99,7 @@ internal class ScanOnDemandParser(
         val expected = exp.map { it.tag }.toSet()
         val errorPos = lastLocation.position + lastLocation.length
         val errorLength = 1 //TODO: determine a better length
-        val location = input.locationFor(errorPos,errorLength)//InputLocation(errorPos, errorColumn, errorLine, errorLength)
+        val location = input.locationFor(errorPos, errorLength)//InputLocation(errorPos, errorColumn, errorLine, errorLength)
 
         val contextInText = rp.graph.input.contextInText(location.position)
         return LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, location, contextInText, expected)
@@ -136,11 +133,12 @@ internal class ScanOnDemandParser(
                     val exp = trs.flatMap { tr ->
                         when (tr.action) {
                             Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
-                            Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.runtimeLookahead)
+                            Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.runtimeLookahead).fullContent
                             Transition.ParseAction.EMBED -> TODO()
-                            Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard, lg.runtimeLookahead).content
-                            Transition.ParseAction.GRAFT -> lg.previous.values.map { it.node.runtimeLookahead }.flatMap { rp.stateSet.createWithParent(tr.lookaheadGuard, it).content }
-    //                        Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
+                            Transition.ParseAction.HEIGHT -> tr.lookaheadGuard.resolveUP(lg.runtimeLookahead).fullContent
+                            Transition.ParseAction.GRAFT -> lg.previous.values.map { it.node.runtimeLookahead }
+                                .flatMap { tr.lookaheadGuard.resolveUP( it).fullContent }
+                            //                        Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                         }
                     }
                     Pair(lg, exp)
@@ -153,11 +151,11 @@ internal class ScanOnDemandParser(
                         val exp = trs.flatMap { tr ->
                             when (tr.action) {
                                 Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
-                                Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.runtimeLookahead)
-                                Transition.ParseAction.EMBED -> lg.currentState.firstOf(lg.runtimeLookahead)
-                                Transition.ParseAction.HEIGHT -> rp.stateSet.createWithParent(tr.lookaheadGuard, lg.runtimeLookahead).content
-                                Transition.ParseAction.GRAFT -> rp.stateSet.createWithParent(tr.lookaheadGuard, prev.runtimeLookaheadSet).content
-       //                         Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
+                                Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.runtimeLookahead).fullContent
+                                Transition.ParseAction.EMBED -> lg.currentState.firstOf(lg.runtimeLookahead).fullContent
+                                Transition.ParseAction.HEIGHT -> tr.lookaheadGuard.resolveUP(lg.runtimeLookahead).fullContent
+                                Transition.ParseAction.GRAFT -> tr.lookaheadGuard.resolveUP(prev.runtimeLookaheadSet).fullContent
+                                //                         Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                             }
                         }
                         exp
@@ -167,7 +165,7 @@ internal class ScanOnDemandParser(
                 }
             }
         }
-        val maxLastLocation: InputLocation = r.map { input.locationFor(it.first.startPosition, it.first.nextInputPosition-it.first.startPosition) }
+        val maxLastLocation: InputLocation = r.map { input.locationFor(it.first.startPosition, it.first.nextInputPosition - it.first.startPosition) }
             .maxByOrNull { it.endPosition }
             ?: error("Internal error")
         val fr = r.filter { it.first.nextInputPosition == maxLastLocation.endPosition }
@@ -205,7 +203,7 @@ internal class ScanOnDemandParser(
             val prev = gn_prev.second?.map { it.state }
             val trans = rp.transitionsEndingInNonEmptyFrom(gn.currentState, prev?.toSet())
             trans.map { tr ->
-                val lh = tr.lookaheadGuard.resolve(gn.runtimeLookahead)
+                val lh = tr.lookaheadGuard.resolveUP(gn.runtimeLookahead).content
                 Pair(tr, lh)
             }
         }.toSet()
@@ -213,11 +211,11 @@ internal class ScanOnDemandParser(
         val result = trans_lh_pairs.flatMap { tr_lh ->
             val tr = tr_lh.first
             val lh = tr_lh.second
-            when(tr.action) {
+            when (tr.action) {
                 Transition.ParseAction.GOAL -> lh
                 Transition.ParseAction.WIDTH -> tr.to.runtimeRulesSet
                 Transition.ParseAction.GRAFT -> lh
-       //         Transition.ParseAction.GRAFT_OR_HEIGHT -> lh
+                //         Transition.ParseAction.GRAFT_OR_HEIGHT -> lh
                 Transition.ParseAction.HEIGHT -> lh
                 Transition.ParseAction.EMBED -> TODO()
             }
@@ -229,7 +227,7 @@ internal class ScanOnDemandParser(
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val usedText = inputText.substring(0, position)
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, usedText)
-        val ss = runtimeRuleSet.fetchStateSetFor(goalRule,automatonKind)
+        val ss = runtimeRuleSet.fetchStateSetFor(goalRule, automatonKind)
         val skipStateSet = runtimeRuleSet.skipParserStateSet
         val rp = RuntimeParser(ss, skipStateSet, goalRule, input)
         this.runtimeParser = rp
@@ -243,7 +241,7 @@ internal class ScanOnDemandParser(
             for (gn in rp.lastGrown) {
                 if (input.isEnd(gn.nextInputPosition)) {
                     val prev = rp.grownInLastPassPrevious[gn]
-                    if (prev==null && gn.currentState.isGoal.not()) {
+                    if (prev == null && gn.currentState.isGoal.not()) {
                         //don't include it TODO: why does this happen?
                     } else {
                         matches.add(Pair(gn, prev))
@@ -257,7 +255,7 @@ internal class ScanOnDemandParser(
     }
 
     override fun expectedTerminalsAt(goalRuleName: String, inputText: String, position: Int, automatonKind: AutomatonKind): Set<RuntimeRule> {
-        return this.expectedAt(goalRuleName, inputText, position,automatonKind)
+        return this.expectedAt(goalRuleName, inputText, position, automatonKind)
             .flatMap {
                 when (it.kind) {
                     RuntimeRuleKind.TERMINAL -> listOf(it)

@@ -102,11 +102,11 @@ grammar Mscript {
     NAME = "[a-zA-Z_][a-zA-Z_0-9]*" ;
 
     COLON               = ':' ;
-    BOOLEAN             = 'true' | 'false' ;
-    INTEGER             = "([+]|[-])?[0-9]+" ;
-    REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;
-    SINGLE_QUOTE_STRING = "'(?:[^'\\]|\\.)*'" ;
-    DOUBLE_QUOTE_STRING = "\"(?:[^\"\\]|\\.)*\"" ;
+    leaf BOOLEAN             = 'true' | 'false' ;
+    leaf INTEGER             = "([+]|[-])?[0-9]+" ;
+    leaf REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;
+    leaf SINGLE_QUOTE_STRING = "'(?:[^'\\]|\\.)*'" ;
+    leaf DOUBLE_QUOTE_STRING = "\"(?:[^\"\\]|\\.)*\"" ;
 }
     """.trimIndent()
         val sut = Agl.processorFromString(grammarStr)

@@ -52,6 +52,8 @@ internal abstract class test_AutomatonUtilsAbstract {
         val lhs_T = LookaheadSet.EOT
 
         fun RP(rr: RuntimeRule, opt: Int, pos: Int): RulePosition = RulePosition(rr, opt, pos)
+        fun LHS(content:Set<RuntimeRule>) = LookaheadSetPart(content.contains(UP),content.contains(EOT),false,content.minus(UP))
+        fun LHS(vararg rrs:RuntimeRule) = LHS(rrs.toSet())
     }
 
 }

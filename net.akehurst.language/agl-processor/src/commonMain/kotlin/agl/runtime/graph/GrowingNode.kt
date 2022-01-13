@@ -32,84 +32,17 @@ internal class GrowingNode(
     val startPosition:Int get() = index.startPosition
     val nextInputPosition: Int get() = index.nextInputPosition
     val nextInputPositionAfterSkip: Int get() = index.nextInputPositionAfterSkip
-    val numNonSkipChildren:Int get() = index.numNonSkipChildren
 
-    //val location: InputLocation get() = children.location
     val matchedTextLength: Int = this.nextInputPosition - this.startPosition
     val runtimeRules = currentState.runtimeRulesSet
-    val terminalRule = runtimeRules.first()
-
-/*
-val lastLocation
-    get() = when (this.runtimeRules.first().kind) {
-        RuntimeRuleKind.TERMINAL -> if (this.skipNodes.isEmpty()) this.location else this.skipNodes.last().location
-        RuntimeRuleKind.GOAL,
-        RuntimeRuleKind.NON_TERMINAL -> if (children.isEmpty()) this.location else children.last().location
-        RuntimeRuleKind.EMBEDDED -> if (children.isEmpty()) this.location else children.last().location
-    }
-*/
 
     var previous: MutableMap<GrowingNodeIndex, PreviousInfo> = mutableMapOf()
     val next: MutableSet<GrowingNode> = mutableSetOf() //TODO: do we actually need this?
     val isLeaf: Boolean get()= this.runtimeRules.first().kind == RuntimeRuleKind.TERMINAL
     val isEmptyMatch: Boolean get() = this.currentState.isAtEnd && this.startPosition == this.nextInputPosition
 
-    /*
-    val asCompletedNodes: List<SPPTNode> by lazy {
-        if (this.isLeaf) {
-            listOf(
-                this.graph.input.leaves[this.runtimeRules.first(), startPosition] ?: error("Internal Error: leaf node not found!")
-            )
-        } else {
-            this.currentState.rulePositions.mapNotNull {
-                if (it.isAtEnd) {
-                    val input = this.graph.input
-                    val rr = it.runtimeRule
-                    val option = it.option
-                    val priority = it.priority
-                    val cn = SPPTBranchFromInputAndGrownChildren(input, rr, option, startPosition, nextInputPosition, priority)
-                    cn.grownChildrenAlternatives[option] = this.children
-                    cn
-                } else {
-                    null
-                }
-            }
-        }
-    }
-*/
-
-    fun newPrevious() {
-        this.previous = mutableMapOf()
-    }
-
-    fun addPrevious(info: PreviousInfo) {
-        val gn = info.node
-        val gi = gn.index
-        this.previous.put(gi, info)
-        info.node.addNext(this)
-    }
-
-    fun addPrevious(gn: GrowingNode) {
-        val info = PreviousInfo(gn)
-        val gi = gn.index
-        val existing = this.previous[gi]
-        if (null==existing) {
-            this.previous.put(gi, info)
-            gn.addNext(this)
-        } else {
-            //merge previouses
-            for (p in gn.previous) {
-                existing.node.addPrevious(p.value)
-            }
-        }
-    }
-
     fun addNext(value: GrowingNode) {
         this.next.add(value)
-    }
-
-    fun removeNext(value: GrowingNode) {
-        this.next.remove(value)
     }
 
     fun toStringTree(withChildren: Boolean, withPrevious: Boolean): String {

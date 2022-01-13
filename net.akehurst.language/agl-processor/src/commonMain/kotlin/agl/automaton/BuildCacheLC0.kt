@@ -143,7 +143,7 @@ internal class BuildCacheLC0(
         //return grouped
         return bottomTerminals.map {
             val rp = RulePosition(it, 0, RulePosition.END_OF_RULE)
-            val lhs = LookaheadSet.ANY
+            val lhs = LookaheadSetPart.ANY
             WidthInfo(rp, lhs)
         }.toSet()
     }
@@ -192,14 +192,14 @@ internal class BuildCacheLC0(
             val ancestors = clsItem.allPrev.map { it.rulePosition.runtimeRule }
             val parent = clsItem.rulePosition
             val upLhs = when (parent.runtimeRule.kind) {
-                RuntimeRuleKind.GOAL -> if (parent.isAtEnd) LookaheadSet.UP else LookaheadSet.ANY
-                else -> LookaheadSet.ANY
+                RuntimeRuleKind.GOAL -> if (parent.isAtEnd) LookaheadSetPart.UP else LookaheadSetPart.ANY
+                else -> LookaheadSetPart.ANY
             }
             val pns = parent.next()
             pns.map { parentNext ->
                 val lhs = when (parentNext.runtimeRule.kind) {
-                    RuntimeRuleKind.GOAL -> LookaheadSet.UP
-                    else -> LookaheadSet.ANY
+                    RuntimeRuleKind.GOAL -> LookaheadSetPart.UP
+                    else -> LookaheadSetPart.ANY
                 }
                 HeightGraftInfo(ancestors,listOf(parent), listOf(parentNext), lhs, upLhs)
             }
@@ -209,8 +209,8 @@ internal class BuildCacheLC0(
                 val ancestors = it.key[0] as List<RuntimeRule>
                 val parentNext = it.key[1] as List<RulePosition>
                 val parent = it.value[0].parent // should all be the same as ancestors are the same
-                val lhs = if (it.value.map { it.lhs }.contains(LookaheadSet.ANY)) LookaheadSet.ANY else LookaheadSet.UP
-                val upLhs = if (it.value.map { it.upLhs }.contains(LookaheadSet.ANY)) LookaheadSet.ANY else LookaheadSet.UP
+                val lhs = it.value.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e.lhs) }
+                val upLhs = it.value.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e.upLhs) }
                 HeightGraftInfo(ancestors,(parent), (parentNext), lhs, upLhs)
             }
         //val grouped2 = grouped.groupBy { listOf(it.lhs, it.upLhs, it.parentNext.map { it.position }) }

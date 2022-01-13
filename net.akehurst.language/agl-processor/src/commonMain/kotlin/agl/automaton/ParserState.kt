@@ -75,6 +75,10 @@ internal class ParserState(
                 else -> true
             }
         }
+
+        fun LookaheadSetPart.lhs(stateSet: ParserStateSet): LookaheadSet {
+            return stateSet.createLookaheadSet(this.includesUP, this.includesEOT, this.matchANY, this.content)
+        }
     }
 
     val outTransitions: TransitionCache = when (this.stateSet.automatonKind) {
@@ -119,14 +123,13 @@ internal class ParserState(
     val isGoal = this.firstRule.kind == RuntimeRuleKind.GOAL
     val isUserGoal = this.firstRule == this.stateSet.userGoalRule
 
-    fun firstOf(ifReachedEnd: LookaheadSet): Set<RuntimeRule> = this.rulePositions.flatMap {
-        stateSet.buildCache.firstOf(it, ifReachedEnd)
-    }.toSet()
+    fun firstOf(ifReachedEnd: LookaheadSet): LookaheadSetPart = this.rulePositions.map {
+        stateSet.buildCache.firstOf(it, LookaheadSetPart(ifReachedEnd.includesUP, ifReachedEnd.includesEOT, ifReachedEnd.matchANY, ifReachedEnd.content))
+    }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
 
 
-    internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet {
-        return this.stateSet.createLookaheadSet(content)
-    }
+    internal fun createLookaheadSet(includesUP: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet =
+        this.stateSet.createLookaheadSet(includesUP, includeEOT, matchAny, content)
 
     fun widthInto(prevState: ParserState?): Set<WidthInfo> = this.stateSet.buildCache.widthInto(this.rulePositions)
 
@@ -445,25 +448,25 @@ internal class ParserState(
         return __transitions.toSet()
     }
 
-    private fun createWidthTransition(rp: RulePosition, lookaheadSet: LookaheadSet): Transition {
+    private fun createWidthTransition(rp: RulePosition, lookaheadSet: LookaheadSetPart): Transition {
         val toRp = RulePosition(rp.runtimeRule, rp.option, RulePosition.END_OF_RULE) //TODO: is this not passed in ? //assumes rp is a terminal
         val to = this.stateSet.states[listOf(toRp)]
         val lh = lookaheadSet
         // upLookahead and prevGuard are unused
-        return Transition(this, to, Transition.ParseAction.WIDTH, lh, LookaheadSet.EMPTY, null) { _, _ -> true }
+        return Transition(this, to, Transition.ParseAction.WIDTH, lh.lhs(this.stateSet), LookaheadSet.EMPTY, null) { _, _ -> true }
     }
 
-    private fun createEmbeddedTransition(rp: RulePosition, lookaheadSet: LookaheadSet): Transition {
+    private fun createEmbeddedTransition(rp: RulePosition, lookaheadSet: LookaheadSetPart): Transition {
         val toRp = RulePosition(rp.runtimeRule, rp.option, RulePosition.END_OF_RULE) //TODO: is this not passed in ?
         val to = this.stateSet.states[listOf(toRp)]
         val lh = lookaheadSet
         // upLookahead and prevGuard are unused
-        return Transition(this, to, Transition.ParseAction.EMBED, lh, LookaheadSet.EMPTY, null) { _, _ -> true }
+        return Transition(this, to, Transition.ParseAction.EMBED, lh.lhs(this.stateSet), LookaheadSet.EMPTY, null) { _, _ -> true }
     }
 
     private fun createHeightTransition3(hg: HeightGraftInfo): Transition {
         val to = this.stateSet.states[hg.parentNext]
-        val trs = Transition(this, to, Transition.ParseAction.HEIGHT, hg.lhs, hg.upLhs, hg.parent) { _, _ -> true }
+        val trs = Transition(this, to, Transition.ParseAction.HEIGHT, hg.lhs.lhs(this.stateSet), hg.upLhs.lhs(this.stateSet), hg.parent) { _, _ -> true }
         return trs
     }
 
@@ -484,7 +487,7 @@ internal class ParserState(
             }
         }
         val to = this.stateSet.states[hg.parentNext]
-        val trs = Transition(this, to, Transition.ParseAction.GRAFT, hg.lhs, hg.upLhs, hg.parent, runtimeGuard)
+        val trs = Transition(this, to, Transition.ParseAction.GRAFT, hg.lhs.lhs(this.stateSet), hg.upLhs.lhs(this.stateSet), hg.parent, runtimeGuard)
         return trs
     }
 

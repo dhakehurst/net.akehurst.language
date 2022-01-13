@@ -22,7 +22,6 @@ import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import org.junit.Assert
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -113,7 +112,7 @@ class test_VistraqQuery_Singles {
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
-        Assert.assertEquals(queryStr, resultStr)
+        assertEquals(queryStr, resultStr)
     }
 
     @Test
@@ -123,7 +122,7 @@ class test_VistraqQuery_Singles {
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
-        Assert.assertEquals(queryStr, resultStr)
+        assertEquals(queryStr, resultStr)
     }
 
 
@@ -134,7 +133,7 @@ class test_VistraqQuery_Singles {
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
-        Assert.assertEquals(queryStr, resultStr)
+        assertEquals(queryStr, resultStr)
     }
 
     @Test
@@ -144,7 +143,7 @@ class test_VistraqQuery_Singles {
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
-        Assert.assertEquals(queryStr, resultStr)
+        assertEquals(queryStr, resultStr)
     }
 
     @Test
@@ -155,7 +154,7 @@ class test_VistraqQuery_Singles {
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
-        Assert.assertEquals(queryStr, resultStr)
+        assertEquals(queryStr, resultStr)
     }
 
     @Test(timeout = 5000)
@@ -166,7 +165,7 @@ class test_VistraqQuery_Singles {
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
-        Assert.assertEquals(queryStr, resultStr)
+        assertEquals(queryStr, resultStr)
         println(sppt.toStringAllWithIndent("  "))
     }
 
@@ -178,7 +177,7 @@ class test_VistraqQuery_Singles {
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
-        Assert.assertEquals(queryStr, resultStr)
+        assertEquals(queryStr, resultStr)
     }
 
     @Test//(timeout = 5000)
@@ -189,7 +188,7 @@ class test_VistraqQuery_Singles {
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
-        Assert.assertEquals(queryStr, resultStr)
+        assertEquals(queryStr, resultStr)
     }
 
 
@@ -201,7 +200,7 @@ class test_VistraqQuery_Singles {
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
-        Assert.assertEquals(queryStr, resultStr)
+        assertEquals(queryStr, resultStr)
     }
 
     @Test
@@ -212,7 +211,7 @@ class test_VistraqQuery_Singles {
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
-        Assert.assertEquals(queryStr, resultStr)
+        assertEquals(queryStr, resultStr)
     }
 
     @Test
@@ -223,7 +222,7 @@ class test_VistraqQuery_Singles {
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
-        Assert.assertEquals(queryStr, resultStr)
+        assertEquals(queryStr, resultStr)
     }
 
     @Test
@@ -236,7 +235,7 @@ class test_VistraqQuery_Singles {
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
-        Assert.assertEquals(queryStr, resultStr)
+        assertEquals(queryStr, resultStr)
     }
 
 
@@ -256,7 +255,7 @@ class test_VistraqQuery_Singles {
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
-        Assert.assertEquals(queryStr, resultStr)
+        assertEquals(queryStr, resultStr)
     }
 
     @Test(timeout = 5000)
@@ -307,6 +306,8 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
 
         try {
             println("parse")
+            processor.parse(queryStr, "query")
+            println("timed parse")
             val v = measureTimedValue {
                 processor.parse(queryStr, "query")
             }

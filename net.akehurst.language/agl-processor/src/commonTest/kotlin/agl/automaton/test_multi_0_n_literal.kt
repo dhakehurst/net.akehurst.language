@@ -16,6 +16,9 @@
 
 package net.akehurst.language.agl.automaton
 
+import agl.automaton.AutomatonTest
+import agl.automaton.automaton
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -43,23 +46,23 @@ internal class test_multi_0_n_literal : test_AutomatonAbstract() {
         val s3 = SM.states[listOf(RulePosition(S, 0, RulePosition.POSITION_MULIT_ITEM))]
         val s4 = SM.states[listOf(RulePosition(S, 0, RulePosition.END_OF_RULE))]
 
-        val lhs_a = SM.createLookaheadSet(setOf(a))
-        val lhs_aU = SM.createLookaheadSet(setOf(a, UP))
-        val lhs_aT = SM.createLookaheadSet(setOf(a, RuntimeRuleSet.END_OF_TEXT))
+        val lhs_a = SM.createLookaheadSet(false,false, false, setOf(a))
+        val lhs_aU = SM.createLookaheadSet(true, false, false,setOf(a))
+        val lhs_aT = SM.createLookaheadSet(false,true, false, setOf(a))
     }
 
     @Test
     override fun firstOf() {
         listOf(
-            Triple(RP(G, 0, SOR), lhs_U, setOf(a, UP)), // G = . S
-            Triple(RP(G, 0, EOR), lhs_U, setOf(UP)), // G = S .
-            Triple(RP(S, 1, SOR), lhs_U, setOf(UP)), // S = . (a.empty)
-            Triple(RP(S, 1, EOR), lhs_U, setOf(UP)), // S = (a.empty) .
-            Triple(RP(S, 0, SOR), lhs_a, setOf(a)), // S = . a*
-            Triple(RP(S, 0, PMI), lhs_a, setOf(a)), // S = a . a*
-            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)) // S = a* .
+            Triple(RP(G, 0, SOR), lhs_U, LHS(a, UP)), // G = . S
+            Triple(RP(G, 0, EOR), lhs_U, LHS(UP)), // G = S .
+            Triple(RP(S, 1, SOR), lhs_U, LHS(UP)), // S = . (a.empty)
+            Triple(RP(S, 1, EOR), lhs_U, LHS(UP)), // S = (a.empty) .
+            Triple(RP(S, 0, SOR), lhs_a, LHS(a)), // S = . a*
+            Triple(RP(S, 0, PMI), lhs_a, LHS(a)), // S = a . a*
+            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)) // S = a* .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs)
+            val actual = SM.buildCache.firstOf(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }
@@ -96,8 +99,8 @@ internal class test_multi_0_n_literal : test_AutomatonAbstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraftInfo(emptyList(),listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, PMI)), lhs_a, lhs_U),
-                HeightGraftInfo(emptyList(),listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, EOR)), lhs_U, lhs_U)
+                HeightGraftInfo(emptyList(),listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, PMI)), lhs_a.part, lhs_U.part),
+                HeightGraftInfo(emptyList(),listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, EOR)), lhs_U.part, lhs_U.part)
         )
         assertEquals(expected, actual)
 
@@ -117,4 +120,28 @@ internal class test_multi_0_n_literal : test_AutomatonAbstract() {
         }
     }
 
+    @Test
+    fun parse_aba() {
+        val parser = ScanOnDemandParser(rrs)
+        parser.parseForGoal("S", "aba", AutomatonKind.LOOKAHEAD_1)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+
+
+        }
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun buildFor() {
+        val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
+    }
 }

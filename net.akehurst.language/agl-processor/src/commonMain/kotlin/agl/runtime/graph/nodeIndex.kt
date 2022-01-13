@@ -103,11 +103,11 @@ internal class CompleteNodeIndex(
 
     val runtimeRulesSet: Set<RuntimeRule> by lazy { this.rulePositions.map { it.runtimeRule }.toSet() }
 
-    private val hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode()
+    private val hashCode_cache by lazy { arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode() }
     //private val hashCode_cache = arrayOf(treeData, rulePositions, startPosition, nextInputPosition).contentHashCode()
 
     //TODO: don't store data twice..also prefer not to create 2 objects!
-    val preferred = PreferredChildIndex(runtimeRulesSet, startPosition)
+    val preferred by lazy {  PreferredChildIndex(runtimeRulesSet, startPosition)}
 
     val highestPriorityRule get() = this.rulePositions.maxByOrNull { it.priority }!!.runtimeRule
     val firstRule: RuntimeRule by lazy { this.rulePositions[0].runtimeRule }

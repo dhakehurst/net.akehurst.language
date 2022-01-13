@@ -22,6 +22,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.regex.RegexMatcher
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.MutableStack
+import net.akehurst.language.collections.mutableStackOf
 
 internal class SPPTParserDefault(
     val rootRuntimeRuleSet: RuntimeRuleSet,
@@ -38,7 +39,7 @@ internal class SPPTParserDefault(
     private val CHILDREN_START = regexMatcher("[{]")
     private val CHILDREN_END = regexMatcher("[}]")
 
-    private var runtimeRuleSetInUse = MutableStack<RuntimeRuleSet>()
+    private var runtimeRuleSetInUse = mutableStackOf<RuntimeRuleSet>(rootRuntimeRuleSet)
     private val node_cache: MutableMap<Pair<SPPTNodeIdentity, Int>, SPPTNode> = mutableMapOf()
 
     var root: SPPTNode? = null
@@ -123,7 +124,6 @@ internal class SPPTParserDefault(
         } else {
             this.node_cache.clear()
         }
-        this.runtimeRuleSetInUse.push(rootRuntimeRuleSet)
         val input = InputFromString(runtimeRuleSetInUse.peek().terminalRules.size, "") //TODO: not sure we should reuse this here? maybe ok
         val scanner = SimpleScanner(treeAsString)
         val nodeNamesStack = MutableStack<NodeStart>()

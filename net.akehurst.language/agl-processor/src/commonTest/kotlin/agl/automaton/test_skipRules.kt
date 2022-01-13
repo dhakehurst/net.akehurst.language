@@ -16,6 +16,9 @@
 
 package net.akehurst.language.agl.automaton
 
+import agl.automaton.AutomatonTest
+import agl.automaton.automaton
+import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -55,10 +58,10 @@ internal class test_skipRules : test_AutomatonAbstract() {
 
         val sk1 = skipSS.states[listOf(RulePosition(skWS, 0, RulePosition.END_OF_RULE))]
 
-        val lhs_a = SM.createLookaheadSet(setOf(a))
-        val lhs_skWCU = SM.createLookaheadSet(setOf(skWS, skCM, UP))
-        val lhs_aT = SM.createLookaheadSet(setOf(a, RuntimeRuleSet.END_OF_TEXT))
-        val lhs_WS_CM_UP = SM.createLookaheadSet(setOf(skWS, skCM, UP))
+        val lhs_a = SM.createLookaheadSet(false,false, false,setOf(a))
+        val lhs_skWCU = SM.createLookaheadSet(true, false, false,setOf(skWS, skCM))
+        val lhs_aT = SM.createLookaheadSet(false, true, false,setOf(a))
+        val lhs_WS_CM_UP = SM.createLookaheadSet(true, false, false,setOf(skWS, skCM))
     }
 
     @Test
@@ -90,21 +93,21 @@ internal class test_skipRules : test_AutomatonAbstract() {
     @Test
     override fun firstOf() {
         listOf(
-            Triple(RP(G, 0, SOR), lhs_U, setOf(a)),    // G = . S
-            Triple(RP(G, 0, EOR), lhs_U, setOf(UP)),   // G = S .
-            Triple(RP(S, 0, SOR), lhs_U, setOf(a)),    // S = . a
-            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),   // S = a .
+            Triple(RP(G, 0, SOR), lhs_U, LHS(a)),    // G = . S
+            Triple(RP(G, 0, EOR), lhs_U, LHS(UP)),   // G = S .
+            Triple(RP(S, 0, SOR), lhs_U, LHS(a)),    // S = . a
+            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),   // S = a .
 
-            Triple(RP(skG, OMI, SOR), lhs_U, setOf(a)),      // skG = . skM+
-            Triple(RP(skG, OMI, EOR), lhs_U, setOf(a)),      // skG = skM+ .
-            Triple(RP(skG, 0, EOR), lhs_U, setOf(UP)),   // skG = skM . skM+
-            Triple(RP(skG, 0, SOR), lhs_U, setOf(a)),    // skG = skM+ .
-            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),     // skM = . WS
-            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),     // skM = WS .
-            Triple(RP(S, 0, EOR), lhs_U, setOf(UP)),     // skM = . CM
-            Triple(RP(S, 0, EOR), lhs_U, setOf(UP))      // skM = CM .
+            Triple(RP(skG, OMI, SOR), lhs_U, LHS(a)),      // skG = . skM+
+            Triple(RP(skG, OMI, EOR), lhs_U, LHS(a)),      // skG = skM+ .
+            Triple(RP(skG, 0, EOR), lhs_U, LHS(UP)),   // skG = skM . skM+
+            Triple(RP(skG, 0, SOR), lhs_U, LHS(a)),    // skG = skM+ .
+            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),     // skM = . WS
+            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),     // skM = WS .
+            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),     // skM = . CM
+            Triple(RP(S, 0, EOR), lhs_U, LHS(UP))      // skM = CM .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs)
+            val actual = SM.buildCache.firstOf(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }
@@ -115,7 +118,7 @@ internal class test_skipRules : test_AutomatonAbstract() {
         val actual = s0.widthInto(null).toList()
 
         val expected = listOf(
-            WidthInfo(RP(a, 0, EOR), lhs_U)
+            WidthInfo(RP(a, 0, EOR), lhs_U.part)
         )
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {
@@ -128,8 +131,8 @@ internal class test_skipRules : test_AutomatonAbstract() {
         val actual = sk0.widthInto(null).toList()
 
         val expected = listOf(
-            WidthInfo(RulePosition(skWS, 0, RulePosition.END_OF_RULE), lhs_skWCU),
-            WidthInfo(RulePosition(skCM, 0, RulePosition.END_OF_RULE), lhs_skWCU)
+            WidthInfo(RulePosition(skWS, 0, RulePosition.END_OF_RULE), lhs_skWCU.part),
+            WidthInfo(RulePosition(skCM, 0, RulePosition.END_OF_RULE), lhs_skWCU.part)
         )
         assertEquals(expected, actual)
     }
@@ -143,11 +146,36 @@ internal class test_skipRules : test_AutomatonAbstract() {
             HeightGraftInfo(emptyList(),
                 listOf(RulePosition(skC, 0, RulePosition.START_OF_RULE)),
                 listOf(RulePosition(skC, 0, RulePosition.END_OF_RULE)),
-                lhs_WS_CM_UP,
-                lhs_WS_CM_UP
+                lhs_WS_CM_UP.part,
+                lhs_WS_CM_UP.part
             )
         )
         assertEquals(expected, actual)
 
+    }
+
+    @Test
+    fun parse_aba() {
+        val parser = ScanOnDemandParser(rrs)
+        parser.parseForGoal("S", "aba", AutomatonKind.LOOKAHEAD_1)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+
+
+        }
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun buildFor() {
+        val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
     }
 }

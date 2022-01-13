@@ -16,41 +16,55 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.agl.automaton.LookaheadSetPart
 import net.akehurst.language.agl.automaton.ParserStateSet
 
 internal class LookaheadSet(
     val number: Int,
+    val includesUP: Boolean,
+    val includesEOT: Boolean,
+    val matchANY: Boolean,
     val content: Set<RuntimeRule>
 ) {
     companion object {
-        val EMPTY = LookaheadSet(-1, emptySet())
-        val ANY = LookaheadSet(-1, setOf(RuntimeRuleSet.ANY_LOOKAHEAD))
-        val EOT = LookaheadSet(-2, setOf(RuntimeRuleSet.END_OF_TEXT))
-        val UP = LookaheadSet(-3, setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+        val EMPTY = LookaheadSet(-1, false, false, false, emptySet())
+        val ANY = LookaheadSet(-2, false, false, true, emptySet())
+        val EOT = LookaheadSet(-3, false, true, false, emptySet())
+        val UP = LookaheadSet(-4, true, false, false, emptySet())
+        val UNCACHED_NUMBER = -5
     }
 
-    fun resolve(runtimeLookahead: LookaheadSet): Set<RuntimeRule> {
+    val regex by lazy {
+        val str = this.content.joinToString(prefix = "(", separator = ")|(", postfix = ")") {
+            if (it.isPattern) it.value else "\\Q${it.value}\\E"
+        }
+        Regex(str)
+    }
+
+    val part get() = LookaheadSetPart(this.includesUP, this.includesEOT, this.matchANY, this.content)
+
+    /**
+     * runtimeLookahead must not include UP
+     * replace UP in this with runtimeLookahead
+     */
+    fun resolveUP(runtimeLookahead: LookaheadSet): LookaheadSetPart {
         return when {
-            UP == runtimeLookahead -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
-            ANY == this -> this.content
-            //null == runtimeLookahead -> this.content
-            UP == this -> runtimeLookahead.content
+            runtimeLookahead.includesUP -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
+            UP == this -> runtimeLookahead.part
             else -> {
-                var result = mutableSetOf<RuntimeRule>()
-                for (rr in this.content) {
-                    if (RuntimeRuleSet.USE_PARENT_LOOKAHEAD == rr) {
-                        result.addAll(runtimeLookahead.content)
-                    } else {
-                        result.add(rr)
-                    }
-                }
-                result
+                val content = if (this.includesUP) this.content.union(runtimeLookahead.content) else this.content
+                val eol = this.includesEOT || (this.includesUP && runtimeLookahead.includesEOT)
+                val ma = this.matchANY || (this.includesUP && runtimeLookahead.matchANY)
+                LookaheadSetPart(false, eol, ma, content)
             }
         }
     }
 
-    fun union(automaton:ParserStateSet, lookahead: LookaheadSet): LookaheadSet {
-        return automaton.createLookaheadSet(this.content.union(lookahead.content))
+    fun union(automaton: ParserStateSet, lookahead: LookaheadSet): LookaheadSet {
+        val up = this.includesUP || lookahead.includesUP
+        val eol = this.includesEOT || lookahead.includesEOT
+        val ma = this.matchANY || lookahead.matchANY
+        return automaton.createLookaheadSet(up, eol, ma, this.content.union(lookahead.content))
     }
 
     override fun hashCode(): Int = number
@@ -59,7 +73,18 @@ internal class LookaheadSet(
         else -> false
     }
 
-    override fun toString(): String = "LookaheadSet{$number,${content.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }}}"
-
+    override fun toString(): String = when {
+        this == ANY -> "LookaheadSet{$number,[ANY]}"
+        this == UP -> "LookaheadSet{$number,[UP]}"
+        this == EOT -> "LookaheadSet{$number,[EOT]}"
+        else -> {
+            val cont = mutableSetOf<RuntimeRule>()
+            if (this.includesUP) cont.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+            if (this.includesEOT) cont.add(RuntimeRuleSet.END_OF_TEXT)
+            if (this.matchANY) cont.add(RuntimeRuleSet.ANY_LOOKAHEAD)
+            cont.addAll(this.content)
+            "LookaheadSet{$number,${content.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }}}"
+        }
+    }
 
 }

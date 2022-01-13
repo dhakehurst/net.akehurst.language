@@ -99,6 +99,8 @@ internal class InputFromString(
         return EOL_PATTERN.findAll(text).map { it.range.first }.toList()
     }
 
+    fun isLookingAt(position: Int, terminalRule: RuntimeRule):Boolean = terminalRule.regex.matchesAt(this.text,position)
+
     private fun matchLiteral(position: Int, patternText: String): RegexMatcher.MatchResult? {
         val stext = this.text.substring(position)
         val match = stext.startsWith(patternText)//regionMatches(position, patternText, 0, patternText.length, false)
@@ -156,8 +158,8 @@ internal class InputFromString(
 
     internal fun tryMatchText(position: Int, terminalRule: RuntimeRule): RegexMatcher.MatchResult? {
         val matched = when {
-            (position >= this.text.length) -> if (terminalRule.value == END_OF_TEXT) RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
-            terminalRule.isPattern -> this.matchRegEx2(position, terminalRule.patternAtStart!!)
+            this.isEnd(position) -> if (terminalRule.value == END_OF_TEXT) RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
+            terminalRule.isPattern -> this.matchRegEx2(position, terminalRule.regex)
             else -> this.matchLiteral(position, terminalRule.value)
             //else ->pattern.match(this.text, position)
         }

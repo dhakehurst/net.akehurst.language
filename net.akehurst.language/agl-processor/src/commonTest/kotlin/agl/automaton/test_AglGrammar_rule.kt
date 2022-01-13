@@ -60,11 +60,11 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
     @Test
     override fun firstOf() {
         listOf(
-            Triple(RP(G, 0, SOR), lhs_U, setOf(R_isLeaf)), // G = . S
-            Triple(RP(G, 0, EOR), lhs_U, setOf(UP))        // G = S .
+            Triple(RP(G, 0, SOR), lhs_U, LHS(R_isLeaf)), // G = . S
+            Triple(RP(G, 0, EOR), lhs_U, LHS(UP))        // G = S .
 //TODO
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs)
+            val actual = SM.buildCache.firstOf(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }
@@ -74,8 +74,8 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
         val actual = s0.widthInto(null).toList()
 
         val expected = listOf(
-            WidthInfo(RP(T_namespace, 0, EOR), lhs_U),
-            WidthInfo(RP(T_namespace, 0, EOR), lhs_U)
+            WidthInfo(RP(T_namespace, 0, EOR), lhs_U.part),
+            WidthInfo(RP(T_namespace, 0, EOR), lhs_U.part)
         )
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {

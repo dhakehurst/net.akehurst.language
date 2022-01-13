@@ -62,10 +62,10 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
     @Test
     override fun firstOf() {
         listOf(
-            /* G = S . */ Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),
-            /* G = . S */ Triple(RulePosition(G, 0, 0), lhs_U, setOf(UP))
+            /* G = S . */ Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, LHS(UP)),
+            /* G = . S */ Triple(RulePosition(G, 0, 0), lhs_U, LHS(UP))
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs)
+            val actual = SM.buildCache.firstOf(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }
@@ -85,7 +85,7 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
     }
 
     @Test
-    fun parse_b() {
+    fun parse_abc() {
         //TODO: is there a way to reset the rrs if it needs it?
         val parser = ScanOnDemandParser(rrs)
         parser.parseForGoal("S", "b", AutomatonKind.LOOKAHEAD_1)
@@ -111,4 +111,15 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
 
     }
 
+    @Test
+    fun buildFor() {
+        val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
+    }
 }
