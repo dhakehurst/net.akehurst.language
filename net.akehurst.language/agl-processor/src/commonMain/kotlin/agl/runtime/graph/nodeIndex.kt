@@ -67,7 +67,7 @@ internal data class GrowingNodeIndex(
     }
 
     //TODO: don't store data twice..also prefer not to create 2 objects!
-    val complete = CompleteNodeIndex(treeData, state.rulePositions, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)
+    val complete = CompleteNodeIndex(treeData, state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)
 
     override fun toString(): String {
         return "GNI{state=$state,lhs=${
@@ -94,14 +94,15 @@ internal data class GrowingNodeIndex(
 internal class CompleteNodeIndex(
     val treeData: TreeData,
     // only RuntimeRules are needed for comparisons, but priority needed in order to resolve priorities, but it should not be part of identity
-    val rulePositions: List<RulePosition>,
+    val state: ParserState,
     val startPosition: Int,
     val nextInputPosition: Int,
     val nextInputPositionAfterSkip: Int,
     val gni: GrowingNodeIndex? // the GNI used to create this, TODO: remove it...just for debug
 ) {
 
-    val runtimeRulesSet: Set<RuntimeRule> by lazy { this.rulePositions.map { it.runtimeRule }.toSet() }
+    val runtimeRulesSet: Set<RuntimeRule> get() = this.state.runtimeRulesSet
+    val rulePositions get() = this.state.rulePositions
 
     private val hashCode_cache by lazy { arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode() }
     //private val hashCode_cache = arrayOf(treeData, rulePositions, startPosition, nextInputPosition).contentHashCode()
@@ -109,14 +110,14 @@ internal class CompleteNodeIndex(
     //TODO: don't store data twice..also prefer not to create 2 objects!
     val preferred by lazy {  PreferredChildIndex(runtimeRulesSet, startPosition)}
 
-    val highestPriorityRule get() = this.rulePositions.maxByOrNull { it.priority }!!.runtimeRule
-    val firstRule: RuntimeRule by lazy { this.rulePositions[0].runtimeRule }
+    val highestPriorityRule get() = this.state.rulePositions.maxByOrNull { it.priority }!!.runtimeRule
+    val firstRule: RuntimeRule by lazy { this.state.rulePositions[0].runtimeRule }
     val isLeaf: Boolean get() = firstRule.kind == RuntimeRuleKind.TERMINAL //should only be one if true
     val isEmbedded: Boolean get() = firstRule.kind == RuntimeRuleKind.EMBEDDED //should only be one if true
     val hasSkipData:Boolean get() = this.nextInputPosition!=nextInputPositionAfterSkip
 
-    val optionList: List<Int> by lazy { this.rulePositions.map { it.option } }
-    val priorityList: List<Int> by lazy { this.rulePositions.map { it.priority } }
+    val optionList: List<Int> by lazy { this.state.rulePositions.map { it.option } }
+    val priorityList: List<Int> by lazy { this.state.rulePositions.map { it.priority } }
 
     override fun hashCode(): Int = this.hashCode_cache
     override fun equals(other: Any?): Boolean = when {

@@ -26,7 +26,7 @@ class GraphStructuredStack<E> {
     }
 
     fun root(head: E) {
-        _previous[head] = mutableSetOf()
+        _previous[head] = hashSetOf()
         _count[head] = 0
     }
 
@@ -36,7 +36,7 @@ class GraphStructuredStack<E> {
     fun push(head: E, next: E): Boolean {
         var set = _previous[next]
         val newHead = if (null == set) {
-            set = mutableSetOf()
+            set = hashSetOf()
             _previous[next] = set
             _count[next] = 0
             true
@@ -46,7 +46,7 @@ class GraphStructuredStack<E> {
         set.add(head)
         val hc = this._count[head]
         if (null==hc) {
-            _previous[head] = mutableSetOf()
+            _previous[head] = hashSetOf()
             this._count[head] = 1
         } else {
             this._count[head] = hc+1

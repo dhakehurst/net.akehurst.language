@@ -62,7 +62,7 @@ class test_Java8_Singles_aglOptm {
         val p = Agl.processorFromString(grammarStr, goal)
 
         val sentence = "int"
-        val (sppt,issues) = p.buildFor(goal).parse(sentence,goal)//TODO: use build
+        val (sppt,issues) = p.buildFor("Type").parse(sentence,"Type")//TODO: use build
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
         assertEquals(1, sppt.maxNumHeads)
@@ -107,15 +107,71 @@ class test_Java8_Singles_aglOptm {
         val (sppt,issues) = proc.parse(sentence,goal)
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
+        assertEqualsWarning(1, sppt.maxNumHeads)
     }
 
     @Test
-    fun arrayIndex() {
+    fun Java8_arrayIndex_Expression() {
         val sentence = "a[0]"
         val goal = "Expression"
         val (sppt,issues) = proc.parse(sentence,goal)
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
+        assertEqualsWarning(1, sppt.maxNumHeads)
+    }
+
+    @Test
+    fun Java8_arrayIndex_ArrayAccess() {
+        val sentence = "a[0]"
+        val goal = "ArrayAccess"
+        val (sppt,issues) = proc.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        assertEqualsWarning(1, sppt.maxNumHeads)
+    }
+
+    @Test
+    fun subgrammar_arrayIndex_ArrayAccess() {
+        val grammarStr = """
+            namespace test
+
+grammar Expressions {
+
+    leaf IDENTIFIER = "[A-Za-z]+" ;
+
+    Expression = Primary Nav? ;
+    Nav = '.' IDENTIFIER ;
+
+    Primary
+      = IDENTIFIER
+      | MethodReference
+      | ArrayAccess
+      | ClassInstanceCreationExpression
+      ;
+
+    MethodReference
+      = ArrayType '::' IDENTIFIER
+      | Primary '::' IDENTIFIER
+      ;
+
+    ArrayType = QualifiedTypeReference '[' ']' ;
+    QualifiedTypeReference = UnannTypeReference ;
+    UnannTypeReference = IDENTIFIER TypeArguments? ;
+    TypeArguments = '<'  '>' ;
+    
+    ClassInstanceCreationExpression  = Primary '.'  'new' ;
+
+    ArrayAccess = Expression '[' Expression ']' ;
+}
+        """.trimIndent()
+        val p = Agl.processorFromString(grammarStr)
+
+        val sentence = "a[b]"
+        val goal = "ArrayAccess"
+        val (sppt,issues) = p.parse(sentence,goal)
+        assertNotNull(sppt)
+        assertEquals(emptyList(),issues)
+        assertEqualsWarning(1, sppt.maxNumHeads)
     }
 
     @Test

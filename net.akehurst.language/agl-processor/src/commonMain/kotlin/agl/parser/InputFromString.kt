@@ -99,18 +99,30 @@ internal class InputFromString(
         return EOL_PATTERN.findAll(text).map { it.range.first }.toList()
     }
 
-    fun isLookingAt(position: Int, terminalRule: RuntimeRule):Boolean = terminalRule.regex.matchesAt(this.text,position)
-
-    private fun matchLiteral(position: Int, patternText: String): RegexMatcher.MatchResult? {
-        val stext = this.text.substring(position)
-        val match = stext.startsWith(patternText)//regionMatches(position, patternText, 0, patternText.length, false)
-        val matchedText = if (match) patternText else null
-        return if (null == matchedText) {
-            null
+    // seems faster to match literal with regex than substring and startsWith
+    private val isLookingAt_cache = hashMapOf<Pair<Int,Int>,Boolean>()
+    fun isLookingAt(position: Int, terminalRule: RuntimeRule):Boolean {
+        val r = isLookingAt_cache[Pair(position,terminalRule.number)]
+        return if (null!=r) {
+             r
         } else {
-            val eolPositions = this.eolPositions(matchedText)
-            RegexMatcher.MatchResult(matchedText, eolPositions)
+            val v = terminalRule.regex.matchesAt(this.text, position)
+            isLookingAt_cache[Pair(position,terminalRule.number)] = v
+            v
+        }
+    }
+
+    private fun matchLiteral(position: Int, terminalRule: RuntimeRule): RegexMatcher.MatchResult? {
+        //val stext = this.text.substring(position)
+        //val match = stext.startsWith(patternText)//regionMatches(position, patternText, 0, patternText.length, false)
+        val match = this.isLookingAt(position,terminalRule)
+        return if (match) {
+            val text = terminalRule.value
+            val eolPositions = this.eolPositions(text)
+            RegexMatcher.MatchResult(text, eolPositions)
             //matchedText
+        } else {
+            null
         }
     }
 
@@ -160,7 +172,7 @@ internal class InputFromString(
         val matched = when {
             this.isEnd(position) -> if (terminalRule.value == END_OF_TEXT) RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
             terminalRule.isPattern -> this.matchRegEx2(position, terminalRule.regex)
-            else -> this.matchLiteral(position, terminalRule.value)
+            else -> this.matchLiteral(position, terminalRule)
             //else ->pattern.match(this.text, position)
         }
         return matched

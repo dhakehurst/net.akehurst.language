@@ -48,7 +48,7 @@ internal class SPPTFromTreeData(
                 val skipChildren = td.completeChildren[sg]!!.values.first().map {
                     td.completeChildren[it]!!.values.first().get(0)
                 }
-                val nug = CompleteNodeIndex(_treeData, userGoal.rulePositions, startPositionBeforeInitialSkip, userGoal.nextInputPosition, td.nextInputPosition!!, null)
+                val nug = CompleteNodeIndex(_treeData, userGoal.state, startPositionBeforeInitialSkip, userGoal.nextInputPosition, td.nextInputPosition!!, null)
                 val userGoalChildren = skipChildren + _treeData.completeChildren[userGoal]!!.values.first()
                 _treeData.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
                 nug
