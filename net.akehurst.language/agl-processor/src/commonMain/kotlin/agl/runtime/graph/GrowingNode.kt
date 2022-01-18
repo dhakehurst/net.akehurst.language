@@ -48,7 +48,12 @@ internal class GrowingNode(
     fun toStringTree(withChildren: Boolean, withPrevious: Boolean): String {
         var r = "$currentState,$startPosition,$nextInputPosition,"
         r += if (this.currentState.isAtEnd) "C" else this.currentState.rulePositions.first().position
-        r+= this.runtimeLookahead.content.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }
+        val cont = mutableSetOf<RuntimeRule>()
+        if (this.runtimeLookahead.includesUP) cont+=RuntimeRuleSet.USE_PARENT_LOOKAHEAD
+        if (this.runtimeLookahead.includesEOT) cont+=RuntimeRuleSet.END_OF_TEXT
+        if (this.runtimeLookahead.matchANY) cont+=RuntimeRuleSet.ANY_LOOKAHEAD
+        cont += this.runtimeLookahead.content
+        r+= cont.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }
         //val name = this.currentState.runtimeRules.joinToString(prefix = "[", separator = ",", postfix = "]") { "${it.tag}(${it.number})" }
         //r += ":" + name
 /*

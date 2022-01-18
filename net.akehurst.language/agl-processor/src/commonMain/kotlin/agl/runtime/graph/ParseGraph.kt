@@ -143,19 +143,29 @@ internal class ParseGraph(
         return GrowingNode(this, gnindex)
     }
 
-    internal fun addGrowingHead(oldHead: GrowingNodeIndex, next: GrowingNode) {
+    /**
+     * return true if a new head was created
+     */
+    internal fun addGrowingHead(oldHead: GrowingNodeIndex, next: GrowingNode):Boolean {
         //this._nodes[next.index] = next
         val new = this._gss.push(oldHead, next.index)
-        if (new) {
+        return if (new) {
             this._growingHeadHeap[next.index] = next
+            true
+        } else {
+            false
         }
     }
 
-    private fun addGrowingHead(oldHead: Set<GrowingNodeIndex>, next: GrowingNode) {
+    /**
+     * return true if a new head was created
+     */
+    private fun addGrowingHead(oldHead: Set<GrowingNodeIndex>, next: GrowingNode):Boolean {
         // this._nodes[next.index] = next
-        if (oldHead.isEmpty()) {
+        return if (oldHead.isEmpty()) {
             this._gss.root(next.index)
             this._growingHeadHeap[next.index] = next
+            true
         } else {
             var new = false
             for (oh in oldHead) {
@@ -164,6 +174,9 @@ internal class ParseGraph(
             }
             if (new) {
                 this._growingHeadHeap[next.index] = next
+                true
+            } else {
+                false
             }
         }
     }
@@ -188,6 +201,9 @@ internal class ParseGraph(
         }
     }
 
+    /**
+     * return true if a new head was created
+     */
     private fun createNewHeadAndDropExisting(existing: CompleteNodeIndex, newHead: GrowingNodeIndex, previous: GrowingNodeIndex) {
         this._gss.pop(existing.gni!!)
         //TODO: maybe this._growingHeadHeap.remove(existing.gni)
@@ -195,33 +211,52 @@ internal class ParseGraph(
         this.addGrowingHead(previous, nn)
     }
 
+    /**
+     * return true if a new head was created
+     */
     private fun createNewHeadAndKeepExisting(newHead: GrowingNodeIndex, previous: GrowingNodeIndex) {
         val nn = this.createGrowingNode(newHead)
-        this.addGrowingHead(previous, nn)
+         this.addGrowingHead(previous, nn)
     }
 
+    /**
+     * return true if a new head was created
+     */
     private fun dropNewHeadAndKeepExisting(existing: CompleteNodeIndex, newHead: GrowingNodeIndex, previous: GrowingNodeIndex) {
         //TODO: probably something to clean up here!
         val i = 0
+
     }
 
+    /**
+     * return true if a new head was created
+     */
     private fun createNewHeadAndDropExisting(existing: CompleteNodeIndex, newHead: GrowingNodeIndex, previous: Set<GrowingNodeIndex>) {
         this._gss.pop(existing.gni!!)
         //TODO: maybe this._growingHeadHeap.remove(existing.gni)
         val nn = this.createGrowingNode(newHead)
-        this.addGrowingHead(previous, nn)
+         this.addGrowingHead(previous, nn)
     }
 
+    /**
+     * return true if a new head was created
+     */
     private fun createNewHeadAndKeepExisting(newHead: GrowingNodeIndex, previous: Set<GrowingNodeIndex>) {
         val nn = this.createGrowingNode(newHead)
-        this.addGrowingHead(previous, nn)
+         this.addGrowingHead(previous, nn)
     }
 
+    /**
+     * return true if a new head was created
+     */
     private fun dropNewHeadAndKeepExisting(existing: CompleteNodeIndex, newHead: GrowingNodeIndex, previous: Set<GrowingNodeIndex>) {
         //TODO: probably something to clean up here!
         val i = 0
     }
 
+    /**
+     * return true if a new head was created
+     */
     private fun findOrCreateGrowingLeafOrEmbeddedNode(
         newHead: GrowingNodeIndex,
         oldHead: GrowingNode,
@@ -316,22 +351,6 @@ internal class ParseGraph(
         }
     }
 
-    fun xxx(newParent: GrowingNodeIndex) {
-        if (newParent.state.isAtEnd) {
-            // if newParent has already been completed
-            // and existing is preferred due to priority or length then
-            //   - remove newParent from GSS
-            //   - do not create new head
-            //   - not create new tree data
-            // else
-            //  - add to GSS
-            //  - create new head if at top of GSS
-            //  - create new tree data
-        } else { // not at end
-
-        }
-    }
-
     fun previousOf(gn: GrowingNodeIndex): Set<GrowingNodeIndex> = this._gss.peek(gn)
 
     fun start(goalState: ParserState, startPosition: Int, lookahead: LookaheadSet, initialSkipData: TreeData?) {
@@ -343,6 +362,9 @@ internal class ParseGraph(
         this.treeData.start(st, initialSkipData)
     }
 
+    /**
+     * return true if grown
+     */
     fun pushToStackOf(
         newState: ParserState,
         lookahead: LookaheadSet,
@@ -351,16 +373,20 @@ internal class ParseGraph(
         oldHead: GrowingNode,
         previous: GrowingNodeIndex?,
         skipData: TreeData?
-    ) {
+    ) :Boolean {
         if (null != previous) this._gss.push(previous, oldHead.index)
         val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: nextInputPosition
         val newHead = this.treeData.createGrowingNodeIndex(newState, lookahead, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0)
         if (null != skipData) {
             this.treeData.setSkipDataAfter(newHead.complete, skipData)
         }
-        this.findOrCreateGrowingLeafOrEmbeddedNode(newHead, oldHead, previous)
+         this.findOrCreateGrowingLeafOrEmbeddedNode(newHead, oldHead, previous)
+        return true
     }
 
+    /**
+     * return true if grown
+     */
     // for embedded segments
     fun pushEmbeddedToStackOf(
         newState: ParserState,
@@ -371,50 +397,58 @@ internal class ParseGraph(
         previous: GrowingNodeIndex,
         embeddedTreeData: TreeData,
         skipData: TreeData?
-    ) {
-        if (null != previous) this._gss.push(previous, oldHead.index)
+    ):Boolean {
+        this._gss.push(previous, oldHead.index)
         //TODO: something different for embedded ?
         val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: nextInputPosition
         val newHead = this.treeData.createGrowingNodeIndex(newState, lookahead, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0)
         if (null != skipData) {
             this.treeData.setSkipDataAfter(newHead.complete, skipData)
         }
-        this.findOrCreateGrowingLeafOrEmbeddedNode(newHead, oldHead, previous)
         val embGoal = embeddedTreeData.root!!
-        val children = embeddedTreeData.childrenFor(embGoal.firstRule, startPosition, nextInputPosition)
+        val children = embeddedTreeData.childrenFor(embGoal.firstRule, embeddedTreeData.startPosition!!, embeddedTreeData.nextInputPosition!!)
         val child = children.first().second[0]
         this.treeData.setEmbeddedChild(newHead, child)
+         this.findOrCreateGrowingLeafOrEmbeddedNode(newHead, oldHead, previous)
         //TODO: do we need to check for longest ?
+        return true
     }
 
+    /**
+     * return true if grown
+     */
     fun createWithFirstChild(
         parentState: ParserState,
         parentRuntimeLookaheadSet: LookaheadSet,
         childNode: GrowingNode,
         previous: GrowingNodeIndex
-    ) {
+    ):Boolean {
         val nextInputPosition = if (childNode.isLeaf) childNode.nextInputPositionAfterSkip else childNode.nextInputPosition
         val parent = this.treeData.createGrowingNodeIndex(parentState, parentRuntimeLookaheadSet, childNode.startPosition, nextInputPosition, nextInputPosition, 1)
         val child = childNode.index
 
-        if (parent.state.isAtEnd) {
+        return if (parent.state.isAtEnd) {
             val existingComplete = this.treeData.preferred(parent.complete)
             if (null != existingComplete) {
                 val shouldDrop = this.mergeDecision(existingComplete, parent)
                 when (shouldDrop) {
                     MergeOptions.PREFER_NEW -> {
-                        createNewHeadAndDropExisting(existingComplete, parent, previous)
                         addNewPreferredTreeData(null, parent, child)
+                        createNewHeadAndDropExisting(existingComplete, parent, previous)
+                        true
                     }
                     MergeOptions.PREFER_EXISTING -> {
                         dropNewHeadAndKeepExisting(existingComplete, parent, previous)
+                        false
                     }
                     MergeOptions.KEEP_BOTH_AS_ALTERNATIVES -> {
-                        createNewHeadAndKeepExisting(parent, previous)
                         addAlternativeTreeData(existingComplete, null, parent, child)
+                        createNewHeadAndKeepExisting(parent, previous)
+                        true
                     }
                     MergeOptions.UNDECIDABLE -> {
                         createNewHeadAndKeepExisting(parent, previous)
+                        true
                     }
                 }
             } else {
@@ -426,19 +460,23 @@ internal class ParseGraph(
                     val newPriority = child.state.priorityList[0]
                     when {
                         newPriority > existingPriority -> {
-                            createNewHeadAndDropExisting(existingGrowing[0], parent, previous)
                             addNewPreferredTreeData(null, parent, child)
+                            createNewHeadAndDropExisting(existingGrowing[0], parent, previous)
+                            true
                         }
                         existingPriority > newPriority -> {
                             dropNewHeadAndKeepExisting(existingGrowing[0], parent, previous)
+                            false
                         }
                         else -> {
                             createNewHeadAndKeepExisting(parent, previous)
+                            true
                         }
                     }
                 } else {
-                    createNewHeadAndKeepExisting(parent, previous)
                     addNewPreferredTreeData(null, parent, child)
+                    createNewHeadAndKeepExisting(parent, previous)
+                    true
                 }
             }
         } else {
@@ -456,36 +494,46 @@ internal class ParseGraph(
                 val m = this.mergeDecision(existingFirstChild, child)
                 when (m) {
                     MergeOptions.PREFER_NEW -> {
-                        createNewHeadAndDropExisting(existingFirstChild, parent, previous)
                         addNewPreferredTreeData(null, parent, child)
+                        createNewHeadAndDropExisting(existingFirstChild, parent, previous)
+                        true
                     }
                     MergeOptions.PREFER_EXISTING -> {
                         dropNewHeadAndKeepExisting(existingFirstChild, parent, previous)
+                        false
                     }
                     MergeOptions.KEEP_BOTH_AS_ALTERNATIVES -> {
-                        createNewHeadAndKeepExisting(parent, previous)
                         addAlternativeTreeData(existingFirstChild, null, parent, child)
+                        createNewHeadAndKeepExisting(parent, previous)
+                        true
                     }
                     MergeOptions.UNDECIDABLE -> {
                         createNewHeadAndKeepExisting(parent, previous)
                         //addNewPreferredTreeData(existingComplete, null, parent, child)
+                        true
                     }
                 }
             } else {
-                createNewHeadAndKeepExisting(parent, previous)
                 addNewPreferredTreeData(null, parent, child)
+                createNewHeadAndKeepExisting(parent, previous)
+                true
             }
         }
     }
 
+    /**
+     * return true if grown
+     */
     fun growNextChild(
         oldParentNode: GrowingNodeIndex,
         nextChildNode: GrowingNode,
         newParentState: ParserState,
         newParentRuntimeLookaheadSet: LookaheadSet
-    ) {
+    ):Boolean {
         val newParentNumNonSkipChildren = oldParentNode.numNonSkipChildren + 1
-        val previous = this.previousOf(oldParentNode)
+        // pop oldParentNode here, because its previous will be linked to the newParentNode
+        //val previous = this.previousOf(oldParentNode)
+        val previous = this._gss.pop(oldParentNode)
         val nextInputPosition = if (nextChildNode.isLeaf) nextChildNode.nextInputPositionAfterSkip else nextChildNode.nextInputPosition
         val newParent = this.treeData.createGrowingNodeIndex(
             newParentState,
@@ -498,25 +546,29 @@ internal class ParseGraph(
         val oldParent = oldParentNode
         val child = nextChildNode.index
 
-        if (newParent.state.isAtEnd) {
+        return if (newParent.state.isAtEnd) {
             val existingComplete = this.treeData.preferred(newParent.complete)
             if (null != existingComplete) {
                 val shouldDrop = this.mergeDecision(existingComplete, newParent)
                 when (shouldDrop) {
                     MergeOptions.PREFER_NEW -> {
-                        createNewHeadAndDropExisting(existingComplete, newParent, previous)
                         addNewPreferredTreeData(oldParent, newParent, child)
+                        createNewHeadAndDropExisting(existingComplete, newParent, previous)
+                        true
                     }
                     MergeOptions.PREFER_EXISTING -> {
                         dropNewHeadAndKeepExisting(existingComplete, newParent, previous)
+                        false
                     }
                     MergeOptions.KEEP_BOTH_AS_ALTERNATIVES -> {
-                        createNewHeadAndKeepExisting(newParent, previous)
                         addAlternativeTreeData(existingComplete, oldParent, newParent, child)
+                        createNewHeadAndKeepExisting(newParent, previous)
+                        true
                     }
                     MergeOptions.UNDECIDABLE -> {
-                        createNewHeadAndKeepExisting(newParent, previous)
                         //addNewPreferredTreeData(existingComplete, oldParent, newParent, child)
+                        createNewHeadAndKeepExisting(newParent, previous)
+                        true
                     }
                 }
             } else {
@@ -526,19 +578,23 @@ internal class ParseGraph(
                     val newPriority = child.state.priorityList[0]
                     when {
                         newPriority > existingPriority -> {
-                            createNewHeadAndDropExisting(existingChild, newParent, previous)
                             addNewPreferredTreeData(null, newParent, child)
+                            createNewHeadAndDropExisting(existingChild, newParent, previous)
+                            true
                         }
                         existingPriority > newPriority -> {
                             dropNewHeadAndKeepExisting(existingChild, newParent, previous)
+                            false
                         }
                         else -> {
                             createNewHeadAndKeepExisting(newParent, previous)
+                            true
                         }
                     }
                 } else {
-                    createNewHeadAndKeepExisting(newParent, previous)
                     addNewPreferredTreeData(oldParent, newParent, child)
+                    createNewHeadAndKeepExisting(newParent, previous)
+                    true
                 }
             }
         } else {
@@ -548,22 +604,31 @@ internal class ParseGraph(
                 val newPriority = child.state.priorityList[0]
                 when {
                     newPriority > existingPriority -> {
-                        createNewHeadAndDropExisting(existingChild, newParent, previous)
                         addNewPreferredTreeData(null, newParent, child)
+                        createNewHeadAndDropExisting(existingChild, newParent, previous)
+                        true
                     }
                     existingPriority > newPriority -> {
                         dropNewHeadAndKeepExisting(existingChild, newParent, previous)
+                        false
                     }
                     else -> {
                         createNewHeadAndKeepExisting(newParent, previous)
+                        true
                     }
                 }
             } else {
-                createNewHeadAndKeepExisting(newParent, previous)
                 addNewPreferredTreeData(oldParent, newParent, child)
+                createNewHeadAndKeepExisting(newParent, previous)
+                true
             }
         }
+    }
 
+    fun drop(previous: GrowingNodeIndex?) {
+        if (null!=previous) {
+            this._gss.removeStack(previous)
+        }
     }
 
     fun isLookingAt(lookaheadGuard: LookaheadSet, runtimeLookahead: LookaheadSet?, nextInputPosition: Int): Boolean {

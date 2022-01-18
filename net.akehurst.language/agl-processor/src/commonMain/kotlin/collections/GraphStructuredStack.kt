@@ -45,16 +45,16 @@ class GraphStructuredStack<E> {
         }
         set.add(head)
         val hc = this._count[head]
-        if (null==hc) {
+        if (null == hc) {
             _previous[head] = hashSetOf()
             this._count[head] = 1
         } else {
-            this._count[head] = hc+1
+            this._count[head] = hc + 1
         }
         return newHead
     }
 
-    fun contains(node:E):Boolean = _previous.containsKey(node)
+    fun contains(node: E): Boolean = _previous.containsKey(node)
 
     fun peek(head: E): Set<E> = _previous[head] ?: emptySet()
 
@@ -63,7 +63,7 @@ class GraphStructuredStack<E> {
         return if (null == count) {
             emptySet()
         } else {
-            if (count==0) {
+            if (count == 0) {
                 _count.remove(head)
                 val prev = _previous.remove(head)!!
                 prev.forEach {
@@ -77,8 +77,29 @@ class GraphStructuredStack<E> {
         }
     }
 
+    fun removeStack(head: E) {
+        var count = this._count[head]
+        if (null == count) {
+            // do nothing
+        } else {
+            //count -= 1
+            //this._count[head] = count
+            if (0 == count) {
+                _count.remove(head)
+                val prev = _previous.remove(head)!!
+                prev.forEach {
+                    val c = this._count[it]!!
+                    this._count[it] = c - 1
+                    removeStack(it)
+                }
+            } else {
+                // do nothing
+            }
+        }
+    }
+
     override fun toString(): String {
-        return this._count.entries.filter { it.value==0 }.joinToString{it.key.toString()}
+        return this._count.entries.filter { it.value == 0 }.joinToString { it.key.toString() }
     }
 
 }
