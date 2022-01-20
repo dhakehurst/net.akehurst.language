@@ -52,6 +52,7 @@ class test_Java8_Singles_aglOptm {
         val (sppt,issues) = proc.parse(sentence,goal)
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
+        assertEquals(1, sppt.maxNumHeads)
     }
 
     @Test
@@ -181,6 +182,7 @@ grammar Expressions {
         val (sppt,issues) = proc.parse(sentence,goal)
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
+        assertEqualsWarning(1, sppt.maxNumHeads)
     }
 
     @Test

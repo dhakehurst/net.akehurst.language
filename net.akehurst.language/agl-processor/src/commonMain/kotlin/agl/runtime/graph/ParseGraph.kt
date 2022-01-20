@@ -627,7 +627,7 @@ internal class ParseGraph(
 
     fun drop(previous: GrowingNodeIndex?) {
         if (null!=previous) {
-            this._gss.removeStack(previous)
+            //this._gss.removeStack(previous)
         }
     }
 
@@ -687,7 +687,7 @@ internal class ParseGraph(
         val heads = this._growingHeadHeap.toList()
         return heads.joinToString(separator = "\n") { h ->
             val p = this.prevOfToString(h.index)
-            "$h$p"
+            "${h.index}$p"
         }
     }
 }

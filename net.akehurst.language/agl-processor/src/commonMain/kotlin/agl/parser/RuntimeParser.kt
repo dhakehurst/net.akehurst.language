@@ -68,7 +68,7 @@ internal class RuntimeParser(
         } else {
             val skipLhsp = gState.rulePositions.map { this.stateSet.buildCache.firstOf(it, LookaheadSetPart.EOT) }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
             val endOfSkipLookaheadSet = this.stateSet.createLookaheadSet(skipLhsp.includesUP, skipLhsp.includesEOT, skipLhsp.matchANY, skipLhsp.content)
-            this.tryParseSkipUntilNone(endOfSkipLookaheadSet, startPosition, true) //TODO: think this might allow some wrong things, might be a better way
+            this.tryParseSkipUntilNone(endOfSkipLookaheadSet, startPosition, false) //TODO: think this might allow some wrong things, might be a better way
         }
         this.graph.start(gState, startPosition, possibleEndOfText, initialSkipData) //TODO: remove LH
     }

@@ -46,8 +46,8 @@ internal class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract
             concatenation("par") { literal("("); ref("E"); literal(")") }
             concatenation("I") { ref("E"); ref("I1") }
             concatenation("I2") { ref("op"); ref("E") }
-            multi("I1",1, -1, "I2")
-            choice("op", RuntimeRuleChoiceKind.LONGEST_PRIORITY){
+            multi("I1", 1, -1, "I2")
+            choice("op", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("/")
                 literal("*")
                 literal("+")
@@ -65,13 +65,13 @@ internal class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract
             S { E { var { "[a-z]+":'a' } } }
         """.trimIndent()
 
-    val actual = super.test(
-        rrs = rrs,
-        goal = goal,
-        sentence = sentence,
-        expectedNumGSSHeads = 1,
-        expectedTrees = *arrayOf(expected)
-    )
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -89,12 +89,12 @@ internal class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -119,12 +119,12 @@ internal class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -154,12 +154,12 @@ internal class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -192,12 +192,12 @@ internal class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -230,12 +230,12 @@ internal class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 

@@ -212,7 +212,7 @@ public class BadBinaryLiterals {
         assertEquals(sentence, resultStr)
     }
 
-    @OptIn(ExperimentalTime::class)
+    @ExperimentalTime
     @Test(timeout = 10000)
     fun long_concatenation() {
 

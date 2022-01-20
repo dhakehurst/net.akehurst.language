@@ -18,6 +18,10 @@ package net.akehurst.language.agl.collections
 
 class GraphStructuredStack<E> {
 
+    companion object {
+        const val DO_CHECK = false
+    }
+
     private val _previous = hashMapOf<E, MutableSet<E>>() //no need to preserve insertion order
     private val _count = hashMapOf<E, Int>() //no need to preserve insertion order
 
@@ -28,6 +32,7 @@ class GraphStructuredStack<E> {
     fun root(head: E) {
         _previous[head] = hashSetOf()
         _count[head] = 0
+        check()
     }
 
     /**
@@ -43,14 +48,19 @@ class GraphStructuredStack<E> {
         } else {
             false
         }
-        set.add(head)
-        val hc = this._count[head]
-        if (null == hc) {
-            _previous[head] = hashSetOf()
-            this._count[head] = 1
+        val added = set.add(head)
+        if (added) {
+            val hc = this._count[head]
+            if (null == hc) {
+                _previous[head] = hashSetOf()
+                this._count[head] = 1
+            } else {
+                this._count[head] = hc + 1
+            }
         } else {
-            this._count[head] = hc + 1
+            // head is already previous of next
         }
+        check()
         return newHead
     }
 
@@ -58,21 +68,47 @@ class GraphStructuredStack<E> {
 
     fun peek(head: E): Set<E> = _previous[head] ?: emptySet()
 
-    fun pop(head: E): Set<E> {
-        val count = this._count[head]
+    fun pop(node: E): Set<E> {
+        val count = this._count[node]
         return if (null == count) {
             emptySet()
         } else {
             if (count == 0) {
-                _count.remove(head)
-                val prev = _previous.remove(head)!!
+                // node is a head, so remove it
+                _count.remove(node)
+                val prev = _previous.remove(node)!!
                 prev.forEach {
                     val c = this._count[it]!!
                     this._count[it] = c - 1
                 }
+                check()
                 prev
             } else {
-                _previous[head]!!
+                val prev = _previous[node]!!
+                // head is not a head of the GSS, just return the previous nodes
+                // do not deduce from count of prev, because head is not removed
+                check()
+                prev
+            }
+        }
+    }
+
+    fun check() {
+        if (DO_CHECK) {
+            val next = mutableMapOf<E, MutableSet<E>>()
+            this._previous.keys.forEach { next[it] = mutableSetOf() }
+            val heads = this._count.entries.filter { it.value == 0 }.map { it.key }
+            var check = heads.toList()
+            while (check.isNotEmpty()) {
+                val p = check.flatMap {
+                    val prev = _previous[it]!!
+                    prev.forEach { pr -> next[pr]!!.add(it) }
+                    prev
+                }
+                check = p
+            }
+            if (next.any { (k, v) -> this._count[k] != v.size }) {
+                error("GSS is broken")
             }
         }
     }
@@ -98,8 +134,34 @@ class GraphStructuredStack<E> {
         }
     }
 
+    private fun prevOfToString(n: E): String {
+        val prev = this.peek(n).toList()
+        return when {
+            prev.isEmpty() -> ""
+            1 == prev.size -> {
+                val p = prev.first()
+                " --> $p${this.prevOfToString(p)}"
+            }
+            else -> {
+                val p = prev.first()
+                " -${prev.size}-> $p${this.prevOfToString(p)}"
+            }
+        }
+    }
+
     override fun toString(): String {
-        return this._count.entries.filter { it.value == 0 }.joinToString { it.key.toString() }
+        val heads = this._count.entries.filter { it.value == 0 }
+        return when {
+            heads.isEmpty() -> if (_previous.isEmpty() && _count.isEmpty()) {
+                "<empty>"
+            } else {
+                "<error>"
+            }
+            else -> heads.joinToString(separator = "\n") { h ->
+                val p = this.prevOfToString(h.key)
+                "${h.key}$p"
+            }
+        }
     }
 
 }
