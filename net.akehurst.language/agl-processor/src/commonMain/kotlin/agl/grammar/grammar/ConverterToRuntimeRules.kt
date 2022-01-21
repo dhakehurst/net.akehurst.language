@@ -165,7 +165,7 @@ internal class ConverterToRuntimeRules(
             rhs is NonTerminal -> {
                 //TODO: handle overridden vs embedded rules!
                 //TODO: need to catch the recursion before this
-                this.compressRhs(rhs.referencedRule.rhs)
+                this.compressRhs(rhs.referencedRule(this.grammar).rhs)
             }
             else -> throw GrammarExeception("Rule ${rhs.owningRule.name}, compressing ${rhs::class} to leaf is not yet supported", null)
         }
@@ -288,11 +288,11 @@ internal class ConverterToRuntimeRules(
         val refName = target.name
         return findNamedRule(refName)
             ?: if (target.embedded) {
-                val embeddedGrammar = target.referencedRule.grammar
-                val (embeddedRuleSet, embeddedStartRule) = this.embedded(embeddedGrammar, target.referencedRule)
+                val embeddedGrammar = target.owningGrammar
+                val (embeddedRuleSet, embeddedStartRule) = this.embedded(embeddedGrammar, target.referencedRule(embeddedGrammar))
                 this.embeddedRule(target.name, false, embeddedRuleSet, embeddedStartRule)
             } else {
-                val r = target.referencedRule //this.grammar.findAllRule(refName)
+                val r = target.referencedRule(this.grammar) //this.grammar.findAllRule(refName)
                 this.visitRule(r, arg)
             }
     }

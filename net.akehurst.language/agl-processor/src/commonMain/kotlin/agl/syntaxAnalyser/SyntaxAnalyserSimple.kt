@@ -138,7 +138,9 @@ class SyntaxAnalyserSimple(
     private fun createValueFromBranch(target: SPPTBranch, path: AsmElementPath, scope: ScopeSimple<AsmElementPath>?): Any? {
         val elType = typeModel.let { typeModel.findType(target.name) }
         return when {
-            null == elType -> TODO()
+            null == elType -> {
+                TODO()
+            }
             BuiltInType.STRING == elType -> TODO()
             BuiltInType.LIST == elType -> TODO()
             elType is ElementType -> {

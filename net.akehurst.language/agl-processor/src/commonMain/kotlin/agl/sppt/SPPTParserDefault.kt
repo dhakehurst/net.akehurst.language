@@ -44,7 +44,7 @@ internal class SPPTParserDefault(
 
     var root: SPPTNode? = null
 
-    val tree: SharedPackedParseTree
+    override val tree: SharedPackedParseTree
         get() {
             val root = this.root ?: throw SPPTException("At least one tree must be added", null)
             return SharedPackedParseTreeDefault(root, -1, -1)
@@ -116,6 +116,10 @@ internal class SPPTParserDefault(
     private fun findBranch(id: SPPTNodeIdentity, length: Int): SPPTBranch? {
         val n = this.findNode(id, length)
         return n?.asBranch
+    }
+
+    override fun clear() {
+        this.node_cache.clear()
     }
 
     override fun parse(treeAsString: String, addTree: Boolean): SharedPackedParseTree {

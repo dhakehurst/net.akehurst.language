@@ -53,7 +53,7 @@ class CompletionProvider(
                 }
                 is NonTerminal -> {
                     //TODO: handle overridden vs embedded rules!
-                    getItems(item.referencedRule.rhs, desiredDepth - 1, done + item)
+                    getItems(item.referencedRule(this.targetGrammar).rhs, desiredDepth - 1, done + item)
                 }
                 is SeparatedList -> {
                     val items = getItems(item.item, desiredDepth, done + item)

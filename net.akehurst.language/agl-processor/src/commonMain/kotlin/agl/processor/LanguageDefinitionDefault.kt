@@ -27,21 +27,22 @@ import kotlin.properties.Delegates
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 class LanguageDefinitionDefault(
     override val identity: String,
-    grammar: String?,
-    override var defaultGoalRule: String?,
+    grammarStrArg: String?,
+    targetGrammarArg: String?,
+    defaultGoalRuleArg: String?,
     style: String?,
     format: String?,
     syntaxAnalyser: SyntaxAnalyser<*, *>?,
     semanticAnalyser: SemanticAnalyser<*,*>?
 ) : LanguageDefinition {
-    constructor(identity: String, grammar: String?) : this(identity, grammar, null, null, null, null, null)
+    constructor(identity: String, grammarStrArg: String?) : this(identity, grammarStrArg, null,null, null, null, null, null)
 
     private val _processor_cache: CachedValue<LanguageProcessor?> = cached {
-        val g = this.grammar
+        val g = this.grammarStr
         if (null == g) {
             null
         } else {
-            Agl.processorFromString(g,defaultGoalRule, syntaxAnalyser,  semanticAnalyser, null)
+            Agl.processorFromString(g,targetGrammar,defaultGoalRule, syntaxAnalyser,  semanticAnalyser, null)
         }
     }
 
@@ -49,7 +50,21 @@ class LanguageDefinitionDefault(
     override val styleObservers = mutableListOf<(String?, String?) -> Unit>()
     override val formatObservers = mutableListOf<(String?, String?) -> Unit>()
 
-    override var grammar: String? by Delegates.observable(grammar) { _, oldValue, newValue ->
+    override var grammarStr: String? by Delegates.observable(grammarStrArg) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+            grammarObservers.forEach { it(oldValue, newValue) }
+        }
+    }
+
+    override var targetGrammar: String? by Delegates.observable(targetGrammarArg) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+            grammarObservers.forEach { it(oldValue, newValue) }
+        }
+    }
+
+    override var defaultGoalRule: String? by Delegates.observable(defaultGoalRuleArg) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
             grammarObservers.forEach { it(oldValue, newValue) }

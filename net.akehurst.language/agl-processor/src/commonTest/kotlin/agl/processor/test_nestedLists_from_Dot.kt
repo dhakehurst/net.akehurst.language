@@ -53,7 +53,7 @@ grammar Dot  {
 	;
 
 	leaf ALPHABETIC_ID = "[a-zA-Z_][a-zA-Z_0-9]*" ;
-	leaf NUMERAL = "[-+]?([0-9]*(.[0-9]+)?)" ;
+	leaf NUMERAL = "[-+]?([0-9]+([.][0-9]+)?|([.][0-9]+))" ;
 }
         """.trimIndent()
 

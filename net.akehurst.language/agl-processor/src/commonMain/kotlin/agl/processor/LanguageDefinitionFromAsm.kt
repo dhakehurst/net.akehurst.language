@@ -29,13 +29,14 @@ import kotlin.properties.Delegates
 class LanguageDefinitionFromAsm(
     override val identity: String,
     grammar: Grammar,
+    override var targetGrammar: String?,
     override var defaultGoalRule: String?,
     style: String?,
     format: String?,
     syntaxAnalyser: SyntaxAnalyser<*, *>?,
     semanticAnalyser: SemanticAnalyser<*, *>?
 ) : LanguageDefinition {
-    constructor(identity: String, grammar: Grammar) : this(identity, grammar, null, null, null, null, null)
+    constructor(identity: String, grammar: Grammar) : this(identity, grammar, null, null, null, null, null, null)
 
     private val _grammarAsm: Grammar = grammar
     private val _processor_cache: CachedValue<LanguageProcessor?> = cached {
@@ -46,7 +47,7 @@ class LanguageDefinitionFromAsm(
     override val styleObservers = mutableListOf<(String?, String?) -> Unit>()
     override val formatObservers = mutableListOf<(String?, String?) -> Unit>()
 
-    override var grammar: String?
+    override var grammarStr: String?
         get() = this._grammarAsm.toString() //TODO:
         set(value) {
             error("Cannot set the grammar of a LanguageDefinitionFromAsm using a String")

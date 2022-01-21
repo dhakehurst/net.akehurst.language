@@ -20,12 +20,12 @@ import net.akehurst.language.api.grammar.*
 
 class NonTerminalDefault(
         override val name: String,
-        val owningGrammar: Grammar,
+        override val owningGrammar: Grammar,
         override val embedded: Boolean
 ) : RuleItemAbstract(), NonTerminal {
 
-    override val referencedRule: Rule by lazy {
-        this.owningGrammar.findAllRule(this.name)
+    override fun referencedRule(targetGrammar: Grammar): Rule  {
+       return targetGrammar.findAllRule(this.name)
     }
 
     override fun setOwningRule(rule: Rule, indices: List<Int>) {

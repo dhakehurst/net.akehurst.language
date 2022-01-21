@@ -64,5 +64,6 @@ interface Terminal : TangibleItem {
 }
 interface NonTerminal : TangibleItem {
     val embedded:Boolean
-    val referencedRule: Rule
+    val owningGrammar: Grammar
+    fun referencedRule(targetGrammar: Grammar): Rule
 }

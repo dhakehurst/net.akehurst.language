@@ -52,9 +52,16 @@ object Agl {
      *   goalRuleName.contains(".") use before '.' to choose the grammar
      *   else use the last grammar in the grammarDefinitionStr
      * }
+     * @param grammarDefinitionStr a string defining the grammar
+     * @param targetGrammarName name of one of the grammars in the grammarDefinitionString to generate parser for (if null use last grammar found)
+     * @param goalRuleName name of the default goal rule to use, it must be one of the rules in the target grammar or its super grammars (if null use first non-skip rule found in target grammar)
+     * @param syntaxAnalyser a syntax analyser (if null use SyntaxAnalyserSimple)
+     * @param semanticAnalyser a semantic analyser (if null use SemanticAnalyserSimple)
+     * @param formatter a formatter
      */
     fun processorFromString(
         grammarDefinitionStr: String,
+        targetGrammarName:String? = null,
         goalRuleName: String? = null,
         syntaxAnalyser: SyntaxAnalyser<*, *>? = null,
         semanticAnalyser: SemanticAnalyser<*, *>? = null,

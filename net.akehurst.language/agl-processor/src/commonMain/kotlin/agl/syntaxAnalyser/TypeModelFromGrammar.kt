@@ -100,10 +100,15 @@ internal class TypeModelFromGrammar(
                     else -> BuiltInType.LIST //TODO: add list type
                 }
                 is NonTerminal -> when {
-                    ruleItem.referencedRule.isLeaf -> BuiltInType.STRING
-                    ruleItem.referencedRule.rhs is EmptyRule -> BuiltInType.NOTHING
-                    ruleItem.referencedRule.rhs is Choice -> typeForChoice("??", (ruleItem.referencedRule.rhs as Choice).alternative)
-                    else -> typeForRhs(ruleItem.referencedRule)
+                    ruleItem.embedded -> {
+                            val embTmfg = TypeModelFromGrammar(ruleItem.owningGrammar)
+                            val embTm = embTmfg.derive()
+                            embTm.findType(ruleItem.name) ?: error("Should never happen")
+                    }
+                    ruleItem.referencedRule(this._grammar).isLeaf -> BuiltInType.STRING
+                    ruleItem.referencedRule(this._grammar).rhs is EmptyRule -> BuiltInType.NOTHING
+                    ruleItem.referencedRule(this._grammar).rhs is Choice -> typeForChoice("??", (ruleItem.referencedRule(this._grammar).rhs as Choice).alternative)
+                    else -> typeForRhs(ruleItem.referencedRule(this._grammar))
                 }
                 is Concatenation -> when {
                     1 == ruleItem.items.size -> typeForRuleItem(ruleItem.items[0])
@@ -170,32 +175,35 @@ internal class TypeModelFromGrammar(
             is EmptyRule -> null
             is Terminal -> null //createUniquePropertyDeclaration(et, UNNAMED_STRING_VALUE, propType)
             is NonTerminal -> {
-                val rhs = ruleItem.referencedRule.rhs
-                when (rhs) {
-                    is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), BuiltInType.STRING, false, childIndex)
-                    is Concatenation -> when {
-                        1 == rhs.items.size -> when (rhs.items[0]) {
-                            is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), BuiltInType.STRING, false,childIndex)
-                            is ListOfItems -> {
-                                val propType = typeForRuleItem(ruleItem.referencedRule.rhs) //to get list type
-                                val isNullable = (rhs.items[0] as ListOfItems).min==0 && (rhs.items[0] as ListOfItems).min==-1
-                                createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), propType, isNullable, childIndex)
+                    val rhs = if (ruleItem.embedded) {
+                        ruleItem.referencedRule(ruleItem.owningGrammar).rhs
+                    } else {
+                        ruleItem.referencedRule(this._grammar).rhs
+                    }
+                    when (rhs) {
+                        is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), BuiltInType.STRING, false, childIndex)
+                        is Concatenation -> when {
+                            1 == rhs.items.size -> when (rhs.items[0]) {
+                                is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), BuiltInType.STRING, false, childIndex)
+                                is ListOfItems -> {
+                                    val propType = typeForRuleItem(rhs) //to get list type
+                                    val isNullable = (rhs.items[0] as ListOfItems).min == 0 && (rhs.items[0] as ListOfItems).min == -1
+                                    createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), propType, isNullable, childIndex)
+                                }
+                                else -> createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), typeForRuleItem(ruleItem), false, childIndex)
                             }
-                            else -> createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), typeForRuleItem(ruleItem), false,childIndex)
+                            else -> createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), typeForRuleItem(ruleItem), false, childIndex)
                         }
-                        else -> createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), typeForRuleItem(ruleItem),false, childIndex)
+                        is Choice -> {
+                            val pName = propertyNameFor(ruleItem)
+                            val choiceType = typeForChoice(pName, rhs.alternative)
+                            createUniquePropertyDeclaration(et, pName, choiceType, false, childIndex)
+                        }
+                        else -> {
+                            val propType = typeForRuleItem(ruleItem)
+                            createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), propType, false, childIndex)
+                        }
                     }
-                    is Choice -> {
-                        val pName = propertyNameFor(ruleItem)
-                        val choiceType = typeForChoice(pName, rhs.alternative)
-                        createUniquePropertyDeclaration(et, pName, choiceType, false, childIndex)
-                    }
-
-                    else -> {
-                        val propType = typeForRuleItem(ruleItem)
-                        createUniquePropertyDeclaration(et, propertyNameFor(ruleItem), propType, false, childIndex)
-                    }
-                }
             }
             is SimpleList -> {
                 val isNullable = ruleItem.min==0 && ruleItem.max==1

@@ -57,6 +57,7 @@ class LanguageRegistry {
             LanguageDefinitionFromAsm(
                 identity = grammarLanguageIdentity,
                 grammar = AglGrammarGrammar(),
+                targetGrammar = null,
                 defaultGoalRule = AglGrammarGrammar.goalRuleName,
                 style = """
                     'namespace' {
@@ -105,6 +106,7 @@ class LanguageRegistry {
             LanguageDefinitionFromAsm(
                 identity = styleLanguageIdentity,
                 grammar = AglStyleGrammar(),
+                targetGrammar = null,
                 defaultGoalRule = AglStyleGrammar.goalRuleName,
                 style = """
                     META_IDENTIFIER {
@@ -139,6 +141,7 @@ class LanguageRegistry {
             LanguageDefinitionFromAsm(
                 identity = formatLanguageIdentity,
                 grammar = AglFormatGrammar(),
+                targetGrammar = null,
                 defaultGoalRule = AglFormatGrammar.goalRuleName,
                 style = """
                 """.trimIndent(),
@@ -153,6 +156,7 @@ class LanguageRegistry {
             LanguageDefinitionFromAsm(
                 identity = scopesLanguageIdentity,
                 grammar = AglScopesGrammar(),
+                targetGrammar = null,
                 defaultGoalRule = AglScopesGrammar.goalRuleName,
                 style = """
                     'scope' {
@@ -218,11 +222,11 @@ class LanguageRegistry {
     }
 
     fun register(
-        identity: String, grammar: String?, defaultGoalRule: String?,
+        identity: String, grammar: String?, targetGrammar:String?, defaultGoalRule: String?,
         style: String?, format: String?, syntaxAnalyser: SyntaxAnalyser<*,*>?, semanticAnalyser: SemanticAnalyser<*,*>?
     ): LanguageDefinition = this.registerFromDefinition(
         LanguageDefinitionDefault(
-            identity, grammar, defaultGoalRule,
+            identity, grammar, targetGrammar, defaultGoalRule,
             style, format, syntaxAnalyser, semanticAnalyser
         )
     )

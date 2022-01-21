@@ -70,7 +70,7 @@ internal class AglGrammarSemanticAnalyser(
             }
             is NonTerminal -> {
                 try {
-                    rhs.referencedRule //will throw 'GrammarRuleNotFoundException' if rule not found
+                    rhs.referencedRule(grammar) //will throw 'GrammarRuleNotFoundException' if rule not found
                 } catch (e: GrammarRuleNotFoundException) {
                     val item = LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, _locationMap!![rhs], e.message!!)
                     this.items.add(item)

@@ -36,6 +36,9 @@ package net.akehurst.language.api.sppt
  */
 interface SPPTParser {
 
+    val tree:SharedPackedParseTree
+
+    fun clear()
     fun parse(treeAsString: String, addTree:Boolean=false): SharedPackedParseTree
 
 }

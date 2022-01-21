@@ -1100,6 +1100,47 @@ class test_AglGrammar {
     }
 
     @Test
+    fun override() {
+
+        val grammarStr = """
+            namespace test
+            grammar Original {
+                S1 = ABC ;
+                ABC = 'a' B 'c' ;
+                B = 'b' ;
+            }
+            grammar Extended extends Original {
+                override B = 'd' ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processorFromString(grammarStr,"Original","S1")
+        assertNotNull(p)
+
+        val (actual1,issues1) = p.parse("abc", "S1")
+        val expected1 = p.spptParser.parse(
+            """
+             S1 { ABC { 'a' B { 'b' } 'c' } }
+        """
+        )
+        assertEquals(expected1.toStringAll, actual1?.toStringAll)
+        assertEquals(expected1, actual1)
+        assertEquals(emptyList(),issues1)
+
+        val p2 = Agl.processorFromString(grammarStr,"Extended","S1")
+        assertNotNull(p2)
+        val (actual2,issues2) = p2.parse("adc", "S1")
+        val expected2 = p2.spptParser.parse(
+            """
+             S1 { ABC { 'a' B { 'd' } 'c' } }
+        """
+        )
+        assertEquals(expected2.toStringAll, actual2?.toStringAll)
+        assertEquals(expected2, actual2)
+        assertEquals(emptyList(),issues2)
+    }
+
+    @Test
     fun embedded_qualified_defaultGoal() {
 
         val grammarStr = """

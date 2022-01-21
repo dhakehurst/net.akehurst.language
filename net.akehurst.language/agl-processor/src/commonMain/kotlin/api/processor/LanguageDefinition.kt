@@ -21,7 +21,8 @@ import net.akehurst.language.api.analyser.SyntaxAnalyser
 
 interface LanguageDefinition {
     val identity: String
-    var grammar: String?
+    var grammarStr: String?
+    var targetGrammar:String?
     var defaultGoalRule: String?
     var style: String?
     var format: String?

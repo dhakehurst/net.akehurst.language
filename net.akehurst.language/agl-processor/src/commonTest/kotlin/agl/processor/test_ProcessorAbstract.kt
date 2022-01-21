@@ -26,9 +26,8 @@ abstract class test_ProcessorAbstract {
     fun test(processor:LanguageProcessor, goal:String, sentence:String, vararg expectedTrees:String) {
         val (actual,issues) = processor.parse(sentence,goal)
 
-        val converter = ConverterToRuntimeRules(processor.grammar)
-        val sppt = SPPTParserDefault(converter.runtimeRuleSet)
-        expectedTrees.forEach { sppt.addTree(it) }
+        val sppt = processor.spptParser
+        expectedTrees.forEach { sppt.parse(it, true) }
         val expected = sppt.tree
 
         assertEquals(expected.toStringAll, actual?.toStringAll)
