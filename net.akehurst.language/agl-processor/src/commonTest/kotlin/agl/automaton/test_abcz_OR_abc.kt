@@ -26,15 +26,16 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 internal class test_abcz_OR_abc : test_AutomatonAbstract() {
 
-    // S =  ABCZ | ABCY
+    // S =  ABCZ | ABC
     // ABCZ = a b c z
     // ABC = a b c
 
-    private companion object {
-        val rrs = runtimeRuleSet {
+    // must be fresh per test or automaton is not correct for different parses (due to caching)
+    private val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("ABCZ")
                 ref("ABC")
@@ -42,26 +43,18 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
             concatenation("ABCZ") { literal("a"); literal("b"); literal("c"); literal("z") }
             concatenation("ABC") { literal("a"); literal("b"); literal("c")}
         }
-        val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val G = SM.startState.runtimeRules.first()
-        val ABCZ = rrs.findRuntimeRule("ABCZ")
-        val ABC = rrs.findRuntimeRule("ABC")
-        val a = rrs.findRuntimeRule("'a'")
-        val b = rrs.findRuntimeRule("'b'")
-        val c = rrs.findRuntimeRule("'c'")
-        val z = rrs.findRuntimeRule("'z'")
+    private    val S = rrs.findRuntimeRule("S")
+    private    val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+    private    val G = SM.startState.runtimeRules.first()
+    private    val ABCZ = rrs.findRuntimeRule("ABCZ")
+    private    val ABC = rrs.findRuntimeRule("ABC")
+    private    val a = rrs.findRuntimeRule("'a'")
+    private    val b = rrs.findRuntimeRule("'b'")
+    private    val c = rrs.findRuntimeRule("'c'")
+    private    val z = rrs.findRuntimeRule("'z'")
 
-        val s0 = SM.startState
-        val s1 = SM.states[listOf(RP(a, 0, RulePosition.END_OF_RULE))]
-        //val s2 = SM.states[listOf(RP(S, 0, RulePosition.POSITION_MULIT_ITEM))]
-        //val s3 = SM.states[listOf(RP(S, 0, RulePosition.END_OF_RULE))]
+    private    val lhs_b = SM.createLookaheadSet(false,false, false,setOf(b))
 
-        val lhs_a = SM.createLookaheadSet(false,false, false,setOf(a))
-        val lhs_b = SM.createLookaheadSet(false,false, false,setOf(b))
-        val lhs_aU = SM.createLookaheadSet(true,false, false,setOf(a))
-        val lhs_aT = SM.createLookaheadSet(false,true, false,setOf(a))
-    }
 
     @Test
     override fun firstOf() {
@@ -103,7 +96,8 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
 
     @Test
     fun s1_heightOrGraftInto_s0() {
-
+        val s0 = SM.startState
+        val s1 = SM.states[listOf(RP(a, 0, EOR))]
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
@@ -121,9 +115,11 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
 
     @Test
     fun s0_transitions() {
+        val s0 = SM.startState
+        val s1 = SM.states[listOf(RP(a, 0, EOR))]
         val actual = s0.transitions(null)
         val expected = listOf(
-            Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_b, LookaheadSet.EMPTY, null) { _, _ -> true },
+            Transition(s0, s1, WIDTH, lhs_b, LookaheadSet.EMPTY, null) { _, _ -> true },
         )
         assertEquals(expected, actual)
     }
@@ -131,30 +127,79 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_abc() {
         val parser = ScanOnDemandParser(rrs)
-        parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        val(sppt,issues) = parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        assertNotNull(sppt)
+        assertEquals(0,issues.size)
+        assertEquals(1,sppt.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        println(rrs.usedAutomatonToString("S"))
+
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
             val s0 = state(RP(G, 0, SOR))                                // G = . S
             val s1 = state(RP(a, 0, EOR))                                // a .
-            val s2 = state(RP(ABCZ, 0, 1),RP(ABC,0,1))    // ABCZ = a . b c z , ABCY = a . b c y
+            val s2 = state(RP(ABCZ, 0, 1),RP(ABC,0,1))    // ABCZ = a . b c z , ABC = a . b c
             val s3 = state(RP(b, 0, EOR))                                // b .
-            val s4 = state(RP(ABCZ, 0, 2),RP(ABC,0,2))    // ABCZ = a b . c z , ABCY = a b . c y
+            val s4 = state(RP(ABCZ, 0, 2),RP(ABC,0,2))    // ABCZ = a b . c z , ABC = a b . c
             val s5 = state(RP(c, 0, EOR))                                // c .
-            val s6 = state(RP(ABCZ, 0, 3),RP(ABC,0,3))    // ABCZ = a b c . z , ABCY = a b c . y
-            val s7 = state(RP(z, 0, EOR))                                // z .
+            val s6 = state(RP(ABCZ, 0, 3))                          // ABCZ = a b c . z
+            val s7 = state(RP(ABC,0,EOR))                                // ABC = a b c .
+            val s8 = state(RP(S, 1, EOR))                                // S = ABC .
+            val s9 = state(RP(G, 0, EOR))                                // G = S .
 
             transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)
             transition(s0, s1, s2, HEIGHT, setOf(b), setOf(UP), listOf(RP(ABCZ,0,0), RP(ABC,0,0)))
             transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
             transition(s2, s3, s4, GRAFT, setOf(c), setOf(UP), listOf(RP(ABCZ,0,1), RP(ABC,0,1)))
-            transition(s0, s4, s5, WIDTH, setOf(z), setOf(), null)
-            transition(s4, s5, s6, GRAFT, setOf(z), setOf(UP), listOf(RP(ABCZ,0,2), RP(ABC,0,2)))
-            transition(s0, s6, s7, WIDTH, setOf(UP), setOf(), null)
+            transition(s0, s4, s5, WIDTH, setOf(UP,z), setOf(), null)
+            transition(s4, s5, s6, GRAFT, setOf(z), setOf(UP), listOf(RP(ABCZ,0,2)))
+            transition(s4, s5, s7, GRAFT, setOf(UP), setOf(UP), listOf(RP(ABC,0,2)))
+            transition(s0, s7, s8, HEIGHT, setOf(UP), setOf(UP), listOf(RP(S,1,SOR)))
+            transition(s0, s8, s9, GRAFT, setOf(UP), setOf(UP), listOf(RP(G,0,SOR)))
+            transition(null, s9, s9, GOAL, setOf(), setOf(), null)
         }
 
         AutomatonTest.assertEquals(expected, actual)
     }
+
+    @Test
+    fun automaton_parse_abcz() {
+        val parser = ScanOnDemandParser(rrs)
+        val(sppt,issues) = parser.parseForGoal("S", "abcz", AutomatonKind.LOOKAHEAD_1)
+        assertNotNull(sppt)
+        assertEquals(0,issues.size)
+        assertEquals(1,sppt.maxNumHeads)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+            val s0 = state(RP(G, 0, SOR))                                // G = . S
+            val s1 = state(RP(a, 0, EOR))                                // a .
+            val s2 = state(RP(ABCZ, 0, 1),RP(ABC,0,1))    // ABCZ = a . b c z , ABC = a . b c
+            val s3 = state(RP(b, 0, EOR))                                // b .
+            val s4 = state(RP(ABCZ, 0, 2),RP(ABC,0,2))    // ABCZ = a b . c z , ABC = a b . c
+            val s5 = state(RP(c, 0, EOR))                                // c .
+            val s6 = state(RP(ABCZ, 0, 3))                          // ABCZ = a b c . z
+            val s7 = state(RP(ABC,0,EOR))                                // ABC = a b c .
+            val s8 = state(RP(z, 0, EOR))                                // z .
+            val s9 = state(RP(ABCZ, 0, EOR))                             // ABCZ = a b c z .
+            val s10 = state(RP(S, 0, EOR))                               // S = ABC .
+            val s11 = state(RP(G, 0, EOR))                               // G = S .
+
+            transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)
+            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(UP), listOf(RP(ABCZ,0,0), RP(ABC,0,0)))
+            transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
+            transition(s2, s3, s4, GRAFT, setOf(c), setOf(UP), listOf(RP(ABCZ,0,1), RP(ABC,0,1)))
+            transition(s0, s4, s5, WIDTH, setOf(UP,z), setOf(), null)
+            transition(s4, s5, s6, GRAFT, setOf(z), setOf(UP), listOf(RP(ABCZ,0,2)))
+            transition(s4, s5, s7, GRAFT, setOf(UP), setOf(UP), listOf(RP(ABC,0,2)))
+            transition(s0, s6, s8, WIDTH, setOf(UP), setOf(), null)
+            transition(s6, s8, s9, GRAFT, setOf(UP), setOf(UP), listOf(RP(ABCZ,0,3)))
+            transition(s0, s9, s10, HEIGHT, setOf(UP), setOf(UP), listOf(RP(S,0,SOR)))
+            transition(s0, s10, s11, GRAFT, setOf(UP), setOf(UP), listOf(RP(G,0,SOR)))
+            transition(null, s11, s11, GOAL, setOf(), setOf(), null)
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
 
     @Test
     fun buildFor() {
