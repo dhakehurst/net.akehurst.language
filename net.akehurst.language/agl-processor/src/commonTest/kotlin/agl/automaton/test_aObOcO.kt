@@ -177,7 +177,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
         assertEquals(0, issues.size)
         assertEquals(1, sppt.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        println(rrs.usedAutomatonToString("S"))
+
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
             val s0 = state(RP(G, 0, SOR))
             val s1 = state(RP(a, 0, EOR))
@@ -220,12 +220,12 @@ internal class test_aObOcO : test_AutomatonAbstract() {
         assertEquals(0, issues.size)
         assertEquals(1, sppt.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        println(rrs.usedAutomatonToString("S"))
+
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
             val s0 = state(RP(G, 0, SOR))
             val s1 = state(RP(a, 0, EOR))
             val s2 = state(RP(aOpt_E, 0, EOR))
-            val s3 = state(RP(aOpt, 0, EOR))
+            val s3 = state(RP(aOpt, 1, EOR))
             val s4 = state(RP(S, 0, 1))
             val s5 = state(RP(b, 0, EOR))
             val s6 = state(RP(bOpt_E, 0, EOR))
@@ -233,13 +233,13 @@ internal class test_aObOcO : test_AutomatonAbstract() {
             val s8 = state(RP(S, 0, 2))
             val s9 = state(RP(c, 0, EOR))
             val s10 = state(RP(cOpt_E, 0, EOR))
-            val s11 = state(RP(cOpt, 1, EOR))
+            val s11 = state(RP(cOpt, 0, EOR))
             val s12 = state(RP(S, 0, EOR))
             val s13 = state(RP(G, 0, EOR))
 
             transition(null, s0, s1, WIDTH, setOf(UP,b,c), setOf(), null)
             transition(null, s0, s2, WIDTH, setOf(UP,b,c), setOf(), null)
-            transition(s0, s1, s3, HEIGHT, setOf(UP,b,c), setOf(UP,b,c), listOf( RP(aOpt, 0, SOR)))
+            transition(s0, s2, s3, HEIGHT, setOf(UP,b,c), setOf(UP,b,c), listOf( RP(aOpt, 1, SOR)))
             transition(s0, s3, s4, HEIGHT, setOf(UP,b,c), setOf(UP), listOf( RP(S, 0, SOR)))
             transition(s0, s4, s5, WIDTH, setOf(UP,c), setOf(), null)
             transition(s0, s4, s6, WIDTH, setOf(UP,c), setOf(), null)
@@ -247,7 +247,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
             transition(s4, s7, s8, GRAFT, setOf(UP,c), setOf(UP), listOf( RP(S, 0, 1)))
             transition(s0, s8, s9, WIDTH, setOf(UP), setOf(), null)
             transition(s0, s8, s10, WIDTH, setOf(UP), setOf(), null)
-            transition(s8, s10, s11, HEIGHT, setOf(UP), setOf(UP), listOf( RP(cOpt, 1, SOR)))
+            transition(s8, s9, s11, HEIGHT, setOf(UP), setOf(UP), listOf( RP(cOpt, 0, SOR)))
             transition(s8, s11, s12, GRAFT, setOf(UP), setOf(UP), listOf( RP(S, 0, 2)))
             transition(s0, s12, s13, GRAFT, setOf(UP), setOf(UP), listOf( RP(G, 0, SOR)))
             transition(null,s13,s13,GOAL, emptySet(), emptySet(),null)

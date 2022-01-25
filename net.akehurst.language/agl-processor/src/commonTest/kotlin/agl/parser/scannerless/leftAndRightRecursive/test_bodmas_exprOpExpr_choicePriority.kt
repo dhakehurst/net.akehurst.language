@@ -97,7 +97,13 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_ScanOnDemandParserAb
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -110,7 +116,13 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_ScanOnDemandParserAb
               }
         """.trimIndent()
 
-        super.test(rrs, "expr", sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = "expr",
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -125,7 +137,13 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_ScanOnDemandParserAb
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -140,7 +158,13 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_ScanOnDemandParserAb
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -159,7 +183,13 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_ScanOnDemandParserAb
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -178,7 +208,13 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_ScanOnDemandParserAb
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -197,7 +233,13 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_ScanOnDemandParserAb
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -216,7 +258,13 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_ScanOnDemandParserAb
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -235,7 +283,13 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_ScanOnDemandParserAb
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -260,7 +314,13 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_ScanOnDemandParserAb
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -285,7 +345,13 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_ScanOnDemandParserAb
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -312,7 +378,13 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_ScanOnDemandParserAb
     } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -343,9 +415,14 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_ScanOnDemandParserAb
     } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
-
 
     @Test
     fun Og_a_add_b_Cg_mul_c() {
@@ -371,7 +448,13 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_ScanOnDemandParserAb
             } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
 }

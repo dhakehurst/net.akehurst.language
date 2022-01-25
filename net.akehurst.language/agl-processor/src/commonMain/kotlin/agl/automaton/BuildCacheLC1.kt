@@ -224,6 +224,7 @@ internal class BuildCacheLC1(
     //for graft, previous must match prevGuard, for height must not match
     private fun calcHeightOrGraftInto(from: List<RuntimeRule>, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
         // upCls is the closure down from prev
+        //TODO: can we reduce upCls at this point ?
         val grouped = mutableListOf<HeightGraftInfo>()
         for (fromRp in from) {
             val upFilt = upCls.filter { fromRp == it.rulePosition.item }
@@ -260,7 +261,18 @@ internal class BuildCacheLC1(
         //         HeightGraftInfo(parent, parentNext, lhs, upLhs)
         //     }
         //return grouped2.toSet() //TODO: returns wrong because for {A,B}-H->{C,D} maybe only A grows into C & B into D
-        return grouped.toSet() //TODO: gives too many heads in some cases where can be grouped2
+
+        val groupedLhs = grouped.groupBy { listOf(it.parent,it.parentNext) }
+            .map {
+                val ancestors = emptyList<RuntimeRule>()
+                val parent = it.key[0]
+                val parentNext = it.key[1]
+                val lhs =  it.value.fold(LookaheadSetPart.EMPTY) { acc,e -> acc.union(e.lhs) }
+                val upLhs = it.value.fold(LookaheadSetPart.EMPTY) { acc,e -> acc.union(e.upLhs) }
+                HeightGraftInfo(ancestors, parent, parentNext, lhs, upLhs)
+            }
+        return groupedLhs.toSet()
+        //return grouped.toSet() //TODO: gives too many heads in some cases where can be grouped2
     }
 
     // return the 'closure' of the parent.rulePosition

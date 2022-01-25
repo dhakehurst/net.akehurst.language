@@ -1,5 +1,7 @@
 package test
 
+import kotlin.test.fail
+
 internal fun messagePrefix(message: String?) = if (message == null) "" else "$message. "
 
 fun <T> assertEqualsWarning(expected: T, actual: T, message: String? = null) {
@@ -8,11 +10,11 @@ fun <T> assertEqualsWarning(expected: T, actual: T, message: String? = null) {
 
 fun assertTrueWarning(lazyMessage: () -> String?, actual: Boolean): Unit {
     if (!actual) {
-        fail(lazyMessage())
+        failWarn(lazyMessage())
     }
 }
 
-fun fail(message: String?) {
+fun failWarn(message: String?) {
     println("WARN: $message")
-    //kotlin.test.fail(message)
+//    fail(message)
 }

@@ -511,7 +511,7 @@ class test_Dot_Singles {
             }
             """.trimIndent()
         val (sppt, issues) = processor.parse(sentence, goal)
-        assertNotNull(sppt)
+        assertNotNull(sppt,)
         assertEquals(emptyList(), issues)
     }
 
