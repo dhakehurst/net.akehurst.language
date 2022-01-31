@@ -49,7 +49,7 @@ internal class test_choice_empty_OR_a : test_ScanOnDemandParserAbstract() {
          S|1 { e { §empty } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
@@ -66,7 +66,7 @@ internal class test_choice_empty_OR_a : test_ScanOnDemandParserAbstract() {
          S { 'a' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,

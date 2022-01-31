@@ -206,7 +206,6 @@ grammar Expressions {
 
     @Test
     fun ClassBody_FieldDeclaration() {
-        TODO("override of 'ClassBody' does not seem to be working !")
         val sentence = "{ int valid = 0b0; }"
         val goal = "ClassBody"
         val (sppt,issues) = proc.buildFor(goal).parse(sentence,goal)

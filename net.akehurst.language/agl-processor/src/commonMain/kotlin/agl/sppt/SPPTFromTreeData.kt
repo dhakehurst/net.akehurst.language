@@ -97,7 +97,7 @@ internal class SPPTFromTreeData(
 
     override fun toStringAllWithIndent(indentIncrement: String): String {
         val visitor = ToStringVisitor("\n", indentIncrement)
-        val all: Set<String> = visitor.visitTree(this, ToStringVisitor.Indent("", true))
+        val all: Set<String> = visitor.visitTree(this, "  ")
         val total = all.size
         val sep = "\n"
         var cur = 0

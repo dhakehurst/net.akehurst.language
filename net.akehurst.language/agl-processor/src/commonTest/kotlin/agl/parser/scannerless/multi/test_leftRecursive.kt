@@ -39,7 +39,6 @@ internal class test_leftRecursive : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a() {
-        fail("this does not terminate if we parse until !canGrow, ok it parse until first goal found!")
         val goal = "S"
         val sentence = "a"
 
@@ -47,20 +46,50 @@ internal class test_leftRecursive : test_ScanOnDemandParserAbstract() {
             S|1 { 'a' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
-
     @Test
-    fun t() {
-        TODO()
-        fail("TODO")
+    fun aa() {
+        TODO("does not terminate")
+        val goal = "S"
+        val sentence = "aa"
+
+        val expected = """
+            S|1 { 'a' }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
+    @Test
+    fun aaa() {
+        TODO("does not terminate")
+        val goal = "S"
+        val sentence = "aaa"
+
+        val expected = """
+            S|1 { 'a' }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
 }

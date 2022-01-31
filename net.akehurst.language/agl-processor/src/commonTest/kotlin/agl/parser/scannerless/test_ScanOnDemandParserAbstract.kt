@@ -27,6 +27,7 @@ import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import test.assertEqualsWarning
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 internal abstract class test_ScanOnDemandParserAbstract {
 
@@ -44,15 +45,15 @@ internal abstract class test_ScanOnDemandParserAbstract {
     fun test2(rrs: RuntimeRuleSet, embeddedRuntimeRuleSets:Map<String,RuntimeRuleSet>, goal: String, sentence: String, expectedNumGSSHeads: Int, vararg expectedTrees: String): SharedPackedParseTree? {
         val parser = ScanOnDemandParser(rrs)
         val (actual, issues) = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
-
+        assertNotNull(actual, issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(emptyList(), issues)
         val sppt = SPPTParserDefault(rrs, embeddedRuntimeRuleSets)
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
-        assertEquals(expected.toStringAllWithIndent("  "), actual?.toStringAllWithIndent("  "))
+        assertEquals(expected.toStringAllWithIndent("  "), actual.toStringAllWithIndent("  "))
         assertEquals(expected, actual)
         //FIXME: add back this assert
-        assertEqualsWarning(expectedNumGSSHeads, actual?.maxNumHeads, "Too many heads on GSS")
-        assertEquals(emptyList(), issues)
+        assertEqualsWarning(expectedNumGSSHeads, actual.maxNumHeads, "Too many heads on GSS")
         return actual
     }
 

@@ -190,6 +190,7 @@ class SyntaxAnalyserSimple(
                                         }
                                     }
                                 }
+                                BuiltInType.ANY ->  this.createValue(ch, childPath, childsScope)
                                 else -> error("Internal error: BuiltInType '' not handled")
                             }
                             setPropertyOrReference(el, propDecl.name, propValue)

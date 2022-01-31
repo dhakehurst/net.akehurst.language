@@ -22,6 +22,10 @@ import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.typeModel.BuiltInType
+import net.akehurst.language.api.typeModel.TypeModel
+import net.akehurst.language.api.typeModel.TypeModelTest
+import net.akehurst.language.api.typeModel.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -35,11 +39,11 @@ namespace com.yakindu.modelviewer.parser
 grammar Mscript {
 
     // end-of-line ('\n') is not whitespace as it marks end of a line in a statementList
-    skip WHITESPACE = "[ \t\x0B\f]+" ;
-    skip LINE_CONTINUATION =  "[.][.][.](?:.*)\R" ;
-    skip COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
-         MULTI_LINE_COMMENT = "%[{](?:.|\n)*?%[}]" ;
-         SINGLE_LINE_COMMENT = "(?:%[^{].+${'$'})|(?:%${'$'})" ;
+    skip leaf WHITESPACE = "[ \t\x0B\f]+" ;
+    skip leafLINE_CONTINUATION =  "[.][.][.](?:.*)\R" ;
+    skip leaf COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
+         leaf MULTI_LINE_COMMENT = "%[{](?:.|\n)*?%[}]" ;
+         leaf SINGLE_LINE_COMMENT = "(?:%[^{].+${'$'})|(?:%${'$'})" ;
 
     script = statementList ;
     statementList = [line / "\R"]* ;
@@ -53,8 +57,8 @@ grammar Mscript {
       //TODO: others
       ;
 
-    assignment = rootVariable '=' expression ;
     conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
+    assignment = rootVariable '=' expression ;
 
     expressionStatement = expression ;
 
@@ -99,9 +103,9 @@ grammar Mscript {
 
     number = INTEGER | REAL ;
 
-    NAME = "[a-zA-Z_][a-zA-Z_0-9]*" ;
+    leaf NAME = "[a-zA-Z_][a-zA-Z_0-9]*" ;
 
-    COLON               = ':' ;
+    leaf COLON               = ':' ;
     leaf BOOLEAN             = 'true' | 'false' ;
     leaf INTEGER             = "([+]|[-])?[0-9]+" ;
     leaf REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;
@@ -110,6 +114,117 @@ grammar Mscript {
 }
     """.trimIndent()
         val sut = Agl.processorFromString(grammarStr)
+    }
+
+    @Test
+    fun mscript_typeModel() {
+        val actual = sut.typeModel
+        val expected = typeModel {
+            elementType("script") {
+                // script = statementList ;
+                propertyListType("statementList", "\$ANY",false,0)
+            }
+            elementType("statementList") {
+                // statementList = [line / "\R"]* ;
+                propertyListType("line", "\$ANY",false,0)
+            }
+            elementType("line") {
+                // line = [statement / ';']* ';'? ;
+                propertyListType("statement", "\$ANY",false,0)
+                propertyUnnamedStringType(true,1)
+            }
+            elementType("statement") {
+                // statement
+                //      = conditional
+                //      | assignment
+                //      | expressionStatement
+                //      //TODO: others
+                //      ;
+            }
+            elementType("conditional") {
+                // conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
+                superType("statement")
+                propertyElementType("expression","expression",false, 1)
+                propertyListType("statementList", "\$ANY",false,3)
+                propertyListType("statementList2", "\$ANY",false,5)
+            }
+            elementType("assignment") {
+                // assignment = rootVariable '=' expression ;
+                superType("statement")
+                propertyElementType("rootVariable","rootVariable",false, 0)
+                propertyElementType("expression","expression",false, 2)
+            }
+            elementType("expressionStatement") {
+                // expressionStatement = expression ;
+                superType("statement")
+                propertyElementType("expression","expression",false, 0)
+            }
+            elementType("expression") {
+                // expression
+                //   = rootVariable
+                //   | literal
+                //   | matrix
+                //   | functionCall
+                //   | prefixExpression
+                //   | infixExpression
+                //   | groupExpression
+                //   ;
+            }
+            elementType("groupExpression") {
+                // groupExpression = '(' expression ')' ;
+                superType("expression")
+                propertyElementType("expression","expression",false,0)
+            }
+            elementType("functionCall") {
+                // functionCall = NAME '(' argumentList ')' ;
+                superType("expression")
+                propertyStringType("NAME", false, 0)
+                propertyListType("argumentList",BuiltInType.ANY,false,2)
+            }
+            elementType("argumentList") {
+                // argumentList = [ argument / ',' ]* ;
+                propertyListType("argument",BuiltInType.ANY,false,2)
+            }
+            elementType("functionCall") {
+                // argument = expression | COLON ;
+            }
+            //
+            //    prefixExpression = prefixOperator expression ;
+            //    prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
+            //
+            //    infixExpression =  [ expression / infixOperator ]2+ ;
+            //    infixOperator
+            //        = '.*' | '*' | './' | '/' | '.\\' | '\\' | '+' | '-'    // arithmetic
+            //        | '==' | '~=' | '>' | '>=' | '<' | '<='                 // relational
+            //        | '&' | '|' | '&&' | '||' | '~'                         // logical
+            //        | ':'                                                   // vector creation
+            //        ;
+            //
+            //    matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
+            //    row = expression (','? expression)* ;
+            //
+            //    literal
+            //      = BOOLEAN
+            //      | number
+            //      | SINGLE_QUOTE_STRING
+            //      | DOUBLE_QUOTE_STRING
+            //      ;
+            //
+            //    rootVariable = NAME ;
+            //
+            //    number = INTEGER | REAL ;
+            //
+            //    leaf NAME = "[a-zA-Z_][a-zA-Z_0-9]*" ;
+            //
+            //    leaf COLON               = ':' ;
+            //    leaf BOOLEAN             = 'true' | 'false' ;
+            //    leaf INTEGER             = "([+]|[-])?[0-9]+" ;
+            //    leaf REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;
+            //    leaf SINGLE_QUOTE_STRING = "'(?:[^'\\]|\\.)*'" ;
+            //    leaf DOUBLE_QUOTE_STRING = "\"(?:[^\"\\]|\\.)*\"" ;
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
     }
 
     @Test

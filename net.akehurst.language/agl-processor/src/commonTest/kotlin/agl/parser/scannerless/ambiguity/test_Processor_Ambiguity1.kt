@@ -107,7 +107,6 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aab() {
-        TODO("does not stop")
         val sentence = "aab"
 
         val expected1 = """
@@ -143,7 +142,6 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aabb() {
-        TODO("does not stop")
         val sentence = "aabb"
 
         val expected1 = """
@@ -168,7 +166,6 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aaabb() {
-        TODO("does not stop")
         val sentence = "aaabb"
 
         val expected1 = """

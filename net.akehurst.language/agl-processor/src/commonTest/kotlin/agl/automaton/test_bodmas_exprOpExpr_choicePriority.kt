@@ -56,19 +56,21 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
     private val b = rrs.findRuntimeRule("'b'")
     private val v = rrs.findRuntimeRule("'v'")
 
+    private val lhs_v = SM.createLookaheadSet(false, false, false, setOf(v))
     private val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
     private val lhs_b = SM.createLookaheadSet(false, false, false, setOf(b))
+    private val lhs_UPab = SM.createLookaheadSet(true, false, false, setOf(a,b))
 
 
     @Test
     override fun firstOf() {
         listOf(
-            Triple(RP(G, 0, SOR), lhs_U, LHS(a)),       // G = . S
+            Triple(RP(G, 0, SOR), lhs_U, LHS(v)),       // G = . S
             Triple(RP(G, 0, EOR), lhs_U, LHS(UP)),      // G = S .
-            Triple(RP(S, 0, SOR), lhs_U, LHS(a)),       // S = . ABC
-            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),      // S = ABC .
-            Triple(RP(S, 1, SOR), lhs_U, LHS(a)),       // S = . ABD
-            Triple(RP(S, 1, EOR), lhs_U, LHS(UP)),      // S = ABD .
+            Triple(RP(S, 0, SOR), lhs_U, LHS(a)),       // S = . E
+            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),      // E = . v
+            Triple(RP(S, 1, SOR), lhs_U, LHS(a)),       // E = . EA
+            Triple(RP(S, 1, EOR), lhs_U, LHS(UP)),      // E = . EB
 
         ).testAll { rp, lhs, expected ->
             val actual = SM.buildCache.firstOf(rp, lhs.part)
@@ -82,7 +84,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
         val actual = s0.widthInto(null).toList()
 
         val expected = listOf(
-            WidthInfo(RP(a, 0, EOR), lhs_b.part)
+            WidthInfo(RP(v, 0, EOR), LHS(UP,a,b))
         )
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {
@@ -91,35 +93,35 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
     }
 
     @Test
+    fun s0_transitions() {
+        val s0 = SM.startState
+        val s1 = SM.states[listOf(RP(v, 0, EOR))]
+        val actual = s0.transitions(null)
+        val expected = listOf(
+            Transition(s0, s1, WIDTH, lhs_UPab, LookaheadSet.EMPTY, null) { _, _ -> true }
+        )
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun s1_heightOrGraftInto_s0() {
         val s0 = SM.startState
-        val s1 = SM.states[listOf(RP(a, 0, EOR))]
+        val s1 = SM.states[listOf(RP(v, 0, EOR))]
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
             HeightGraftInfo(
                 emptyList(),
-                emptyList(),
-                emptyList(),
-                lhs_a.part,
-                lhs_U.part
+                listOf(RP(E,0,SOR)),
+                listOf(RP(E,0,EOR)),
+                LHS(UP,a,b),
+                LHS(UP,a,b)
             )
         )
         assertEquals(expected, actual)
-
     }
 
-    @Test
-    fun s0_transitions() {
-        val s0 = SM.startState
-        val s1 = SM.states[listOf(RP(a, 0, EOR))]
-        val actual = s0.transitions(null)
-        val expected = listOf<Transition>(
-            Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_b, LookaheadSet.EMPTY, null) { _, _ -> true },
-            //    Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY, null) { _, _ -> true }
-        )
-        assertEquals(expected, actual)
-    }
+
 
     @Test
     fun automaton_parse_v() {
@@ -131,7 +133,14 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
-            val s0 = state(RP(G, 0, SOR))     /* G = . S   */
+            val s0 = state(RP(G, 0, SOR))     /* G = . S */
+            val s1 = state(RP(v, 0, EOR))     /* v .     */
+            val s2 = state(RP(E, 0, EOR))     /* E = v . */
+            val s3 = state(RP(S, 0, EOR))     /* S = E . */
+            val s4 = state(RP(EA, 0, 1),RP(EB, 0, 1))     /* G = . S   */
+            val s5 = state(RP(EA, 0, 1))     /* G = . S   */
+            val s6 = state(RP(EB, 0, 1))     /* G = . S   */
+            val s7 = state(RP(G, 0, EOR))     /* G = . S   */
 
 
             //transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)

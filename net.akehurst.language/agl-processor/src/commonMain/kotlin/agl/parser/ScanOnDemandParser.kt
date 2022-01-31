@@ -117,7 +117,7 @@ internal class ScanOnDemandParser(
         //
 
         rp.resetGraphToLastGrown()
-        rp.tryGrowWidthOnce()
+        val grown = rp.tryGrowWidthOnce()
         val poss = if (graph.canGrow) {
             rp.tryGrowHeightOrGraft()
         } else {
@@ -125,37 +125,35 @@ internal class ScanOnDemandParser(
             rp.tryGrowHeightOrGraft()
         }
 
-        val r = poss.map { lg ->
+        val r = poss.map { (lg,prevs) ->
+            //val prevs = rp._lastGss.peek(lg)
             // compute next expected item/RuntimeRule
-            when (lg.runtimeRules.first().kind) {
+            when (lg.state.runtimeRules.first().kind) {
                 RuntimeRuleKind.GOAL -> {
-                    val trs = lg.currentState.transitions(null)
+                    val trs = lg.state.transitions(null)
                     val exp = trs.flatMap { tr ->
                         when (tr.action) {
                             Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
-                            Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.runtimeLookahead).fullContent
+                            Transition.ParseAction.WIDTH -> lg.state.firstOf(lg.runtimeLookaheadSet).fullContent
                             Transition.ParseAction.EMBED -> TODO()
-                            Transition.ParseAction.HEIGHT -> tr.lookaheadGuard.resolveUP(lg.runtimeLookahead).fullContent
-                            Transition.ParseAction.GRAFT -> lg.previous.values.map { it.node.runtimeLookahead }
-                                .flatMap { tr.lookaheadGuard.resolveUP( it).fullContent }
-                            //                        Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
+                            Transition.ParseAction.HEIGHT -> tr.lookaheadGuard.resolveUP(lg.runtimeLookaheadSet).fullContent
+                            Transition.ParseAction.GRAFT -> prevs.map { it.runtimeLookaheadSet }
+                                .flatMap { tr.lookaheadGuard.resolveUP(it).fullContent }
                         }
                     }
                     Pair(lg, exp)
                 }
                 else -> {
-                    val prevs = rp.grownInLastPassPrevious[lg] ?: emptySet() //graph.previousOf(lg.index)
                     val x = prevs.flatMap { prev ->
-                        val trs = lg.currentState.transitions(prev.state)
+                        val trs = lg.state.transitions(prev.state)
                             .filter { it.runtimeGuard(it, prev, prev.state.rulePositions) }
                         val exp = trs.flatMap { tr ->
                             when (tr.action) {
                                 Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
-                                Transition.ParseAction.WIDTH -> lg.currentState.firstOf(lg.runtimeLookahead).fullContent
-                                Transition.ParseAction.EMBED -> lg.currentState.firstOf(lg.runtimeLookahead).fullContent
-                                Transition.ParseAction.HEIGHT -> tr.lookaheadGuard.resolveUP(lg.runtimeLookahead).fullContent
+                                Transition.ParseAction.WIDTH -> lg.state.firstOf(lg.runtimeLookaheadSet).fullContent
+                                Transition.ParseAction.EMBED -> lg.state.firstOf(lg.runtimeLookaheadSet).fullContent
+                                Transition.ParseAction.HEIGHT -> tr.lookaheadGuard.resolveUP(lg.runtimeLookaheadSet).fullContent
                                 Transition.ParseAction.GRAFT -> tr.lookaheadGuard.resolveUP(prev.runtimeLookaheadSet).fullContent
-                                //                         Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
                             }
                         }
                         exp

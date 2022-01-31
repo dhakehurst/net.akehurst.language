@@ -60,7 +60,7 @@ internal class ParseGraph(
     //val _nodes = mutableMapOf<GrowingNodeIndex, GrowingNode>()
 
     // to keep track of the stack and get 'previous' nodes
-    val _gss = GraphStructuredStack<GrowingNodeIndex>()
+    var _gss = GraphStructuredStack<GrowingNodeIndex>()
 
     //TODO: is the fifo version faster ? it might help with processing heads in a better order!
     // to order the heads efficiently so we grow them in the required order
@@ -114,9 +114,14 @@ internal class ParseGraph(
 
     val hasNextHead: Boolean get() = this._growingHeadHeap.isNotEmpty()
 
-    val nextHeadStartPosition: Int get() = this._growingHeadHeap.peekRoot?.startPosition ?: Int.MAX_VALUE
-    //val growingHeadMaxNextInputPosition: Int get() = this.growingHead.toList().lastOrNull()?.nextInputPosition ?: -1 //TODO: cache rather than compute
-
+    val nextHeadStartPosition: Int get() {
+        val root = this._growingHeadHeap.peekRoot
+        return when {
+            null==root -> Int.MAX_VALUE
+            root.index.state.isGoal -> -1
+            else -> root.startPosition
+        }
+    }
     /**
      * extract head with min nextInputPosition
      * assumes there is one - check with hasNextHead
@@ -627,7 +632,7 @@ internal class ParseGraph(
 
     fun drop(previous: GrowingNodeIndex?) {
         if (null!=previous) {
-            //this._gss.removeStack(previous)
+            this._gss.removeStack(previous)
         }
     }
 

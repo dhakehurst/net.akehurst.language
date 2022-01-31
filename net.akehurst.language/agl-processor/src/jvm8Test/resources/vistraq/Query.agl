@@ -3,8 +3,8 @@ namespace com.itemis.typedgraph.query
 grammar Query {
 
     skip WHITE_SPACE = "\s+" ;
-	skip SINGLE_LINE_COMMENT = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
-	skip MULTI_LINE_COMMENT = "//[^\n\r]*" ;
+	skip MULTI_LINE_COMMENT = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
+	skip SINGLE_LINE_COMMENT = "//[^\n\r]*" ;
 
     query = singleQuery | compositeQuery ;
     singleQuery = timespanDefinition? querySource? returnDefinition? ;

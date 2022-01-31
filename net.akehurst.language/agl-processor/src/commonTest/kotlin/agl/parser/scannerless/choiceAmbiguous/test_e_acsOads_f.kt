@@ -121,7 +121,7 @@ internal class test_e_acsOads_f : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun eaf() {
-        val sentence = "a"
+        val sentence = "eaf"
 
         val expected1 = """
             S { 'e' ambig { acs { 'a' } } 'f' }

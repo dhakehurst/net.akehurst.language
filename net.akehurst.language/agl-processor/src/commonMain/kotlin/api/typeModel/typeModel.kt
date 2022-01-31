@@ -95,6 +95,6 @@ data class PropertyDeclaration(
 
     override fun toString(): String  {
         val nullable = if (isNullable) "?" else ""
-        return "$name: ${type.name}$nullable"
+        return "$name: ${type.name} $nullable [$childIndex]"
     }
 }

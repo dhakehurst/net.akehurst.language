@@ -19,6 +19,7 @@ package net.akehurst.language.parser.scanondemand.leftRecursive
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.scanondemand.concatenation.test_aObOcO
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
@@ -42,32 +43,25 @@ internal class test_aa : test_ScanOnDemandParserAbstract() {
         val goal = "S"
     }
 
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_a = b.literal("a")
-        val r_S = b.rule("S").build()
-        val r_P1 = b.rule("P1").build()
-        val r_P = b.rule("P").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,r_S, r_P1)
-        b.rule(r_P1).concatenation(r_P, r_S)
-        b.rule(r_S).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,r_P, r_a)
-        return b
-    }
-
     @Test
     fun a() {
-        TODO("does not terminate")
         val sentence = "a"
 
         val expected = """
             S { 'a' }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
-    //@Test
+    @Test
     fun aa() {
-        TODO("does not terminate!")
         val sentence = "aa"
 
         val expected = """
@@ -77,7 +71,13 @@ internal class test_aa : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
 }

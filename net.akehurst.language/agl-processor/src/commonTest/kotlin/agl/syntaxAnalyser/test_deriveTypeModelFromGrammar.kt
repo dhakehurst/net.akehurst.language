@@ -23,58 +23,6 @@ import kotlin.test.*
 
 class test_deriveTypeModelFromGrammar {
 
-    private fun _assertEquals(expected: TypeModel, actual: TypeModel) {
-        assertEquals(expected.types.size, actual.types.size)
-        for (k in expected.types.keys) {
-            val expEl = expected.types[k]
-            val actEl = actual.types[k]
-            _assertEquals(expEl, actEl)
-        }
-    }
-
-    private fun _assertEquals(expected: RuleType?, actual: RuleType?) {
-        when {
-            null == expected || null == actual -> fail("should never be null")
-            expected is BuiltInType && actual is BuiltInType -> assertTrue(expected === actual)
-            expected is ElementType && actual is ElementType -> _assertEquals(expected, actual)
-        }
-    }
-
-    private fun _assertEquals(expected: ElementType, actual: ElementType) {
-        assertEquals(expected.name, actual.name)
-        assertEquals(expected.superType.size, actual.superType.size, "Wrong number of superTypes for '${expected.name}'")
-        for (i in 0 until expected.superType.size) {
-            val expEl = expected.superType[i]
-            val actEl = actual.superType[i]
-            _assertEquals(expEl, actEl)
-        }
-        assertEquals(expected.subType.size, actual.subType.size, "Wrong number of subTypes for '${expected.name}'")
-        for (i in 0 until expected.subType.size) {
-            val expEl = expected.subType.toList()[i] //TODO: set set equality !
-            val actEl = actual.subType.toList()[i]
-            _assertEquals(expEl, actEl)
-        }
-        assertEquals(expected.property.size, actual.property.size, "Wrong number of properties for '${expected.name}'")
-        for (k in expected.property.keys) {
-            val expEl = expected.property[k]
-            val actEl = actual.property[k]
-            assertNotNull(actEl, "expected PropertyDeclaration '$k' not found in actual ElementType '${expected.name}")
-            _assertEquals(expEl, actEl)
-        }
-    }
-
-    private fun _assertEquals(expected: PropertyDeclaration?, actual: PropertyDeclaration?) {
-        when {
-            null == expected || null == actual -> fail("should never be null")
-            else -> {
-                assertEquals(expected.name, actual.name)
-                assertEquals(expected.isNullable, actual.isNullable)
-                assertEquals(expected.childIndex, actual.childIndex)
-                assertEquals(expected.type.name, actual.type.name)
-            }
-        }
-    }
-
     private companion object {
         val grammarProc = Agl.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
     }
@@ -98,7 +46,7 @@ class test_deriveTypeModelFromGrammar {
             }
         }
 
-        _assertEquals(expected, actual)
+        TypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -122,7 +70,7 @@ class test_deriveTypeModelFromGrammar {
             }
         }
 
-        _assertEquals(expected, actual)
+        TypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -144,7 +92,7 @@ class test_deriveTypeModelFromGrammar {
             }
         }
 
-        _assertEquals(expected, actual)
+        TypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -168,7 +116,7 @@ class test_deriveTypeModelFromGrammar {
             }
         }
 
-        _assertEquals(expected, actual)
+        TypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -190,7 +138,7 @@ class test_deriveTypeModelFromGrammar {
             }
         }
 
-        _assertEquals(expected, actual)
+        TypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -213,7 +161,7 @@ class test_deriveTypeModelFromGrammar {
             }
         }
 
-        _assertEquals(expected, actual)
+        TypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -236,7 +184,7 @@ class test_deriveTypeModelFromGrammar {
             }
         }
 
-        _assertEquals(expected, actual)
+        TypeModelTest.assertEquals(expected, actual)
     }
 
 
@@ -260,7 +208,7 @@ class test_deriveTypeModelFromGrammar {
             }
         }
 
-        _assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -287,7 +235,7 @@ class test_deriveTypeModelFromGrammar {
             }
         }
 
-        _assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -317,7 +265,7 @@ class test_deriveTypeModelFromGrammar {
             }
         }
 
-        _assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -351,7 +299,7 @@ class test_deriveTypeModelFromGrammar {
             }
         }
 
-        _assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -382,7 +330,7 @@ class test_deriveTypeModelFromGrammar {
             elementType("c") {}
         }
 
-        _assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -413,7 +361,7 @@ class test_deriveTypeModelFromGrammar {
             elementType("c") {}
         }
 
-        _assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -440,7 +388,7 @@ class test_deriveTypeModelFromGrammar {
             }
         }
 
-        _assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
 }

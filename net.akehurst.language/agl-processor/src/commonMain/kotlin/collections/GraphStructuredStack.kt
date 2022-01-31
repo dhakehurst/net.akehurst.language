@@ -16,14 +16,17 @@
 
 package net.akehurst.language.agl.collections
 
-class GraphStructuredStack<E> {
+class GraphStructuredStack<E>(previous:MutableMap<E,MutableSet<E>>, count:MutableMap<E,Int>) {
+    constructor(): this(hashMapOf<E, MutableSet<E>>(), hashMapOf<E, Int>()) //no need to preserve insertion order
 
     companion object {
         const val DO_CHECK = false
     }
 
-    private val _previous = hashMapOf<E, MutableSet<E>>() //no need to preserve insertion order
-    private val _count = hashMapOf<E, Int>() //no need to preserve insertion order
+    private val _previous = previous
+    private val _count = count
+
+    val roots:List<E> = this._count.entries.filter { it.value==0 }.map { it.key }
 
     fun clear() {
         this._previous.clear()
@@ -32,7 +35,7 @@ class GraphStructuredStack<E> {
     fun root(head: E) {
         _previous[head] = hashSetOf()
         _count[head] = 0
-        check()
+        check() //TODO: remove
     }
 
     /**
@@ -60,7 +63,7 @@ class GraphStructuredStack<E> {
         } else {
             // head is already previous of next
         }
-        check()
+        check() //TODO: remove
         return newHead
     }
 
@@ -81,13 +84,13 @@ class GraphStructuredStack<E> {
                     val c = this._count[it]!!
                     this._count[it] = c - 1
                 }
-                check()
+                check() //TODO: remove
                 prev
             } else {
                 val prev = _previous[node]!!
                 // head is not a head of the GSS, just return the previous nodes
                 // do not deduce from count of prev, because head is not removed
-                check()
+                check() //TODO: remove
                 prev
             }
         }
@@ -132,6 +135,15 @@ class GraphStructuredStack<E> {
                 // do nothing
             }
         }
+    }
+
+    fun clone(): GraphStructuredStack<E> {
+        val previous = HashMap<E, MutableSet<E>>(this._previous.size)
+        for(e in this._previous) {
+            previous[e.key] = e.value.toMutableSet()
+        }
+        val clone = GraphStructuredStack<E>(previous, HashMap(this._count))
+        return clone
     }
 
     private fun prevOfToString(n: E): String {
