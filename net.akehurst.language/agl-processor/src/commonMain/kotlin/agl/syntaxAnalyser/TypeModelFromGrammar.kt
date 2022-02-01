@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.typeModel.*
 
@@ -33,9 +34,13 @@ internal class TypeModelFromGrammar(
     private val _ruleToType = mutableMapOf<Rule, RuleType>()
     private val _typeModel = TypeModel()
     private val _typeForRuleItem = mutableMapOf<RuleItem, RuleType>()
-    private val _uniquePropertyNames = mutableMapOf<Pair<ElementType, String>, Int>()
+    private val _uniquePropertyNames = mutableMapOf<Pair<StructuredRuleType, String>, Int>()
 
     internal fun derive(): TypeModel {
+        val choiceRules = _grammar.allRule.filter { it.isLeaf.not() && it.isSkip.not() && it.rhs is Choice }
+        for (chRule in choiceRules) {
+
+        }
         for (rule in _grammar.allRule) {
             if (rule.isSkip.not() && rule.isLeaf.not()) {
                 typeForRhs(rule)
@@ -53,29 +58,7 @@ internal class TypeModelFromGrammar(
             val ruleType = when (rhs) {
                 // rhs's are only ever these things (currently)
                 is EmptyRule -> findOrCreateElementType(rule.name)
-                is Choice -> {
-                    // if all rhs gives ElementType then this ruleType is a super type of all rhs
-                    // else rhs maps to properties
-                    val choiceType = findOrCreateElementType(rule.name)
-                    val subtypes = rhs.alternative.map { typeForRuleItem(it) }
-                    when {
-                        subtypes.all { it is ElementType } -> {
-                            subtypes.forEach {
-                                (it as ElementType).addSuperType(choiceType)
-                            }
-                            choiceType
-                        }
-                        subtypes.all { it === BuiltInType.STRING } -> {
-                            createUniquePropertyDeclaration(choiceType, UNNAMED_STRING_PROPERTY_NAME, BuiltInType.STRING, false, 0)
-                            choiceType
-                        }
-                        subtypes.all { it === BuiltInType.LIST } -> {
-                            createUniquePropertyDeclaration(choiceType, UNNAMED_LIST_PROPERTY_VALUE, BuiltInType.LIST, false, 0)
-                            choiceType
-                        }
-                        else -> BuiltInType.ANY
-                    }
-                }
+                is Choice -> typeForChoice(rule)
                 is Concatenation -> {
                     typeForConcatenation(rule, rhs.items)
                 }
@@ -96,11 +79,11 @@ internal class TypeModelFromGrammar(
                 is Terminal -> BuiltInType.STRING
                 is SimpleList -> when (ruleItem.max) {
                     1 -> typeForRuleItem(ruleItem.item) //TODO: nullable
-                    else -> BuiltInType.LIST //TODO: add list type
+                    else -> ListType(typeForRuleItem(ruleItem.item)) //BuiltInType.LIST //TODO: add list type
                 }
                 is SeparatedList -> when (ruleItem.max) {
                     1 -> typeForRuleItem(ruleItem.item) //TODO: nullable //unlikely!
-                    else -> BuiltInType.LIST //TODO: add list type
+                    else -> ListType(BuiltInType.ANY) //BuiltInType.LIST //TODO: add list type
                 }
                 is NonTerminal -> when {
                     ruleItem.embedded -> {
@@ -110,7 +93,10 @@ internal class TypeModelFromGrammar(
                     }
                     ruleItem.referencedRule(this._grammar).isLeaf -> BuiltInType.STRING
                     ruleItem.referencedRule(this._grammar).rhs is EmptyRule -> BuiltInType.NOTHING
-                    ruleItem.referencedRule(this._grammar).rhs is Choice -> typeForChoice("??", (ruleItem.referencedRule(this._grammar).rhs as Choice).alternative)
+                    ruleItem.referencedRule(this._grammar).rhs is Choice -> {
+                        val r = ruleItem.referencedRule(this._grammar)
+                        typeForChoice(r) //r.name, (r.rhs as Choice).alternative)
+                    }
                     else -> typeForRhs(ruleItem.referencedRule(this._grammar))
                 }
                 is Concatenation -> when {
@@ -120,8 +106,7 @@ internal class TypeModelFromGrammar(
                 is Group -> when {
                     1 == ruleItem.choice.alternative.size -> {
                         val concat = ruleItem.choice.alternative[0]
-                        val unnamedName = newUnnamed(ruleItem.owningRule)
-                        val concatType = findOrCreateElementType(unnamedName)
+                        val concatType = TupleType()
                         this._typeForRuleItem[ruleItem] = concatType
                         concat.items.forEachIndexed { idx, it ->
                             createPropertyDeclaration(concatType, it, idx)
@@ -139,10 +124,6 @@ internal class TypeModelFromGrammar(
         }
     }
 
-    private fun newUnnamed(owningRule: Rule): String {
-        TODO()
-    }
-
     private fun typeForConcatenation(rule: Rule, items: List<ConcatenationItem>): ElementType {
         val concatType = findOrCreateElementType(rule.name)
         this._ruleToType[rule] = concatType
@@ -152,22 +133,37 @@ internal class TypeModelFromGrammar(
         return concatType
     }
 
-    private fun typeForChoice(name: String, alternative: List<Concatenation>): RuleType {
+    private fun typeForChoice(choiceRule:Rule):RuleType{ //name: String, alternative: List<Concatenation>): RuleType {
         // if all rhs gives ElementType then this ruleType is a super type of all rhs
         // else rhs maps to properties
-        val subtypes = alternative.map { typeForRuleItem(it) }
+
+        val subtypes = (choiceRule.rhs as Choice).alternative.map { typeForRuleItem(it) }
         return when {
             subtypes.all { it is ElementType } -> {
-                val choiceType = findOrCreateElementType(name)
+                val choiceType = findOrCreateElementType(choiceRule.name)
+                _ruleToType[choiceRule] = choiceType
                 subtypes.forEach {
                     (it as ElementType).addSuperType(choiceType)
                 }
                 choiceType
             }
-            subtypes.all { it === net.akehurst.language.api.typeModel.BuiltInType.STRING } -> BuiltInType.STRING
-            subtypes.all { it === net.akehurst.language.api.typeModel.BuiltInType.LIST } -> BuiltInType.LIST
+            //subtypes.all { it === BuiltInType.STRING } -> BuiltInType.STRING
+            subtypes.all { it === BuiltInType.STRING } -> {
+                val choiceType = findOrCreateElementType(choiceRule.name)
+                _ruleToType[choiceRule] = choiceType
+                createUniquePropertyDeclaration(choiceType, UNNAMED_STRING_PROPERTY_NAME, BuiltInType.STRING, false, 0)
+                choiceType
+            }
+            //subtypes.all { it is ListType } -> ListType(BuiltInType.ANY)
+            subtypes.all { it is ListType} ->{ //=== BuiltInType.LIST } -> {
+                val choiceType = findOrCreateElementType(choiceRule.name)
+                _ruleToType[choiceRule] = choiceType
+                createUniquePropertyDeclaration(choiceType, UNNAMED_LIST_PROPERTY_VALUE, ListType(BuiltInType.ANY), false, 0)
+                choiceType
+            }
             else -> {
-                val choiceType = findOrCreateElementType(name)
+                val choiceType = findOrCreateElementType(choiceRule.name)
+                _ruleToType[choiceRule] = choiceType
                 createUniquePropertyDeclaration(choiceType, UNNAMED_ANY_PROPERTY_NAME,BuiltInType.ANY, false,0)
                 choiceType
             }
@@ -179,16 +175,21 @@ internal class TypeModelFromGrammar(
         return rt
     }
 
-    private fun createPropertyDeclaration(et: ElementType, ruleItem: ConcatenationItem, childIndex: Int): PropertyDeclaration? {
+    private fun newUnnamed(owningRule: Rule): String {
+        return "Tuple"
+    }
+
+    private fun createPropertyDeclaration(et: StructuredRuleType, ruleItem: ConcatenationItem, childIndex: Int): PropertyDeclaration? {
         return when (ruleItem) {
             is EmptyRule -> null
             is Terminal -> null //createUniquePropertyDeclaration(et, UNNAMED_STRING_VALUE, propType)
             is NonTerminal -> {
-                    val rhs = if (ruleItem.embedded) {
-                        ruleItem.referencedRule(ruleItem.owningGrammar).rhs
+                    val refRule = if (ruleItem.embedded) {
+                        ruleItem.referencedRule(ruleItem.owningGrammar)
                     } else {
-                        ruleItem.referencedRule(this._grammar).rhs
+                        ruleItem.referencedRule(this._grammar)
                     }
+                val rhs = refRule.rhs
                     when (rhs) {
                         is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem), BuiltInType.STRING, false, childIndex)
                         is Concatenation -> when {
@@ -205,7 +206,7 @@ internal class TypeModelFromGrammar(
                         }
                         is Choice -> {
                             val pName = propertyNameFor(et, ruleItem)
-                            val choiceType = typeForChoice(pName, rhs.alternative)
+                            val choiceType = typeForChoice(refRule) //pName, rhs.alternative)
                             createUniquePropertyDeclaration(et, pName, choiceType, false, childIndex)
                         }
                         else -> {
@@ -224,7 +225,7 @@ internal class TypeModelFromGrammar(
         }
     }
 
-    private fun propertyNameFor(et: ElementType, ruleItem: SimpleItem): String = when (ruleItem) {
+    private fun propertyNameFor(et: StructuredRuleType, ruleItem: SimpleItem): String = when (ruleItem) {
         is EmptyRule -> error("should not happen")
         is Terminal -> UNNAMED_STRING_PROPERTY_NAME
         is NonTerminal -> ruleItem.name
@@ -232,12 +233,12 @@ internal class TypeModelFromGrammar(
         else -> error("Internal error, unhandled subtype of SimpleItem")
     }
 
-    private fun createUniquePropertyDeclaration(et: ElementType, name: String, type: RuleType, isNullable:Boolean, childIndex: Int): PropertyDeclaration? {
+    private fun createUniquePropertyDeclaration(et: StructuredRuleType, name: String, type: RuleType, isNullable:Boolean, childIndex: Int): PropertyDeclaration? {
         val uniqueName = createUniquePropertyNameFor(et,name)
         return PropertyDeclaration(et, uniqueName, type, isNullable, childIndex)
     }
 
-    private fun createUniquePropertyNameFor(et: ElementType, name: String): String {
+    private fun createUniquePropertyNameFor(et: StructuredRuleType, name: String): String {
         val nameCount = this._uniquePropertyNames[Pair(et, name)]
         val uniqueName = if (null == nameCount) {
             this._uniquePropertyNames[Pair(et, name)] = 2

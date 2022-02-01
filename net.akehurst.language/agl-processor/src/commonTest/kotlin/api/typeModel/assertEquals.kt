@@ -43,13 +43,13 @@ object TypeModelTest {
         for (i in 0 until expected.superType.size) {
             val expEl = expected.superType[i]
             val actEl = actual.superType[i]
-            assertEquals(expEl, actEl)
+            assertEquals(expEl.name, actEl.name)
         }
         assertEquals(expected.subType.size, actual.subType.size, "Wrong number of subTypes for '${expected.name}'")
         for (i in 0 until expected.subType.size) {
             val expEl = expected.subType.toList()[i] //TODO: set set equality !
             val actEl = actual.subType.toList()[i]
-            assertEquals(expEl, actEl)
+            assertEquals(expEl.name, actEl.name)
         }
         assertEquals(expected.property.size, actual.property.size, "Wrong number of properties for '${expected.name}'")
         for (k in expected.property.keys) {
@@ -65,9 +65,9 @@ object TypeModelTest {
             null == expected || null == actual -> fail("should never be null")
             else -> {
                 assertEquals(expected.name, actual.name)
-                assertEquals(expected.isNullable, actual.isNullable)
-                assertEquals(expected.childIndex, actual.childIndex)
-                assertEquals(expected.type.name, actual.type.name)
+                assertEquals(expected.isNullable, actual.isNullable, "Different nullable for ${expected}")
+                assertEquals(expected.childIndex, actual.childIndex, "Different childIndex for ${expected}")
+                assertEquals(expected.type.name, actual.type.name,"Different types for ${expected}")
             }
         }
     }

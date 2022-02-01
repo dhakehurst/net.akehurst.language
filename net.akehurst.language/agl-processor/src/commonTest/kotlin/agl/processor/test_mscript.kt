@@ -23,7 +23,6 @@ import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.typeModel.BuiltInType
-import net.akehurst.language.api.typeModel.TypeModel
 import net.akehurst.language.api.typeModel.TypeModelTest
 import net.akehurst.language.api.typeModel.typeModel
 import kotlin.test.Test
@@ -122,41 +121,42 @@ grammar Mscript {
         val expected = typeModel {
             elementType("script") {
                 // script = statementList ;
-                propertyListType("statementList", "\$ANY",false,0)
+                propertyListType("statementList", BuiltInType.ANY,false,0)
             }
             elementType("statementList") {
                 // statementList = [line / "\R"]* ;
-                propertyListType("line", "\$ANY",false,0)
+                propertyListType("line", BuiltInType.ANY,false,0)
             }
             elementType("line") {
                 // line = [statement / ';']* ';'? ;
-                propertyListType("statement", "\$ANY",false,0)
-                propertyUnnamedStringType(true,1)
+                propertyListType("statement", BuiltInType.ANY,false,0)
+                propertyUnnamedType(BuiltInType.STRING,true,1)
             }
             elementType("statement") {
                 // statement
-                //      = conditional
-                //      | assignment
-                //      | expressionStatement
-                //      //TODO: others
-                //      ;
+                //   = conditional
+                //   | assignment
+                //   | expressionStatement
+                //   //TODO: others
+                //   ;
+                subTypes("conditional","assignment","expressionStatement")
             }
             elementType("conditional") {
                 // conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
-                superType("statement")
+                //superType("statement")
                 propertyElementType("expression","expression",false, 1)
-                propertyListType("statementList", "\$ANY",false,3)
-                propertyListType("statementList2", "\$ANY",false,5)
+                propertyListType("statementList", BuiltInType.ANY,false,3)
+                propertyListType("statementList2", BuiltInType.ANY,false,5)
             }
             elementType("assignment") {
                 // assignment = rootVariable '=' expression ;
-                superType("statement")
+                //superType("statement")
                 propertyElementType("rootVariable","rootVariable",false, 0)
                 propertyElementType("expression","expression",false, 2)
             }
             elementType("expressionStatement") {
                 // expressionStatement = expression ;
-                superType("statement")
+                //superType("statement")
                 propertyElementType("expression","expression",false, 0)
             }
             elementType("expression") {
@@ -169,15 +169,16 @@ grammar Mscript {
                 //   | infixExpression
                 //   | groupExpression
                 //   ;
+                subTypes("rootVariable","literal","matrix","functionCall","prefixExpression","infixExpression","groupExpression")
             }
             elementType("groupExpression") {
                 // groupExpression = '(' expression ')' ;
-                superType("expression")
+                //superType("expression")
                 propertyElementType("expression","expression",false,0)
             }
             elementType("functionCall") {
                 // functionCall = NAME '(' argumentList ')' ;
-                superType("expression")
+                //superType("expression")
                 propertyStringType("NAME", false, 0)
                 propertyListType("argumentList",BuiltInType.ANY,false,2)
             }
@@ -185,43 +186,59 @@ grammar Mscript {
                 // argumentList = [ argument / ',' ]* ;
                 propertyListType("argument",BuiltInType.ANY,false,2)
             }
-            elementType("functionCall") {
+            elementType("argument") {
                 // argument = expression | COLON ;
             }
-            //
-            //    prefixExpression = prefixOperator expression ;
-            //    prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
-            //
-            //    infixExpression =  [ expression / infixOperator ]2+ ;
-            //    infixOperator
-            //        = '.*' | '*' | './' | '/' | '.\\' | '\\' | '+' | '-'    // arithmetic
-            //        | '==' | '~=' | '>' | '>=' | '<' | '<='                 // relational
-            //        | '&' | '|' | '&&' | '||' | '~'                         // logical
-            //        | ':'                                                   // vector creation
-            //        ;
-            //
-            //    matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
-            //    row = expression (','? expression)* ;
-            //
-            //    literal
-            //      = BOOLEAN
-            //      | number
-            //      | SINGLE_QUOTE_STRING
-            //      | DOUBLE_QUOTE_STRING
-            //      ;
-            //
-            //    rootVariable = NAME ;
-            //
-            //    number = INTEGER | REAL ;
-            //
-            //    leaf NAME = "[a-zA-Z_][a-zA-Z_0-9]*" ;
-            //
-            //    leaf COLON               = ':' ;
-            //    leaf BOOLEAN             = 'true' | 'false' ;
-            //    leaf INTEGER             = "([+]|[-])?[0-9]+" ;
-            //    leaf REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;
-            //    leaf SINGLE_QUOTE_STRING = "'(?:[^'\\]|\\.)*'" ;
-            //    leaf DOUBLE_QUOTE_STRING = "\"(?:[^\"\\]|\\.)*\"" ;
+            elementType("prefixExpression") {
+                // prefixExpression = prefixOperator expression ;
+                //superType("expression")
+            }
+            elementType("prefixOperator") {
+                // prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
+                propertyUnnamedType(BuiltInType.STRING,false,0)
+            }
+            elementType("infixExpression") {
+                // infixExpression =  [ expression / infixOperator ]2+ ;
+                //superType("expression")
+            }
+            elementType("infixOperator") {
+                // infixOperator
+                //        = '.*' | '*' | './' | '/' | '.\\' | '\\' | '+' | '-'    // arithmetic
+                //        | '==' | '~=' | '>' | '>=' | '<' | '<='                 // relational
+                //        | '&' | '|' | '&&' | '||' | '~'                         // logical
+                //        | ':'                                                   // vector creation
+                //        ;
+                propertyUnnamedType(BuiltInType.STRING,false,0)
+            }
+            elementType("matrix") {
+                //superType("expression")
+                // matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
+                propertyListTypeOf("row","row",false,1)
+            }
+            elementType("row") {
+                // row = expression (','? expression)* ;
+                propertyElementType("expression", "expression", false, 0)
+
+            }
+            elementType("literal") {
+                //    literal
+                //      = BOOLEAN
+                //      | number
+                //      | SINGLE_QUOTE_STRING
+                //      | DOUBLE_QUOTE_STRING
+                //      ;
+                //superType("expression")
+                propertyUnnamedType(BuiltInType.ANY,false,0)
+            }
+            elementType("rootVariable") {
+                // rootVariable = NAME ;
+                //superType("expression")
+                propertyStringType("NAME", false, 0)
+            }
+            elementType("number") {
+                // number = INTEGER | REAL ;
+                propertyUnnamedType(BuiltInType.STRING,false,0)
+            }
         }
 
         TypeModelTest.assertEquals(expected, actual)

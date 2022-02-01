@@ -34,6 +34,7 @@ import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.typeModel.BuiltInType
 import net.akehurst.language.api.typeModel.ElementType
+import net.akehurst.language.api.typeModel.ListType
 import net.akehurst.language.api.typeModel.TypeModel
 
 /**
@@ -142,7 +143,7 @@ class SyntaxAnalyserSimple(
                 TODO()
             }
             BuiltInType.STRING == elType -> TODO()
-            BuiltInType.LIST == elType -> TODO()
+            elType is ListType -> TODO()
             elType is ElementType -> {
                 val actualType = when {
                     elType.subType.isNotEmpty() -> elType.subType.first { it.name == target.nonSkipChildren[0].name }
@@ -166,34 +167,37 @@ class SyntaxAnalyserSimple(
                                     ch.isEmptyMatch -> null
                                     else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, childsScope)
                                 }
-                                BuiltInType.LIST -> when {
-                                    actualTarget.isList -> when {
-                                        actualTarget.isEmptyLeaf -> emptyList<Any>()
-                                        else -> actualTarget.asBranch.nonSkipChildren.mapIndexedNotNull { ci, b ->
-                                            val childPath2 = childPath + ci.toString()
-                                            if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
-                                                null
-                                            } else {
-                                                this.createValue(b, childPath2, childsScope)
-                                            }
-                                        }
-                                    }
-                                    else -> when {
-                                        ch.isEmptyLeaf -> emptyList<Any>()
-                                        else -> ch.asBranch.nonSkipChildren.mapIndexedNotNull { ci, b ->
-                                            val childPath2 = childPath + ci.toString()
-                                            if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
-                                                null
-                                            } else {
-                                                this.createValue(b, childPath2, childsScope)
-                                            }
-                                        }
-                                    }
-                                }
-                                BuiltInType.ANY ->  this.createValue(ch, childPath, childsScope)
+                                BuiltInType.ANY -> this.createValue(ch, childPath, childsScope)
                                 else -> error("Internal error: BuiltInType '' not handled")
                             }
                             setPropertyOrReference(el, propDecl.name, propValue)
+                        }
+                        is ListType -> {
+                            val ch = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
+                            when {
+                                actualTarget.isList -> when {
+                                    actualTarget.isEmptyLeaf -> emptyList<Any>()
+                                    else -> actualTarget.asBranch.nonSkipChildren.mapIndexedNotNull { ci, b ->
+                                        val childPath2 = childPath + ci.toString()
+                                        if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
+                                            null
+                                        } else {
+                                            this.createValue(b, childPath2, childsScope)
+                                        }
+                                    }
+                                }
+                                else -> when {
+                                    ch.isEmptyLeaf -> emptyList<Any>()
+                                    else -> ch.asBranch.nonSkipChildren.mapIndexedNotNull { ci, b ->
+                                        val childPath2 = childPath + ci.toString()
+                                        if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
+                                            null
+                                        } else {
+                                            this.createValue(b, childPath2, childsScope)
+                                        }
+                                    }
+                                }
+                            }
                         }
                         is ElementType -> {
                             val ch = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
@@ -202,8 +206,8 @@ class SyntaxAnalyserSimple(
                                     ch.isEmptyLeaf -> null
                                     else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, childsScope)
                                 }
-                                propType.subType.isNotEmpty() && ch.asBranch.nonSkipChildren.size == 1 ->this.createValue(ch.asBranch.nonSkipChildren[0], childPath, childsScope)
-                                else ->this.createValue(ch, childPath, childsScope)
+                                propType.subType.isNotEmpty() && ch.asBranch.nonSkipChildren.size == 1 -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, childsScope)
+                                else -> this.createValue(ch, childPath, childsScope)
                             }
                             setPropertyOrReference(el, propDecl.name, propValue)
                         }

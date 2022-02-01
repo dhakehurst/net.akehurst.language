@@ -22,15 +22,15 @@ import net.akehurst.language.agl.collections.mutableOrderedSetOf
 
 class TypeModel {
 
-    val types = mutableMapOf<String, RuleType>()
+    val types = mutableMapOf<String, ElementType>()
 
     init {
-        types[BuiltInType.STRING.name] = BuiltInType.STRING
-        types[BuiltInType.LIST.name] = BuiltInType.LIST
+        //types[BuiltInType.ANY.name] = BuiltInType.ANY
+        //types[BuiltInType.STRING.name] = BuiltInType.STRING
     }
 
     fun findType(name: String): RuleType? = types[name]
-    fun findOrCreateType(name: String): RuleType {
+    fun findOrCreateType(name: String): ElementType {
         val existing = types[name]
         return if (null == existing) {
             val t = ElementType(name)
@@ -46,11 +46,17 @@ interface RuleType {
     val name: String
 }
 
+interface StructuredRuleType : RuleType {
+    val property : MutableMap<String,PropertyDeclaration>
+    fun getPropertyByIndex(i:Int):PropertyDeclaration
+    fun appendProperty(name: String, propertyDeclaration: PropertyDeclaration)
+}
+
 class BuiltInType private constructor(override val name: String) : RuleType {
     companion object {
         val NOTHING = BuiltInType("\$Nothing")
         val STRING = BuiltInType("\$String")
-        val LIST = BuiltInType("\$List")
+        //val LIST = BuiltInType("\$List")
         val ANY = BuiltInType("\$Any")
     }
 
@@ -63,10 +69,36 @@ class BuiltInType private constructor(override val name: String) : RuleType {
     override fun toString(): String = name
 }
 
-data class ElementType(override val name: String) : RuleType {
+data class ListType(val elementType:RuleType) : RuleType {
+    override val name: String = "List<$elementType>"
+}
+
+class TupleType() : StructuredRuleType {
+    override val name: String = "Tuple"
+    override val property = mutableMapOf<String, PropertyDeclaration>()
+    private val _propertyIndex = mutableListOf<PropertyDeclaration>()
+
+    override fun getPropertyByIndex(i:Int):PropertyDeclaration = _propertyIndex[i]
+    override fun appendProperty(name: String, propertyDeclaration: PropertyDeclaration)  {
+        check(propertyDeclaration.owner==this)
+        check(this.property.containsKey(name).not())
+        this.property[name]=propertyDeclaration
+        this._propertyIndex.add(propertyDeclaration)
+    }
+
+    override fun hashCode(): Int = 0
+    override fun equals(other: Any?): Boolean = when(other) {
+        !is TupleType -> false
+        else ->this._propertyIndex==other._propertyIndex
+    }
+
+    override fun toString(): String = "Tuple<${this._propertyIndex.joinToString { it.type.name }}>"
+}
+
+data class ElementType(override val name: String) : StructuredRuleType {
     val superType:OrderedSet<ElementType> = mutableOrderedSetOf<ElementType>()
     val subType:Set<ElementType> = mutableSetOf<ElementType>()
-    val property = mutableMapOf<String, PropertyDeclaration>()
+    override val property = mutableMapOf<String, PropertyDeclaration>()
     private val _propertyIndex = mutableListOf<PropertyDeclaration>()
 
     fun addSuperType(type:ElementType) {
@@ -74,16 +106,17 @@ data class ElementType(override val name: String) : RuleType {
         (type.subType as MutableSet).add(this)
     }
 
-    fun getPropertyByIndex(i:Int):PropertyDeclaration = _propertyIndex[i]
-    fun appendProperty(name: String, propertyDeclaration: PropertyDeclaration) {
+    override fun getPropertyByIndex(i:Int):PropertyDeclaration = _propertyIndex[i]
+    override fun appendProperty(name: String, propertyDeclaration: PropertyDeclaration) {
         check(propertyDeclaration.owner==this)
+        check(this.property.containsKey(name).not())
         this.property[name]=propertyDeclaration
         this._propertyIndex.add(propertyDeclaration)
     }
 }
 
 data class PropertyDeclaration(
-    val owner: ElementType,
+    val owner: StructuredRuleType,
     val name: String,
     val type: RuleType,
     val isNullable: Boolean,
@@ -95,6 +128,6 @@ data class PropertyDeclaration(
 
     override fun toString(): String  {
         val nullable = if (isNullable) "?" else ""
-        return "$name: ${type.name} $nullable [$childIndex]"
+        return "${owner.name}.$name: ${type.name} $nullable [$childIndex]"
     }
 }

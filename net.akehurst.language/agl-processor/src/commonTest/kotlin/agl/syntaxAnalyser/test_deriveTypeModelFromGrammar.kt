@@ -157,7 +157,40 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyUnnamedStringType(false,0)
+                propertyUnnamedType(BuiltInType.STRING,false,0)
+            }
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun choice_of_choice_1() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = L | M ;
+                L = 'a' | 'b' | 'c' ;
+                M = 'x' | 'y' ;
+            }
+        """.trimIndent()
+
+        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        assertNotNull(grammars)
+        assertTrue(gramIssues.isEmpty())
+
+        val actual = TypeModelFromGrammar(grammars.last()).derive()
+        val expected = typeModel {
+            elementType("S") {
+                subTypes("L", "M")
+            }
+            elementType("L") {
+                //superType("S")
+                propertyUnnamedType(BuiltInType.STRING, false,0)
+            }
+            elementType("M") {
+                //superType("S")
+                propertyUnnamedType(BuiltInType.STRING,false,0)
             }
         }
 
@@ -180,13 +213,12 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyUnnamedStringType(true, 0) // of String
+                propertyUnnamedType(BuiltInType.STRING,true, 0) // of String
             }
         }
 
         TypeModelTest.assertEquals(expected, actual)
     }
-
 
     @Test
     fun multi_literal() {
@@ -204,11 +236,11 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyUnnamedListType(false,0) // of String
+                propertyUnnamedListType(BuiltInType.STRING,false,0) // of String
             }
         }
 
-        assertEquals(expected, actual)
+        TypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -228,14 +260,14 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyListOfStringType("as",false,0)
+                propertyListType("as",BuiltInType.ANY,false,0)
             }
             elementType("as") {
-                propertyUnnamedListType(false,0)
+                propertyUnnamedListType(BuiltInType.ANY,false,0)
             }
         }
 
-        assertEquals(expected, actual)
+        TypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -256,16 +288,16 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyListType("as", "a",false,0) // of String
+                propertyListType("as", BuiltInType.ANY,false,0) // of String
             }
             elementType("as") {
-                propertyListOfStringType("a",false,0)
+                propertyListType("a",BuiltInType.ANY,false,0)
             }
             elementType("a") {
             }
         }
 
-        assertEquals(expected, actual)
+        TypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -287,19 +319,19 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyListType("ass", BuiltInType.LIST.name,false,0) // of String
+                propertyListType("ass", BuiltInType.ANY,false,0) // of String
             }
             elementType("ass") {
-                propertyListOfStringType("as",false,0)
+                propertyListType("as",BuiltInType.ANY, false,0)
             }
             elementType("as") {
-                propertyListOfStringType("a",false,0)
+                propertyListTypeOf("a","a",false,0)
             }
             elementType("a") {
             }
         }
 
-        assertEquals(expected, actual)
+        TypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -330,7 +362,7 @@ class test_deriveTypeModelFromGrammar {
             elementType("c") {}
         }
 
-        assertEquals(expected, actual)
+        TypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -361,7 +393,7 @@ class test_deriveTypeModelFromGrammar {
             elementType("c") {}
         }
 
-        assertEquals(expected, actual)
+        TypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -381,14 +413,14 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(grammars.last()).derive()
         val expected = typeModel {
             elementType("S") {
-                propertyListOfStringType("as",false,0) // of String
+                propertyListType("as",BuiltInType.STRING,false,0) // of String
             }
             elementType("as") {
-                propertyUnnamedListType(false,0) // of String
+                propertyUnnamedListType(BuiltInType.STRING,false,0) // of String
             }
         }
 
-        assertEquals(expected, actual)
+        TypeModelTest.assertEquals(expected, actual)
     }
 
 }
