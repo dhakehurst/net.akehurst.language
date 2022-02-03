@@ -82,7 +82,7 @@ internal class test_abcz_OR_abc : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2, //TODO: might be possible to make this 1...need to combine H-to ab and a_bc
+            expectedNumGSSHeads = 1,
             expectedTrees = arrayOf(expected)
         )
     }

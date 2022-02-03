@@ -37,10 +37,6 @@ internal class TypeModelFromGrammar(
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredRuleType, String>, Int>()
 
     internal fun derive(): TypeModel {
-        val choiceRules = _grammar.allRule.filter { it.isLeaf.not() && it.isSkip.not() && it.rhs is Choice }
-        for (chRule in choiceRules) {
-
-        }
         for (rule in _grammar.allRule) {
             if (rule.isSkip.not() && rule.isLeaf.not()) {
                 typeForRhs(rule)
@@ -78,12 +74,12 @@ internal class TypeModelFromGrammar(
                 is EmptyRule -> BuiltInType.NOTHING
                 is Terminal -> BuiltInType.STRING
                 is SimpleList -> when (ruleItem.max) {
-                    1 -> typeForRuleItem(ruleItem.item) //TODO: nullable
+                    1 -> typeForRuleItem(ruleItem.item) //no need for nullable, when min is 0 we get empty list
                     else -> ListType(typeForRuleItem(ruleItem.item)) //BuiltInType.LIST //TODO: add list type
                 }
                 is SeparatedList -> when (ruleItem.max) {
-                    1 -> typeForRuleItem(ruleItem.item) //TODO: nullable //unlikely!
-                    else -> ListType(BuiltInType.ANY) //BuiltInType.LIST //TODO: add list type
+                    1 -> typeForRuleItem(ruleItem.item) //no need for nullable, when min is 0 we get empty list
+                    else -> ListType(BuiltInType.ANY) //BuiltInType.LIST //TODO: maybe list of Tuple(element,separator) last element with null separator ?
                 }
                 is NonTerminal -> when {
                     ruleItem.embedded -> {
@@ -219,7 +215,9 @@ internal class TypeModelFromGrammar(
                 val isNullable = ruleItem.min==0 && ruleItem.max==1
                 createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item), typeForRuleItem(ruleItem), isNullable, childIndex)
             }
-            is SeparatedList -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item), typeForRuleItem(ruleItem),false,  childIndex)
+            is SeparatedList -> {
+                createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item), typeForRuleItem(ruleItem), false, childIndex)
+            }
             is Group -> TODO()
             else -> error("Internal error, unhandled subtype of ConcatenationItem")
         }
@@ -229,7 +227,7 @@ internal class TypeModelFromGrammar(
         is EmptyRule -> error("should not happen")
         is Terminal -> UNNAMED_STRING_PROPERTY_NAME
         is NonTerminal -> ruleItem.name
-        is Group -> createUniquePropertyNameFor(et, UNNAMED_GROUP_PROPERTY_NAME)
+        is Group ->  UNNAMED_GROUP_PROPERTY_NAME
         else -> error("Internal error, unhandled subtype of SimpleItem")
     }
 

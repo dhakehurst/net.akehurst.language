@@ -174,7 +174,7 @@ class SyntaxAnalyserSimple(
                         }
                         is ListType -> {
                             val ch = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
-                            when {
+                            val propValue = when {
                                 actualTarget.isList -> when {
                                     actualTarget.isEmptyLeaf -> emptyList<Any>()
                                     else -> actualTarget.asBranch.nonSkipChildren.mapIndexedNotNull { ci, b ->
@@ -198,6 +198,7 @@ class SyntaxAnalyserSimple(
                                     }
                                 }
                             }
+                            setPropertyOrReference(el, propDecl.name, propValue)
                         }
                         is ElementType -> {
                             val ch = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]

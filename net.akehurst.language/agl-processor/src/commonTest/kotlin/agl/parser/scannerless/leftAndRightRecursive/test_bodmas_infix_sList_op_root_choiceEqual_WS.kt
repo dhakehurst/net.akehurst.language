@@ -23,6 +23,7 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.parser.scanondemand.examples.test_Johnson_Longest
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -61,21 +62,6 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
         val goal = "S"
     }
 
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_expr = b.rule("expr").build()
-        val r_var = b.rule("var").concatenation(b.pattern("[a-zA-Z]+"))
-        val r_bool = b.rule("bool").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, b.literal("true"), b.literal("false"))
-        val r_op = b.rule("op").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, b.literal("/"), b.literal("*"), b.literal("+"), b.literal("-"))
-        val r_group = b.rule("group").concatenation(b.literal("("), r_expr, b.literal(")"))
-        val r_infix = b.rule("infix").separatedList(2, -1, r_op, r_expr)
-        val r_root = b.rule("root").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, r_var, r_bool)
-        b.rule(r_expr).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_root, r_group, r_infix)
-        b.rule("S").concatenation(r_expr)
-        b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
-        return b
-    }
-
     @Test
     fun empty_fails() {
         val sentence = ""
@@ -98,7 +84,13 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
             }
         """.trimIndent()
 
-        super.test(rrs,goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
 
     }
 
@@ -112,7 +104,13 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
               } }
         """.trimIndent()
 
-        super.test(rrs,"expr", sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -127,7 +125,13 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
             }
         """.trimIndent()
 
-        super.test(rrs,goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -142,7 +146,13 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
             }
         """.trimIndent()
 
-        super.test(rrs,goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -161,7 +171,13 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
             }
         """.trimIndent()
 
-        super.test(rrs,goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
 
     }
 
@@ -181,7 +197,13 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
             }
         """.trimIndent()
 
-        super.test(rrs,goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
 
     }
 
@@ -201,7 +223,13 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
             }
         """.trimIndent()
 
-        super.test(rrs,goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
 
     }
 
@@ -221,7 +249,13 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
             }
         """.trimIndent()
 
-        super.test(rrs,goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
 
     }
 
@@ -241,7 +275,13 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
             }
         """.trimIndent()
 
-        super.test(rrs,goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
 
     }
 
@@ -259,7 +299,13 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
             } } }
         """.trimIndent()
 
-        super.test(rrs,goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -276,7 +322,13 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
             } } }
         """.trimIndent()
 
-        super.test(rrs,goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -295,7 +347,13 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
             } } }
         """.trimIndent()
 
-        super.test(rrs,goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -318,7 +376,13 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
             } } }
         """.trimIndent()
 
-        super.test(rrs,goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -341,7 +405,13 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
             } } }
         """.trimIndent()
 
-        super.test(rrs,goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
     @Test
@@ -364,7 +434,13 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
             } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
 }

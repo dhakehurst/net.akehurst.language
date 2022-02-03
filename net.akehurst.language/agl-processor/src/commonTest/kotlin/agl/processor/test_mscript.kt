@@ -121,16 +121,16 @@ grammar Mscript {
         val expected = typeModel {
             elementType("script") {
                 // script = statementList ;
-                propertyListType("statementList", BuiltInType.ANY,false,0)
+                propertyListType("statementList", BuiltInType.ANY, false, 0)
             }
             elementType("statementList") {
                 // statementList = [line / "\R"]* ;
-                propertyListType("line", BuiltInType.ANY,false,0)
+                propertyListType("line", BuiltInType.ANY, false, 0)
             }
             elementType("line") {
                 // line = [statement / ';']* ';'? ;
-                propertyListType("statement", BuiltInType.ANY,false,0)
-                propertyUnnamedType(BuiltInType.STRING,true,1)
+                propertyListType("statement", BuiltInType.ANY, false, 0)
+                propertyUnnamedType(BuiltInType.STRING, true, 1)
             }
             elementType("statement") {
                 // statement
@@ -139,25 +139,22 @@ grammar Mscript {
                 //   | expressionStatement
                 //   //TODO: others
                 //   ;
-                subTypes("conditional","assignment","expressionStatement")
+                subTypes("conditional", "assignment", "expressionStatement")
             }
             elementType("conditional") {
                 // conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
-                //superType("statement")
-                propertyElementType("expression","expression",false, 1)
-                propertyListType("statementList", BuiltInType.ANY,false,3)
-                propertyListType("statementList2", BuiltInType.ANY,false,5)
+                propertyElementType("expression", "expression", false, 1)
+                propertyListType("statementList", BuiltInType.ANY, false, 3)
+                propertyListType("statementList2", BuiltInType.ANY, false, 5)
             }
             elementType("assignment") {
                 // assignment = rootVariable '=' expression ;
-                //superType("statement")
-                propertyElementType("rootVariable","rootVariable",false, 0)
-                propertyElementType("expression","expression",false, 2)
+                propertyElementType("rootVariable", "rootVariable", false, 0)
+                propertyElementType("expression", "expression", false, 2)
             }
             elementType("expressionStatement") {
                 // expressionStatement = expression ;
-                //superType("statement")
-                propertyElementType("expression","expression",false, 0)
+                propertyElementType("expression", "expression", false, 0)
             }
             elementType("expression") {
                 // expression
@@ -169,37 +166,39 @@ grammar Mscript {
                 //   | infixExpression
                 //   | groupExpression
                 //   ;
-                subTypes("rootVariable","literal","matrix","functionCall","prefixExpression","infixExpression","groupExpression")
+                subTypes("rootVariable", "literal", "matrix", "functionCall", "prefixExpression", "infixExpression", "groupExpression")
             }
             elementType("groupExpression") {
                 // groupExpression = '(' expression ')' ;
                 //superType("expression")
-                propertyElementType("expression","expression",false,0)
+                propertyElementType("expression", "expression", false, 1)
             }
             elementType("functionCall") {
                 // functionCall = NAME '(' argumentList ')' ;
                 //superType("expression")
                 propertyStringType("NAME", false, 0)
-                propertyListType("argumentList",BuiltInType.ANY,false,2)
+                propertyListType("argumentList", BuiltInType.ANY, false, 2)
             }
             elementType("argumentList") {
                 // argumentList = [ argument / ',' ]* ;
-                propertyListType("argument",BuiltInType.ANY,false,2)
+                propertyListType("argument", BuiltInType.ANY, false, 0)
             }
             elementType("argument") {
                 // argument = expression | COLON ;
+                propertyUnnamedType(BuiltInType.ANY, false, 0)
             }
             elementType("prefixExpression") {
                 // prefixExpression = prefixOperator expression ;
-                //superType("expression")
+                propertyElementType("prefixOperator", "prefixOperator", false, 0)
+                propertyElementType("expression", "expression", false, 1)
             }
             elementType("prefixOperator") {
                 // prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
-                propertyUnnamedType(BuiltInType.STRING,false,0)
+                propertyUnnamedType(BuiltInType.STRING, false, 0)
             }
             elementType("infixExpression") {
                 // infixExpression =  [ expression / infixOperator ]2+ ;
-                //superType("expression")
+                propertyListType("expression", BuiltInType.ANY, false, 0)
             }
             elementType("infixOperator") {
                 // infixOperator
@@ -208,17 +207,19 @@ grammar Mscript {
                 //        | '&' | '|' | '&&' | '||' | '~'                         // logical
                 //        | ':'                                                   // vector creation
                 //        ;
-                propertyUnnamedType(BuiltInType.STRING,false,0)
+                propertyUnnamedType(BuiltInType.STRING, false, 0)
             }
             elementType("matrix") {
-                //superType("expression")
                 // matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
-                propertyListTypeOf("row","row",false,1)
+                propertyListType("row", BuiltInType.ANY, false, 1)
             }
             elementType("row") {
                 // row = expression (','? expression)* ;
                 propertyElementType("expression", "expression", false, 0)
-
+                propertyListOfTupleType("\$group", false, 1) {
+                    propertyUnnamedType(BuiltInType.STRING, true, 0)
+                    propertyElementType("expression", "expression", false, 1)
+                }
             }
             elementType("literal") {
                 //    literal
@@ -227,17 +228,15 @@ grammar Mscript {
                 //      | SINGLE_QUOTE_STRING
                 //      | DOUBLE_QUOTE_STRING
                 //      ;
-                //superType("expression")
-                propertyUnnamedType(BuiltInType.ANY,false,0)
+                propertyUnnamedType(BuiltInType.ANY, false, 0)
             }
             elementType("rootVariable") {
                 // rootVariable = NAME ;
-                //superType("expression")
                 propertyStringType("NAME", false, 0)
             }
             elementType("number") {
                 // number = INTEGER | REAL ;
-                propertyUnnamedType(BuiltInType.STRING,false,0)
+                propertyUnnamedType(BuiltInType.STRING, false, 0)
             }
         }
 
@@ -768,8 +767,38 @@ grammar Mscript {
         val (actual, issues) = sut.process<AsmSimple, Any>(text, "script")
 
         val expected = asmSimple {
-            root(":script") {
-
+            root("script") {
+                propertyListOfElement("statementList") {
+                    element("line") {
+                        propertyListOfElement("statement"){
+                            element("expressionStatement") {
+                                propertyElement("expression", "functionCall") {
+                                    propertyString("NAME","disp")
+                                    propertyListOfElement("argumentList") {
+                                        element("argument") {
+                                            propertyUnnamedElement("functionCall") {
+                                                propertyString("NAME","get_param")
+                                                propertyListOfElement("argumentList") {
+                                                    element("argument") {
+                                                        propertyUnnamedElement("rootVariable") {
+                                                            propertyString("NAME", "gcbh")
+                                                        }
+                                                    }
+                                                    element("argument") {
+                                                        propertyUnnamedElement("literal") {
+                                                            propertyUnnamedString("'xxx'")
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        propertyUnnamedString(null)
+                    }
+                }
             }
         }
 

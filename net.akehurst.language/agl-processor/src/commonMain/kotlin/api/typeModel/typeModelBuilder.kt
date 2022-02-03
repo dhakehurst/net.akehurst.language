@@ -78,6 +78,13 @@ abstract class StructuredTypeBuilder(
         PropertyDeclaration(_structuredType, propertyName, ListType(listElementType), isNullable, childIndex)
     }
 
+    fun propertyListOfTupleType(propertyName: String, isNullable: Boolean, childIndex: Int, init: TupleTypeBuilder.() -> Unit = {}) {
+        val b = TupleTypeBuilder(_model)
+        b.init()
+        val tt = b.build()
+        PropertyDeclaration(_structuredType, propertyName, ListType(tt), isNullable, childIndex)
+    }
+
     fun propertyTupleType(propertyName: String, isNullable: Boolean, childIndex: Int, init: TupleTypeBuilder.() -> Unit = {}) {
         val b = TupleTypeBuilder(_model)
         b.init()

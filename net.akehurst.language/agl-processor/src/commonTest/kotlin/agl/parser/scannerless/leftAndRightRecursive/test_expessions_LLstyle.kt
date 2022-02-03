@@ -27,6 +27,11 @@ internal class test_expessions_LLstyle : test_ScanOnDemandParserAbstract() {
     // E = P
     //   | E '+' P
 
+    // S = E
+    // E = P | E1
+    // E1 = E o P
+    // P = a
+
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("E") }

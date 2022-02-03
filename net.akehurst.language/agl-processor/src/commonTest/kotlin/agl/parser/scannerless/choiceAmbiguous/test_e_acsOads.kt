@@ -133,7 +133,7 @@ internal class test_e_acsOads : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 2, //TODO can we make this 1 by merging states?
+                expectedNumGSSHeads = 1,
                 expectedTrees = arrayOf(expected1,expected2)
         )
     }

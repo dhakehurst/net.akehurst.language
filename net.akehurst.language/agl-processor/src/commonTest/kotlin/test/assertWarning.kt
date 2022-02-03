@@ -15,6 +15,6 @@ fun assertTrueWarning(lazyMessage: () -> String?, actual: Boolean): Unit {
 }
 
 fun failWarn(message: String?) {
-    println("WARN: $message")
-//    fail(message)
+//    println("WARN: $message")
+    fail(message)
 }

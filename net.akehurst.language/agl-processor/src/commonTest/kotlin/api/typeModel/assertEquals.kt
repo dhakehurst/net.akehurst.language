@@ -55,7 +55,7 @@ object TypeModelTest {
         for (k in expected.property.keys) {
             val expEl = expected.property[k]
             val actEl = actual.property[k]
-            assertNotNull(actEl, "expected PropertyDeclaration '$k' not found in actual ElementType '${expected.name}")
+            assertNotNull(actEl, "expected PropertyDeclaration '$k' not found in actual ElementType '${expected.name}'. [${actual.property.values.joinToString { it.name }}]")
             assertEquals(expEl, actEl)
         }
     }
