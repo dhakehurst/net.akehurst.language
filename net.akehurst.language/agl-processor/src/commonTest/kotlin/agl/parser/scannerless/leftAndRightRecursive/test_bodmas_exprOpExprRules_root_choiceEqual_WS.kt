@@ -27,7 +27,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_bodmas_exprOpExpr_root_choiceEqual_WS : test_ScanOnDemandParserAbstract() {
+internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDemandParserAbstract() {
 
     // S =  expr ;
     // expr = root | group | div | mul | add | sub ;

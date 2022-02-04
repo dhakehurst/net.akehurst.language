@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-internal class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract() {
+internal class test_bodmas_exprListOfOpExpr_Longest : test_ScanOnDemandParserAbstract() {
 
     // S = E
     /* E = var | I | '(' E ')' */
@@ -127,7 +127,6 @@ internal class test_expessions_bodmas2_Longest : test_ScanOnDemandParserAbstract
             expectedTrees = arrayOf(expected)
         )
     }
-
 
     @Test
     fun vavavav() {

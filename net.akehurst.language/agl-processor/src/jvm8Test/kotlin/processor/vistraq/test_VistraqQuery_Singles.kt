@@ -125,7 +125,6 @@ class test_VistraqQuery_Singles {
         assertEquals(queryStr, resultStr)
     }
 
-
     @Test
     fun pathExpression_NOT_A() {
         val queryStr = "NOT A"
@@ -191,7 +190,6 @@ class test_VistraqQuery_Singles {
         assertEquals(queryStr, resultStr)
     }
 
-
     @Test
     fun whereClause_expression_literalValue_true() {
         val queryStr = "WHERE true"
@@ -238,7 +236,6 @@ class test_VistraqQuery_Singles {
         assertEquals(queryStr, resultStr)
     }
 
-
     @Test(timeout = 5000)
     fun q2() {
         val queryStr = """
@@ -260,8 +257,8 @@ class test_VistraqQuery_Singles {
 
     @Test(timeout = 5000)
     fun query1() {
-        //val queryStr = "MATCH A WHERE a == b AND a == b AND true RETURN TABLE COLUMN a CONTAINING a"
-        val queryStr = "MATCH A  RETURN 1"
+        val queryStr = "MATCH A WHERE a == b AND a == b AND true RETURN TABLE COLUMN a CONTAINING a"
+        //val queryStr = "MATCH A  RETURN 1"
 
         val (sppt, issues) = processor.parse(queryStr, "query")
         assertNotNull(sppt)

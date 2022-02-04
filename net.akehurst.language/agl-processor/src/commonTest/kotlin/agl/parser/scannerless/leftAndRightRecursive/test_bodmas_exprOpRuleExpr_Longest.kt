@@ -21,12 +21,12 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-internal class test_expessions_bodmas1_Priority : test_ScanOnDemandParserAbstract() {
+internal class test_bodmas_exprOpRuleExpr_Longest : test_ScanOnDemandParserAbstract() {
 
     // S = E
     // E = var | I | '(' E ')'
     // I = E op E ;
-    // op = '/' < 'M' < '+' < '-'
+    // op = '/' | 'M' | '+' | '-'
     // var = "[a-z]+"
     private companion object {
         val rrs = runtimeRuleSet {
@@ -37,7 +37,7 @@ internal class test_expessions_bodmas1_Priority : test_ScanOnDemandParserAbstrac
                 ref("par")
             }
             concatenation("I") { ref("E"); ref("op"); ref("E") }
-            choice("op", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("op", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("/")
                 literal("M")
                 literal("+")
@@ -61,14 +61,14 @@ internal class test_expessions_bodmas1_Priority : test_ScanOnDemandParserAbstrac
     }
 
     @Test
-    fun vav() {
-        val sentence = "v+v"
+    fun a_add_b() {
+        val sentence = "a+b"
 
         val expected = """
             S { E|1 { I {
-              E{ var { "[a-z]+":'v' } }
+              E { var { "[a-z]+":'a' } }
               op|2 { '+' }
-              E{var { "[a-z]+":'v' } }
+              E { var { "[a-z]+":'b' } }
             } } }
         """.trimIndent()
 
@@ -115,6 +115,7 @@ internal class test_expessions_bodmas1_Priority : test_ScanOnDemandParserAbstrac
       E { var { "[a-z]+" : 'v' } }
     } } }
         """.trimIndent()
+
 
         super.test(rrs, goal, sentence, 1, expected)
     }

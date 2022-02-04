@@ -82,7 +82,6 @@ internal class test_bodmas_sList_root_choiceEqual : test_ScanOnDemandParserAbstr
         ),issues)
     }
 
-
     @Test
     fun a() {
         val sentence = "a"

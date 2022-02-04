@@ -21,12 +21,12 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-internal class test_expessions_bodmas1_Longest : test_ScanOnDemandParserAbstract() {
+internal class test_bodmas_exprOpRuleExpr_Priority : test_ScanOnDemandParserAbstract() {
 
     // S = E
     // E = var | I | '(' E ')'
     // I = E op E ;
-    // op = '/' | 'M' | '+' | '-'
+    // op = '/' < 'M' < '+' < '-'
     // var = "[a-z]+"
     private companion object {
         val rrs = runtimeRuleSet {
@@ -37,7 +37,7 @@ internal class test_expessions_bodmas1_Longest : test_ScanOnDemandParserAbstract
                 ref("par")
             }
             concatenation("I") { ref("E"); ref("op"); ref("E") }
-            choice("op", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("op", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
                 literal("/")
                 literal("M")
                 literal("+")
@@ -50,11 +50,11 @@ internal class test_expessions_bodmas1_Longest : test_ScanOnDemandParserAbstract
     }
 
     @Test
-    fun a() {
-        val sentence = "a"
+    fun v() {
+        val sentence = "v"
 
         val expected = """
-            S { E { var { "[a-z]+":'a' } } }
+            S { E { var { "[a-z]+":'v' } } }
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)
@@ -66,9 +66,9 @@ internal class test_expessions_bodmas1_Longest : test_ScanOnDemandParserAbstract
 
         val expected = """
             S { E|1 { I {
-              E { var { "[a-z]+":'v' } }
+              E{ var { "[a-z]+":'v' } }
               op|2 { '+' }
-              E { var { "[a-z]+":'v' } }
+              E{var { "[a-z]+":'v' } }
             } } }
         """.trimIndent()
 
@@ -95,7 +95,6 @@ internal class test_expessions_bodmas1_Longest : test_ScanOnDemandParserAbstract
         super.test(rrs, goal, sentence, 1, expected1)
     }
 
-
     @Test
     fun vavavav() {
         val sentence = "v+v+v+v"
@@ -115,7 +114,6 @@ internal class test_expessions_bodmas1_Longest : test_ScanOnDemandParserAbstract
       E { var { "[a-z]+" : 'v' } }
     } } }
         """.trimIndent()
-
 
         super.test(rrs, goal, sentence, 1, expected)
     }

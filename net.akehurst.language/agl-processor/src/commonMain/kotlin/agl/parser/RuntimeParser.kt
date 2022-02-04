@@ -580,7 +580,8 @@ internal class RuntimeParser(
                 val runtimeLhs = curGn.runtimeLookahead
                 val startPosition = l.startPosition
                 val nextInputPosition = l.nextInputPosition
-                this.graph.pushToStackOf(transition.to, runtimeLhs, startPosition, nextInputPosition, curGn, previous, skipData)
+                //this.graph.pushToStackOf(transition.to, runtimeLhs, startPosition, nextInputPosition, curGn, previous, skipData)
+                this.graph.pushToStackOf(transition.to, LookaheadSet.EMPTY, startPosition, nextInputPosition, curGn, previous, skipData)
             } else {
                 false
             }

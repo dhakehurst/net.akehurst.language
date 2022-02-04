@@ -125,7 +125,7 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_aoa() {
         val parser = ScanOnDemandParser(rrs)
-        val (sppt, issues) = parser.parseForGoal("S", "aoa", AutomatonKind.LOOKAHEAD_1)
+        val (sppt, issues) = parser.parseForGoal("S", "aoaoaoa", AutomatonKind.LOOKAHEAD_1)
         println(parser.runtimeRuleSet.usedAutomatonToString("S"))
         assertNotNull(sppt)
         assertEquals(0, issues.size)
@@ -137,15 +137,16 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
             val s1 = state(RP(a, 0, EOR))     /* a .       */
             val s2 = state(RP(P, 0, EOR))     /* P = a . */
             val s3 = state(RP(E, 0, EOR))     /* E = P . */
-            val s4 = state(RP(ABC, 0, 2), RP(ABD, 0, 2)) /* ABC = ab . c | ABD = ab . d */
-            //val s5 = state(RP(c, 0, EOR))     /* c . */
-            //val s6 = state(RP(d, 0, EOR))     /* c . */
-            //val s7 = state(RP(ABC, 0, EOR))     /* ABC = abc . */
-            //val s8 = state(RP(S, 0, EOR))     /* S = ABC . */
-            //val s9 = state(RP(G, 0, EOR))     /* G = S .   */
+            val s4 = state(RP(S, 0, EOR))     /* S = E . */
+            val s5 = state(RP(E1, 0, 1)) /* E1 = E . o P */
+            val s6 = state(RP(o, 0, EOR))     /* o . */
+            val s7 = state(RP(E1, 0, 2)) /* E1 = E o . P */
+            val s8 = state(RP(E1, 0, EOR))    /* E1 = E o P . */
+            val s9 = state(RP(E, 1, EOR))     /* E = E1 . */
+            val s10 = state(RP(G,0,EOR))      /* G = S . */
 
-            //transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)
-            //transition(s0, s1, s2, HEIGHT, setOf(b), setOf(UP), listOf(RP(ABC, 0, SOR), RP(ABD, 0, SOR)))
+            transition(null, s0, s1, WIDTH, setOf(UP,o), setOf(), null)
+            transition(listOf(s0,s7), s1, s2, HEIGHT, setOf(UP), setOf(UP), listOf(RP(P, 0, SOR)))
             //transition(s0, s2, s3, WIDTH, setOf(c, d), setOf(), null)
             //transition(s2, s3, s4, GRAFT, setOf(c, d), setOf(UP), listOf(RP(ABC, 0, 1), RP(ABD, 0, 1)))
             //transition(s0, s4, s5, WIDTH, setOf(UP), setOf(), null)

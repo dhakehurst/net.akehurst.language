@@ -69,23 +69,6 @@ internal class test_bodmas_sList_root_choicePriority : test_ScanOnDemandParserAb
         val goal = "S"
     }
 
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_expr = b.rule("expr").build()
-        val r_var = b.rule("var").concatenation(b.pattern("[a-zA-Z]+"))
-        val r_bool = b.rule("bool").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, b.literal("true"), b.literal("false"))
-        val r_group = b.rule("group").concatenation(b.literal("("), r_expr, b.literal(")"))
-        val r_div = b.rule("div").separatedList(2, -1, b.literal("/"), r_expr)
-        val r_mul = b.rule("mul").separatedList(2, -1, b.literal("*"), r_expr)
-        val r_add = b.rule("add").separatedList(2, -1, b.literal("+"), r_expr)
-        val r_sub = b.rule("sub").separatedList(2, -1, b.literal("-"), r_expr)
-        val r_root = b.rule("root").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, r_var, r_bool)
-        b.rule(r_expr).choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, r_root, r_group, r_div, r_mul, r_add, r_sub)
-        b.rule("S").concatenation(r_expr)
-        b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
-        return b
-    }
-
     @Test
     fun empty_fails() {
         val sentence = ""
@@ -98,7 +81,6 @@ internal class test_bodmas_sList_root_choicePriority : test_ScanOnDemandParserAb
             ), issues
         )
     }
-
 
     @Test
     fun a() {
@@ -142,22 +124,7 @@ internal class test_bodmas_sList_root_choicePriority : test_ScanOnDemandParserAb
     }
 
     @Test
-    fun S_var() {
-        val sentence = "var"
-
-        val expected = """
-            S {
-              expr { root {
-                var { "[a-zA-Z]+" : 'var' }
-              } }
-            }
-        """.trimIndent()
-
-        super.test(rrs, goal, sentence, 1, expected)
-    }
-
-    @Test
-    fun S_group_a() {
+    fun group_a() {
         val sentence = "(a)"
 
         val expected = """
@@ -398,7 +365,6 @@ internal class test_bodmas_sList_root_choicePriority : test_ScanOnDemandParserAb
 
         super.test(rrs, goal, sentence, 1, expected)
     }
-
 
     @Test
     fun Og_a_add_b_Cg_mul_c() {

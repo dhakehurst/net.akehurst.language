@@ -25,7 +25,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_bodmas_exprOpExpr_choicePriority : test_ScanOnDemandParserAbstract() {
+internal class test_bodmas_exprOpExprRules_choicePriority : test_ScanOnDemandParserAbstract() {
 
     // S =  expr ;
     // expr = var < bool < group < div < mul < add < sub ;
@@ -59,21 +59,6 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_ScanOnDemandParserAb
             concatenation("var") { pattern("[a-zA-Z]+") }
         }
         val goal = "S"
-    }
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_expr = b.rule("expr").build()
-        val r_var = b.rule("var").concatenation(b.pattern("[a-zA-Z]+"))
-        val r_bool = b.rule("bool").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, b.literal("true"), b.literal("false"))
-        val r_group = b.rule("group").concatenation(b.literal("("), r_expr, b.literal(")"))
-        val r_div = b.rule("div").concatenation(r_expr, b.literal("/"), r_expr)
-        val r_mul = b.rule("mul").concatenation(r_expr, b.literal("*"), r_expr)
-        val r_add = b.rule("add").concatenation(r_expr, b.literal("+"), r_expr)
-        val r_sub = b.rule("sub").concatenation(r_expr, b.literal("-"), r_expr)
-        b.rule(r_expr).choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, r_var, r_bool, r_group, r_div, r_mul, r_add, r_sub)
-        b.rule("S").concatenation(r_expr)
-        b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
-        return b
     }
 
     @Test
