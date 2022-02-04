@@ -82,7 +82,7 @@ internal data class HeightGraftInfo(
     val parent: List<RulePosition>,
     val parentNext: List<RulePosition>, // to state
     val lhs: LookaheadSetPart,
-    val upLhs: LookaheadSetPart
+    val upLhs: Set<LookaheadSetPart>
 ) {
     override fun toString(): String {
         val ancestorsStr = ancestors.joinToString(prefix = "[", postfix = "]", separator = "-") { it.tag }
@@ -91,13 +91,16 @@ internal data class HeightGraftInfo(
         if (lhs.includesEOT) cont1.add(RuntimeRuleSet.END_OF_TEXT)
         if (lhs.matchANY) cont1.add(RuntimeRuleSet.ANY_LOOKAHEAD)
         cont1.addAll(lhs.content)
-        val cont2 = mutableSetOf<RuntimeRule>()
-        if (upLhs.includesUP) cont2.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        if (upLhs.includesEOT) cont2.add(RuntimeRuleSet.END_OF_TEXT)
-        if (upLhs.matchANY) cont2.add(RuntimeRuleSet.ANY_LOOKAHEAD)
-        cont2.addAll(upLhs.content)
+        val ul = upLhs.map {
+            val cont2 = mutableSetOf<RuntimeRule>()
+            if (it.includesUP) cont2.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+            if (it.includesEOT) cont2.add(RuntimeRuleSet.END_OF_TEXT)
+            if (it.matchANY) cont2.add(RuntimeRuleSet.ANY_LOOKAHEAD)
+            cont2.addAll(it.content)
+            cont2
+        }
         val lhsStr = cont1.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }
-        val upLhsStr = cont2.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }
+        val upLhsStr = ul.joinToString(prefix = "[", postfix = "]", separator = ",") { it.joinToString(separator = "|") {  it.tag }}
         return "HeightGraftInfo(ancestors=$ancestorsStr, parent=$parent, parentNext=$parentNext, lhs=$lhsStr, upLhs=$upLhsStr)"
     }
 }

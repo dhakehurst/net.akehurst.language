@@ -235,7 +235,7 @@ internal class BuildCacheLC1(
                 val pns = parent.next()
                 pns.map { parentNext ->
                     val lhs = this.stateSet.buildCache.firstOf(parentNext, upLhs)// this.stateSet.expectedAfter(parentNext)
-                    HeightGraftInfo(ancestors, listOf(parent), listOf(parentNext), lhs, upLhs)
+                    HeightGraftInfo(ancestors, listOf(parent), listOf(parentNext), lhs, setOf(upLhs))
                 }
             }
             // the HeightGraftInfo in res will always have 1 element in parentNext, see above
@@ -246,7 +246,7 @@ internal class BuildCacheLC1(
                     val parentNext = it.value.flatMap { it.parentNext }.toSet().toList()
                     val parent = it.value.flatMap { it.parent }.toSet().toList()
                     val lhs = it.value.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e.lhs) }
-                    val upLhs = it.value.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e.upLhs) }
+                    val upLhs = it.value.flatMap { it.upLhs }.toSet()//.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e.upLhs) }
                     HeightGraftInfo(ancestors, (parent), (parentNext), lhs, upLhs)
                 }
             grouped.addAll(grpd)
@@ -268,7 +268,7 @@ internal class BuildCacheLC1(
                 val parent = it.key[0]
                 val parentNext = it.key[1]
                 val lhs =  it.value.fold(LookaheadSetPart.EMPTY) { acc,e -> acc.union(e.lhs) }
-                val upLhs = it.value.fold(LookaheadSetPart.EMPTY) { acc,e -> acc.union(e.upLhs) }
+                val upLhs = it.value.flatMap { it.upLhs }.toSet()//fold(LookaheadSetPart.EMPTY) { acc,e -> acc.union(e.upLhs) }
                 HeightGraftInfo(ancestors, parent, parentNext, lhs, upLhs)
             }
         //return groupedLhs.toSet()

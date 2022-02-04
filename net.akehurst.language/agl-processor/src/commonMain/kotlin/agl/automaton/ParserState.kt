@@ -227,7 +227,7 @@ internal class ParserState(
             thisIsGoalState -> when {
                 this.rulePositions.first().isAtEnd -> { //should be only one RP !
                     val to = this
-                    __goalTransitions.add(Transition(this, to, Transition.ParseAction.GOAL, LookaheadSet.EMPTY, LookaheadSet.EMPTY, null) { _, _ -> true })
+                    __goalTransitions.add(Transition(this, to, Transition.ParseAction.GOAL, LookaheadSet.EMPTY, setOf(LookaheadSet.EMPTY), null) { _, _ -> true })
                 }
                 else -> {
                     val widthInto = this.widthInto(previousState)
@@ -261,7 +261,7 @@ internal class ParserState(
                             (isGoal && this.stateSet.isSkip) -> {
                                 // must be end of skip. TODO: can do something better than this!
                                 val to = this
-                                __goalTransitions.add(Transition(this, to, Transition.ParseAction.GOAL, LookaheadSet.EMPTY, LookaheadSet.EMPTY, null) { _, _ -> true })
+                                __goalTransitions.add(Transition(this, to, Transition.ParseAction.GOAL, LookaheadSet.EMPTY, setOf(LookaheadSet.EMPTY), null) { _, _ -> true })
                             }
                             else -> {
                                 val ts = this.createGraftTransition3(hg)
@@ -323,7 +323,7 @@ internal class ParserState(
             thisIsGoalState -> when {
                 isAtEnd -> {
                     val to = this
-                    __goalTransitions.add(Transition(this, to, Transition.ParseAction.GOAL, LookaheadSet.EMPTY, LookaheadSet.EMPTY, null) { _, _ -> true })
+                    __goalTransitions.add(Transition(this, to, Transition.ParseAction.GOAL, LookaheadSet.EMPTY, setOf(LookaheadSet.EMPTY), null) { _, _ -> true })
                 }
                 else -> {
                     val widthInto = this.widthInto(previousState)
@@ -358,7 +358,7 @@ internal class ParserState(
                                 (isGoal && this.stateSet.isSkip) -> {
                                     // must be end of skip. TODO: can do something better than this!
                                     val to = this
-                                    __goalTransitions.add(Transition(this, to, Transition.ParseAction.GOAL, LookaheadSet.EMPTY, LookaheadSet.EMPTY, null) { _, _ -> true })
+                                    __goalTransitions.add(Transition(this, to, Transition.ParseAction.GOAL, LookaheadSet.EMPTY, setOf(LookaheadSet.EMPTY), null) { _, _ -> true })
                                 }
                                 else -> {
                                     val ts = this.createGraftTransition3(hg)
@@ -453,7 +453,7 @@ internal class ParserState(
         val to = this.stateSet.states[listOf(toRp)]
         val lh = lookaheadSet
         // upLookahead and prevGuard are unused
-        return Transition(this, to, Transition.ParseAction.WIDTH, lh.lhs(this.stateSet), LookaheadSet.EMPTY, null) { _, _ -> true }
+        return Transition(this, to, Transition.ParseAction.WIDTH, lh.lhs(this.stateSet), setOf(LookaheadSet.EMPTY), null) { _, _ -> true }
     }
 
     private fun createEmbeddedTransition(rp: RulePosition, lookaheadSet: LookaheadSetPart): Transition {
@@ -461,12 +461,13 @@ internal class ParserState(
         val to = this.stateSet.states[listOf(toRp)]
         val lh = lookaheadSet
         // upLookahead and prevGuard are unused
-        return Transition(this, to, Transition.ParseAction.EMBED, lh.lhs(this.stateSet), LookaheadSet.EMPTY, null) { _, _ -> true }
+        return Transition(this, to, Transition.ParseAction.EMBED, lh.lhs(this.stateSet), setOf(LookaheadSet.EMPTY), null) { _, _ -> true }
     }
 
     private fun createHeightTransition3(hg: HeightGraftInfo): Transition {
         val to = this.stateSet.states[hg.parentNext]
-        val trs = Transition(this, to, Transition.ParseAction.HEIGHT, hg.lhs.lhs(this.stateSet), hg.upLhs.lhs(this.stateSet), hg.parent) { _, _ -> true }
+        val upLhs = hg.upLhs.map{it.lhs(this.stateSet)}.toSet()
+        val trs = Transition(this, to, Transition.ParseAction.HEIGHT, hg.lhs.lhs(this.stateSet), upLhs, hg.parent) { _, _ -> true }
         return trs
     }
 
@@ -487,7 +488,8 @@ internal class ParserState(
             }
         }
         val to = this.stateSet.states[hg.parentNext]
-        val trs = Transition(this, to, Transition.ParseAction.GRAFT, hg.lhs.lhs(this.stateSet), hg.upLhs.lhs(this.stateSet), hg.parent, runtimeGuard)
+        val upLhs = hg.upLhs.map{it.lhs(this.stateSet)}.toSet()
+        val trs = Transition(this, to, Transition.ParseAction.GRAFT, hg.lhs.lhs(this.stateSet), upLhs, hg.parent, runtimeGuard)
         return trs
     }
 

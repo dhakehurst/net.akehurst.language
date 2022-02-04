@@ -54,7 +54,7 @@ internal class RuntimeParser(
     internal var grownInThisPassPrevious = mutableMapOf<GrowingNode, MutableSet<GrowingNodeIndex>>()
     private var grownInLastPass = mutableListOf<GrowingNode>()
     internal var grownInLastPassPrevious = mutableMapOf<GrowingNode, MutableSet<GrowingNodeIndex>>()
-    internal lateinit var _lastGss:GraphStructuredStack<GrowingNodeIndex>
+    internal lateinit var _lastGss: GraphStructuredStack<GrowingNodeIndex>
     private var interruptedMessage: String? = null
 
     private val readyForShift = mutableListOf<GrowingNode>()
@@ -92,28 +92,28 @@ internal class RuntimeParser(
 
     fun resetGraphToLastGrown() {
         this.graph._gss = this._lastGss
-        for(r in this.graph._gss.roots) {
+        for (r in this.graph._gss.roots) {
             this.graph._growingHeadHeap[r] = GrowingNode(this.graph, r)
         }
         // this.graph.replaceHeads(this.lastGrown)
         //val maxLastGrown = this.lastGrown.maxOf { it.nextInputPosition }
         //this.lastGrown.filter { it.nextInputPosition==maxLastGrown }.forEach { gn ->
-       //     val prv = this.grownInLastPassPrevious[gn]!!
-       //     if (prv.isEmpty()) {
-       //         this.graph._gss.root(gn.index)
-       //         this.graph._growingHeadHeap[gn.index] = gn
-       //     } else {
-       //         prv.forEach { prev ->
-       //             this.graph.addGrowingHead(prev, gn)
-       //         }
-       //     }
-       // }
+        //     val prv = this.grownInLastPassPrevious[gn]!!
+        //     if (prv.isEmpty()) {
+        //         this.graph._gss.root(gn.index)
+        //         this.graph._growingHeadHeap[gn.index] = gn
+        //     } else {
+        //         prv.forEach { prev ->
+        //             this.graph.addGrowingHead(prev, gn)
+        //         }
+        //     }
+        // }
     }
 
-    fun rememberForErrorComputation(gn:GrowingNode, previous: GrowingNodeIndex?) {
+    fun rememberForErrorComputation(gn: GrowingNode, previous: GrowingNodeIndex?) {
         //this.grownInThisPass.add(gn)
         //var set = this.grownInThisPassPrevious[gn]
-       // if (null==set) {
+        // if (null==set) {
         //    set = mutableSetOf<GrowingNodeIndex>()
         //    this.grownInThisPassPrevious[gn] = set
         //}
@@ -124,7 +124,7 @@ internal class RuntimeParser(
 
     fun startPass() {
         //this.grownInThisPassPrevious = mutableMapOf<GrowingNode, MutableSet<GrowingNodeIndex>>()
-       // this.grownInThisPass = mutableListOf<GrowingNode>()
+        // this.grownInThisPass = mutableListOf<GrowingNode>()
         this._lastGss = this.graph._gss.clone()
     }
 
@@ -139,6 +139,7 @@ internal class RuntimeParser(
     fun tryGrowWidthOnce() {
         this.grow3(true)
     }
+
     fun tryGrowWidthOnce1() {
         this.startPass()
         val currentStartPosition = this.graph.nextHeadStartPosition
@@ -151,16 +152,16 @@ internal class RuntimeParser(
     }
 
     // used for finding error info
-    fun tryGrowHeightOrGraft() : Set<Pair<GrowingNodeIndex,Set<GrowingNodeIndex>>> {
-        val lg = mutableSetOf<Pair<GrowingNodeIndex,Set<GrowingNodeIndex>>>()
+    fun tryGrowHeightOrGraft(): Set<Pair<GrowingNodeIndex, Set<GrowingNodeIndex>>> {
+        val lg = mutableSetOf<Pair<GrowingNodeIndex, Set<GrowingNodeIndex>>>()
         this.startPass()
         // try height or graft
         val currentStartPosition = this.graph.nextHeadStartPosition
         while (this.graph.hasNextHead && this.graph.nextHeadStartPosition <= currentStartPosition) {
-        //while ((this.canGrow && this.graph.goals.isEmpty())) {
+            //while ((this.canGrow && this.graph.goals.isEmpty())) {
             val (gn, previous) = this.graph.nextHead()
             checkInterrupt()
-            lg.add(Pair(gn.index,previous))
+            lg.add(Pair(gn.index, previous))
             this.growHeightOrGraftOnly(gn, previous)
         }
         this.endPass()
@@ -593,13 +594,19 @@ internal class RuntimeParser(
     private fun doHeight(curGn: GrowingNode, previous: GrowingNodeIndex, transition: Transition, noLookahead: Boolean): Boolean {
         val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, previous.runtimeLookaheadSet, curGn.nextInputPositionAfterSkip)
         return if (noLookahead || hasLh) {
-            val runtimeLhs = this.stateSet.createWithParent(transition.upLookahead, previous.runtimeLookaheadSet)
-            this.graph.createWithFirstChild(
-                parentState = transition.to,
-                parentRuntimeLookaheadSet = runtimeLhs,
-                childNode = curGn,
-                previous
-            )
+            var res = false
+            //TODO: join stuff here if possible
+            for (trUpLhs in transition.upLookahead) {
+                val runtimeLhs = this.stateSet.createWithParent(trUpLhs, previous.runtimeLookaheadSet)
+                val b = this.graph.createWithFirstChild(
+                    parentState = transition.to,
+                    parentRuntimeLookaheadSet = runtimeLhs,
+                    childNode = curGn,
+                    previous
+                )
+                res = b || res
+            }
+            res
         } else {
             false
         }
@@ -609,13 +616,19 @@ internal class RuntimeParser(
         return if (transition.runtimeGuard(transition, previous, previous.state.rulePositions)) {
             val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, previous.runtimeLookaheadSet, curGn.nextInputPositionAfterSkip)
             if (noLookahead || hasLh) {
-                val runtimeLhs = this.stateSet.createWithParent(transition.upLookahead, previous.runtimeLookaheadSet)
-                this.graph.growNextChild(
-                    oldParentNode = previous,
-                    nextChildNode = curGn,
-                    newParentState = transition.to,
-                    newParentRuntimeLookaheadSet = runtimeLhs
-                )
+                var res = false
+                //TODO: join stuff here if possible
+                for (trUpLhs in transition.upLookahead) {
+                    val runtimeLhs = this.stateSet.createWithParent(trUpLhs, previous.runtimeLookaheadSet)
+                    val b = this.graph.growNextChild(
+                        oldParentNode = previous,
+                        nextChildNode = curGn,
+                        newParentState = transition.to,
+                        newParentRuntimeLookaheadSet = runtimeLhs
+                    )
+                    res = b || res
+                }
+                res
             } else {
                 false
             }

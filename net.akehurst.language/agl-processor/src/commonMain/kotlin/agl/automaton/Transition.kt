@@ -27,7 +27,7 @@ internal class Transition(
         val to: ParserState,
         val action: ParseAction,
         val lookaheadGuard: LookaheadSet,
-        val upLookahead: LookaheadSet,
+        val upLookahead: Set<LookaheadSet>,
         val prevGuard: List<RulePosition>?,
         val runtimeGuard: Transition.(current:GrowingNodeIndex, previous:List<RulePosition>?)->Boolean
 ) {
@@ -72,13 +72,16 @@ internal class Transition(
         if (lookaheadGuard.includesEOT) cont1.add(RuntimeRuleSet.END_OF_TEXT)
         if (lookaheadGuard.matchANY) cont1.add(RuntimeRuleSet.ANY_LOOKAHEAD)
         cont1.addAll(lookaheadGuard.content)
-        val cont2 = mutableSetOf<RuntimeRule>()
-        if (upLookahead.includesUP) cont2.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        if (upLookahead.includesEOT) cont2.add(RuntimeRuleSet.END_OF_TEXT)
-        if (upLookahead.matchANY) cont2.add(RuntimeRuleSet.ANY_LOOKAHEAD)
-        cont2.addAll(upLookahead.content)
+        val upLHS = upLookahead.map {
+            val cont2 = mutableSetOf<RuntimeRule>()
+            if (it.includesUP) cont2.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+            if (it.includesEOT) cont2.add(RuntimeRuleSet.END_OF_TEXT)
+            if (it.matchANY) cont2.add(RuntimeRuleSet.ANY_LOOKAHEAD)
+            cont2.addAll(it.content)
+            cont2
+        }
         val lh = cont1.joinToString(separator = ",") {it.tag}
-        val ulh = cont2.joinToString(separator = ","){it.tag}
+        val ulh = upLHS.joinToString(separator = ","){it.joinToString(separator = "|") { it.tag }}
         return "Transition { $from -- $action [$lh|$ulh] --> $to }"
     }
 }

@@ -59,18 +59,31 @@ internal class AutomatonBuilder(
         upLookaheadContent: Set<RuntimeRule>,
         prevGuard: List<RulePosition>?
     ): Transition {
+        return transition(previousStates,from,to,action,lookaheadGuardContent,setOf(upLookaheadContent),prevGuard)
+    }
+    fun transition(
+        previousStates: List<ParserState?>,
+        from: ParserState,
+        to: ParserState,
+        action: Transition.ParseAction,
+        lookaheadGuardContent: Set<RuntimeRule>,
+        upLookaheadContent: Set<Set<RuntimeRule>>,
+        prevGuard: List<RulePosition>?
+    ): Transition {
         val lookaheadGuard = result.createLookaheadSet(
             lookaheadGuardContent.contains(RuntimeRuleSet.USE_PARENT_LOOKAHEAD),
             lookaheadGuardContent.contains(RuntimeRuleSet.END_OF_TEXT),
             lookaheadGuardContent.contains(RuntimeRuleSet.ANY_LOOKAHEAD),
             lookaheadGuardContent.minus(RuntimeRuleSet.USE_PARENT_LOOKAHEAD).minus(RuntimeRuleSet.END_OF_TEXT).minus(RuntimeRuleSet.ANY_LOOKAHEAD)
         )
-        val upLookahead = result.createLookaheadSet(
-            upLookaheadContent.contains(RuntimeRuleSet.USE_PARENT_LOOKAHEAD),
-            upLookaheadContent.contains(RuntimeRuleSet.END_OF_TEXT),
-            upLookaheadContent.contains(RuntimeRuleSet.ANY_LOOKAHEAD),
-            upLookaheadContent.minus(RuntimeRuleSet.USE_PARENT_LOOKAHEAD).minus(RuntimeRuleSet.END_OF_TEXT).minus(RuntimeRuleSet.ANY_LOOKAHEAD)
-        )
+        val upLookahead = upLookaheadContent.map {
+            result.createLookaheadSet(
+                it.contains(RuntimeRuleSet.USE_PARENT_LOOKAHEAD),
+                it.contains(RuntimeRuleSet.END_OF_TEXT),
+                it.contains(RuntimeRuleSet.ANY_LOOKAHEAD),
+                it.minus(RuntimeRuleSet.USE_PARENT_LOOKAHEAD).minus(RuntimeRuleSet.END_OF_TEXT).minus(RuntimeRuleSet.ANY_LOOKAHEAD)
+            )
+        }.toSet()
         val trans = Transition(from, to, action, lookaheadGuard, upLookahead, prevGuard) { _, _ -> true }
         return from.outTransitions.addTransition(previousStates, trans)
     }

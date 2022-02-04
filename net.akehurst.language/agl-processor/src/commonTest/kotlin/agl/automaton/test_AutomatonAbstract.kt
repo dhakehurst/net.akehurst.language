@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
@@ -59,6 +60,16 @@ internal abstract class test_AutomatonUtilsAbstract {
 }
 
 internal abstract class test_AutomatonAbstract : test_AutomatonUtilsAbstract() {
+
+    fun Transition(
+         from: ParserState,
+         to: ParserState,
+         action: Transition.ParseAction,
+         lookaheadGuard: LookaheadSet,
+         upLookahead: LookaheadSet,
+         prevGuard: List<RulePosition>?,
+         runtimeGuard: Transition.(current: GrowingNodeIndex, previous:List<RulePosition>?)->Boolean
+    ) = net.akehurst.language.agl.automaton.Transition(from,to,action,lookaheadGuard,setOf(upLookahead),prevGuard,runtimeGuard)
 
     fun <T1,T2,T3> List<Triple<T1,T2,T3>>.testAll(f:(arg1:T1,arg2:T2,arg3:T3)->Unit) {
         for(data in this) {

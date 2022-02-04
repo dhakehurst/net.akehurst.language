@@ -201,7 +201,7 @@ internal class BuildCacheLC0(
                     RuntimeRuleKind.GOAL -> LookaheadSetPart.UP
                     else -> LookaheadSetPart.ANY
                 }
-                HeightGraftInfo(ancestors,listOf(parent), listOf(parentNext), lhs, upLhs)
+                HeightGraftInfo(ancestors,listOf(parent), listOf(parentNext), lhs, setOf(upLhs))
             }
         }
         val grouped = res.groupBy { listOf(it.ancestors, it.parentNext) }//, it.lhs) }
@@ -210,7 +210,7 @@ internal class BuildCacheLC0(
                 val parentNext = it.key[1] as List<RulePosition>
                 val parent = it.value[0].parent // should all be the same as ancestors are the same
                 val lhs = it.value.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e.lhs) }
-                val upLhs = it.value.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e.upLhs) }
+                val upLhs = it.value.flatMap { it.upLhs }.toSet()//.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e.upLhs) }
                 HeightGraftInfo(ancestors,(parent), (parentNext), lhs, upLhs)
             }
         //val grouped2 = grouped.groupBy { listOf(it.lhs, it.upLhs, it.parentNext.map { it.position }) }

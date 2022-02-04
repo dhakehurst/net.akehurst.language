@@ -387,7 +387,7 @@ internal class RuntimeRuleSet(
                 val prev = st.outTransitions.previousFor(tr)
                     .map { it?.number?.value } //transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }
                 val trStr = "${tr.from.number.value} --> ${tr.to.number.value}"
-                val trGrd = "[${tr.lookaheadGuard.content.joinToString(prefix = if(tr.lookaheadGuard.includesUP) "UP," else "") { c -> c.tag }} | ${tr.upLookahead.content.joinToString(prefix = if(tr.upLookahead.includesUP) "UP," else "") { c -> c.tag }}]"
+                val trGrd = "[${tr.lookaheadGuard.content.joinToString(prefix = if(tr.lookaheadGuard.includesUP) "UP," else "") { c -> c.tag }} | TODO]"//${tr.upLookahead.content.joinToString(prefix = if(tr.upLookahead.includesUP) "UP," else "") { c -> c.tag }}]"
                 val prvGrd = " [${tr.prevGuard?.joinToString()}]"
                 b.append("{${prev.joinToString()}} ")
                 b.append(trStr)
