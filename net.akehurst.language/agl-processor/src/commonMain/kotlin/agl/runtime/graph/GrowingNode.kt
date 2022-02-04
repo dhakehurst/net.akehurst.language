@@ -28,7 +28,7 @@ internal class GrowingNode(
     private val hashCode_cache = arrayOf(this.currentState, this.startPosition).contentHashCode()
 
     val currentState: ParserState get() = index.state
-    val runtimeLookahead: LookaheadSet get() = index.runtimeLookaheadSet
+    val runtimeLookahead: Set<LookaheadSet> get() = index.runtimeLookaheadSet
     val startPosition:Int get() = index.startPosition
     val nextInputPosition: Int get() = index.nextInputPosition
     val nextInputPositionAfterSkip: Int get() = index.nextInputPositionAfterSkip
@@ -48,12 +48,15 @@ internal class GrowingNode(
     fun toStringTree(withChildren: Boolean, withPrevious: Boolean): String {
         var r = "$currentState,$startPosition,$nextInputPosition,"
         r += if (this.currentState.isAtEnd) "C" else this.currentState.rulePositions.first().position
-        val cont = mutableSetOf<RuntimeRule>()
-        if (this.runtimeLookahead.includesUP) cont+=RuntimeRuleSet.USE_PARENT_LOOKAHEAD
-        if (this.runtimeLookahead.includesEOT) cont+=RuntimeRuleSet.END_OF_TEXT
-        if (this.runtimeLookahead.matchANY) cont+=RuntimeRuleSet.ANY_LOOKAHEAD
-        cont += this.runtimeLookahead.content
-        r+= cont.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }
+        val ct = this.runtimeLookahead.map {
+            val cont = mutableSetOf<RuntimeRule>()
+            if (it.includesUP) cont+=RuntimeRuleSet.USE_PARENT_LOOKAHEAD
+            if (it.includesEOT) cont+=RuntimeRuleSet.END_OF_TEXT
+            if (it.matchANY) cont+=RuntimeRuleSet.ANY_LOOKAHEAD
+            cont += it.content
+            cont
+        }
+        r+= ct.joinToString(prefix = "[", postfix = "]", separator = ",") { it.joinToString(separator = "|") { it.tag} }
         //val name = this.currentState.runtimeRules.joinToString(prefix = "[", separator = ",", postfix = "]") { "${it.tag}(${it.number})" }
         //r += ":" + name
 /*

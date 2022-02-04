@@ -31,7 +31,7 @@ import net.akehurst.language.agl.runtime.structure.*
 internal data class GrowingNodeIndex(
     val treeData: TreeData,
     val state: ParserState,
-    val runtimeLookaheadSet: LookaheadSet,
+    val runtimeLookaheadSet: Set<LookaheadSet>,
     val startPosition: Int,
     val nextInputPosition: Int,
     val nextInputPositionAfterSkip: Int,
@@ -70,18 +70,20 @@ internal data class GrowingNodeIndex(
     val complete = CompleteNodeIndex(treeData, state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)
 
     override fun toString(): String {
-        val cont = mutableSetOf<RuntimeRule>()
-        if (runtimeLookaheadSet.includesUP) cont += RuntimeRuleSet.USE_PARENT_LOOKAHEAD
-        if (runtimeLookaheadSet.includesEOT) cont += RuntimeRuleSet.END_OF_TEXT
-        if (runtimeLookaheadSet.matchANY) cont += RuntimeRuleSet.ANY_LOOKAHEAD
-        cont+=runtimeLookaheadSet.content
-        return "GNI{state=$state,lhs=${
-            cont.joinToString(
-                prefix = "[",
-                postfix = "]",
-                separator = ","
-            ) { it.tag }
-        },sp=${startPosition}, np=$nextInputPosition, len=$numNonSkipChildren}"
+        val ct = runtimeLookaheadSet.map {
+            val cont = mutableSetOf<RuntimeRule>()
+            if (it.includesUP) cont += RuntimeRuleSet.USE_PARENT_LOOKAHEAD
+            if (it.includesEOT) cont += RuntimeRuleSet.END_OF_TEXT
+            if (it.matchANY) cont += RuntimeRuleSet.ANY_LOOKAHEAD
+            cont += it.content
+            cont
+        }
+        val ctStr = ct.joinToString(
+            prefix = "[",
+            postfix = "]",
+            separator = ","
+        ) { it.joinToString(separator = "|") { it.tag }}
+        return "GNI{state=$state,lhs=$ctStr,sp=${startPosition}, np=$nextInputPosition, len=$numNonSkipChildren}"
     }
 
 }

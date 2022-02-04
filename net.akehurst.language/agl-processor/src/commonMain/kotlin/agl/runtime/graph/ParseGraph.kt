@@ -358,7 +358,7 @@ internal class ParseGraph(
 
     fun previousOf(gn: GrowingNodeIndex): Set<GrowingNodeIndex> = this._gss.peek(gn)
 
-    fun start(goalState: ParserState, startPosition: Int, lookahead: LookaheadSet, initialSkipData: TreeData?) {
+    fun start(goalState: ParserState, startPosition: Int, lookahead: Set<LookaheadSet>, initialSkipData: TreeData?) {
         val nextInputPositionAfterSkip = initialSkipData?.nextInputPosition ?: startPosition
         val st = this.treeData.createGrowingNodeIndex(goalState, lookahead, nextInputPositionAfterSkip, nextInputPositionAfterSkip, nextInputPositionAfterSkip, 0)
         val goalGN = this.createGrowingNode(st)
@@ -372,7 +372,7 @@ internal class ParseGraph(
      */
     fun pushToStackOf(
         newState: ParserState,
-        lookahead: LookaheadSet,
+        lookahead: Set<LookaheadSet>,
         startPosition: Int,
         nextInputPosition: Int,
         oldHead: GrowingNode,
@@ -395,7 +395,7 @@ internal class ParseGraph(
     // for embedded segments
     fun pushEmbeddedToStackOf(
         newState: ParserState,
-        lookahead: LookaheadSet,
+        lookahead: Set<LookaheadSet>,
         startPosition: Int,
         nextInputPosition: Int,
         oldHead: GrowingNode,
@@ -424,7 +424,7 @@ internal class ParseGraph(
      */
     fun createWithFirstChild(
         parentState: ParserState,
-        parentRuntimeLookaheadSet: LookaheadSet,
+        parentRuntimeLookaheadSet: Set<LookaheadSet>,
         childNode: GrowingNode,
         previous: GrowingNodeIndex
     ):Boolean {
@@ -533,7 +533,7 @@ internal class ParseGraph(
         oldParentNode: GrowingNodeIndex,
         nextChildNode: GrowingNode,
         newParentState: ParserState,
-        newParentRuntimeLookaheadSet: LookaheadSet
+        newParentRuntimeLookaheadSet: Set<LookaheadSet>
     ):Boolean {
         val newParentNumNonSkipChildren = oldParentNode.numNonSkipChildren + 1
         // pop oldParentNode here, because its previous will be linked to the newParentNode

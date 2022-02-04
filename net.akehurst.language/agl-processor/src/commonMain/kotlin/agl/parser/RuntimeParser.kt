@@ -59,13 +59,13 @@ internal class RuntimeParser(
 
     private val readyForShift = mutableListOf<GrowingNode>()
     private val readyForShiftPrevious = mutableMapOf<GrowingNode, MutableSet<GrowingNodeIndex>>()
-    private val _skip_cache = mutableMapOf<Pair<Int, LookaheadSet>, TreeData?>()
+    private val _skip_cache = mutableMapOf<Pair<Int, Set<LookaheadSet>>, TreeData?>()
 
     fun reset() {
         this.graph.reset()
     }
 
-    fun start(startPosition: Int, possibleEndOfText: LookaheadSet) {
+    fun start(startPosition: Int, possibleEndOfText: Set<LookaheadSet>) {
         val gState = stateSet.startState
         val initialSkipData = if (this.stateSet.isSkip) {
             null
@@ -240,11 +240,11 @@ internal class RuntimeParser(
         fun GrowingNodeIndex.asString() = "(s${state.number.value},${startPosition}-${nextInputPosition}{${numNonSkipChildren}}${
             state.rulePositions.joinToString()
         }${
-            runtimeLookaheadSet.content.joinToString(
+            runtimeLookaheadSet.joinToString(
                 prefix = "[",
                 postfix = "]",
-                separator = ","
-            ) { it.tag }
+                separator = "|"
+            ) { it.toString() }
         })"
 
         fun GrowingNodeIndex.chains(): List<List<GrowingNodeIndex>> {
@@ -575,14 +575,17 @@ internal class RuntimeParser(
             val skipData = this.tryParseSkipUntilNone(skipLh, l.nextInputPosition, noLookahead)
             val nextInput = skipData?.nextInputPosition ?: l.nextInputPosition
 
-            val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, curGn.runtimeLookahead, nextInput)
-
+            //val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, curGn.runtimeLookahead, nextInput)
+            val lhWithMatch = curGn.runtimeLookahead.filter {
+                this.graph.isLookingAt(transition.lookaheadGuard, it, curGn.nextInputPositionAfterSkip)
+            }
+            val hasLh = lhWithMatch.isNotEmpty()
             if (noLookahead || hasLh) {
-                val runtimeLhs = curGn.runtimeLookahead
+                //val runtimeLhs = lhWithMatch
                 val startPosition = l.startPosition
                 val nextInputPosition = l.nextInputPosition
                 //this.graph.pushToStackOf(transition.to, runtimeLhs, startPosition, nextInputPosition, curGn, previous, skipData)
-                this.graph.pushToStackOf(transition.to, LookaheadSet.EMPTY, startPosition, nextInputPosition, curGn, previous, skipData)
+                this.graph.pushToStackOf(transition.to, setOf(LookaheadSet.EMPTY), startPosition, nextInputPosition, curGn, previous, skipData)
             } else {
                 false
             }
@@ -592,21 +595,23 @@ internal class RuntimeParser(
     }
 
     private fun doHeight(curGn: GrowingNode, previous: GrowingNodeIndex, transition: Transition, noLookahead: Boolean): Boolean {
-        val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, previous.runtimeLookaheadSet, curGn.nextInputPositionAfterSkip)
+        //val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, previous.runtimeLookaheadSet, curGn.nextInputPositionAfterSkip)
+        val lhWithMatch = previous.runtimeLookaheadSet.filter {
+            this.graph.isLookingAt(transition.lookaheadGuard, it, curGn.nextInputPositionAfterSkip)
+        }
+        val hasLh = lhWithMatch.isNotEmpty()
         return if (noLookahead || hasLh) {
-            var res = false
-            //TODO: join stuff here if possible
-            for (trUpLhs in transition.upLookahead) {
-                val runtimeLhs = this.stateSet.createWithParent(trUpLhs, previous.runtimeLookaheadSet)
-                val b = this.graph.createWithFirstChild(
+                val runtimeLhs = transition.upLookahead.flatMap{ trLhs ->
+                    lhWithMatch.map { prLhs ->
+                        this.stateSet.createWithParent(trLhs, prLhs)
+                    }
+                }.toSet()
+                this.graph.createWithFirstChild(
                     parentState = transition.to,
                     parentRuntimeLookaheadSet = runtimeLhs,
                     childNode = curGn,
                     previous
                 )
-                res = b || res
-            }
-            res
         } else {
             false
         }
@@ -614,21 +619,23 @@ internal class RuntimeParser(
 
     private fun doGraft(curGn: GrowingNode, previous: GrowingNodeIndex, transition: Transition, noLookahead: Boolean): Boolean {
         return if (transition.runtimeGuard(transition, previous, previous.state.rulePositions)) {
-            val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, previous.runtimeLookaheadSet, curGn.nextInputPositionAfterSkip)
+            //val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, previous.runtimeLookaheadSet, curGn.nextInputPositionAfterSkip)
+            val lhWithMatch = previous.runtimeLookaheadSet.filter {
+                this.graph.isLookingAt(transition.lookaheadGuard, it, curGn.nextInputPositionAfterSkip)
+            }
+            val hasLh = lhWithMatch.isNotEmpty()
             if (noLookahead || hasLh) {
-                var res = false
-                //TODO: join stuff here if possible
-                for (trUpLhs in transition.upLookahead) {
-                    val runtimeLhs = this.stateSet.createWithParent(trUpLhs, previous.runtimeLookaheadSet)
-                    val b = this.graph.growNextChild(
+                val runtimeLhs = transition.upLookahead.flatMap{ trLhs ->
+                    lhWithMatch.map { prLhs ->
+                        this.stateSet.createWithParent(trLhs, prLhs)
+                    }
+                }.toSet()
+                    this.graph.growNextChild(
                         oldParentNode = previous,
                         nextChildNode = curGn,
                         newParentState = transition.to,
                         newParentRuntimeLookaheadSet = runtimeLhs
                     )
-                    res = b || res
-                }
-                res
             } else {
                 false
             }
@@ -637,7 +644,7 @@ internal class RuntimeParser(
         }
     }
 
-    private fun tryParseSkipUntilNone(lookaheadSet: LookaheadSet, startPosition: Int, noLookahead: Boolean): TreeData? {
+    private fun tryParseSkipUntilNone(lookaheadSet: Set<LookaheadSet>, startPosition: Int, noLookahead: Boolean): TreeData? {
         val key = Pair(startPosition, lookaheadSet)
         return if (_skip_cache.containsKey(key)) {
             // can cache null as a valid result
@@ -655,7 +662,7 @@ internal class RuntimeParser(
     // must use a different instance of Input, so it can be reset, reset clears cached leaves. //TODO: check this
     private val skipParser = skipStateSet?.let { RuntimeParser(it, null, skipStateSet.userGoalRule, InputFromString(skipStateSet.usedTerminalRules.size, this.input.text)) }
 
-    private fun tryParseSkip(lookaheadSet: LookaheadSet, startPosition: Int, noLookahead: Boolean): TreeData? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
+    private fun tryParseSkip(lookaheadSet: Set<LookaheadSet>, startPosition: Int, noLookahead: Boolean): TreeData? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
         skipParser!!.reset()
         skipParser.start(startPosition, lookaheadSet)
         do {

@@ -46,7 +46,7 @@ internal class TreeData(
 
     fun createGrowingNodeIndex(
         state: ParserState,
-        lhs: LookaheadSet,
+        lhs: Set<LookaheadSet>,
         startPosition: Int,
         nextInputPosition: Int,
         nextInputPositionAfterSkip: Int,
