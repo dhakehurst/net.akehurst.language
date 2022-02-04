@@ -113,13 +113,13 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
                 listOf(RulePosition(S, 0, 0)),
                 listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
                 lhs_U.part,
-                lhs_U.part
+                setOf(LHS(UP))
             ),
             HeightGraftInfo(emptyList(),
                 listOf(RulePosition(S1, 0, 0)),
                 listOf(RulePosition(S1, 0, 1)),
                 lhs_a.part,
-                lhs_U.part
+                setOf(LHS(UP))
             )
         )
         assertEquals(expected, actual)
@@ -151,7 +151,7 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
                 listOf(RulePosition(G, 0, 0)),
                 listOf(RulePosition(G, 0, RulePosition.END_OF_RULE)),
                 lhs_U.part,
-                lhs_U.part
+                setOf(LHS(UP))
             )
         )
         assertEquals(expected, actual)
@@ -167,7 +167,7 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
                 listOf(RulePosition(S1, 0, 1)),
                 listOf(RulePosition(S1, 0, RulePosition.END_OF_RULE)),
                 lhs_U.part,
-                lhs_U.part
+                setOf(LHS(UP))
             )
         )
         assertEquals(expected, actual)
@@ -202,7 +202,7 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
                 listOf(RulePosition(S, 1, 0)),
                 listOf(RulePosition(S, 1, RulePosition.END_OF_RULE)),
                 lhs_U.part,
-                lhs_U.part
+                setOf(LHS(UP))
             )
         )
         assertEquals(expected, actual)

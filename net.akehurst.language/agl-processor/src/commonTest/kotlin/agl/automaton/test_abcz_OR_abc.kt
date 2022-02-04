@@ -106,7 +106,7 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
                 listOf(RP(ABCZ, 0, SOR), RP(ABC, 0, SOR)),
                 listOf(RP(ABCZ, 0, 1), RP(ABC, 0, 1)),
                 lhs_b.part,
-                lhs_U.part
+                setOf(LHS(UP))
             )
         )
         assertEquals(expected, actual)

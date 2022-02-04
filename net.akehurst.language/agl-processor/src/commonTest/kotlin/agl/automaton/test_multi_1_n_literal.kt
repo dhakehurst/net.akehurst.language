@@ -88,13 +88,13 @@ internal class test_multi_1_n_literal : test_AutomatonAbstract() {
                     listOf(RulePosition(S, 0, 0)),
                     listOf(RulePosition(S, 0, PMI)),
                     lhs_a.part,
-                    lhs_U.part
+                    setOf(LHS(UP))
                 ),
                 HeightGraftInfo(emptyList(),
                     listOf(RulePosition(S, 0, 0)),
                     listOf(RulePosition(S, 0, EOR)),
                     lhs_U.part,
-                    lhs_U.part
+                    setOf(LHS(UP))
                 )
         )
         assertEquals(expected, actual)

@@ -115,7 +115,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
                 listOf(RP(E,0,SOR)),
                 listOf(RP(E,0,EOR)),
                 LHS(UP,a,b),
-                LHS(UP,a,b)
+                setOf(LHS(UP,a,b))
             )
         )
         assertEquals(expected, actual)

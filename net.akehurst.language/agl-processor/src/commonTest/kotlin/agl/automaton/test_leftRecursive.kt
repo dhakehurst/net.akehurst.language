@@ -112,14 +112,14 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
                 listOf(RP(S, 0, 0)),
                 listOf(RP(S, 0, EOR)),
                 lhs_U.part,
-                lhs_U.part
+                setOf(LHS(UP))
             ),
             HeightGraftInfo(
                 listOf(G,S,S1),
                 listOf(RP(S, 0, 0)),
                 listOf(RP(S, 0, EOR)),
                 lhs_a.part,
-                lhs_a.part
+                setOf(LHS(a))
             )
         )
         assertEquals(expected, actual)
@@ -150,14 +150,14 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
                 listOf(RP(G, 0, 0)),
                 listOf(RP(G, 0, EOR)),
                 lhs_U.part,
-                lhs_U.part
+                setOf(LHS(UP))
             ),
             HeightGraftInfo(
                 listOf(G,S),
                 listOf(RP(S1, 0, 0)),
                 listOf(RP(S1, 0, 1)),
                 lhs_a.part,
-                lhs_U.part
+                setOf(LHS(UP))
             )
             ,
             HeightGraftInfo(
@@ -165,7 +165,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
                 listOf(RP(S1, 0, 0)),
                 listOf(RP(S1, 0, 1)),
                 lhs_a.part,
-                lhs_a.part
+                setOf(LHS(a))
             )
         )
         assertEquals(expected, actual)
@@ -221,7 +221,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
                 listOf(RP(S1, 0, 1)),
                 listOf(RP(S1, 0, EOR)),
                 lhs_aU.part,
-                lhs_U.part
+                setOf(LHS(UP))
             )
         )
         assertEquals(expected, actual)

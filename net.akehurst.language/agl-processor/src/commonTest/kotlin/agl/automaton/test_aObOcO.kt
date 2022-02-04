@@ -119,7 +119,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
                 listOf(RP(aOpt, 0, 0)),
                 listOf(RP(aOpt, 0, EOR)),
                 lhs_bcU.part,
-                lhs_bcU.part
+                setOf(LHS(b,c, UP))
             )
         )
         assertEquals(expected, actual)

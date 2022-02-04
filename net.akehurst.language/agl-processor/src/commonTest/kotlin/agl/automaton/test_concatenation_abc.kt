@@ -107,7 +107,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
                 listOf(RulePosition(S, 0, 0)),
                 listOf(RulePosition(S, 0, 1)),
                 lhs_b.part,
-                lhs_U.part
+                setOf(LHS(UP))
             )
         )
         assertEquals(expected, actual)

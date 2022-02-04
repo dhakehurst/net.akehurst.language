@@ -19,6 +19,8 @@ package net.akehurst.language.agl.automaton
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
@@ -776,7 +778,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             transition(listOf(s0,s3), s1, s3, HEIGHT, setOf(ANY), setOf(ANY), listOf(RP(S1,0,SOR)))
             transition(s0, s2, s4, GRAFT, setOf(UP), setOf(ANY), listOf(RP(G,0,SOR)))
             transition(s3, s2, s5, GRAFT, setOf(ANY), setOf(ANY), listOf(RP(S1,0,1)))
-            transition(listOf(s0,s3), s3, s1, WIDTH, setOf(ANY), emptySet(), null)
+            transition(listOf(s0,s3), s3, s1, WIDTH, setOf(ANY), emptySet<RuntimeRule>(), null)
             transition(null, s4, s4, GOAL, emptySet(), emptySet(), null)
             transition(listOf(s0,s3), s5, s6, HEIGHT, setOf(ANY), setOf(ANY), listOf(RP(S,1,SOR)))
             transition(s3, s5, s6, HEIGHT, setOf(ANY), setOf(ANY), listOf(RP(S,1,SOR)))

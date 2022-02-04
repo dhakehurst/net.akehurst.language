@@ -146,7 +146,7 @@ TODO()
                     listOf(RP(S, 0, 0)),
                     listOf(RP(S, 0, EOR)),
                     lhs_U.part,
-                    lhs_U.part
+                    setOf(LHS(UP))
                 )
         )
         assertEquals(expected, actual)

@@ -59,9 +59,9 @@ internal class AutomatonBuilder(
         upLookaheadContent: Set<RuntimeRule>,
         prevGuard: List<RulePosition>?
     ): Transition {
-        return transition(previousStates,from,to,action,lookaheadGuardContent,setOf(upLookaheadContent),prevGuard)
+        return transition1(previousStates,from,to,action,lookaheadGuardContent,setOf(upLookaheadContent),prevGuard)
     }
-    fun transition(
+    fun transition1(
         previousStates: List<ParserState?>,
         from: ParserState,
         to: ParserState,
