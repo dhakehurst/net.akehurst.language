@@ -47,16 +47,16 @@ class test_TreeData {
         val sentence = "a"
 
         sut.setFirstChild(
-            sut.createGrowingNodeIndex(state_S, LookaheadSet.ANY, 0, 1, 1,1),
-            sut.createGrowingNodeIndex(state_a, LookaheadSet.ANY, 0, 1, 1,0),
+            sut.createGrowingNodeIndex(state_S, setOf(LookaheadSet.ANY), 0, 1, 1,1),
+            sut.createGrowingNodeIndex(state_a, setOf(LookaheadSet.ANY), 0, 1, 1,0),
         false
         )
         sut.setFirstChild(
-            sut.createGrowingNodeIndex(state_Ge, LookaheadSet.ANY, 0, 1, 1,1),
-            sut.createGrowingNodeIndex(state_S, LookaheadSet.ANY, 0, 1, 1,1),
+            sut.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 1, 1,1),
+            sut.createGrowingNodeIndex(state_S, setOf(LookaheadSet.ANY), 0, 1, 1,1),
             false
         )
-        sut.setRoot(sut.createGrowingNodeIndex(state_Ge, LookaheadSet.ANY, 0, 1, 1,1))
+        sut.setRoot(sut.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 1, 1,1))
 
         val expected = sppt.addTree(
             """
@@ -96,28 +96,28 @@ class test_TreeData {
         val sentence = "abc"
 
         sut.setFirstChild(
-            sut.createGrowingNodeIndex(state_S1, LookaheadSet.ANY, 0, 1, 1,1),
-            sut.createGrowingNodeIndex(state_a, LookaheadSet.ANY, 0, 1, 1,0),
+            sut.createGrowingNodeIndex(state_S1, setOf(LookaheadSet.ANY), 0, 1, 1,1),
+            sut.createGrowingNodeIndex(state_a, setOf(LookaheadSet.ANY),0, 1, 1,0),
             false
         )
         sut.setInGrowingParentChildAt(
-            sut.createGrowingNodeIndex(state_S1, LookaheadSet.ANY, 0, 1, 1,1),
-            sut.createGrowingNodeIndex(state_S2, LookaheadSet.ANY, 0, 2, 2,2),
-            sut.createGrowingNodeIndex(state_b, LookaheadSet.ANY, 1, 2, 2,0),
+            sut.createGrowingNodeIndex(state_S1, setOf(LookaheadSet.ANY),0, 1, 1,1),
+            sut.createGrowingNodeIndex(state_S2, setOf(LookaheadSet.ANY),0, 2, 2,2),
+            sut.createGrowingNodeIndex(state_b, setOf(LookaheadSet.ANY),1, 2, 2,0),
             false
         )
         sut.setInGrowingParentChildAt(
-            sut.createGrowingNodeIndex(state_S2, LookaheadSet.ANY, 0, 2,2, 2),
-            sut.createGrowingNodeIndex(state_S3, LookaheadSet.ANY, 0, 3, 3,3),
-            sut.createGrowingNodeIndex(state_c, LookaheadSet.ANY, 2, 3, 3,0),
+            sut.createGrowingNodeIndex(state_S2, setOf(LookaheadSet.ANY),0, 2,2, 2),
+            sut.createGrowingNodeIndex(state_S3, setOf(LookaheadSet.ANY), 0, 3, 3,3),
+            sut.createGrowingNodeIndex(state_c, setOf(LookaheadSet.ANY),2, 3, 3,0),
             false
         )
         sut.setFirstChild(
-            sut.createGrowingNodeIndex(state_Ge, LookaheadSet.ANY, 0, 3,3, 1),
-            sut.createGrowingNodeIndex(state_S3, LookaheadSet.ANY, 0, 3, 3,1),
+            sut.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 3,3, 1),
+            sut.createGrowingNodeIndex(state_S3, setOf(LookaheadSet.ANY),0, 3, 3,1),
             false
         )
-        sut.setRoot(sut.createGrowingNodeIndex(state_Ge, LookaheadSet.ANY, 0, 3, 3,1))
+        sut.setRoot(sut.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 3, 3,1))
 
         val expected = sppt.addTree(
             """

@@ -55,7 +55,7 @@ internal class ScanOnDemandParser(
         val rp = RuntimeParser(s0.stateSet, skipStateSet, goalRule, input)
         this.runtimeParser = rp
 
-        rp.start(0, LookaheadSet.EOT)
+        rp.start(0, setOf(LookaheadSet.EOT))
         var seasons = 1
         var maxNumHeads = rp.graph.numberOfHeads
         var totalWork = maxNumHeads
@@ -134,11 +134,12 @@ internal class ScanOnDemandParser(
                     val exp = trs.flatMap { tr ->
                         when (tr.action) {
                             Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
-                            Transition.ParseAction.WIDTH -> lg.state.firstOf(lg.runtimeLookaheadSet).fullContent
+                            Transition.ParseAction.WIDTH -> lg.runtimeLookaheadSet.flatMap{lg.state.firstOf(it).fullContent}.toSet()
                             Transition.ParseAction.EMBED -> TODO()
-                            Transition.ParseAction.HEIGHT -> tr.lookaheadGuard.resolveUP(lg.runtimeLookaheadSet).fullContent
-                            Transition.ParseAction.GRAFT -> prevs.map { it.runtimeLookaheadSet }
-                                .flatMap { tr.lookaheadGuard.resolveUP(it).fullContent }
+                            Transition.ParseAction.HEIGHT -> lg.runtimeLookaheadSet.flatMap{tr.lookaheadGuard.resolveUP(it).fullContent}.toSet()
+                            Transition.ParseAction.GRAFT -> prevs.flatMap {
+                                it.runtimeLookaheadSet.flatMap{tr.lookaheadGuard.resolveUP(it).fullContent}
+                            }.toSet()
                         }
                     }
                     Pair(lg, exp)
@@ -150,10 +151,10 @@ internal class ScanOnDemandParser(
                         val exp = trs.flatMap { tr ->
                             when (tr.action) {
                                 Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
-                                Transition.ParseAction.WIDTH -> lg.state.firstOf(lg.runtimeLookaheadSet).fullContent
-                                Transition.ParseAction.EMBED -> lg.state.firstOf(lg.runtimeLookaheadSet).fullContent
-                                Transition.ParseAction.HEIGHT -> tr.lookaheadGuard.resolveUP(lg.runtimeLookaheadSet).fullContent
-                                Transition.ParseAction.GRAFT -> tr.lookaheadGuard.resolveUP(prev.runtimeLookaheadSet).fullContent
+                                Transition.ParseAction.WIDTH -> lg.runtimeLookaheadSet.flatMap{lg.state.firstOf(it).fullContent}
+                                Transition.ParseAction.EMBED -> lg.runtimeLookaheadSet.flatMap{lg.state.firstOf(it).fullContent}
+                                Transition.ParseAction.HEIGHT -> lg.runtimeLookaheadSet.flatMap{tr.lookaheadGuard.resolveUP(it).fullContent}
+                                Transition.ParseAction.GRAFT -> prev.runtimeLookaheadSet.flatMap{tr.lookaheadGuard.resolveUP(it).fullContent}
                             }
                         }
                         exp
@@ -200,9 +201,11 @@ internal class ScanOnDemandParser(
             val gn = gn_prev.first
             val prev = gn_prev.second?.map { it.state }
             val trans = rp.transitionsEndingInNonEmptyFrom(gn.currentState, prev?.toSet())
-            trans.map { tr ->
-                val lh = tr.lookaheadGuard.resolveUP(gn.runtimeLookahead).content
-                Pair(tr, lh)
+            trans.flatMap { tr ->
+                val pairs = gn.runtimeLookahead
+                    .map{Pair(tr,tr.lookaheadGuard.resolveUP(it).content)}
+                    .toSet()
+                pairs
             }
         }.toSet()
 
@@ -230,7 +233,7 @@ internal class ScanOnDemandParser(
         val rp = RuntimeParser(ss, skipStateSet, goalRule, input)
         this.runtimeParser = rp
 
-        rp.start(0, LookaheadSet.EOT)
+        rp.start(0, setOf(LookaheadSet.EOT))
         var seasons = 1
 
         val matches = mutableListOf<Pair<GrowingNode, Set<GrowingNodeIndex>?>>()

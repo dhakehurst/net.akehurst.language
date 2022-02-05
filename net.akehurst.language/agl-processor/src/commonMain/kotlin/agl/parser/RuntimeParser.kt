@@ -72,7 +72,7 @@ internal class RuntimeParser(
         } else {
             val skipLhsp = gState.rulePositions.map { this.stateSet.buildCache.firstOf(it, LookaheadSetPart.EOT) }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
             val endOfSkipLookaheadSet = this.stateSet.createLookaheadSet(skipLhsp.includesUP, skipLhsp.includesEOT, skipLhsp.matchANY, skipLhsp.content)
-            this.tryParseSkipUntilNone(endOfSkipLookaheadSet, startPosition, false) //TODO: think this might allow some wrong things, might be a better way
+            this.tryParseSkipUntilNone(setOf(endOfSkipLookaheadSet), startPosition, false) //TODO: think this might allow some wrong things, might be a better way
         }
         this.graph.start(gState, startPosition, possibleEndOfText, initialSkipData) //TODO: remove LH
     }
@@ -571,13 +571,13 @@ internal class RuntimeParser(
         rememberForErrorComputation(curGn, previous)
         val l = this.graph.input.findOrTryCreateLeaf(transition.to.firstRule, curGn.nextInputPosition)
         return if (null != l) {
-            val skipLh = this.stateSet.createWithParent(transition.lookaheadGuard, curGn.runtimeLookahead)
+            val skipLh = curGn.runtimeLookahead.map{this.stateSet.createWithParent(transition.lookaheadGuard, it) }.toSet()
             val skipData = this.tryParseSkipUntilNone(skipLh, l.nextInputPosition, noLookahead)
             val nextInput = skipData?.nextInputPosition ?: l.nextInputPosition
 
             //val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, curGn.runtimeLookahead, nextInput)
             val lhWithMatch = curGn.runtimeLookahead.filter {
-                this.graph.isLookingAt(transition.lookaheadGuard, it, curGn.nextInputPositionAfterSkip)
+                this.graph.isLookingAt(transition.lookaheadGuard, it, nextInput)
             }
             val hasLh = lhWithMatch.isNotEmpty()
             if (noLookahead || hasLh) {
@@ -686,14 +686,10 @@ internal class RuntimeParser(
         val embeddedSkipStateSet = embeddedRuntimeRuleSet.skipParserStateSet
         val embeddedParser = RuntimeParser(embeddedS0.stateSet, embeddedSkipStateSet, embeddedStartRule, this.input)
         val startPosition = curGn.nextInputPosition
-        val embeddedPossibleEOT = embeddedS0.stateSet.createLookaheadSet(
-            false, false, false,
-            transition.lookaheadGuard.content.union( //TODO: what if transition.lookaheadGuard.includesUP ??
-                this.stateSet.runtimeRuleSet.firstSkipTerminals.toSet() ?: emptySet()
-            )
-        )
-
-        embeddedParser.start(startPosition, embeddedPossibleEOT)
+        val transPlusSkip = transition.lookaheadGuard.content.union(this.stateSet.runtimeRuleSet.firstSkipTerminals.toSet())
+        val embeddedPossibleEOT = embeddedS0.stateSet.createLookaheadSet(false, false, false, transPlusSkip)
+        val embeddedEOT = curGn.runtimeLookahead.map{this.stateSet.createWithParent(embeddedPossibleEOT, it)}.toSet()
+        embeddedParser.start(startPosition, embeddedEOT)
         var seasons = 1
         var maxNumHeads = embeddedParser.graph.numberOfHeads
         do {
@@ -706,7 +702,7 @@ internal class RuntimeParser(
         return if (match.root != null) {
             val ni = match.nextInputPosition!! // will always have value if root not null
             //TODO: parse skipNodes
-            val skipLh = this.stateSet.createWithParent(transition.lookaheadGuard, curGn.runtimeLookahead)
+            val skipLh = curGn.runtimeLookahead.map{this.stateSet.createWithParent(transition.lookaheadGuard, it)}.toSet()
             val skipData = this.tryParseSkipUntilNone(skipLh, ni, noLookahead)//, lh) //TODO: does the result get reused?
             val nextInput = skipData?.nextInputPosition ?: ni
             this.graph.pushEmbeddedToStackOf(transition.to, curGn.runtimeLookahead, startPosition, nextInput, curGn, previous, match, skipData)

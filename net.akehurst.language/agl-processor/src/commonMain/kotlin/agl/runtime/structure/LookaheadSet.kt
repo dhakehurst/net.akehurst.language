@@ -83,7 +83,7 @@ internal class LookaheadSet(
             if (this.includesEOT) cont.add(RuntimeRuleSet.END_OF_TEXT)
             if (this.matchANY) cont.add(RuntimeRuleSet.ANY_LOOKAHEAD)
             cont.addAll(this.content)
-            "LookaheadSet{$number,${content.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }}}"
+            "LookaheadSet{$number,${cont.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }}}"
         }
     }
 

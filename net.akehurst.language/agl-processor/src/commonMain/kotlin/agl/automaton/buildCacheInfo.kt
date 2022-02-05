@@ -100,7 +100,7 @@ internal data class HeightGraftInfo(
             cont2
         }
         val lhsStr = cont1.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }
-        val upLhsStr = ul.joinToString(prefix = "[", postfix = "]", separator = ",") { it.joinToString(separator = "|") {  it.tag }}
+        val upLhsStr = ul.joinToString(prefix = "[", postfix = "]", separator = "|") { it.joinToString(separator = ",") {  it.tag }}
         return "HeightGraftInfo(ancestors=$ancestorsStr, parent=$parent, parentNext=$parentNext, lhs=$lhsStr, upLhs=$upLhsStr)"
     }
 }

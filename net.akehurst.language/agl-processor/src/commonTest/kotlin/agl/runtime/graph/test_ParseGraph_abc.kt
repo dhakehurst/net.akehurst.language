@@ -52,7 +52,7 @@ class test_ParseGraph_abc {
 
         val gr = RuntimeRuleSet.createGoalRule(r_S)
         val startState = rrs.fetchStateSetFor(r_S, AutomatonKind.LOOKAHEAD_1).startState
-        sut.start(startState, 0, LookaheadSet.EMPTY, null)
+        sut.start(startState, 0, setOf(LookaheadSet.EMPTY), null)
 
         assertEquals(RuntimeRuleKind.GOAL, gr.kind)
         assertEquals(true, sut.canGrow)
