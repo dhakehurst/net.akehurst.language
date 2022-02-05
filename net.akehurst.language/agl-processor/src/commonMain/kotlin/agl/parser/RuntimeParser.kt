@@ -571,13 +571,17 @@ internal class RuntimeParser(
         rememberForErrorComputation(curGn, previous)
         val l = this.graph.input.findOrTryCreateLeaf(transition.to.firstRule, curGn.nextInputPosition)
         return if (null != l) {
-            val skipLh = curGn.runtimeLookahead.map{this.stateSet.createWithParent(transition.lookaheadGuard, it) }.toSet()
+            val skipLh = if(transition.lookaheadGuard.includesUP) {
+                curGn.runtimeLookahead.map { this.stateSet.createWithParent(transition.lookaheadGuard, it) }.toSet()
+            } else {
+                setOf(transition.lookaheadGuard)
+            }
             val skipData = this.tryParseSkipUntilNone(skipLh, l.nextInputPosition, noLookahead)
-            val nextInput = skipData?.nextInputPosition ?: l.nextInputPosition
+            val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: l.nextInputPosition
 
             //val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, curGn.runtimeLookahead, nextInput)
             val lhWithMatch = curGn.runtimeLookahead.filter {
-                this.graph.isLookingAt(transition.lookaheadGuard, it, nextInput)
+                this.graph.isLookingAt(transition.lookaheadGuard, it, nextInputPositionAfterSkip)
             }
             val hasLh = lhWithMatch.isNotEmpty()
             if (noLookahead || hasLh) {
@@ -602,8 +606,12 @@ internal class RuntimeParser(
         val hasLh = lhWithMatch.isNotEmpty()
         return if (noLookahead || hasLh) {
                 val runtimeLhs = transition.upLookahead.flatMap{ trLhs ->
-                    lhWithMatch.map { prLhs ->
-                        this.stateSet.createWithParent(trLhs, prLhs)
+                    if (trLhs.includesUP) {
+                        lhWithMatch.map { prLhs ->
+                            this.stateSet.createWithParent(trLhs, prLhs)
+                        }
+                    } else {
+                        listOf(trLhs)
                     }
                 }.toSet()
                 this.graph.createWithFirstChild(
@@ -626,8 +634,12 @@ internal class RuntimeParser(
             val hasLh = lhWithMatch.isNotEmpty()
             if (noLookahead || hasLh) {
                 val runtimeLhs = transition.upLookahead.flatMap{ trLhs ->
-                    lhWithMatch.map { prLhs ->
-                        this.stateSet.createWithParent(trLhs, prLhs)
+                    if (trLhs.includesUP) {
+                        lhWithMatch.map { prLhs ->
+                            this.stateSet.createWithParent(trLhs, prLhs)
+                        }
+                    } else {
+                        listOf(trLhs)
                     }
                 }.toSet()
                     this.graph.growNextChild(

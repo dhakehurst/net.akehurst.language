@@ -28,7 +28,7 @@ import net.akehurst.language.agl.runtime.structure.*
     length/nextInputPosition is necessary because ?
   - size of a list ( only relevant for MULTI and SEPARATED_LIST)
  */
-internal data class GrowingNodeIndex(
+internal  class GrowingNodeIndex(
     val treeData: TreeData,
     val state: ParserState,
     val runtimeLookaheadSet: Set<LookaheadSet>,
@@ -66,8 +66,23 @@ internal data class GrowingNodeIndex(
         }
     }
 
+    private val _hashCode = arrayOf(state,runtimeLookaheadSet,startPosition,nextInputPosition,numNonSkipChildren).contentHashCode()
     //TODO: don't store data twice..also prefer not to create 2 objects!
     val complete = CompleteNodeIndex(treeData, state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)
+
+    override fun hashCode(): Int =_hashCode
+
+    override fun equals(other: Any?): Boolean = when(other) {
+        !is GrowingNodeIndex -> false
+        else -> when {
+            this.state != other.state -> false
+            this.startPosition != other.startPosition -> false
+            this.nextInputPosition != other.nextInputPosition -> false
+            this.numNonSkipChildren != other.numNonSkipChildren -> false
+            this.runtimeLookaheadSet != other.runtimeLookaheadSet -> false
+            else -> true
+        }
+    }
 
     override fun toString(): String {
         val ct = runtimeLookaheadSet.map {
