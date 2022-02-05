@@ -25,14 +25,12 @@ internal abstract class BuildCacheAbstract(
 
     protected var _cacheOff = true
 
-
     //TODO: use smaller array for done, but would to map rule number!
     private val _firstOfNotEmpty = Array<FirstOfResult?>(this.stateSet.runtimeRuleSet.runtimeRules.size, { null })
 
     override fun on() {
         _cacheOff = false
     }
-
 
     /*
      * firstOf needs to iterate along a rule (calling .next()) and down (recursively stopping appropriately)

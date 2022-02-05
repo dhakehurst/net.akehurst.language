@@ -271,8 +271,8 @@ internal class BuildCacheLC1(
                 val upLhs = it.value.flatMap { it.upLhs }.toSet()//fold(LookaheadSetPart.EMPTY) { acc,e -> acc.union(e.upLhs) }
                 HeightGraftInfo(ancestors, parent, parentNext, lhs, upLhs)
             }
-        //return groupedLhs.toSet()
-        return grouped.toSet() //TODO: gives too many heads in some cases where can be grouped2
+        return groupedLhs.toSet()
+        //return grouped.toSet() //TODO: gives too many heads in some cases where can be grouped2
     }
 
     // return the 'closure' of the parent.rulePosition

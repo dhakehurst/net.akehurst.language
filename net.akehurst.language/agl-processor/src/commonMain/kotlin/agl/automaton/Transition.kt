@@ -81,7 +81,7 @@ internal class Transition(
             cont2
         }
         val lh = cont1.joinToString(separator = ",") {it.tag}
-        val ulh = upLHS.joinToString(separator = ","){it.joinToString(separator = "|") { it.tag }}
-        return "Transition { $from -- $action [$lh|$ulh] --> $to }"
+        val ulh = upLHS.joinToString(separator = "|"){it.joinToString(separator = ",") { it.tag }}
+        return "Transition { $from -- $action [$lh]($ulh) --> $to }"
     }
 }
