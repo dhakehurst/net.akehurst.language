@@ -35,7 +35,7 @@ class test_Java8Agl_BlocksAndStatements(val data: Data) {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
         val processor: LanguageProcessor by lazy {
-            Agl.processorFromString(grammarStr, "BlocksAndStatements.Block")
+            Agl.processorFromString(grammarStr, "BlocksAndStatements","Block")
         }
         var sourceFiles = arrayOf(
                 "/java8/sentences/blocks-valid.txt"

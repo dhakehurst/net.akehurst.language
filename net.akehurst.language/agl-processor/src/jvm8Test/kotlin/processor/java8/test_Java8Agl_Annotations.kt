@@ -34,7 +34,7 @@ class test_Java8Agl_Annotations(val data:Data) {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
         val processor : LanguageProcessor by lazy {
-            Agl.processorFromString(grammarStr, "Annotations.Annotation")
+            Agl.processorFromString(grammarStr, "Annotations","Annotation")
         }
         var sourceFiles = arrayOf("/java8/sentences/annotations-valid.txt")
 
