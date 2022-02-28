@@ -103,7 +103,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
 
         val expected = listOf(
             HeightGraftInfo(
-                listOf(G),
+                listOf(),
                 listOf(RulePosition(S, 0, 0)),
                 listOf(RulePosition(S, 0, 1)),
                 lhs_b.part,
@@ -187,8 +187,24 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+            val s0 = state(RP(G,0,SOR))
+            val s1 = state(RP(a,0,EOR))
+            val s2 = state(RP(S,0,1))
+            val s3 = state(RP(b,0,EOR))
+            val s4 = state(RP(S,0,2))
+            val s5 = state(RP(c,0,EOR))
+            val s6 = state(RP(S,0,EOR))
+            val s7 = state(RP(G,0,EOR))
 
+            transition(null, s0, s1, WIDTH, setOf(b), setOf(),null)
+            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(UP),listOf(RP(S,0,SOR)))
+            transition(s0, s2, s3, WIDTH, setOf(c), setOf(),null)
+            transition(s2, s3, s4, GRAFT, setOf(c), setOf(UP),listOf(RP(S,0,1)))
+            transition(s0, s4, s5, WIDTH, setOf(UP), setOf(),null)
+            transition(s4, s5, s6, GRAFT, setOf(UP), setOf(UP),listOf(RP(S,0,2)))
+            transition(s0, s6, s7, GRAFT, setOf(UP), setOf(UP),listOf(RP(G,0,0)))
+            transition(null, s7, s7, GOAL, setOf(), setOf(),null)
         }
 
         AutomatonTest.assertEquals(expected, actual)

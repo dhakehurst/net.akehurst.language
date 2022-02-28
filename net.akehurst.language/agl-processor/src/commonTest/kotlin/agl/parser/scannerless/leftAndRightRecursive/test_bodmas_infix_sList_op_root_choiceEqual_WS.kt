@@ -106,7 +106,7 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
 
         super.test(
             rrs = rrs,
-            goal = goal,
+            goal = "expr",
             sentence = sentence,
             expectedNumGSSHeads = 2,
             expectedTrees = arrayOf(expected)

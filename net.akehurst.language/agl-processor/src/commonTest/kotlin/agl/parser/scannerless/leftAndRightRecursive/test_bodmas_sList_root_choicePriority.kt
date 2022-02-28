@@ -105,7 +105,7 @@ internal class test_bodmas_sList_root_choicePriority : test_ScanOnDemandParserAb
               } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(rrs, goal, sentence, 2, expected)
     }
 
     @Test
@@ -120,7 +120,7 @@ internal class test_bodmas_sList_root_choicePriority : test_ScanOnDemandParserAb
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(rrs, goal, sentence, 2, expected)
     }
 
     @Test

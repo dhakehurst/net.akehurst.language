@@ -105,7 +105,7 @@ internal class test_bodmas_exprOpExprRules_choicePriority : test_ScanOnDemandPar
             rrs = rrs,
             goal = "expr",
             sentence = sentence,
-            expectedNumGSSHeads = 1,
+            expectedNumGSSHeads = 2,
             expectedTrees = arrayOf(expected)
         )
     }
@@ -126,7 +126,7 @@ internal class test_bodmas_exprOpExprRules_choicePriority : test_ScanOnDemandPar
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 1,
+            expectedNumGSSHeads = 2,
             expectedTrees = arrayOf(expected)
         )
     }

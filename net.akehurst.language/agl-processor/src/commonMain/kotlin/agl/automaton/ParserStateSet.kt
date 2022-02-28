@@ -231,26 +231,26 @@ internal class ParserStateSet(
         }
 
     fun build(): ParserStateSet {
-        println("Build not yet implemented")
-        //this.buildCache.on()
-        //TODO: buildAndTraverse()
-        //preBuilt = true
-        //this.buildCache.clearAndOff()
+        //println("Build not yet implemented")
+        this.buildCache.on()
+        buildAndTraverse1()
+        preBuilt = true
+        this.buildCache.clearAndOff()
         return this
     }
 
     private fun buildAndTraverse1() {
         data class StateNode(val prev: StateNode?, val state: ParserState) {
             override fun toString(): String = when {
-                null == prev -> "$state"
+                null == prev -> "$state --> null"
                 else -> "$state --> $prev"
             }
         }
 
-        val done = mutableSetOf<Pair<ParserState?, Transition>>()
+        val done = mutableSetOf<Pair<ParserState?, ParserState>>()
         val transitions = MutableQueue<Pair<StateNode, Transition>>()
         var curNode = StateNode(null, this.startState)
-        val s0_trans = this.startState.transitions(curNode.prev?.state)
+        val s0_trans = curNode.state.transitions(curNode.prev?.state)
         s0_trans.forEach { transitions.enqueue(Pair(curNode, it)) }
         while (transitions.isEmpty.not()) {
             val pair = transitions.dequeue()
@@ -258,10 +258,12 @@ internal class ParserStateSet(
             val prevState = curNode.prev?.state
             val tr = pair.second
             val dp = Pair(prevState, tr)
-            if (done.contains(dp)) {
+            //if (done.contains(dp)) {
                 //do nothing
-            } else {
-                done.add(dp)
+            //    val i=0
+            //} else {
+                //done.add(dp)
+                //println(dp)
                 // assume we take the transition
                 val curState = curNode.state
                 val nextState = tr.to
@@ -270,30 +272,49 @@ internal class ParserStateSet(
                     Transition.ParseAction.WIDTH -> {
                         val newNode = StateNode(prev = curNode, state = nextState)
                         val newTrans = newNode.state.transitions(newNode.prev?.state)
-                        newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
-                        //done.add(dp)
+                        val dp = Pair(newNode.prev?.state, newNode.state)
+                        if (done.contains(dp)) {
+                        } else {
+                            done.add(dp)
+                            newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
+                        }
                     }
                     Transition.ParseAction.EMBED -> {
                         val newNode = StateNode(prev = curNode, state = nextState)
                         val newTrans = newNode.state.transitions(newNode.prev?.state)
                         newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
-                        //done.add(dp)
+                        val dp = Pair(newNode.prev?.state, newNode.state)
+                        if (done.contains(dp)) {
+                        } else {
+                            done.add(dp)
+                            newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
+                        }
                     }
                     Transition.ParseAction.HEIGHT -> {
                         val newNode = StateNode(prev = curNode.prev, state = nextState)
                         val newTrans = newNode.state.transitions(newNode.prev?.state)
                         newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
+                        val dp = Pair(newNode.prev?.state, newNode.state)
+                        if (done.contains(dp)) {
+                        } else {
+                            done.add(dp)
+                            newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
+                        }
                     }
                     Transition.ParseAction.GRAFT -> {
-                        val prevNode = curNode.prev!!
-                        val newNode = StateNode(prev = prevNode.prev, state = nextState)
+                        val newNode = StateNode(prev = curNode.prev!!.prev, state = nextState)
                         val newTrans = newNode.state.transitions(newNode.prev?.state)
                         newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
+                        val dp = Pair(newNode.prev?.state, newNode.state)
+                        if (done.contains(dp)) {
+                        } else {
+                            done.add(dp)
+                            newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
+                        }
                     }
-                    //               Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
-                    Transition.ParseAction.GOAL -> null;//buildAndTraverse(nextState, prevStack, done)
+                    Transition.ParseAction.GOAL -> Unit
                 }
-            }
+            //}
         }
     }
 

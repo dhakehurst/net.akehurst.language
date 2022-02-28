@@ -44,6 +44,7 @@ internal abstract class test_ScanOnDemandParserAbstract {
 
     fun test2(rrs: RuntimeRuleSet, embeddedRuntimeRuleSets:Map<String,RuntimeRuleSet>, goal: String, sentence: String, expectedNumGSSHeads: Int, vararg expectedTrees: String): SharedPackedParseTree? {
         val parser = ScanOnDemandParser(rrs)
+        parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
         val (actual, issues) = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
         assertNotNull(actual, issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(emptyList(), issues)
@@ -59,6 +60,7 @@ internal abstract class test_ScanOnDemandParserAbstract {
 
     fun testFail(rrs: RuntimeRuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int): Pair<SharedPackedParseTree?, List<LanguageIssue>> {
         val parser = ScanOnDemandParser(rrs)
+        parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
         val p = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
         return p
     }

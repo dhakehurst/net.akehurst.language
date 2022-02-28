@@ -101,14 +101,12 @@ internal class test_bodmas_sList_root_choiceEqual : test_ScanOnDemandParserAbstr
         val sentence = "true"
 
         val expected = """
-            S {
               expr { root|1 {
                 bool { 'true' }
               } }
-            }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(rrs, "expr", sentence, 2, expected)
     }
 
     @Test
@@ -123,7 +121,7 @@ internal class test_bodmas_sList_root_choiceEqual : test_ScanOnDemandParserAbstr
             }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected)
+        super.test(rrs, goal, sentence, 2, expected)
     }
 
     @Test
@@ -244,7 +242,7 @@ internal class test_bodmas_sList_root_choiceEqual : test_ScanOnDemandParserAbstr
     @Test
     fun a_add_b_mul_c() {
         val sentence = "a+b*c"
-
+//TODO("transition from s7 are weird !")
         val expected = """
             S {
              expr|4 {

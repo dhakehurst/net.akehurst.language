@@ -34,6 +34,15 @@ internal class LookaheadSet(
         val UNCACHED_NUMBER = -5
     }
 
+    val totalContent:Set<RuntimeRule> get() {
+        val c = mutableSetOf<RuntimeRule>()
+        if (this.includesUP) c.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+        if (this.includesEOT) c.add(RuntimeRuleSet.END_OF_TEXT)
+        if (this.matchANY) c.add(RuntimeRuleSet.ANY_LOOKAHEAD)
+        c.addAll(this.content)
+        return c
+    }
+
     val regex by lazy {
         val str = this.content.joinToString(prefix = "(", separator = ")|(", postfix = ")") {
             if (it.isPattern) it.value else "\\Q${it.value}\\E"

@@ -116,7 +116,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDema
             rrs = rrs,
             goal = "expr",
             sentence = sentence,
-            expectedNumGSSHeads = 1,
+            expectedNumGSSHeads = 2,
             expectedTrees = arrayOf(expected)
         )
     }
@@ -137,7 +137,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDema
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 1,
+            expectedNumGSSHeads = 2,
             expectedTrees = arrayOf(expected)
         )
     }

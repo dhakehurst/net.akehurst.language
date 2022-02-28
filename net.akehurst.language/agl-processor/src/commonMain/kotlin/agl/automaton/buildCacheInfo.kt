@@ -60,6 +60,13 @@ internal data class LookaheadSetPart(
         )
     }
 
+    fun containsAll(other: LookaheadSetPart):Boolean = when {
+        this.matchANY -> true
+        this.includesEOT.not() && other.includesEOT -> false
+        this.includesUP.not() && other.includesUP -> false
+        else -> this.fullContent.containsAll(other.fullContent)
+    }
+
 }
 
 internal data class FirstOfResult(

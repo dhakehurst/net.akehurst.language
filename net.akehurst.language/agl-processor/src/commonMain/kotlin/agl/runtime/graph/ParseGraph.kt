@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.automaton.LookaheadSetPart
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.collections.BinaryHeap
 import net.akehurst.language.agl.collections.GraphStructuredStack
@@ -114,14 +113,16 @@ internal class ParseGraph(
 
     val hasNextHead: Boolean get() = this._growingHeadHeap.isNotEmpty()
 
-    val nextHeadStartPosition: Int get() {
-        val root = this._growingHeadHeap.peekRoot
-        return when {
-            null==root -> Int.MAX_VALUE
-            root.index.state.isGoal -> -1
-            else -> root.startPosition
+    val nextHeadStartPosition: Int
+        get() {
+            val root = this._growingHeadHeap.peekRoot
+            return when {
+                null == root -> Int.MAX_VALUE
+                root.index.state.isGoal -> -1
+                else -> root.startPosition
+            }
         }
-    }
+
     /**
      * extract head with min nextInputPosition
      * assumes there is one - check with hasNextHead
@@ -151,7 +152,7 @@ internal class ParseGraph(
     /**
      * return true if a new head was created
      */
-    internal fun addGrowingHead(oldHead: GrowingNodeIndex, next: GrowingNode):Boolean {
+    internal fun addGrowingHead(oldHead: GrowingNodeIndex, next: GrowingNode): Boolean {
         //this._nodes[next.index] = next
         val new = this._gss.push(oldHead, next.index)
         return if (new) {
@@ -165,7 +166,7 @@ internal class ParseGraph(
     /**
      * return true if a new head was created
      */
-    private fun addGrowingHead(oldHead: Set<GrowingNodeIndex>, next: GrowingNode):Boolean {
+    private fun addGrowingHead(oldHead: Set<GrowingNodeIndex>, next: GrowingNode): Boolean {
         // this._nodes[next.index] = next
         return if (oldHead.isEmpty()) {
             this._gss.root(next.index)
@@ -221,7 +222,7 @@ internal class ParseGraph(
      */
     private fun createNewHeadAndKeepExisting(newHead: GrowingNodeIndex, previous: GrowingNodeIndex) {
         val nn = this.createGrowingNode(newHead)
-         this.addGrowingHead(previous, nn)
+        this.addGrowingHead(previous, nn)
     }
 
     /**
@@ -240,7 +241,7 @@ internal class ParseGraph(
         this._gss.pop(existing.gni!!)
         //TODO: maybe this._growingHeadHeap.remove(existing.gni)
         val nn = this.createGrowingNode(newHead)
-         this.addGrowingHead(previous, nn)
+        this.addGrowingHead(previous, nn)
     }
 
     /**
@@ -248,7 +249,7 @@ internal class ParseGraph(
      */
     private fun createNewHeadAndKeepExisting(newHead: GrowingNodeIndex, previous: Set<GrowingNodeIndex>) {
         val nn = this.createGrowingNode(newHead)
-         this.addGrowingHead(previous, nn)
+        this.addGrowingHead(previous, nn)
     }
 
     /**
@@ -378,14 +379,14 @@ internal class ParseGraph(
         oldHead: GrowingNode,
         previous: GrowingNodeIndex?,
         skipData: TreeData?
-    ) :Boolean {
+    ): Boolean {
         if (null != previous) this._gss.push(previous, oldHead.index)
         val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: nextInputPosition
         val newHead = this.treeData.createGrowingNodeIndex(newState, lookahead, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0)
         if (null != skipData) {
             this.treeData.setSkipDataAfter(newHead.complete, skipData)
         }
-         this.findOrCreateGrowingLeafOrEmbeddedNode(newHead, oldHead, previous)
+        this.findOrCreateGrowingLeafOrEmbeddedNode(newHead, oldHead, previous)
         return true
     }
 
@@ -402,7 +403,7 @@ internal class ParseGraph(
         previous: GrowingNodeIndex,
         embeddedTreeData: TreeData,
         skipData: TreeData?
-    ):Boolean {
+    ): Boolean {
         this._gss.push(previous, oldHead.index)
         //TODO: something different for embedded ?
         val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: nextInputPosition
@@ -414,7 +415,7 @@ internal class ParseGraph(
         val children = embeddedTreeData.childrenFor(embGoal.firstRule, embeddedTreeData.startPosition!!, embeddedTreeData.nextInputPosition!!)
         val child = children.first().second[0]
         this.treeData.setEmbeddedChild(newHead, child)
-         this.findOrCreateGrowingLeafOrEmbeddedNode(newHead, oldHead, previous)
+        this.findOrCreateGrowingLeafOrEmbeddedNode(newHead, oldHead, previous)
         //TODO: do we need to check for longest ?
         return true
     }
@@ -427,7 +428,7 @@ internal class ParseGraph(
         parentRuntimeLookaheadSet: Set<LookaheadSet>,
         childNode: GrowingNode,
         previous: GrowingNodeIndex
-    ):Boolean {
+    ): Boolean {
         val nextInputPosition = if (childNode.isLeaf) childNode.nextInputPositionAfterSkip else childNode.nextInputPosition
         val parent = this.treeData.createGrowingNodeIndex(parentState, parentRuntimeLookaheadSet, childNode.startPosition, nextInputPosition, nextInputPosition, 1)
         val child = childNode.index
@@ -534,7 +535,7 @@ internal class ParseGraph(
         nextChildNode: GrowingNode,
         newParentState: ParserState,
         newParentRuntimeLookaheadSet: Set<LookaheadSet>
-    ):Boolean {
+    ): Boolean {
         val newParentNumNonSkipChildren = oldParentNode.numNonSkipChildren + 1
         // pop oldParentNode here, because its previous will be linked to the newParentNode
         //val previous = this.previousOf(oldParentNode)
@@ -631,7 +632,7 @@ internal class ParseGraph(
     }
 
     fun drop(previous: GrowingNodeIndex?) {
-        if (null!=previous) {
+        if (null != previous) {
             this._gss.removeStack(previous)
         }
     }
@@ -639,30 +640,31 @@ internal class ParseGraph(
     fun isLookingAt(lookaheadGuard: LookaheadSet, runtimeLookahead: LookaheadSet?, nextInputPosition: Int): Boolean {
         //runtimeLookahead should never includeUP
         return when {
-            null != runtimeLookahead && runtimeLookahead.includesUP -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
             lookaheadGuard.matchANY -> true
-            null == runtimeLookahead -> lookaheadGuard.content.any { this.input.isLookingAt(nextInputPosition,it) } //this.input.isLookingAt(nextInputPosition, lookaheadGuard.regex)
+            null != runtimeLookahead && runtimeLookahead.includesUP -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
+            null == runtimeLookahead -> lookaheadGuard.content.any {
+                this.input.isLookingAt(nextInputPosition, it)
+            } //this.input.isLookingAt(nextInputPosition, lookaheadGuard.regex)
             LookaheadSet.UP == lookaheadGuard -> when {
                 runtimeLookahead.matchANY -> true
-                LookaheadSet.EOT == runtimeLookahead -> this.input.isEnd(nextInputPosition)
-                else -> when {
-                    runtimeLookahead.includesEOT && this.input.isEnd(nextInputPosition)->true
-                    runtimeLookahead.content.isEmpty() -> false
-                    else -> runtimeLookahead.content.any { this.input.isLookingAt(nextInputPosition,it) }
-                }
+                runtimeLookahead.includesEOT && this.input.isEnd(nextInputPosition) -> true
+                runtimeLookahead.content.isEmpty() -> false
+                else -> runtimeLookahead.content.any { this.input.isLookingAt(nextInputPosition, it) }
+            }
+            lookaheadGuard.includesUP.not() -> when {
+                lookaheadGuard.matchANY -> true
+                lookaheadGuard.includesEOT && this.input.isEnd(nextInputPosition) -> true
+                lookaheadGuard.content.isEmpty() -> false
+                else -> lookaheadGuard.content.any { this.input.isLookingAt(nextInputPosition, it) }
             }
             else -> {
                 val lhs = lookaheadGuard.resolveUP(runtimeLookahead)
                 when {
                     lhs.matchANY -> true
-                    LookaheadSetPart.EOT == lhs -> this.input.isEnd(nextInputPosition)
-                    else -> when {
-                        lhs.includesEOT && this.input.isEnd(nextInputPosition)->true
-                        lhs.content.isEmpty() -> false
-                        else -> lhs.content.any { this.input.isLookingAt(nextInputPosition,it) }
-                    }
+                    lhs.includesEOT && this.input.isEnd(nextInputPosition) -> true
+                    lhs.content.isEmpty() -> false
+                    else -> lhs.content.any { this.input.isLookingAt(nextInputPosition, it) }
                 }
-
             }
         }
     }

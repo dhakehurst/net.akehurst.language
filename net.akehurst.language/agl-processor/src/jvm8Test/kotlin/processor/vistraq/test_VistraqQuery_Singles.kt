@@ -190,6 +190,30 @@ class test_VistraqQuery_Singles {
         assertEquals(queryStr, resultStr)
     }
 
+    @Test//(timeout = 5000)
+    fun expression_long_fromBlog() {
+        val queryStr = """
+     ms.released == true
+     AND ft.status == 'done'
+     AND task.status == 'done'
+     AND iResult.value == 'pass'
+     AND uResult.value == 'pass'
+     AND build.testCoverage >= 80
+     AND bug.status == 'done'
+     AND bResult.value == 'pass'
+     AND build.buildDate < ms.dueDate
+     AND build.version == ms.version
+     AND binary.version == ms.version
+     AND binary.publishedDate < ms.dueDate
+        """.trimIndent()
+
+        val (sppt, issues) = processor.parse(queryStr, "expression")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
+        assertEquals(queryStr, resultStr)
+    }
+
     @Test
     fun whereClause_expression_literalValue_true() {
         val queryStr = "WHERE true"
@@ -258,6 +282,40 @@ class test_VistraqQuery_Singles {
     @Test(timeout = 5000)
     fun query1() {
         val queryStr = "MATCH A WHERE a == b AND a == b AND true RETURN TABLE COLUMN a CONTAINING a"
+        //val queryStr = "MATCH A  RETURN 1"
+
+        val (sppt, issues) = processor.parse(queryStr, "query")
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = sppt.asString
+        assertEquals(queryStr, resultStr)
+    }
+
+    @Test(timeout = 5000)
+    fun query2() {
+        val queryStr = """
+FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
+ MATCH Milestone AS ms
+   WHERE ms.dueDate <= now
+   RETURN TABLE COLUMN Due CONTAINING COUNT(ms)
+ JOIN
+   MATCH Milestone AS ms
+    ( LINKED * TIMES WITH Bug AS bug
+      LINKED USING 1..* LINKS WITH TestResult AS bResult
+    OR LINKED WITH Feature AS ft
+      ( LINKED * TIMES WITH SubTask AS task
+      OR LINKED WITH Requirement AS req
+        ( LINKED USING 1..* LINKS WITH TestResult AS iResult
+        AND
+          LINKED TO CodeFile AS code
+          LINKED USING 1..* LINKS WITH TestResult AS uResult
+        ) ) )
+    LINKED 1 TIMES TO Build AS build
+    LINKED 1 TIMES TO Binary AS binary
+   RETURN TABLE COLUMN Met CONTAINING COUNT(ms)
+ JOIN
+   RETURN TABLE COLUMN Percent CONTAINING (Met / Due)* 100
+        """.trimIndent()
         //val queryStr = "MATCH A  RETURN 1"
 
         val (sppt, issues) = processor.parse(queryStr, "query")

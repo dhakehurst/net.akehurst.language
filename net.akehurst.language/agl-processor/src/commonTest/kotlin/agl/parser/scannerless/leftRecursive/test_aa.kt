@@ -22,6 +22,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.concatenation.test_aObOcO
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
+import kotlin.test.fail
 
 internal class test_aa : test_ScanOnDemandParserAbstract() {
 
@@ -45,6 +46,7 @@ internal class test_aa : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a() {
+        fail("did not terminate!")
         val sentence = "a"
 
         val expected = """

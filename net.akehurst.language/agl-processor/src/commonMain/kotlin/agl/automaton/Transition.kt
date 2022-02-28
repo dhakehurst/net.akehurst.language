@@ -19,20 +19,18 @@ package net.akehurst.language.agl.automaton
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 
 internal class Transition(
-        val from: ParserState,
-        val to: ParserState,
-        val action: ParseAction,
-        val lookaheadGuard: LookaheadSet,
-        val upLookahead: Set<LookaheadSet>,
-        val prevGuard: List<RulePosition>?,
-        val runtimeGuard: Transition.(current:GrowingNodeIndex, previous:List<RulePosition>?)->Boolean
+    val from: ParserState,
+    val to: ParserState,
+    val action: ParseAction,
+    val lookaheadGuard: LookaheadSet,
+    val upLookahead: Set<LookaheadSet>,
+    val prevGuard: List<RulePosition>?,
+    val runtimeGuard: Transition.(current: GrowingNodeIndex, previous: List<RulePosition>?) -> Boolean
 ) {
 
-    internal  enum class ParseAction {
+    internal enum class ParseAction {
         HEIGHT, // reduce first
         GRAFT,  // reduce other
         WIDTH,  // shift
@@ -41,8 +39,8 @@ internal class Transition(
 //        GRAFT_OR_HEIGHT // try graft if fails do height -- reduces ambiguity on recursive rules
     }
 
-    private val hashCode_cache:Int by lazy {
-        arrayListOf(from, to, action, lookaheadGuard,upLookahead, prevGuard).hashCode()
+    private val hashCode_cache: Int by lazy {
+        arrayListOf(from, to, action, lookaheadGuard, upLookahead, prevGuard).hashCode()
     }
 
 
@@ -51,14 +49,14 @@ internal class Transition(
     }
 
     override fun equals(other: Any?): Boolean {
-        when(other) {
+        when (other) {
             is Transition -> {
-                if (this.from!=other.from) return false
-                if (this.to!=other.to) return false
-                if (this.action!=other.action) return false
-                if (this.lookaheadGuard!=other.lookaheadGuard) return false
-                if (this.upLookahead!=other.upLookahead) return false
-                if (this.prevGuard!=other.prevGuard) return false
+                if (this.from != other.from) return false
+                if (this.to != other.to) return false
+                if (this.action != other.action) return false
+                if (this.lookaheadGuard != other.lookaheadGuard) return false
+                if (this.upLookahead != other.upLookahead) return false
+                if (this.prevGuard != other.prevGuard) return false
                 return true
             }
             else -> return false
@@ -67,21 +65,10 @@ internal class Transition(
 
     override fun toString(): String {
         //val lh = " "+this.lookaheadGuard.number.toString()+":"+this.lookaheadGuard.content.map { it.tag }
-        val cont1 = mutableSetOf<RuntimeRule>()
-        if (lookaheadGuard.includesUP) cont1.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        if (lookaheadGuard.includesEOT) cont1.add(RuntimeRuleSet.END_OF_TEXT)
-        if (lookaheadGuard.matchANY) cont1.add(RuntimeRuleSet.ANY_LOOKAHEAD)
-        cont1.addAll(lookaheadGuard.content)
-        val upLHS = upLookahead.map {
-            val cont2 = mutableSetOf<RuntimeRule>()
-            if (it.includesUP) cont2.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-            if (it.includesEOT) cont2.add(RuntimeRuleSet.END_OF_TEXT)
-            if (it.matchANY) cont2.add(RuntimeRuleSet.ANY_LOOKAHEAD)
-            cont2.addAll(it.content)
-            cont2
-        }
-        val lh = cont1.joinToString(separator = ",") {it.tag}
-        val ulh = upLHS.joinToString(separator = "|"){it.joinToString(separator = ",") { it.tag }}
+        val cont1 = lookaheadGuard.totalContent
+        val upLHS = upLookahead.map { it.totalContent }
+        val lh = cont1.joinToString(separator = ",") { it.tag }
+        val ulh = upLHS.joinToString(separator = "|") { it.joinToString(separator = ",") { it.tag } }
         return "Transition { $from -- $action [$lh]($ulh) --> $to }"
     }
 }

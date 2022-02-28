@@ -115,7 +115,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
 
         val expected = listOf(
             HeightGraftInfo(
-                listOf(G,S),
+                listOf(),
                 listOf(RP(aOpt, 0, 0)),
                 listOf(RP(aOpt, 0, EOR)),
                 lhs_bcU.part,
@@ -260,8 +260,45 @@ internal class test_aObOcO : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+            val s0 = state(RP(G, 0, SOR))
+            val s1 = state(RP(a, 0, EOR))
+            val s2 = state(RP(aOpt_E, 0, EOR))
+            val s3 = state(RP(aOpt, 0, EOR))
+            val s4 = state(RP(aOpt, 1, EOR))
+            val s5 = state(RP(S, 0, 1))
+            val s6 = state(RP(b, 0, EOR))
+            val s7 = state(RP(bOpt_E, 0, EOR))
+            val s8 = state(RP(bOpt, 0, EOR))
+            val s9 = state(RP(bOpt, 1, EOR))
+            val s10 = state(RP(S, 0, 2))
+            val s11 = state(RP(c, 0, EOR))
+            val s12 = state(RP(cOpt_E, 0, EOR))
+            val s13 = state(RP(cOpt, 0, EOR))
+            val s14 = state(RP(cOpt, 1, EOR))
+            val s15 = state(RP(S, 0, EOR))
+            val s16 = state(RP(G, 0, EOR))
 
+            transition(null, s0, s1, WIDTH, setOf(UP,b,c), setOf(), null)
+            transition(null, s0, s2, WIDTH, setOf(UP,b,c), setOf(), null)
+            transition(s0, s1, s3, HEIGHT, setOf(UP,b,c), setOf(UP,b,c), listOf( RP(aOpt, 0, SOR)))
+            transition(s0, s2, s4, HEIGHT, setOf(UP,b,c), setOf(UP,b,c), listOf( RP(aOpt, 1, SOR)))
+            transition(s0, s3, s5, HEIGHT, setOf(UP,b,c), setOf(UP), listOf( RP(S, 0, SOR)))
+            transition(s0, s4, s5, HEIGHT, setOf(UP,b,c), setOf(UP), listOf( RP(S, 0, SOR)))
+            transition(s0, s5, s6, WIDTH, setOf(UP,c), setOf(), null)
+            transition(s0, s5, s7, WIDTH, setOf(UP,c), setOf(), null)
+            transition(s5, s6, s8, HEIGHT, setOf(UP,c), setOf(UP,c), listOf( RP(bOpt, 0, SOR)))
+            transition(s5, s7, s9, HEIGHT, setOf(UP,c), setOf(UP,c), listOf( RP(bOpt, 1, SOR)))
+            transition(s5, s8, s10, GRAFT, setOf(UP,c), setOf(UP), listOf( RP(S, 0, 1)))
+            transition(s5, s9, s10, GRAFT, setOf(UP,c), setOf(UP), listOf( RP(S, 0, 1)))
+            transition(s0, s10, s11, WIDTH, setOf(UP), setOf(), null)
+            transition(s0, s10, s12, WIDTH, setOf(UP), setOf(), null)
+            transition(s10, s11, s13, HEIGHT, setOf(UP), setOf(UP), listOf( RP(cOpt, 0, SOR)))
+            transition(s10, s12, s14, HEIGHT, setOf(UP), setOf(UP), listOf( RP(cOpt, 1, SOR)))
+            transition(s10, s13, s15, GRAFT, setOf(UP), setOf(UP), listOf( RP(S, 0, 2)))
+            transition(s10, s14, s15, GRAFT, setOf(UP), setOf(UP), listOf( RP(S, 0, 2)))
+            transition(s0, s15, s16, GRAFT, setOf(UP), setOf(UP), listOf( RP(G, 0, SOR)))
+            transition(null,s16,s16,GOAL, emptySet(), emptySet(),null)
         }
 
         AutomatonTest.assertEquals(expected, actual)

@@ -27,30 +27,31 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 internal class test_sList_0_n_literal : test_AutomatonAbstract() {
-    // S =  ['a' / ',']* ;
+    // S =  ['a' / 'b']* ;
 
-    private companion object {
-        val rrs = runtimeRuleSet {
-            sList("S", 0, -1, "'a'", "','")
-            literal("'a'", "a")
-            literal("','", ",")
-        }
-        val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-
-        val a = rrs.findRuntimeRule("'a'")
-        val _c = rrs.findRuntimeRule("','")
-        val G = SM.startState.runtimeRules.first()
-
-        val s0 = SM.startState
-
-        val lhs_a = SM.createLookaheadSet(false, false, false,setOf(a))
+    // must be fresh per test or automaton is not correct for different parses (due to caching)
+    private val rrs = runtimeRuleSet {
+        sList("S", 0, -1, "'a'", "'b'")
+        literal("'a'", "a")
+        literal("'b'", "b")
     }
+    private val S = rrs.findRuntimeRule("S")
+    private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+
+    private val a = rrs.findRuntimeRule("'a'")
+    private val b = rrs.findRuntimeRule("'b'")
+    private val G = SM.startState.runtimeRules.first()
+
+    private val s0 = SM.startState
+
+    private val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
+
 
     @Test
     override fun firstOf() {
         TODO("not implemented")
     }
+
     @Test
     override fun s0_widthInto() {
         val s0 = SM.startState
@@ -71,8 +72,8 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
         val s1 = s0.stateSet.fetch(listOf(RulePosition(a, 0, RulePosition.END_OF_RULE)))
 
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_T, LookaheadSet.EMPTY, null) { _, _ -> true },
-                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_a, LookaheadSet.EMPTY, null) { _, _ -> true }
+            Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_T, LookaheadSet.EMPTY, null) { _, _ -> true },
+            Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_a, LookaheadSet.EMPTY, null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in actual.indices) {
@@ -84,6 +85,20 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
     fun parse_aba() {
         val parser = ScanOnDemandParser(rrs)
         parser.parseForGoal("S", "aba", AutomatonKind.LOOKAHEAD_1)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+
+
+        }
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun parse_empty_and_abababa() {
+        val parser = ScanOnDemandParser(rrs)
+        parser.parseForGoal("S", "", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "abababa", AutomatonKind.LOOKAHEAD_1)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
