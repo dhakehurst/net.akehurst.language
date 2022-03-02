@@ -19,6 +19,7 @@ package net.akehurst.language.agl.automaton
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.collections.MutableQueue
+import net.akehurst.language.collections.Stack
 import net.akehurst.language.collections.lazyMapNonNull
 
 internal class ParserStateSet(
@@ -60,7 +61,7 @@ internal class ParserStateSet(
         ParserState(StateNumber(this.nextStateNumber++), it, this)
     }
 
-    val allBuiltStates:List<ParserState> get() = this.states.values.toList()
+    val allBuiltStates: List<ParserState> get() = this.states.values.toList()
     val allBuiltTransitions: Set<Transition> get() = this.allBuiltStates.flatMap { it.outTransitions.allBuiltTransitions }.toSet()
 
     val startState: ParserState by lazy {
@@ -192,7 +193,7 @@ internal class ParserStateSet(
         val existing = this.allBuiltStates.firstOrNull {
             it.rulePositions.containsAll(rulePositions)
         }
-        return existing?: this.states[rulePositions]
+        return existing ?: this.states[rulePositions]
     }
 
     internal fun createLookaheadSet(includeUP: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet {
@@ -222,29 +223,29 @@ internal class ParserStateSet(
         }
     }
 
-    private val createWithParent_cache = mutableMapOf<Pair<Int,Int>, LookaheadSet>()
+    private val createWithParent_cache = mutableMapOf<Pair<Int, Int>, LookaheadSet>()
     fun createWithParent(upLhs: LookaheadSet, runtimeLookahead: LookaheadSet): LookaheadSet {
-             return if (upLhs.includesUP) {
-                val res = createWithParent_cache[Pair(upLhs.number,runtimeLookahead.number)]
-                if (null == res) {
-                    val lhs = when {
-                        LookaheadSet.UP == upLhs -> runtimeLookahead
-                        else -> {
-                            val content = if (upLhs.includesUP) upLhs.content.union(runtimeLookahead.content) else upLhs.content
-                            val eol = upLhs.includesEOT || (upLhs.includesUP && runtimeLookahead.includesEOT)
-                            val ma = upLhs.matchANY || (upLhs.includesUP && runtimeLookahead.matchANY)
-                            this.createLookaheadSet(false, eol, ma, content)
-                        }
+        return if (upLhs.includesUP) {
+            val res = createWithParent_cache[Pair(upLhs.number, runtimeLookahead.number)]
+            if (null == res) {
+                val lhs = when {
+                    LookaheadSet.UP == upLhs -> runtimeLookahead
+                    else -> {
+                        val content = if (upLhs.includesUP) upLhs.content.union(runtimeLookahead.content) else upLhs.content
+                        val eol = upLhs.includesEOT || (upLhs.includesUP && runtimeLookahead.includesEOT)
+                        val ma = upLhs.matchANY || (upLhs.includesUP && runtimeLookahead.matchANY)
+                        this.createLookaheadSet(false, eol, ma, content)
                     }
-                    this.createWithParent_cache[Pair(upLhs.number,runtimeLookahead.number)] = lhs
-                    lhs
-                } else {
-                    res
                 }
+                this.createWithParent_cache[Pair(upLhs.number, runtimeLookahead.number)] = lhs
+                lhs
             } else {
-                 upLhs
+                res
             }
+        } else {
+            upLhs
         }
+    }
 
     fun build(): ParserStateSet {
         //println("Build not yet implemented")
@@ -256,81 +257,79 @@ internal class ParserStateSet(
     }
 
     private fun buildAndTraverse1() {
-        data class StateNode(val prev: StateNode?, val state: ParserState) {
+        class StatesStack(prevStack: Stack<ParserState>, val state: ParserState) {
+            private val hashCode_cache = arrayOf(this.state, *(prevStack.elements.toTypedArray())).contentHashCode()
+
+            val stack: Stack<ParserState> = prevStack
+            val prev = stack.peekOrNull()
+
+            fun push(nextState: ParserState): StatesStack = StatesStack(this.stack.push(this.state), nextState)
+            fun pushPrev(nextState: ParserState): StatesStack = StatesStack(this.stack.clone(), nextState)
+            fun pushPrevPrev(nextState: ParserState): StatesStack = StatesStack(this.stack.pop().stack, nextState)
+
+            val isLooped: Boolean
+                get() {
+                   return when {
+                        stack.size < 1 -> false
+                        else -> {
+                            val p = Pair(this.state, this.prev)
+                            for (i in this.stack.elements.size - 1 downTo 0) {
+                                val os = this.stack.elements[i]
+                                val op = if (i > 1) this.stack.elements[i - 1] else null
+                                val opr = Pair(os, op)
+                                if (p == opr) {
+                                    return true
+                                }
+                            }
+                            false
+                        }
+                    }
+                }
+
+            override fun hashCode(): Int = hashCode_cache
+
+            override fun equals(other: Any?): Boolean = when {
+                this===other -> true
+                other !is StatesStack -> false
+                this.state!=other.state -> false
+                else -> this.stack == other.stack
+            }
+
             override fun toString(): String = when {
-                null == prev -> "$state --> null"
-                else -> "$state --> $prev"
+                this.stack.isEmpty -> "$state-->null"
+                else -> "$state-->${stack.elements.reversed().joinToString(separator = "-->") { it.toString() }}-->null"
             }
         }
 //TODO: create valid states first ? and/or enable mering of states
-        val done = mutableSetOf<Pair<ParserState?, ParserState>>()
-        val transitions = MutableQueue<Pair<StateNode, Transition>>()
-        var curNode = StateNode(null, this.startState)
-        val s0_trans = curNode.state.transitions(curNode.prev?.state)
-        s0_trans.forEach { transitions.enqueue(Pair(curNode, it)) }
+        val done = mutableSetOf<StatesStack>()
+        val transitions = MutableQueue<Pair<StatesStack, Transition>>()
+        var curStack = StatesStack(Stack(), this.startState)
+        val s0_trans = curStack.state.transitions(curStack.prev)
+        s0_trans.forEach { transitions.enqueue(Pair(curStack, it)) }
         while (transitions.isEmpty.not()) {
             val pair = transitions.dequeue()
-            curNode = pair.first
-            val prevState = curNode.prev?.state
+            curStack = pair.first
             val tr = pair.second
-            //val dp = Pair(prevState, tr)
-            //if (done.contains(dp)) {
-                //do nothing
-            //    val i=0
-            //} else {
-                //done.add(dp)
-                //println(dp)
-                // assume we take the transition
-                val curState = curNode.state
-                val nextState = tr.to
-                check(tr.from == curState) { "Error building Automaton" }
-                when (tr.action) {
-                    Transition.ParseAction.WIDTH -> {
-                        val newNode = StateNode(prev = curNode, state = nextState)
-                        val newTrans = newNode.state.transitions(newNode.prev?.state)
-                        val dp = Pair(newNode.prev?.state, newNode.state)
-                        if (done.contains(dp)) {
-                            // do nothing
-                        } else {
-                            done.add(dp)
-                            newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
-                        }
-                    }
-                    Transition.ParseAction.EMBED -> {
-                        val newNode = StateNode(prev = curNode, state = nextState)
-                        val newTrans = newNode.state.transitions(newNode.prev?.state)
-                        val dp = Pair(newNode.prev?.state, newNode.state)
-                        if (done.contains(dp)) {
-                            // do nothing
-                        } else {
-                            done.add(dp)
-                            newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
-                        }
-                    }
-                    Transition.ParseAction.HEIGHT -> {
-                        val newNode = StateNode(prev = curNode.prev, state = nextState)
-                        val newTrans = newNode.state.transitions(newNode.prev?.state)
-                        val dp = Pair(newNode.prev?.state, newNode.state)
-                        if (done.contains(dp)) {
-                            // do nothing
-                        } else {
-                            done.add(dp)
-                            newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
-                        }
-                    }
-                    Transition.ParseAction.GRAFT -> {
-                        val newNode = StateNode(prev = curNode.prev!!.prev, state = nextState)
-                        val newTrans = newNode.state.transitions(newNode.prev?.state)
-                        val dp = Pair(newNode.prev?.state, newNode.state)
-                        if (done.contains(dp)) {
-                        } else {
-                            done.add(dp)
-                            newTrans.forEach { transitions.enqueue(Pair(newNode, it)) }
-                        }
-                    }
-                    Transition.ParseAction.GOAL -> Unit
+            // assume we take the transition
+            val curState = curStack.state
+            val nextState = tr.to
+            check(tr.from == curState) { "Error building Automaton" }
+            val newStack = when (tr.action) {
+                Transition.ParseAction.WIDTH -> curStack.push(nextState)
+                Transition.ParseAction.EMBED -> curStack.push(nextState)
+                Transition.ParseAction.HEIGHT -> curStack.pushPrev(nextState)
+                Transition.ParseAction.GRAFT -> curStack.pushPrevPrev(nextState)
+                Transition.ParseAction.GOAL -> curStack
+            }
+            val newTrans = newStack.state.transitions(newStack.prev)
+            if (newStack.isLooped) {
+                // do nothing
+                val i = 0
+            } else {
+                if (done.add(newStack)) {
+                    newTrans.forEach { transitions.enqueue(Pair(newStack, it)) }
                 }
-            //}
+            }
         }
     }
 
