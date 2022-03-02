@@ -17,7 +17,7 @@ class test_buildFor {
 
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
-        assertEquals(6, actual.states.values.size)
+        assertEquals(6, actual.allBuiltStates.size)
         //TODO: expected Transitions
     }
 
@@ -34,7 +34,7 @@ class test_buildFor {
 
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
-        assertEquals(9, actual.states.values.size)
+        assertEquals(9, actual.allBuiltStates.size)
         assertEquals(12, actual.allBuiltTransitions.size)
         //TODO: expected Transitions
     }
@@ -56,7 +56,7 @@ class test_buildFor {
         parser.parseForGoal("S", "ba", AutomatonKind.LOOKAHEAD_1)
         parser.parseForGoal("S", "a", AutomatonKind.LOOKAHEAD_1)
 
-        assertEquals(9, actual.states.values.size)
+        assertEquals(9, actual.allBuiltStates.size)
         assertEquals(12, actual.allBuiltTransitions.size)
         //TODO: expected Transitions
     }

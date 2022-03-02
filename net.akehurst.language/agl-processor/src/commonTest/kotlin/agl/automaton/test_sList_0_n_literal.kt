@@ -69,7 +69,7 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
     @Test
     fun s0_transitions() {
         val actual = s0.transitions(null)
-        val s1 = s0.stateSet.fetch(listOf(RulePosition(a, 0, RulePosition.END_OF_RULE)))
+        val s1 = s0.stateSet.fetchCompatibleOrCreateState(listOf(RulePosition(a, 0, RulePosition.END_OF_RULE)))
 
         val expected = listOf(
             Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_T, LookaheadSet.EMPTY, null) { _, _ -> true },

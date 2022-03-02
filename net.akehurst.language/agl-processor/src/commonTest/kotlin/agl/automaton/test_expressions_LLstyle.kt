@@ -94,7 +94,7 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
     @Test
     fun s1_heightOrGraftInto_s0() {
         val s0 = SM.startState
-        val s1 = SM.states[listOf(RP(a, 0, EOR))]
+        val s1 = SM.createState(listOf(RP(a, 0, EOR)))
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
@@ -113,7 +113,7 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
     @Test
     fun s0_transitions() {
         val s0 = SM.startState
-        val s1 = SM.states[listOf(RP(a, 0, EOR))]
+        val s1 = SM.createState(listOf(RP(a, 0, EOR)))
         val actual = s0.transitions(null)
         val expected = listOf<Transition>(
             Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_a, LookaheadSet.EMPTY, null) { _, _ -> true },
@@ -146,7 +146,7 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
             val s10 = state(RP(G,0,EOR))      /* G = S . */
 
             transition(null, s0, s1, WIDTH, setOf(UP,o), setOf(), null)
-            transition(listOf(s0,s7), s1, s2, HEIGHT, setOf(UP), setOf(UP), listOf(RP(P, 0, SOR)))
+            transition(listOf(s0,s7), s1, s2, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(P, 0, SOR)))
             //transition(s0, s2, s3, WIDTH, setOf(c, d), setOf(), null)
             //transition(s2, s3, s4, GRAFT, setOf(c, d), setOf(UP), listOf(RP(ABC, 0, 1), RP(ABD, 0, 1)))
             //transition(s0, s4, s5, WIDTH, setOf(UP), setOf(), null)

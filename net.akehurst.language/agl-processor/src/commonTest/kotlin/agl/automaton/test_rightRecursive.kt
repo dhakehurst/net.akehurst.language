@@ -48,12 +48,12 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
         val a = rrs.findRuntimeRule("'a'")
 
         val s0 = SM.startState
-        val s1 = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]
-        val s2 = SM.states[listOf(RulePosition(S, 0, RulePosition.END_OF_RULE))]
-        val s3 = SM.states[listOf(RulePosition(S1, 0, 1))]
-        val s4 = SM.states[listOf(RulePosition(S1, 0, RulePosition.END_OF_RULE))]
-        val s5 = SM.states[listOf(RulePosition(G, 0, RulePosition.END_OF_RULE))]
-        val s6 = SM.states[listOf(RulePosition(S, 1, RulePosition.END_OF_RULE))]
+        val s1 = SM.createState(listOf(RulePosition(a, 0, RulePosition.END_OF_RULE)))
+        val s2 = SM.createState(listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)))
+        val s3 = SM.createState(listOf(RulePosition(S1, 0, 1)))
+        val s4 = SM.createState(listOf(RulePosition(S1, 0, RulePosition.END_OF_RULE)))
+        val s5 = SM.createState(listOf(RulePosition(G, 0, RulePosition.END_OF_RULE)))
+        val s6 = SM.createState(listOf(RulePosition(S, 1, RulePosition.END_OF_RULE)))
 
         val lhs_a = SM.createLookaheadSet(false, false, false,setOf(a))
         val lhs_aU = SM.createLookaheadSet(true, false, false,setOf(a))

@@ -37,7 +37,7 @@ internal class AutomatonBuilder(
  //   val GRAFT_OR_HEIGHT = Transition.ParseAction.GRAFT_OR_HEIGHT
 
     fun state(vararg rulePositions: RulePosition): ParserState {
-        return result.states[rulePositions.toList()]
+        return result.createState(rulePositions.toList())
     }
 
     fun transition(
@@ -46,7 +46,7 @@ internal class AutomatonBuilder(
         to: ParserState,
         action: Transition.ParseAction,
         lookaheadGuardContent: Set<RuntimeRule>,
-        upLookaheadContent: Set<RuntimeRule>,
+        upLookaheadContent: Set<Set<RuntimeRule>>,
         prevGuard: List<RulePosition>?
     ): Transition = transition(listOf(previousState),from, to, action, lookaheadGuardContent, upLookaheadContent, prevGuard)
 
@@ -56,10 +56,10 @@ internal class AutomatonBuilder(
         to: ParserState,
         action: Transition.ParseAction,
         lookaheadGuardContent: Set<RuntimeRule>,
-        upLookaheadContent: Set<RuntimeRule>,
+        upLookaheadContent: Set<Set<RuntimeRule>>,
         prevGuard: List<RulePosition>?
     ): Transition {
-        return transition1(previousStates,from,to,action,lookaheadGuardContent,setOf(upLookaheadContent),prevGuard)
+        return transition1(previousStates,from,to,action,lookaheadGuardContent,upLookaheadContent,prevGuard)
     }
     fun transition1(
         previousStates: List<ParserState?>,

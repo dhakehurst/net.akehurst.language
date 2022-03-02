@@ -44,8 +44,8 @@ class test_GrowingChildren {
         val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val s0 = SM.startState
         val G = s0.runtimeRules.first()
-        val st_a = SM.states[listOf(RulePosition(a, 0, RulePosition.END_OF_RULE))]
-        val st_S_EOR = SM.states[listOf(RulePosition(S, 0, RulePosition.END_OF_RULE))]
+        val st_a = SM.createState(listOf(RulePosition(a, 0, RulePosition.END_OF_RULE)))
+        val st_S_EOR = SM.createState(listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)))
 
         val ruleOptionList_G0 = setOf(RuleOption(G, 0))
         val ruleOptionList_S = setOf(RuleOption(S, 0))

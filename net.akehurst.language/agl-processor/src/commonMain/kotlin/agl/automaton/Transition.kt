@@ -43,10 +43,7 @@ internal class Transition(
         arrayListOf(from, to, action, lookaheadGuard, upLookahead, prevGuard).hashCode()
     }
 
-
-    override fun hashCode(): Int {
-        return this.hashCode_cache
-    }
+    override fun hashCode(): Int = this.hashCode_cache
 
     override fun equals(other: Any?): Boolean {
         when (other) {

@@ -95,7 +95,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
     @Test
     fun s0_transitions() {
         val s0 = SM.startState
-        val s1 = SM.states[listOf(RP(v, 0, EOR))]
+        val s1 = SM.createState(listOf(RP(v, 0, EOR)))
         val actual = s0.transitions(null)
         val expected = listOf(
             Transition(s0, s1, WIDTH, lhs_UPab, LookaheadSet.EMPTY, null) { _, _ -> true }
@@ -106,7 +106,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
     @Test
     fun s1_heightOrGraftInto_s0() {
         val s0 = SM.startState
-        val s1 = SM.states[listOf(RP(v, 0, EOR))]
+        val s1 = SM.createState(listOf(RP(v, 0, EOR)))
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(

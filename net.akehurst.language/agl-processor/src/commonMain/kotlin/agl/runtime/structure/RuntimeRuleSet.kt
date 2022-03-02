@@ -375,7 +375,7 @@ internal class RuntimeRuleSet(
         val b = StringBuilder()
         val gr = this.findRuntimeRule(goalRuleName)
 
-        val states = this.states_cache[gr]!!.states.values
+        val states = this.states_cache[gr]!!.allBuiltStates
         val transitions = states.flatMap { it.outTransitions.allBuiltTransitions.toSet() }.toSet()
 
         states.forEach {

@@ -48,12 +48,12 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
     private val a = rrs.findRuntimeRule("'a'")
 
     private val s0 = SM.startState
-    private val s1 = SM.states[listOf(RP(a, 0, EOR))]
-    private val s2 = SM.states[listOf(RP(S, 0, EOR))]
-    private val s3 = SM.states[listOf(RP(S1, 0, EOR))]
-    private val s4 = SM.states[listOf(RP(S1, 0, 1))]
-    private val s5 = SM.states[listOf(RP(G, 0, EOR))]
-    private val s6 = SM.states[listOf(RP(S, 1, EOR))]
+    private val s1 = SM.createState(listOf(RP(a, 0, EOR)))
+    private val s2 = SM.createState(listOf(RP(S, 0, EOR)))
+    private val s3 = SM.createState(listOf(RP(S1, 0, EOR)))
+    private val s4 = SM.createState(listOf(RP(S1, 0, 1)))
+    private val s5 = SM.createState(listOf(RP(G, 0, EOR)))
+    private val s6 = SM.createState(listOf(RP(S, 1, EOR)))
 
     private val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
     private val lhs_aU = SM.createLookaheadSet(true, false, false, setOf(a))

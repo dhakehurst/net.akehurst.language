@@ -64,8 +64,8 @@ internal class test_sList_compositeMulti : test_AutomatonAbstract() {
         val lhs_ciU = SM.createLookaheadSet(true, false, false,setOf(c, i))
 
         val s0 = SM.startState
-        val s1 = SM.states[listOf(RP(n, 0, EOR))]
-        val s2 = SM.states[listOf(RP(Se, 0, EOR))]
+        val s1 = SM.createState(listOf(RP(n, 0, EOR)))
+        val s2 = SM.createState(listOf(RP(Se, 0, EOR)))
     }
 
     @Test

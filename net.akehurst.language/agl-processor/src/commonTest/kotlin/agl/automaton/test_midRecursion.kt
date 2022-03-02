@@ -105,8 +105,8 @@ internal class test_midRecursion : test_AutomatonAbstract() {
 
             transition(null, s0, s1, WIDTH, setOf(UP), setOf(), null)
             transition(null, s0, s2, WIDTH, setOf(a, b), setOf(), null)
-            transition(s0, s1, s3, HEIGHT, setOf(UP), setOf(UP), listOf(RP(S, 0, SOR)))
-            transition(s0, s3, s4, GRAFT, setOf(UP), setOf(UP), listOf(RP(G, 0, SOR)))
+            transition(s0, s1, s3, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, SOR)))
+            transition(s0, s3, s4, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, SOR)))
             transition(null, s4, s4, GOAL, setOf(), setOf(), null)
         }
 
@@ -134,15 +134,15 @@ internal class test_midRecursion : test_AutomatonAbstract() {
 
             transition(null, s0, s1, WIDTH, setOf(UP), setOf(), null)
             transition(null, s0, s2, WIDTH, setOf(a, b), setOf(), null)
-            transition(s3, s1, s4, HEIGHT, setOf(c), setOf(c), listOf(RP(S, 0, 0)))
-            transition(s0, s2, s3, HEIGHT, setOf(a, b), setOf(UP), listOf(RP(S1, 0, SOR)))
+            transition(s3, s1, s4, HEIGHT, setOf(c), setOf(setOf(c)), listOf(RP(S, 0, 0)))
+            transition(s0, s2, s3, HEIGHT, setOf(a, b), setOf(setOf(UP)), listOf(RP(S1, 0, SOR)))
             transition(s0, s3, s1, WIDTH, setOf(c), setOf(), null)
             transition(s0, s3, s2, WIDTH, setOf(a, b), setOf(), null)
-            transition(s3, s4, s5, GRAFT, setOf(c), setOf(UP), listOf(RP(S1, 0, 1)))
+            transition(s3, s4, s5, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(S1, 0, 1)))
             transition(s0, s5, s6, WIDTH, setOf(UP), setOf(), null)
-            transition(s5, s6, s7, GRAFT, setOf(UP), setOf(UP), listOf(RP(S1, 0, 2)))
-            transition(s0, s7, s8, HEIGHT, setOf(UP), setOf(UP), listOf(RP(S, 1, SOR)))
-            transition(s0, s8, s9, GRAFT, setOf(UP), setOf(UP), listOf(RP(G, 0, SOR)))
+            transition(s5, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(S1, 0, 2)))
+            transition(s0, s7, s8, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 1, SOR)))
+            transition(s0, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, SOR)))
             transition(null, s9, s9, GOAL, setOf(), setOf(), null)
         }
 

@@ -75,7 +75,7 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
         val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val s0 = SM.startState
         val G = s0.runtimeRules.first()
-        val s1 = SM.states[listOf(RP(d, 0, EOR))]
+        val s1 = SM.createState(listOf(RP(d, 0, EOR)))
 
         val lhs_ac = SM.createLookaheadSet(false,false, false,setOf(a,c))
         val lhs_a = SM.createLookaheadSet(false,false, false,setOf(a))
@@ -159,8 +159,8 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
 
         val actual = s0.transitions(null)
 
-        val s2 = s0.stateSet.fetch(listOf(RulePosition(b, 0, RulePosition.END_OF_RULE)))
-        val s1 = s0.stateSet.fetch(listOf(RulePosition(d, 0, RulePosition.END_OF_RULE)))
+        val s2 = s0.stateSet.fetchCompatibleOrCreateState(listOf(RulePosition(b, 0, RulePosition.END_OF_RULE)))
+        val s1 = s0.stateSet.fetchCompatibleOrCreateState(listOf(RulePosition(d, 0, RulePosition.END_OF_RULE)))
         val expected = listOf(
             Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_ac, LookaheadSet.EMPTY, null) { _, _ -> true },
             Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_d, LookaheadSet.EMPTY, null) { _, _ -> true }
@@ -184,8 +184,8 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
     @Test
     fun s1_transitions_s0() {
         val actual = s1.transitions(s0)
-        val s3 = s0.stateSet.fetch(listOf(RulePosition(rA, 0, RulePosition.END_OF_RULE)))
-        val s4 = s0.stateSet.fetch(listOf(RulePosition(rB, 0, RulePosition.END_OF_RULE)))
+        val s3 = s0.stateSet.fetchCompatibleOrCreateState(listOf(RulePosition(rA, 0, RulePosition.END_OF_RULE)))
+        val s4 = s0.stateSet.fetchCompatibleOrCreateState(listOf(RulePosition(rB, 0, RulePosition.END_OF_RULE)))
         val expected = listOf<Transition>(
             Transition(s1, s3, Transition.ParseAction.HEIGHT, lhs_a, LookaheadSet.EMPTY, null) { _, _ -> true },
             Transition(s1, s4, Transition.ParseAction.HEIGHT, lhs_c, LookaheadSet.EMPTY, null) { _, _ -> true }
@@ -235,16 +235,16 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
             val s19 = state(RP(S4, 0, EOR))
             val s20 = state(RP(S, 3, EOR))
 
-            transition(null, s0, s1, WIDTH, setOf(a, c), setOf(UP), listOf())
-            transition(null, s0, s2, WIDTH, setOf(d), setOf(UP), listOf())
+            transition(null, s0, s1, WIDTH, setOf(a, c), setOf(setOf(UP)), listOf())
+            transition(null, s0, s2, WIDTH, setOf(d), setOf(setOf(UP)), listOf())
 
-            transition(s0, s1, s3, HEIGHT, setOf(a), setOf(a), listOf(RP(rA, 0, 0)))
-            transition(s0, s1, s4, HEIGHT, setOf(c), setOf(c), listOf(RP(rB, 0, 0)))
-            transition(s14, s1, s3, HEIGHT, setOf(c), setOf(c), listOf(RP(rA, 0, 0)))
-            transition(s14, s1, s4, HEIGHT, setOf(a), setOf(a), listOf(RP(rB, 0, 0)))
+            transition(s0, s1, s3, HEIGHT, setOf(a), setOf(setOf(a)), listOf(RP(rA, 0, 0)))
+            transition(s0, s1, s4, HEIGHT, setOf(c), setOf(setOf(c)), listOf(RP(rB, 0, 0)))
+            transition(s14, s1, s3, HEIGHT, setOf(c), setOf(setOf(c)), listOf(RP(rA, 0, 0)))
+            transition(s14, s1, s4, HEIGHT, setOf(a), setOf(setOf(a)), listOf(RP(rB, 0, 0)))
 
-            transition(s0, s2, s4, HEIGHT, setOf(a, c), setOf(UP), listOf())
-            transition(s0, s0, s1, HEIGHT, setOf(a, c), setOf(UP), listOf())
+            transition(s0, s2, s4, HEIGHT, setOf(a, c), setOf(setOf(UP)), listOf())
+            transition(s0, s0, s1, HEIGHT, setOf(a, c), setOf(setOf(UP)), listOf())
         }
 
         AutomatonTest.assertEquals(expected, actual)

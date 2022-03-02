@@ -104,7 +104,7 @@ internal class AglGrammarSemanticAnalyser(
         val goalRuleName = grammar.rule.first { it.isSkip.not() }.name
         val automaton = rrs.automatonFor(goalRuleName, automatonKind)
 
-        automaton.states.values.forEach { state ->
+        automaton.allBuiltStates.forEach { state ->
             val trans = state.outTransitions.allBuiltTransitions
             if (trans.size > 1) {
                 trans.forEach { tr1 ->

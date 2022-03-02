@@ -39,9 +39,9 @@ class test_TreeData {
         val SM = rrs.fetchStateSetFor(rule_S, AutomatonKind.LOOKAHEAD_1)
         val state_G0 = SM.startState
         val rule_G = state_G0.firstRule
-        val state_Ge = SM.states[listOf(RulePosition(rule_G, 0, RulePosition.END_OF_RULE))]
-        val state_S = SM.states[listOf(RulePosition(rule_S, 0, RulePosition.END_OF_RULE))]
-        val state_a = SM.states[listOf(RulePosition(rule_a, 0, RulePosition.END_OF_RULE))]
+        val state_Ge = SM.createState(listOf(RulePosition(rule_G, 0, RulePosition.END_OF_RULE)))
+        val state_S = SM.createState(listOf(RulePosition(rule_S, 0, RulePosition.END_OF_RULE)))
+        val state_a = SM.createState(listOf(RulePosition(rule_a, 0, RulePosition.END_OF_RULE)))
         val sut = TreeData(0)
 
         val sentence = "a"
@@ -84,13 +84,13 @@ class test_TreeData {
         val SM = rrs.fetchStateSetFor(rule_S, AutomatonKind.LOOKAHEAD_1)
         val state_G0 = SM.startState
         val rule_G = state_G0.firstRule
-        val state_Ge = SM.states[listOf(RulePosition(rule_G, 0, RulePosition.END_OF_RULE))]
-        val state_S1 = SM.states[listOf(RulePosition(rule_S, 0, 1))]
-        val state_S2 = SM.states[listOf(RulePosition(rule_S, 0, 2))]
-        val state_S3 = SM.states[listOf(RulePosition(rule_S, 0, RulePosition.END_OF_RULE))]
-        val state_a = SM.states[listOf(RulePosition(rule_a, 0, RulePosition.END_OF_RULE))]
-        val state_b = SM.states[listOf(RulePosition(rule_b, 0, RulePosition.END_OF_RULE))]
-        val state_c = SM.states[listOf(RulePosition(rule_c, 0, RulePosition.END_OF_RULE))]
+        val state_Ge = SM.createState(listOf(RulePosition(rule_G, 0, RulePosition.END_OF_RULE)))
+        val state_S1 = SM.createState(listOf(RulePosition(rule_S, 0, 1)))
+        val state_S2 = SM.createState(listOf(RulePosition(rule_S, 0, 2)))
+        val state_S3 = SM.createState(listOf(RulePosition(rule_S, 0, RulePosition.END_OF_RULE)))
+        val state_a = SM.createState(listOf(RulePosition(rule_a, 0, RulePosition.END_OF_RULE)))
+        val state_b = SM.createState(listOf(RulePosition(rule_b, 0, RulePosition.END_OF_RULE)))
+        val state_c = SM.createState(listOf(RulePosition(rule_c, 0, RulePosition.END_OF_RULE)))
         val sut = TreeData(0)
 
         val sentence = "abc"

@@ -43,10 +43,10 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
         val c = rrs.findRuntimeRule("'c'")
 
         val s0 = SM.startState
-        val s1 = SM.states[listOf(RP(a, 0, RulePosition.END_OF_RULE))]
-        val s2 = SM.states[listOf(RP(S, 0, 1))]
-        val s3 = SM.states[listOf(RP(b, 0, RulePosition.END_OF_RULE))]
-        val s4 = SM.states[listOf(RP(S, 0, 2))]
+        val s1 = SM.createState(listOf(RP(a, 0, RulePosition.END_OF_RULE)))
+        val s2 = SM.createState(listOf(RP(S, 0, 1)))
+        val s3 = SM.createState(listOf(RP(b, 0, RulePosition.END_OF_RULE)))
+        val s4 = SM.createState(listOf(RP(S, 0, 2)))
 
         val lhs_a = SM.createLookaheadSet(false, false, false,setOf(a))
         val lhs_b = SM.createLookaheadSet(false,false, false, setOf(b))
@@ -171,12 +171,12 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
             val s7 = state(RP(G,0,EOR))
 
             transition(null, s0, s1, WIDTH, setOf(b), setOf(),null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(UP),listOf(RP(S,0,SOR)))
+            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)),listOf(RP(S,0,SOR)))
             transition(s0, s2, s3, WIDTH, setOf(c), setOf(),null)
-            transition(s2, s3, s4, GRAFT, setOf(c), setOf(UP),listOf(RP(S,0,1)))
+            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)),listOf(RP(S,0,1)))
             transition(s0, s4, s5, WIDTH, setOf(UP), setOf(),null)
-            transition(s4, s5, s6, GRAFT, setOf(UP), setOf(UP),listOf(RP(S,0,2)))
-            transition(s0, s6, s7, GRAFT, setOf(UP), setOf(UP),listOf(RP(G,0,0)))
+            transition(s4, s5, s6, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(S,0,2)))
+            transition(s0, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(G,0,0)))
             transition(null, s7, s7, GOAL, setOf(), setOf(),null)
         }
         AutomatonTest.assertEquals(expected, actual)
@@ -198,12 +198,12 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
             val s7 = state(RP(G,0,EOR))
 
             transition(null, s0, s1, WIDTH, setOf(b), setOf(),null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(UP),listOf(RP(S,0,SOR)))
+            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)),listOf(RP(S,0,SOR)))
             transition(s0, s2, s3, WIDTH, setOf(c), setOf(),null)
-            transition(s2, s3, s4, GRAFT, setOf(c), setOf(UP),listOf(RP(S,0,1)))
+            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)),listOf(RP(S,0,1)))
             transition(s0, s4, s5, WIDTH, setOf(UP), setOf(),null)
-            transition(s4, s5, s6, GRAFT, setOf(UP), setOf(UP),listOf(RP(S,0,2)))
-            transition(s0, s6, s7, GRAFT, setOf(UP), setOf(UP),listOf(RP(G,0,0)))
+            transition(s4, s5, s6, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(S,0,2)))
+            transition(s0, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(G,0,0)))
             transition(null, s7, s7, GOAL, setOf(), setOf(),null)
         }
 

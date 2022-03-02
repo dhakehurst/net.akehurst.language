@@ -20,6 +20,7 @@ import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
+import net.akehurst.language.collections.MutableQueue
 
 internal class ClosureItemLC1(
     val parentItem: ClosureItemLC1?, //needed for height/graft
@@ -422,13 +423,13 @@ internal class BuildCacheLC1(
             _cacheOff -> {
                 val lhs = calcLookaheadDown(rp, upLhs)
                 val ci = ClosureItemLC1(null, rp, null, lhs)
-                calcDnClosureLC1(ci, mutableSetOf(ci))
+                calcDnClosureLC1(ci)//, mutableSetOf(ci))
             }
             else -> {
                 _dnClosure[rp] ?: run {
                     val lhs = calcLookaheadDown(rp, upLhs)
                     val ci = ClosureItemLC1(null, rp, null, lhs)
-                    val v = calcDnClosureLC1(ci, mutableSetOf(ci))
+                    val v = calcDnClosureLC1(ci)//, mutableSetOf(ci))
                     _dnClosure[rp] = v
                     v
                 }
@@ -453,7 +454,7 @@ internal class BuildCacheLC1(
     // does not go all the way down to terminals,
     // stops just above,
     // when item.rulePosition.items is a TERMINAL/EMBEDDED
-    private fun calcDnClosureLC1(item: ClosureItemLC1, items: MutableSet<ClosureItemLC1> = mutableSetOf()): Set<ClosureItemLC1> {
+    private fun calcDnClosureLC1_1(item: ClosureItemLC1, items: MutableSet<ClosureItemLC1> = mutableSetOf()): Set<ClosureItemLC1> {
         return when {
             item.rulePosition.isAtEnd -> items
             //items.any {
@@ -484,7 +485,7 @@ internal class BuildCacheLC1(
                             }
                             items.addAll(newItems)
                             for (ci in newItems) {
-                                calcDnClosureLC1(ci, items)
+                                calcDnClosureLC1_1(ci, items)
                             }
                         }
                     }
@@ -494,36 +495,35 @@ internal class BuildCacheLC1(
         }
     }
 
-    private fun calcDnClosureLC1_2(topItem: ClosureItemLC1, ): Set<ClosureItemLC1> {
-        val items = mutableSetOf<ClosureItemLC1>()
-        var newItems = setOf(topItem)
-        while(newItems.isNotEmpty()) {
-            val nextNewItems = mutableSetOf<ClosureItemLC1>()
-            for(item in newItems) {
-                when {
-                    item.rulePosition.isAtEnd -> Unit
-                    else -> {
-                        val rr = item.rulePosition.item
-                        if (null!=rr) {
-                            when (rr.kind) {
-                                RuntimeRuleKind.TERMINAL, RuntimeRuleKind.EMBEDDED -> Unit
-                                RuntimeRuleKind.GOAL, RuntimeRuleKind.NON_TERMINAL -> {
-                                    val chRps = rr.rulePositionsAt[0]
-                                    val potentialNewItems = chRps.flatMap { chRp ->
-                                        val chNext = chRp.next()
-                                        chNext.map { chNx ->
-                                            val lhs = firstOf(chNx, item.lookaheadSet)
-                                            ClosureItemLC1(item, chRp, chNx, lhs)
-                                        }
+    private fun calcDnClosureLC1(topItem: ClosureItemLC1): Set<ClosureItemLC1> {
+        val items = mutableSetOf<ClosureItemLC1>(topItem)
+        val newItemQueue = MutableQueue<ClosureItemLC1>()
+        newItemQueue.enqueue(topItem)
+        while(newItemQueue.isNotEmpty) {
+            val item = newItemQueue.dequeue()
+            when {
+                item.rulePosition.isAtEnd -> Unit
+                else -> {
+                    val rr = item.rulePosition.item
+                    if (null!=rr) {
+                        when (rr.kind) {
+                            RuntimeRuleKind.TERMINAL, RuntimeRuleKind.EMBEDDED -> Unit
+                            RuntimeRuleKind.GOAL, RuntimeRuleKind.NON_TERMINAL -> {
+                                val chRps = rr.rulePositionsAt[0]
+                                val potentialNewItems = chRps.flatMap { chRp ->
+                                    val chNext = chRp.next()
+                                    chNext.map { chNx ->
+                                        val lhs = firstOf(chNx, item.lookaheadSet)
+                                        ClosureItemLC1(item, chRp, chNx, lhs)
                                     }
-                                    val newItems = potentialNewItems.filter {
-                                        item.rulePosition.isAtEnd.not() &&
-                                                items.any { existing -> existing.equivalentOf(it) }.not()
-                                    }
-                                    items.addAll(newItems)
-                                    for (ci in newItems) {
-                                        calcDnClosureLC1(ci, items)
-                                    }
+                                }
+                                val newItems = potentialNewItems.filter {
+                                    item.rulePosition.isAtEnd.not() &&
+                                            items.any { existing -> existing.equivalentOf(it) }.not()
+                                }
+                                items.addAll(newItems)
+                                for (ci in newItems) {
+                                    newItemQueue.enqueue(ci)
                                 }
                             }
                         }
@@ -531,44 +531,7 @@ internal class BuildCacheLC1(
                 }
             }
         }
-        return when {
-            topItem.rulePosition.isAtEnd -> items
-            //items.any {
-            //    it.rulePosition == item.rulePosition &&
-            //             it.lookaheadSet == item.lookaheadSet &&
-            //             it.parentItem?.lookaheadSet == item.parentItem?.lookaheadSet
-            // } -> items
-            else -> {
-                //items.add(item)
-                val rr = topItem.rulePosition.item
-                if (null != rr) {
-                    when (rr.kind) {
-                        RuntimeRuleKind.TERMINAL,
-                        RuntimeRuleKind.EMBEDDED -> Unit
-                        RuntimeRuleKind.GOAL,
-                        RuntimeRuleKind.NON_TERMINAL -> {
-                            val chRps = rr.rulePositionsAt[0]
-                            val potentialNewItems = chRps.flatMap { chRp ->
-                                val chNext = chRp.next()
-                                chNext.map { chNx ->
-                                    val lhs = firstOf(chNx, topItem.lookaheadSet)
-                                    ClosureItemLC1(topItem, chRp, chNx, lhs)
-                                }
-                            }
-                            val newItems = potentialNewItems.filter {
-                                topItem.rulePosition.isAtEnd.not() &&
-                                        items.any { existing -> existing.equivalentOf(it) }.not()
-                            }
-                            items.addAll(newItems)
-                            for (ci in newItems) {
-                                calcDnClosureLC1(ci, items)
-                            }
-                        }
-                    }
-                }
-                items
-            }
-        }
+        return items
     }
 
 

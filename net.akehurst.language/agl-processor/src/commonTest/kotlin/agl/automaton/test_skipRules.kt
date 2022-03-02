@@ -56,7 +56,7 @@ internal class test_skipRules : test_AutomatonAbstract() {
         val skWS = rrs.findRuntimeRule("WS")
         val skCM = rrs.findRuntimeRule("COMMENT")
 
-        val sk1 = skipSS.states[listOf(RulePosition(skWS, 0, RulePosition.END_OF_RULE))]
+        val sk1 = skipSS.createState(listOf(RulePosition(skWS, 0, RulePosition.END_OF_RULE)))
 
         val lhs_a = SM.createLookaheadSet(false,false, false,setOf(a))
         val lhs_skWCU = SM.createLookaheadSet(true, false, false,setOf(skWS, skCM))

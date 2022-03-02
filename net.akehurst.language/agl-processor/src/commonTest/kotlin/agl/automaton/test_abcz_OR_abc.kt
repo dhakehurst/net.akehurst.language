@@ -97,7 +97,7 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
     @Test
     fun s1_heightOrGraftInto_s0() {
         val s0 = SM.startState
-        val s1 = SM.states[listOf(RP(a, 0, EOR))]
+        val s1 = SM.createState(listOf(RP(a, 0, EOR)))
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
@@ -116,7 +116,7 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
     @Test
     fun s0_transitions() {
         val s0 = SM.startState
-        val s1 = SM.states[listOf(RP(a, 0, EOR))]
+        val s1 = SM.createState(listOf(RP(a, 0, EOR)))
         val actual = s0.transitions(null)
         val expected = listOf(
             Transition(s0, s1, WIDTH, lhs_b, LookaheadSet.EMPTY, null) { _, _ -> true },
@@ -145,15 +145,15 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
             val s8 = state(RP(S, 1, EOR))                                // S = ABC .
             val s9 = state(RP(G, 0, EOR))                                // G = S .
 
-            transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(UP), listOf(RP(ABCZ,0,0), RP(ABC,0,0)))
+            transition(null, s0, s1, WIDTH, setOf(b), emptySet(), null)
+            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), listOf(RP(ABCZ,0,0), RP(ABC,0,0)))
             transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
-            transition(s2, s3, s4, GRAFT, setOf(c), setOf(UP), listOf(RP(ABCZ,0,1), RP(ABC,0,1)))
+            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(ABCZ,0,1), RP(ABC,0,1)))
             transition(s0, s4, s5, WIDTH, setOf(UP,z), setOf(), null)
-            transition(s4, s5, s6, GRAFT, setOf(z), setOf(UP), listOf(RP(ABCZ,0,2)))
-            transition(s4, s5, s7, GRAFT, setOf(UP), setOf(UP), listOf(RP(ABC,0,2)))
-            transition(s0, s7, s8, HEIGHT, setOf(UP), setOf(UP), listOf(RP(S,1,SOR)))
-            transition(s0, s8, s9, GRAFT, setOf(UP), setOf(UP), listOf(RP(G,0,SOR)))
+            transition(s4, s5, s6, GRAFT, setOf(z), setOf(setOf(UP)), listOf(RP(ABCZ,0,2)))
+            transition(s4, s5, s7, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(ABC,0,2)))
+            transition(s0, s7, s8, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S,1,SOR)))
+            transition(s0, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G,0,SOR)))
             transition(null, s9, s9, GOAL, setOf(), setOf(), null)
         }
 
@@ -183,17 +183,17 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
             val s10 = state(RP(S, 0, EOR))                               // S = ABC .
             val s11 = state(RP(G, 0, EOR))                               // G = S .
 
-            transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(UP), listOf(RP(ABCZ,0,0), RP(ABC,0,0)))
+            transition(null, s0, s1, WIDTH, setOf(b), emptySet(), null)
+            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), listOf(RP(ABCZ,0,0), RP(ABC,0,0)))
             transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
-            transition(s2, s3, s4, GRAFT, setOf(c), setOf(UP), listOf(RP(ABCZ,0,1), RP(ABC,0,1)))
+            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(ABCZ,0,1), RP(ABC,0,1)))
             transition(s0, s4, s5, WIDTH, setOf(UP,z), setOf(), null)
-            transition(s4, s5, s6, GRAFT, setOf(z), setOf(UP), listOf(RP(ABCZ,0,2)))
-            transition(s4, s5, s7, GRAFT, setOf(UP), setOf(UP), listOf(RP(ABC,0,2)))
+            transition(s4, s5, s6, GRAFT, setOf(z), setOf(setOf(UP)), listOf(RP(ABCZ,0,2)))
+            transition(s4, s5, s7, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(ABC,0,2)))
             transition(s0, s6, s8, WIDTH, setOf(UP), setOf(), null)
-            transition(s6, s8, s9, GRAFT, setOf(UP), setOf(UP), listOf(RP(ABCZ,0,3)))
-            transition(s0, s9, s10, HEIGHT, setOf(UP), setOf(UP), listOf(RP(S,0,SOR)))
-            transition(s0, s10, s11, GRAFT, setOf(UP), setOf(UP), listOf(RP(G,0,SOR)))
+            transition(s6, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(ABCZ,0,3)))
+            transition(s0, s9, s10, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S,0,SOR)))
+            transition(s0, s10, s11, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G,0,SOR)))
             transition(null, s11, s11, GOAL, setOf(), setOf(), null)
         }
 

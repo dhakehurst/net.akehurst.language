@@ -3,12 +3,13 @@ package agl.automaton
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.automaton.Transition
+import kotlin.test.fail
 
 internal object AutomatonTest {
 
     fun assertEquals(expected: ParserStateSet, actual: ParserStateSet) {
-        val expected_states = expected.states.values.map { it.rulePositions }.toSet()
-        val actual_states = actual.states.values.map { it.rulePositions }.toSet()
+        val expected_states = expected.allBuiltStates.map { it.rulePositions }.toSet()
+        val actual_states = actual.allBuiltStates.map { it.rulePositions }.toSet()
 
         kotlin.test.assertEquals(expected_states, actual_states, "States do not match")
 /*
@@ -19,8 +20,8 @@ internal object AutomatonTest {
         }
 */
         kotlin.test.assertEquals(expected.allBuiltTransitions.size, actual.allBuiltTransitions.size, "Number of Transitions do not match")
-        for (exp in expected.states.values) {
-            val act = actual.states[exp.rulePositions]
+        for (exp in expected.allBuiltStates) {
+            val act = actual.fetchState(exp.rulePositions) ?: fail("Actual state $exp not found")
             assertEquals(exp, act)
         }
     }

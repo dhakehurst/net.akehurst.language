@@ -68,7 +68,7 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
     private val v = rrs.findRuntimeRule("'v'")
     private val vr = rrs.findRuntimeRule("var")
 
-    private val lhs_da = LHS(d,a).lhs(SM)
+    private val lhs_da = LHS(d, a).lhs(SM)
 
     @Test
     override fun firstOf() {
@@ -90,7 +90,7 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
         val actual = s0.widthInto(null).toList()
 
         val expected = listOf(
-            WidthInfo(RP(v, 0, EOR), LHS(UP))
+            WidthInfo(RP(v, 0, EOR), LHS(UP, d, a))
         )
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {
@@ -101,10 +101,10 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
     @Test
     fun s0_transitions() {
         val s0 = SM.startState
-        val s1 = SM.states[listOf(RP(v, 0, EOR))]
+        val s1 = SM.createState(listOf(RP(v, 0, EOR)))
         val actual = s0.transitions(null)
         val expected = listOf(
-            Transition(s0, s1, WIDTH, lhs_U, LookaheadSet.EMPTY, null) { _, _ -> true }
+            Transition(s0, s1, WIDTH, LHS(UP, d, a).lhs(SM), LookaheadSet.EMPTY, null) { _, _ -> true }
         )
         assertEquals(expected, actual)
     }
@@ -112,60 +112,57 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
     @Test
     fun s1_heightOrGraftInto_s0() {
         val s0 = SM.startState
-        val s1 = SM.states[listOf(RP(v, 0, EOR))]
+        val s1 = SM.createState(listOf(RP(v, 0, EOR)))
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-            HeightGraftInfo(emptyList(), listOf(RP(S, 0, SOR)), listOf(RP(S, 0, EOR)), LHS(UP), setOf(LHS(UP))),
-            HeightGraftInfo(
-                ancestors = emptyList(),
-                parent = listOf(RP(div, 0, SOR)),
-                parentNext = listOf(RP(S, 0, EOR)),
-                lhs = LHS(UP),
-                upLhs = setOf(LHS(UP))
-            ),
+            HeightGraftInfo(emptyList(), listOf(RP(vr, 0, SOR)), listOf(RP(vr, 0, EOR)), LHS(UP, d, a), setOf(LHS(UP), LHS(d), LHS(a)))
         )
         assertEquals(expected, actual)
     }
 
     @Test
-    fun s7_heightOrGraftInto_s7() {
-        /*
-        G-S-E
-        G-S-E-div0-E
-        G-S-E-div2-E
-         */
+    fun s4_heightOrGraftInto_s0() {
         val s0 = SM.startState
-        val s7 = SM.states[listOf(RP(E, 0, EOR))]
-        val actual = s7.heightOrGraftInto(s0).toList()
+        val s1 = SM.createState(listOf(RP(v, 0, EOR)))      /* 'v' .   */
+        val s2 = SM.createState(listOf(RP(vr, 0, EOR)))     /* var = "[a-z]+" .   */
+        val s3 = SM.createState(listOf(RP(root, 0, EOR)))   /* root = vr .   */
+        val s4 = SM.createState(listOf(RP(E, 0, EOR)))      /* E = root .   */
+        val actual = s4.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
             HeightGraftInfo(
                 emptyList(),
-                listOf(RP(E, 0, SOR)),
-                listOf(RP(E, 0, EOR)),
-                LHS(d,a),
+                listOf(RP(S, 0, SOR)),
+                listOf(RP(S, 0, EOR)),
+                LHS(UP),
                 setOf(LHS(UP))
+            ),
+            HeightGraftInfo(
+                emptyList(),
+                listOf(RP(div, 0, SOR), RP(add, 0, SOR)),
+                listOf(RP(div, 0, PLS), RP(add, 0, PLS)),
+                LHS(d, a),
+                setOf(LHS(UP), LHS(d), LHS(a))
             )
         )
         assertEquals(expected, actual)
     }
 
     @Test
-    fun s0_s7_transitions() {
-        val s0 = SM.states[listOf(RP(G, 0, SOR))  ]    /* G = . S   */
-        val s1 = SM.states[listOf(RP(v, 0, EOR))]      /* 'v' .   */
-        val s5 = SM.states[listOf(RP(vr, 0, EOR))]     /* var = "[a-z]+" .   */
-        val s6 = SM.states[listOf(RP(root, 0, EOR))]   /* root = vr .   */
-        val s7 = SM.states[listOf(RP(E, 0, EOR))]      /* E = root .   */
-        val s8 = SM.states[listOf(RP(S, 0, EOR))]      /* S = E .   */
-        val s9 = SM.states[listOf(RP(div, 0, SOR),RP(add, 0, SOR))]
-        val s10 = SM.states[listOf(RP(div, 0, PLI),RP(add, 0, PLI))]
+    fun s4_transitions_s0() {
+        val s0 = SM.createState(listOf(RP(G, 0, SOR)))    /* G = . S   */
+        val s1 = SM.createState(listOf(RP(v, 0, EOR)))      /* 'v' .   */
+        val s2 = SM.createState(listOf(RP(vr, 0, EOR)))     /* var = "[a-z]+" .   */
+        val s3 = SM.createState(listOf(RP(root, 0, EOR)))   /* root = vr .   */
+        val s4 = SM.createState(listOf(RP(E, 0, EOR)))      /* E = root .   */
+        val s5 = SM.createState(listOf(RP(S, 0, EOR)))      /* S = E .   */
+        val s6 = SM.createState(listOf(RP(div, 0, PLS), RP(add, 0, PLS)))
 
-        val actual = s7.transitions(s0)
+        val actual = s4.transitions(s0)
         val expected = listOf(
-            Transition(s7, s9, HEIGHT, lhs_da, LookaheadSet.EMPTY, null) { _, _ -> true },
-            Transition(s7, s10, GRAFT, lhs_da, LookaheadSet.EMPTY, null) { _, _ -> true }
+            Transition(s4, s5, HEIGHT, LHS(UP).lhs(SM), LHS(UP).lhs(SM), listOf(RP(S, 0, SOR))) { _, _ -> true },
+            Transition(s4, s6, HEIGHT, LHS(d, a).lhs(SM), setOf(LHS(UP).lhs(SM), LHS(d).lhs(SM), LHS(a).lhs(SM)), listOf(RP(div, 0, SOR), RP(add, 0, SOR))) { _, _ -> true }
         )
         assertEquals(expected, actual)
     }
@@ -182,12 +179,25 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S */
             val s1 = state(RP(v, 0, EOR))     /* v .     */
-            val s2 = state(RP(E, 0, EOR))     /* E = v . */
-            val s3 = state(RP(S, 0, EOR))     /* S = E . */
+            val s2 = state(RP(vr, 0, EOR))    /* var = v .     */
+            val s3 = state(RP(root, 0, EOR))  /* root = var .     */
+            val s4 = state(RP(E, 0, EOR))     /* E = v . */
+            val s5 = state(RP(S, 0, EOR))     /* S = E . */
+            val s6 = state(
+                RP(div, 0, 1),
+                RP(add, 0, 1)
+            ) /* div = E . '/' ... | div = E . '+' ...  */
             val s7 = state(RP(G, 0, EOR))     /* G = . S   */
 
 
-            //transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)
+            transition(null, s0, s1, WIDTH, setOf(UP, d, a), emptySet(), null)
+            transition(s0, s1, s2, HEIGHT, setOf(UP, d, a), setOf(setOf(UP), setOf(d), setOf(a)), listOf(RP(vr,0,SOR)))
+            transition(s0, s2, s3, HEIGHT, setOf(UP, d, a), setOf(setOf(UP), setOf(d), setOf(a)), listOf(RP(root,0,SOR)))
+            transition(s0, s3, s4, HEIGHT, setOf(UP, d, a), setOf(setOf(UP), setOf(d), setOf(a)), listOf(RP(E,0,SOR)))
+            transition(s0, s4, s5, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S,0,SOR)))
+            transition(s0, s4, s6, HEIGHT, setOf( d, a), setOf(setOf(UP), setOf(d), setOf(a)), listOf(RP(div,0,SOR),RP(add,0,SOR)))
+            transition(s0, s5, s7, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G,0,SOR)))
+            transition(null, s7, s7, GOAL, emptySet(), emptySet(), null)
 
         }
 
@@ -211,11 +221,25 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
             val s3 = state(RP(root, 0, EOR))   /* root = vr .   */
             val s4 = state(RP(E, 0, EOR))      /* E = root .   */
             val s5 = state(RP(S, 0, EOR))      /* S = E .   */
-            val s6 = state(RP(div, 0, 1),
-                           RP(add, 0, 1)) /* div = E . '/' ... | div = E . '+' ...  */
-            val s7 = state(RP(G,0,EOR))        /* G = S .   */
+            val s6 = state(
+                RP(div, 0, PLS),
+                RP(add, 0, PLS)
+            )               /* div = [E . '/' ...]2+ | div = [E . '+' ...]+2  */
+            val s7 = state(RP(d, 0, EOR))        /* '/' . */
+            val s8 = state(RP(a, 0, EOR))        /* '/' . */
+            val s9 = state(RP(div, 0, PLI))    /* div = [E ... '/' . E ...]2+ */
+            val s10 = state(RP(div, 0, EOR))     /* div = [E / '/']2+ . . */
+            val s11 = state(RP(E, 1, EOR))       /* E = div . */
+            val s12 = state(RP(G, 0, EOR))        /* G = S .   */
 
-            //transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)
+            transition(null, s0, s1, WIDTH, setOf(UP, d, a), emptySet(), null)
+            transition(s0, s1, s2, HEIGHT, setOf(UP, d, a), emptySet(), null)
+            transition(s0, s2, s3, HEIGHT, setOf(UP, d, a), emptySet(), null)
+            transition(s0, s3, s4, HEIGHT, setOf(UP, d, a), emptySet(), null)
+            transition(s0, s4, s5, HEIGHT, setOf(UP, d, a), emptySet(), null)
+            transition(s0, s4, s6, HEIGHT, setOf(UP, d, a), emptySet(), null)
+            transition(s0, s5, s7, GRAFT, setOf(UP, d, a), emptySet(), null)
+            transition(s0, s7, s7, GOAL, setOf(UP, d, a), emptySet(), null)
 
         }
 
@@ -228,7 +252,29 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+            val s0 = state(RP(G, 0, SOR))      /* G = . S   */
+            val s1 = state(RP(v, 0, EOR))      /* 'v' .   */
+            val s2 = state(RP(vr, 0, EOR))     /* var = "[a-z]+" .   */
+            val s3 = state(RP(root, 0, EOR))   /* root = vr .   */
+            val s4 = state(RP(E, 0, EOR))      /* E = root .   */
+            val s5 = state(RP(S, 0, EOR))      /* S = E .   */
+            val s6 = state(
+                RP(div, 0, PLS),
+                RP(add, 0, PLS)
+            )               /* div = [E . '/' ...]2+ | div = [E . '+' ...]+2  */
+            val s7 = state(RP(G, 0, EOR))        /* G = S .   */
+            val s8 = state(RP(d, 0, EOR))        /* '/' . */
+            val s9 = state(RP(a, 0, EOR))        /* '/' . */
+            val s10 = state(RP(div, 0, PLI))    /* div = [E ... '/' . E ...]2+ */
+            val s11 = state(RP(add, 0, PLI))     /* add = [E ... '+' . E ...]2+ */
+            val s12 = state(RP(div, 0, EOR))     /* div = [E / '/']2+ . . */
+            val s13 = state(RP(add, 0, EOR))     /* add = [E / '+']2+ . . */
+            val s14 = state(RP(E, 1, EOR))       /* E = div . */
+            val s15 = state(RP(E, 2, EOR))       /* E = add . */
 
+            transition(null, s0, s1, HEIGHT, setOf(UP, d, a), emptySet(), null)
+            transition(s0, s1, s2, HEIGHT, setOf(UP, d, a), emptySet(), null)
+            transition(null, s0, s1, HEIGHT, setOf(UP, d, a), emptySet(), null)
         }
 
         AutomatonTest.assertEquals(expected, actual)

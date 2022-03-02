@@ -19,7 +19,6 @@ package net.akehurst.language.agl.automaton
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
@@ -33,31 +32,27 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
     // S = C C ;
     // C = C1 | d ;
     // C1 = c C ;
-    private companion object {
-        val rrs = runtimeRuleSet {
-            concatenation("S") { ref("C"); ref("C") }
-            choice("C", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                ref("C1")
-                literal("d")
-            }
-            concatenation("C1") { literal("c"); ref("C") }
+    // must be fresh per test or automaton is not correct for different parses (due to caching)
+    private val rrs = runtimeRuleSet {
+        concatenation("S") { ref("C"); ref("C") }
+        choice("C", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            ref("C1")
+            literal("d")
         }
-
-        val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-
-        val C = rrs.findRuntimeRule("C")
-        val C1 = rrs.findRuntimeRule("C1")
-        val T_c = rrs.findRuntimeRule("'c'")
-        val T_d = rrs.findRuntimeRule("'d'")
-        val G = SM.startState.runtimeRules.first()
-
-        val s0 = SM.startState
-        val s1 = SM.states[listOf(RP(T_c, 0, EOR))]
-        val s2 = SM.states[listOf(RP(T_d, 0, EOR))]
-
-        val lhs_cd = SM.createLookaheadSet(false, false, false,setOf(T_c, T_d))
+        concatenation("C1") { literal("c"); ref("C") }
     }
+
+    private val S = rrs.findRuntimeRule("S")
+    private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+
+    private val C = rrs.findRuntimeRule("C")
+    private val C1 = rrs.findRuntimeRule("C1")
+    private val T_c = rrs.findRuntimeRule("'c'")
+    private val T_d = rrs.findRuntimeRule("'d'")
+    private val G = SM.startState.runtimeRules.first()
+
+    private val lhs_cd = SM.createLookaheadSet(false, false, false, setOf(T_c, T_d))
+
 
     @Test
     override fun firstOf() {
@@ -96,13 +91,15 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
 
     @Test
     fun s0_transitions() {
-        val s0 = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1).startState
+        val s0 = SM.startState
+        val s1 = SM.createState(listOf(RP(T_c, 0, EOR)))
+        val s2 = SM.createState(listOf(RP(T_d, 0, EOR)))
 
         val actual = s0.transitions(null)
 
         val expected = listOf(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_cd, lhs_E, null) { _, _ -> true },
-                Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_cd, lhs_E, null) { _, _ -> true }
+            Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_cd, lhs_E, null) { _, _ -> true },
+            Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_cd, lhs_E, null) { _, _ -> true }
         ).toList()
         assertEquals(expected.size, actual.size)
         for (i in 0 until actual.size) {
@@ -143,13 +140,13 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
             transition(null, s0, s1, WIDTH, setOf(T_c, T_d), emptySet(), null)
             transition(null, s0, s2, WIDTH, setOf(T_c, T_d), emptySet(), null)
 
-            transition(s0, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(T_c, T_d), listOf(RP(C1, 0, 0)))
-            transition(s3, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(UP), listOf(RP(C1, 0, 0)))
-            transition(s7, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(UP), listOf(RP(C1, 0, 0)))
+            transition(s0, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(T_c, T_d)), listOf(RP(C1, 0, 0)))
+            transition(s3, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(UP)), listOf(RP(C1, 0, 0)))
+            transition(s7, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(UP)), listOf(RP(C1, 0, 0)))
 
-            transition(s3, s2, s4, HEIGHT, setOf(UP), setOf(UP), listOf(RP(C,1,0)))
-            transition(s7, s2, s4, HEIGHT, setOf(UP), setOf(UP), listOf(RP(C,1,0)))
-            transition(s0, s2, s4, HEIGHT, setOf(T_c, T_d), setOf(T_c, T_d), listOf(RP(C,1,0)))
+            transition(s3, s2, s4, HEIGHT, setOf(UP),setOf( setOf(UP)), listOf(RP(C, 1, 0)))
+            transition(s7, s2, s4, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(C, 1, 0)))
+            transition(s0, s2, s4, HEIGHT, setOf(T_c, T_d), setOf(setOf(T_c, T_d)), listOf(RP(C, 1, 0)))
 
             transition(s0, s3, s1, WIDTH, setOf(T_c, T_d), emptySet(), null)
             transition(s0, s3, s2, WIDTH, setOf(T_c, T_d), emptySet(), null)
@@ -158,20 +155,20 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
             transition(s7, s3, s1, WIDTH, setOf(T_c, T_d), emptySet(), null)
             transition(s7, s3, s2, WIDTH, setOf(UP), emptySet(), null)
 
-            transition(s3, s4, s5, GRAFT, setOf(UP), setOf(UP), listOf(RP(C1,0,1)))
-            transition(s7, s4, s8, GRAFT, setOf(UP), setOf(UP), listOf(RP(S,0,1)))
-            transition(s0, s4, s7, HEIGHT, setOf(T_c, T_d), setOf(UP), listOf(RP(S,0,0)))
+            transition(s3, s4, s5, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(C1, 0, 1)))
+            transition(s7, s4, s8, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 1)))
+            transition(s0, s4, s7, HEIGHT, setOf(T_c, T_d), setOf(setOf(UP)), listOf(RP(S, 0, 0)))
 
-            transition(s3, s5, s6, HEIGHT, setOf(UP), setOf(UP), listOf(RP(C,0,0)))
-            transition(s0, s5, s6, HEIGHT, setOf(T_c, T_d), setOf(T_c, T_d), listOf(RP(C,0,0)))
+            transition(s3, s5, s6, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(C, 0, 0)))
+            transition(s0, s5, s6, HEIGHT, setOf(T_c, T_d), setOf(setOf(T_c, T_d)), listOf(RP(C, 0, 0)))
 
-            transition(s3, s6, s5, GRAFT, setOf(UP), setOf(UP), listOf(RP(C1,0,1)))
-            transition(s0, s6, s7, HEIGHT, setOf(T_c, T_d), setOf(UP), listOf(RP(S,0,0)))
+            transition(s3, s6, s5, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(C1, 0, 1)))
+            transition(s0, s6, s7, HEIGHT, setOf(T_c, T_d), setOf(setOf(UP)), listOf(RP(S, 0, 0)))
 
             transition(s0, s7, s1, WIDTH, setOf(T_c, T_d), emptySet(), null)
             transition(s0, s7, s2, WIDTH, setOf(UP), emptySet(), null)
 
-            transition(s0, s8, s9, GRAFT, setOf(UP), setOf(UP), listOf(RP(G,0,0)))
+            transition(s0, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
 
             transition(null, s9, s9, GOAL, setOf(), setOf(), null)
         }

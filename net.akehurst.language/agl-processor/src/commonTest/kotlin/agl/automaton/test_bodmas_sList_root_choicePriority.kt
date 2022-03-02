@@ -123,7 +123,7 @@ internal class test_bodmas_sList_root_choicePriority : test_AutomatonAbstract() 
     @Test
     fun s0_transitions() {
         val s0 = SM.startState
-        val s1 = SM.states[listOf(RP(v, 0, EOR))]
+        val s1 = SM.createState(listOf(RP(v, 0, EOR)))
         val actual = s0.transitions(null)
         val expected = listOf(
             Transition(s0, s1, WIDTH, lhs_U, LookaheadSet.EMPTY, null) { _, _ -> true }
@@ -134,7 +134,7 @@ internal class test_bodmas_sList_root_choicePriority : test_AutomatonAbstract() 
     @Test
     fun s1_heightOrGraftInto_s0() {
         val s0 = SM.startState
-        val s1 = SM.states[listOf(RP(v, 0, EOR))]
+        val s1 = SM.createState(listOf(RP(v, 0, EOR)))
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
@@ -158,7 +158,7 @@ internal class test_bodmas_sList_root_choicePriority : test_AutomatonAbstract() 
         G-S-E-div2-E
          */
         val s0 = SM.startState
-        val s7 = SM.states[listOf(RP(E, 0, EOR))]
+        val s7 = SM.createState(listOf(RP(E, 0, EOR)))
         val actual = s7.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
@@ -175,17 +175,17 @@ internal class test_bodmas_sList_root_choicePriority : test_AutomatonAbstract() 
 
     @Test
     fun s0_s7_transitions() {
-        val s0 = SM.states[listOf(RP(G, 0, SOR))  ]    /* G = . S   */
-        val s1 = SM.states[listOf(RP(v, 0, EOR))]      /* 'v' .   */
-        val s2 = SM.states[listOf(RP(t, 0, EOR))]      /* 'true' .   */
-        val s3 = SM.states[listOf(RP(f, 0, EOR))]      /* 'false' .   */
-        val s4 = SM.states[listOf(RP(o, 0, EOR))]      /* '(' .   */
-        val s5 = SM.states[listOf(RP(vr, 0, EOR))]     /* var = "[a-z]+" .   */
-        val s6 = SM.states[listOf(RP(root, 0, EOR))]   /* root = vr .   */
-        val s7 = SM.states[listOf(RP(E, 0, EOR))]      /* E = root .   */
-        val s8 = SM.states[listOf(RP(S, 0, EOR))]      /* S = E .   */
-        val s9 = SM.states[listOf(RP(div, 0, SOR),RP(mul, 0, SOR),RP(add, 0, SOR),RP(sub, 0, SOR))]
-        val s10 = SM.states[listOf(RP(div, 0, PLI),RP(mul, 0, PLI),RP(add, 0, PLI),RP(sub, 0, PLI))]
+        val s0 = SM.createState(listOf(RP(G, 0, SOR)))    /* G = . S   */
+        val s1 = SM.createState(listOf(RP(v, 0, EOR)))     /* 'v' .   */
+        val s2 = SM.createState(listOf(RP(t, 0, EOR)))      /* 'true' .   */
+        val s3 = SM.createState(listOf(RP(f, 0, EOR)))      /* 'false' .   */
+        val s4 = SM.createState(listOf(RP(o, 0, EOR)))      /* '(' .   */
+        val s5 = SM.createState(listOf(RP(vr, 0, EOR)))     /* var = "[a-z]+" .   */
+        val s6 = SM.createState(listOf(RP(root, 0, EOR)))   /* root = vr .   */
+        val s7 = SM.createState(listOf(RP(E, 0, EOR)))      /* E = root .   */
+        val s8 = SM.createState(listOf(RP(S, 0, EOR)))      /* S = E .   */
+        val s9 = SM.createState(listOf(RP(div, 0, SOR),RP(mul, 0, SOR),RP(add, 0, SOR),RP(sub, 0, SOR)))
+        val s10 = SM.createState(listOf(RP(div, 0, PLI),RP(mul, 0, PLI),RP(add, 0, PLI),RP(sub, 0, PLI)))
 
         val actual = s7.transitions(s0)
         val expected = listOf(
