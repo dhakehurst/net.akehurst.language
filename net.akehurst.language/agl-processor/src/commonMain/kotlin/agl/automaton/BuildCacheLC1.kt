@@ -20,7 +20,9 @@ import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
+import net.akehurst.language.collections.LazyMapNonNull
 import net.akehurst.language.collections.MutableQueue
+import net.akehurst.language.collections.mutableQueueOf
 
 internal class ClosureItemLC1(
     val parentItem: ClosureItemLC1?, //needed for height/graft
@@ -28,8 +30,17 @@ internal class ClosureItemLC1(
     val next: RulePosition?,
     val lookaheadSet: LookaheadSetPart
 ) {
-    val allPrev: Set<ClosureItemLC1> = if (null == parentItem) mutableSetOf() else parentItem.allPrev + parentItem
+    val allPrev: Set<ClosureItemLC1> by lazy { if (null == parentItem) mutableSetOf() else parentItem.allPrev + parentItem }
 
+    val allRulePositionsButTop: List<RulePosition> by lazy {
+        if (null == parentItem) {
+            mutableListOf()
+        } else {
+            parentItem.allRulePositionsButTop + rulePosition
+        }
+    }
+
+    /*
     val prev: List<RulePosition> by lazy {
         if (null == this.parentItem) {
             emptyList<RulePosition>()
@@ -41,8 +52,8 @@ internal class ClosureItemLC1(
             listOf(x.rulePosition)
         }
     }
-
-    val hasLooped: Boolean get() = allPrev.any { this.equivalentOf(it) }
+*/
+    //val hasLooped: Boolean get() = allPrev.any { this.equivalentOf(it) }
 
     fun equivalentOf(other: ClosureItemLC1): Boolean {
         return this.rulePosition == other.rulePosition &&
@@ -105,7 +116,7 @@ internal class BuildCacheLC1(
         val done = mutableMapOf<Pair<RulePosition?, LookaheadSet>, Boolean>()
 
         //traverse down and collect closure
-        val cls = this.traverseRulePositions(ClosureItemLC1(null, G_0_0, null, LookaheadSetPart.UP))
+        //val cls = this.traverseRulePositions(ClosureItemLC1(null, G_0_0, null, LookaheadSetPart.UP))
         //calcAndCacheWidthInfo(listOf(G_0_0), cls)
         cacheStateInfo(listOf(G_0_0.atEnd()), listOf())
     }
@@ -116,7 +127,77 @@ internal class BuildCacheLC1(
         _cacheOff = true
     }
 
-    override fun stateInfo(): Set<StateInfo> = this._stateInfo.values.toSet()
+    override fun stateInfo(): Set<StateInfo> {
+        //= this._stateInfo.values.toSet()
+        // prev of startState = null
+        // closureDown(startState)
+        // FOR each RP in closure
+        //   stateX = RP.next
+        //   stateX.prev.add( startState )
+        //   IF RP.isNotAtEnd THEN
+        //     closureDown(stateX)
+        //     ...
+        data class PossibleState(val rulePositions: List<RulePosition>) {
+            val isAtEnd: Boolean = this.rulePositions.any { it.isAtEnd } //all in state should be either atEnd or notAtEnd
+            val nextStates get() = this.rulePositions.flatMap { rp -> rp.next().map { PossibleState(listOf(it)) } }.toSet()
+        }
+
+        data class RpToDo(
+            val state: PossibleState,
+            val prev: PossibleState?,
+            //      val lookaheadSet: LookaheadSetPart
+        )
+
+        val possiblePrev = LazyMapNonNull<PossibleState, MutableSet<PossibleState?>>() { mutableSetOf() }
+
+        // Enumerate all rule-positions used in state definitions
+        val allStateRPs = this.stateSet.usedRules.flatMap { rr ->
+            rr.rulePositions.filter { rp -> rp.isAtStart.not() }
+        }
+        // compute RPs merged into one state - i.e. same ?
+        val allMergedStateRps = allStateRPs.groupBy { rp -> listOf(rp) } //this.firstOf(rp, LookaheadSetPart.UP ) }.values //TODO: fix parameter to firstOf
+
+        val stateInfos = mutableSetOf<StateInfo>()
+
+        // previous of start state is null
+        val done = mutableSetOf<PossibleState>()
+        val s0 = PossibleState(this.stateSet.startState.rulePositions)
+        possiblePrev[s0].add(null)
+        val todo = mutableQueueOf(RpToDo(s0, null))
+        while (todo.isNotEmpty) {
+            val stateToDo = todo.dequeue()
+            done.add(stateToDo.state)
+            var stateRpNexts = stateToDo.state.nextStates
+            while (stateRpNexts.isNotEmpty()) {
+                stateRpNexts.forEach {
+                    possiblePrev[it].add(stateToDo.prev)
+                    if (done.contains(it).not()) {
+                        todo.enqueue(RpToDo(it, stateToDo.prev))
+                    }
+                }
+                stateRpNexts = stateRpNexts.flatMap { it.nextStates }.toSet()
+            }
+            for (rp in stateToDo.state.rulePositions) {
+                val dnCls = this.dnClosureLC1(rp)
+                //TODO: single loop!
+                val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
+                val termRps = filt.flatMap { it.rulePosition.item!!.rulePositions }.toSet()
+                val rps = filt.flatMap { cls -> cls.allRulePositionsButTop }.toSet()
+                val rpNexts = rps.flatMap { it.next() }.toSet() + termRps //.map { rpn -> this.fetchCompatibleState(listOf(rpn)) } }
+                rpNexts.forEach {
+                    val ss = PossibleState(listOf(it))
+                    possiblePrev[ss].add(stateToDo.state)
+                    if (it.runtimeRule.isNonTerminal && done.contains(ss).not()) {
+                        todo.enqueue(RpToDo(ss, stateToDo.state))
+                    }
+                }
+            }
+        }
+
+        TODO("merge states ans speed up!")
+
+        return possiblePrev.entries.map { StateInfo(it.key.rulePositions, it.value.map { it?.rulePositions ?: emptyList() }) }.toSet()
+    }
 
     override fun widthInto(fromStateRulePositions: List<RulePosition>): Set<WidthInfo> {
         return if (this._cacheOff) {
@@ -273,13 +354,14 @@ internal class BuildCacheLC1(
                 val parent = it.key[0]
                 val parentNext = it.key[1]
                 val lhs = it.value.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e.lhs) }
-                val upLhs = it.value.flatMap { it.upLhs }.toSet().fold(setOf<LookaheadSetPart>()) { acc,e -> if (acc.any { it.containsAll(e) }) acc else acc+e }
+                val upLhs = it.value.flatMap { it.upLhs }.toSet().fold(setOf<LookaheadSetPart>()) { acc, e -> if (acc.any { it.containsAll(e) }) acc else acc + e }
                 HeightGraftInfo(ancestors, parent, parentNext, lhs, upLhs)
             }
         return groupedLhs.toSet()
         //return grouped.toSet() //TODO: gives too many heads in some cases where can be grouped2
     }
 
+    /*
     // return the 'closure' of the parent.rulePosition
     private fun traverseRulePositions(parent: ClosureItemLC1): Set<RuntimeRule> {
         return when {
@@ -415,6 +497,7 @@ internal class BuildCacheLC1(
             }
         }
     }
+    */
 
     private fun dnClosureLC1(rp: RulePosition): Set<ClosureItemLC1> {
         val upLhs: LookaheadSetPart = LookaheadSetPart.UP
@@ -499,13 +582,13 @@ internal class BuildCacheLC1(
         val items = mutableSetOf<ClosureItemLC1>(topItem)
         val newItemQueue = MutableQueue<ClosureItemLC1>()
         newItemQueue.enqueue(topItem)
-        while(newItemQueue.isNotEmpty) {
+        while (newItemQueue.isNotEmpty) {
             val item = newItemQueue.dequeue()
             when {
                 item.rulePosition.isAtEnd -> Unit
                 else -> {
                     val rr = item.rulePosition.item
-                    if (null!=rr) {
+                    if (null != rr) {
                         when (rr.kind) {
                             RuntimeRuleKind.TERMINAL, RuntimeRuleKind.EMBEDDED -> Unit
                             RuntimeRuleKind.GOAL, RuntimeRuleKind.NON_TERMINAL -> {

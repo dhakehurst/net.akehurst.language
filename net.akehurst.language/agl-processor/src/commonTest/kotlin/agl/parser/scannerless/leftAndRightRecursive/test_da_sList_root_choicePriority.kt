@@ -142,22 +142,22 @@ internal class test_da_sList_root_choicePriority : test_ScanOnDemandParserAbstra
     }
 
     @Test
-    fun a_mul_b_add_c() {
-        val sentence = "a*b+c"
+    fun v_div_v_add_v() {
+        val sentence = "v/v+v"
 
         val expected = """
             S {
              expr|4 {
               add {
-                expr|3 {
-                  mul {
-                    expr { root { var { "[a-zA-Z]+" : 'a' } } }
-                    '*'
-                    expr { root { var { "[a-zA-Z]+" : 'b' } } }
+                expr|1 {
+                  div {
+                    expr { root { var { 'v' } } }
+                    '/'
+                    expr { root { var { 'v' } } }
                   }
                 }
                '+'
-               expr { root { var { "[a-zA-Z]+" : 'c' } } }
+               expr { root { var { 'v' } } }
               }
              }
             }
@@ -167,24 +167,24 @@ internal class test_da_sList_root_choicePriority : test_ScanOnDemandParserAbstra
     }
 
     @Test
-    fun a_mul_b_mul_c_add_d() {
-        val sentence = "a*b*c+d"
+    fun v_div_v_div_v_add_v() {
+        val sentence = "v/v/v+v"
 
         val expected = """
             S {
-             expr|4 {
+             expr|2 {
               add {
                 expr|3 {
-                  mul {
-                    expr { root { var { "[a-zA-Z]+" : 'a' } } }
-                    '*'
-                    expr { root { var { "[a-zA-Z]+" : 'b' } } }
-                    '*'
-                    expr { root { var { "[a-zA-Z]+" : 'c' } } }
+                  div {
+                    expr { root { var { 'v' } } }
+                    '/'
+                    expr { root { var { 'v' } } }
+                    '/'
+                    expr { root { var { 'v' } } }
                   }
                 }
                '+'
-               expr { root { var { "[a-zA-Z]+" : 'd' } } }
+               expr { root { var { 'v' } } }
               }
              }
             }
@@ -194,24 +194,24 @@ internal class test_da_sList_root_choicePriority : test_ScanOnDemandParserAbstra
     }
 
     @Test
-    fun a_add_b_mul_c_mul_d_add_f_add_g() {
-        val sentence = "a+b*c*d+f+g"
+    fun v_add_v_div_v_div_v_add_v_add_v() {
+        val sentence = "v+v/v/v+v+v"
 
         val expected = """
-         S { expr|4 { add {
-              expr { root { var { "[a-zA-Z]+" : 'a' } } }
+         S { expr|2 { add {
+              expr { root { var { 'v' } } }
               '+'
-              expr|3 { mul {
-                  expr { root { var { "[a-zA-Z]+" : 'b' } } }
-                  '*'
-                  expr { root { var { "[a-zA-Z]+" : 'c' } } }
-                  '*'
-                  expr { root { var { "[a-zA-Z]+" : 'd' } } }
+              expr|1 { div {
+                  expr { root { var { 'v' } } }
+                  '/'
+                  expr { root { var { 'v' } } }
+                  '/'
+                  expr { root { var { 'v' } } }
                 } }
               '+'
-              expr { root { var { "[a-zA-Z]+" : 'f' } } }
+              expr { root { var { 'v' } } }
               '+'
-              expr { root { var { "[a-zA-Z]+" : 'g' } } }
+              expr { root { var { 'v' } } }
             } } }
         """.trimIndent()
 
@@ -219,20 +219,20 @@ internal class test_da_sList_root_choicePriority : test_ScanOnDemandParserAbstra
     }
 
     @Test
-    fun a_add_b_add_c_add_d() {
-        val sentence = "a+b+c+c+d"
+    fun v_add_v_add_v_add_v() {
+        val sentence = "v+v+v+v+v"
 
         val expected = """
              S { expr|4 { add {
-                  expr { root { var { "[a-zA-Z]+" : 'a' } } }
+                  expr { root { var { 'v' } } }
                   '+'
-                  expr { root { var { "[a-zA-Z]+" : 'b' } } }
+                  expr { root { var { 'v' } } }
                   '+'
-                  expr { root { var { "[a-zA-Z]+" : 'c' } } }
+                  expr { root { var { 'v' } } }
                   '+'
-                  expr { root { var { "[a-zA-Z]+" : 'c' } } }
+                  expr { root { var { 'v' } } }
                   '+'
-                  expr { root { var { "[a-zA-Z]+" : 'd' } } }
+                  expr { root { var { 'v' } } }
                 } } }
         """.trimIndent()
 
@@ -241,55 +241,27 @@ internal class test_da_sList_root_choicePriority : test_ScanOnDemandParserAbstra
 
     @Test
     fun a_add_b_add_c_add_d_add_e_add_f() {
-        val sentence = "a+b+c+c+d+e+f"
+        val sentence = "v+v+v+v+v+v+v"
 
         val expected = """
          S { expr|4 { add {
-              expr { root { var { "[a-zA-Z]+" : 'a' } } }
+              expr { root { var { 'v' } } }
               '+'
-              expr { root { var { "[a-zA-Z]+" : 'b' } } }
+              expr { root { var { 'v' } } }
               '+'
-              expr { root { var { "[a-zA-Z]+" : 'c' } } }
+              expr { root { var { 'v' } } }
               '+'
-              expr { root { var { "[a-zA-Z]+" : 'c' } } }
+              expr { root { var { 'v' } } }
               '+'
-              expr { root { var { "[a-zA-Z]+" : 'd' } } }
+              expr { root { var { 'v' } } }
               '+'
-              expr { root { var { "[a-zA-Z]+" : 'e' } } }
+              expr { root { var { 'v' } } }
               '+'
-              expr { root { var { "[a-zA-Z]+" : 'f' } } }
+              expr { root { var { 'v' } } }
             } } }
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)
     }
-
-    @Test
-    fun Og_a_add_b_Cg_mul_c() {
-        val sentence = "(a+b)*c"
-
-        val expected = """
-            S { expr|3 { mul {
-              expr|1 {
-                group {
-                  '('
-                    expr|4 {
-                      add {
-                        expr { root { var { "[a-zA-Z]+" : 'a' } } }
-                        '+'
-                        expr { root { var { "[a-zA-Z]+" : 'b' } } }
-                      }
-                    }
-                  ')'
-                }
-              }
-              '*'
-              expr { root { var { "[a-zA-Z]+" : 'c' } } }
-            } } }
-        """.trimIndent()
-
-        super.test(rrs, goal, sentence, 1, expected)
-    }
-
 
 }

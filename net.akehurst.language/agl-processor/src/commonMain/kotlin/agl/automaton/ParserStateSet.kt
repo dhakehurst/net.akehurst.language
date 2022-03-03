@@ -18,9 +18,12 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.processor.AutomatonKind
+import net.akehurst.language.collections.*
+import net.akehurst.language.collections.LazyMapNonNull
 import net.akehurst.language.collections.MutableQueue
 import net.akehurst.language.collections.Stack
 import net.akehurst.language.collections.lazyMapNonNull
+import net.akehurst.language.collections.mutableQueueOf
 
 internal class ParserStateSet(
     val number: Int,
@@ -57,9 +60,7 @@ internal class ParserStateSet(
      * similar to LR(0) states
      * Lookahead on the transitions allows for equivalence to LR(1)
      */
-    private val states = lazyMapNonNull<List<RulePosition>, ParserState> {
-        ParserState(StateNumber(this.nextStateNumber++), it, this)
-    }
+    private val states = mutableMapOf<List<RulePosition>, ParserState>()
 
     val allBuiltStates: List<ParserState> get() = this.states.values.toList()
     val allBuiltTransitions: Set<Transition> get() = this.allBuiltStates.flatMap { it.outTransitions.allBuiltTransitions }.toSet()
@@ -67,13 +68,13 @@ internal class ParserStateSet(
     val startState: ParserState by lazy {
         val goalRule = RuntimeRuleSet.createGoalRule(userGoalRule)
         val goalRP = listOf(RulePosition(goalRule, 0, 0))
-        val state = this.states[goalRP]
+        val state = this.createState(goalRP)
         state
     }
     val endState: ParserState by lazy {
         val goalRule = this.startState.runtimeRules.first()
         val goalRP = listOf(RulePosition(goalRule, 0, RulePosition.END_OF_RULE))
-        val state = this.states[goalRP]
+        val state = this.createState(goalRP)
         state
     }
 
@@ -182,19 +183,26 @@ internal class ParserStateSet(
     //fun createWithParent(upLhs: LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet = this.runtimeRuleSet.createWithParent(upLhs, parentLookahead)
 
     internal fun createState(rulePositions: List<RulePosition>): ParserState {
-        return this.states[rulePositions]
+        check(this.states.contains(rulePositions).not()) { "State already created for $rulePositions" }
+        val state = ParserState(StateNumber(this.nextStateNumber++), rulePositions, this)
+        this.states[rulePositions] = state
+        return state
     }
 
-    internal fun fetchState(rulePositions: List<RulePosition>): ParserState? {
-        return this.allBuiltStates.firstOrNull { it.rulePositions == rulePositions }
-    }
+    internal fun fetchState(rulePositions: List<RulePosition>): ParserState? =
+         this.allBuiltStates.firstOrNull { it.rulePositions == rulePositions }
 
-    internal fun fetchCompatibleOrCreateState(rulePositions: List<RulePosition>): ParserState {
+
+    internal fun fetchCompatibleState(rulePositions: List<RulePosition>): ParserState? {
         val existing = this.allBuiltStates.firstOrNull {
             it.rulePositions.containsAll(rulePositions)
         }
-        return existing ?: this.states[rulePositions]
+        return existing
     }
+
+    internal fun fetchCompatibleOrCreateState(rulePositions: List<RulePosition>): ParserState =
+        fetchCompatibleState(rulePositions) ?: this.createState(rulePositions)
+
 
     internal fun createLookaheadSet(includeUP: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet {
         return when {
@@ -248,12 +256,51 @@ internal class ParserStateSet(
     }
 
     fun build(): ParserStateSet {
-        //println("Build not yet implemented")
-        this.buildCache.on()
-        buildAndTraverse1()
-        preBuilt = true
-        this.buildCache.clearAndOff()
+        if (this.preBuilt.not()) {
+            this.buildCache.on()
+            buildAndTraverse()
+            preBuilt = true
+            this.buildCache.clearAndOff()
+        } else {
+            // already built
+        }
         return this
+    }
+
+    private fun buildAndTraverse2() {
+        // prev of startState = null
+        // closureDown(startState)
+        // FOR each RP in closure
+        //   stateX = RP.next
+        //   stateX.prev.add( startState )
+        //   IF RP.isNotAtEnd THEN
+        //     closureDown(stateX)
+        //     ...
+
+        //what about merged states!
+
+        val possiblePrev = LazyMapNonNull<ParserState, MutableSet<ParserState?>>() { mutableSetOf() }
+
+        // Enumerate all rule-positions used in state definitions
+        val allStateRPs = this.usedRules.flatMap { rr ->
+            rr.rulePositions.filter { rp -> rp.isAtStart.not() }
+        }
+        // compute RPs merged into one state - i.e. same ?
+        val allMergedStateRps = allStateRPs.groupBy { rp -> this.buildCache.firstOf(rp, LookaheadSetPart.UP ) }.values //TODO: fix parameter to firstOf
+        val allMergedStates = allMergedStateRps.map { rps -> this.createState(rps) }
+
+        val stateInfos = this.buildCache.stateInfo()
+
+        // previous of start state is null
+        possiblePrev[this.startState].add(null)
+        val todo = mutableQueueOf(this.startState)
+        while (todo.isNotEmpty) {
+            val state = todo.dequeue()
+            val stateNexts = state.rulePositions.map { rp -> rp.next().map { rpn -> this.fetchCompatibleState(listOf(rpn)) } }
+            //val cls = this.buildCache.closureDownFrom(state.rulePositions)
+
+        }
+
     }
 
     private fun buildAndTraverse1() {
@@ -269,7 +316,7 @@ internal class ParserStateSet(
 
             val isLooped: Boolean
                 get() {
-                   return when {
+                    return when {
                         stack.size < 1 -> false
                         else -> {
                             val p = Pair(this.state, this.prev)
@@ -289,9 +336,9 @@ internal class ParserStateSet(
             override fun hashCode(): Int = hashCode_cache
 
             override fun equals(other: Any?): Boolean = when {
-                this===other -> true
+                this === other -> true
                 other !is StatesStack -> false
-                this.state!=other.state -> false
+                this.state != other.state -> false
                 else -> this.stack == other.stack
             }
 
@@ -334,12 +381,16 @@ internal class ParserStateSet(
     }
 
     private fun buildAndTraverse() {
-        this.buildCache.buildCaches()
-        // key = Pair<listOf(<rhs-items>)>
+       // this.buildCache.buildCaches()
         val stateInfos = this.buildCache.stateInfo()
 
         for (si in stateInfos) {
-            val state = this.states[si.rulePositions]
+            if (si.rulePositions != this.startState.rulePositions) {
+                val state = this.createState(si.rulePositions)
+            }
+        }
+        for (si in stateInfos) {
+            val state = this.fetchState(si.rulePositions)!!
             when {
                 state.isGoal -> state.transitions(null)
                 else -> {

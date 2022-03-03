@@ -39,7 +39,7 @@ class test_Java8_Singles_aglOptm {
             val grammarStr = this::class.java.getResource(path)?.readText() ?: error("file not found '$path'")
             val proc = Agl.processorFromString(grammarStr)
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
-            //proc.buildFor(forRule)//TODO: use build
+            proc.buildFor(forRule)//TODO: use build
             return proc
         }
     }

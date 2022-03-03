@@ -53,7 +53,7 @@ import net.akehurst.language.api.sppt.SPPTNode
                     }
                 }
                 when {
-                    rp.isLeaf -> when {
+                    rp.isTerminal -> when {
                         child.hasSkipData -> {
                             val skipData = this._treeData.skipChildrenAfter(child)
                             val skipChildren = skipData?.let {

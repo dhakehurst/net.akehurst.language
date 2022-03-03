@@ -28,31 +28,25 @@ import kotlin.test.assertEquals
 
 internal class test_concatenation_abc : test_AutomatonAbstract() {
     // S =  'a' 'b' 'c' ;
-    private companion object {
 
-        val rrs = runtimeRuleSet {
-            concatenation("S") { literal("a");literal("b");literal("c") }
-        }
-
-        val S = rrs.findRuntimeRule("S")
-        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val G = SM.startState.runtimeRules.first()
-
-        val a = rrs.findRuntimeRule("'a'")
-        val b = rrs.findRuntimeRule("'b'")
-        val c = rrs.findRuntimeRule("'c'")
-
-        val s0 = SM.startState
-        val s1 = SM.createState(listOf(RP(a, 0, RulePosition.END_OF_RULE)))
-        val s2 = SM.createState(listOf(RP(S, 0, 1)))
-        val s3 = SM.createState(listOf(RP(b, 0, RulePosition.END_OF_RULE)))
-        val s4 = SM.createState(listOf(RP(S, 0, 2)))
-
-        val lhs_a = SM.createLookaheadSet(false, false, false,setOf(a))
-        val lhs_b = SM.createLookaheadSet(false,false, false, setOf(b))
-        val lhs_c = SM.createLookaheadSet(false,false, false, setOf(c))
-        val lhs_aU = SM.createLookaheadSet(true,false, false, setOf(a))
+    // must be fresh per test or automaton is not correct for different parses (due to caching)
+    private val rrs = runtimeRuleSet {
+        concatenation("S") { literal("a");literal("b");literal("c") }
     }
+
+    private val S = rrs.findRuntimeRule("S")
+    private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+    private val G = SM.startState.runtimeRules.first()
+
+    private val a = rrs.findRuntimeRule("'a'")
+    private val b = rrs.findRuntimeRule("'b'")
+    private val c = rrs.findRuntimeRule("'c'")
+
+    private val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
+    private val lhs_b = SM.createLookaheadSet(false, false, false, setOf(b))
+    private val lhs_c = SM.createLookaheadSet(false, false, false, setOf(c))
+    private val lhs_aU = SM.createLookaheadSet(true, false, false, setOf(a))
+
 
     @Test
     override fun firstOf() {
@@ -85,6 +79,9 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
 
     @Test
     fun s0_transitions() {
+        val s0 = SM.startState
+        val s1 = SM.createState(listOf(RP(a, 0, RulePosition.END_OF_RULE)))
+
         val actual = s0.transitions(null)
 
         val expected = listOf(
@@ -98,6 +95,8 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
 
     @Test
     fun s1_heightOrGraftInto_s0() {
+        val s0 = SM.startState
+        val s1 = SM.createState(listOf(RP(a, 0, RulePosition.END_OF_RULE)))
 
         val actual = s1.heightOrGraftInto(s0).toList()
 
@@ -116,6 +115,10 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
 
     @Test
     fun s1_transitions_s0() {
+        val s0 = SM.startState
+        val s1 = SM.createState(listOf(RP(a, 0, RulePosition.END_OF_RULE)))
+        val s2 = SM.createState(listOf(RP(S, 0, 1)))
+
         val actual = s1.transitions(s0)
 
         val expected = listOf(
@@ -129,6 +132,11 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
 
     @Test
     fun s2_transitions_s0() {
+        val s0 = SM.startState
+        val s1 = SM.createState(listOf(RP(a, 0, RulePosition.END_OF_RULE)))
+        val s2 = SM.createState(listOf(RP(S, 0, 1)))
+        val s3 = SM.createState(listOf(RP(b, 0, RulePosition.END_OF_RULE)))
+
         val actual = s2.transitions(s0)
 
         val expected = listOf(
@@ -143,6 +151,11 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
 
     @Test
     fun s3_transitions_s2() {
+        val s0 = SM.startState
+        val s1 = SM.createState(listOf(RP(a, 0, RulePosition.END_OF_RULE)))
+        val s2 = SM.createState(listOf(RP(S, 0, 1)))
+        val s3 = SM.createState(listOf(RP(b, 0, RulePosition.END_OF_RULE)))
+        val s4 = SM.createState(listOf(RP(S, 0, 2)))
         val actual = s3.transitions(s2)
 
         val expected = listOf(
@@ -158,26 +171,26 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
     fun parse_abc() {
         val parser = ScanOnDemandParser(rrs)
         parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
-            val s0 = state(RP(G,0,SOR))
-            val s1 = state(RP(a,0,EOR))
-            val s2 = state(RP(S,0,1))
-            val s3 = state(RP(b,0,EOR))
-            val s4 = state(RP(S,0,2))
-            val s5 = state(RP(c,0,EOR))
-            val s6 = state(RP(S,0,EOR))
-            val s7 = state(RP(G,0,EOR))
+            val s0 = state(RP(G, 0, SOR))
+            val s1 = state(RP(a, 0, EOR))
+            val s2 = state(RP(S, 0, 1))
+            val s3 = state(RP(b, 0, EOR))
+            val s4 = state(RP(S, 0, 2))
+            val s5 = state(RP(c, 0, EOR))
+            val s6 = state(RP(S, 0, EOR))
+            val s7 = state(RP(G, 0, EOR))
 
-            transition(null, s0, s1, WIDTH, setOf(b), setOf(),null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)),listOf(RP(S,0,SOR)))
-            transition(s0, s2, s3, WIDTH, setOf(c), setOf(),null)
-            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)),listOf(RP(S,0,1)))
-            transition(s0, s4, s5, WIDTH, setOf(UP), setOf(),null)
-            transition(s4, s5, s6, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(S,0,2)))
-            transition(s0, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(G,0,0)))
-            transition(null, s7, s7, GOAL, setOf(), setOf(),null)
+            transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)
+            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), listOf(RP(S, 0, SOR)))
+            transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
+            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(S, 0, 1)))
+            transition(s0, s4, s5, WIDTH, setOf(UP), setOf(), null)
+            transition(s4, s5, s6, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 2)))
+            transition(s0, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
+            transition(null, s7, s7, GOAL, setOf(), setOf(), null)
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -188,23 +201,23 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
-            val s0 = state(RP(G,0,SOR))
-            val s1 = state(RP(a,0,EOR))
-            val s2 = state(RP(S,0,1))
-            val s3 = state(RP(b,0,EOR))
-            val s4 = state(RP(S,0,2))
-            val s5 = state(RP(c,0,EOR))
-            val s6 = state(RP(S,0,EOR))
-            val s7 = state(RP(G,0,EOR))
+            val s0 = state(RP(G, 0, SOR))
+            val s1 = state(RP(a, 0, EOR))
+            val s2 = state(RP(S, 0, 1))
+            val s3 = state(RP(b, 0, EOR))
+            val s4 = state(RP(S, 0, 2))
+            val s5 = state(RP(c, 0, EOR))
+            val s6 = state(RP(S, 0, EOR))
+            val s7 = state(RP(G, 0, EOR))
 
-            transition(null, s0, s1, WIDTH, setOf(b), setOf(),null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)),listOf(RP(S,0,SOR)))
-            transition(s0, s2, s3, WIDTH, setOf(c), setOf(),null)
-            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)),listOf(RP(S,0,1)))
-            transition(s0, s4, s5, WIDTH, setOf(UP), setOf(),null)
-            transition(s4, s5, s6, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(S,0,2)))
-            transition(s0, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(G,0,0)))
-            transition(null, s7, s7, GOAL, setOf(), setOf(),null)
+            transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)
+            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), listOf(RP(S, 0, SOR)))
+            transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
+            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(S, 0, 1)))
+            transition(s0, s4, s5, WIDTH, setOf(UP), setOf(), null)
+            transition(s4, s5, s6, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 2)))
+            transition(s0, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
+            transition(null, s7, s7, GOAL, setOf(), setOf(), null)
         }
 
         AutomatonTest.assertEquals(expected, actual)
