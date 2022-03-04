@@ -603,7 +603,7 @@ internal class RuntimeParser(
         val lhWithMatch = previous.runtimeLookaheadSet.filter {
             this.graph.isLookingAt(transition.lookaheadGuard, it, curGn.nextInputPositionAfterSkip)
         }
-        val hasLh = lhWithMatch.isNotEmpty()
+        val hasLh = lhWithMatch.isNotEmpty() //TODO: if(transition.lookaheadGuard.includesUP) {
         return if (noLookahead || hasLh) {
                 val runtimeLhs = transition.upLookahead.flatMap{ trLhs ->
                     if (trLhs.includesUP) {
@@ -631,7 +631,7 @@ internal class RuntimeParser(
             val lhWithMatch = previous.runtimeLookaheadSet.filter {
                 this.graph.isLookingAt(transition.lookaheadGuard, it, curGn.nextInputPositionAfterSkip)
             }
-            val hasLh = lhWithMatch.isNotEmpty()
+            val hasLh = lhWithMatch.isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {
             if (noLookahead || hasLh) {
                 val runtimeLhs = transition.upLookahead.flatMap{ trLhs ->
                     if (trLhs.includesUP) {

@@ -127,7 +127,9 @@ internal class BuildCacheLC1(
         _cacheOff = true
     }
 
-    override fun stateInfo(): Set<StateInfo> {
+    override fun stateInfo(): Set<StateInfo> = this.stateInfo2()
+
+    private fun stateInfo1(): Set<StateInfo> {
         //= this._stateInfo.values.toSet()
         // prev of startState = null
         // closureDown(startState)
@@ -194,9 +196,49 @@ internal class BuildCacheLC1(
             }
         }
 
-        TODO("merge states ans speed up!")
+        //TODO("merge states ans speed up!")
 
         return possiblePrev.entries.map { StateInfo(it.key.rulePositions, it.value.map { it?.rulePositions ?: emptyList() }) }.toSet()
+    }
+
+    private fun stateInfo2(): Set<StateInfo> {
+        data class PossibleState(val rulePosition: RulePosition) {
+            val isAtEnd: Boolean = this.rulePosition.isAtEnd //all in state should be either atEnd or notAtEnd
+            val nextStates get() = this.rulePosition.next().map { PossibleState(it) }.toSet()
+        }
+
+        data class RpToDo(
+            val state: PossibleState,
+            val prev: PossibleState?,
+            //      val lookaheadSet: LookaheadSetPart
+        )
+        val possiblePrev = LazyMapNonNull<PossibleState, MutableSet<PossibleState?>>() { mutableSetOf() }
+        val done = mutableSetOf<PossibleState>()
+        val s0 = PossibleState(this.stateSet.startState.rulePositions.first())
+        possiblePrev[s0].add(null)
+        val rpToDo = MutableQueue<RpToDo>()
+        val todo = mutableQueueOf(RpToDo(s0, s0))
+        while(todo.isNotEmpty) {
+            val stateToDo = todo.dequeue()
+            done.add(stateToDo.state)
+            val rule = stateToDo.state.rulePosition.item
+            if (null!=rule) {
+                val ruleRps = rule.rulePositions
+                for(ruleRp in ruleRps) {
+                    val ruleRpState = PossibleState(ruleRp)
+                    if(ruleRp.isAtStart.not()) possiblePrev[ruleRpState].add(stateToDo.prev)
+                    val nextPrev = when{
+                        ruleRp.isAtStart -> stateToDo.prev
+                        ruleRp.isAtEnd -> stateToDo.prev
+                        else -> ruleRpState
+                    }
+                    todo.enqueue(RpToDo(ruleRpState, nextPrev))
+                }
+            } else {
+                //no items for rule
+            }
+        }
+        return possiblePrev.entries.map { StateInfo(listOf(it.key.rulePosition), it.value.map { it?.let{listOf(it.rulePosition)} ?: emptyList() }) }.toSet()
     }
 
     override fun widthInto(fromStateRulePositions: List<RulePosition>): Set<WidthInfo> {
