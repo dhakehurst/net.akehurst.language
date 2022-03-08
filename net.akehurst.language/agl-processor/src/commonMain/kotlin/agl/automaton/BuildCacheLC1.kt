@@ -202,57 +202,82 @@ internal class BuildCacheLC1(
     }
 
     private fun stateInfo2(): Set<StateInfo> {
-        data class PossibleState(val rulePosition: RulePosition) {
-            val isAtEnd: Boolean = this.rulePosition.isAtEnd //all in state should be either atEnd or notAtEnd
-            val nextStates get() = this.rulePosition.next().map { PossibleState(it) }.toSet()
+        data class PossibleState(val rulePosition: RulePosition, val prev: RulePosition?, val firstOf: LookaheadSetPart, val firstOfNext: LookaheadSetPart) {
+            val isAtEnd: Boolean = this.rulePosition.isAtEnd
+            //override fun hashCode(): Int = rulePosition.hashCode()
+            //override fun equals(other: Any?): Boolean =when(other) {
+            //    !is PossibleState -> false
+            //    else -> this.rulePosition ==other.rulePosition
+            //}
+
+            override fun toString(): String = "${this.rulePosition}-prev->${prev}[${firstOfNext.fullContent.joinToString { it.tag }}]"
         }
 
         data class RpToDo(
             val state: PossibleState,
             val prev: PossibleState?,
-            //      val lookaheadSet: LookaheadSetPart
+            val parent: PossibleState?
         )
+
         val possiblePrev = LazyMapNonNull<PossibleState, MutableSet<PossibleState?>>() { mutableSetOf() }
         val done = mutableSetOf<PossibleState>()
-        val s0 = PossibleState(this.stateSet.startState.rulePositions.first())
+        val rpS0 = this.stateSet.startState.rulePositions.first()
+        val firstOfS0 = firstOf(rpS0, LookaheadSetPart.UP)
+        val s0 = PossibleState(rpS0, null, firstOfS0, LookaheadSetPart.UP)
         possiblePrev[s0].add(null)
-        val rpToDo = MutableQueue<RpToDo>()
-        val todo = mutableQueueOf(RpToDo(s0, s0))
-        while(todo.isNotEmpty) {
+        possiblePrev[PossibleState(rpS0, null, LookaheadSetPart.UP, LookaheadSetPart.EMPTY)].add(null)
+        val todo = mutableQueueOf(RpToDo(s0, s0, null))
+        while (todo.isNotEmpty) {
             val stateToDo = todo.dequeue()
+            val state = stateToDo.state
+            val parent = stateToDo.parent
+            val parentFirstOf = parent?.firstOf ?: LookaheadSetPart.UP
+            val parentFirstOfNext = parent?.firstOfNext ?: LookaheadSetPart.UP
             done.add(stateToDo.state)
+            val stateFirstOfNext = when {
+                state.isAtEnd -> stateToDo.parent?.rulePosition?.let { firstOf(it, parentFirstOfNext) } ?: LookaheadSetPart.UP
+                else -> state.rulePosition.next().map { firstOf(it, parentFirstOfNext) }.reduce { acc, it -> acc.union(it) }
+            }
             val rule = stateToDo.state.rulePosition.item
-            if (null!=rule) {
+            if (null != rule) {
                 val ruleRps = rule.rulePositions
-                for(ruleRp in ruleRps) {
-                    val ruleRpState = PossibleState(ruleRp)
-                    if(ruleRp.isAtStart.not()) possiblePrev[ruleRpState].add(stateToDo.prev)
-                    val nextPrev = when{
+                for (ruleRp in ruleRps) {
+                    val firstOf = firstOf(ruleRp, stateFirstOfNext)
+                    val firstOfNext = when {
+                        ruleRp.isAtEnd -> stateFirstOfNext
+                        else -> ruleRp.next().map { firstOf(it, stateFirstOfNext) }.reduce { acc, it -> acc.union(it) }
+                    }
+                    val ruleRpState = PossibleState(ruleRp, stateToDo.prev?.rulePosition, firstOf, firstOfNext)
+                    if (ruleRp.isAtStart.not()) possiblePrev[ruleRpState].add(stateToDo.prev)
+                    val nextPrev = when {
                         ruleRp.isAtStart -> stateToDo.prev
                         ruleRp.isAtEnd -> stateToDo.prev
                         else -> ruleRpState
                     }
-                    todo.enqueue(RpToDo(ruleRpState, nextPrev))
+                    if (done.contains(ruleRpState).not()) {
+                        todo.enqueue(RpToDo(ruleRpState, nextPrev, state))
+                    }
                 }
             } else {
                 //no items for rule
             }
         }
-        return possiblePrev.entries.map { StateInfo(listOf(it.key.rulePosition), it.value.map { it?.let{listOf(it.rulePosition)} ?: emptyList() }) }.toSet()
+        //TODO("merge states ans speed up!")
+        // need to compute transition info, because merging relies on it,
+        // merge states a and b if a.outgoing == b.outgoing.
+        // tr1==tr2 if tr2.to==tr2.to && tr1.lh==tr2.lh
+
+        return possiblePrev.entries.map { StateInfo(listOf(it.key.rulePosition), it.value.map { it?.let { listOf(it.rulePosition) } ?: emptyList() }) }.toSet()
     }
 
     override fun widthInto(fromStateRulePositions: List<RulePosition>): Set<WidthInfo> {
         return if (this._cacheOff) {
             val dnCls = fromStateRulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
-            //val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
-            //val bottomTerminals = filt.map { it.rulePosition.item!! }.toSet()
             val calc = calcAndCacheWidthInfo(fromStateRulePositions, dnCls)
             calc
         } else {
             this._widthInto[fromStateRulePositions]?.values?.toSet() ?: run {
                 val dnCls = fromStateRulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
-                //val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
-                //val bottomTerminals = filt.map { it.rulePosition.item!! }.toSet()
                 val calc = calcAndCacheWidthInfo(fromStateRulePositions, dnCls)
                 calc
             }

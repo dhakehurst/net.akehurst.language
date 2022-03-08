@@ -67,6 +67,7 @@ internal data class LookaheadSetPart(
         else -> this.fullContent.containsAll(other.fullContent)
     }
 
+    override fun toString(): String = "LHS(${this.fullContent.joinToString()})"
 }
 
 internal data class FirstOfResult(
