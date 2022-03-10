@@ -251,6 +251,9 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
+        val parser = ScanOnDemandParser(rrs)
+        val (sppt, issues) = parser.parseForGoal("S", "v/v", AutomatonKind.LOOKAHEAD_1)
+
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      /* G = . S   */
             val s1 = state(RP(v, 0, EOR))      /* 'v' .   */

@@ -63,6 +63,7 @@ internal class RuntimeRule(
             }
         }
 
+    val isGoal get() = this.kind == RuntimeRuleKind.GOAL
     val isEmptyRule get() = this.kind == RuntimeRuleKind.TERMINAL && null != this.rhsOpt && this.rhs.itemsKind == RuntimeRuleRhsItemsKind.EMPTY
     val isNonTerminal get() = this.kind == RuntimeRuleKind.NON_TERMINAL && null != this.rhsOpt
     val isChoice get()  = isNonTerminal && this.rhs.itemsKind == RuntimeRuleRhsItemsKind.CHOICE
@@ -163,16 +164,16 @@ internal class RuntimeRule(
                                 setOf(
                                     RulePosition(this, RulePosition.OPTION_SLIST_EMPTY, RulePosition.START_OF_RULE),
                                     RulePosition(this, RulePosition.OPTION_SLIST_EMPTY, RulePosition.END_OF_RULE),
-                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
                                     RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
                                     RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
                                     RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE)
                                 )
                             }
                         } else {
                             setOf(
-                                RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
                                 RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+                                RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
                                 RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
                                 RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE)
                             )

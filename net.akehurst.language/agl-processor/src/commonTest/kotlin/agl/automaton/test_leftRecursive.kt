@@ -366,8 +366,19 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+            val s0 = state(RP(G, 0, SOR))     /* {}     G = . S    */
+            val s1 = state(RP(a, 0, EOR))     /* {0,4}  a .        */
+            val s2 = state(RP(S, 0, EOR))     /* {0}    S = a .    */
+            val s3 = state(RP(G, 0, EOR))     /* {}     G = S .    */
+            val s4 = state(RP(S1, 0, 1)) /* {0}    S1 = S . a */
+            val s5 = state(RP(S1, 0, EOR))    /* {0}    S1 = S a . */
+            val s6 = state(RP(S, 1, EOR))     /* {0}    S = S1 .   */
 
-
+            transition(null, s0, s1, WIDTH, setOf(UP,a), emptySet(),null)
+            transition(s0, s1, s2, HEIGHT, setOf(UP,a), setOf(setOf(UP),setOf(a)), listOf(RP(S,0,SOR)))
+            transition(s0, s2, s4, HEIGHT, setOf(a), setOf(setOf(UP),setOf(a)),listOf(RP(S1,0,SOR)))
+            transition(s0, s2, s5, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(G,0,SOR)))
+            transition(null, s5, s5, GOAL, emptySet(), emptySet(),null)
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -377,8 +388,17 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+        val parser = ScanOnDemandParser(rrs)
+        val (sppt, issues) = parser.parseForGoal("S", "aaa", AutomatonKind.LOOKAHEAD_1)
 
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+            val s0 = state(RP(G, 0, SOR))     /* {}     G = . S    */
+            val s1 = state(RP(G, 0, EOR))     /* {}     G = S .    */
+            val s2 = state(RP(S, 0, EOR))     /* {0}    S = a .    */
+            val s3 = state(RP(S, 1, EOR))     /* {0}    S = S1 .   */
+            val s4 = state(RP(a, 0, EOR))     /* {0,5}  a .        */
+            val s5 = state(RP(S1, 0, 1)) /* {0}    S1 = S . a */
+            val s6 = state(RP(S1, 0, EOR))    /* {0}    S1 = S a . */
         }
 
         AutomatonTest.assertEquals(expected, actual)
