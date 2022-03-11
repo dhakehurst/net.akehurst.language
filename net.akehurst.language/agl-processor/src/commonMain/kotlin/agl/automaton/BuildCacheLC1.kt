@@ -109,15 +109,25 @@ internal class BuildCacheLC1(
             val mergedTransInfo: Set<PossibleTransInfo> by lazy {
                 val tis = this.outTransInfo.values.flatten().toSet()
                 val wtis = tis.filter { it.action == Transition.ParseAction.WIDTH }
+                val etis = tis.filter { it.action == Transition.ParseAction.EMBED }
                 val htis = tis.filter { it.action == Transition.ParseAction.HEIGHT }
                 val gtis = tis.filter { it.action == Transition.ParseAction.GRAFT }
 
                 val groupedWtis = wtis.groupBy { it.firstOf }
+                val groupedEtis = etis.groupBy { it.firstOf }
                 val groupedHtis = htis.groupBy { it.parent }
                 val groupedGtis = gtis.groupBy { it.parent }
 
                 val mergedWtis = groupedWtis.map { me ->
-                    val prev = me.value.flatMap { it.prev }
+                    val prev = me.value.flatMap { it.prev }.toSet().toList()
+                    val action = Transition.ParseAction.WIDTH
+                    val parent = null // not needed for WIDTH
+                    val firstOf = me.key
+                    val lookaheadSet = me.value.map { it.lookaheadSet }.reduce { acc, it -> acc.union(it) }
+                    PossibleTransInfo(prev, parent, action, firstOf, lookaheadSet)
+                }.toSet()
+                val mergedEtis = groupedEtis.map { me ->
+                    val prev = me.value.flatMap { it.prev }.toSet().toList()
                     val action = Transition.ParseAction.WIDTH
                     val parent = null // not needed for WIDTH
                     val firstOf = me.key
@@ -125,7 +135,7 @@ internal class BuildCacheLC1(
                     PossibleTransInfo(prev, parent, action, firstOf, lookaheadSet)
                 }.toSet()
                 val mergedHtis = groupedHtis.map { me ->
-                    val prev = me.value.flatMap { it.prev }
+                    val prev = me.value.flatMap { it.prev }.toSet().toList()
                     val action = Transition.ParseAction.HEIGHT
                     val parent = me.key
                     val firstOf = LookaheadSetPart.EMPTY // not needed for H/G
@@ -133,7 +143,7 @@ internal class BuildCacheLC1(
                     PossibleTransInfo(prev, parent, action, firstOf, lookaheadSet)
                 }.toSet()
                 val mergedGtis = groupedGtis.map { me ->
-                    val prev = me.value.flatMap { it.prev }
+                    val prev = me.value.flatMap { it.prev }.toSet().toList()
                     val action = Transition.ParseAction.GRAFT
                     val parent = me.key
                     val firstOf = LookaheadSetPart.EMPTY // not needed for H/G
@@ -141,8 +151,10 @@ internal class BuildCacheLC1(
                     PossibleTransInfo(prev, parent, action, firstOf, lookaheadSet)
                 }.toSet()
 
-                mergedWtis+mergedHtis+mergedGtis
+                mergedWtis+mergedEtis+mergedHtis+mergedGtis
             }
+
+            val allPrev get() = outTransInfo.values.flatMap { it.map { it.prev } }.toSet().toList()
 
             fun setPrevInfo(prev: RulePosition?, parent: PossibleState?, firstOf: LookaheadSetPart, firstOfNext: LookaheadSetPart) {
                 val action = when {
@@ -208,7 +220,7 @@ internal class BuildCacheLC1(
     }
 
     override fun stateInfo(): Set<StateInfo> {
-        data class RpToDo(val state: PossibleState, val prev: PossibleState?, val parent: PossibleState?)
+        data class RpToDo(val state: PossibleState, val prev: PossibleState?, val stateFirstOfNext: LookaheadSetPart)
 
         val possibleStates = mutableMapOf<RulePosition, PossibleState>()
         val done = mutableSetOf<Pair<PossibleState, PossibleState?>>()
@@ -227,19 +239,20 @@ internal class BuildCacheLC1(
         stateGend.setPrevInfo(null, null, LookaheadSetPart.EMPTY, LookaheadSetPart.EMPTY)
 
         // Other states
-        val todo = mutableQueueOf(RpToDo(stateGstart, null, null))
+        val todo = mutableQueueOf(RpToDo(stateGstart, null, LookaheadSetPart.UP))
         //TODO speed up! by eliminating calls to firstOf
         while (todo.isNotEmpty) {
             val stateToDo = todo.dequeue()
             val state = stateToDo.state
             val prev = stateToDo.prev
-            val parent = stateToDo.parent
-            val parentFirstOfNext = parent?.firstOfNext(prev?.rulePosition) ?: LookaheadSetPart.UP
+            val stateFirstOfNext = stateToDo.stateFirstOfNext
+            //val parentFirstOfNext = parent?.firstOfNext(prev?.rulePosition) ?: LookaheadSetPart.UP
             done.add(Pair(state, prev))
-            val stateFirstOfNext = when {
-                state.isAtEnd -> stateToDo.parent?.rulePosition?.let { firstOf(it, parentFirstOfNext) } ?: LookaheadSetPart.UP
-                else -> state.rulePosition.next().map { firstOf(it, parentFirstOfNext) }.reduce { acc, it -> acc.union(it) }
-            }
+            //val stateFirstOfNext = when {
+            //    state.isAtEnd -> stateToDo.parent?.rulePosition?.let { firstOf(it, parentFirstOfNext) } ?: LookaheadSetPart.UP
+           //     else -> state.rulePosition.next().map { firstOf(it, parentFirstOfNext) }.reduce { acc, it -> acc.union(it) }
+            //}
+            //val stateFirstOfNext = state.firstOfNext(prev?.rulePosition)
             val rule = stateToDo.state.rulePosition.item
             if (null != rule) {
                 val ruleRps = rule.rulePositions
@@ -259,7 +272,7 @@ internal class BuildCacheLC1(
                         }
                         ruleRpState.setPrevInfo(thisPrev.rulePosition, state, firstOf, firstOfNext)
                         if (ruleRp.isAtStart.not()) possibleStates[ruleRp] = ruleRpState
-                        todo.enqueue(RpToDo(ruleRpState, nextPrev, state))
+                        todo.enqueue(RpToDo(ruleRpState, nextPrev, firstOfNext))
                     }
                 }
             } else {
@@ -269,18 +282,33 @@ internal class BuildCacheLC1(
 
         val mergedStates = mergeStates(possibleStates)
 
-        return possibleStates.values.map { StateInfo(listOf(it.rulePosition), it.outTransInfo.keys.map { it?.let { listOf(it) } ?: emptyList() }) }.toSet()
+        //return possibleStates.values.map { StateInfo(listOf(it.rulePosition), it.outTransInfo.keys.map { it?.let { listOf(it) } ?: emptyList() }) }.toSet()
+        return mergedStates
     }
 
-    private fun mergeStates(unmerged: Map<RulePosition, PossibleState>): Set<PossibleState> {
-        val groupedByOutgoing = unmerged.values.groupBy { it.mergedTransInfo }
+    private fun mergeStates(unmerged: Map<RulePosition, PossibleState>): Set<StateInfo> {
+        val groupedByOutgoing = unmerged.values.groupBy {
+            it.mergedTransInfo.map { ti ->
+                when(ti.action) {
+                    Transition.ParseAction.WIDTH,Transition.ParseAction.EMBED -> ti.firstOf
+                    Transition.ParseAction.HEIGHT,Transition.ParseAction.GRAFT -> ti.parent
+                    Transition.ParseAction.GOAL -> ti
+                }
+            }
+        }
 
         // val groupedByWidthTransitions = possibleStates.values.groupBy { it.outTransInfo.values.map { Pair(it.action, it.firstOfNext) } }
         //     .filter { it.value.size > 1 && it.key.all { it.first == Transition.ParseAction.WIDTH } }
 
         val groupedByHeightGraftTransitions = unmerged.values.groupBy { it.outTransInfo.values.flatMap { it.map { Pair(it.action, it.firstOf) } } }
             .filter { it.value.size > 1 && it.key.all { it.first == Transition.ParseAction.HEIGHT || it.first == Transition.ParseAction.GRAFT } }
-        return unmerged.values.toSet()
+
+        val mergedStateInfo = groupedByOutgoing.map { me ->
+            val rulePositions = me.value.map { it.rulePosition }
+            val possiblePrev = me.value.flatMap { it.allPrev }.toSet().toList()
+            StateInfo(rulePositions, possiblePrev)
+        }.toSet()
+        return mergedStateInfo
     }
 
     override fun widthInto(fromStateRulePositions: List<RulePosition>): Set<WidthInfo> {

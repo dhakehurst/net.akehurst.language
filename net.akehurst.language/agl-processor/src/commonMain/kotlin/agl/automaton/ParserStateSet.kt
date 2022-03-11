@@ -395,7 +395,7 @@ internal class ParserStateSet(
                 state.isGoal -> state.transitions(null)
                 else -> {
                     for (prevRps in si.possiblePrev) {
-                        val prev = this.states[prevRps]
+                        val prev = this.fetchCompatibleState(prevRps)
                         state.transitions(prev)
                     }
                 }
