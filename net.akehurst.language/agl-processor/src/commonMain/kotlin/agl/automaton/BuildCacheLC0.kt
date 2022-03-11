@@ -70,17 +70,6 @@ internal class BuildCacheLC0(
     //    to-state-rule-positions -> HeightGraftInfo
     private val _heightOrGraftInto = mutableMapOf<Pair<List<RulePosition>, List<RuntimeRule>>, MutableSet<HeightGraftInfo>>()
 
-    override fun buildCaches() {
-        val goalRule = this.stateSet.startState.runtimeRules.first()
-        val G_0_0 = goalRule.rulePositions.first()
-        val done = mutableSetOf<ClosureItemLC0>()
-
-        //traverse down and collect closure
-        val ci = ClosureItemLC0(null, G_0_0)
-        this.traverseRulePositions(ci)
-        cacheStateInfo(listOf(G_0_0.atEnd()), listOf())
-    }
-
     override fun clearAndOff() {
         _upClosure.clear()
         _dnClosure.clear()

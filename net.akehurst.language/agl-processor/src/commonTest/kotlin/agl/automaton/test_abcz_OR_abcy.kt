@@ -211,6 +211,12 @@ internal class test_abcz_OR_abcy : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
+        val parser = ScanOnDemandParser(rrs)
+        val (sppt, issues) = parser.parseForGoal("S", "abcy", AutomatonKind.LOOKAHEAD_1)
+        assertNotNull(sppt)
+        assertEquals(0, issues.size)
+        assertEquals(1, sppt.maxNumHeads)
+
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
 
         }

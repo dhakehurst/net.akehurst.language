@@ -109,20 +109,6 @@ internal class test_sList_compositeMulti : test_AutomatonAbstract() {
     }
 
     @Test
-    fun calcClosure_G_0_0() {
-        val cl_G = ClosureItemLC1(null, RP(G, 0, 0), RP(G, 0, 0), lhs_U.part)
-        val cl_G_So0 = ClosureItemLC1(cl_G, RP(S, 0, 0), RP(S, OLS, PLS), lhs_i.part)
-        val cl_G_So0_nl = ClosureItemLC1(cl_G_So0, RP(nl, 0, 0), RP(nl, 0, 1), lhs_i.part)
-        val cl_G_So1 = ClosureItemLC1(cl_G, RP(S, 1, 0), RP(G, 0, 0), lhs_U.part)
-TODO()
-        //val actual = SM.buildCache.calcClosure(ClosureItemLC1(null, RP(G, 0, 0), null, lhs_U))
-       // val expected = setOf(
-       //         cl_G, cl_G_So0, cl_G_So1
-       // )
-       // assertEquals(expected, actual)
-    }
-
-    @Test
     fun s0_transitions() {
         val actual = s0.transitions(null)
 

@@ -44,44 +44,43 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
     // S4 = b B a ;
     // A = d ;
     // B = d ;
-    private companion object {
 
-        val rrs = runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                ref("S1")
-                ref("S2")
-                ref("S3")
-                ref("S4")
-            }
-            concatenation("S1") { ref("A"); literal("a") }
-            concatenation("S2") { literal("b"); ref("A"); literal("c") }
-            concatenation("S3") { ref("B"); literal("c") }
-            concatenation("S4") { literal("b"); ref("B"); literal("a") }
-            concatenation("A") { literal("d") }
-            concatenation("B") { literal("d") }
+    // must be fresh per test or automaton is not correct for different parses (due to caching)
+    private val rrs = runtimeRuleSet {
+        choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            ref("S1")
+            ref("S2")
+            ref("S3")
+            ref("S4")
         }
-        val S = rrs.findRuntimeRule("S")
-        val S1 = rrs.findRuntimeRule("S1")
-        val S2 = rrs.findRuntimeRule("S2")
-        val S3 = rrs.findRuntimeRule("S3")
-        val S4 = rrs.findRuntimeRule("S4")
-        val rA = rrs.findRuntimeRule("A")
-        val rB = rrs.findRuntimeRule("B")
-        val a = rrs.findRuntimeRule("'a'")
-        val b = rrs.findRuntimeRule("'b'")
-        val c = rrs.findRuntimeRule("'c'")
-        val d = rrs.findRuntimeRule("'d'")
-
-        val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val s0 = SM.startState
-        val G = s0.runtimeRules.first()
-        val s1 = SM.createState(listOf(RP(d, 0, EOR)))
-
-        val lhs_ac = SM.createLookaheadSet(false,false, false,setOf(a,c))
-        val lhs_a = SM.createLookaheadSet(false,false, false,setOf(a))
-        val lhs_c = SM.createLookaheadSet(false,false, false,setOf(c))
-        val lhs_d = SM.createLookaheadSet(false,false, false,setOf(d))
+        concatenation("S1") { ref("A"); literal("a") }
+        concatenation("S2") { literal("b"); ref("A"); literal("c") }
+        concatenation("S3") { ref("B"); literal("c") }
+        concatenation("S4") { literal("b"); ref("B"); literal("a") }
+        concatenation("A") { literal("d") }
+        concatenation("B") { literal("d") }
     }
+    private val S = rrs.findRuntimeRule("S")
+    private val S1 = rrs.findRuntimeRule("S1")
+    private val S2 = rrs.findRuntimeRule("S2")
+    private val S3 = rrs.findRuntimeRule("S3")
+    private val S4 = rrs.findRuntimeRule("S4")
+    private val rA = rrs.findRuntimeRule("A")
+    private val rB = rrs.findRuntimeRule("B")
+    private val a = rrs.findRuntimeRule("'a'")
+    private val b = rrs.findRuntimeRule("'b'")
+    private val c = rrs.findRuntimeRule("'c'")
+    private val d = rrs.findRuntimeRule("'d'")
+
+    private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+    private val s0 = SM.startState
+    private val G = s0.runtimeRules.first()
+
+    private val lhs_ac = SM.createLookaheadSet(false, false, false, setOf(a, c))
+    private val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
+    private val lhs_c = SM.createLookaheadSet(false, false, false, setOf(c))
+    private val lhs_d = SM.createLookaheadSet(false, false, false, setOf(d))
+
 
     @Test
     override fun firstOf() {
@@ -139,21 +138,6 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
     }
 
     @Test
-    fun createClosure_G00_UP() {
-        val cl_G = ClosureItemLC1(null, RP(G, 0, 0), RP(G, 0, EOR), lhs_U.part)
-        //val cl_G_S = ClosureItemLC1(cl_G, RP(S, 0, 0), RulePosition(S, 0, 1), lhs_bcU)
-        //val cl_G_S_aOpt0 = ClosureItemLC1(cl_G_S, RP(aOpt, OMI, 0), RP(aOpt, OMI, EOR), lhs_bcU)
-        //val cl_G_S_aOpt1 = ClosureItemLC1(cl_G_S, RP(aOpt, OME, 0), RP(aOpt, OME, EOR), lhs_bcU)
-
-        TODO()
-        //val actual = SM.buildCache.calcClosure(RP(G, 0, 0), lhs_U)
-        //val expected = setOf(
-        //    cl_G //, cl_G_S, cl_G_S_aOpt0, cl_G_S_aOpt1
-        //)
-        //assertEquals(expected, actual)
-    }
-
-    @Test
     fun s0_transitions() {
         val s0 = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1).startState
 
@@ -173,6 +157,7 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
 
     @Test
     fun s1_heightOrGraftInto_s0() {
+        val s1 = SM.createState(listOf(RP(d, 0, EOR)))
         val actual = s1.heightOrGraftInto(s0)
 
         assertNotNull(actual)
@@ -183,6 +168,7 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
 
     @Test
     fun s1_transitions_s0() {
+        val s1 = SM.createState(listOf(RP(d, 0, EOR)))
         val actual = s1.transitions(s0)
         val s3 = s0.stateSet.fetchCompatibleOrCreateState(listOf(RulePosition(rA, 0, RulePosition.END_OF_RULE)))
         val s4 = s0.stateSet.fetchCompatibleOrCreateState(listOf(RulePosition(rB, 0, RulePosition.END_OF_RULE)))
@@ -211,6 +197,13 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
     fun buildFor() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
+
+        val sentences = setOf("da","bdc","dc","bda")
+        val parser = ScanOnDemandParser(rrs)
+        sentences.forEach {
+            val (sppt,issues) = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
+            assertNotNull(sppt)
+        }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
@@ -249,63 +242,5 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
 
         AutomatonTest.assertEquals(expected, actual)
     }
-/*
-    @Test
-    fun transitions() {
-        // G(s0) -*-> ?
-        val s0 = rrs.startingState(S)
-        val actual_s0 = s0.transitions(null, LookaheadSet.EMPTY)
-
-        val s1 = s0.stateSet.fetch(RulePosition(b, 0, RulePosition.END_OF_RULE))
-        val s2 = s0.stateSet.fetch(RulePosition(d, 0, RulePosition.END_OF_RULE))
-        val expected_s0 = listOf<Transition>(
-                Transition(s0, s1, Transition.ParseAction.WIDTH, setOf(d), null, { _, _ -> true }),
-                Transition(s0, s2, Transition.ParseAction.WIDTH, setOf(a,c), null, { _, _ -> true })
-        )
-        assertEquals(expected_s0, actual_s0)
-
-        // G(s0) -WIDTH-> b(s1) -*-> ?
-        val actual_s0_s1 = s1.transitions(s0)
-        val s3 = s0.stateSet.fetch(RulePosition(S2, 0, 1))
-        val s4 = s0.stateSet.fetch(RulePosition(S4, 0, 1))
-        val expected_s0_s1 = listOf<Transition>(
-                Transition(s1, s3, Transition.ParseAction.HEIGHT, setOf(d), null, { _, _ -> true }),
-                Transition(s1, s4, Transition.ParseAction.HEIGHT, setOf(d), null, { _, _ -> true })
-        )
-        assertEquals(expected_s0_s1, actual_s0_s1)
-
-        // G(s0) -WIDTH-> b(s1) -HEIGHT-> S2(s3) -*-> ?
-        val actual_s0_s3 = s3.transitions(s0)
-        val expected_s0_s3 = listOf<Transition>(
-                Transition(s3, s2, Transition.ParseAction.WIDTH, setOf(c), null, { _, _ -> true })
-        )
-        assertEquals(expected_s0_s3, actual_s0_s3)
-
-        // G(s0) -WIDTH-> b(s1) -HEIGHT-> S4(s4) -*-> ?
-        val actual_s4 = s4.transitions(s0)
-        val expected_s4 = listOf<Transition>(
-                Transition(s4, s2, Transition.ParseAction.WIDTH, setOf(a), null, { _, _ -> true })
-        )
-        assertEquals(expected_s4, actual_s4)
-
-        // G(s0) -WIDTH-> d(s2) -*-> ?
-        val actual_s0_s2 = s2.transitions(s0)
-        val s5 = s0.stateSet.fetch(RulePosition(rA, 0, RulePosition.END_OF_RULE))
-        val s6 = s0.stateSet.fetch(RulePosition(rB, 0, RulePosition.END_OF_RULE))
-        val expected_s0_s2 = listOf<Transition>(
-                Transition(s2, s5, Transition.ParseAction.HEIGHT, setOf(a,c), null, { _, _ -> true }),
-                Transition(s2, s6, Transition.ParseAction.HEIGHT, setOf(a,c), null, { _, _ -> true })
-        )
-        assertEquals(expected_s0_s2, actual_s0_s2)
-
-        // G(s0) -WIDTH-> b(s1) -HEIGHT-> S2(s4) -WIDTH-> d(s2) -*-> ?
-        val actual_s4_s2 = s2.transitions(s4)
-        val expected_s4_s2 = listOf<Transition>(
-                Transition(s2, s6, Transition.ParseAction.HEIGHT, setOf(a,c), null, { _, _ -> true })
-        )
-        assertEquals(expected_s4_s2, actual_s4_s2)
-
-    }
-*/
 
 }
