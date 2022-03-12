@@ -74,10 +74,17 @@ internal data class FirstOfResult(
     val needsNext: Boolean,
     val result: LookaheadSetPart
 )
-
+internal data class TransInfo(
+    val prev:List<RulePosition>,
+    val parent:List<RulePosition>,
+    val action: Transition.ParseAction,
+    val to:List<RulePosition>,
+    val lookaheadSet: LookaheadSetPart
+)
 internal data class StateInfo(
     val rulePositions: List<RulePosition>,
-    val possiblePrev: List<List<RulePosition>>
+    val possiblePrev: List<List<RulePosition>>,
+    val possibleTrans:List<TransInfo>
 )
 
 internal data class WidthInfo(

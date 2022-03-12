@@ -98,6 +98,12 @@ internal class BuildCacheLC1(
             val firstOf: LookaheadSetPart,
             val lookaheadSet: LookaheadSetPart
         ) {
+            val to: List<RulePosition>
+                get() = when (this.action) {
+                    Transition.ParseAction.WIDTH, Transition.ParseAction.EMBED -> this.firstOf.fullContent.map { RulePosition(it, 0, RulePosition.END_OF_RULE) }
+                    Transition.ParseAction.HEIGHT, Transition.ParseAction.GRAFT -> this.parent?.rulePosition?.next()?.toList() ?: emptyList()
+                    Transition.ParseAction.GOAL -> emptyList()
+                }
         }
 
         data class PossibleState(val rulePosition: RulePosition) {
@@ -151,7 +157,7 @@ internal class BuildCacheLC1(
                     PossibleTransInfo(prev, parent, action, firstOf, lookaheadSet)
                 }.toSet()
 
-                mergedWtis+mergedEtis+mergedHtis+mergedGtis
+                mergedWtis + mergedEtis + mergedHtis + mergedGtis
             }
 
             val allPrev get() = outTransInfo.values.flatMap { it.map { it.prev } }.toSet().toList()
@@ -193,11 +199,25 @@ internal class BuildCacheLC1(
                 }
             }
 
-
             override fun toString(): String = "${this.rulePosition}{${outTransInfo.entries.joinToString { "${it.key}" }}}"
         }
 
+        val StateInfo.mergedTransInfo: Set<TransInfo>
+            get() {
+                val tis = this.possibleTrans
+                val groupedTis = tis.groupBy { Pair(it.action, it.to) }
+                val mergedTis = groupedTis.map { me ->
+                    val prev = me.value.flatMap { it.prev }.toSet().toList()
+                    val action = me.key.first
+                    val parent = me.value.flatMap { it.parent }.toSet().toList()
+                    val to = me.key.second
+                    val lookaheadSet = me.value.map { it.lookaheadSet }.reduce { acc, it -> acc.union(it) }
+                    TransInfo(prev, parent, action, to, lookaheadSet)
+                }.toSet()
+                return mergedTis
+            }
 
+        val StateInfo.allPrev: List<List<RulePosition>> get() = this.possibleTrans.map { it.prev }.toSet().toList()
     }
 
     private val _calcClosureLR0 = mutableMapOf<RulePosition, Set<RulePosition>>()
@@ -250,7 +270,7 @@ internal class BuildCacheLC1(
             done.add(Pair(state, prev))
             //val stateFirstOfNext = when {
             //    state.isAtEnd -> stateToDo.parent?.rulePosition?.let { firstOf(it, parentFirstOfNext) } ?: LookaheadSetPart.UP
-           //     else -> state.rulePosition.next().map { firstOf(it, parentFirstOfNext) }.reduce { acc, it -> acc.union(it) }
+            //     else -> state.rulePosition.next().map { firstOf(it, parentFirstOfNext) }.reduce { acc, it -> acc.union(it) }
             //}
             //val stateFirstOfNext = state.firstOfNext(prev?.rulePosition)
             val rule = stateToDo.state.rulePosition.item
@@ -287,28 +307,56 @@ internal class BuildCacheLC1(
     }
 
     private fun mergeStates(unmerged: Map<RulePosition, PossibleState>): Set<StateInfo> {
-        val groupedByOutgoing = unmerged.values.groupBy {
-            it.mergedTransInfo.map { ti ->
-                when(ti.action) {
-                    Transition.ParseAction.WIDTH,Transition.ParseAction.EMBED -> ti.firstOf
-                    Transition.ParseAction.HEIGHT,Transition.ParseAction.GRAFT -> ti.parent
-                    Transition.ParseAction.GOAL -> ti
-                }
-            }
-        }
 
-        // val groupedByWidthTransitions = possibleStates.values.groupBy { it.outTransInfo.values.map { Pair(it.action, it.firstOfNext) } }
-        //     .filter { it.value.size > 1 && it.key.all { it.first == Transition.ParseAction.WIDTH } }
-
-        val groupedByHeightGraftTransitions = unmerged.values.groupBy { it.outTransInfo.values.flatMap { it.map { Pair(it.action, it.firstOf) } } }
-            .filter { it.value.size > 1 && it.key.all { it.first == Transition.ParseAction.HEIGHT || it.first == Transition.ParseAction.GRAFT } }
-
-        val mergedStateInfo = groupedByOutgoing.map { me ->
+        val groupedByOutgoing = unmerged.values.groupBy { it.mergedTransInfo.map { ti -> Pair(ti.action, ti.to) } }
+        val mergedPossibleStates = groupedByOutgoing.map { me ->
             val rulePositions = me.value.map { it.rulePosition }
             val possiblePrev = me.value.flatMap { it.allPrev }.toSet().toList()
-            StateInfo(rulePositions, possiblePrev)
-        }.toSet()
-        return mergedStateInfo
+            val possibleTrans = me.value.flatMap {
+                it.mergedTransInfo.map {
+                    TransInfo(it.prev, it.parent?.let { listOf(it.rulePosition) } ?: emptyList(), it.action, it.to, it.lookaheadSet)
+                }
+            }.toSet().toList()
+            StateInfo(rulePositions, possiblePrev, possibleTrans)
+        }.associateBy { it.rulePositions }
+        val updatedMergedStates = mergedPossibleStates.values.map { state ->
+            val rulePositions = state.rulePositions
+            val possiblePrev = state.possiblePrev.map { pp -> mergedPossibleStates.keys.first { it.containsAll(pp) } }
+            val possibleTrans = state.possibleTrans.map { tr ->
+                val prev = mergedPossibleStates.keys.firstOrNull { it.containsAll(tr.prev) } ?: tr.prev
+                val parent = mergedPossibleStates.keys.firstOrNull { it.containsAll(tr.parent) } ?: tr.parent
+                val to = mergedPossibleStates.keys.firstOrNull { it.containsAll(tr.to) } ?: tr.to
+                TransInfo(prev, parent, tr.action, to, tr.lookaheadSet)
+            }
+            StateInfo(rulePositions, possiblePrev, possibleTrans)
+        }
+
+        var originalNumStates = unmerged.size
+        var mergedNum = updatedMergedStates.size
+        var updMergedStates = updatedMergedStates
+        while (mergedNum != originalNumStates) {
+            val grpdByOutgoing = updMergedStates.groupBy { it.mergedTransInfo.map { ti -> Pair(ti.action, ti.to) } }
+            val mgdPossibleStates = grpdByOutgoing.map { me ->
+                val rulePositions = me.value.flatMap { it.rulePositions }
+                val possiblePrev = me.value.flatMap { it.allPrev }.toSet().toList()
+                val possibleTrans = me.value.flatMap { it.mergedTransInfo }.toSet().toList()
+                StateInfo(rulePositions, possiblePrev, possibleTrans)
+            }.associateBy { it.rulePositions }
+            updMergedStates = mgdPossibleStates.values.map { state ->
+                val rulePositions = state.rulePositions
+                val possiblePrev = state.possiblePrev.map { pp -> mergedPossibleStates.keys.first { it.containsAll(pp) } }
+                val possibleTrans = state.possibleTrans.map { tr ->
+                    val prev = mergedPossibleStates.keys.firstOrNull { it.containsAll(tr.prev) } ?: tr.prev
+                    val parent = mergedPossibleStates.keys.firstOrNull { it.containsAll(tr.parent) } ?: tr.parent
+                    val to = mergedPossibleStates.keys.firstOrNull { it.containsAll(tr.to) } ?: tr.to
+                    TransInfo(prev, parent, tr.action, to, tr.lookaheadSet)
+                }
+                StateInfo(rulePositions, possiblePrev, possibleTrans)
+            }
+            originalNumStates = mergedNum
+            mergedNum = updMergedStates.size
+        }
+        return updMergedStates.toSet()//mergedStateInfo
     }
 
     override fun widthInto(fromStateRulePositions: List<RulePosition>): Set<WidthInfo> {

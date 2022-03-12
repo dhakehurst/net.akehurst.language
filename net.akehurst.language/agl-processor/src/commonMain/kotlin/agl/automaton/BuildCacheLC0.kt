@@ -100,7 +100,7 @@ internal class BuildCacheLC0(
             calc
         }
     }
-
+/*
     private fun cacheStateInfo(rulePositions: List<RulePosition>, prev: List<RulePosition>) {
         val existing = this._stateInfo[rulePositions]
         if (null == existing) {
@@ -110,7 +110,7 @@ internal class BuildCacheLC0(
             this._stateInfo[rulePositions] = StateInfo(rulePositions, pp)
         }
     }
-
+*/
     private fun calcAndCacheWidthInfo(fromRulePositions: List<RulePosition>, bottomTerminals: Set<RuntimeRule>): Set<WidthInfo> {
         val wis = calcWidthInfo(fromRulePositions, bottomTerminals)
         cacheWidthInfo(fromRulePositions, wis)
@@ -214,6 +214,7 @@ internal class BuildCacheLC0(
         return grouped.toSet() //TODO: gives too many heads in some cases where can be grouped2
     }
 
+    /*
     // return the terminals at the bottom of each closure
     private fun traverseRulePositions(parent: ClosureItemLC0): Set<RuntimeRule> {
         return when {
@@ -372,7 +373,7 @@ internal class BuildCacheLC0(
         val rp2NextItems = rp2.item//rp2.next().map { it.item }
         return sameItemsUntil && rp1NextItems == rp2NextItems
     }
-
+*/
 
     internal fun dnClosureLR0(rp: RulePosition): Set<ClosureItemLC0> {
         return if (_cacheOff) {
