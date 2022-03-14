@@ -288,6 +288,7 @@ internal class ParserState(
                             val ts = this.createEmbeddedTransition(rp, lhs)
                             __embeddedTransitions.add(ts)
                         }
+                        else -> error("should never happen")
                     }
                 }
             }

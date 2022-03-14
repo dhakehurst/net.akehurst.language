@@ -19,13 +19,11 @@ package net.akehurst.language.parser.scanondemand.examples
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.fail
 
 internal class test_AhoSetiUlman_4_54 : test_ScanOnDemandParserAbstract() {
 
@@ -34,7 +32,7 @@ internal class test_AhoSetiUlman_4_54 : test_ScanOnDemandParserAbstract() {
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("C"); ref("C") }
-            choice("C",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("C", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
                 ref("cC")
                 literal("d")
             }
@@ -47,22 +45,26 @@ internal class test_AhoSetiUlman_4_54 : test_ScanOnDemandParserAbstract() {
     fun c_fails() {
         val sentence = "c"
 
-        val (sppt,issues) = super.testFail(rrs, goal, sentence, 1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"c^",setOf("'c'","'d'"))
-        ),issues)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1, 2, 1, 1), "c^", setOf("'c'", "'d'"))
+            ), issues
+        )
     }
 
     @Test
     fun d_fails() {
         val sentence = "d"
 
-        val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"d^",setOf("'c'","'d'"))
-        ),issues)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1, 2, 1, 1), "d^", setOf("'c'", "'d'"))
+            ), issues
+        )
     }
 
 
@@ -74,21 +76,21 @@ internal class test_AhoSetiUlman_4_54 : test_ScanOnDemandParserAbstract() {
             S { C|1 { 'd' } C|1 { 'd' } }
         """.trimIndent()
 
-        super.test(rrs,goal,sentence,1,expected)
+        super.test(rrs, goal, sentence, 1, expected)
 
     }
 
 
     @Test
     fun dcd() {
-
+        fail("java.lang.OutOfMemoryError: Java heap space: failed reallocation of scalar replaced objects")
         val sentence = "dcd"
 
         val expected = """
             S { C { 'd' } C{ C|1 { 'c' C { 'd' } } } }
         """.trimIndent()
 
-        super.test(rrs, goal,sentence,1,expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
 }
