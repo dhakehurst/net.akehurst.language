@@ -20,6 +20,7 @@ import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.collections.MutableQueue
+import net.akehurst.language.collections.lazyMapNonNull
 import net.akehurst.language.collections.mutableQueueOf
 
 internal class BuildCacheLC1(
@@ -108,7 +109,10 @@ internal class BuildCacheLC1(
                 }
         }
 
-        data class PossibleState(val rulePosition: RulePosition) {
+        class PossibleState(
+            val firstOfCache: Map<RulePosition, MutableMap<RulePosition, LookaheadSetPart>>,
+            val rulePosition: RulePosition
+        ) {
             val isAtStart: Boolean = this.rulePosition.isAtStart
             val isAtEnd: Boolean = this.rulePosition.isAtEnd
 
@@ -120,10 +124,15 @@ internal class BuildCacheLC1(
                 val mergedTis = groupedTis.map { me ->
                     val prev = me.value.map { it.prev }.toSet().toList()
                     val parent = me.value.mapNotNull { it.parent?.rulePosition }.toSet().toList()
-                    val parentFirstOfNext = me.value.map { it.parentFirstOfNext }
+                    //val parentFirstOfNext = me.value.map { it.parentFirstOfNext }
+                    val parentFirstOfNext = me.value.map { tr -> tr.prev.map{tr.parent.rulePosition.next().map { this.firstOfNext(it) } }}
                     val action = me.key.first
                     val to = me.key.second
-                    val lookaheadSet = me.value.map { it.firstOfNext }.reduce { acc, it -> acc.union(it) }
+                    val lookaheadSet = when (action) {
+                        Transition.ParseAction.GOAL -> LookaheadSetPart.UP
+                        Transition.ParseAction.WIDTH, Transition.ParseAction.EMBED -> me.value.flatMap { tr -> tr.prev.map{ this.firstOfCache[tr.to.first()]!!.get(it)!! }}.reduce { acc, it -> acc.union(it) }
+                        Transition.ParseAction.HEIGHT, Transition.ParseAction.GRAFT -> me.value.flatMap { tr -> tr.prev.map{this.firstOfNext(it)} }.reduce { acc, it -> acc.union(it) }
+                    }
                     TransInfo(prev, parent, parentFirstOfNext, action, to, lookaheadSet)
                 }.toSet()
                 mergedTis
@@ -131,7 +140,7 @@ internal class BuildCacheLC1(
 
             val allPrev get() = outTransInfo.values.flatMap { it.map { it.prev } }.toSet().toList()
 
-            fun setPrevInfo(prev: RulePosition?, parent: PossibleState?, parentFirstOfNext: LookaheadSetPart, firstOf: LookaheadSetPart, firstOfNext: LookaheadSetPart, nextOf: LookaheadSetPart) {
+            fun setPrevInfo(prev: RulePosition?, parent: PossibleState?, parentFirstOfNext: LookaheadSetPart, firstOf: LookaheadSetPart, firstOfNext: LookaheadSetPart) {
                 val action = when {
                     rulePosition.runtimeRule.isGoal -> when {
                         rulePosition.isAtEnd -> Transition.ParseAction.GOAL    // RP(G,0,EOR)
@@ -155,17 +164,15 @@ internal class BuildCacheLC1(
                     outTransInfo[prev] = set
                 }
                 val prevList = prev?.let { listOf(it) } ?: emptyList()
-                set.add(PossibleTransInfo(prevList, parent, parentFirstOfNext, action, firstOf, firstOfNext, nextOf))
+                set.add(PossibleTransInfo(prevList, parent, parentFirstOfNext, action, firstOf, firstOfNext))
             }
 
-            fun firstOfNext(prev: RulePosition?): LookaheadSetPart {
-                return when {
-                    null == prev -> LookaheadSetPart.UP
-                    else -> outTransInfo.get(prev)
-                        ?.map { it.firstOfNext }
-                        ?.reduce { acc, it -> acc.union(it) } //TODO: not sure if we should merge LHs here
-                        ?: LookaheadSetPart.EMPTY
-                }
+            fun firstOfNext(prev: RulePosition?): LookaheadSetPart = this.firstOfCache[this.rulePosition]!!.get(prev)!!
+
+            override fun hashCode(): Int = this.rulePosition.hashCode()
+            override fun equals(other: Any?): Boolean = when (other) {
+                !is PossibleState -> false
+                else -> this.rulePosition == other.rulePosition
             }
 
             override fun toString(): String = "${this.rulePosition}{${outTransInfo.entries.joinToString { "${it.key}" }}}"
@@ -220,22 +227,22 @@ internal class BuildCacheLC1(
             val stateNextOfNext: LookaheadSetPart
         )
 
+        val firstOfCache = lazyMapNonNull<RulePosition, MutableMap<RulePosition, LookaheadSetPart>> { mutableMapOf() }
         val possibleStates = mutableMapOf<RulePosition, PossibleState>()
         val done = mutableSetOf<Pair<PossibleState, PossibleState?>>()
 
         // Start State [G(0,0,SOR)]
         val rpGstart = this.stateSet.startState.rulePositions.first()
-        val stateGstart = PossibleState(rpGstart)
+        val stateGstart = PossibleState(firstOfCache, rpGstart)
         possibleStates[rpGstart] = stateGstart
         val firstOfGstart = this.firstOf(rpGstart, LookaheadSetPart.UP)
-        val nextOfGstart = this.secondOf(rpGstart, LookaheadSetPart.UP, LookaheadSetPart.EMPTY)
-        stateGstart.setPrevInfo(null, null, LookaheadSetPart.EMPTY, firstOfGstart, LookaheadSetPart.UP,nextOfGstart)
+        stateGstart.setPrevInfo(null, null, LookaheadSetPart.EMPTY, firstOfGstart, LookaheadSetPart.UP)
 
         // End State [G(0,0,EOR)]
         val rpGend = rpGstart.atEnd()
-        val stateGend = PossibleState(rpGend)
+        val stateGend = PossibleState(firstOfCache, rpGend)
         possibleStates[rpGend] = stateGend
-        stateGend.setPrevInfo(null, null, LookaheadSetPart.EMPTY, LookaheadSetPart.EMPTY, LookaheadSetPart.EMPTY, LookaheadSetPart.EMPTY)
+        stateGend.setPrevInfo(null, null, LookaheadSetPart.EMPTY, LookaheadSetPart.EMPTY, LookaheadSetPart.EMPTY)
 
         // Other states
         val todo = mutableQueueOf(RpToDo(stateGstart, null, LookaheadSetPart.UP, LookaheadSetPart.EMPTY))
@@ -251,7 +258,7 @@ internal class BuildCacheLC1(
             if (null != rule) {
                 val ruleRps = rule.rulePositions
                 for (ruleRp in ruleRps) {
-                    val ruleRpState = possibleStates[ruleRp] ?: PossibleState(ruleRp)
+                    val ruleRpState = possibleStates[ruleRp] ?: PossibleState(firstOfCache, ruleRp)
                     val thisPrev = prev ?: state // ?: handles special case for [G = . S] where prev is null
                     val nextPrev = when {
                         ruleRp.isAtStart -> thisPrev
@@ -260,18 +267,10 @@ internal class BuildCacheLC1(
                     }
                     if (done.contains(Pair(ruleRpState, nextPrev)).not()) {
                         val firstOf = firstOf(ruleRp, stateFirstOfNext)
-                        val firstOfNext = when {
-                            ruleRp.isAtEnd -> stateFirstOfNext
-                            else -> ruleRp.next().map { firstOf(it, stateFirstOfNext) }.reduce { acc, it -> acc.union(it) }
-                        }
-                        val nextOf = this.secondOf(ruleRp, stateFirstOfNext, stateNextOfNext)
-                        val nextOfNext = when {
-                            ruleRp.isAtEnd -> stateNextOfNext
-                            else -> ruleRp.next().map { secondOf(it, stateFirstOfNext, stateNextOfNext) }.reduce { acc, it -> acc.union(it) }
-                        }
-                        ruleRpState.setPrevInfo(thisPrev.rulePosition, state, stateFirstOfNext, firstOf, firstOfNext, nextOf)
+                        firstOfCache[ruleRp][thisPrev.rulePosition] = firstOf
+                        ruleRpState.setPrevInfo(thisPrev.rulePosition, state, stateFirstOfNext, firstOf, firstOfNext)
                         if (ruleRp.isAtStart.not()) possibleStates[ruleRp] = ruleRpState
-                        todo.enqueue(RpToDo(ruleRpState, nextPrev, firstOfNext, nextOfNext))
+                        todo.enqueue(RpToDo(ruleRpState, nextPrev, firstOfNext))
                     }
                 }
             } else {
