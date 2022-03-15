@@ -65,6 +65,9 @@ internal class RuntimeRule(
 
     val isGoal get() = this.kind == RuntimeRuleKind.GOAL
     val isEmptyRule get() = this.kind == RuntimeRuleKind.TERMINAL && null != this.rhsOpt && this.rhs.itemsKind == RuntimeRuleRhsItemsKind.EMPTY
+    val isTerminal get() = this.kind == RuntimeRuleKind.TERMINAL
+    val isEmbedded get() = this.kind == RuntimeRuleKind.EMBEDDED
+    val isTerminalOrEmbedded get() = this.isTerminal || this.isEmbedded
     val isNonTerminal get() = this.kind == RuntimeRuleKind.NON_TERMINAL && null != this.rhsOpt
     val isChoice get()  = isNonTerminal && this.rhs.itemsKind == RuntimeRuleRhsItemsKind.CHOICE
     val isChoiceLongest get() = this.isChoice && this.rhs.choiceKind == RuntimeRuleChoiceKind.LONGEST_PRIORITY

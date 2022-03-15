@@ -70,10 +70,6 @@ internal data class LookaheadSetPart(
     override fun toString(): String = "LHS(${this.fullContent.joinToString{it.tag}})"
 }
 
-internal data class FirstOfResult(
-    val needsNext: Boolean,
-    val result: LookaheadSetPart
-)
 internal data class TransInfo(
     val prev:List<List<RulePosition>>,
     val parent:List<RulePosition>,

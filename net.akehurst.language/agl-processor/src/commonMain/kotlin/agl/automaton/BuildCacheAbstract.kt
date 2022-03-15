@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
@@ -25,6 +26,22 @@ import net.akehurst.language.api.processor.AutomatonKind
 internal abstract class BuildCacheAbstract(
     val stateSet: ParserStateSet
 ) : BuildCache {
+
+    private data class FirstOfResult(val needsFirstOfParentNext: Boolean, val result: LookaheadSetPart) {
+        fun union(other:FirstOfResult) = FirstOfResult(this.needsFirstOfParentNext||other.needsFirstOfParentNext, this.result.union(other.result))
+        fun endResult(firstOfParentNext:LookaheadSetPart) = when {
+            needsFirstOfParentNext -> result.union(firstOfParentNext)
+            else -> result
+        }
+    }
+    private data class SecondOfResult(val needsFirstOfParentNext: Boolean, val needsSecondOfParent:Boolean, val result: LookaheadSetPart) {
+        fun endResult(parentFirstOfNext: LookaheadSetPart, parentNextOf: LookaheadSetPart): LookaheadSetPart {
+            var res = result
+            if (needsFirstOfParentNext) res = res.union(parentFirstOfNext)
+            if(needsSecondOfParent) res = res.union(parentNextOf)
+            return res
+        }
+    }
 
     protected var _cacheOff = true
 
@@ -36,6 +53,9 @@ internal abstract class BuildCacheAbstract(
     }
 
     /*
+     * return the LookaheadSet for the given RulePosition.
+     * i.e. the set of all possible Terminals that would be expected in a sentence after the given RulePosition.
+     *
      * firstOf needs to iterate along a rule (calling .next()) and down (recursively stopping appropriately)
      * next() needs to be called to skip over empty rules (empty or empty lists)
     */
@@ -45,23 +65,19 @@ internal abstract class BuildCacheAbstract(
             else -> {
                 // this will iterate .next() until end of rule so no need to do it here
                 val res = firstOfRpNotEmpty(rulePosition, mutableMapOf(), BooleanArray(this.stateSet.runtimeRuleSet.runtimeRules.size))
-                when (res.needsNext) {
-                    false -> res.result
-                    else -> res.result.union(ifReachedEnd)
-                }
+                res.endResult(ifReachedEnd)
             }
         }
     }
 
-    fun firstOfRpNotEmpty(rulePosition: RulePosition, doneRp: MutableMap<RulePosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
+    private fun firstOfRpNotEmpty(rulePosition: RulePosition, doneRp: MutableMap<RulePosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
         var existing = doneRp[rulePosition]
         if (null == existing) {
             /*DEBUG*/ if (rulePosition.isAtEnd) error("Internal Error")
             var needsNext = false
             var result = LookaheadSetPart.EMPTY
-
             var rps = setOf(rulePosition)
-            while (rps.isNotEmpty()) {
+            while (rps.isNotEmpty()) { // loop here to handle empties
                 val nrps = mutableSetOf<RulePosition>()
                 for (rp in rps) {
                     //TODO: handle self recursion, i.e. multi/slist perhaps filter out rp from rp.next or need a 'done' map to results
@@ -76,16 +92,16 @@ internal abstract class BuildCacheAbstract(
                             RuntimeRuleKind.EMBEDDED -> {
                                 val embSS = item.embeddedRuntimeRuleSet!!.fetchStateSetFor(item.embeddedStartRule!!, AutomatonKind.LOOKAHEAD_1)
                                 val f =
-                                    (embSS.buildCache as BuildCacheLC1).firstOfNotEmpty(item.embeddedStartRule, doneRp, BooleanArray(item.embeddedRuntimeRuleSet.runtimeRules.size))
+                                    (embSS.buildCache as BuildCacheAbstract).firstOfNotEmpty(item.embeddedStartRule, doneRp, BooleanArray(item.embeddedRuntimeRuleSet.runtimeRules.size))
                                 result = result.union(f.result)
-                                if (f.needsNext) {
+                                if (f.needsFirstOfParentNext) {
                                     needsNext = true
                                 }
                             }
                             RuntimeRuleKind.NON_TERMINAL -> {
                                 val f = firstOfNotEmpty(item, doneRp, done)
                                 result = result.union(f.result)
-                                if (f.needsNext) nrps.addAll(rp.next())
+                                if (f.needsFirstOfParentNext) nrps.addAll(rp.next())
                             }
                         }
                     }
@@ -98,10 +114,9 @@ internal abstract class BuildCacheAbstract(
         return existing
     }
 
-    fun firstOfNotEmpty(rule: RuntimeRule, doneRp: MutableMap<RulePosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
-        //fun firstOfNotEmpty(rule: RuntimeRule): FirstOfResult {
+    private fun firstOfNotEmpty(rule: RuntimeRule, doneRp: MutableMap<RulePosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
         return when {
-            0 > rule.number -> when {
+            0 > rule.number -> when { // handle special kinds of RuntimeRule
                 RuntimeRuleSet.GOAL_RULE_NUMBER == rule.number -> TODO()
                 RuntimeRuleSet.EOT_RULE_NUMBER == rule.number -> TODO()
                 RuntimeRuleSet.SKIP_RULE_NUMBER == rule.number -> TODO()
@@ -122,7 +137,7 @@ internal abstract class BuildCacheAbstract(
         }
     }
 
-    fun firstOfNotEmptySafe(rule: RuntimeRule, doneRp: MutableMap<RulePosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
+    private fun firstOfNotEmptySafe(rule: RuntimeRule, doneRp: MutableMap<RulePosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
         var needsNext = false
         var result = LookaheadSetPart.EMPTY
         val pos = rule.rulePositionsAt[0]
@@ -135,9 +150,9 @@ internal abstract class BuildCacheAbstract(
                     RuntimeRuleKind.GOAL -> error("should never happen")
                     RuntimeRuleKind.EMBEDDED -> {
                         val embSS = item.embeddedRuntimeRuleSet!!.fetchStateSetFor(item.embeddedStartRule!!, AutomatonKind.LOOKAHEAD_1)
-                        val f = (embSS.buildCache as BuildCacheLC1).firstOfNotEmpty(item.embeddedStartRule, doneRp, BooleanArray(item.embeddedRuntimeRuleSet.runtimeRules.size))
+                        val f = (embSS.buildCache as BuildCacheAbstract).firstOfNotEmpty(item.embeddedStartRule, doneRp, BooleanArray(item.embeddedRuntimeRuleSet.runtimeRules.size))
                         result = result.union(f.result)
-                        if (f.needsNext) {
+                        if (f.needsFirstOfParentNext) {
                             needsNext = true
                         }
                     }
@@ -145,7 +160,7 @@ internal abstract class BuildCacheAbstract(
                     RuntimeRuleKind.NON_TERMINAL -> {
                         val f = firstOfRpNotEmpty(rp, doneRp, done)
                         result = result.union(f.result)
-                        needsNext = needsNext || f.needsNext
+                        needsNext = needsNext || f.needsFirstOfParentNext
                     }
                 }
             }
@@ -153,70 +168,153 @@ internal abstract class BuildCacheAbstract(
         return FirstOfResult(needsNext, result)
     }
 
-    fun nextOf(rulePosition: RulePosition, ifReachedEnd: LookaheadSetPart): LookaheadSetPart {
+    /*
+     * return the 'next' LookaheadSet for the given RulePosition.
+     * i.e. the set of all possible Terminals that would be expected in a sentence after the next Terminal of the given RulePosition.
+     * i.e. the second LookaheadSet
+     * Don't like that this is needed, but it is necessary to provide the LookaheadSet for a WIDTH transition
+     * which, in turn, needs the 'next' LookaheadSet to pass as argument to the SkipRule Parser so it knows when to terminate.
+     *
+     * a b c d e
+     *    ^ current position in sentence
+     *     ^ 'c' is the target (to) of the WIDTH transition - which is also firstOf(RulePosition)
+     *       ^ 'd' needs to be the Lookahead which is passed to the skipParser
+    */
+    fun secondOf(rulePosition: RulePosition, parentFirstOfNext: LookaheadSetPart, parentNextOf:LookaheadSetPart): LookaheadSetPart {
+        TODO("handle recursion")
         return when {
-            rulePosition.isAtEnd -> ifReachedEnd
+            rulePosition.isAtEnd -> parentNextOf
+            null!=rulePosition.item && rulePosition.item!!.isTerminalOrEmbedded -> {
+                val next = rulePosition.next()
+                next.map {firstOf(it,parentFirstOfNext)}.reduce { acc, it -> acc.union(it) }
+            }
             else -> {
                 val next = rulePosition.next()
-                next.map {
-                    when {
-                        rulePosition.isAtEnd -> ifReachedEnd
-                        else -> {
-                            val res = nextOfRpNotEmpty(rulePosition, mutableMapOf(), BooleanArray(this.stateSet.runtimeRuleSet.runtimeRules.size))
-                            when (res.needsNext) {
-                                false -> res.result
-                                else -> res.result.union(ifReachedEnd)
-                            }
-                        }
-                    }
-                }.reduce { acc, it -> acc.union(it) }
+                val firstOfNext = next.map {firstOf(it,parentFirstOfNext)}.reduce { acc, it -> acc.union(it) }
+                val nextOf = LookaheadSetPart.EMPTY // should never be needed by recursive call below
+                val rpsOfItem = rulePosition.item?.rulePositionsAt?.get(0) ?: emptySet()
+                rpsOfItem.map { secondOf(it, firstOfNext,nextOf) }.reduce { acc, it -> acc.union(it) } //FIXME
             }
         }
     }
 
-    fun nextOfRpNotEmpty(rulePosition: RulePosition, doneRp: MutableMap<RulePosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
-        var existing = doneRp[rulePosition]
-        if (null == existing) {
+     fun secondOf2(rulePosition: RulePosition, parentFirstOfNext: LookaheadSetPart, parentSecondOf:LookaheadSetPart): LookaheadSetPart {
+        return when {
+            rulePosition.isAtEnd -> parentSecondOf
+            //null!=rulePosition.item && rulePosition.item!!.isTerminalOrEmbedded -> {
+            //    //TODO check if this is done in the call to nextOfRpNotEmpty(...)
+            //    val next = rulePosition.next()
+            //    next.map {firstOf(it,parentFirstOfNext)}.reduce { acc, it -> acc.union(it) }
+            //}
+            else -> {
+                //use hashMap as we don't need ordering of LinkedHashMap
+                val res = secondOfRpNotEmpty(rulePosition, hashMapOf(), HashMap(this.stateSet.runtimeRuleSet.runtimeRules.size))
+                val result = res.endResult(parentFirstOfNext, parentSecondOf)
+                result
+            }
+        }
+    }
+
+    private fun secondOfRpNotEmpty(rulePosition: RulePosition, doneRp: MutableMap<RulePosition, SecondOfResult>, doneByRule: MutableMap<RuntimeRule, SecondOfResult>): SecondOfResult {
+        var result = doneRp[rulePosition]
+        if (null == result) {
             /*DEBUG*/ if (rulePosition.isAtEnd) error("Internal Error")
-            var needsNext = false
-            var result = LookaheadSetPart.EMPTY
+            var needsFirstOfParentNext=false
+            var needsSecondOfParent=false
+            var nextOfResult = LookaheadSetPart.EMPTY
 
             var rps = setOf(rulePosition)
-            while (rps.isNotEmpty()) {
+            while (rps.isNotEmpty()) { // loop here to handle empties
                 val nrps = mutableSetOf<RulePosition>()
                 for (rp in rps) {
                     //TODO: handle self recursion, i.e. multi/slist perhaps filter out rp from rp.next or need a 'done' map to results
                     val item = rp.item
                     when {
                         //item is null only when rp.isAtEnd
-                        null == item /*rp.isAtEnd*/ -> needsNext = true
+                        null == item /*rp.isAtEnd*/ -> needsSecondOfParent = true
                         item.isEmptyRule -> nrps.addAll(rp.next())
                         else -> when (item.kind) {
                             RuntimeRuleKind.GOAL -> TODO()
-                            RuntimeRuleKind.TERMINAL -> result = result.union(LookaheadSetPart(false, false, false, setOf(item)))
+                            RuntimeRuleKind.TERMINAL -> needsFirstOfParentNext = true
                             RuntimeRuleKind.EMBEDDED -> {
+                                //FIXME
                                 val embSS = item.embeddedRuntimeRuleSet!!.fetchStateSetFor(item.embeddedStartRule!!, AutomatonKind.LOOKAHEAD_1)
                                 val f =
-                                    (embSS.buildCache as BuildCacheLC1).firstOfNotEmpty(item.embeddedStartRule, doneRp, BooleanArray(item.embeddedRuntimeRuleSet.runtimeRules.size))
-                                result = result.union(f.result)
-                                if (f.needsNext) {
-                                    needsNext = true
+                                    (embSS.buildCache as BuildCacheAbstract).secondOfNotEmpty(item.embeddedStartRule, doneRp, HashMap(item.embeddedRuntimeRuleSet.runtimeRules.size))
+                                nextOfResult = nextOfResult.union(f.result)
+                                if (f.needsFirstOfParentNext) {
+                                    needsFirstOfParentNext = true
                                 }
                             }
                             RuntimeRuleKind.NON_TERMINAL -> {
-                                val f = nextOfNotEmpty(item, doneRp, done)
-                                result = result.union(f.result)
-                                if (f.needsNext) nrps.addAll(rp.next())
+                                val f = secondOfNotEmpty(item, doneRp, doneByRule)
+                                nextOfResult = nextOfResult.union(f.result)
+                                if (f.needsFirstOfParentNext) {
+                                    val next = rp.next().map { this.firstOf(it,) }
+                                    val f = this.firstOf()
+                                }
+                                if (f.needsSecondOfParent) nrps.addAll(rp.next())
                             }
                         }
                     }
                 }
                 rps = nrps
             }
-            existing = FirstOfResult(needsNext, result)
-            doneRp[rulePosition] = existing
+            result = SecondOfResult(needsFirstOfParentNext,needsSecondOfParent, nextOfResult)
+            doneRp[rulePosition] = result
         }
-        return existing
+        return result
+    }
+
+    private fun secondOfNotEmpty(rule: RuntimeRule, doneRp: MutableMap<RulePosition, SecondOfResult>, doneByRule: MutableMap<RuntimeRule, SecondOfResult>): SecondOfResult {
+        return when {
+            0 > rule.number -> when {
+                RuntimeRuleSet.GOAL_RULE_NUMBER == rule.number -> TODO()
+                RuntimeRuleSet.EOT_RULE_NUMBER == rule.number -> TODO()
+                RuntimeRuleSet.SKIP_RULE_NUMBER == rule.number -> TODO()
+                RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER == rule.number -> secondOfNotEmptySafe(rule, doneRp, doneByRule)
+                RuntimeRuleSet.USE_PARENT_LOOKAHEAD_RULE_NUMBER == rule.number -> TODO()
+                else -> error("unsupported rule number $rule")
+            }
+            null!=doneByRule[rule] -> doneByRule[rule]!!
+            else -> {
+                doneByRule[rule] = SecondOfResult(false,false, LookaheadSetPart.EMPTY) // place holder to mark 'doing it', stop recursion
+                val result = secondOfNotEmptySafe(rule, doneRp, doneByRule)
+                doneByRule[rule] = result
+                result
+            }
+        }
+    }
+
+    private fun secondOfNotEmptySafe(rule: RuntimeRule, doneRp: MutableMap<RulePosition, SecondOfResult>, doneByRule: MutableMap<RuntimeRule, SecondOfResult>): SecondOfResult {
+        var needsNext = false
+        var result = LookaheadSetPart.EMPTY
+        val pos = rule.rulePositionsAt[0]
+        for (rp in pos) {
+            val item = rp.item
+            when {
+                null == item -> error("should never happen")
+                item.isEmptyRule -> needsNext = true //should not happen
+                else -> when (item.kind) {
+                    RuntimeRuleKind.GOAL -> error("should never happen")
+                    RuntimeRuleKind.EMBEDDED -> {
+                        val embSS = item.embeddedRuntimeRuleSet!!.fetchStateSetFor(item.embeddedStartRule!!, AutomatonKind.LOOKAHEAD_1)
+                        val f = (embSS.buildCache as BuildCacheAbstract).firstOfNotEmpty(item.embeddedStartRule, doneRp, BooleanArray(item.embeddedRuntimeRuleSet.runtimeRules.size))
+                        result = result.union(f.result)
+                        if (f.needsFirstOfParentNext) {
+                            needsNext = true
+                        }
+                    }
+                    RuntimeRuleKind.TERMINAL -> result = result.union(LookaheadSetPart(false, false, false, setOf(item)))
+                    RuntimeRuleKind.NON_TERMINAL -> {
+                        val f = firstOfRpNotEmpty(rp, doneRp, done)
+                        result = result.union(f.result)
+                        needsNext = needsNext || f.needsFirstOfParentNext
+                    }
+                }
+            }
+        }
+        return FirstOfResult(needsNext, result)
     }
 
 }
