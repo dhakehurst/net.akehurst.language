@@ -850,7 +850,7 @@ class test_AglGrammar_item {
         )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(2, actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -879,7 +879,7 @@ class test_AglGrammar_item {
         )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(2, actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 
     @Test
@@ -970,6 +970,6 @@ class test_AglGrammar_item {
         )
         assertNotNull(actual)
         assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(2, actual.maxNumHeads)
+        assertEquals(1, actual.maxNumHeads)
     }
 }
