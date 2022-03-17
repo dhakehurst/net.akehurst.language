@@ -29,7 +29,7 @@ import test.assertEqualsWarning
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean = true) {
+internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean = false) {
 
     fun test(rrs: RuntimeRuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int, vararg expectedTrees: String): SharedPackedParseTree? {
         return this.test2(
@@ -46,6 +46,7 @@ internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean = true
         val parser = ScanOnDemandParser(rrs)
         if(build)parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
         val (actual, issues) = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
+
         assertNotNull(actual, issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(emptyList(), issues)
         val sppt = SPPTParserDefault(rrs, embeddedRuntimeRuleSets)

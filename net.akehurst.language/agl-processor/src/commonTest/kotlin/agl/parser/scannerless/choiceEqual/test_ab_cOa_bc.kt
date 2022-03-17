@@ -27,7 +27,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
+internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract(true) {
 
     // S = ab_c | a_bc;
     // ab_c = ab 'c'
@@ -121,6 +121,7 @@ internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
                 expectedNumGSSHeads = 1,
                 expectedTrees = arrayOf(expected)
         )
+        println(rrs.usedAutomatonToString("S"))
     }
 
 }

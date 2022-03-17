@@ -218,7 +218,7 @@ internal class ParserState(
         __embeddedTransitions.clear()
         __transitions.clear()
 
-        val thisIsGoalState = this.isGoal && null == previousState
+        val thisIsGoalState = this.isGoal // && null == previousState
         when {
             thisIsGoalState -> when {
                 this.rulePositions.first().isAtEnd -> { //should be only one RP !

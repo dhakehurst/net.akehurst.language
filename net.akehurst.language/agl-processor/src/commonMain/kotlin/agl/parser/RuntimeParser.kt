@@ -355,7 +355,7 @@ internal class RuntimeParser(
 
     private fun growGoalNode(gn: GrowingNode, noLookahead: Boolean) {
         //no previous, so gn must be the Goal node
-        val transitions = gn.currentState.transitions(null)
+        val transitions = gn.currentState.transitions(stateSet.startState)//null)
         for (it in transitions) {
             when (it.action) {
                 Transition.ParseAction.GOAL -> doGoal(gn)
