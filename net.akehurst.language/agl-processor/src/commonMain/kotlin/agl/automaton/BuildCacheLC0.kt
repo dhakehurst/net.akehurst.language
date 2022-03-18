@@ -82,21 +82,21 @@ internal class BuildCacheLC0(
 
     override fun stateInfo(): Set<StateInfo> = this._stateInfo.values.toSet()
 
-    override fun widthInto(fromStateRulePositions: List<RulePosition>): Set<WidthInfo> {
-        return this._widthInto[fromStateRulePositions]?.values?.toSet() ?: run {
-            val dnCls = fromStateRulePositions.flatMap { this.dnClosureLR0(it) }.toSet()
+    override fun widthInto(prevState: ParserState, fromState: ParserState): Set<WidthInfo> {
+        return this._widthInto[fromState.rulePositions]?.values?.toSet() ?: run {
+            val dnCls = fromState.rulePositions.flatMap { this.dnClosureLR0(it) }.toSet()
             val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
             val bottomTerminals = filt.map { it.rulePosition.item!! }.toSet()
-            val calc = calcAndCacheWidthInfo(fromStateRulePositions, bottomTerminals)
+            val calc = calcAndCacheWidthInfo(fromState.rulePositions, bottomTerminals)
             calc
         }
     }
 
-    override fun heightGraftInto(prevStateRulePositions: List<RulePosition>, fromStateRuntimeRules: List<RuntimeRule>): Set<HeightGraftInfo> {
-        val key = Pair(prevStateRulePositions, fromStateRuntimeRules)
+    override fun heightGraftInto(prevState: ParserState, fromStateRuntimeRules: List<RuntimeRule>): Set<HeightGraftInfo> {
+        val key = Pair(prevState.rulePositions, fromStateRuntimeRules)
         return this._heightOrGraftInto[key] ?: run {
-            val upCls = prevStateRulePositions.flatMap { this.dnClosureLR0(it) }.toSet()
-            val calc = calcAndCacheHeightOrGraftInto(prevStateRulePositions, fromStateRuntimeRules, upCls)
+            val upCls = prevState.rulePositions.flatMap { this.dnClosureLR0(it) }.toSet()
+            val calc = calcAndCacheHeightOrGraftInto(prevState.rulePositions, fromStateRuntimeRules, upCls)
             calc
         }
     }

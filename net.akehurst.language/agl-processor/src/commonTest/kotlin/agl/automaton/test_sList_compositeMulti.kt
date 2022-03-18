@@ -96,7 +96,7 @@ internal class test_sList_compositeMulti : test_AutomatonAbstract() {
     @Test
     override fun s0_widthInto() {
         val s0 = SM.startState
-        val actual = s0.widthInto(null).toList()
+        val actual = s0.widthInto(s0).toList()
 
         val expected = listOf(
             WidthInfo(RP(n, 0, EOR), lhs_ciU.part),
@@ -110,7 +110,7 @@ internal class test_sList_compositeMulti : test_AutomatonAbstract() {
 
     @Test
     fun s0_transitions() {
-        val actual = s0.transitions(null)
+        val actual = s0.transitions(s0)
 
         val expected = listOf(
                 Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_ciU, LookaheadSet.EMPTY, null) { _, _ -> true },

@@ -80,7 +80,7 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
     @Test
     override fun s0_widthInto() {
         val s0 = SM.startState
-        val actual = s0.widthInto(null).toList()
+        val actual = s0.widthInto(s0).toList()
 
         val expected = listOf(
             WidthInfo(RP(a, 0, EOR), lhs_a.part)
@@ -114,7 +114,7 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
     fun s0_transitions() {
         val s0 = SM.startState
         val s1 = SM.createState(listOf(RP(a, 0, EOR)))
-        val actual = s0.transitions(null)
+        val actual = s0.transitions(s0)
         val expected = listOf<Transition>(
             Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_a, LookaheadSet.EMPTY, null) { _, _ -> true },
             //    Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY, null) { _, _ -> true }

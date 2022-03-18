@@ -115,7 +115,7 @@ internal class test_skipRules : test_AutomatonAbstract() {
     @Test
     override fun s0_widthInto() {
         val s0 = SM.startState
-        val actual = s0.widthInto(null).toList()
+        val actual = s0.widthInto(s0).toList()
 
         val expected = listOf(
             WidthInfo(RP(a, 0, EOR), lhs_U.part)
@@ -128,7 +128,7 @@ internal class test_skipRules : test_AutomatonAbstract() {
 
     @Test
     fun sk0_widthInto() {
-        val actual = sk0.widthInto(null).toList()
+        val actual = sk0.widthInto(s0).toList()
 
         val expected = listOf(
             WidthInfo(RulePosition(skWS, 0, RulePosition.END_OF_RULE), lhs_skWCU.part),

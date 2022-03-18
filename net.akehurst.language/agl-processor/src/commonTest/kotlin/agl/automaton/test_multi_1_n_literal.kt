@@ -67,7 +67,7 @@ internal class test_multi_1_n_literal : test_AutomatonAbstract() {
     @Test
     override fun s0_widthInto() {
         val s0 = SM.startState
-        val actual = s0.widthInto(null).toList()
+        val actual = s0.widthInto(s0).toList()
 
         val expected = listOf(
             WidthInfo(RP(a,0,EOR), lhs_aU.part)

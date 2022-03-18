@@ -70,7 +70,7 @@ internal class test_multi_0_n_literal : test_AutomatonAbstract() {
     @Test
     override fun s0_widthInto() {
         val s0 = SM.startState
-        val actual = s0.widthInto(null).toList()
+        val actual = s0.widthInto(s0).toList()
 
         val expected = listOf<WidthInfo>()
         assertEquals(expected.size, actual.size)
@@ -81,7 +81,7 @@ internal class test_multi_0_n_literal : test_AutomatonAbstract() {
 
     @Test
     fun s0_transitions() {
-        val actual = s0.transitions(null)
+        val actual = s0.transitions(s0)
 
         val expected = listOf(
                 Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_aU, LookaheadSet.EMPTY, null) { _, _ -> true },

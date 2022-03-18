@@ -77,7 +77,7 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
 
     override fun s0_widthInto() {
         val s0 = SM.startState
-        val actual = s0.widthInto(null).toList()
+        val actual = s0.widthInto(s0).toList()
 
         val expected = listOf(
             WidthInfo(RP(T_c, 0, EOR), lhs_cd.part),
@@ -95,7 +95,7 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
         val s1 = SM.createState(listOf(RP(T_c, 0, EOR)))
         val s2 = SM.createState(listOf(RP(T_d, 0, EOR)))
 
-        val actual = s0.transitions(null)
+        val actual = s0.transitions(s0)
 
         val expected = listOf(
             Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_cd, lhs_E, null) { _, _ -> true },

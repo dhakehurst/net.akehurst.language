@@ -209,7 +209,7 @@ internal class BuildCacheLC1(
 
     // from-state-listOf-rule-positions -> mapOf
     //    to-state-terminal-rule -> WidthInfo
-    private val _widthInto = mutableMapOf<List<RulePosition>, MutableMap<RuntimeRule, WidthInfo>>()
+    private val _widthInto = mutableMapOf<ParserState, MutableMap<RuntimeRule, WidthInfo>>()
 
     // Pair( listOf(RulePositions-of-previous-state), listOf(RuntimeRules-of-fromState) ) -> mapOf
     //    to-state-rule-positions -> HeightGraftInfo
@@ -268,7 +268,7 @@ internal class BuildCacheLC1(
                         done.add(d)
                         //val action = calcAction(state, ruleRpState)
                         val ruleRpPrevForChildren = when {
-                            ruleRp.isAtStart -> prev
+                            ruleRp.isAtStart -> ruleRpPrev
                             else -> ruleRpState
                         }
                         //val ruleRpPrevForNonFirstChildren = when {
@@ -391,45 +391,61 @@ internal class BuildCacheLC1(
         return updMergedStates.toSet()//mergedStateInfo
     }
 
-    override fun widthInto(fromStateRulePositions: List<RulePosition>): Set<WidthInfo> {
+    override fun widthInto(prevState: ParserState, fromState: ParserState): Set<WidthInfo> {
+
         return if (this._cacheOff) {
-            val dnCls = fromStateRulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
-            val calc = calcAndCacheWidthInfo(fromStateRulePositions, dnCls)
+            val calc = calcWidthInfo(prevState, fromState)
             calc
         } else {
-            this._widthInto[fromStateRulePositions]?.values?.toSet() ?: run {
-                val dnCls = fromStateRulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
-                val calc = calcAndCacheWidthInfo(fromStateRulePositions, dnCls)
+            this._widthInto[fromState]?.values?.toSet() ?: run {
+                val calc = calcAndCacheWidthInfo(prevState, fromState)
                 calc
             }
         }
     }
 
-    override fun heightGraftInto(prevStateRulePositions: List<RulePosition>, fromStateRuntimeRules: List<RuntimeRule>): Set<HeightGraftInfo> {
+    override fun heightGraftInto(prevState: ParserState, fromStateRuntimeRules: List<RuntimeRule>): Set<HeightGraftInfo> {
         return if (this._cacheOff) {
             // have to ensure somehow that from grows into prev
             // have to do closure down from prev,
             // upCls is the closure down from prev
-            val upCls = prevStateRulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
-            val calc = calcAndCacheHeightOrGraftInto(prevStateRulePositions, fromStateRuntimeRules, upCls)
+            val upCls = prevState.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
+            val calc = calcAndCacheHeightOrGraftInto(prevState.rulePositions, fromStateRuntimeRules, upCls)
             calc
         } else {
-            val key = Pair(prevStateRulePositions, fromStateRuntimeRules)
+            val key = Pair(prevState.rulePositions, fromStateRuntimeRules)
             this._heightOrGraftInto[key]?.values?.toSet() ?: run {
-                val upCls = prevStateRulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
-                val calc = calcAndCacheHeightOrGraftInto(prevStateRulePositions, fromStateRuntimeRules, upCls)
+                val upCls = prevState.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
+                val calc = calcAndCacheHeightOrGraftInto(prevState.rulePositions, fromStateRuntimeRules, upCls)
                 calc
             }
         }
     }
 
-    private fun calcAndCacheWidthInfo(fromRulePositions: List<RulePosition>, dnCls: Set<ClosureItemLC1>): Set<WidthInfo> {
-        val wis = calcWidthInfo(fromRulePositions, dnCls)
-        cacheWidthInfo(fromRulePositions, wis)
+    private fun calcAndCacheWidthInfo(prevState: ParserState, fromState: ParserState): Set<WidthInfo> {
+        val wis = calcWidthInfo(prevState, fromState)
+        cacheWidthInfo(fromState, wis)
         return wis
     }
 
-    private fun calcWidthInfo(fromRulePositions: List<RulePosition>, dnCls: Set<ClosureItemLC1>): Set<WidthInfo> {
+    private fun calcWidthInfo(prevState: ParserState, fromState: ParserState): Set<WidthInfo> {
+        // the 'to' state is the firstOf the fromState.rulePosition
+        // if there are multiple fromState.rulePositions then they should have same firstOf or they would not be merged.
+        // after a WIDTH, fromState becomes the prevState, therefore
+        // the lookahead is the firstOf the parent of the 'to' state, in the context of the fromStateRulePositions
+        val firstOfInEmpty = this.firstOfIncEmpty(fromState.rulePositions.first(), LookaheadSetPart.EMPTY)
+        val toStateRRules = firstOf.content
+        val wis = toStateRRules.map { rr ->
+            val upCls = fromState.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
+            val upFilt = upCls.filter { rr == it.rulePosition.item }
+            val lhs = upFilt.map { it.lookaheadSet }.reduce{ acc, it -> acc.union(it) }
+            val rp = RulePosition(rr, 0, RulePosition.END_OF_RULE)
+            WidthInfo(rp, lhs)
+        }
+        return wis.toSet()
+    }
+
+    private fun calcWidthInfo1(fromRulePositions: List<RulePosition>, dnCls: Set<ClosureItemLC1>): Set<WidthInfo> {
         // lookahead comes from down closure
         val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
         val grouped = filt.groupBy { it.rulePosition.item!! }.map {
@@ -442,10 +458,10 @@ internal class BuildCacheLC1(
         return grouped
     }
 
-    private fun cacheWidthInfo(fromRulePositions: List<RulePosition>, wis: Set<WidthInfo>) {
-        val map = this._widthInto[fromRulePositions] ?: run {
+    private fun cacheWidthInfo(fromState: ParserState, wis: Set<WidthInfo>) {
+        val map = this._widthInto[fromState] ?: run {
             val x = mutableMapOf<RuntimeRule, WidthInfo>()
-            this._widthInto[fromRulePositions] = x
+            this._widthInto[fromState] = x
             x
         }
         for (wi in wis) {

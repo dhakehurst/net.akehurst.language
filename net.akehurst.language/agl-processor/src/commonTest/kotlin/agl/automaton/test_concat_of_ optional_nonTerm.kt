@@ -59,6 +59,7 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
         val T_b = rrs.findRuntimeRule("'b'")
         val E_optA = optA.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
     }
+
     @Test
     override fun firstOf() {
         listOf(
@@ -73,7 +74,7 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
     @Test
     override fun s0_widthInto() {
         val s0 = SM.startState
-        val actual = s0.widthInto(null).toList()
+        val actual = s0.widthInto(s0).toList()
         TODO()
         val expected = listOf<WidthInfo>(
 

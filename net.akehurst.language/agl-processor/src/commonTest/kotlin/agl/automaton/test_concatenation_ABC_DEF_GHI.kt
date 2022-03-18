@@ -86,7 +86,7 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
     @Test
     override fun s0_widthInto() {
         val s0 = SM.startState
-        val actual = s0.widthInto(null).toList()
+        val actual = s0.widthInto(s0).toList()
 
         val expected = listOf(
             WidthInfo(RulePosition(a, 0, RulePosition.END_OF_RULE), LHS(b))
@@ -102,7 +102,7 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
         val s0 = SM.startState
         val s1 = SM.createState(listOf(RP(a, 0, RulePosition.END_OF_RULE)))
 
-        val actual = s0.transitions(null)
+        val actual = s0.transitions(s0)
 
         val expected = listOf(
             Transition(s0, s1, Transition.ParseAction.WIDTH, LHS(b).lhs(SM), LookaheadSet.EMPTY, null) { _, _ -> true }

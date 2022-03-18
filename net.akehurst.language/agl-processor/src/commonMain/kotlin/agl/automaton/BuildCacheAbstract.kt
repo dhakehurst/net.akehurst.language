@@ -22,6 +22,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
+import net.akehurst.language.collections.lazyMapNonNull
 
 internal abstract class BuildCacheAbstract(
     val stateSet: ParserStateSet
@@ -45,11 +46,18 @@ internal abstract class BuildCacheAbstract(
 
     protected var _cacheOff = true
 
+    // RulePosition -> ( prev/context -> LookaheadSetPart )
+    private val _firstOf = lazyMapNonNull<RulePosition, MutableMap<ParserState, LookaheadSetPart>> { mutableMapOf() }
+
     //TODO: use smaller array for done, but would to map rule number!
     private val _firstOfNotEmpty = Array<FirstOfResult?>(this.stateSet.runtimeRuleSet.runtimeRules.size, { null })
 
     override fun on() {
         _cacheOff = false
+    }
+
+    fun firstOfInContext(rulePosition: RulePosition, prev:ParserState) {
+
     }
 
     /*

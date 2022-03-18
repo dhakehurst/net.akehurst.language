@@ -130,11 +130,11 @@ internal class ScanOnDemandParser(
             // compute next expected item/RuntimeRule
             when (lg.state.runtimeRules.first().kind) {
                 RuntimeRuleKind.GOAL -> {
-                    val trs = lg.state.transitions(null)
+                    val trs = lg.state.transitions(rp.stateSet.startState)
                     val exp = trs.flatMap { tr ->
                         when (tr.action) {
                             Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
-                            Transition.ParseAction.WIDTH -> lg.runtimeLookaheadSet.flatMap{lg.state.firstOf(it).fullContent}.toSet()
+                            Transition.ParseAction.WIDTH -> lg.runtimeLookaheadSet.flatMap{lg.state.firstOf(it).fullContent}.toSet() //TODO: needs prev as arg to firstOf
                             Transition.ParseAction.EMBED -> TODO()
                             Transition.ParseAction.HEIGHT -> lg.runtimeLookaheadSet.flatMap{tr.lookaheadGuard.resolveUP(it).fullContent}.toSet()
                             Transition.ParseAction.GRAFT -> prevs.flatMap {

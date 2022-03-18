@@ -55,7 +55,7 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
     @Test
     override fun s0_widthInto() {
         val s0 = SM.startState
-        val actual = s0.widthInto(null).toList()
+        val actual = s0.widthInto(s0).toList()
 
         val expected = listOf(
             WidthInfo(RulePosition(a, 0, 0), lhs_T.part)
@@ -68,7 +68,7 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
 
     @Test
     fun s0_transitions() {
-        val actual = s0.transitions(null)
+        val actual = s0.transitions(s0)
         val s1 = s0.stateSet.fetchCompatibleOrCreateState(listOf(RulePosition(a, 0, RulePosition.END_OF_RULE)))
 
         val expected = listOf(

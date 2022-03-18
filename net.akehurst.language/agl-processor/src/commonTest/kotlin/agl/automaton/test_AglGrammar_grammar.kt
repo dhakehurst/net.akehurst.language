@@ -83,7 +83,7 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
     @Test
     override fun s0_widthInto() {
         val s0 = SM.startState
-        val actual = s0.widthInto(null).toList()
+        val actual = s0.widthInto(s0).toList()
 
         val expected = listOf(
             WidthInfo(RP(T_namespace, 0, EOR), lhs_IDENTIFIER)

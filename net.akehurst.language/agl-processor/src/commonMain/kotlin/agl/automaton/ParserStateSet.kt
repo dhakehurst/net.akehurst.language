@@ -308,7 +308,7 @@ internal class ParserStateSet(
             private val hashCode_cache = arrayOf(this.state, *(prevStack.elements.toTypedArray())).contentHashCode()
 
             val stack: Stack<ParserState> = prevStack
-            val prev = stack.peekOrNull()
+            val prev = stack.peekOrNull() ?: state.stateSet.startState
 
             fun push(nextState: ParserState): StatesStack = StatesStack(this.stack.push(this.state), nextState)
             fun pushPrev(nextState: ParserState): StatesStack = StatesStack(this.stack.clone(), nextState)
@@ -391,15 +391,15 @@ internal class ParserStateSet(
         }
         for (si in stateInfos) {
             val state = this.fetchState(si.rulePositions)!!
-            when {
-                state.isGoal -> state.transitions(null)
-                else -> {
+            //when {
+               // state.isGoal -> state.transitions(null)
+               // else -> {
                     for (prevRps in si.possiblePrev) {
-                        val prev = this.fetchCompatibleState(prevRps)
+                        val prev = this.fetchCompatibleState(prevRps) ?: error("should never be null")
                         state.transitions(prev)
                     }
-                }
-            }
+              //  }
+            //}
         }
 
     }

@@ -173,7 +173,7 @@ internal class RuntimeParser(
     internal fun growWidthOnly(gn: GrowingNode, previous: Collection<GrowingNodeIndex>) {
         when (gn.runtimeRules.first().kind) { //FIXME
             RuntimeRuleKind.GOAL -> {
-                val transitions = gn.currentState.transitions(null)
+                val transitions = gn.currentState.transitions(stateSet.startState)//null)
                     .filter { tr -> tr.to.runtimeRulesSet.any { it.isEmptyRule }.not() }
                 if (transitions.isEmpty()) {
                     this.rememberForErrorComputation(gn, null) // remember for finding error info, think this never happens
@@ -369,7 +369,7 @@ internal class RuntimeParser(
 
     private fun growGoalNodeReduce(gn: GrowingNode, noLookahead: Boolean) {
         //no previous, so gn must be the Goal node
-        val transitions = gn.currentState.transitions(null)
+        val transitions = gn.currentState.transitions(stateSet.startState)//null)
         for (it in transitions) {
             when (it.action) {
                 Transition.ParseAction.GOAL -> doGoal(gn)
@@ -726,7 +726,7 @@ internal class RuntimeParser(
 
     internal fun transitionsFrom(state: ParserState, previous: Set<ParserState>?): Set<Transition> {
         return when (state.runtimeRules.first().kind) {//FIXME
-            RuntimeRuleKind.GOAL -> state.transitions(null)
+            RuntimeRuleKind.GOAL -> state.transitions(stateSet.startState)//null)
             RuntimeRuleKind.TERMINAL -> previous!!.flatMap { prevState -> state.transitions(prevState) }
             RuntimeRuleKind.NON_TERMINAL -> previous!!.flatMap { prevState -> state.transitions(prevState) }
             RuntimeRuleKind.EMBEDDED -> previous!!.flatMap { prevState -> state.transitions(prevState) }

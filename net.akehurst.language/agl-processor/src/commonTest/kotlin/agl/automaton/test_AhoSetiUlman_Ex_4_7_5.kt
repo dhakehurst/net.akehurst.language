@@ -124,7 +124,7 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
 
     override fun s0_widthInto() {
         val s0 = SM.startState
-        val actual = s0.widthInto(null).toList()
+        val actual = s0.widthInto(s0).toList()
 
         val expected = listOf(
             WidthInfo(RP(d, 0, 0), lhs_T.part),
@@ -141,7 +141,7 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
     fun s0_transitions() {
         val s0 = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1).startState
 
-        val actual = s0.transitions(null)
+        val actual = s0.transitions(s0)
 
         val s2 = s0.stateSet.fetchCompatibleOrCreateState(listOf(RulePosition(b, 0, RulePosition.END_OF_RULE)))
         val s1 = s0.stateSet.fetchCompatibleOrCreateState(listOf(RulePosition(d, 0, RulePosition.END_OF_RULE)))

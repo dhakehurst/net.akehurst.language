@@ -27,7 +27,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract(true) {
+internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
 
     // S = ab_c | a_bc;
     // ab_c = ab 'c'
