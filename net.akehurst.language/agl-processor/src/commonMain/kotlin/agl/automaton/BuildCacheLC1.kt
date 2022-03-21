@@ -311,13 +311,13 @@ internal class BuildCacheLC1(
 
     private fun mergeStates(unmerged: Map<RulePosition, PossibleState>): Set<StateInfo> {
         // merge states with transitions to the same (next) state with same action
-        val statesAtEnd = unmerged.filter { it.key.isAtEnd }
+        val statesAtEnd = unmerged.filter { it.key.isAtEnd || it.key.isGoal }
         val statesAtEndMapped = statesAtEnd.values.map { state ->
             val rulePositions = listOf(state.rulePosition)
             val possibleTrans = state.mergedTransInfo.toList()
             StateInfo(rulePositions, possibleTrans)
         }
-        val statesNotAtEnd = unmerged.filter { it.key.isAtEnd.not() }
+        val statesNotAtEnd = unmerged.filter { it.key.isAtEnd.not() && it.key.isGoal.not() }
         val groupedByOutgoing = statesNotAtEnd.values.groupBy { it.mergedTransInfo.map { ti -> Pair(ti.action, ti.to) } }
         val mergedPossibleStates = groupedByOutgoing.map { me ->
             val rulePositions = me.value.map { it.rulePosition }
@@ -350,8 +350,8 @@ internal class BuildCacheLC1(
         var mergedNum = updatedMergedStates.size
         var updMergedStates = updatedMergedStates
         while (mergedNum != originalNumStates) {
-            val atEnd = updMergedStates.filter { it.isAtEnd }
-            val nonAtEnd = updMergedStates.filter { it.isAtEnd.not() }
+            val atEnd = updMergedStates.filter { it.isAtEnd || it.isGoal }
+            val nonAtEnd = updMergedStates.filter { it.isAtEnd.not() && it.isGoal.not() }
             val grpdByOutgoing = nonAtEnd.groupBy { it.mergedTransInfo.map { ti -> Pair(ti.action, ti.to) } }
             val mgdPossibleStates = grpdByOutgoing.map { me ->
                 val rulePositions = me.value.flatMap { it.rulePositions }

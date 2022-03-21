@@ -51,11 +51,13 @@ internal class RulePosition(
 
     val identity: RuleOptionId = RuleOption(runtimeRule, option) //TODO: Make this an Int
 
-    val isAtStart = position == START_OF_RULE
-    val isAtEnd = position == END_OF_RULE
-    val isTerminal = runtimeRule.kind == RuntimeRuleKind.TERMINAL
-    val isEmbedded = runtimeRule.kind == RuntimeRuleKind.EMBEDDED
-    val isTerminalOrEmbedded = this.isTerminal || this.isEmbedded
+    val isGoal get() = this.runtimeRule.isGoal
+    val isAtStart get() = position == START_OF_RULE
+    val isAtEnd get() = position == END_OF_RULE
+    val isTerminal get() = this.runtimeRule.isTerminal
+    val isNonTerminal get() = this.runtimeRule.isNonTerminal
+    val isEmbedded get() = this.runtimeRule.isEmbedded
+    val isTerminalOrEmbedded get() = this.isTerminal || this.isEmbedded
 
     val items: List<RuntimeRule>
         get() = if (END_OF_RULE == position) {
@@ -84,9 +86,7 @@ internal class RulePosition(
 
     fun atEnd() = RulePosition(this.runtimeRule, this.option, END_OF_RULE)
 
-    fun next(): Set<RulePosition> {
-        return this.items.flatMap { this.next(it) }.toSet()
-    }
+    fun next(): Set<RulePosition> = this.items.flatMap { this.next(it) }.toSet()
 
     /**
      * itemRule is the rule we use to increment rp
