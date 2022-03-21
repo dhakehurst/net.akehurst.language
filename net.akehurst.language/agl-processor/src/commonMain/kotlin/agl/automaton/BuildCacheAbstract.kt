@@ -23,6 +23,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.collections.lazyMapNonNull
+import net.akehurst.language.collections.mutableQueueOf
 
 internal abstract class BuildCacheAbstract(
     val stateSet: ParserStateSet
@@ -47,7 +48,8 @@ internal abstract class BuildCacheAbstract(
     protected var _cacheOff = true
 
     // RulePosition -> ( prev/context -> LookaheadSetPart )
-    private val _firstOf = lazyMapNonNull<RulePosition, MutableMap<ParserState, LookaheadSetPart>> { mutableMapOf() }
+    private val _firstOfInContext = lazyMapNonNull<RulePosition, MutableMap<ParserState, LookaheadSetPart>> { mutableMapOf() }
+    private val _firstTerminal = mutableMapOf<RulePosition, List<RuntimeRule>>()
 
     //TODO: use smaller array for done, but would to map rule number!
     private val _firstOfNotEmpty = Array<FirstOfResult?>(this.stateSet.runtimeRuleSet.runtimeRules.size, { null })
@@ -56,8 +58,27 @@ internal abstract class BuildCacheAbstract(
         _cacheOff = false
     }
 
+    /**
+     * return list of first terminals expected at the given RulePosition
+     * RulePosition should never be 'atEnd' and there should always be a
+     * non-empty list of "real" terminals ('empty' terminals permitted)
+     */
+    fun firstTerminal(fromState: ParserState):List<RuntimeRule> {
+        return fromState.rulePositions.flatMap { this.firstTerminal(it) }.toSet().toList()
+    }
+
     fun firstOfInContext(rulePosition: RulePosition, prev:ParserState) {
 
+    }
+
+    private fun firstTerminal(rulePosition: RulePosition):List<RuntimeRule> {
+        val result = _firstTerminal[rulePosition]
+        return if (null!=result) {
+            result
+        } else {
+            calcResultsOfClosureDownFrom(rulePosition)
+            _firstTerminal[rulePosition] ?: error("Internal error, no firstTerminal created for $rulePosition")
+        }
     }
 
     /*
@@ -176,34 +197,27 @@ internal abstract class BuildCacheAbstract(
         return FirstOfResult(needsNext, result)
     }
 
-    /*
-     * return the 'next' LookaheadSet for the given RulePosition.
-     * i.e. the set of all possible Terminals that would be expected in a sentence after the next Terminal of the given RulePosition.
-     * i.e. the second LookaheadSet
-     * Don't like that this is needed, but it is necessary to provide the LookaheadSet for a WIDTH transition
-     * which, in turn, needs the 'next' LookaheadSet to pass as argument to the SkipRule Parser so it knows when to terminate.
-     *
-     * a b c d e
-     *    ^ current position in sentence
-     *     ^ 'c' is the target (to) of the WIDTH transition - which is also firstOf(RulePosition)
-     *       ^ 'd' needs to be the Lookahead which is passed to the skipParser
-    */
-    fun secondOf(rulePosition: RulePosition, parentFirstOfNext: LookaheadSetPart, parentNextOf:LookaheadSetPart): LookaheadSetPart {
-        return when {
-            rulePosition.isAtEnd -> parentNextOf
-            null!=rulePosition.item && rulePosition.item!!.isTerminalOrEmbedded -> {
-                val next = rulePosition.next()
-                next.map {firstOf(it,parentFirstOfNext)}.reduce { acc, it -> acc.union(it) }
-            }
-            else -> {
-                val next = rulePosition.next()
-                val firstOfNext = next.map {firstOf(it,parentFirstOfNext)}.reduce { acc, it -> acc.union(it) }
-                val nextOf = LookaheadSetPart.EMPTY // should never be needed by recursive call below
-                val rpsOfItem = rulePosition.item?.rulePositionsAt?.get(0) ?: emptySet()
-                rpsOfItem.map { secondOf(it, firstOfNext,nextOf) }.reduce { acc, it -> acc.union(it) } //FIXME
+    private fun calcResultsOfClosureDownFrom(rulePosition: RulePosition) {
+        //val done =
+        val todoList = mutableQueueOf(rulePosition)
+        while(todoList.isNotEmpty) {
+            val rp = todoList.dequeue()
+            val rule = rp.item
+            when {
+                null == rule -> Unit
+                rule.isTerminal -> this._firstTerminal[rp] = listOf(rule)
+                else -> {
+                    val childNextRulePositions1 = rule.rulePositionsAt[1]
+                    for (childNextRp in childNextRulePositions1) {
+                        todoList.enqueue(childNextRp)
+                    }
+                    val childNextRulePositions0 = rule.rulePositionsAt[0]
+                    for (childNextRp in childNextRulePositions0) {
+                        todoList.enqueue(childNextRp)
+                    }
+                }
             }
         }
     }
-
 
 }

@@ -16,14 +16,11 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
+import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.collections.*
-import net.akehurst.language.collections.LazyMapNonNull
-import net.akehurst.language.collections.MutableQueue
-import net.akehurst.language.collections.Stack
-import net.akehurst.language.collections.lazyMapNonNull
-import net.akehurst.language.collections.mutableQueueOf
 
 internal class ParserStateSet(
     val number: Int,
@@ -138,9 +135,9 @@ internal class ParserStateSet(
             return x
         }
     */
-    internal val firstTerminals = lazyMapNonNull<RulePosition, Set<RuntimeRule>> { rp ->
+    internal val firstTerminals = lazyMapNonNull<RulePosition, List<RuntimeRule>> { rp ->
         when (rp.runtimeRule.kind) {
-            RuntimeRuleKind.TERMINAL -> setOf(rp.runtimeRule)
+            RuntimeRuleKind.TERMINAL -> listOf(rp.runtimeRule)
             RuntimeRuleKind.EMBEDDED -> {
                 TODO()
             }
@@ -149,12 +146,12 @@ internal class ParserStateSet(
                     this.isSkip -> {
                         this.runtimeRuleSet.skipRules.flatMap {
                             this.runtimeRuleSet.firstTerminals[it.number].filter { this.usedTerminalRules.contains(it) }
-                        }.toSet()
+                        }.toSet().toList()
                     }
-                    else -> this.runtimeRuleSet.firstTerminals[this.userGoalRule.number].filter { this.usedTerminalRules.contains(it) }.toSet()
+                    else -> this.runtimeRuleSet.firstTerminals[this.userGoalRule.number].filter { this.usedTerminalRules.contains(it) }.toSet().toList()
                 }
-                rp.isAtEnd -> emptySet()
-                else -> emptySet()//this.possibleEndOfText
+                rp.isAtEnd -> emptyList()
+                else -> emptyList()//this.possibleEndOfText
             }
             RuntimeRuleKind.NON_TERMINAL -> {
                 this.runtimeRuleSet.firstTerminals2[rp]
@@ -190,7 +187,7 @@ internal class ParserStateSet(
     }
 
     internal fun fetchState(rulePositions: List<RulePosition>): ParserState? =
-         this.allBuiltStates.firstOrNull { it.rulePositions == rulePositions }
+        this.allBuiltStates.firstOrNull { it.rulePositions == rulePositions }
 
 
     internal fun fetchCompatibleState(rulePositions: List<RulePosition>): ParserState? {
@@ -286,7 +283,7 @@ internal class ParserStateSet(
             rr.rulePositions.filter { rp -> rp.isAtStart.not() }
         }
         // compute RPs merged into one state - i.e. same ?
-        val allMergedStateRps = allStateRPs.groupBy { rp -> this.buildCache.firstOf(rp, LookaheadSetPart.UP ) }.values //TODO: fix parameter to firstOf
+        val allMergedStateRps = allStateRPs.groupBy { rp -> this.buildCache.firstOf(rp, LookaheadSetPart.UP) }.values //TODO: fix parameter to firstOf
         val allMergedStates = allMergedStateRps.map { rps -> this.createState(rps) }
 
         val stateInfos = this.buildCache.stateInfo()
@@ -381,7 +378,7 @@ internal class ParserStateSet(
     }
 
     private fun buildAndTraverse() {
-       // this.buildCache.buildCaches()
+        // this.buildCache.buildCaches()
         val stateInfos = this.buildCache.stateInfo()
 
         for (si in stateInfos) {
@@ -391,15 +388,16 @@ internal class ParserStateSet(
         }
         for (si in stateInfos) {
             val state = this.fetchState(si.rulePositions)!!
-            //when {
-               // state.isGoal -> state.transitions(null)
-               // else -> {
-                    for (prevRps in si.possiblePrev) {
-                        val prev = this.fetchCompatibleState(prevRps) ?: error("should never be null")
-                        state.transitions(prev)
-                    }
-              //  }
-            //}
+            for (ti in si.possibleTrans) {
+                val previousStates = ti.prev.map { p -> this.fetchState(p) ?: error("Internal error, state not created for $p") }
+                val action = ti.action
+                val to = this.fetchState(ti.to) ?: error("Internal error, state not created for ${ti.to}")
+                val lookahead = ti.lookaheadSet.lhs(this)
+                val upLookahead  = ti.parentFirstOfNext.map { it.lhs(this) }.toSet() // why a Set ?
+                val prevGuard = emptyList<RulePosition>() //FIXME
+                val runtimeGuard: Transition.(GrowingNodeIndex, List<RulePosition>?) -> Boolean = { gn, previous -> true } //FIXME
+                state.createTransition(previousStates, action, to, lookahead, upLookahead, prevGuard, runtimeGuard)
+            }
         }
 
     }

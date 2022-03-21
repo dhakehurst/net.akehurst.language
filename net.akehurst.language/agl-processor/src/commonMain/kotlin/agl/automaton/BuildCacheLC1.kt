@@ -254,7 +254,6 @@ internal class BuildCacheLC1(
         while (todo.isNotEmpty) {
             val stateToDo = todo.dequeue()
             val state = stateToDo.state
-            val prev = stateToDo.prev
             val prevForChildren = stateToDo.prevForChildren
             val stateFirstOfNext = stateToDo.stateFirstOfNext
             val rule = stateToDo.state.rulePosition.item
@@ -266,15 +265,10 @@ internal class BuildCacheLC1(
                     val d = Pair(ruleRpState, ruleRpPrev)
                     if (done.contains(d).not()) {
                         done.add(d)
-                        //val action = calcAction(state, ruleRpState)
                         val ruleRpPrevForChildren = when {
                             ruleRp.isAtStart -> ruleRpPrev
                             else -> ruleRpState
                         }
-                        //val ruleRpPrevForNonFirstChildren = when {
-                        //    ruleRp.isAtStart -> prevForNonFirstChildren
-                        //    else -> ruleRpState
-                        //}
                         val firstOf = firstOf(ruleRp, stateFirstOfNext)
                         firstOfCache[ruleRp][ruleRpPrev.rulePosition] = firstOf
                         val firstOfNext = when {
@@ -404,19 +398,19 @@ internal class BuildCacheLC1(
         }
     }
 
-    override fun heightGraftInto(prevState: ParserState, fromStateRuntimeRules: List<RuntimeRule>): Set<HeightGraftInfo> {
+    override fun heightGraftInto(prevState: ParserState, fromState: ParserState): Set<HeightGraftInfo> {
         return if (this._cacheOff) {
             // have to ensure somehow that from grows into prev
             // have to do closure down from prev,
             // upCls is the closure down from prev
             val upCls = prevState.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
-            val calc = calcAndCacheHeightOrGraftInto(prevState.rulePositions, fromStateRuntimeRules, upCls)
+            val calc = calcAndCacheHeightOrGraftInto(prevState.rulePositions, fromState.runtimeRules, upCls)
             calc
         } else {
-            val key = Pair(prevState.rulePositions, fromStateRuntimeRules)
+            val key = Pair(prevState.rulePositions, fromState.runtimeRules)
             this._heightOrGraftInto[key]?.values?.toSet() ?: run {
                 val upCls = prevState.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
-                val calc = calcAndCacheHeightOrGraftInto(prevState.rulePositions, fromStateRuntimeRules, upCls)
+                val calc = calcAndCacheHeightOrGraftInto(prevState.rulePositions, fromState.runtimeRules, upCls)
                 calc
             }
         }
@@ -429,13 +423,12 @@ internal class BuildCacheLC1(
     }
 
     private fun calcWidthInfo(prevState: ParserState, fromState: ParserState): Set<WidthInfo> {
-        // the 'to' state is the firstOf the fromState.rulePosition
+        // the 'to' state is the first Terminal the fromState.rulePosition
         // if there are multiple fromState.rulePositions then they should have same firstOf or they would not be merged.
         // after a WIDTH, fromState becomes the prevState, therefore
         // the lookahead is the firstOf the parent of the 'to' state, in the context of the fromStateRulePositions
-        val firstOfInEmpty = this.firstOfIncEmpty(fromState.rulePositions.first(), LookaheadSetPart.EMPTY)
-        val toStateRRules = firstOf.content
-        val wis = toStateRRules.map { rr ->
+        val firstTerminals = this.firstTerminal(fromState)
+        val wis = firstTerminals.map { rr ->
             val upCls = fromState.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
             val upFilt = upCls.filter { rr == it.rulePosition.item }
             val lhs = upFilt.map { it.lookaheadSet }.reduce{ acc, it -> acc.union(it) }

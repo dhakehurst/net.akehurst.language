@@ -92,11 +92,11 @@ internal class BuildCacheLC0(
         }
     }
 
-    override fun heightGraftInto(prevState: ParserState, fromStateRuntimeRules: List<RuntimeRule>): Set<HeightGraftInfo> {
-        val key = Pair(prevState.rulePositions, fromStateRuntimeRules)
+    override fun heightGraftInto(prevState: ParserState, fromState:ParserState): Set<HeightGraftInfo> {
+        val key = Pair(prevState.rulePositions, fromState.runtimeRules)
         return this._heightOrGraftInto[key] ?: run {
             val upCls = prevState.rulePositions.flatMap { this.dnClosureLR0(it) }.toSet()
-            val calc = calcAndCacheHeightOrGraftInto(prevState.rulePositions, fromStateRuntimeRules, upCls)
+            val calc = calcAndCacheHeightOrGraftInto(prevState.rulePositions, fromState.runtimeRules, upCls)
             calc
         }
     }

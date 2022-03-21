@@ -68,23 +68,23 @@ internal class test_skipRules : test_AutomatonAbstract() {
     fun firstTerminals() {
         //TODO
         var actual = skipSS.firstTerminals[RulePosition(skG, 0, 0)]
-        var expected = setOf(skWS, skCM)
+        var expected = listOf(skWS, skCM)
         assertEquals(expected, actual)
 
         actual = skipSS.firstTerminals[RulePosition(skM, 0, 0)]
-        expected = setOf(skWS, skCM)
+        expected = listOf(skWS, skCM)
         assertEquals(expected, actual)
 
         actual = skipSS.firstTerminals[RulePosition(skM, 0, RulePosition.POSITION_MULIT_ITEM)]
-        expected = setOf(skWS, skCM)
+        expected = listOf(skWS, skCM)
         assertEquals(expected, actual)
 
         actual = skipSS.firstTerminals[RulePosition(skC, 0, 0)]
-        expected = setOf(skWS)
+        expected = listOf(skWS)
         assertEquals(expected, actual)
 
         actual = skipSS.firstTerminals[RulePosition(skC, 1, 0)]
-        expected = setOf(skCM)
+        expected = listOf(skCM)
         assertEquals(expected, actual)
 
 

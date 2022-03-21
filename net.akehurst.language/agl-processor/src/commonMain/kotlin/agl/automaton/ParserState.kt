@@ -121,6 +121,20 @@ internal class ParserState(
     val isGoal = this.firstRule.kind == RuntimeRuleKind.GOAL
     val isUserGoal = this.firstRule == this.stateSet.userGoalRule
 
+    internal fun createTransition(
+        previousStates: List<ParserState>,
+        action: Transition.ParseAction,
+        to:ParserState,
+        lookahead:LookaheadSet,
+        upLookahead:Set<LookaheadSet>,
+        prevGuard:List<RulePosition>?,
+        runtimeGuard:Transition.(current: GrowingNodeIndex, previous: List<RulePosition>?) -> Boolean
+    ) {
+        val trans = Transition(this, to, action, lookahead, upLookahead, prevGuard, runtimeGuard)
+        this.outTransitions.addTransition(previousStates, trans)
+    }
+
+
     fun firstOf(ifReachedEnd: LookaheadSet): LookaheadSetPart = this.rulePositions.map {
         stateSet.buildCache.firstOf(it, LookaheadSetPart(ifReachedEnd.includesUP, ifReachedEnd.includesEOT, ifReachedEnd.matchANY, ifReachedEnd.content))
     }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
@@ -133,7 +147,7 @@ internal class ParserState(
 
     //for graft, previous must match prevGuard, for height must not match
     // (allow this to take 'null' so can use it for LC0)
-    fun heightOrGraftInto(prevState: ParserState): Set<HeightGraftInfo> = this.stateSet.buildCache.heightGraftInto(prevState, this.runtimeRules)
+    fun heightOrGraftInto(prevState: ParserState): Set<HeightGraftInfo> = this.stateSet.buildCache.heightGraftInto(prevState, this)
 
     fun transitions(previousState: ParserState): List<Transition> {
         val cache: List<Transition>? = this.outTransitions.findTransitionByPrevious(previousState)

@@ -28,10 +28,10 @@ class test_RuntimeRuleSet_firstTerminals2 {
         val r_a = rb.literal("a")
         val S = rb.rule("S").concatenation(r_a)
         val sut = rb.ruleSet()
-        val actual = sut.firstTerminals2[RulePosition(S,0,0)] ?: setOf()
-        val expected = setOf(r_a)
+        val actual = sut.firstTerminals2[RulePosition(S,0,0)]
+        val expected = listOf(r_a)
 
-        assertEquals<Set<RuntimeRule>>(expected, actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -40,10 +40,10 @@ class test_RuntimeRuleSet_firstTerminals2 {
         val r_a = rb.literal("a")
         val S = rb.rule("S").concatenation(r_a)
         val sut = rb.ruleSet()
-        val actual = sut.firstTerminals2[RulePosition(S,0,-1)] ?: setOf()
-        val expected = emptySet<RuntimeRule>()
+        val actual = sut.firstTerminals2[RulePosition(S,0,-1)]
+        val expected = emptyList<RuntimeRule>()
 
-        assertEquals<Set<RuntimeRule>>(expected, actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -59,9 +59,9 @@ class test_RuntimeRuleSet_firstTerminals2 {
 
         val sut = rb.ruleSet()
         val actual1 = sut.firstTerminals2[RulePosition(r_S,0,0)]
-        assertEquals(setOf(A), actual1)
+        assertEquals(listOf(A), actual1)
         val actual2 = sut.firstTerminals2[RulePosition(r_S,1,0)]
-        assertEquals(setOf(B), actual2)
+        assertEquals(listOf(B), actual2)
     }
 
     // S = P | 'a' ;
@@ -76,7 +76,7 @@ class test_RuntimeRuleSet_firstTerminals2 {
         val sut = b.ruleSet()
 
         val actual = sut.firstTerminals2[RulePosition(r_S,0,0)]
-        val expected = setOf(r_P.emptyRuleItem, r_a)
+        val expected = listOf(r_P.emptyRuleItem, r_a)
 
         assertEquals(expected, actual)
     }

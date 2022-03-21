@@ -121,9 +121,9 @@ internal class RuntimeRuleSet(
     }
 
     // used when calculating lookahead
-    val firstTerminals2 = lazyMapNonNull<RulePosition, Set<RuntimeRule>> {
+    val firstTerminals2 = lazyMapNonNull<RulePosition, List<RuntimeRule>> {
         val trps = expectedTerminalRulePositions[it] ?: arrayOf()
-        trps.flatMap { it.items }.toSet()
+        trps.flatMap { it.items }.toSet().toList()
     }
 
     // userGoalRule -> ParserStateSet
@@ -242,8 +242,7 @@ internal class RuntimeRuleSet(
                                         calcLookahead(null, parent.rulePosition, parent.lookahead)
                                     }
                                 } else {
-                                    val lh: Set<RuntimeRule> = this.firstTerminals2[nextChildRP]
-                                        ?: error("should never happen")
+                                    val lh: List<RuntimeRule> = this.firstTerminals2[nextChildRP]
                                     if (lh.isEmpty()) {
                                         error("should never happen")
                                     } else {
@@ -270,7 +269,7 @@ internal class RuntimeRuleSet(
                     if (nextRP.isAtEnd) {
                         calcLookahead(null, parent.rulePosition, parent.lookahead)
                     } else {
-                        val lh: Set<RuntimeRule> = this.firstTerminals2[nextRP] ?: error("should never happen")
+                        val lh: List<RuntimeRule> = this.firstTerminals2[nextRP]
                         if (lh.isEmpty()) {
                             error("should never happen")
                         } else {
