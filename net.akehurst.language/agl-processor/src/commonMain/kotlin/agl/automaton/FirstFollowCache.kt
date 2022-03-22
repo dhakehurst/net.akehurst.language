@@ -18,57 +18,44 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.collections.LazyMapNonNull
 import net.akehurst.language.collections.lazyMapNonNull
 
 internal class FirstFollowCache {
 
     // prev/context -> ( RulePosition -> Set<Terminal-RuntimeRule> )
-    private val _firstTerminal = lazyMapNonNull<RulePosition, MutableMap<RulePosition, MutableSet<RuntimeRule>>> { mutableMapOf() }
+    private val _firstTerminal = lazyMapNonNull<RulePosition, LazyMapNonNull<RulePosition, MutableSet<RuntimeRule>>> { lazyMapNonNull { mutableSetOf() } }
 
     // prev/context -> ( RulePosition -> function to get value from _firstTerminal )
-    private val _firstOfInContext = lazyMapNonNull<RulePosition, MutableMap<RulePosition, () -> Set<RuntimeRule>>> { mutableMapOf() }
+    private val _firstOfInContext = lazyMapNonNull<RulePosition, LazyMapNonNull<RulePosition, MutableSet<RuntimeRule>>> { lazyMapNonNull { mutableSetOf() } }
 
     // prev/context -> ( RulePosition -> function to get value from _firstTerminal )
-    private val _followInContext = lazyMapNonNull<RulePosition, MutableMap<RulePosition, () -> Set<RuntimeRule>>> { mutableMapOf() }
+    private val _followInContext = lazyMapNonNull<RulePosition, LazyMapNonNull<RulePosition, MutableSet<RuntimeRule>>> { lazyMapNonNull { mutableSetOf() } }
 
-    fun containsFirstTerminal(prev: RulePosition, rulePosition: RulePosition): Boolean = null != this._firstTerminal[prev][rulePosition]
+    fun containsFirstTerminal(prev: RulePosition, rulePosition: RulePosition): Boolean = this._firstTerminal[prev].containsKey(rulePosition)
 
-    fun firstTerminal(prev: RulePosition, rulePosition: RulePosition): Set<RuntimeRule>? {
+    fun firstTerminal(prev: RulePosition, rulePosition: RulePosition): Set<RuntimeRule> {
         return this._firstTerminal[prev][rulePosition]
     }
 
+    fun firstOfInContext(prev: RulePosition, rulePosition: RulePosition): Set<RuntimeRule> {
+        return this._firstOfInContext[prev][rulePosition]
+    }
+
+    fun followInContext(prev: RulePosition, rulePosition: RulePosition): Set<RuntimeRule> {
+        return this._followInContext[prev][rulePosition]
+    }
+
     fun addFirstTerminalInContext(prev: RulePosition, rulePosition: RulePosition, terminal: RuntimeRule) {
-        val forContext = this._firstTerminal[prev]
-        val set = forContext[rulePosition]
-        if (set == null) {
-            forContext[rulePosition] = mutableSetOf(terminal)
-        } else {
-            set.add(terminal)
-        }
+        this._firstTerminal[prev][rulePosition].add(terminal)
     }
 
-    fun firstOfInContextIsFirstTerminalInContext(
-        firstOfPrev: RulePosition,
-        firstOfRulePosition: RulePosition,
-        firstTerminalPrev: RulePosition,
-        firstTerminalRulePosition: RulePosition
-    ) {
-        this._firstOfInContext[firstOfPrev][firstOfRulePosition] = {
-            this._firstTerminal[firstTerminalPrev][firstTerminalRulePosition]
-                ?: error("Internal error, firstTerminal[$firstTerminalPrev][$firstTerminalRulePosition] not calculated")
-        }
+    fun addFirstOfInContext(prev: RulePosition, rulePosition: RulePosition, terminal: RuntimeRule) {
+        this._firstOfInContext[prev][rulePosition].add(terminal)
     }
 
-    fun followInContextIsFirstTerminalInContext(
-        followPrev: RulePosition,
-        followRulePosition: RulePosition,
-        firstTerminalPrev: RulePosition,
-        firstTerminalRulePosition: RulePosition
-    ) {
-        this._followInContext[followPrev][followRulePosition] = {
-            this._firstTerminal[firstTerminalPrev][firstTerminalRulePosition]
-                ?: error("Internal error, firstTerminal[$firstTerminalPrev][$firstTerminalRulePosition] not calculated")
-        }
+    fun addFollowInContext(prev: RulePosition, rulePosition: RulePosition, terminal: RuntimeRule) {
+        this._followInContext[prev][rulePosition].add(terminal)
     }
 
 }

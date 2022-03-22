@@ -55,6 +55,7 @@ internal class RulePosition(
     val isAtStart get() = position == START_OF_RULE
     val isAtEnd get() = position == END_OF_RULE
     val isTerminal get() = this.runtimeRule.isTerminal
+    val isEmptyRule get() = this.runtimeRule.isEmptyRule
     val isNonTerminal get() = this.runtimeRule.isNonTerminal
     val isEmbedded get() = this.runtimeRule.isEmbedded
     val isTerminalOrEmbedded get() = this.isTerminal || this.isEmbedded

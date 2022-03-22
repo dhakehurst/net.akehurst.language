@@ -209,7 +209,8 @@ internal abstract class BuildCacheAbstract(
             val parent: RulePosition,
             val rulePosition: RulePosition,
             val calcFirstTerminal: Boolean,
-            val calcLookahead: Boolean
+            val calcLookahead: Boolean,
+            val future:(futureTerminal:RuntimeRule)->Unit = {_-> }
         )
 
         when {
@@ -217,12 +218,11 @@ internal abstract class BuildCacheAbstract(
             else -> {
                 //handle special case for Goal
                 when {
-                    rulePosition.isGoal -> when {
-                        rulePosition.isAtStart -> {
-                            this.firstFollowCache.followInContextIsFirstTerminalInContext(prev, rulePosition, prev, this.stateSet.endState.rulePositions.first())
-                        }
-                        rulePosition.isAtEnd -> this.firstFollowCache.addFirstTerminalInContext(prev, rulePosition, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-                        else -> error("Internal Error, Goal RulePosition should only have start and end")
+                    rulePosition.isGoal && rulePosition.isAtStart ->  {
+                        val goalEndRp = this.stateSet.endState.rulePositions.first()
+                        this.firstFollowCache.addFirstTerminalInContext(prev, goalEndRp, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                        this.firstFollowCache.addFirstOfInContext(prev, goalEndRp, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                        this.firstFollowCache.addFollowInContext(prev, rulePosition, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
                     }
                     else -> Unit
                 }
@@ -244,10 +244,13 @@ internal abstract class BuildCacheAbstract(
                                         childRp.isAtStart -> childPrev
                                         else -> childRp
                                     }
-                                    todoList.push(Task(childPrev, childPrevForChildren, rulePosition, childRp, true, true))
+                                    todoList.push(Task(childPrev, childPrevForChildren, rulePosition, childRp, true, true){futureTerminal->
+                                        this.firstFollowCache.addFirstTerminalInContext(prev, rulePosition, futureTerminal)
+                                    })
                                 }
                             }
-                            // if childNextRp is atEnd then lookahead is firstNonEmptyTerminal of parent.next - assume it is already calculated
+                            /*
+                            // if childNextRp is atEnd then firstOf is firstNonEmptyTerminal of parent.next - assume it is already calculated
                             // else lookahead is firstNonEmptyTerminal of childNextRp.next
                             when {
                                 childRp.isAtEnd -> Unit
@@ -262,6 +265,7 @@ internal abstract class BuildCacheAbstract(
                                     }
                                 }
                             }
+                             */
                         }
                     }
                 }
@@ -273,13 +277,19 @@ internal abstract class BuildCacheAbstract(
                     val td = todoList.pop()
                     when { //maybe check if already calc'd
                         td.rulePosition.isAtEnd -> when {
-                            td.rulePosition.isTerminal -> this.firstFollowCache.addFirstTerminalInContext(td.prev, td.parent, td.rulePosition.runtimeRule)
+                            td.rulePosition.isTerminal -> {
+                                this.firstFollowCache.addFirstTerminalInContext(td.prev, td.parent, td.rulePosition.runtimeRule)
+                                //td.future.invoke(td.rulePosition.runtimeRule)
+                            }
                             td.calcLookahead -> {
                                 TODO()
                             }
                             else -> Unit
                         }
-                        td.rulePosition.item!!.isTerminal -> this.firstFollowCache.addFirstTerminalInContext(td.prev, td.rulePosition, td.rulePosition.item!!)
+                        td.rulePosition.item!!.isTerminal -> {
+                            this.firstFollowCache.addFirstTerminalInContext(td.prev, td.rulePosition, td.rulePosition.item!!)
+                            td.future.invoke(td.rulePosition.item!!)
+                        }
                         else -> {
                             val childPrev = td.prevForChildren
                             val childRulePositions = td.rulePosition.item!!.rulePositionsAt[0]
@@ -291,7 +301,10 @@ internal abstract class BuildCacheAbstract(
                                         childRp.isAtStart -> childPrev
                                         else -> childRp
                                     }
-                                    todoList.push(Task(childPrev, childPrevForChildren, td.rulePosition, childRp, true, true))
+                                    todoList.push(Task(childPrev, childPrevForChildren, td.rulePosition, childRp, true, true){futureTerminal->
+                                        this.firstFollowCache.addFirstTerminalInContext(td.prev, td.rulePosition, futureTerminal)
+                                        td.future.invoke(futureTerminal)
+                                    })
                                     /*
                                 if (td.calcLookahead) { // only calc lookahead if needed
                                     // if childNextRp is atEnd then lookahead is firstNonEmptyTerminal of parent.next
@@ -314,9 +327,6 @@ internal abstract class BuildCacheAbstract(
                             }
                         }
                     }
-                }
-                for (lh in lookaheads) {
-                    //this._
                 }
             }
         }
