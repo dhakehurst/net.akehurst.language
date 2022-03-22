@@ -20,7 +20,7 @@ import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 
 internal interface BuildCache {
-    fun on()
+    fun switchCacheOn()
     fun clearAndOff()
 
     fun stateInfo(): Set<StateInfo>

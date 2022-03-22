@@ -254,7 +254,7 @@ internal class ParserStateSet(
 
     fun build(): ParserStateSet {
         if (this.preBuilt.not()) {
-            this.buildCache.on()
+            this.buildCache.switchCacheOn()
             buildAndTraverse()
             preBuilt = true
             this.buildCache.clearAndOff()

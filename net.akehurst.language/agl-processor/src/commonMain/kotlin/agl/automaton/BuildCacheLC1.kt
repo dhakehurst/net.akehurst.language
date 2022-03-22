@@ -181,6 +181,7 @@ internal class BuildCacheLC1(
         }
 
         val StateInfo.isAtEnd: Boolean get() = this.rulePositions.any { it.isAtEnd }
+        val StateInfo.isGoal: Boolean get() = this.rulePositions.any { it.isGoal }
 
         val StateInfo.mergedTransInfo: Set<TransInfo>
             get() {
@@ -259,27 +260,27 @@ internal class BuildCacheLC1(
             val rule = stateToDo.state.rulePosition.item
             if (null != rule) {
                 val ruleRps = rule.rulePositions
-                for (ruleRp in ruleRps) {
-                    val ruleRpState = possibleStates[ruleRp] ?: PossibleState(firstOfCache, ruleRp)
-                    val ruleRpPrev = prevForChildren
-                    val d = Pair(ruleRpState, ruleRpPrev)
+                for (childRp in ruleRps) {
+                    val ruleRpState = possibleStates[childRp] ?: PossibleState(firstOfCache, childRp)
+                    val childRpPrev = prevForChildren
+                    val d = Pair(ruleRpState, childRpPrev)
                     if (done.contains(d).not()) {
                         done.add(d)
-                        val ruleRpPrevForChildren = when {
-                            ruleRp.isAtStart -> ruleRpPrev
+                        val childRpPrevForChildren = when {
+                            childRp.isAtStart -> childRpPrev
                             else -> ruleRpState
                         }
-                        val firstOf = firstOf(ruleRp, stateFirstOfNext)
-                        firstOfCache[ruleRp][ruleRpPrev.rulePosition] = firstOf
+                        val firstOf = firstOf(childRp, stateFirstOfNext)
+                        firstOfCache[childRp][childRpPrev.rulePosition] = firstOf
                         val firstOfNext = when {
-                            ruleRp.isAtEnd -> stateFirstOfNext
-                            else -> ruleRp.next().map { firstOf(it, stateFirstOfNext) }.reduce { acc, it -> acc.union(it) }
+                            childRp.isAtEnd -> stateFirstOfNext
+                            else -> childRp.next().map { firstOf(it, stateFirstOfNext) }.reduce { acc, it -> acc.union(it) }
                         }
-                        if (ruleRp.isAtStart.not()) {
-                            ruleRpState.setTransInfo(ruleRpPrev.rulePosition, state, firstOf, firstOfNext)
-                            possibleStates[ruleRp] = ruleRpState
+                        if (childRp.isAtStart.not()) {
+                            ruleRpState.setTransInfo(childRpPrev.rulePosition, state, firstOf, firstOfNext)
+                            possibleStates[childRp] = ruleRpState
                         }
-                        todo.enqueue(RpToDo(ruleRpState, ruleRpPrev, ruleRpPrevForChildren, firstOfNext))
+                        todo.enqueue(RpToDo(ruleRpState, childRpPrev, childRpPrevForChildren, firstOfNext))
                     } else {
                         //do not recurse
                     }
@@ -386,7 +387,6 @@ internal class BuildCacheLC1(
     }
 
     override fun widthInto(prevState: ParserState, fromState: ParserState): Set<WidthInfo> {
-
         return if (this._cacheOff) {
             val calc = calcWidthInfo(prevState, fromState)
             calc
@@ -426,8 +426,8 @@ internal class BuildCacheLC1(
         // the 'to' state is the first Terminal the fromState.rulePosition
         // if there are multiple fromState.rulePositions then they should have same firstOf or they would not be merged.
         // after a WIDTH, fromState becomes the prevState, therefore
-        // the lookahead is the firstOf the parent of the 'to' state, in the context of the fromStateRulePositions
-        val firstTerminals = this.firstTerminal(fromState)
+        // the lookahead is the firstOf the parent.next of the 'to' state, in the context of the fromStateRulePositions
+        val firstTerminals = this.firstTerminal(prevState,fromState)
         val wis = firstTerminals.map { rr ->
             val upCls = fromState.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
             val upFilt = upCls.filter { rr == it.rulePosition.item }
