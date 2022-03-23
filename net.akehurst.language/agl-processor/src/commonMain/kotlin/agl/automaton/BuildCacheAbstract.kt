@@ -16,7 +16,10 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.collections.mutableStackOf
 
@@ -34,7 +37,7 @@ internal abstract class BuildCacheAbstract(
 
     protected var _cacheOff = true
 
-    protected val firstFollowCache = FirstFollowCache()
+    protected val firstFollowCache = FirstFollowCache(this.stateSet)
 
     //TODO: use smaller array for done, but would to map rule number!
     private val _firstOfNotEmpty = Array<FirstOfResult?>(this.stateSet.runtimeRuleSet.runtimeRules.size, { null })
@@ -49,7 +52,7 @@ internal abstract class BuildCacheAbstract(
      * non-empty list of "real" terminals ('empty' terminals permitted)
      */
     fun firstTerminal(prev: ParserState, fromState: ParserState): List<RuntimeRule> {
-        return prev.rulePositions.flatMap {  prevRp ->
+        return prev.rulePositions.flatMap { prevRp ->
             fromState.rulePositions.flatMap { fromRp ->
                 this.firstTerminal(prevRp, fromRp)
             }
@@ -64,12 +67,12 @@ internal abstract class BuildCacheAbstract(
 
     }
 
-    private fun firstTerminal(prev:RulePosition, rulePosition: RulePosition): Set<RuntimeRule> {
-        return if (this.firstFollowCache.containsFirstTerminal(prev,rulePosition)) {
-            this.firstFollowCache.firstTerminal(prev,rulePosition) ?: error("Internal error, no firstTerminal created for $rulePosition")
+    private fun firstTerminal(prev: RulePosition, rulePosition: RulePosition): Set<RuntimeRule> {
+        return if (this.firstFollowCache.containsFirstTerminal(prev, rulePosition)) {
+            this.firstFollowCache.firstTerminal(prev, rulePosition) ?: error("Internal error, no firstTerminal created for $rulePosition")
         } else {
             calcFirstAndFollowFor(prev, rulePosition)
-            this.firstFollowCache.firstTerminal(prev,rulePosition) ?: error("Internal error, no firstTerminal created for $rulePosition")
+            this.firstFollowCache.firstTerminal(prev, rulePosition) ?: error("Internal error, no firstTerminal created for $rulePosition")
         }
     }
 
@@ -194,141 +197,4 @@ internal abstract class BuildCacheAbstract(
         return FirstOfResult(needsNext, result)
     }
 
-
-    /**
-     * traverse down the closure of rulePosition.
-     * record the firstTerminal and the lookahead of each rulePosition in the closure
-     *
-     * only call this if certain need to calc FirstAndFollow.
-     * can check if needed by testing _firstTerminal[rulePosition]==null
-     */
-    private fun calcFirstAndFollowFor(prev: RulePosition, rulePosition: RulePosition) {
-        data class Task(
-            val prev: RulePosition,
-            val prevForChildren: RulePosition,
-            val parent: RulePosition,
-            val rulePosition: RulePosition,
-            val calcFirstTerminal: Boolean,
-            val calcLookahead: Boolean,
-            val future:(futureTerminal:RuntimeRule)->Unit = {_-> }
-        )
-
-        when {
-            this.firstFollowCache.containsFirstTerminal(prev, rulePosition) -> Unit //already calculated, don't repeat
-            else -> {
-                //handle special case for Goal
-                when {
-                    rulePosition.isGoal && rulePosition.isAtStart ->  {
-                        val goalEndRp = this.stateSet.endState.rulePositions.first()
-                        this.firstFollowCache.addFirstTerminalInContext(prev, goalEndRp, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-                        this.firstFollowCache.addFirstOfInContext(prev, goalEndRp, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-                        this.firstFollowCache.addFollowInContext(prev, rulePosition, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-                    }
-                    else -> Unit
-                }
-
-                val lookaheads = mutableListOf<RulePosition>()
-                val todoList = mutableStackOf<Task>()
-                // handle rulePosition first as it has no parent defined
-                when {
-                    rulePosition.isTerminal -> Unit // do nothing
-                    rulePosition.item!!.isTerminal -> this.firstFollowCache.addFirstTerminalInContext(prev, rulePosition, rulePosition.item!!)
-                    else -> {
-                        val childPrev = prev
-                        val childRulePositions = rulePosition.item!!.rulePositionsAt[0]
-                        for (childRp in childRulePositions) {
-                            when {
-                                childRp.isTerminal -> this.firstFollowCache.addFirstTerminalInContext(prev, childRp, childRp.item!!)
-                                else -> {
-                                    val childPrevForChildren = when {
-                                        childRp.isAtStart -> childPrev
-                                        else -> childRp
-                                    }
-                                    todoList.push(Task(childPrev, childPrevForChildren, rulePosition, childRp, true, true){futureTerminal->
-                                        this.firstFollowCache.addFirstTerminalInContext(prev, rulePosition, futureTerminal)
-                                    })
-                                }
-                            }
-                            /*
-                            // if childNextRp is atEnd then firstOf is firstNonEmptyTerminal of parent.next - assume it is already calculated
-                            // else lookahead is firstNonEmptyTerminal of childNextRp.next
-                            when {
-                                childRp.isAtEnd -> Unit
-                                else -> {
-                                    val next = childRp.next()
-                                    for(childNextRp in next) {
-                                        val childPrevForChildren = when {
-                                            childNextRp.isAtStart -> prev
-                                            else -> rulePosition
-                                        }
-                                        todoList.push(Task(childPrev, childPrevForChildren, rulePosition, childNextRp, true, false))
-                                    }
-                                }
-                            }
-                             */
-                        }
-                    }
-                }
-
-                // handle rest of Tasks
-                val done = mutableSetOf<Pair<RulePosition, RulePosition>>() // Pair(prev,rulePos)
-                done.add(Pair(prev, rulePosition))
-                while (todoList.isNotEmpty) {
-                    val td = todoList.pop()
-                    when { //maybe check if already calc'd
-                        td.rulePosition.isAtEnd -> when {
-                            td.rulePosition.isTerminal -> {
-                                this.firstFollowCache.addFirstTerminalInContext(td.prev, td.parent, td.rulePosition.runtimeRule)
-                                //td.future.invoke(td.rulePosition.runtimeRule)
-                            }
-                            td.calcLookahead -> {
-                                TODO()
-                            }
-                            else -> Unit
-                        }
-                        td.rulePosition.item!!.isTerminal -> {
-                            this.firstFollowCache.addFirstTerminalInContext(td.prev, td.rulePosition, td.rulePosition.item!!)
-                            td.future.invoke(td.rulePosition.item!!)
-                        }
-                        else -> {
-                            val childPrev = td.prevForChildren
-                            val childRulePositions = td.rulePosition.item!!.rulePositionsAt[0]
-                            for (childRp in childRulePositions) {
-                                val d = Pair(childPrev, childRp)
-                                if (done.contains(d).not()) {
-                                    done.add(d)
-                                    val childPrevForChildren = when {
-                                        childRp.isAtStart -> childPrev
-                                        else -> childRp
-                                    }
-                                    todoList.push(Task(childPrev, childPrevForChildren, td.rulePosition, childRp, true, true){futureTerminal->
-                                        this.firstFollowCache.addFirstTerminalInContext(td.prev, td.rulePosition, futureTerminal)
-                                        td.future.invoke(futureTerminal)
-                                    })
-                                    /*
-                                if (td.calcLookahead) { // only calc lookahead if needed
-                                    // if childNextRp is atEnd then lookahead is firstNonEmptyTerminal of parent.next
-                                    // else lookahead is firstNonEmptyTerminal of childNextRp.next
-                                    when {
-                                        childRp.isAtEnd -> {
-                                            val next = td.rulePosition.next()
-                                            next.forEach { todoList.push(Task(childPrev, childPrevForChildren, td.rulePosition, it, true, false)) }
-                                        }
-                                        else -> {
-                                            val next = childRp.next()
-                                            next.forEach { todoList.push(Task(childPrev, childPrevForChildren, td.rulePosition, it, true, false)) }
-                                        }
-                                    }
-                                } else {
-                                    //do nothing
-                                }
-                                 */
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
