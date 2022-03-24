@@ -54,7 +54,7 @@ internal abstract class BuildCacheAbstract(
     fun firstTerminal(prev: ParserState, fromState: ParserState): List<RuntimeRule> {
         return prev.rulePositions.flatMap { prevRp ->
             fromState.rulePositions.flatMap { fromRp ->
-                this.firstTerminal(prevRp, fromRp)
+                this.firstFollowCache.firstTerminal(prevRp, fromRp)
             }
         }.toSet().toList()
     }
@@ -65,15 +65,6 @@ internal abstract class BuildCacheAbstract(
 
     fun followInContext(prev: ParserState, fromState: ParserState) {
 
-    }
-
-    private fun firstTerminal(prev: RulePosition, rulePosition: RulePosition): Set<RuntimeRule> {
-        return if (this.firstFollowCache.containsFirstTerminal(prev, rulePosition)) {
-            this.firstFollowCache.firstTerminal(prev, rulePosition) ?: error("Internal error, no firstTerminal created for $rulePosition")
-        } else {
-            calcFirstAndFollowFor(prev, rulePosition)
-            this.firstFollowCache.firstTerminal(prev, rulePosition) ?: error("Internal error, no firstTerminal created for $rulePosition")
-        }
     }
 
     /*

@@ -21,9 +21,47 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.collections.LazyMapNonNull
 import net.akehurst.language.collections.lazyMapNonNull
+import net.akehurst.language.collections.mutableQueueOf
 import net.akehurst.language.collections.mutableStackOf
 
 internal class FirstFollowCache(val stateSet: ParserStateSet) {
+
+    private companion object {
+        interface ClosureItem {
+            val parent: ClosureItem
+            val prev: RulePosition
+            val rulePosition: RulePosition
+            val prevForChildren: RulePosition
+        }
+
+        data class ClosureItemRoot(override val prev: RulePosition, override val rulePosition: RulePosition) : ClosureItem {
+            override val parent: ClosureItem get() = error("ClosureItemRoot has no parent")
+            override val prevForChildren = when {
+                rulePosition.isAtStart -> prev
+                else -> rulePosition
+            }
+        }
+
+        data class ClosureItemChild(override val parent: ClosureItem, override val rulePosition: RulePosition) : ClosureItem {
+            override val prev: RulePosition = parent.prevForChildren
+            override val prevForChildren = when {
+                rulePosition.isAtStart -> prev
+                else -> rulePosition
+            }
+        }
+
+        data class CalculationTask(
+            val closureItem: ClosureItem,
+            val needsFirstOf: Boolean, // pass as arg so we limit what is calculated
+            val needsFollow: Boolean, // pass as arg so we limit what is calculated
+            val postTaskActions: (futureTerminal: RuntimeRule) -> Unit = { _ -> }
+        ) {
+            val prev get() = closureItem.prev
+            val rulePosition get() = closureItem.rulePosition
+            val parentRulePosition get() = closureItem.parent.rulePosition
+            val prevForChildren get() = closureItem.prevForChildren
+        }
+    }
 
     // prev/context -> ( RulePosition -> Set<Terminal-RuntimeRule> )
     private val _firstTerminal = lazyMapNonNull<RulePosition, LazyMapNonNull<RulePosition, MutableSet<RuntimeRule>>> { lazyMapNonNull { mutableSetOf() } }
@@ -34,10 +72,14 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
     // prev/context -> ( RulePosition -> function to get value from _firstTerminal )
     private val _followInContext = lazyMapNonNull<RulePosition, LazyMapNonNull<RulePosition, MutableSet<RuntimeRule>>> { lazyMapNonNull { mutableSetOf() } }
 
+    // followPrev -> ( followRP -> Pair<firstOfPrev, firstOfRP> )
+    private val _followInContextAsReferenceToFirstOf =
+        lazyMapNonNull<RulePosition, LazyMapNonNull<RulePosition, MutableSet<Pair<RulePosition, RulePosition>>>> { lazyMapNonNull { mutableSetOf() } }
+
     fun containsFirstTerminal(prev: RulePosition, rulePosition: RulePosition): Boolean = this._firstTerminal[prev].containsKey(rulePosition)
 
     fun firstTerminal(prev: RulePosition, rulePosition: RulePosition): Set<RuntimeRule> {
-        return if (this._firstTerminal.containsKey(prev).not() || this._firstTerminal[prev].containsKey(rulePosition).not()) {
+        return if (this._firstTerminal.containsKey(prev) || this._firstTerminal[prev].containsKey(rulePosition)) {
             this._firstTerminal[prev][rulePosition]
         } else {
             this.calcFirstAndFollowFor(prev, rulePosition)
@@ -50,7 +92,14 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
     }
 
     fun followInContext(prev: RulePosition, rulePosition: RulePosition): Set<RuntimeRule> {
-        return this._followInContext[prev][rulePosition]
+        return if (this._followInContext[prev].containsKey(rulePosition)) {
+            this._followInContext[prev][rulePosition]
+        } else {
+            val list = this._followInContextAsReferenceToFirstOf[prev][rulePosition]
+            val firstOf = list.flatMap { (p, rp) -> this.firstOfInContext(p, rp) }.toSet()
+            this._followInContext[prev][rulePosition].addAll(firstOf)
+            firstOf
+        }
     }
 
     fun addFirstTerminalInContext(prev: RulePosition, rulePosition: RulePosition, terminal: RuntimeRule) {
@@ -63,6 +112,34 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
 
     fun addFollowInContext(prev: RulePosition, rulePosition: RulePosition, terminal: RuntimeRule) {
         this._followInContext[prev][rulePosition].add(terminal)
+    }
+
+    fun addFollowInContextAsReferenceToFirstOf(followPrev: RulePosition, followRulePosition: RulePosition, firstOfPrev: RulePosition, firstOfRulePosition: RulePosition) {
+        _followInContextAsReferenceToFirstOf[followPrev][followRulePosition].add(Pair(firstOfPrev, firstOfRulePosition))
+    }
+
+    private fun createTasksToCalcFirstOf(closure:ClosureItem) : List<CalculationTask> {
+        val result = mutableListOf<CalculationTask>() //TODO: maybe speed up by passing in stackOfTasks
+        val currentItem = closure
+        val toDo = mutableQueueOf()
+        while(currentItem !is ClosureItemRoot) {
+            val rp = currentItem.rulePosition
+            when {
+                rp.isEmptyRule -> {
+                    // add firstOf(rulePosition.next)
+                    rp.next().map { rpNext ->
+
+                    }
+                }
+                rp.isAtEnd -> {
+                    // add firstOf(parent.next)
+                }
+                else -> {
+                    this.add
+                }
+            }
+        }
+        return result
     }
 
     /**
@@ -101,21 +178,21 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                     else -> Unit
                 }
 
+                val closureRoot = ClosureItemRoot(prev, rulePosition)
                 val done = mutableSetOf<Pair<RulePosition, RulePosition>>() // Pair(prev,rulePos)
-                val todoList = mutableStackOf<Task>()
+                val todoList = mutableStackOf<CalculationTask>()
                 // handle rulePosition first as it has no parent defined
                 when {
                     rulePosition.isTerminal -> Unit // do nothing
                     rulePosition.item!!.isTerminal -> this.addFirstTerminalInContext(prev, rulePosition, rulePosition.item!!)
                     else -> {
-                        val childPrev = prev
                         val childRulePositions = rulePosition.item!!.rulePositionsAt[0]
                         for (childRp in childRulePositions) {
-                            val d = Pair(childPrev, childRp)
+                            val d = Pair(prev, childRp)
                             done.add(d)
                             val needsFirstOf = childRp.isAtStart.not() && childRp.isTerminal.not()
                             val needsFollow = childRp.isTerminal //always false here
-                            todoList.push(Task(null, childPrev, childRp, needsFirstOf, needsFollow) { futureTerminal ->
+                            todoList.push(CalculationTask(ClosureItemChild(closureRoot, childRp), needsFirstOf, needsFollow) { futureTerminal ->
                                 this.addFirstTerminalInContext(prev, rulePosition, futureTerminal)
                             })
                         }
@@ -128,18 +205,27 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                     val td = todoList.pop()
                     when { //maybe check if already calc'd
                         td.rulePosition.isTerminal -> {
-                            this.addFirstTerminalInContext(td.prev, td.parent!!.rulePosition, td.rulePosition.runtimeRule)
-                            td.future.invoke(td.rulePosition.runtimeRule) // triggers setting firstTerminal up the closure
-                            // follow(X) = firstOf(X.parent.next)
-                            for(pn in td.parent.parent.rulePosition.next()) {
-                                this.addFollowInContextToFirstOf(td.prev, td.rulePosition, td.prev, pn) // check target prev
+                            this.addFirstTerminalInContext(td.prev, td.parentRulePosition, td.rulePosition.runtimeRule)
+                            td.postTaskActions.invoke(td.rulePosition.runtimeRule) // triggers setting firstTerminal up the closure
+
+                            val parent = td.closureItem.parent.parent.rulePosition
+                            if (null != parent) {
+                                for (pn in parent.next()) {
+                                    // follow(X) = firstOf(parent.next)
+                                    this.addFollowInContextAsReferenceToFirstOf(td.prev, td.rulePosition, td.prev, pn) // check target prev
+                                    //firstOf(parent.next) = firstTerminals(parent.next) excluding <empty>
+                                    // and including when empty, firstOf(parent.next.next) || firstOf(parent.next.parent)
+                                    this.createTasksToCalcFirstOf(pn)
+                                }
+                            } else {
+                                //follow and firstOf can be UP because covered by 'prev' at runtime
                             }
                         }
                         td.rulePosition.item!!.isTerminal -> {
                             this.addFirstTerminalInContext(td.prev, td.rulePosition, td.rulePosition.item!!)
-                            td.future.invoke(td.rulePosition.item!!)// triggers setting firstTerminal up the closure
+                            td.postTaskActions.invoke(td.rulePosition.item!!)// triggers setting firstTerminal up the closure
                             // follow(X) = firstOf(X.parent.next)
-                            for(pn in td.parent.rulePosition.next()) {
+                            for (pn in td.parent.rulePosition.next()) {
                                 this.addFollowInContextToFirstOf(td.prev, td.rulePosition, td.prev, pn) // check target prev
                             }
                         }
@@ -152,9 +238,9 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                                     done.add(d)
                                     val needsFirstOf = childRp.isAtStart.not() && childRp.isTerminal.not()
                                     val needsFollow = childRp.isTerminal //always false here
-                                    todoList.push(Task(td, childPrev, childRp,needsFirstOf,needsFollow) { futureTerminal ->
+                                    todoList.push(CalculationTask(ClosureItemChild(td.closureItem, childRp), childPrev, needsFirstOf, needsFollow) { futureTerminal ->
                                         this.addFirstTerminalInContext(td.prev, td.rulePosition, futureTerminal)
-                                        td.future.invoke(futureTerminal)
+                                        td.postTaskActions.invoke(futureTerminal)
                                     })
 
                                     if (td.needsFollow) { // only calc lookahead if needed
@@ -163,11 +249,11 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                                         when {
                                             childRp.isAtEnd -> {
                                                 val next = td.rulePosition.next()
-                                                next.forEach { todoList.push(Task(td, childPrev,  it, true, false)) }
+                                                next.forEach { todoList.push(Task(td, childPrev, it, true, false)) }
                                             }
                                             else -> {
                                                 val next = childRp.next()
-                                                next.forEach { todoList.push(Task(td, childPrev,  it, true, false)) }
+                                                next.forEach { todoList.push(Task(td, childPrev, it, true, false)) }
                                             }
                                         }
                                     } else {
