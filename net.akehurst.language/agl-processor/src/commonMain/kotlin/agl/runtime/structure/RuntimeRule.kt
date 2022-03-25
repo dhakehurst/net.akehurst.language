@@ -18,7 +18,7 @@ package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.collections.lazyArray
-import net.akehurst.language.collections.lazyMapNonNull
+import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.collections.transitiveClosure
 
 /**
@@ -108,6 +108,8 @@ internal class RuntimeRule(
         }
     }
 
+    val asTerminalRulePosition = RulePosition(this, 0, RulePosition.END_OF_RULE)
+
     val rulePositions: Set<RulePosition> //TODO: make constants where possible for these sets
         get() {
             return when (kind) {
@@ -190,7 +192,7 @@ internal class RuntimeRule(
             }
         }
 
-    val rulePositionsAt = lazyMapNonNull<Int, Set<RulePosition>> { index ->
+    val rulePositionsAt = lazyMutableMapNonNull<Int, Set<RulePosition>> { index ->
         this.calcExpectedRulePositions(index)
     }
 

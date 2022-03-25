@@ -17,11 +17,11 @@
 package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
-import net.akehurst.language.collections.lazyMapNonNull
+import net.akehurst.language.collections.lazyMutableMapNonNull
 
 class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 
-    private val _literals = lazyMapNonNull<String, Terminal>() {
+    private val _literals = lazyMutableMapNonNull<String, Terminal>() {
         TerminalDefault(it, false)
     }
 

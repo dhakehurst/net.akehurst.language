@@ -135,7 +135,7 @@ internal class ParserStateSet(
             return x
         }
     */
-    internal val firstTerminals = lazyMapNonNull<RulePosition, List<RuntimeRule>> { rp ->
+    internal val firstTerminals = lazyMutableMapNonNull<RulePosition, List<RuntimeRule>> { rp ->
         when (rp.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> listOf(rp.runtimeRule)
             RuntimeRuleKind.EMBEDDED -> {
@@ -276,7 +276,7 @@ internal class ParserStateSet(
 
         //what about merged states!
 
-        val possiblePrev = LazyMapNonNull<ParserState, MutableSet<ParserState?>>() { mutableSetOf() }
+        val possiblePrev = LazyMutableMapNonNull<ParserState, MutableSet<ParserState?>>() { mutableSetOf() }
 
         // Enumerate all rule-positions used in state definitions
         val allStateRPs = this.usedRules.flatMap { rr ->

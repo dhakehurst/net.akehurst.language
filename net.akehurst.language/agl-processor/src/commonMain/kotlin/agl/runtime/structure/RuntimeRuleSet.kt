@@ -21,7 +21,7 @@ import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.collections.lazyMap
-import net.akehurst.language.collections.lazyMapNonNull
+import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.collections.transitiveClosure
 
 internal class RuntimeRuleSet(
@@ -121,7 +121,7 @@ internal class RuntimeRuleSet(
     }
 
     // used when calculating lookahead
-    val firstTerminals2 = lazyMapNonNull<RulePosition, List<RuntimeRule>> {
+    val firstTerminals2 = lazyMutableMapNonNull<RulePosition, List<RuntimeRule>> {
         val trps = expectedTerminalRulePositions[it] ?: arrayOf()
         trps.flatMap { it.items }.toSet().toList()
     }
@@ -152,7 +152,7 @@ internal class RuntimeRuleSet(
     }
 
     //called from ParserStateSet, which adds the Goal Rule bits
-    internal val parentPosition = lazyMapNonNull<RuntimeRule, Set<RulePosition>> { childRR ->
+    internal val parentPosition = lazyMutableMapNonNull<RuntimeRule, Set<RulePosition>> { childRR ->
         //TODO: this is slow, is there a better way?
         this.runtimeRules.flatMap { rr ->
             val rps = rr.rulePositions

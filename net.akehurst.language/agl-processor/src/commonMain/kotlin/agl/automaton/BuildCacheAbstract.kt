@@ -59,12 +59,14 @@ internal abstract class BuildCacheAbstract(
         }.toSet().toList()
     }
 
-    fun firstOfInContext(prev: ParserState, fromState: ParserState) {
-
+    fun firstOfInContext(prev: ParserState, fromState: ParserState): List<RuntimeRule> {
+TODO()
     }
 
-    fun followInContext(prev: ParserState, fromState: ParserState) {
-
+    fun followInContext(prev: ParserState, terminalRule: RuntimeRule): List<RuntimeRule> {
+        return prev.rulePositions.flatMap { prevRp ->
+            this.firstFollowCache.followInContext(prevRp, terminalRule)
+        }.toSet().toList()
     }
 
     /*

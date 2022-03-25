@@ -19,8 +19,8 @@ package net.akehurst.language.agl.grammar.grammar
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.processor.LanguageProcessorException
-import net.akehurst.language.collections.LazyMapNonNull
-import net.akehurst.language.collections.lazyMapNonNull
+import net.akehurst.language.collections.LazyMutableMapNonNull
+import net.akehurst.language.collections.lazyMutableMapNonNull
 
 /**
  * arg: String =
@@ -47,7 +47,7 @@ internal class ConverterToRuntimeRules(
     // index by value
     private val terminalRules = mutableMapOf<String, RuntimeRule>()
     private val originalRuleItem: MutableMap<Pair<Int, Int>, RuleItem> = mutableMapOf()
-    private val embeddedConverters: LazyMapNonNull<Grammar, ConverterToRuntimeRules> = lazyMapNonNull { embeddedGrammar ->
+    private val embeddedConverters: LazyMutableMapNonNull<Grammar, ConverterToRuntimeRules> = lazyMutableMapNonNull { embeddedGrammar ->
         val embeddedConverter = ConverterToRuntimeRules(embeddedGrammar)
         embeddedConverter
     }

@@ -16,11 +16,12 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.collections.MutableQueue
-import net.akehurst.language.collections.lazyMapNonNull
+import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.collections.mutableQueueOf
 
 internal class BuildCacheLC1(
@@ -230,7 +231,7 @@ internal class BuildCacheLC1(
             val stateFirstOfNext: LookaheadSetPart
         )
 
-        val firstOfCache = lazyMapNonNull<RulePosition, MutableMap<RulePosition?, LookaheadSetPart>> { mutableMapOf() }
+        val firstOfCache = lazyMutableMapNonNull<RulePosition, MutableMap<RulePosition?, LookaheadSetPart>> { mutableMapOf() }
         val possibleStates = mutableMapOf<RulePosition, PossibleState>()
         val done = mutableSetOf<Pair<PossibleState, PossibleState?>>()
 
@@ -432,6 +433,7 @@ internal class BuildCacheLC1(
             val upCls = fromState.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
             val upFilt = upCls.filter { rr == it.rulePosition.item }
             val lhs = upFilt.map { it.lookaheadSet }.reduce{ acc, it -> acc.union(it) }
+            val follow = this.followInContext(prevState, rr)
             val rp = RulePosition(rr, 0, RulePosition.END_OF_RULE)
             WidthInfo(rp, lhs)
         }
@@ -469,7 +471,7 @@ internal class BuildCacheLC1(
     }
 
     private fun calcAndCacheHeightOrGraftInto(prev: List<RulePosition>, from: List<RuntimeRule>, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
-        val hgi = calcHeightOrGraftInto(from, upCls)
+        val hgi = calcHeightOrGraftInto(prev, from, upCls)
         cacheHeightOrGraftInto(prev, from, hgi)
         return hgi
     }
@@ -495,7 +497,21 @@ internal class BuildCacheLC1(
     }
 
     //for graft, previous must match prevGuard, for height must not match
-    private fun calcHeightOrGraftInto(from: List<RuntimeRule>, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
+    private fun calcHeightOrGraftInto(prev: List<RulePosition>, from: List<RuntimeRule>, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
+        val info = prev.flatMap { pr ->
+            val pps = from.flatMap { fr ->
+                this.firstFollowCache.parentInContext(pr, fr)
+            }
+            pps.flatMap { pp ->
+                pp.next().map { ppn ->
+                    val firstOf = this.firstFollowCache.firstOfInContext(pr, ppn)
+                    val lhs = LookaheadSet.createFromRuntimeRules(this.stateSet, firstOf).part
+                    val upLhs = emptySet<LookaheadSetPart>()
+                    HeightGraftInfo(emptyList(), listOf(pp), listOf(ppn), lhs, upLhs)
+                }
+            }
+        }.toSet()
+
         // upCls is the closure down from prev
         //TODO: can we reduce upCls at this point ?
         val hgis = mutableListOf<HeightGraftInfo>()

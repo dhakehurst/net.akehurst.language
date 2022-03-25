@@ -32,6 +32,14 @@ internal class LookaheadSet(
         val EOT = LookaheadSet(-3, false, true, false, emptySet())
         val UP = LookaheadSet(-4, true, false, false, emptySet())
         val UNCACHED_NUMBER = -5
+
+        fun createFromRuntimeRules(automaton: ParserStateSet, fullContent:Set<RuntimeRule>): LookaheadSet {
+            val includeUP = fullContent.contains(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+            val includeEOT = fullContent.contains(RuntimeRuleSet.END_OF_TEXT)
+            val matchAny = fullContent.contains(RuntimeRuleSet.ANY_LOOKAHEAD)
+            val content = fullContent.minus(RuntimeRuleSet.USE_PARENT_LOOKAHEAD).minus(RuntimeRuleSet.END_OF_TEXT).minus(RuntimeRuleSet.ANY_LOOKAHEAD)
+            return automaton.createLookaheadSet(includeUP, includeEOT, matchAny, content)
+        }
     }
 
     val totalContent:Set<RuntimeRule> get() {

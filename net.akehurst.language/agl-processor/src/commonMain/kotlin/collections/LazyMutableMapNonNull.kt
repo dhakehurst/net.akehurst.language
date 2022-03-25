@@ -16,9 +16,9 @@
 
 package net.akehurst.language.collections
 
-internal fun <K,V> lazyMapNonNull(accessor: (K) -> V) = LazyMapNonNull(accessor)
+internal fun <K,V> lazyMutableMapNonNull(accessor: (K) -> V) = LazyMutableMapNonNull(accessor)
 
-internal class LazyMapNonNull<K,V>(val accessor: (K) -> V) : Map<K,V> {
+internal class LazyMutableMapNonNull<K,V>(val accessor: (K) -> V) : MutableMap<K,V> {
 
     val map = mutableMapOf<K,V>()
 
@@ -32,16 +32,16 @@ internal class LazyMapNonNull<K,V>(val accessor: (K) -> V) : Map<K,V> {
         }
     }
 
-    override val entries: Set<Map.Entry<K, V>>
+    override val entries: MutableSet<MutableMap.MutableEntry<K, V>>
         get() = map.entries
 
-    override val keys: Set<K>
+    override val keys: MutableSet<K>
         get() = map.keys
 
     override val size: Int
         get() = map.size
 
-    override val values: Collection<V>
+    override val values: MutableCollection<V>
         get() = map.values
 
     override fun containsKey(key: K): Boolean {
@@ -57,5 +57,16 @@ internal class LazyMapNonNull<K,V>(val accessor: (K) -> V) : Map<K,V> {
     override fun isEmpty(): Boolean {
         return map.isEmpty()
     }
+
+    override fun clear() {
+        this.map.clear()
+    }
+
+    override fun put(key: K, value: V): V? = this.map.put(key,value)
+    override fun putAll(from: Map<out K, V>) {
+        this.map.putAll(from)
+    }
+
+    override fun remove(key: K): V? = this.map.remove(key)
 
 }
