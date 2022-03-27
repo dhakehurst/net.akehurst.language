@@ -185,7 +185,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                     }
                     else -> Unit
                 }
-TODO("mising followInContext - eg. G,0,0 <-- div,0,1")
+//TODO("mising followInContext - eg. G,0,0 <-- div,0,1")
                 val closureRoot = ClosureItemRoot(prev, rulePosition)
                 calcFirstAndFollowForClosureRoot(closureRoot, true)
             }
@@ -200,6 +200,20 @@ TODO("mising followInContext - eg. G,0,0 <-- div,0,1")
         when {
             closureRoot.rulePosition.isAtEnd -> Unit // do nothing (terminals are always atEnd, do nothing for them also)
             closureRoot.rulePosition.item!!.isTerminal -> {
+                val childRp = closureRoot.rulePosition.item!!.asTerminalRulePosition
+                val needsFirstOf = childRp.isAtStart.not() && childRp.isTerminal.not()
+                val needsFollow = childRp.isTerminal
+                todoList.push(CalculationTask(ClosureItemChild(closureRoot, childRp), needsFirstOf, needsFollow) { futureTerminal ->
+                    this.addFirstTerminalInContext(closureRoot.prev, closureRoot.rulePosition, futureTerminal)
+                    for(rpn in closureRoot.rulePosition.next()) {
+                        //should be atEnd
+                        for(npv in closureRoot.nextPrev) {
+                            this.addFirstOfInContextAsReferenceToFirstTerminal(closureRoot.prev, rpn, closureRoot.prev, npv)
+                        }
+                    }
+                    //td.postTaskActions.invoke(futureTerminal)
+                })
+                /*
                 this.addFirstTerminalInContext(closureRoot.prev, closureRoot.rulePosition, closureRoot.rulePosition.item!!)
                 if (closureRoot.rulePosition.item!!.isEmptyRule) {
                     TODO()
@@ -207,10 +221,13 @@ TODO("mising followInContext - eg. G,0,0 <-- div,0,1")
                     this.addFirstOfInContext(closureRoot.prev, closureRoot.rulePosition, closureRoot.rulePosition.item!!)
                 }
 
-                // can't compute follow as firstOf(parent.next) because there is no parent of a ClosureRoot
-                // but 'UP' should give the runtime LHS (follow) which is correct as this is the root, thus will grow into the prev
-                // follow(X) = UP
+                for (nextPrev in closureRoot.nextPrev) {
+                    // follow(X) = firstOf(parent.next)
+                    this.addFollowInContextAsReferenceToFirstOf(td.prev, td.rulePosition.runtimeRule, parentClosureItem.prev, nextPrev)
+                }
+
                 this.addFollowInContext(closureRoot.prev, closureRoot.rulePosition.runtimeRule, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                 */
             }
             else -> {
                 val childRulePositions = closureRoot.rulePosition.item!!.rulePositionsAt[0]
@@ -246,7 +263,7 @@ TODO("mising followInContext - eg. G,0,0 <-- div,0,1")
                     val parentClosureItem = td.closureItem.parent
                     for (nextPrev in parentClosureItem.nextPrev) {
                         // follow(X) = firstOf(parent.next)
-                        this.addFollowInContextAsReferenceToFirstOf(td.prev, td.rulePosition.runtimeRule, parentClosureItem.prev, nextPrev) // check target prev
+                        this.addFollowInContextAsReferenceToFirstOf(parentClosureItem.prev, td.rulePosition.runtimeRule, parentClosureItem.prev, nextPrev) // check target prev
                         if (calcFollow) {
                             //firstOf(parent.next) = firstTerminals(parent.next) excluding <empty>
                             // and including when empty, firstOf(parent.next.next) || firstOf(parent.next.parent)
