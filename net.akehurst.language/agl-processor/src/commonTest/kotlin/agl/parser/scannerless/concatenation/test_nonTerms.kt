@@ -29,15 +29,15 @@ import kotlin.test.assertNull
 internal class test_nonTerms : test_ScanOnDemandParserAbstract() {
 
     // S = a b c;
-    // a = 'a' ;
-    // b = 'b' ;
-    // c = 'c' ;
+    // A = 'a' ;
+    // B = 'b' ;
+    // C = 'c' ;
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("S") { ref("a"); ref("b"); ref("c") }
-            concatenation("a") { literal("a") }
-            concatenation("b") { literal("b") }
-            concatenation("c") { literal("c") }
+            concatenation("S") { ref("A"); ref("B"); ref("C") }
+            concatenation("A") { literal("a") }
+            concatenation("B") { literal("b") }
+            concatenation("C") { literal("c") }
         }
         val goal = "S"
     }
@@ -87,9 +87,9 @@ internal class test_nonTerms : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-                a { 'a' }
-                b { 'b' }
-                c { 'c' }
+                A { 'a' }
+                B { 'b' }
+                C { 'c' }
             }
         """.trimIndent()
 
