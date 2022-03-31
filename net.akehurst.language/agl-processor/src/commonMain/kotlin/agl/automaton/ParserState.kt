@@ -18,6 +18,7 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.processor.AutomatonKind
 
 internal class ParserState(
@@ -107,7 +108,7 @@ internal class ParserState(
     val isChoice: Boolean by lazy { this.choiceKindList.isNotEmpty() } // it should be empty if not a choice
 
     val firstRuleChoiceKind by lazy {
-        check(1 == this.choiceKindList.size)
+        if (Debug.CHECK)  check(1 == this.choiceKindList.size)
         this.choiceKindList[0]
     }
 

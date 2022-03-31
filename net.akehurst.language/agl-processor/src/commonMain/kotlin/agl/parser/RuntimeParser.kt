@@ -27,6 +27,8 @@ import net.akehurst.language.agl.runtime.structure.RuleOption
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
+import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.agl.util.debug
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParserInterruptedException
 import net.akehurst.language.api.sppt.SPPTNode
@@ -261,17 +263,17 @@ internal class RuntimeParser(
             }
         }
         if (true) {
-            println("--- ${debugCount++} --------------------------------------------------------")
+            if (Debug.OUTPUT) debug(Debug.IndentDelta.NONE){"--- ${debugCount++} --------------------------------------------------------"}
             this.graph._growingHeadHeap.forEach {
                 val chains = it.index.chains()
                 chains.forEach { chain ->
                     val str = chain.joinToString(separator = "-->") {
                         it.asString()
                     }
-                    println(str)
+                    if (Debug.OUTPUT) debug(Debug.IndentDelta.NONE){str}
                 }
             }
-            println()
+            if (Debug.OUTPUT) debug(Debug.IndentDelta.NONE){""}
         }
     }
 

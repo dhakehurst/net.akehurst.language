@@ -20,6 +20,7 @@ import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
+import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.collections.MutableQueue
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.collections.mutableQueueOf
@@ -434,7 +435,7 @@ internal class BuildCacheLC1(
             val upFilt = upCls.filter { rr == it.rulePosition.item }
             val lhs = upFilt.map { it.lookaheadSet }.reduce{ acc, it -> acc.union(it) }
             val follow = this.followInContext(fromState, rr).toSet()
-            check(lhs.fullContent==follow) { "$lhs != [${follow.joinToString { it.tag }}] Follow($fromState,${rr.tag})" }
+            if(Debug.CHECK) check(lhs.fullContent==follow) { "$lhs != [${follow.joinToString { it.tag }}] Follow($fromState,${rr.tag})" }
             val rp = RulePosition(rr, 0, RulePosition.END_OF_RULE)
             WidthInfo(rp, lhs)
         }

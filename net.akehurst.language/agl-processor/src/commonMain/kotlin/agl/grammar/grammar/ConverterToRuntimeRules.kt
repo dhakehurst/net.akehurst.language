@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.processor.LanguageProcessorException
 import net.akehurst.language.collections.LazyMutableMapNonNull
@@ -85,7 +86,7 @@ internal class ConverterToRuntimeRules(
     }
 
     private fun nextRule(name: String, kind: RuntimeRuleKind, isPattern: Boolean, isSkip: Boolean): RuntimeRule {
-        check(this.runtimeRules.containsKey(name).not())
+        if (Debug.CHECK) check(this.runtimeRules.containsKey(name).not())
         val newRule = RuntimeRule(_runtimeRuleSet.number, runtimeRules.size, name, "", kind, isPattern, isSkip, null, null)
         runtimeRules[name] = newRule
         return newRule
@@ -101,7 +102,7 @@ internal class ConverterToRuntimeRules(
     }
 
     private fun embeddedRule(name: String, isSkip: Boolean, embeddedRuntimeRuleSet: RuntimeRuleSet, embeddedStartRule: RuntimeRule): RuntimeRule {
-        check(this.runtimeRules.containsKey(name).not())
+        if (Debug.CHECK) check(this.runtimeRules.containsKey(name).not())
         val newRule = RuntimeRule(_runtimeRuleSet.number, runtimeRules.size, name, "", RuntimeRuleKind.EMBEDDED, false, isSkip, embeddedRuntimeRuleSet, embeddedStartRule)
         runtimeRules[name] = newRule
         return newRule

@@ -23,6 +23,7 @@ import net.akehurst.language.agl.collections.binaryHeap
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.util.Debug
 
 internal class ParseGraph(
     val input: InputFromString,
@@ -291,7 +292,7 @@ internal class ParseGraph(
     ): MergeOptions {
         return when {
             newNode.state.isChoice -> {
-                check(newNode.state.choiceKindList.size == 1) //TODO: could remove this check if always passes
+                if (Debug.CHECK) check(newNode.state.choiceKindList.size == 1) //TODO: could remove this check if always passes
                 when (newNode.state.firstRuleChoiceKind) {
                     RuntimeRuleChoiceKind.NONE -> error("should never happen")
                     RuntimeRuleChoiceKind.LONGEST_PRIORITY -> {

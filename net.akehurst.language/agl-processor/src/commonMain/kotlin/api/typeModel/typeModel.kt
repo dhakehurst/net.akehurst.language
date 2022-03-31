@@ -19,6 +19,7 @@ package net.akehurst.language.api.typeModel
 import net.akehurst.language.agl.collections.MutableOrderedSet
 import net.akehurst.language.agl.collections.OrderedSet
 import net.akehurst.language.agl.collections.mutableOrderedSetOf
+import net.akehurst.language.agl.util.Debug
 
 class TypeModel {
 
@@ -80,8 +81,8 @@ class TupleType() : StructuredRuleType {
 
     override fun getPropertyByIndex(i:Int):PropertyDeclaration = _propertyIndex[i]
     override fun appendProperty(name: String, propertyDeclaration: PropertyDeclaration)  {
-        check(propertyDeclaration.owner==this)
-        check(this.property.containsKey(name).not())
+        if (Debug.CHECK) check(propertyDeclaration.owner==this)
+        if (Debug.CHECK) check(this.property.containsKey(name).not())
         this.property[name]=propertyDeclaration
         this._propertyIndex.add(propertyDeclaration)
     }
@@ -108,8 +109,8 @@ data class ElementType(override val name: String) : StructuredRuleType {
 
     override fun getPropertyByIndex(i:Int):PropertyDeclaration = _propertyIndex[i]
     override fun appendProperty(name: String, propertyDeclaration: PropertyDeclaration) {
-        check(propertyDeclaration.owner==this)
-        check(this.property.containsKey(name).not())
+        if (Debug.CHECK) check(propertyDeclaration.owner==this)
+        if (Debug.CHECK) check(this.property.containsKey(name).not())
         this.property[name]=propertyDeclaration
         this._propertyIndex.add(propertyDeclaration)
     }
