@@ -47,10 +47,6 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
             override val parent: ClosureItem get() = error("ClosureItemRoot has no parent")
             override val prevPrev: RulePosition get() = error("ClosureItemRoot has no prevPrev")
 
-            //override val prevForChildren = when {
-            //    rulePosition.isAtStart -> prev
-            //    else -> rulePosition
-            //}
             override val nextPrev = this.rulePosition.next()
 
             override fun toString(): String = "$prev<--$rulePosition"
@@ -63,10 +59,6 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                 else -> parent.rulePosition
             }
 
-            //override val prevForChildren = when {
-            //    rulePosition.isAtStart -> prev
-            //     else -> rulePosition
-            // }
             override val nextPrev = when {
                 rulePosition.isTerminal -> parent.nextPrev
                 else -> rulePosition.next().flatMap {
@@ -306,22 +298,11 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                 */
                 when { //maybe check if already calc'd
                     td.closureItem.rulePosition.isTerminal -> {
-                        this.propagateFirstTerminalUpTheClosure(td.closureItem)
+                        this.propagateFirstTerminalUpTheClosure(td.closureItem, calcFollow)
                         //only need follow for terminals
-                        for (nextPrev in td.closureItem.nextPrev) {
-                            // follow(term) = firstOf(term.parent.next) = firstOf()
-                            this.addFollowInContextAsReferenceToFirstOf(
-                                td.closureItem.prev,
-                                td.closureItem.rulePosition.runtimeRule,
-                                td.closureItem.prevPrev,
-                                nextPrev
-                            ) // check target prev
-                            if (calcFollow) {
-                                //firstOf(parent.next) = firstTerminals(parent.next) excluding <empty>
-                                // and including when empty, firstOf(parent.next.next) || firstOf(parent.next.parent)
-                                val closureRoot1 = ClosureItemRoot(td.closureItem.prevPrev, nextPrev)
-                                calcFirstAndFollowForClosureRoot(closureRoot1, false)
-                            }
+                        for (pnp in td.closureItem.parent.nextPrev) {
+                            this.addFollowInContextAsReferenceToFirstOf(td.closureItem.prev, td.closureItem.rulePosition.runtimeRule, td.closureItem.parent.prevPrev, pnp)
+                            if (calcFollow) this.calcFirstAndFollowForClosureRoot(ClosureItemRoot(td.closureItem.prevPrev, pnp), false)
                         }
                     }
                     td.closureItem.rulePosition.item!!.isTerminal -> {
@@ -370,22 +351,22 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
     /**
      * iterate up a closure and set firstTerm,firstOf,follow as required
      */
-    private fun propagateFirstTerminalUpTheClosure(closureItem: ClosureItem) {
+    private fun propagateFirstTerminalUpTheClosure(closureItem: ClosureItem, calcFollow: Boolean) {
         var cls = closureItem
         val terminal = cls.rulePosition.runtimeRule
         if (Debug.CHECK)  check(terminal.isTerminal)
         var needsNextIfEmpty = terminal.isEmptyRule
-        this.setFirsts(cls, terminal, needsNextIfEmpty)
+        this.setFirsts(cls, terminal, needsNextIfEmpty,calcFollow)
         while (cls !is ClosureItemRoot) {
             cls = cls.parent
-            this.setFirsts(cls, terminal, needsNextIfEmpty)
+            this.setFirsts(cls, terminal, needsNextIfEmpty,calcFollow)
             if (cls !is ClosureItemRoot && cls.parent.rulePosition.isAtEnd.not()) {
                 needsNextIfEmpty = false
             }
         }
     }
 
-    private fun setFirsts(cls: ClosureItem, terminal: RuntimeRule, terminalEmptyAndNeedsNext: Boolean) {
+    private fun setFirsts(cls: ClosureItem, terminal: RuntimeRule, terminalEmptyAndNeedsNext: Boolean, calcFollow: Boolean) {
         // when {
         //   startState -> WIDTH - targetState = firstTerminals, lookahead = follow(targetState)
         //   atStart -> Nothing needed (unless startState)
@@ -394,28 +375,32 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
         // }
         // other than the start state, firstTerm & firstOf are never called on RPs at the start
         // also never called on a Terminal
-        TODO()
-        if ((cls.rulePosition.isGoal || cls.rulePosition.isAtStart.not()) && cls.rulePosition.isTerminal.not()) {
-            this.addFirstTerminalInContext(cls.prev, cls.rulePosition, terminal)
-        }
-        if (cls is ClosureItemRoot) {
-
-        } else {
-            if (terminalEmptyAndNeedsNext) {
-                for (npv in cls.nextPrev) {
-                    this.addFirstOfInContextAsReferenceToFirstOf(cls.parent.prev, cls.parent.rulePosition, cls.prevPrev, npv)
-                    // have to do the calc or cannot resolve replacement for 'empty'
-                    //this.calcFirstAndFollowForClosureRoot(ClosureItemRoot(cls.prevPrev, npv), false)
+        when {
+            cls.rulePosition.isAtStart -> when {
+                cls.rulePosition.isGoal -> {
+                    this.addFirstTerminalInContext(cls.prev, cls.rulePosition, terminal)
                 }
+                else -> Unit // nothing needed
+            }
+            cls.rulePosition.isAtEnd -> {
+                for (npv in cls.nextPrev) {
+                    when {
+                        npv.isAtEnd -> this.addFirstOfInContext(cls.prev, cls.rulePosition, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                        else -> {
+                            this.addFirstOfInContextAsReferenceToFirstOf(cls.prev, cls.rulePosition, cls.prevPrev, npv)
+                            if (cls.rulePosition.isEmptyRule) {
+                                this.calcFirstAndFollowForClosureRoot(ClosureItemRoot(cls.prevPrev, npv), false)
+                            }
+                        }
+                    }
+                }
+            }
+            else -> {
+                // for targetState
+                this.addFirstTerminalInContext(cls.prev, cls.rulePosition, terminal)
+                //follow handled in calcFirstAndFollowForClosureRoot
             }
         }
     }
 
-
-    private fun setFirstOfForAtEnd(closureItem:ClosureItem) {
-        for (npv in closureItem.nextPrev) {
-            this.addFirstOfInContextAsReferenceToFirstTerminal(closureItem.prev, closureItem.rulePosition, closureItem.prevPrev, npv)
-            //if (calcFollow) this.calcFirstAndFollowForClosureRoot(ClosureItemRoot(closureItem.prevPrev, npv), false)
-        }
-    }
 }
