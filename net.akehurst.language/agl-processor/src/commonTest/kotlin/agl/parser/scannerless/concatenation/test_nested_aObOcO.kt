@@ -46,20 +46,12 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
     fun empty_fails() {
         val sentence = ""
 
-        val expected = """
-            S {
-                aOpt|1 { §empty }
-                bOpt|1 { §empty }
-                cOpt|1 { §empty }
-            }
-        """.trimIndent()
-
-        super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0,1,1,1),"^d", setOf("'a'","'b'","'c'","'t'"))
+            ), issues
         )
     }
 
@@ -71,7 +63,7 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0,1,1,1),"^d", setOf("'a'","'b'","'c'","<EOT>"))
+                parseError(InputLocation(0,1,1,1),"^d", setOf("'a'","'b'","'c'","'t'"))
             ), issues
         )
     }
@@ -101,14 +93,16 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun a() {
-        val sentence = "a"
+    fun at() {
+        val sentence = "at"
 
         val expected = """
-            S {
+            S { Opts {
                 aOpt { 'a' }
                 bOpt|1 { §empty }
                 cOpt|1 { §empty }
+                }
+                't'
             }
         """.trimIndent()
 
@@ -122,14 +116,16 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun ab() {
-        val sentence = "ab"
+    fun abt() {
+        val sentence = "abt"
 
         val expected = """
-            S {
+            S { Opts {
                 aOpt { 'a' }
                 bOpt { 'b' }
                 cOpt|1 { §empty }
+                }
+                't'
             }
         """.trimIndent()
 
@@ -150,20 +146,22 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1,2,1,1),"b^a", setOf("'c'","<EOT>"))
+                parseError(InputLocation(1,2,1,1),"b^a", setOf("'c'","'t'"))
             ), issues
         )
     }
 
     @Test
-    fun ac() {
-        val sentence = "ac"
+    fun act() {
+        val sentence = "act"
 
         val expected = """
-            S {
+            S { Opts {
                 aOpt { 'a' }
                 bOpt|1 { §empty }
                 cOpt { 'c' }
+                }
+                't'
             }
         """.trimIndent()
 
@@ -177,14 +175,16 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun abc() {
-        val sentence = "abc"
+    fun abct() {
+        val sentence = "abct"
 
         val expected = """
-            S {
+            S { Opts {
                 aOpt { 'a' }
                 bOpt { 'b' }
                 cOpt { 'c' }
+                }
+                't'
             }
         """.trimIndent()
 
@@ -205,7 +205,7 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1,2,1,1),"a^dc", setOf("'b'","'c'","<EOT>"))
+                parseError(InputLocation(1,2,1,1),"a^dc", setOf("'b'","'c'","'t'"))
             ), issues
         )
     }
@@ -218,7 +218,7 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2,3,1,1),"ab^d", setOf("'c'","<EOT>"))
+                parseError(InputLocation(2,3,1,1),"ab^d", setOf("'c'","'t'"))
             ), issues
         )
     }
@@ -231,20 +231,22 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(3,4,1,1),"abc^d", setOf("<EOT>"))
+                parseError(InputLocation(3,4,1,1),"abc^d", setOf("'t'"))
             ), issues
         )
     }
 
     @Test
-    fun b() {
-        val sentence = "b"
+    fun bt() {
+        val sentence = "bt"
 
         val expected = """
-            S {
+            S { Opts {
                 aOpt|1 { §empty }
                 bOpt { 'b' }
                 cOpt|1 { §empty }
+                }
+                't'
             }
         """.trimIndent()
 
@@ -258,14 +260,16 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun bc() {
-        val sentence = "bc"
+    fun bct() {
+        val sentence = "bct"
 
         val expected = """
-            S {
+            S { Opts {
                 aOpt|1 { §empty }
                 bOpt { 'b' }
                 cOpt { 'c' }
+                }
+                't'
             }
         """.trimIndent()
 
@@ -279,15 +283,17 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun c() {
+    fun ct() {
         val goal = "S"
-        val sentence = "c"
+        val sentence = "ct"
 
         val expected = """
-            S {
+            S { Opts {
                 aOpt|1 { §empty }
                 bOpt|1 { §empty }
                 cOpt { 'c' }
+               }
+               't'
             }
         """.trimIndent()
 
@@ -309,7 +315,7 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1,2,1,1),"c^b", setOf("<EOT>"))
+                parseError(InputLocation(1,2,1,1),"c^b", setOf("'t'"))
             ), issues
         )
     }

@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -31,6 +32,14 @@ internal data class LookaheadSetPart(
         val UP = LookaheadSetPart(true, false, false, emptySet())
         val ANY = LookaheadSetPart(false, false, true, emptySet())
         val EOT = LookaheadSetPart(false, true, false,emptySet())
+
+        fun createFromRuntimeRules(fullContent:Set<RuntimeRule>): LookaheadSetPart {
+            val includeUP = fullContent.contains(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+            val includeEOT = fullContent.contains(RuntimeRuleSet.END_OF_TEXT)
+            val matchAny = fullContent.contains(RuntimeRuleSet.ANY_LOOKAHEAD)
+            val content = fullContent.minus(RuntimeRuleSet.USE_PARENT_LOOKAHEAD).minus(RuntimeRuleSet.END_OF_TEXT).minus(RuntimeRuleSet.ANY_LOOKAHEAD)
+            return LookaheadSetPart(includeUP, includeEOT, matchAny, content)
+        }
     }
 
     val regex by lazy {

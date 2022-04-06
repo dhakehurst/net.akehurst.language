@@ -433,9 +433,10 @@ internal class BuildCacheLC1(
         val wis = firstTerminals.map { rr ->
             val upCls = fromState.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
             val upFilt = upCls.filter { rr == it.rulePosition.item }
-            val lhs = upFilt.map { it.lookaheadSet }.reduce{ acc, it -> acc.union(it) }
+            val lhs_old = upFilt.map { it.lookaheadSet }.reduce{ acc, it -> acc.union(it) }
             val follow = this.followInContext(fromState, rr).toSet()
-            if(Debug.CHECK) check(lhs.fullContent==follow) { "$lhs != [${follow.joinToString { it.tag }}] Follow($fromState,${rr.tag})" }
+            val lhs = LookaheadSetPart.createFromRuntimeRules(follow)
+            if(Debug.CHECK) check(lhs_old.fullContent==follow) { "$lhs_old != [${follow.joinToString { it.tag }}] Follow($fromState,${rr.tag})" }
             val rp = RulePosition(rr, 0, RulePosition.END_OF_RULE)
             WidthInfo(rp, lhs)
         }
