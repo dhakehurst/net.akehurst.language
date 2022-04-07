@@ -429,6 +429,7 @@ internal class BuildCacheLC1(
         // if there are multiple fromState.rulePositions then they should have same firstOf or they would not be merged.
         // after a WIDTH, fromState becomes the prevState, therefore
         // the lookahead is the firstOf the parent.next of the 'to' state, in the context of the fromStateRulePositions
+        if (Debug.OUTPUT) Debug.debug(Debug.IndentDelta.INC_AFTER){ "START calcWidthInfo($prevState, $fromState) - ${fromState.rulePositions.map { it.item?.tag }}" }
         val firstTerminals = this.firstTerminal(prevState,fromState)
         val wis = firstTerminals.map { rr ->
             val upCls = fromState.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
@@ -440,6 +441,7 @@ internal class BuildCacheLC1(
             val rp = RulePosition(rr, 0, RulePosition.END_OF_RULE)
             WidthInfo(rp, lhs)
         }
+        if (Debug.OUTPUT) Debug.debug(Debug.IndentDelta.DEC_BEFORE){ "FINISH calcWidthInfo($prevState, $fromState)" }
         return wis.toSet()
     }
 
