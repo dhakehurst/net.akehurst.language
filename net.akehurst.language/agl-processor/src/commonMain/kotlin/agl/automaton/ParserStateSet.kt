@@ -62,18 +62,11 @@ internal class ParserStateSet(
     val allBuiltStates: List<ParserState> get() = this.states.values.toList()
     val allBuiltTransitions: Set<Transition> get() = this.allBuiltStates.flatMap { it.outTransitions.allBuiltTransitions }.toSet()
 
-    val startState: ParserState by lazy {
-        val goalRule = RuntimeRuleSet.createGoalRule(userGoalRule)
-        val goalRP = listOf(RulePosition(goalRule, 0, 0))
-        val state = this.createState(goalRP)
-        state
-    }
-    val endState: ParserState by lazy {
-        val goalRule = this.startState.runtimeRules.first()
-        val goalRP = listOf(RulePosition(goalRule, 0, RulePosition.END_OF_RULE))
-        val state = this.createState(goalRP)
-        state
-    }
+    val goalRule by lazy { RuntimeRuleSet.createGoalRule(userGoalRule) }
+    val startRulePosition by lazy { RulePosition(goalRule, 0, 0) }
+    val finishRulePosition by lazy { RulePosition(goalRule, 0, RulePosition.END_OF_RULE) }
+    val startState: ParserState by lazy { this.createState(listOf(startRulePosition))  }
+    val endState: ParserState by lazy {  this.createState(listOf(finishRulePosition)) }
 
     /*
         // runtimeRule -> set of rulePositions where the rule is used

@@ -92,6 +92,7 @@ internal class RulePosition(
     /**
      * itemRule is the rule we use to increment rp
      */
+    //FIXME: I think the parameter 'itemRule' here is not needed
     private fun next(itemRule: RuntimeRule): Set<RulePosition> { //TODO: cache this
         return if (RulePosition.END_OF_RULE == this.position) {
             emptySet()
