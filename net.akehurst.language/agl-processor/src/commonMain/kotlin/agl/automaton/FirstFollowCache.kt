@@ -62,7 +62,15 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
             override val nextPrev = this.rulePosition.next()
 
             override val nextNotAtEnd: List<Pair<RulePosition, RulePosition>>
-                get() = ifRootAtEnd as List<Pair<RulePosition, RulePosition>>
+                get() = when {
+                    rulePosition.isTerminal -> ifRootAtEnd
+                    else -> rulePosition.next().flatMap {
+                        when {
+                            it.isAtEnd -> ifRootAtEnd
+                            else -> listOf(Pair(prev,it))
+                        }
+                    }
+                }
 
             override fun toString(): String = "$prev<--$rulePosition"
         }
@@ -104,11 +112,16 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
             }
 
             override val nextNotAtEnd: List<Pair<RulePosition, RulePosition>> get() = when {
-                    rulePosition.isTerminal -> parent.nextNotAtEnd
-                    else -> rulePosition.next().flatMap {
+                    rulePosition.isTerminal -> parent.rulePosition.next().flatMap {
                         when {
                             it.isAtEnd -> parent.nextNotAtEnd
                             else -> listOf(Pair(parent.prev,it))
+                        }
+                    }
+                    else -> rulePosition.next().flatMap {
+                        when {
+                            it.isAtEnd -> parent.nextNotAtEnd
+                            else -> listOf(Pair(prev,it))
                         }
                     }
                 }
@@ -156,7 +169,8 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
     fun firstTerminal(prev: RulePosition, rulePosition: RulePosition): Set<RuntimeRule> {
         check(prev.isAtEnd.not()) { "firstTerminal($prev,$rulePosition)" }
         val nextNotAtEnd = Pair(this.stateSet.startRulePosition, this.stateSet.finishRulePosition)
-        calcFirstAndFollowForClosureRoot(ClosureItemRoot(prev, rulePosition, listOf(nextNotAtEnd)), true) // repetition checked for within
+        //calcFirstAndFollowForClosureRoot(ClosureItemRoot(prev, rulePosition, listOf(nextNotAtEnd)), true) // repetition checked for within
+        needsNext(prev,rulePosition,true)
         return this._firstTerminal[prev][rulePosition]
     }
 
@@ -194,11 +208,11 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
         return this._parentInContext[prev][completedRule]
     }
 
-    fun needsNext(prev: RulePosition, rulePosition: RulePosition):Boolean {
+    private fun needsNext(prev: RulePosition, rulePosition: RulePosition,calcFollow:Boolean):Boolean {
         return if (_needsNext[prev].containsKey(rulePosition)) {
             _needsNext[prev][rulePosition]!!
         } else {
-            val r = this.calcFirstTermClosure(ClosureItemRoot(prev,rulePosition))
+            val r = this.calcFirstTermClosure(ClosureItemRoot(prev,rulePosition, listOf()),calcFollow)
             _needsNext[prev][rulePosition] = r
             r
         }
@@ -252,14 +266,14 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
         this._parentInContext[prev][completedRule].add(parentRulePosition)
     }
 
-    private fun calcFirstTermClosure(closureStart: ClosureItem):Boolean {
+    private fun calcFirstTermClosure(closureStart: ClosureItem, calcFollow: Boolean):Boolean {
+        if (Debug.OUTPUT) debug(Debug.IndentDelta.INC_AFTER) { "START calcFirstTermClosure($closureStart, $calcFollow)" }
         val done = mutableSetOf<Pair<Set<RulePosition>, RulePosition>>()
         val todoList = mutableStackOf<ClosureItem>()
         todoList.push(closureStart)
         var needsNext = false
         while (todoList.isNotEmpty) {
             val cls = todoList.pop()
-            done.add(d)
             when {
                 cls.rulePosition.isTerminal -> {
                     val r = this.propagateFirstTerminalUpTheClosure(cls, calcFollow)
@@ -284,6 +298,8 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                 }
             }
         }
+        if (Debug.OUTPUT) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcFirstTermClosure($closureStart)" }
+        return needsNext
     }
 
     // may be called with closure that is not the 'Root' of the closure, rather a starting point in a closure,
@@ -291,6 +307,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
     /**
      * return true if needsNext (i.e. could be empty)
      */
+    /*
     private fun calcFirstAndFollowForClosureRoot(closureStart: ClosureItem, calcFollow: Boolean) {
         val doit = when (this._doneFollow[closureStart.prev][closureStart.rulePosition]) {
             null -> true
@@ -370,6 +387,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
             if (Debug.OUTPUT) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcFirstAndFollowForClosureRoot($closureStart)" }
         }
     }
+    */
 
     /**
      * iterate up a closure and set firstTerm,firstOf,follow as required
@@ -412,9 +430,14 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
         // also never called on a Terminal
         return when {
             cls.rulePosition.isTerminal -> { // terminals only
-                for(np in cls.nextNotAtEnd) {
-                    this.calcFirstAndFollowForClosureRoot(ClosureItemRoot(np.first,np.second, emptyList()), false)
-                    this.addFollowInContextAsReferenceToFirstOf(cls.prev, cls.rulePosition.runtimeRule, np.first,np.second)
+                if (cls.nextNotAtEnd.isEmpty()) {
+                    this.addFollowInContext(cls.prev, cls.rulePosition.runtimeRule, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                } else {
+                    for (np in cls.nextNotAtEnd) {
+                        //this.calcFirstAndFollowForClosureRoot(ClosureItemRoot(np.first, np.second, emptyList()), false)
+                        needsNext(np.first, np.second, false)
+                        this.addFollowInContextAsReferenceToFirstOf(cls.prev, cls.rulePosition.runtimeRule, np.first, np.second)
+                    }
                 }
                 /*
                 for (npvCls in cls.nextClosure) {
@@ -468,9 +491,16 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                     var thisNeedsNext = false
                     for (pn in cls.rulePosition.next()) {
                         if (pn.isAtEnd) {
-                            for(np in cls.nextNotAtEnd) {
-                                this.calcFirstAndFollowForClosureRoot(ClosureItemRoot(np.first,np.second, listOf()), false)
-                                this.addFirstOfInContextAsReferenceToFirstOf(cls.prev, cls.rulePosition, np.first,np.second)
+                            if (cls.nextNotAtEnd.isEmpty()) {
+                                this.addFirstOfInContext(cls.prev, cls.rulePosition, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                                thisNeedsNext = true
+                            } else {
+                                for (np in cls.nextNotAtEnd) {
+                                    //this.calcFirstAndFollowForClosureRoot(ClosureItemRoot(np.first, np.second, listOf()), false)
+                                    val r = needsNext(np.first, np.second, false)
+                                    thisNeedsNext = r || thisNeedsNext
+                                    this.addFirstOfInContextAsReferenceToFirstOf(cls.prev, cls.rulePosition, np.first, np.second)
+                                }
                             }
                             /*
                             for (npvCls in cls.nextClosure) {
@@ -512,9 +542,17 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                                 }
                             }
                             */
-                            thisNeedsNext = true
                         } else {
-                            //next is not atEnd, nothing to do
+                            if (cls.nextNotAtEnd.isEmpty()) {
+                                this.addFirstOfInContext(cls.prev, cls.rulePosition, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                            } else {
+                                for (np in cls.nextNotAtEnd) {
+                                    //this.calcFirstAndFollowForClosureRoot(ClosureItemRoot(np.first, np.second, listOf()), false)
+                                    val r = needsNext(np.first, np.second, false)
+                                    thisNeedsNext = r || thisNeedsNext
+                                    this.addFirstOfInContextAsReferenceToFirstOf(cls.prev, cls.rulePosition, np.first, np.second)
+                                }
+                            }
                         }
                     }
                     childNeedsNext && thisNeedsNext
@@ -525,11 +563,16 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
             cls.rulePosition.isAtStart -> {
                 if (childNeedsNext) {
                     var thisNeedsNext = false
-                    for(np in cls.nextNotAtEnd) {
-                        //val r = this.calcFirstAndFollowForClosureRoot(ClosureItemRoot(np.first,np.second, listOf()), false)
-                        val r = needsNext(np.first,np.second)
-                        thisNeedsNext = r || thisNeedsNext
-                        this.addFirstOfInContextAsReferenceToFirstOf(cls.prev, cls.rulePosition, np.first,np.second)
+                    if (cls.nextNotAtEnd.isEmpty()) {
+                        this.addFirstOfInContext(cls.prev, cls.rulePosition, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                        thisNeedsNext = cls.rulePosition.next().any { it.isAtEnd }
+                    } else {
+                        for (np in cls.nextNotAtEnd) {
+                            //val r = this.calcFirstAndFollowForClosureRoot(ClosureItemRoot(np.first,np.second, listOf()), false)
+                            val r = needsNext(np.first, np.second, false)
+                            thisNeedsNext = r || thisNeedsNext
+                            this.addFirstOfInContextAsReferenceToFirstOf(cls.prev, cls.rulePosition, np.first, np.second)
+                        }
                     }
                     /*
                     for (pn in cls.rulePosition.next()) {
