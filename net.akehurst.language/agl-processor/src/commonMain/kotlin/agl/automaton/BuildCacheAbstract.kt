@@ -51,7 +51,7 @@ internal abstract class BuildCacheAbstract(
      * RulePosition should never be 'atEnd' and there should always be a
      * non-empty list of "real" terminals ('empty' terminals permitted)
      */
-    fun firstTerminal(prev: ParserState, fromState: ParserState): List<RuntimeRule> {
+    override fun firstTerminal(prev: ParserState, fromState: ParserState): List<RuntimeRule> {
         return prev.rulePositions.flatMap { prevRp ->
             fromState.rulePositions.flatMap { fromRp ->
                 this.firstFollowCache.firstTerminal(prevRp, fromRp)
@@ -63,9 +63,9 @@ internal abstract class BuildCacheAbstract(
 TODO()
     }
 
-    fun followInContext(prev: ParserState, terminalRule: RuntimeRule): List<RuntimeRule> {
+    override fun followInContext(prev: ParserState, runtimeRule: RuntimeRule): List<RuntimeRule> {
         return prev.rulePositions.flatMap { prevRp ->
-            this.firstFollowCache.followInContext(prevRp, terminalRule)
+            this.firstFollowCache.followInContext(prevRp, runtimeRule)
         }.toSet().toList()
     }
 

@@ -20,9 +20,7 @@ import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -64,6 +62,29 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
         ).testAll { rp, lhs, expected ->
             val actual = SM.buildCache.firstOf(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
+        }
+    }
+
+    @Test
+    fun follow() {
+        val ffc = FirstFollowCache(SM)
+        listOf(
+            listOf(RP(G, 0, SOR),RP(G, 0, SOR),RP(G, 0, SOR), a, LHS(UP, a)),     //  (G = . S) <-- (S = . a)  <==  a
+                                                                                                //  (G = . S)    <==  S
+            listOf(RP(G, 0, SOR),RP(G, 0, SOR),RP(G, 0, SOR), S, LHS(UP, a)),     //  (G = . S) <-- (S = . S1) <-- (S1 = . S a)  <==  S
+            listOf(RP(G, 0, SOR),RP(G, 0, SOR),RP(G, 0, SOR), S1, LHS(UP,a)),     //  (G = . S) <-- (S = . S1)   <==  S1
+            listOf(RP(G, 0, SOR),RP(G, 0, SOR),RP(S1, 0, 1), a, LHS(UP)),    // (S1 = S . a)  <==  a
+            listOf(RP(G, 0, SOR),RP(G, 0, SOR),RP(G, 0, SOR), G, LHS(UP)),        // (G = . S)  <==  G
+        ).testAll { list ->
+            val procPrev = list[0] as RulePosition
+            val procRp = list[1] as RulePosition
+            val followPrev = list[2] as RulePosition
+            val followRr = list[3] as RuntimeRule
+            val expected = list[4] as LookaheadSetPart
+            println("($procPrev, $procRp, $followPrev, ${followRr.tag})")
+            ffc.processClosureFor(procPrev, procRp, true)
+            val actual = LHS(ffc.followInContext(followPrev, followRr).toSet())
+            assertEquals(expected, actual, "failed ($procPrev, $procRp, $followPrev, ${followRr.tag})")
         }
     }
 
@@ -158,7 +179,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
                 setOf(LHS(UP))
             ),
             HeightGraftInfo(
-                listOf(G,S),
+                emptyList(),
                 listOf(RP(S1, 0, 0)),
                 listOf(RP(S1, 0, 1)),
                 lhs_a.part,
@@ -166,7 +187,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
             )
             ,
             HeightGraftInfo(
-                listOf(G,S,S1,S),
+                emptyList(),
                 listOf(RP(S1, 0, 0)),
                 listOf(RP(S1, 0, 1)),
                 lhs_a.part,
@@ -317,25 +338,23 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
     fun parse_a() {
         val parser = ScanOnDemandParser(rrs)
         val (sppt, issues) = parser.parseForGoal("S", "a", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
         assertNotNull(sppt)
         assertEquals(0, issues.size)
         assertEquals(1, sppt.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S    */
             val s1 = state(RP(a, 0, EOR))     /* a .        */
             val s2 = state(RP(S, 0, EOR))     /* S = a .    */
-            val s3 = state(RP(S1, 0, EOR))    /* S1 = S a . */
+            val s3 = state(RP(G, 0, EOR))     /* G = S .    */
             val s4 = state(RP(S1, 0, 1)) /* S1 = S . a */
-            val s5 = state(RP(G, 0, EOR))     /* G = S .    */
-            val s6 = state(RP(S, 1, EOR))     /* S = S1 .   */
 
-            transition(null, s0, s1, WIDTH, setOf(UP,a), emptySet(),null)
+            transition(s0, s0, s1, WIDTH, setOf(UP,a), emptySet(),null)
             transition(s0, s1, s2, HEIGHT, setOf(UP,a), setOf(setOf(UP),setOf(a)), listOf(RP(S,0,SOR)))
             transition(s0, s2, s4, HEIGHT, setOf(a), setOf(setOf(UP),setOf(a)),listOf(RP(S1,0,SOR)))
-            transition(s0, s2, s5, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(G,0,SOR)))
-            transition(null, s5, s5, GOAL, emptySet(), emptySet(),null)
+            transition(s0, s2, s3, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(G,0,SOR)))
+            transition(s0, s3, s3, GOAL, emptySet(), emptySet(),null)
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -344,11 +363,11 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
     fun parse_aa() {
         val parser = ScanOnDemandParser(rrs)
         val (sppt, issues) = parser.parseForGoal("S", "aa", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
         assertNotNull(sppt)
         assertEquals(0, issues.size)
         assertEquals(1, sppt.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
 
 
@@ -360,11 +379,12 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
     fun parse_aaa() {
         val parser = ScanOnDemandParser(rrs)
         val (sppt, issues) = parser.parseForGoal("S", "aaa", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
         assertNotNull(sppt)
         assertEquals(0, issues.size)
         assertEquals(1, sppt.maxNumHeads)
+
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
             val s0 = state(RP(G, 0, SOR))     /* {}     G = . S    */
             val s1 = state(RP(a, 0, EOR))     /* {0,4}  a .        */
@@ -374,11 +394,16 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
             val s5 = state(RP(S1, 0, EOR))    /* {0}    S1 = S a . */
             val s6 = state(RP(S, 1, EOR))     /* {0}    S = S1 .   */
 
-            transition(null, s0, s1, WIDTH, setOf(UP,a), emptySet(),null)
+            transition(s0, s0, s1, WIDTH, setOf(UP,a), emptySet(),null)
             transition(s0, s1, s2, HEIGHT, setOf(UP,a), setOf(setOf(UP),setOf(a)), listOf(RP(S,0,SOR)))
+            transition(s0, s1, s5, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(S1,0,1)))
             transition(s0, s2, s4, HEIGHT, setOf(a), setOf(setOf(UP),setOf(a)),listOf(RP(S1,0,SOR)))
-            transition(s0, s2, s5, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(G,0,SOR)))
-            transition(null, s5, s5, GOAL, emptySet(), emptySet(),null)
+            transition(s0, s2, s3, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(G,0,SOR)))
+            transition(s0, s3, s3, GOAL, emptySet(), emptySet(),null)
+            transition(s0, s4, s1, WIDTH, setOf(UP), emptySet(),null)
+            transition(s0, s5, s6, HEIGHT, setOf(UP,a), setOf(setOf(UP),setOf(a)), listOf(RP(S,1,SOR)))
+            transition(s0, s6, s4, HEIGHT, setOf(a), setOf(setOf(UP),setOf(a)), listOf(RP(S1,0,SOR)))
+            transition(s0, s6, s3, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(G,0,SOR)))
         }
         AutomatonTest.assertEquals(expected, actual)
     }

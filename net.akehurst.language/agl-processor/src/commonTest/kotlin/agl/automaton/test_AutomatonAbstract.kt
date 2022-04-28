@@ -76,7 +76,11 @@ internal abstract class test_AutomatonAbstract : test_AutomatonUtilsAbstract() {
             f.invoke(data.first,data.second,data.third)
         }
     }
-
+    fun <T> List<List<T>>.testAll(f:(arg1:List<T>)->Unit) {
+        for(data in this) {
+            f.invoke(data)
+        }
+    }
     /**
     listOf(
         /* G = S . */ Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),
