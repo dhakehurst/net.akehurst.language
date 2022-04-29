@@ -44,7 +44,7 @@ internal class test_multiple_the_same : test_ScanOnDemandParserAbstract() {
             literal("B", "b")
             literal("X", "x")
         }
-        val goal = "S"
+        const val goal = "S"
     }
 
     @Test
@@ -68,12 +68,12 @@ internal class test_multiple_the_same : test_ScanOnDemandParserAbstract() {
             S { X:'x' Ls|1 { §empty } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -87,12 +87,12 @@ internal class test_multiple_the_same : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 

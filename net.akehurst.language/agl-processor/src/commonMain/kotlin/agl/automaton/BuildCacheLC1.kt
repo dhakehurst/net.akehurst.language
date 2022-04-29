@@ -492,21 +492,49 @@ internal class BuildCacheLC1(
         val info = prev.flatMap { pr ->
             val parentsOfFrom = from.flatMap { fr -> this.firstFollowCache.parentInContext(pr, fr) }
             parentsOfFrom.flatMap { (pPrev,pRp) ->
-                val targets = pRp.next()
-                targets.map { tgt ->
-                    val follow = this.firstFollowCache.followInContext(pr, tgt.runtimeRule)
-                    val lhs = LookaheadSetPart.createFromRuntimeRules(follow)
-                    val tgtParents = this.firstFollowCache.parentInContext(pr, tgt.runtimeRule)
-                    val parentFollow = tgtParents.flatMap { tp ->
-                        val f = this.firstFollowCache.followInContext(tp.prev, tp.rulePosition.runtimeRule)
-                        if (f.isEmpty()) {
-                            listOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-                        } else {
-                            f
+                when {
+                    pRp.isAtStart -> { //HEIGHT
+                        val targets = pRp.next()
+                        targets.map { tgt ->
+                            val firstOrfollow = when {
+                                tgt.isAtEnd -> this.firstFollowCache.followInContext(pPrev, tgt.runtimeRule)
+                                else -> this.firstFollowCache.firstOfInContext(pPrev, tgt)
+                            }
+                            val lhs = LookaheadSetPart.createFromRuntimeRules(firstOrfollow)
+                            val tgtParents = this.firstFollowCache.parentInContext(pPrev, tgt.runtimeRule)
+                            val parentFollow = tgtParents.flatMap { tp ->
+                                val f = this.firstFollowCache.followInContext(tp.context, tp.rulePosition.runtimeRule)
+                                if (f.isEmpty()) {
+                                    listOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                                } else {
+                                    f
+                                }
+                            }
+                            val upLhs = LookaheadSetPart.createFromRuntimeRules(parentFollow.toSet())
+                            HeightGraftInfo(emptyList(), listOf(pRp), listOf(tgt), lhs, setOf(upLhs))
                         }
                     }
-                    val upLhs = LookaheadSetPart.createFromRuntimeRules(parentFollow.toSet())
-                    HeightGraftInfo(emptyList(), listOf(pRp), listOf(tgt), lhs, setOf(upLhs))
+                    else -> { //GRAFT
+                        val targets = pRp.next()
+                        targets.map { tgt ->
+                            val firstOrfollow = when {
+                                tgt.isAtEnd -> this.firstFollowCache.followInContext(pPrev, tgt.runtimeRule)
+                                else -> this.firstFollowCache.firstOfInContext(pPrev, tgt)
+                            }
+                            val lhs = LookaheadSetPart.createFromRuntimeRules(firstOrfollow)
+                            val tgtParents = this.firstFollowCache.parentInContext(pPrev, tgt.runtimeRule)
+                            val parentFollow = tgtParents.flatMap { tp ->
+                                val f = this.firstFollowCache.followInContext(tp.context, tp.rulePosition.runtimeRule)
+                                if (f.isEmpty()) {
+                                    listOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                                } else {
+                                    f
+                                }
+                            }
+                            val upLhs = LookaheadSetPart.createFromRuntimeRules(parentFollow.toSet())
+                            HeightGraftInfo(emptyList(), listOf(pRp), listOf(tgt), lhs, setOf(upLhs))
+                        }
+                    }
                 }
             }
         }.toSet()

@@ -82,7 +82,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
             val followRr = list[3] as RuntimeRule
             val expected = list[4] as LookaheadSetPart
             println("($procPrev, $procRp, $followPrev, ${followRr.tag})")
-            ffc.processClosureFor(procPrev, procRp, true)
+            ffc.processClosureFor(procPrev, procRp, listOf(),true)
             val actual = LHS(ffc.followInContext(followPrev, followRr).toSet())
             assertEquals(expected, actual, "failed ($procPrev, $procRp, $followPrev, ${followRr.tag})")
         }
@@ -369,7 +369,13 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
         assertEquals(1, sppt.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
-
+            val s0 = state(RP(G, 0, SOR))     /* G = . S    */
+            val s1 = state(RP(a, 0, EOR))     /* a .        */
+            val s2 = state(RP(S, 0, EOR))     /* S = a .    */
+            val s3 = state(RP(G, 0, EOR))     /* G = S .    */
+            val s4 = state(RP(S1, 0, 1)) /* S1 = S . a */
+            val s5 = state(RP(S1, 0, EOR))    /* S1 = S a . */
+            val s6 = state(RP(S, 1, EOR))     /* S = S1 . */
 
         }
         AutomatonTest.assertEquals(expected, actual)
@@ -386,17 +392,17 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
-            val s0 = state(RP(G, 0, SOR))     /* {}     G = . S    */
+            val s0 = state(RP(G, 0, SOR))     /* {0}    G = . S    */
             val s1 = state(RP(a, 0, EOR))     /* {0,4}  a .        */
             val s2 = state(RP(S, 0, EOR))     /* {0}    S = a .    */
-            val s3 = state(RP(G, 0, EOR))     /* {}     G = S .    */
+            val s3 = state(RP(G, 0, EOR))     /* {0}    G = S .    */
             val s4 = state(RP(S1, 0, 1)) /* {0}    S1 = S . a */
             val s5 = state(RP(S1, 0, EOR))    /* {0}    S1 = S a . */
             val s6 = state(RP(S, 1, EOR))     /* {0}    S = S1 .   */
 
             transition(s0, s0, s1, WIDTH, setOf(UP,a), emptySet(),null)
             transition(s0, s1, s2, HEIGHT, setOf(UP,a), setOf(setOf(UP),setOf(a)), listOf(RP(S,0,SOR)))
-            transition(s0, s1, s5, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(S1,0,1)))
+            transition(s4, s1, s5, GRAFT, setOf(UP,a), setOf(setOf(UP,a)),listOf(RP(S1,0,1)))
             transition(s0, s2, s4, HEIGHT, setOf(a), setOf(setOf(UP),setOf(a)),listOf(RP(S1,0,SOR)))
             transition(s0, s2, s3, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(G,0,SOR)))
             transition(s0, s3, s3, GOAL, emptySet(), emptySet(),null)

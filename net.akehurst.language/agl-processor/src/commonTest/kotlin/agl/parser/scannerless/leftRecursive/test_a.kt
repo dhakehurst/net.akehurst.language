@@ -18,8 +18,12 @@ package net.akehurst.language.parser.scanondemand.leftRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.parser.scanondemand.concatenation.test_a_b_c_literal
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 internal class  test_a : test_ScanOnDemandParserAbstract() {
 
@@ -33,10 +37,24 @@ internal class  test_a : test_ScanOnDemandParserAbstract() {
             }
             concatenation("S1") { ref("S"); literal("a") }
         }
+        val goal = "S"
     }
+
+    @Test
+    fun empty_fails() {
+        val sentence = ""
+
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+            ), issues
+        )
+    }
+
     @Test
     fun a() {
-        val goal = "S"
         val sentence = "a"
 
         val expected = """
@@ -54,7 +72,6 @@ internal class  test_a : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aa() {
-        val goal = "S"
         val sentence = "aa"
 
         val expected = """
@@ -72,7 +89,6 @@ internal class  test_a : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aaa() {
-        val goal = "S"
         val sentence = "aaa"
 
         val expected = """
@@ -100,7 +116,6 @@ internal class  test_a : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aaaaa() {
-        val goal = "S"
         val sentence = "aaaaa"
 
         val expected = """
@@ -130,7 +145,6 @@ internal class  test_a : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a50() {
-        val goal = "S"
         val sentence = "a".repeat(50)
 
         val expected = "S|1 { S1 { ".repeat(49) + "S { 'a' }" + "'a' } }".repeat(49)
@@ -146,7 +160,6 @@ internal class  test_a : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a150() {
-        val goal = "S"
         val sentence = "a".repeat(150)
 
         val expected = "S|1 { S1 { ".repeat(149) + "S { 'a' }" + "'a' } }".repeat(149)
@@ -162,7 +175,6 @@ internal class  test_a : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a500() {
-        val goal = "S"
         val sentence = "a".repeat(500)
 
         val expected = "S|1 { S1 { ".repeat(499) + "S { 'a' }" + "'a' } }".repeat(499)
@@ -178,7 +190,6 @@ internal class  test_a : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a2000() {
-        val goal = "S"
         val sentence = "a".repeat(2000)
 
         val expected = "S|1 { S1 { ".repeat(1999) + "S { 'a' }" + "'a' } }".repeat(1999)
