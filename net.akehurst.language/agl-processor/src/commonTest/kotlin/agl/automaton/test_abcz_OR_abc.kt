@@ -18,6 +18,7 @@ package net.akehurst.language.agl.automaton
 
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
+import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
@@ -53,9 +54,6 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
     private    val c = rrs.findRuntimeRule("'c'")
     private    val z = rrs.findRuntimeRule("'z'")
 
-    private    val lhs_b = SM.createLookaheadSet(false,false, false,setOf(b))
-
-
     @Test
     override fun firstOf() {
         listOf(
@@ -83,29 +81,27 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
     @Test
     override fun s0_widthInto() {
         val s0 = SM.startState
-        val actual = s0.widthInto(s0).toList()
+        val actual = s0.widthInto(s0)
 
-        val expected = listOf(
-            WidthInfo(RP(a, 0, EOR), lhs_b.part)
+        val expected = setOf(
+            WidthInfo(RP(a, 0, EOR), LHS(b))
         )
-        assertEquals(expected.size, actual.size)
-        for (i in 0 until actual.size) {
-            assertEquals(expected[i], actual[i])
-        }
+        assertEquals(expected, actual)
     }
 
     @Test
     fun s1_heightOrGraftInto_s0() {
         val s0 = SM.startState
         val s1 = SM.createState(listOf(RP(a, 0, EOR)))
-        val actual = s1.heightOrGraftInto(s0).toList()
+        s0.widthInto(s0)
+        val actual = s1.heightOrGraftInto(s0)
 
-        val expected = listOf(
+        val expected = setOf(
             HeightGraftInfo(
-                listOf(G, S),
+                listOf(),
                 listOf(RP(ABCZ, 0, SOR), RP(ABC, 0, SOR)),
                 listOf(RP(ABCZ, 0, 1), RP(ABC, 0, 1)),
-                lhs_b.part,
+                LHS(b),
                 setOf(LHS(UP))
             )
         )
@@ -119,7 +115,7 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
         val s1 = SM.createState(listOf(RP(a, 0, EOR)))
         val actual = s0.transitions(s0)
         val expected = listOf(
-            Transition(s0, s1, WIDTH, lhs_b, LookaheadSet.EMPTY, null) { _, _ -> true },
+            Transition(s0, s1, WIDTH, LHS(b).lhs(SM), LookaheadSet.EMPTY, null) { _, _ -> true },
         )
         assertEquals(expected, actual)
     }

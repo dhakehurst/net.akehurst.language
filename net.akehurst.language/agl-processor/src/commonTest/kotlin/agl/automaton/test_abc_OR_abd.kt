@@ -96,9 +96,10 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
     fun s1_heightOrGraftInto_s0() {
         val s0 = SM.startState
         val s1 = SM.createState(listOf(RP(a, 0, EOR)))
-        val actual = s1.heightOrGraftInto(s0).toList()
+        s0.widthInto(s0)
+        val actual = s1.heightOrGraftInto(s0)
 
-        val expected = listOf(
+        val expected = setOf(
             HeightGraftInfo(
                 listOf(),
                 listOf(RP(ABC, 0, SOR), RP(ABD, 0, SOR)),

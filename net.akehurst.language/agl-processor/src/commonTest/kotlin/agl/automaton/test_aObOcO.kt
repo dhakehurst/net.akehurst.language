@@ -56,10 +56,6 @@ internal class test_aObOcO : test_AutomatonAbstract() {
     private val c = rrs.findRuntimeRule("'c'")
     private val G = SM.startState.runtimeRules.first()
 
-    private val s0 = SM.startState
-    private val s1 = SM.createState(listOf(RP(a, 0, EOR)))
-    private val s2 = SM.createState(listOf(RP(aOpt_E, 0, EOR)))
-
     private val lhs_bcU = SM.createLookaheadSet(true, false, false, setOf(b, c))
 
     @Test
@@ -86,44 +82,27 @@ internal class test_aObOcO : test_AutomatonAbstract() {
     @Test
     override fun s0_widthInto() {
         val s0 = SM.startState
-        val actual = s0.widthInto(s0).toList()
+        val actual = s0.widthInto(s0)
 
-        val expected = listOf(
-            WidthInfo(RP(a, 0, EOR), lhs_bcU.part),
-            WidthInfo(RP(aOpt_E, 0, EOR), lhs_bcU.part)
+        val expected = setOf(
+            WidthInfo(RP(aOpt_E, 0, EOR),  LHS(UP, b, c)),
+            WidthInfo(RP(a, 0, EOR), LHS(UP, b, c)),
         )
-        assertEquals(expected.size, actual.size)
-        for (i in 0 until actual.size) {
-            assertEquals(expected[i], actual[i])
-        }
+        assertEquals(expected, actual)
+
     }
 
     @Test
     fun s0_transitions() {
+         val s0 = SM.startState
+         val s1 = SM.createState(listOf(RP(a, 0, EOR)))
+         val s2 = SM.createState(listOf(RP(aOpt_E, 0, EOR)))
         val actual = s0.transitions(s0)
         val expected = listOf(
             Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY, null) { _, _ -> true },
             Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY, null) { _, _ -> true }
         )
         assertEquals(expected, actual)
-    }
-
-    @Test
-    fun s1_heightOrGraftInto_s0() {
-
-        val actual = s1.heightOrGraftInto(s0).toList()
-
-        val expected = listOf(
-            HeightGraftInfo(
-                listOf(),
-                listOf(RP(aOpt, 0, 0)),
-                listOf(RP(aOpt, 0, EOR)),
-                lhs_bcU.part,
-                setOf(LHS(b,c, UP))
-            )
-        )
-        assertEquals(expected, actual)
-
     }
 
     @Test
@@ -151,8 +130,8 @@ internal class test_aObOcO : test_AutomatonAbstract() {
             val s12 = state(RP(S, 0, EOR))
             val s13 = state(RP(G, 0, EOR))
 
-            transition(null, s0, s1, WIDTH, setOf(UP,b,c), setOf(), null)
-            transition(null, s0, s2, WIDTH, setOf(UP,b,c), setOf(), null)
+            transition(s0, s0, s1, WIDTH, setOf(UP,b,c), setOf(), null)
+            transition(s0, s0, s2, WIDTH, setOf(UP,b,c), setOf(), null)
             transition(s0, s1, s3, HEIGHT, setOf(UP,b,c), setOf(setOf(UP,b,c)), listOf( RP(aOpt, 0, SOR)))
             transition(s0, s3, s4, HEIGHT, setOf(UP,b,c), setOf(setOf(UP)), listOf( RP(S, 0, SOR)))
             transition(s0, s4, s5, WIDTH, setOf(UP,c), setOf(), null)
@@ -164,7 +143,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
             transition(s8, s10, s11, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf( RP(cOpt, 1, SOR)))
             transition(s8, s11, s12, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(S, 0, 2)))
             transition(s0, s12, s13, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(G, 0, SOR)))
-            transition(null,s13,s13,GOAL, emptySet(), emptySet(),null)
+            transition(s0,s13,s13,GOAL, emptySet(), emptySet(),null)
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -194,8 +173,8 @@ internal class test_aObOcO : test_AutomatonAbstract() {
             val s12 = state(RP(S, 0, EOR))
             val s13 = state(RP(G, 0, EOR))
 
-            transition(null, s0, s1, WIDTH, setOf(UP,b,c), setOf(), null)
-            transition(null, s0, s2, WIDTH, setOf(UP,b,c), setOf(), null)
+            transition(s0, s0, s1, WIDTH, setOf(UP,b,c), setOf(), null)
+            transition(s0, s0, s2, WIDTH, setOf(UP,b,c), setOf(), null)
             transition(s0, s2, s3, HEIGHT, setOf(UP,b,c), setOf(setOf(UP,b,c)), listOf( RP(aOpt, 1, SOR)))
             transition(s0, s3, s4, HEIGHT, setOf(UP,b,c), setOf(setOf(UP)), listOf( RP(S, 0, SOR)))
             transition(s0, s4, s5, WIDTH, setOf(UP,c), setOf(), null)
@@ -207,7 +186,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
             transition(s8, s10, s11, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf( RP(cOpt, 1, SOR)))
             transition(s8, s11, s12, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(S, 0, 2)))
             transition(s0, s12, s13, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(G, 0, SOR)))
-            transition(null,s13,s13,GOAL, emptySet(), emptySet(),null)
+            transition(s0,s13,s13,GOAL, emptySet(), emptySet(),null)
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -237,8 +216,8 @@ internal class test_aObOcO : test_AutomatonAbstract() {
             val s12 = state(RP(S, 0, EOR))
             val s13 = state(RP(G, 0, EOR))
 
-            transition(null, s0, s1, WIDTH, setOf(UP,b,c), setOf(), null)
-            transition(null, s0, s2, WIDTH, setOf(UP,b,c), setOf(), null)
+            transition(s0, s0, s1, WIDTH, setOf(UP,b,c), setOf(), null)
+            transition(s0, s0, s2, WIDTH, setOf(UP,b,c), setOf(), null)
             transition(s0, s2, s3, HEIGHT, setOf(UP,b,c), setOf(setOf(UP,b,c)), listOf( RP(aOpt, 1, SOR)))
             transition(s0, s3, s4, HEIGHT, setOf(UP,b,c), setOf(setOf(UP)), listOf( RP(S, 0, SOR)))
             transition(s0, s4, s5, WIDTH, setOf(UP,c), setOf(), null)
@@ -250,7 +229,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
             transition(s8, s9, s11, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf( RP(cOpt, 0, SOR)))
             transition(s8, s11, s12, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(S, 0, 2)))
             transition(s0, s12, s13, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(G, 0, SOR)))
-            transition(null,s13,s13,GOAL, emptySet(), emptySet(),null)
+            transition(s0,s13,s13,GOAL, emptySet(), emptySet(),null)
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -279,8 +258,8 @@ internal class test_aObOcO : test_AutomatonAbstract() {
             val s15 = state(RP(S, 0, EOR))
             val s16 = state(RP(G, 0, EOR))
 
-            transition(null, s0, s1, WIDTH, setOf(UP,b,c), setOf(), null)
-            transition(null, s0, s2, WIDTH, setOf(UP,b,c), setOf(), null)
+            transition(s0, s0, s1, WIDTH, setOf(UP,b,c), setOf(), null)
+            transition(s0, s0, s2, WIDTH, setOf(UP,b,c), setOf(), null)
             transition(s0, s1, s3, HEIGHT, setOf(UP,b,c), setOf(setOf(UP,b,c)), listOf( RP(aOpt, 0, SOR)))
             transition(s0, s2, s4, HEIGHT, setOf(UP,b,c), setOf(setOf(UP,b,c)), listOf( RP(aOpt, 1, SOR)))
             transition(s0, s3, s5, HEIGHT, setOf(UP,b,c), setOf(setOf(UP)), listOf( RP(S, 0, SOR)))
@@ -298,7 +277,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
             transition(s10, s13, s15, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(S, 0, 2)))
             transition(s10, s14, s15, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(S, 0, 2)))
             transition(s0, s15, s16, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(G, 0, SOR)))
-            transition(null,s16,s16,GOAL, emptySet(), emptySet(),null)
+            transition(s0,s16,s16,GOAL, emptySet(), emptySet(),null)
         }
 
         AutomatonTest.assertEquals(expected, actual)

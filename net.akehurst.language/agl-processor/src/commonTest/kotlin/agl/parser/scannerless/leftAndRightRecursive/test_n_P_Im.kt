@@ -173,7 +173,7 @@ internal class test_n_P_Im : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 2, //TODO: can we make this 1 anyhow?
+                expectedNumGSSHeads = 1,
                 expectedTrees = arrayOf(expected)
         )
     }

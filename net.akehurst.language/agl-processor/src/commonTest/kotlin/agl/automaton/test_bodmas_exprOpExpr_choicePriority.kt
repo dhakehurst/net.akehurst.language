@@ -18,6 +18,7 @@ package net.akehurst.language.agl.automaton
 
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
+import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
@@ -56,12 +57,6 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
     private val b = rrs.findRuntimeRule("'b'")
     private val v = rrs.findRuntimeRule("'v'")
 
-    private val lhs_v = SM.createLookaheadSet(false, false, false, setOf(v))
-    private val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
-    private val lhs_b = SM.createLookaheadSet(false, false, false, setOf(b))
-    private val lhs_UPab = SM.createLookaheadSet(true, false, false, setOf(a,b))
-
-
     @Test
     override fun firstOf() {
         listOf(
@@ -81,15 +76,12 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
     @Test
     override fun s0_widthInto() {
         val s0 = SM.startState
-        val actual = s0.widthInto(s0).toList()
+        val actual = s0.widthInto(s0)
 
-        val expected = listOf(
-            WidthInfo(RP(v, 0, EOR), LHS(UP,a,b))
+        val expected = setOf(
+            WidthInfo(RP(v, 0, EOR), LHS(UP, a, b))
         )
-        assertEquals(expected.size, actual.size)
-        for (i in 0 until actual.size) {
-            assertEquals(expected[i], actual[i])
-        }
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -98,7 +90,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
         val s1 = SM.createState(listOf(RP(v, 0, EOR)))
         val actual = s0.transitions(s0)
         val expected = listOf(
-            Transition(s0, s1, WIDTH, lhs_UPab, LookaheadSet.EMPTY, null) { _, _ -> true }
+            Transition(s0, s1, WIDTH, LHS(UP,a,b).lhs(SM), LookaheadSet.EMPTY, null) { _, _ -> true }
         )
         assertEquals(expected, actual)
     }
@@ -107,21 +99,20 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
     fun s1_heightOrGraftInto_s0() {
         val s0 = SM.startState
         val s1 = SM.createState(listOf(RP(v, 0, EOR)))
+        s0.widthInto(s0)
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
             HeightGraftInfo(
                 emptyList(),
-                listOf(RP(E,0,SOR)),
-                listOf(RP(E,0,EOR)),
-                LHS(UP,a,b),
-                setOf(LHS(UP,a,b))
+                listOf(RP(E, 0, SOR)),
+                listOf(RP(E, 0, EOR)),
+                LHS(UP, a, b),
+                setOf(LHS(UP, a, b))
             )
         )
         assertEquals(expected, actual)
     }
-
-
 
     @Test
     fun automaton_parse_v() {
@@ -137,7 +128,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
             val s1 = state(RP(v, 0, EOR))     /* v .     */
             val s2 = state(RP(E, 0, EOR))     /* E = v . */
             val s3 = state(RP(S, 0, EOR))     /* S = E . */
-            val s4 = state(RP(EA, 0, 1),RP(EB, 0, 1))     /* G = . S   */
+            val s4 = state(RP(EA, 0, 1), RP(EB, 0, 1))     /* G = . S   */
             val s5 = state(RP(EA, 0, 1))     /* G = . S   */
             val s6 = state(RP(EB, 0, 1))     /* G = . S   */
             val s7 = state(RP(G, 0, EOR))     /* G = . S   */
