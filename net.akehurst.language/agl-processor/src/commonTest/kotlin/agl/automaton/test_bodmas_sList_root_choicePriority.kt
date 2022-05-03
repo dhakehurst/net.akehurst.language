@@ -138,9 +138,9 @@ internal class test_bodmas_sList_root_choicePriority : test_AutomatonAbstract() 
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-            HeightGraftInfo(emptyList(), listOf(RP(S, 0, SOR)), listOf(RP(S, 0, EOR)), LHS(UP), setOf(LHS(UP))),
+            HeightGraftInfo(Transition.ParseAction.HEIGHT, listOf(RP(S, 0, SOR)), listOf(RP(S, 0, EOR)), LHS(UP), setOf(LHS(UP))),
             HeightGraftInfo(
-                ancestors = emptyList(),
+                action = Transition.ParseAction.HEIGHT,
                 parent = listOf(RP(div, 0, SOR)),
                 parentNext = listOf(RP(S, 0, EOR)),
                 lhs = LHS(UP),
@@ -163,7 +163,7 @@ internal class test_bodmas_sList_root_choicePriority : test_AutomatonAbstract() 
 
         val expected = listOf(
             HeightGraftInfo(
-                emptyList(),
+                Transition.ParseAction.HEIGHT,
                 listOf(RP(E, 0, SOR)),
                 listOf(RP(E, 0, EOR)),
                 LHS(d,m,a,s),

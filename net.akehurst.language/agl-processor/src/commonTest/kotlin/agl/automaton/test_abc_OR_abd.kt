@@ -101,7 +101,7 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
 
         val expected = setOf(
             HeightGraftInfo(
-                listOf(),
+                Transition.ParseAction.HEIGHT,
                 listOf(RP(ABC, 0, SOR), RP(ABD, 0, SOR)),
                 listOf(RP(ABC, 0, 1), RP(ABD, 0, 1)),
                 lhs_b.part,

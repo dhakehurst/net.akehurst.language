@@ -97,12 +97,12 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
     fun s1_heightOrGraftInto_s0() {
         val s0 = SM.startState
         val s1 = SM.createState(listOf(RP(a, 0, RulePosition.END_OF_RULE)))
-
+        s0.widthInto(s0)
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
             HeightGraftInfo(
-                listOf(),
+                Transition.ParseAction.HEIGHT,
                 listOf(RulePosition(S, 0, 0)),
                 listOf(RulePosition(S, 0, 1)),
                 lhs_b.part,
@@ -119,6 +119,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
         val s1 = SM.createState(listOf(RP(a, 0, RulePosition.END_OF_RULE)))
         val s2 = SM.createState(listOf(RP(S, 0, 1)))
 
+        s0.transitions(s0)
         val actual = s1.transitions(s0)
 
         val expected = listOf(
@@ -137,6 +138,8 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
         val s2 = SM.createState(listOf(RP(S, 0, 1)))
         val s3 = SM.createState(listOf(RP(b, 0, RulePosition.END_OF_RULE)))
 
+        s0.transitions(s0)
+        s1.transitions(s0)
         val actual = s2.transitions(s0)
 
         val expected = listOf(
@@ -156,6 +159,10 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
         val s2 = SM.createState(listOf(RP(S, 0, 1)))
         val s3 = SM.createState(listOf(RP(b, 0, RulePosition.END_OF_RULE)))
         val s4 = SM.createState(listOf(RP(S, 0, 2)))
+
+        s0.transitions(s0)
+        s1.transitions(s0)
+        s2.transitions(s0)
         val actual = s3.transitions(s2)
 
         val expected = listOf(
@@ -183,14 +190,14 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
             val s6 = state(RP(S, 0, EOR))
             val s7 = state(RP(G, 0, EOR))
 
-            transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)
+            transition(s0, s0, s1, WIDTH, setOf(b), setOf(), null)
             transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), listOf(RP(S, 0, SOR)))
             transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
             transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(S, 0, 1)))
             transition(s0, s4, s5, WIDTH, setOf(UP), setOf(), null)
             transition(s4, s5, s6, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 2)))
             transition(s0, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
-            transition(null, s7, s7, GOAL, setOf(), setOf(), null)
+            transition(s0, s7, s7, GOAL, setOf(), setOf(), null)
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -202,22 +209,22 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
             val s0 = state(RP(G, 0, SOR))
-            val s1 = state(RP(a, 0, EOR))
-            val s2 = state(RP(S, 0, 1))
-            val s3 = state(RP(b, 0, EOR))
-            val s4 = state(RP(S, 0, 2))
-            val s5 = state(RP(c, 0, EOR))
-            val s6 = state(RP(S, 0, EOR))
-            val s7 = state(RP(G, 0, EOR))
+            val s1 = state(RP(S, 0, 1))
+            val s2 = state(RP(S, 0, 2))
+            val s3 = state(RP(G, 0, EOR))
+            val s4 = state(RP(S, 0, EOR))
+            val s5 = state(RP(a, 0, EOR))
+            val s6 = state(RP(b, 0, EOR))
+            val s7 = state(RP(c, 0, EOR))
 
-            transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), listOf(RP(S, 0, SOR)))
-            transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
-            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(S, 0, 1)))
-            transition(s0, s4, s5, WIDTH, setOf(UP), setOf(), null)
-            transition(s4, s5, s6, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 2)))
-            transition(s0, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
-            transition(null, s7, s7, GOAL, setOf(), setOf(), null)
+            transition(s0, s0, s5, WIDTH, setOf(b), setOf(), null)
+            transition(s0, s1, s6, WIDTH, setOf(c), setOf(), null)
+            transition(s0, s2, s7, WIDTH, setOf(UP), setOf(), null)
+            transition(s0, s3, s3, GOAL, setOf(), setOf(), null)
+            transition(s0, s4, s3, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
+            transition(s0, s5, s1, HEIGHT, setOf(b), setOf(setOf(UP)), listOf(RP(S, 0, SOR)))
+            transition(s1, s6, s2, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(S, 0, 1)))
+            transition(s2, s7, s4, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 2)))
         }
 
         AutomatonTest.assertEquals(expected, actual)

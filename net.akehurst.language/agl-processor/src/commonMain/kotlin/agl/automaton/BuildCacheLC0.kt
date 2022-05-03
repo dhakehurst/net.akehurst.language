@@ -178,8 +178,11 @@ internal class BuildCacheLC0(
         // upCls is the closure down from prev
         val upFilt = upCls.filter { from.contains(it.rulePosition.item) }
         val res = upFilt.flatMap { clsItem ->
-            val ancestors = clsItem.allPrev.map { it.rulePosition.runtimeRule }
             val parent = clsItem.rulePosition
+            val action = when {
+                parent.isAtStart -> Transition.ParseAction.HEIGHT
+                else -> Transition.ParseAction.GRAFT
+            }
             val upLhs = when (parent.runtimeRule.kind) {
                 RuntimeRuleKind.GOAL -> if (parent.isAtEnd) LookaheadSetPart.UP else LookaheadSetPart.ANY
                 else -> LookaheadSetPart.ANY
@@ -190,17 +193,17 @@ internal class BuildCacheLC0(
                     RuntimeRuleKind.GOAL -> LookaheadSetPart.UP
                     else -> LookaheadSetPart.ANY
                 }
-                HeightGraftInfo(ancestors,listOf(parent), listOf(parentNext), lhs, setOf(upLhs))
+                HeightGraftInfo(action,listOf(parent), listOf(parentNext), lhs, setOf(upLhs))
             }
         }
-        val grouped = res.groupBy { listOf(it.ancestors, it.parentNext) }//, it.lhs) }
+        val grouped = res.groupBy { listOf(it.action, it.parentNext) }//, it.lhs) }
             .map {
-                val ancestors = it.key[0] as List<RuntimeRule>
+                val action = it.key[0] as Transition.ParseAction
                 val parentNext = it.key[1] as List<RulePosition>
                 val parent = it.value[0].parent // should all be the same as ancestors are the same
                 val lhs = it.value.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e.lhs) }
                 val upLhs = it.value.flatMap { it.upLhs }.toSet()//.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e.upLhs) }
-                HeightGraftInfo(ancestors,(parent), (parentNext), lhs, upLhs)
+                HeightGraftInfo(action,(parent), (parentNext), lhs, upLhs)
             }
         //val grouped2 = grouped.groupBy { listOf(it.lhs, it.upLhs, it.parentNext.map { it.position }) }
         //    .map {

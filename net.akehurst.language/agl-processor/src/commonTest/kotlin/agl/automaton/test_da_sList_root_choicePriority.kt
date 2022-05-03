@@ -116,7 +116,7 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-            HeightGraftInfo(emptyList(), listOf(RP(vr, 0, SOR)), listOf(RP(vr, 0, EOR)), LHS(UP, d, a), setOf(LHS(UP), LHS(d), LHS(a)))
+            HeightGraftInfo(Transition.ParseAction.HEIGHT, listOf(RP(vr, 0, SOR)), listOf(RP(vr, 0, EOR)), LHS(UP, d, a), setOf(LHS(UP), LHS(d), LHS(a)))
         )
         assertEquals(expected, actual)
     }
@@ -132,14 +132,14 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
 
         val expected = listOf(
             HeightGraftInfo(
-                emptyList(),
+                Transition.ParseAction.HEIGHT,
                 listOf(RP(S, 0, SOR)),
                 listOf(RP(S, 0, EOR)),
                 LHS(UP),
                 setOf(LHS(UP))
             ),
             HeightGraftInfo(
-                emptyList(),
+                Transition.ParseAction.HEIGHT,
                 listOf(RP(div, 0, SOR), RP(add, 0, SOR)),
                 listOf(RP(div, 0, PLS), RP(add, 0, PLS)),
                 LHS(d, a),

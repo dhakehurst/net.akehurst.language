@@ -99,7 +99,7 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
 
         val expected = listOf(
             HeightGraftInfo(
-                listOf(G, S),
+                Transition.ParseAction.HEIGHT,
                 listOf(RP(E, 0, SOR), RP(E, 0, SOR)),
                 listOf(RP(E, 0, 1), RP(E, 0, 1)),
                 lhs_a.part,

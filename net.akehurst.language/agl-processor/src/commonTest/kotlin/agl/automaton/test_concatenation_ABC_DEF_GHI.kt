@@ -122,7 +122,7 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
 
         val expected = listOf(
             HeightGraftInfo(
-                listOf(),
+                Transition.ParseAction.HEIGHT,
                 listOf(RulePosition(S, 0, 0)),
                 listOf(RulePosition(S, 0, 1)),
                 LHS(b),

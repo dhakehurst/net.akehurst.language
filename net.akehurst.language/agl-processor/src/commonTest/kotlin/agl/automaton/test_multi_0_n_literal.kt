@@ -99,8 +99,8 @@ internal class test_multi_0_n_literal : test_AutomatonAbstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraftInfo(emptyList(),listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, PMI)), lhs_a.part, setOf(LHS(UP))),
-                HeightGraftInfo(emptyList(),listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, EOR)), lhs_U.part, setOf(LHS(UP)))
+                HeightGraftInfo(Transition.ParseAction.HEIGHT,listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, PMI)), lhs_a.part, setOf(LHS(UP))),
+                HeightGraftInfo(Transition.ParseAction.HEIGHT,listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, EOR)), lhs_U.part, setOf(LHS(UP)))
         )
         assertEquals(expected, actual)
 

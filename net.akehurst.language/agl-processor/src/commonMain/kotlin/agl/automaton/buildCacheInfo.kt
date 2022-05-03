@@ -100,14 +100,13 @@ internal data class WidthInfo(
 )
 
 internal data class HeightGraftInfo(
-    val ancestors: List<RuntimeRule>,
+    val action: Transition.ParseAction,
     val parent: List<RulePosition>,
     val parentNext: List<RulePosition>, // to state
     val lhs: LookaheadSetPart,
     val upLhs: Set<LookaheadSetPart>
 ) {
     override fun toString(): String {
-        val ancestorsStr = ancestors.joinToString(prefix = "[", postfix = "]", separator = "-") { it.tag }
         val cont1 = mutableSetOf<RuntimeRule>()
         if (lhs.includesUP) cont1.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         if (lhs.includesEOT) cont1.add(RuntimeRuleSet.END_OF_TEXT)
@@ -123,6 +122,6 @@ internal data class HeightGraftInfo(
         }
         val lhsStr = cont1.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }
         val upLhsStr = ul.joinToString(prefix = "[", postfix = "]", separator = "|") { it.joinToString(separator = ",") {  it.tag }}
-        return "HeightGraftInfo(ancestors=$ancestorsStr, parent=$parent, parentNext=$parentNext, lhs=$lhsStr, upLhs=$upLhsStr)"
+        return "HeightGraftInfo(action=$action, parent=$parent, parentNext=$parentNext, lhs=$lhsStr, upLhs=$upLhsStr)"
     }
 }

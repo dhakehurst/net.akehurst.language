@@ -17,11 +17,17 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.ParserState
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.LookaheadSet
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.sppt.SPPTBranchFromTreeData
+import net.akehurst.language.agl.sppt.SPPTLeafFromInput
+import net.akehurst.language.agl.sppt.ToStringVisitor
 
 internal class GrowingNode(
     val graph: ParseGraph,
-    val index:GrowingNodeIndex
+    val index: GrowingNodeIndex
 ) {
 
     //FIXME: shouldn't really do this, shouldn't store these in sets!!
@@ -29,7 +35,7 @@ internal class GrowingNode(
 
     val currentState: ParserState get() = index.state
     val runtimeLookahead: Set<LookaheadSet> get() = index.runtimeLookaheadSet
-    val startPosition:Int get() = index.startPosition
+    val startPosition: Int get() = index.startPosition
     val nextInputPosition: Int get() = index.nextInputPosition
     val nextInputPositionAfterSkip: Int get() = index.nextInputPositionAfterSkip
 
@@ -38,49 +44,29 @@ internal class GrowingNode(
 
     var previous: MutableMap<GrowingNodeIndex, PreviousInfo> = mutableMapOf()
     val next: MutableSet<GrowingNode> = mutableSetOf() //TODO: do we actually need this?
-    val isLeaf: Boolean get()= this.runtimeRules.first().kind == RuntimeRuleKind.TERMINAL
+    val isLeaf: Boolean get() = this.runtimeRules.first().kind == RuntimeRuleKind.TERMINAL
     val isEmptyMatch: Boolean get() = this.currentState.isAtEnd && this.startPosition == this.nextInputPosition
 
     fun addNext(value: GrowingNode) {
         this.next.add(value)
     }
 
-    fun toStringTree(withChildren: Boolean, withPrevious: Boolean): String {
+    private fun toStringNode(withPrevious: Boolean): String {
         var r = "$currentState,$startPosition,$nextInputPosition,"
         r += if (this.currentState.isAtEnd) "C" else this.currentState.rulePositions.first().position
         val ct = this.runtimeLookahead.map {
             val cont = mutableSetOf<RuntimeRule>()
-            if (it.includesUP) cont+=RuntimeRuleSet.USE_PARENT_LOOKAHEAD
-            if (it.includesEOT) cont+=RuntimeRuleSet.END_OF_TEXT
-            if (it.matchANY) cont+=RuntimeRuleSet.ANY_LOOKAHEAD
+            if (it.includesUP) cont += RuntimeRuleSet.USE_PARENT_LOOKAHEAD
+            if (it.includesEOT) cont += RuntimeRuleSet.END_OF_TEXT
+            if (it.matchANY) cont += RuntimeRuleSet.ANY_LOOKAHEAD
             cont += it.content
             cont
         }
-        r+= ct.joinToString(prefix = "[", postfix = "]", separator = ",") { it.joinToString(separator = "|") { it.tag} }
-        //val name = this.currentState.runtimeRules.joinToString(prefix = "[", separator = ",", postfix = "]") { "${it.tag}(${it.number})" }
-        //r += ":" + name
-/*
-        if (withChildren) {
-            if (this.isLeaf) {
-                // no children
-            } else {
-                r += "{"
-                for (c in this.children) {
-                    //TODO:                r += c.accept(ParseTreeToSingleLineTreeString(), null)
-                }
-                if (this.hasCompleteChildren) {
-                    r += "}"
-                } else {
-                    r += "..."
-                }
-            }
-        }
-*/
+        r += ct.joinToString(prefix = "[", postfix = "]", separator = ",") { it.joinToString(separator = "|") { it.tag } }
         if (withPrevious) {
             val visited = HashSet<GrowingNode>()
             r += this.toStringPrevious(visited)
         }
-
         return r
     }
 
@@ -94,14 +80,28 @@ internal class GrowingNode(
             if (visited.contains(prev)) {
                 s = "--> ..."
             } else if (this.previous.size == 1) {
-                s = " --> " + prev.toStringTree(false, false) + prev.toStringPrevious(visited)
+                s = " --> " + prev.toStringNode(false) + prev.toStringPrevious(visited)
             } else {
                 val sz = this.previous.size
-                s = " -" + sz + "> " + prev.toStringTree(false, false) + prev.toStringPrevious(visited)
+                s = " -" + sz + "> " + prev.toStringNode(false) + prev.toStringPrevious(visited)
             }
 
         }
         return s
+    }
+
+    //useful during debug
+    fun toStringTree(): String {
+        val nodes = when {
+            this.isLeaf -> this.runtimeRules.map { rr ->
+                SPPTLeafFromInput(this.graph.input, rr, this.startPosition, this.nextInputPosition, 0)
+            }
+            else -> this.runtimeRules.map { rr ->
+                SPPTBranchFromTreeData(this.graph.treeData, this.graph.input, rr, 0, this.startPosition, this.nextInputPosition, 0)
+            }
+        }
+        val v = ToStringVisitor("\n", "  ")
+        return nodes.joinToString(separator = "\n") { n -> v.visitNode(n, "  ").joinToString(separator = "\n") }
     }
 
     // --- Any ---
@@ -122,7 +122,7 @@ internal class GrowingNode(
     }
 
     override fun toString(): String {
-        return this.toStringTree(false, true)
+        return this.toStringNode(true)
     }
 
 }

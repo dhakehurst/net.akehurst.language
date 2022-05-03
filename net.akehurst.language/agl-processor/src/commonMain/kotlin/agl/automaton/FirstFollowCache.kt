@@ -58,8 +58,9 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
             val prev: RulePosition
             val rulePosition: RulePosition
 
-
+            val prevPrev: RulePosition
             val parentNextNotAtEnd: List<NextNotAtEnd>
+
             /**
              * List Of Pairs (prev,rp) that indicate the "next" state from which a 'WIDTH' is possible
              * i.e. growing up from current rp until an rp NOT atEnd
@@ -73,6 +74,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
             override val parentNextNotAtEnd: List<NextNotAtEnd>,
         ) : ClosureItem {
             override val parent: ClosureItem get() = error("ClosureItemRoot has no parent")
+            override val prevPrev: RulePosition get() = error("ClosureItemRoot has no prevPrev")
             override val nextNotAtEnd: List<NextNotAtEnd>
                 get() = when {
                     rulePosition.isTerminal -> parentNextNotAtEnd
@@ -91,7 +93,6 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
             override val parent: ClosureItem,
             override val rulePosition: RulePosition
         ) : ClosureItem {
-            override val parentNextNotAtEnd = parent.nextNotAtEnd
             override val prev: RulePosition = when {
                 parent.rulePosition.isAtStart -> parent.prev
                 else -> parent.rulePosition
@@ -111,6 +112,12 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                         }
                     }
                 }
+            override val prevPrev: RulePosition = when {
+                parent.rulePosition.isGoal -> parent.prev
+                parent.rulePosition.isAtStart -> parent.prevPrev
+                else -> parent.prev
+            }
+            override val parentNextNotAtEnd get() = parent.nextNotAtEnd
 
             override fun toString(): String = "$parent-->$rulePosition"
         }
@@ -206,19 +213,17 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
      */
     // internal so we can use in testing
     internal fun processClosureFor(prev: RulePosition, rulePosition: RulePosition, nextNotAtEnd: List<NextNotAtEnd>, calcFollow: Boolean): Boolean {
-
-            val doit = when (this._doneFollow[prev][rulePosition]) {
-                null -> true
-                false -> calcFollow == true
-                true -> false
-            }
-            if (doit) {
-                this._doneFollow[prev][rulePosition] = calcFollow
-                val r = this.calcFirstTermClosure(ClosureItemRoot(prev, rulePosition, nextNotAtEnd), calcFollow)
-                this._needsNext[prev][rulePosition] = r
-            }
-
-return false
+        val doit = when (this._doneFollow[prev][rulePosition]) {
+            null -> true
+            false -> calcFollow == true
+            true -> false
+        }
+        if (doit) {
+            this._doneFollow[prev][rulePosition] = calcFollow
+            val r = this.calcFirstTermClosure(ClosureItemRoot(prev, rulePosition, nextNotAtEnd), calcFollow)
+            this._needsNext[prev][rulePosition] = r
+        }
+        return false
     }
 
     /**
@@ -511,7 +516,7 @@ return false
                     var thisNeedsNext = false
                     for (rpNxt in rp.next()) {
                         if (rpNxt.isAtEnd) {
-                            thisNeedsNext =true
+                            thisNeedsNext = true
                             if (cls.nextNotAtEnd.isEmpty()) {
                                 this.addFirstOfInContext(prev, rp, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
                                 thisNeedsNext = true
@@ -538,19 +543,29 @@ return false
                     var thisNeedsNext = false
                     for (rpNxt in rp.next()) {
                         if (rpNxt.isAtEnd) {
-                            thisNeedsNext =true
+                            thisNeedsNext = true
                             if (cls.nextNotAtEnd.isEmpty()) {
                                 //this.addFirstOfInContext(prev, rp, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
                                 thisNeedsNext = true
                             } else {
                                 for (np in cls.nextNotAtEnd) {
-                                    //val nnae = np.previousNextNotAtEnd?.let { listOf(it) } ?: emptyList()
-                                    //val r = processClosureFor(np.prev, np.rulePosition, nnae, false)
-                                    //this.addFirstOfInContextAsReferenceToFirstOf(prev, rp, np.prev, np.rulePosition)
+                                    val prevPrev = when (cls) {
+                                        is ClosureItemRoot -> np.previousNextNotAtEnd?.prev ?: error("???")
+                                        is ClosureItemChild -> cls.prevPrev
+                                        else -> error("Internal Error: subtype of ClosureItem not handled")
+                                    }
+                                    val nnae = np.previousNextNotAtEnd?.let { listOf(it) } ?: emptyList()
+                                    val r = processClosureFor(np.prev, np.rulePosition, nnae, false)
+                                    this.addFirstOfInContextAsReferenceToFirstOf(prevPrev, prev, np.prev, np.rulePosition)
                                 }
                             }
                         } else {
-                            this.addFirstOfInContextAsReferenceToFirstOf(prev, rp, prev, rpNxt)
+                            val prevPrev = when (cls) {
+                                is ClosureItemRoot -> error("")
+                                is ClosureItemChild -> cls.prevPrev
+                                else -> error("Internal Error: subtype of ClosureItem not handled")
+                            }
+                            this.addFirstOfInContextAsReferenceToFirstOf(prevPrev, prev, prev, rpNxt)
                         }
                     }
                     childNeedsNext && thisNeedsNext

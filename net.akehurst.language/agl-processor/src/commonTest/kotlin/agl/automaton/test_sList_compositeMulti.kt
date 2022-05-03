@@ -128,7 +128,8 @@ internal class test_sList_compositeMulti : test_AutomatonAbstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraftInfo(emptyList(),
+                HeightGraftInfo(
+                    Transition.ParseAction.HEIGHT,
                     listOf(RP(S, 0, 0)),
                     listOf(RP(S, 0, EOR)),
                     lhs_U.part,

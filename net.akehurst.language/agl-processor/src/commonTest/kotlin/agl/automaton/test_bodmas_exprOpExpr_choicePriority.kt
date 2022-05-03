@@ -104,7 +104,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
 
         val expected = listOf(
             HeightGraftInfo(
-                emptyList(),
+                Transition.ParseAction.HEIGHT,
                 listOf(RP(E, 0, SOR)),
                 listOf(RP(E, 0, EOR)),
                 LHS(UP, a, b),

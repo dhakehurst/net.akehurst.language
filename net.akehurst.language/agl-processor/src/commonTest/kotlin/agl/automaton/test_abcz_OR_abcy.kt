@@ -104,7 +104,7 @@ internal class test_abcz_OR_abcy : test_AutomatonAbstract() {
 
         val expected = listOf(
             HeightGraftInfo(
-                listOf(G, S),
+                Transition.ParseAction.HEIGHT,
                 listOf(RP(ABCZ, 0, SOR), RP(ABCY, 0, SOR)),
                 listOf(RP(ABCZ, 0, 1), RP(ABCY, 0, 1)),
                 lhs_b.part,

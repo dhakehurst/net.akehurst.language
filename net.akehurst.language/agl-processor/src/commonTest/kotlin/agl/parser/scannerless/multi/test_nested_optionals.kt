@@ -91,9 +91,9 @@ internal class test_nested_optionals : test_ScanOnDemandParserAbstract() {
               'a'
               R {
                 Os {
-                  aOpt|1 { §empty }
-                  bOpt|1 { §empty }
-                  cOpt|1 { §empty }
+                  Bo|1 { §empty }
+                  Co|1 { §empty }
+                  Do|1 { §empty }
                 }
                 'y'
               }
@@ -111,39 +111,21 @@ internal class test_nested_optionals : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun at() {
-        val sentence = "at"
+    fun abyz() {
+        val sentence = "abyz"
 
         val expected = """
-            S { Opts {
-                aOpt { 'a' }
-                bOpt|1 { §empty }
-                cOpt|1 { §empty }
+            S {
+              'a'
+              R {
+                Os {
+                  Bo { 'b' }
+                  Co|1 { §empty }
+                  Do|1 { §empty }
                 }
-                't'
-            }
-        """.trimIndent()
-
-        super.test(
-            rrs = rrs,
-            goal = goal,
-            sentence = sentence,
-            expectedNumGSSHeads = 1,
-            expectedTrees = arrayOf(expected)
-        )
-    }
-
-    @Test
-    fun abt() {
-        val sentence = "abt"
-
-        val expected = """
-            S { Opts {
-                aOpt { 'a' }
-                bOpt { 'b' }
-                cOpt|1 { §empty }
-                }
-                't'
+                'y'
+              }
+              'z'
             }
         """.trimIndent()
 
@@ -170,16 +152,21 @@ internal class test_nested_optionals : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun act() {
-        val sentence = "act"
+    fun acyz() {
+        val sentence = "acyz"
 
         val expected = """
-            S { Opts {
-                aOpt { 'a' }
-                bOpt|1 { §empty }
-                cOpt { 'c' }
+            S {
+              'a'
+              R {
+                Os {
+                  Bo|1 { §empty }
+                  Co{ 'c' }
+                  Do|1 { §empty }
                 }
-                't'
+                'y'
+              }
+              'z'
             }
         """.trimIndent()
 

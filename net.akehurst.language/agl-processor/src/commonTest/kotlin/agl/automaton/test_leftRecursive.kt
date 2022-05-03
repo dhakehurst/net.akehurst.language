@@ -126,14 +126,14 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
 
         val expected = listOf(
             HeightGraftInfo(
-                listOf(G),
+                Transition.ParseAction.HEIGHT,
                 listOf(RP(S, 0, 0)),
                 listOf(RP(S, 0, EOR)),
                 lhs_U.part,
                 setOf(LHS(UP))
             ),
             HeightGraftInfo(
-                listOf(G,S,S1),
+                Transition.ParseAction.HEIGHT,
                 listOf(RP(S, 0, 0)),
                 listOf(RP(S, 0, EOR)),
                 lhs_a.part,
@@ -172,14 +172,14 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
 
         val expected = setOf(
             HeightGraftInfo(
-                emptyList(),
+                Transition.ParseAction.HEIGHT,
                 listOf(RP(G, 0, 0)),
                 listOf(RP(G, 0, EOR)),
                 lhs_U.part,
                 setOf(LHS(UP))
             ),
             HeightGraftInfo(
-                emptyList(),
+                Transition.ParseAction.HEIGHT,
                 listOf(RP(S1, 0, 0)),
                 listOf(RP(S1, 0, 1)),
                 lhs_a.part,
@@ -187,7 +187,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
             )
             ,
             HeightGraftInfo(
-                emptyList(),
+                Transition.ParseAction.HEIGHT,
                 listOf(RP(S1, 0, 0)),
                 listOf(RP(S1, 0, 1)),
                 lhs_a.part,
@@ -264,7 +264,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
 
         val expected = listOf(
             HeightGraftInfo(
-                emptyList(),
+                Transition.ParseAction.HEIGHT,
                 listOf(RP(S1, 0, 1)),
                 listOf(RP(S1, 0, EOR)),
                 lhs_aU.part,

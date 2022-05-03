@@ -143,7 +143,8 @@ internal class test_skipRules : test_AutomatonAbstract() {
         val actual = sk1.heightOrGraftInto(sk0).toList()
 
         val expected = listOf(
-            HeightGraftInfo(emptyList(),
+            HeightGraftInfo(
+                Transition.ParseAction.HEIGHT,
                 listOf(RulePosition(skC, 0, RulePosition.START_OF_RULE)),
                 listOf(RulePosition(skC, 0, RulePosition.END_OF_RULE)),
                 lhs_WS_CM_UP.part,

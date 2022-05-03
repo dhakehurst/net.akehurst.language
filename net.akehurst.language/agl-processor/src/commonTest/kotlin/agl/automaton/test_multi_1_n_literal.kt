@@ -84,13 +84,15 @@ internal class test_multi_1_n_literal : test_AutomatonAbstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraftInfo(emptyList(),
+                HeightGraftInfo(
+                    Transition.ParseAction.HEIGHT,
                     listOf(RulePosition(S, 0, 0)),
                     listOf(RulePosition(S, 0, PMI)),
                     lhs_a.part,
                     setOf(LHS(UP))
                 ),
-                HeightGraftInfo(emptyList(),
+                HeightGraftInfo(
+                    Transition.ParseAction.HEIGHT,
                     listOf(RulePosition(S, 0, 0)),
                     listOf(RulePosition(S, 0, EOR)),
                     lhs_U.part,
