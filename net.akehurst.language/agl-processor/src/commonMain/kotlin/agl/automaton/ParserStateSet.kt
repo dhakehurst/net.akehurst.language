@@ -182,7 +182,6 @@ internal class ParserStateSet(
     internal fun fetchState(rulePositions: List<RulePosition>): ParserState? =
         this.allBuiltStates.firstOrNull { it.rulePositions == rulePositions }
 
-
     internal fun fetchCompatibleState(rulePositions: List<RulePosition>): ParserState? {
         val existing = this.allBuiltStates.firstOrNull {
             it.rulePositions.containsAll(rulePositions)
@@ -192,7 +191,6 @@ internal class ParserStateSet(
 
     internal fun fetchCompatibleOrCreateState(rulePositions: List<RulePosition>): ParserState =
         fetchCompatibleState(rulePositions) ?: this.createState(rulePositions)
-
 
     internal fun createLookaheadSet(includeUP: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet {
         return when {
@@ -385,8 +383,20 @@ internal class ParserStateSet(
                 val previousStates = ti.prev.map { p -> this.fetchState(p) ?: error("Internal error, state not created for $p") }
                 val action = ti.action
                 val to = this.fetchState(ti.to) ?: error("Internal error, state not created for ${ti.to}")
-                val lookahead = ti.lookaheadSet.lhs(this)
-                val upLookahead = ti.parentFirstOfNext.map { it.lhs(this) }.toSet() // why a Set ?
+                val lookahead = when (action) {
+                    Transition.ParseAction.GOAL-> LookaheadSet.EMPTY
+                    Transition.ParseAction.WIDTH,
+                    Transition.ParseAction.EMBED,
+                    Transition.ParseAction.HEIGHT,
+                    Transition.ParseAction.GRAFT -> ti.lookaheadSet.lhs(this)
+                }
+                val upLookahead = when (action) {
+                    Transition.ParseAction.GOAL,
+                    Transition.ParseAction.WIDTH,
+                    Transition.ParseAction.EMBED-> setOf(LookaheadSet.EMPTY)
+                    Transition.ParseAction.HEIGHT,
+                    Transition.ParseAction.GRAFT -> ti.parentFirstOfNext.map { it.lhs(this) }.toSet() // why a Set ?
+                }
                 val prevGuard = when (action) {
                     Transition.ParseAction.GOAL,
                     Transition.ParseAction.WIDTH,

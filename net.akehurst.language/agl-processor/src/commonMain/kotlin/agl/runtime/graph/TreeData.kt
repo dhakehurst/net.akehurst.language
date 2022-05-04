@@ -46,14 +46,14 @@ internal class TreeData(
 
     fun createGrowingNodeIndex(
         state: ParserState,
-        lhs: Set<LookaheadSet>,
+        runtimeLookaheadSet: Set<LookaheadSet>,
         startPosition: Int,
         nextInputPosition: Int,
         nextInputPositionAfterSkip: Int,
         numNonSkipChildren: Int
     ): GrowingNodeIndex {
         val listSize = GrowingNodeIndex.listSize(state.runtimeRules.first(), numNonSkipChildren)
-        return GrowingNodeIndex(this, state, lhs, startPosition, nextInputPosition, nextInputPositionAfterSkip, listSize)
+        return GrowingNodeIndex(this, state, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, listSize)
     }
 
     fun childrenFor(runtimeRule: RuntimeRule, startPosition: Int, nextInputPosition: Int): List<Pair<List<Int>,List<CompleteNodeIndex>>> {

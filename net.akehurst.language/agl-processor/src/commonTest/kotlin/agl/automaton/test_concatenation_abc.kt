@@ -25,6 +25,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 internal class test_concatenation_abc : test_AutomatonAbstract() {
     // S =  'a' 'b' 'c' ;
@@ -42,10 +43,8 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
     private val b = rrs.findRuntimeRule("'b'")
     private val c = rrs.findRuntimeRule("'c'")
 
-    private val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
     private val lhs_b = SM.createLookaheadSet(false, false, false, setOf(b))
     private val lhs_c = SM.createLookaheadSet(false, false, false, setOf(c))
-    private val lhs_aU = SM.createLookaheadSet(true, false, false, setOf(a))
 
 
     @Test
@@ -177,8 +176,12 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
     @Test
     fun parse_abc() {
         val parser = ScanOnDemandParser(rrs)
-        parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        val (sppt,issues) = parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        assertNotNull(sppt)
+        assertEquals(0, issues.size)
+        assertEquals(1, sppt.maxNumHeads)
         println(rrs.usedAutomatonToString("S"))
+
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
             val s0 = state(RP(G, 0, SOR))
@@ -206,6 +209,12 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
     fun buildFor() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
+
+        val parser = ScanOnDemandParser(rrs)
+        val (sppt,issues) = parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        assertNotNull(sppt) { issues.joinToString("\n") { it.toString() } }
+        assertEquals(0, issues.size)
+        assertEquals(1, sppt.maxNumHeads)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
             val s0 = state(RP(G, 0, SOR))

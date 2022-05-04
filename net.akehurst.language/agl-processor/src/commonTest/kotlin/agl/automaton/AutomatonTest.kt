@@ -64,7 +64,7 @@ internal object AutomatonTest {
         kotlin.test.assertEquals(expected.action, actual.action, "Action does not match for ${expPrev} -> $expected")
         kotlin.test.assertEquals(expected.lookaheadGuard.totalContent.map { it.tag }, actual.lookaheadGuard.totalContent.map { it.tag }, "Lookahead content does not match for ${expPrev} -> $expected")
        //TODO kotlin.test.assertEquals(expected.upLookahead.includesUP, actual.upLookahead.includesUP, "Up lookahead content does not match for ${expPrev} -> $expected")
-       // kotlin.test.assertEquals(expected.upLookahead.content, actual.upLookahead.content, "Up lookahead content does not match for ${expPrev} -> $expected")
+        kotlin.test.assertEquals(expected.upLookahead, actual.upLookahead, "Up lookahead content does not match for ${expPrev} -> $expected")
         kotlin.test.assertEquals(expected.prevGuard, actual.prevGuard, "Previous guard does not match for ${expPrev} -> $expected")
     }
 

@@ -91,6 +91,7 @@ internal class LookaheadSet(
     }
 
     override fun toString(): String = when {
+        this == EMPTY -> "LookaheadSet{$number,[EMPTY]}"
         this == ANY -> "LookaheadSet{$number,[ANY]}"
         this == UP -> "LookaheadSet{$number,[UP]}"
         this == EOT -> "LookaheadSet{$number,[EOT]}"

@@ -374,7 +374,7 @@ internal class ParseGraph(
      */
     fun pushToStackOf(
         newState: ParserState,
-        lookahead: Set<LookaheadSet>,
+        runtimeLookaheadSet: Set<LookaheadSet>,
         startPosition: Int,
         nextInputPosition: Int,
         oldHead: GrowingNode,
@@ -383,7 +383,7 @@ internal class ParseGraph(
     ): Boolean {
         if (null != previous) this._gss.push(previous, oldHead.index)
         val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: nextInputPosition
-        val newHead = this.treeData.createGrowingNodeIndex(newState, lookahead, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0)
+        val newHead = this.treeData.createGrowingNodeIndex(newState, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0)
         if (null != skipData) {
             this.treeData.setSkipDataAfter(newHead.complete, skipData)
         }
@@ -397,7 +397,7 @@ internal class ParseGraph(
     // for embedded segments
     fun pushEmbeddedToStackOf(
         newState: ParserState,
-        lookahead: Set<LookaheadSet>,
+        runtimeLookaheadSet: Set<LookaheadSet>,
         startPosition: Int,
         nextInputPosition: Int,
         oldHead: GrowingNode,
@@ -408,7 +408,7 @@ internal class ParseGraph(
         this._gss.push(previous, oldHead.index)
         //TODO: something different for embedded ?
         val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: nextInputPosition
-        val newHead = this.treeData.createGrowingNodeIndex(newState, lookahead, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0)
+        val newHead = this.treeData.createGrowingNodeIndex(newState, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0)
         if (null != skipData) {
             this.treeData.setSkipDataAfter(newHead.complete, skipData)
         }

@@ -263,17 +263,17 @@ internal class RuntimeParser(
             }
         }
         if (true) {
-            if (Debug.OUTPUT) debug(Debug.IndentDelta.NONE){"--- ${debugCount++} --------------------------------------------------------"}
+            if (Debug.OUTPUT) debug(Debug.IndentDelta.NONE) { "--- ${debugCount++} --------------------------------------------------------" }
             this.graph._growingHeadHeap.forEach {
                 val chains = it.index.chains()
                 chains.forEach { chain ->
                     val str = chain.joinToString(separator = "-->") {
                         it.asString()
                     }
-                    if (Debug.OUTPUT) debug(Debug.IndentDelta.NONE){str}
+                    if (Debug.OUTPUT) debug(Debug.IndentDelta.NONE) { str }
                 }
             }
-            if (Debug.OUTPUT) debug(Debug.IndentDelta.NONE){""}
+            if (Debug.OUTPUT) debug(Debug.IndentDelta.NONE) { "" }
         }
     }
 
@@ -573,7 +573,7 @@ internal class RuntimeParser(
         rememberForErrorComputation(curGn, previous)
         val l = this.graph.input.findOrTryCreateLeaf(transition.to.firstRule, curGn.nextInputPosition)
         return if (null != l) {
-            val skipLh = if(transition.lookaheadGuard.includesUP) {
+            val skipLh = if (transition.lookaheadGuard.includesUP) {
                 curGn.runtimeLookahead.map { this.stateSet.createWithParent(transition.lookaheadGuard, it) }.toSet()
             } else {
                 setOf(transition.lookaheadGuard)
@@ -607,21 +607,21 @@ internal class RuntimeParser(
         }
         val hasLh = lhWithMatch.isNotEmpty() //TODO: if(transition.lookaheadGuard.includesUP) {
         return if (noLookahead || hasLh) {
-                val runtimeLhs = transition.upLookahead.flatMap{ trLhs ->
-                    if (trLhs.includesUP) {
-                        lhWithMatch.map { prLhs ->
-                            this.stateSet.createWithParent(trLhs, prLhs)
-                        }
-                    } else {
-                        listOf(trLhs)
+            val runtimeLhs = transition.upLookahead.flatMap { trLhs ->
+                if (trLhs.includesUP) {
+                    lhWithMatch.map { prLhs ->
+                        this.stateSet.createWithParent(trLhs, prLhs)
                     }
-                }.toSet()
-                this.graph.createWithFirstChild(
-                    parentState = transition.to,
-                    parentRuntimeLookaheadSet = runtimeLhs,
-                    childNode = curGn,
-                    previous
-                )
+                } else {
+                    listOf(trLhs)
+                }
+            }.toSet()
+            this.graph.createWithFirstChild(
+                parentState = transition.to,
+                parentRuntimeLookaheadSet = runtimeLhs,
+                childNode = curGn,
+                previous
+            )
         } else {
             false
         }
@@ -635,7 +635,8 @@ internal class RuntimeParser(
             }
             val hasLh = lhWithMatch.isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {
             if (noLookahead || hasLh) {
-                val runtimeLhs = transition.upLookahead.flatMap{ trLhs ->
+                /*
+                val runtimeLhs = transition.upLookahead.flatMap { trLhs ->
                     if (trLhs.includesUP) {
                         lhWithMatch.map { prLhs ->
                             this.stateSet.createWithParent(trLhs, prLhs)
@@ -644,12 +645,14 @@ internal class RuntimeParser(
                         listOf(trLhs)
                     }
                 }.toSet()
-                    this.graph.growNextChild(
-                        oldParentNode = previous,
-                        nextChildNode = curGn,
-                        newParentState = transition.to,
-                        newParentRuntimeLookaheadSet = runtimeLhs
-                    )
+                 */
+                val runtimeLhs = previous.runtimeLookaheadSet
+                this.graph.growNextChild(
+                    oldParentNode = previous,
+                    nextChildNode = curGn,
+                    newParentState = transition.to,
+                    newParentRuntimeLookaheadSet = runtimeLhs
+                )
             } else {
                 false
             }
@@ -702,7 +705,7 @@ internal class RuntimeParser(
         val startPosition = curGn.nextInputPosition
         val transPlusSkip = transition.lookaheadGuard.content.union(this.stateSet.runtimeRuleSet.firstSkipTerminals.toSet())
         val embeddedPossibleEOT = embeddedS0.stateSet.createLookaheadSet(false, false, false, transPlusSkip)
-        val embeddedEOT = curGn.runtimeLookahead.map{this.stateSet.createWithParent(embeddedPossibleEOT, it)}.toSet()
+        val embeddedEOT = curGn.runtimeLookahead.map { this.stateSet.createWithParent(embeddedPossibleEOT, it) }.toSet()
         embeddedParser.start(startPosition, embeddedEOT)
         var seasons = 1
         var maxNumHeads = embeddedParser.graph.numberOfHeads
@@ -716,7 +719,7 @@ internal class RuntimeParser(
         return if (match.root != null) {
             val ni = match.nextInputPosition!! // will always have value if root not null
             //TODO: parse skipNodes
-            val skipLh = curGn.runtimeLookahead.map{this.stateSet.createWithParent(transition.lookaheadGuard, it)}.toSet()
+            val skipLh = curGn.runtimeLookahead.map { this.stateSet.createWithParent(transition.lookaheadGuard, it) }.toSet()
             val skipData = this.tryParseSkipUntilNone(skipLh, ni, noLookahead)//, lh) //TODO: does the result get reused?
             val nextInput = skipData?.nextInputPosition ?: ni
             this.graph.pushEmbeddedToStackOf(transition.to, curGn.runtimeLookahead, startPosition, nextInput, curGn, previous, match, skipData)

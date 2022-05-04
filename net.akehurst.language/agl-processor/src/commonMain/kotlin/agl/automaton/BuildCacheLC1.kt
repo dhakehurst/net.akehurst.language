@@ -82,6 +82,7 @@ internal class BuildCacheLC1(
         data class PossibleTransInfo(
             val prev: RulePosition,
             val parent: PossibleState?,
+            val parentFirstOfNext:LookaheadSetPart,
             val action: Transition.ParseAction,
             val firstOf: LookaheadSetPart,
             val firstOfNext: LookaheadSetPart
@@ -107,12 +108,27 @@ internal class BuildCacheLC1(
 
             val mergedTransInfo: Set<TransInfo> by lazy {
                 val tis = this.outTransInfo.values.flatten().toSet()
-                val groupedTis = tis.groupBy { Pair(it.action, it.to) }
-                val mergedTis = groupedTis.map { me ->
+                val tisAtEnd = tis.filter { it.to.first().isAtEnd }
+                need to split thinga at end!
+                val mergedAtEnd = tisAtEnd.map {
+                    val parent = it.parent?.let {listOf(it.rulePosition)} ?: emptyList()
+                    val lookaheadSet = when (it.action) {
+                        Transition.ParseAction.GOAL -> LookaheadSetPart.UP
+                        Transition.ParseAction.WIDTH, Transition.ParseAction.EMBED ->  this.firstOfCache[it.to.first()]!!.get(this.rulePosition)!!
+                        Transition.ParseAction.HEIGHT, Transition.ParseAction.GRAFT -> it.firstOfNext
+                    }
+                    TransInfo(listOf(listOf(it.prev)), parent, listOf(it.parentFirstOfNext), it.action, it.to, lookaheadSet)
+                }
+                val tisNotAtEnd = tis - tisAtEnd
+                val groupNotAtEnd = tisNotAtEnd.groupBy { Pair(it.action, it.to) }
+                val mergedNotAtEnd = groupNotAtEnd.map { me ->
                     val prev = me.value.map { it.prev.let { listOf(it) } ?: emptyList() }.toSet().toList()
                     val parent = me.value.mapNotNull { it.parent?.rulePosition }.toSet().toList()
                     //val parentFirstOfNext = me.value.map { it.parentFirstOfNext }
-                    val parentFirstOfNext = me.value.flatMap { tr -> tr.parent?.rulePosition?.next()?.map { this.firstOfNext(tr.prev) } ?: emptyList() }
+                    val parentFirstOfNext = me.value.map { tr ->
+                        //tr.parent?.rulePosition?.next()?.map { this.firstOfNext(tr.prev) } ?: emptyList()
+                        tr.parentFirstOfNext
+                    }
                     val action = me.key.first
                     val to = me.key.second
                     val lookaheadSet = when (action) {
@@ -128,12 +144,12 @@ internal class BuildCacheLC1(
                     }
                     TransInfo(prev, parent, parentFirstOfNext, action, to, lookaheadSet)
                 }.toSet()
-                mergedTis
+                mergedNotAtEnd + mergedAtEnd
             }
 
             val allPrev get() = outTransInfo.values.flatMap { it.map { it.prev } }.toSet().toList()
 
-            fun setTransInfo(prev: RulePosition, parent: PossibleState?, firstOf: LookaheadSetPart, firstOfNext: LookaheadSetPart) {
+            fun setTransInfo(prev: RulePosition, parent: PossibleState?, parentFirstOfNext:LookaheadSetPart, firstOf: LookaheadSetPart, firstOfNext: LookaheadSetPart) {
                 val action = when {
                     rulePosition.runtimeRule.isGoal -> when {
                         rulePosition.isAtEnd -> Transition.ParseAction.GOAL    // RP(G,0,EOR)
@@ -154,7 +170,7 @@ internal class BuildCacheLC1(
                     set = mutableSetOf()
                     outTransInfo[prev] = set
                 }
-                set.add(PossibleTransInfo(prev, parent, action, firstOf, firstOfNext))
+                set.add(PossibleTransInfo(prev, parent, parentFirstOfNext, action, firstOf, firstOfNext))
             }
 
             fun firstOfNext(prev: RulePosition?): LookaheadSetPart = this.firstOfCache[this.rulePosition]!!.get(prev)!!
@@ -213,6 +229,7 @@ internal class BuildCacheLC1(
     override fun stateInfo(): Set<StateInfo> {
         data class RpToDo(
             val state: PossibleState,
+            val parentFirstOfNext: LookaheadSetPart,
             val prev: PossibleState,
             val prevForChildren: PossibleState,
             val stateFirstOfNext: LookaheadSetPart
@@ -229,16 +246,16 @@ internal class BuildCacheLC1(
         val firstOfGstart = this.firstOf(rpGstart, LookaheadSetPart.UP)
         firstOfCache[rpGstart][null] = firstOfGstart
         firstOfCache[rpGstart][rpGstart] = firstOfGstart
-        stateGstart.setTransInfo(rpGstart, null, firstOfGstart, LookaheadSetPart.UP)
+        stateGstart.setTransInfo(rpGstart, null, LookaheadSetPart.EMPTY, firstOfGstart, LookaheadSetPart.UP)
 
         // End State [G(0,0,EOR)]
         val rpGend = rpGstart.atEnd()
         val stateGend = PossibleState(firstOfCache, rpGend)
         possibleStates[rpGend] = stateGend
-        stateGend.setTransInfo(rpGstart, null, LookaheadSetPart.EMPTY, LookaheadSetPart.EMPTY)
+        stateGend.setTransInfo(rpGstart, null, LookaheadSetPart.EMPTY, LookaheadSetPart.EMPTY, LookaheadSetPart.EMPTY)
 
         // Other states
-        val todo = mutableQueueOf(RpToDo(stateGstart, stateGstart, stateGstart, LookaheadSetPart.UP))
+        val todo = mutableQueueOf(RpToDo(stateGstart,  LookaheadSetPart.EMPTY, stateGstart, stateGstart, LookaheadSetPart.UP))
         //TODO speed up! by eliminating calls to firstOf
         while (todo.isNotEmpty) {
             val stateToDo = todo.dequeue()
@@ -249,26 +266,30 @@ internal class BuildCacheLC1(
             if (null != rule) {
                 val ruleRps = rule.rulePositions
                 for (childRp in ruleRps) {
-                    val ruleRpState = possibleStates[childRp] ?: PossibleState(firstOfCache, childRp)
+                    val childRpState = possibleStates[childRp] ?: PossibleState(firstOfCache, childRp)
+                    val childParentFirstOfNext = when {
+                        childRpState.isAtEnd -> stateToDo.parentFirstOfNext
+                        else -> stateFirstOfNext
+                    }
                     val childRpPrev = prevForChildren
-                    val d = Pair(ruleRpState, childRpPrev)
+                    val d = Pair(childRpState, childRpPrev)
                     if (done.contains(d).not()) {
                         done.add(d)
                         val childRpPrevForChildren = when {
                             childRp.isAtStart -> childRpPrev
-                            else -> ruleRpState
+                            else -> childRpState
                         }
-                        val firstOf = firstOf(childRp, stateFirstOfNext)
+                        val firstOf = this.firstOf(childRp, stateFirstOfNext) //TODO: don't use firstOf Function
                         firstOfCache[childRp][childRpPrev.rulePosition] = firstOf
                         val firstOfNext = when {
                             childRp.isAtEnd -> stateFirstOfNext
-                            else -> childRp.next().map { firstOf(it, stateFirstOfNext) }.reduce { acc, it -> acc.union(it) }
+                            else -> childRp.next().map { this.firstOf(it, stateFirstOfNext) }.reduce { acc, it -> acc.union(it) } //TODO: don't use firstOf Function
                         }
                         if (childRp.isAtStart.not()) {
-                            ruleRpState.setTransInfo(childRpPrev.rulePosition, state, firstOf, firstOfNext)
-                            possibleStates[childRp] = ruleRpState
+                            childRpState.setTransInfo(childRpPrev.rulePosition, state, childParentFirstOfNext, firstOf, firstOfNext)
+                            possibleStates[childRp] = childRpState
                         }
-                        todo.enqueue(RpToDo(ruleRpState, childRpPrev, childRpPrevForChildren, firstOfNext))
+                        todo.enqueue(RpToDo(childRpState, childParentFirstOfNext, childRpPrev, childRpPrevForChildren, firstOfNext))
                     } else {
                         //do not recurse
                     }
@@ -329,7 +350,7 @@ internal class BuildCacheLC1(
                     tr.parent.any { it.isAtStart } -> tr.parent
                     else -> mergedPossibleStates.keys.firstOrNull { it.containsAll(tr.parent) } ?: tr.parent
                 }
-                val to =mergedPossibleStates.keys.firstOrNull { it.containsAll(tr.to) } ?: tr.to
+                val to = mergedPossibleStates.keys.firstOrNull { it.containsAll(tr.to) } ?: tr.to
                 TransInfo(prev, parent, tr.parentFirstOfNext, tr.action, to, tr.lookaheadSet)
             }
             StateInfo(rulePositions, possibleTrans)
@@ -505,16 +526,21 @@ internal class BuildCacheLC1(
                     }
                     val lhs = LookaheadSetPart.createFromRuntimeRules(firstOrFollow)
                     val tgtParents = this.firstFollowCache.parentInContext(pPrev, tgt.runtimeRule)
-                    val parentFollow = tgtParents.flatMap { tp ->
-                        tp.rulePosition.next().flatMap { parRpNxt ->
-                            val parFirstOrFollow = when {
-                                tp.rulePosition.isAtEnd -> this.firstFollowCache.followInContext(tp.context, parRpNxt.runtimeRule)
-                                else -> this.firstFollowCache.firstOfInContext(tp.context, parRpNxt)
-                            }
-                            if (parFirstOrFollow.isEmpty()) {
-                                listOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-                            } else {
-                                parFirstOrFollow
+                    val parentFollow = when {
+                        tgtParents.isEmpty()-> listOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD) // occurs eg. when GRAFT into RP(G,0,EOR) at end
+                        else -> {
+                            tgtParents.flatMap { tp ->
+                                tp.rulePosition.next().flatMap { parRpNxt ->
+                                    val parFirstOrFollow = when {
+                                        tp.rulePosition.isAtEnd -> this.firstFollowCache.followInContext(tp.context, parRpNxt.runtimeRule)
+                                        else -> this.firstFollowCache.firstOfInContext(tp.context, parRpNxt)
+                                    }
+                                    if (parFirstOrFollow.isEmpty()) {
+                                        listOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                                    } else {
+                                        parFirstOrFollow
+                                    }
+                                }
                             }
                         }
                     }
