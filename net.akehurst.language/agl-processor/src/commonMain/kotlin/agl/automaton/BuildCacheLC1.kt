@@ -109,7 +109,7 @@ internal class BuildCacheLC1(
             val mergedTransInfo: Set<TransInfo> by lazy {
                 val tis = this.outTransInfo.values.flatten().toSet()
                 val tisAtEnd = tis.filter { it.to.first().isAtEnd }
-                need to split thinga at end!
+                need to split things at end!
                 val mergedAtEnd = tisAtEnd.map {
                     val parent = it.parent?.let {listOf(it.rulePosition)} ?: emptyList()
                     val lookaheadSet = when (it.action) {
