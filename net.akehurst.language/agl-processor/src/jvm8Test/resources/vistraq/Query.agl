@@ -2,9 +2,9 @@ namespace com.itemis.typedgraph.query
 
 grammar Query {
 
-    skip WHITE_SPACE = "\s+" ;
-	skip MULTI_LINE_COMMENT = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
-	skip SINGLE_LINE_COMMENT = "//[^\n\r]*" ;
+    skip leaf WHITE_SPACE = "\s+" ;
+    skip leaf MULTI_LINE_COMMENT = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
+    skip leaf SINGLE_LINE_COMMENT = "//[^\n\r]*" ;
 
     query = singleQuery | compositeQuery ;
     singleQuery = timespanDefinition? querySource? returnDefinition? ;

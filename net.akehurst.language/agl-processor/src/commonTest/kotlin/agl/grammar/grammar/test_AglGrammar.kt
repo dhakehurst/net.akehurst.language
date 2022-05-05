@@ -1182,4 +1182,21 @@ class test_AglGrammar {
 
         val (actual, issues) = p.process<AsmSimple, Any>("aca")
     }
+
+    @Test
+    fun weird() {
+        val grammarStr = """
+            namespace com.itemis.typedgraph.query
+            grammar Query {
+                //leaf x = y ;
+                
+                skip leaf WHITE_SPACE = "\s+" ;
+                skip leaf MULTI_LINE_COMMENT = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
+                skip leaf SINGLE_LINE_COMMENT = "//[^\n\r]*" ;
+            }
+    """.trimIndent()
+
+        val p = Agl.processorFromString(grammarStr)
+        assertNotNull(p)
+    }
 }

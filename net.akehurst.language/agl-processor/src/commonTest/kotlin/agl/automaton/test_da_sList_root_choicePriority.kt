@@ -212,11 +212,11 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
         assertNotNull(sppt)
         assertEquals(0, issues.size)
         assertEquals(1, sppt.maxNumHeads)
+
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
             val s0 = state(RP(G, 0, SOR))      /* G = . S   */
-            val s1 = state(RP(G, 0, EOR))        /* G = S .   */
             val s2 = state(RP(v, 0, EOR))      /* 'v' .   */
             val s3 = state(RP(vr, 0, EOR))     /* var = "[a-z]+" .   */
             val s4 = state(RP(root, 0, EOR))   /* root = vr .   */
@@ -231,6 +231,7 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
             val s10 = state(RP(div, 0, PLI))    /* div = [E ... '/' . E ...]2+ */
             val s11 = state(RP(div, 0, EOR))     /* div = [E / '/']2+ . . */
             val s12 = state(RP(E, 1, EOR))       /* E = div . */
+            val s1 = state(RP(G, 0, EOR))        /* G = S .   */
 
             transition(null, s0, s1, WIDTH, setOf(UP, d, a), emptySet(), null)
             transition(s0, s1, s2, HEIGHT, setOf(UP, d, a), emptySet(), null)

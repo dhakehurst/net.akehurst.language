@@ -50,7 +50,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
         override fun toString(): String = "NextNotAtEnd{prev=$prev, rulePosition=$rulePosition}"
     }
 
-    private companion object {
+    internal companion object {
         enum class ReferenceFunc { FIRST_TERM, FIRST_OF }
 
         interface ClosureItem {
@@ -154,12 +154,15 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
     // prev/context -> ( TerminalRule -> ParentRulePosition )
     private val _parentInContext = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<ParentOfInContext>>> { lazyMutableMapNonNull { hashSetOf() } }
 
+    init {
+        // firstTerm(context=RP(G,0,SOR), rulePosition=RP(G,0,EOR) ) = UP
+        this.addFirstTerminalAndFirstOfInContext(this.stateSet.startRulePosition, this.stateSet.finishRulePosition, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+    }
+
     fun firstTerminal(prev: RulePosition, rulePosition: RulePosition): Set<RuntimeRule> {
         check(prev.isAtEnd.not()) { "firstTerminal($prev,$rulePosition)" }
-        //val nextNotAtEnd = Pair(this.stateSet.startRulePosition, this.stateSet.finishRulePosition)
-        //calcFirstAndFollowForClosureRoot(ClosureItemRoot(prev, rulePosition, listOf(nextNotAtEnd)), true) // repetition checked for within
         val nextNotAtEnd = NextNotAtEnd(null, this.stateSet.startRulePosition, this.stateSet.finishRulePosition)
-        // nextNotAtEnd of (startRp, finishRp) should always resolve to 'UP.
+        // nextNotAtEnd of (startRp, finishRp) should always resolve to 'UP (see init).
         // the correct nextNotAtEnd, may not be (startRp, finishRp),
         // BUT it should also always resolve to 'UP'
         processClosureFor(prev, rulePosition, listOf(nextNotAtEnd), true)
@@ -289,35 +292,6 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
         var needsNext = false
         while (todoList.isNotEmpty) {
             val cls = todoList.pop()
-/*
-            when (cls) {
-                is ClosureItemRoot -> {
-                    val prev = cls.prev
-                    val rr = cls.rulePosition.runtimeRule
-                    if (cls.nextNotAtEnd.isEmpty()) {
-                        this.addFollowInContext(prev, rr, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-                    } else {
-                        for (pn in cls.nextNotAtEnd) {
-                            this.addFollowInContextAsReferenceToFirstOf(prev, rr, pn.prev, pn.rulePosition)
-                        }
-                    }
-                }
-                is ClosureItemChild -> {
-                    val prev = cls.prev
-                    val rr = cls.rulePosition.runtimeRule
-                    val parentRp = cls.parent.rulePosition
-                    this.addParentInContext(prev, rr, ParentOfInContext(cls.parent.prev, parentRp))
-                    if (cls.parent.nextNotAtEnd.isEmpty()) {
-                        this.addFollowInContext(prev, rr, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-                    } else {
-                        for (pn in cls.parent.nextNotAtEnd) {
-                            this.addFollowInContextAsReferenceToFirstOf(prev, rr, pn.prev, pn.rulePosition)
-                        }
-                    }
-                }
-                else -> error("Internal Error: Should not happen")
-            }
-*/
             when {
                 cls.rulePosition.isAtEnd -> when {
                     cls.rulePosition.isGoal -> {
@@ -352,92 +326,39 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
         return needsNext
     }
 
-    // may be called with closure that is not the 'Root' of the closure, rather a starting point in a closure,
-    // processing above the start would already be in progress in that case
-    /**
-     * return true if needsNext (i.e. could be empty)
-     */
-    /*
-    private fun calcFirstAndFollowForClosureRoot(closureStart: ClosureItem, calcFollow: Boolean) {
-        val doit = when (this._doneFollow[closureStart.prev][closureStart.rulePosition]) {
-            null -> true
-            false -> calcFollow == true
-            true -> false
-        }
-        if (doit) {
-            if (Debug.OUTPUT) debug(Debug.IndentDelta.INC_AFTER) { "START calcFirstAndFollowForClosureRoot($closureStart, $calcFollow)" }
-            this._doneFollow[closureStart.prev][closureStart.rulePosition] = calcFollow
-            val done = mutableSetOf<Pair<Set<RulePosition>, RulePosition>>()
-            done.add(Pair(closureStart.nextPrev, closureStart.rulePosition))
-            val todoList = mutableStackOf<CalculationTask>()
-            // handle root first as it has no parent defined
+    //internal so can be tested
+    internal fun calcClosures(closureStart: ClosureItem): List<ClosureItem> {
+        if (Debug.OUTPUT) debug(Debug.IndentDelta.INC_AFTER) { "START calcClosures: $closureStart" }
+        val completeClosures = mutableListOf<ClosureItem>()
+        val done = mutableSetOf<Triple<RulePosition, RulePosition, List<NextNotAtEnd>>>()
+        val todoList = mutableStackOf<ClosureItem>()
+        todoList.push(closureStart)
+        while (todoList.isNotEmpty) {
+            val cls = todoList.pop()
             when {
-                closureStart.rulePosition.isAtEnd -> this.addFirstTerminalAndFirstOfInContext(closureStart.prev, closureStart.rulePosition, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-                closureStart.rulePosition.item!!.isTerminal -> {
-                    val childRp = closureStart.rulePosition.item!!.asTerminalRulePosition
-                    val needsFollow = childRp.isTerminal
-                    todoList.push(CalculationTask(ClosureItemChild(closureStart, childRp), needsFollow))
+                cls.rulePosition.isTerminal -> completeClosures.add(cls)
+                cls.rulePosition.item!!.isTerminal -> {
+                    val childRp = cls.rulePosition.item!!.asTerminalRulePosition
+                    todoList.push(ClosureItemChild(cls, childRp))
                 }
                 else -> {
-                    val childRulePositions = closureStart.rulePosition.item!!.rulePositionsAt[0]
+                    val childRulePositions = cls.rulePosition.item!!.rulePositionsAt[0]
                     for (childRp in childRulePositions) {
-                        val d = Pair(closureStart.nextPrev, childRp)
-                        done.add(d)
-                        val needsFollow = childRp.isTerminal //always false here
-                        todoList.push(CalculationTask(ClosureItemChild(closureStart, childRp), needsFollow))
-                    }
-                }
-            }
-
-            // handle rest of Tasks
-            while (todoList.isNotEmpty) {
-                val td = todoList.pop()
-                this.addParentInContext(td.closureItem.prev, td.closureItem.rulePosition.runtimeRule, td.closureItem.parent.rulePosition)
-                when { //maybe check if already calc'd
-                    td.closureItem.rulePosition.isTerminal -> {
-                        this.propagateFirstTerminalUpTheClosure(td.closureItem, calcFollow)
-                    }
-                    td.closureItem.rulePosition.item!!.isTerminal -> {
-                        val childRp = td.closureItem.rulePosition.item!!.asTerminalRulePosition
-                        val needsFollow = childRp.isTerminal
-                        todoList.push(CalculationTask(ClosureItemChild(td.closureItem, childRp), needsFollow))
-                    }
-                    td.closureItem.rulePosition.isAtEnd -> error("Internal Error: should never happen")
-                    else -> {
-                        val childRulePositions = td.closureItem.rulePosition.item!!.rulePositionsAt[0]
-                        for (childRp in childRulePositions) {
-                            val d = Pair(td.closureItem.nextPrev, childRp)
-                            if (done.contains(d).not()) {
-                                done.add(d)
-                                val needsFollow = childRp.isTerminal //always false here
-                                todoList.push(CalculationTask(ClosureItemChild(td.closureItem, childRp), needsFollow))
-                                if (td.needsFollow) { // only calc lookahead if needed
-                                    // if childNextRp is atEnd then lookahead is firstNonEmptyTerminal of parent.next
-                                    // else lookahead is firstNonEmptyTerminal of childNextRp.next
-                                    when {
-                                        childRp.isAtEnd -> {
-                                            val next = td.closureItem.rulePosition.next()
-                                            next.forEach { todoList.push(CalculationTask(ClosureItemChild(td.closureItem, it), false)) }
-                                        }
-                                        else -> {
-                                            val next = childRp.next()
-                                            next.forEach { todoList.push(CalculationTask(ClosureItemChild(td.closureItem, it), false)) }
-                                        }
-                                    }
-                                } else {
-                                    //do nothing
-                                }
-                            } else {
-                                // already done
-                            }
+                        val childCls = ClosureItemChild(cls, childRp)
+                        val d = Triple(childCls.prev, childCls.rulePosition, childCls.parent.nextNotAtEnd)
+                        if (done.contains(d).not()) {
+                            done.add(d)
+                            todoList.push(childCls)
+                        } else {
+                            // already done
                         }
                     }
                 }
             }
-            if (Debug.OUTPUT) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcFirstAndFollowForClosureRoot($closureStart)" }
         }
+        if (Debug.OUTPUT) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcClosures: $closureStart" }
+        return completeClosures
     }
-    */
 
     /**
      * iterate up a closure and set firstTerm,firstOf,follow as required
@@ -499,7 +420,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
         } else {
             for (pn in cls.parentNextNotAtEnd) {
                 val nnae = pn.previousNextNotAtEnd?.let { listOf(it) } ?: emptyList()
-                processClosureFor(pn.prev, pn.rulePosition, nnae, false)
+                if (calcFollow) processClosureFor(pn.prev, pn.rulePosition, nnae, false)
                 this.addFollowInContextAsReferenceToFirstOf(prev, rr, pn.prev, pn.rulePosition)
                 //this.addFollowInContextAsReferenceToFollow(prev,rr,pn.prev,pn.rulePosition.runtimeRule)
             }

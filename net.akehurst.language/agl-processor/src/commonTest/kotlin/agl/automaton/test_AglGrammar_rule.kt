@@ -16,88 +16,124 @@
 
 package net.akehurst.language.agl.automaton
 
+import agl.automaton.AutomatonTest
+import agl.automaton.automaton
 import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 internal class test_AglGrammar_rule : test_AutomatonAbstract() {
 
-    private companion object {
-        val grammar = AglGrammarGrammar()
-        val converterToRuntimeRules = ConverterToRuntimeRules(grammar)
-        val parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
-        val rrs = parser.runtimeRuleSet
+    private val grammar = AglGrammarGrammar()
+    private val converterToRuntimeRules = ConverterToRuntimeRules(grammar)
+    private val parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
+    private val rrs = parser.runtimeRuleSet
 
-        val R_rule = rrs.findRuntimeRule("rule")
+    private val userGoalRuleName = "rule"
 
-        val R_isOverride = rrs.findRuntimeRule("isOverride")
-        val R_override = R_isOverride.rhs.items[0].rhs.items[RuntimeRuleItem.MULTI__ITEM]
-        val R_overrideEmpty = R_isOverride.rhs.items[0].rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
+    private val R_rule = rrs.findRuntimeRule(userGoalRuleName)
 
-        val R_isSkip = rrs.findRuntimeRule("isSkip")
-        val R_skip = R_isSkip.rhs.items[0].rhs.items[RuntimeRuleItem.MULTI__ITEM]
-        val R_skipEmpty = R_isSkip.rhs.items[0].rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
+    private val R_isOverride = rrs.findRuntimeRule("isOverride")
+    private val T_override = R_isOverride.rhs.items[RuntimeRuleItem.MULTI__ITEM]
+    private val T_overrideEmpty = R_isOverride.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
 
-        val R_isLeaf = rrs.findRuntimeRule("isLeaf")
-        val R_leaf = R_isLeaf.rhs.items[0].rhs.items[RuntimeRuleItem.MULTI__ITEM]
-        val R_leafEmpty = R_isLeaf.rhs.items[0].rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
+    private val R_isSkip = rrs.findRuntimeRule("isSkip")
+    private val T_skip = R_isSkip.rhs.items[RuntimeRuleItem.MULTI__ITEM]
+    private val T_skipEmpty = R_isSkip.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
 
-        val R_IDENTIFIER = rrs.findRuntimeRule("IDENTIFIER")
-        val T_namespace = rrs.findRuntimeRule("'namespace'")
+    private val R_isLeaf = rrs.findRuntimeRule("isLeaf")
+    private val T_leaf = R_isLeaf.rhs.items[RuntimeRuleItem.MULTI__ITEM]
+    private val T_leafEmpty = R_isLeaf.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
 
-        val SM = rrs.fetchStateSetFor(R_rule, AutomatonKind.LOOKAHEAD_1)
-        val s0 = SM.startState
-        val G = s0.runtimeRules.first()
+    private val T_IDENTIFIER = rrs.findRuntimeRule("IDENTIFIER")
+    private val T_equals = rrs.findRuntimeRule("'='")
 
+    private val SM = rrs.fetchStateSetFor(R_rule, AutomatonKind.LOOKAHEAD_1)
+    private val s0 = SM.startState
+    private val G = s0.runtimeRules.first()
 
-    }
+    // IMPORTANT, notice that userGoal rule is 'rule' (not 'grammar')
 
     @Test
     override fun firstOf() {
         listOf(
-            Triple(RP(G, 0, SOR), lhs_U, LHS(R_isLeaf)), // G = . S
-            Triple(RP(G, 0, EOR), lhs_U, LHS(UP))        // G = S .
+            Triple(RP(G, 0, SOR), LHS(UP), LHS(T_override, T_skip, T_leaf,T_IDENTIFIER)), // G = . S
+            Triple(RP(G, 0, EOR), LHS(UP), LHS(UP))        // G = S .
 //TODO
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs.part)
+            val actual = SM.buildCache.firstOf(rp, lhs)
             assertEquals(expected, actual, "failed $rp")
         }
     }
 
+    @Test
     override fun s0_widthInto() {
         val s0 = SM.startState
-        val actual = s0.widthInto(s0).toList()
+        val actual = s0.widthInto(s0)
 
-        val expected = listOf(
-            WidthInfo(RP(T_namespace, 0, EOR), lhs_U.part),
-            WidthInfo(RP(T_namespace, 0, EOR), lhs_U.part)
+        val expected = setOf(
+            WidthInfo(RP(T_override, 0, EOR), LHS(T_skip, T_leaf, T_IDENTIFIER)),
+            WidthInfo(RP(T_overrideEmpty, 0, EOR), LHS(T_skip, T_leaf, T_IDENTIFIER)),
         )
-        assertEquals(expected.size, actual.size)
-        for (i in 0 until actual.size) {
-            assertEquals(expected[i], actual[i])
-        }
+        assertEquals(expected, actual)
     }
 
     @Test
-    fun rule_firstTerminals() {
-        // rule = ruleTypeLabels IDENTIFIER '='  choice';'
-        // ruleTypeLabels = isOverride isSkip isLeaf
-        // isOverride 'override'?
-        // isSkip 'skip'?
-        // isLeaf 'leaf'?
+    fun automaton_parse__r_a() {
+        val parser = ScanOnDemandParser(rrs)
+        val (sppt, issues) = parser.parseForGoal(userGoalRuleName, "r=a;", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString(userGoalRuleName))
+        assertNotNull(sppt)
+        assertEquals(0, issues.size)
+        assertEquals(1, sppt.maxNumHeads)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(R_rule, AutomatonKind.LOOKAHEAD_1)
 
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, userGoalRuleName, 0, false) {
+            val s0 = state(RP(G, 0, SOR))     /* G = . S   */
 
-        val actual = rrs.firstTerminals[R_rule.number]
+        }
 
-        val expected = setOf<RuntimeRule>(R_override, R_overrideEmpty)
-
-        assertEquals(expected, actual)
-
+        AutomatonTest.assertEquals(expected, actual)
     }
 
+    @Test
+    fun automaton_parse__r_bac() {
+        val parser = ScanOnDemandParser(rrs)
+        val (sppt, issues) = parser.parseForGoal(userGoalRuleName, "r=(a);", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString(userGoalRuleName))
+        assertNotNull(sppt)
+        assertEquals(0, issues.size)
+        assertEquals(1, sppt.maxNumHeads)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(R_rule, AutomatonKind.LOOKAHEAD_1)
+
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, userGoalRuleName, 0, false) {
+            val s0 = state(RP(G, 0, SOR))     /* G = . S   */
+
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun automaton_parse__s_l_r_bac() {
+        val parser = ScanOnDemandParser(rrs)
+        val (sppt, issues) = parser.parseForGoal(userGoalRuleName, "skip leaf r=(a);", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString(userGoalRuleName))
+        assertNotNull(sppt)
+        assertEquals(0, issues.size)
+        assertEquals(1, sppt.maxNumHeads)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(R_rule, AutomatonKind.LOOKAHEAD_1)
+
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, userGoalRuleName, 0, false) {
+            val s0 = state(RP(G, 0, SOR))     /* G = . S   */
+
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
+    }
 }

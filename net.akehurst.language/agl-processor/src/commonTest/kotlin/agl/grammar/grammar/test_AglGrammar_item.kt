@@ -977,34 +977,68 @@ class test_AglGrammar_item {
     }
 
     @Test
-    fun grammar__rule_nonTermail_a() {
+    fun grammar__grammar_nonTerminal_a() {
         val gstr = """
             grammar Test { s = a ; }
         """.trimIndent()
         val (actual,issues) = parse("grammar", gstr)
         val expected = this.sppt(
             """
-            rules { rule {
-                ruleTypeLabels { isOverride|1 { §empty } isSkip|1 { §empty } isLeaf|1 { §empty } }
+            grammar {
+              'grammar' WHITESPACE : ' '
+              IDENTIFIER : 'Test' WHITESPACE : ' '
+              extends { §empty }
+              '{'  WHITESPACE : ' '
+              rules { rule {
+                ruleTypeLabels {
+                  isOverride { §empty }
+                  isSkip { §empty }
+                  isLeaf { §empty }
+                }
                 IDENTIFIER : 's' WHITESPACE : ' '
                 '=' WHITESPACE : ' '
-                rhs|1 { concatenation { concatenationItem { simpleItem|2 { group {
-                    '('
-                    groupedContent|1 { choice|2 { simpleChoice {
-                        concatenation {
-                            concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' WHITESPACE : ' ' } } } }
-                            concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } }
-                        }
-                        '|' WHITESPACE : ' '
-                        concatenation { concatenationItem|1 { listOfItems { simpleList {
-                            simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } }
-                            multiplicity|2 { '?' }
-                        } } } }
-                    } } }
-                    ')' WHITESPACE : ' '
-                } } } } }
-                ';'
-            } }
+                rhs { concatenation { concatenationItem { simpleItem { nonTerminal { qualifiedName {
+                  IDENTIFIER : 'a' WHITESPACE : ' '
+                } } } } } }
+                ';' WHITESPACE : ' '
+              } }
+              '}'
+            }
+        """.trimIndent()
+        )
+        assertNotNull(actual, issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(expected.toStringAll, actual.toStringAll)
+        assertEquals(1, actual.maxNumHeads)
+    }
+
+    @Test
+    fun grammar__grammar_skip_rule_nonTerminal_a() {
+        val gstr = """
+            grammar Test { skip s = a ; }
+        """.trimIndent()
+        val (actual,issues) = parse("grammar", gstr)
+        val expected = this.sppt(
+            """
+            grammar {
+              'grammar' WHITESPACE : ' '
+              IDENTIFIER : 'Test' WHITESPACE : ' '
+              extends { §empty }
+              '{'  WHITESPACE : ' '
+              rules { rule {
+                ruleTypeLabels {
+                  isOverride { §empty }
+                  isSkip { §empty }
+                  isLeaf { §empty }
+                }
+                IDENTIFIER : 's' WHITESPACE : ' '
+                '=' WHITESPACE : ' '
+                rhs { concatenation { concatenationItem { simpleItem { nonTerminal { qualifiedName {
+                  IDENTIFIER : 'a' WHITESPACE : ' '
+                } } } } } }
+                ';' WHITESPACE : ' '
+              } }
+              '}'
+            }
         """.trimIndent()
         )
         assertNotNull(actual, issues.joinToString(separator = "\n") { it.toString() })

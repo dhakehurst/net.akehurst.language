@@ -143,12 +143,15 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
 
     @Test
     fun automaton_parse_vav() {
+        //given
         val parser = ScanOnDemandParser(rrs)
         val (sppt, issues) = parser.parseForGoal("S", "vav", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(sppt)
         assertEquals(0, issues.size)
         assertEquals(1, sppt.maxNumHeads)
+
+        //when
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
@@ -159,6 +162,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
 
         }
 
+        // then
         AutomatonTest.assertEquals(expected, actual)
     }
 

@@ -244,6 +244,7 @@ internal class ParserStateSet(
     }
 
     fun build(): ParserStateSet {
+        /* TODO: make build work
         if (this.preBuilt.not()) {
             this.buildCache.switchCacheOn()
             buildAndTraverse()
@@ -252,6 +253,7 @@ internal class ParserStateSet(
         } else {
             // already built
         }
+         */
         return this
     }
 

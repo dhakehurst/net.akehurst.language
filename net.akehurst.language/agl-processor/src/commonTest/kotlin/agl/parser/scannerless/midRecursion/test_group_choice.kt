@@ -80,7 +80,28 @@ internal class test_group_choice : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun bac() {
+    fun choice_bac() {
+        val sentence = "(a)"
+
+        val expected = """
+              choice|1 { longestChoice { concatItem|1 { group {
+                      '('
+                      choice|1 { longestChoice { concatItem { ID : 'a' } } }
+                      ')'
+                    } } } }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = "choice",
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun rule_bac() {
         val sentence = "r=(a);"
 
         val expected = """
@@ -104,6 +125,7 @@ internal class test_group_choice : test_ScanOnDemandParserAbstract() {
                 expectedTrees = arrayOf(expected)
         )
     }
+
     @Test
     fun bbacc() {
         val sentence = "r=((a));"

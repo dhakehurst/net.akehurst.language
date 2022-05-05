@@ -470,7 +470,7 @@ public class BadBinaryLiterals {
         val goal = "Block"
 
         val (sppt,issues) = proc.parse(sentence,goal)
-        assertNotNull(sppt)
+        assertNotNull(sppt, issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(),issues)
         // println( t.toStringAll )
         val resultStr = SPPT2InputText().visitTree(sppt, "")

@@ -31,11 +31,12 @@ internal class test_nested_optionals : test_ScanOnDemandParserAbstract() {
         extends = 'extends' [qualifiedName / ',']+ ;
         rules = rule+ ;
         rule = ruleTypeLabels IDENTIFIER '=' rhs ';' ;
+        ruleTypeLabels = ...
      */
     /*
-        S = 'a' R 'z' ;
-        //rules = rule+ ;
-        R = Os 'y' ;
+        S = 'a' Rs 'z' ;
+        Rs = R+ ;
+        R = Os 's' 't' ;
         Os = Bo Co Do ;
         Bo = 'b'?
         Co = 'c'?
@@ -43,8 +44,9 @@ internal class test_nested_optionals : test_ScanOnDemandParserAbstract() {
      */
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("S") { literal("a"); ref("R"); literal("z") }
-            concatenation("R") { ref("Os"); literal("y") }
+            concatenation("S") { literal("i"); literal("a"); ref("Rs"); literal("z") }
+            multi("Rs",1,-1,"R")
+            concatenation("R") { ref("Os"); literal("i"); literal("t") }
             concatenation("Os") { ref("Bo"); ref("Co"); ref("Do") }
             multi("Bo", 0, 1, "'b'")
             multi("Co", 0, 1, "'c'")
@@ -83,19 +85,37 @@ internal class test_nested_optionals : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun ayz() {
-        val sentence = "ayz"
+    fun a_fails() {
+        val sentence = "a"
+
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'","'c'","'d'","'y'"))
+            ), issues
+        )
+    }
+
+
+    @Test
+    fun iaitz() {
+        val sentence = "iaitz"
 
         val expected = """
             S {
+              'i'
               'a'
+              Rs {
               R {
                 Os {
                   Bo|1 { §empty }
                   Co|1 { §empty }
                   Do|1 { §empty }
                 }
-                'y'
+                'i'
+                't'
+              }
               }
               'z'
             }
@@ -111,19 +131,23 @@ internal class test_nested_optionals : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun abyz() {
-        val sentence = "abyz"
+    fun iabitz() {
+        val sentence = "iabitz"
 
         val expected = """
             S {
+             'i'
               'a'
-              R {
-                Os {
-                  Bo { 'b' }
-                  Co|1 { §empty }
-                  Do|1 { §empty }
-                }
-                'y'
+              Rs{
+                  R {
+                    Os {
+                      Bo { 'b' }
+                      Co|1 { §empty }
+                      Do|1 { §empty }
+                    }
+                    'i'
+                    't'
+                  }
               }
               'z'
             }
@@ -152,8 +176,40 @@ internal class test_nested_optionals : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun acyz() {
-        val sentence = "acyz"
+    fun iacitz() {
+        val sentence = "iacitz"
+
+        val expected = """
+            S {
+              'i'
+              'a'
+              Rs {
+                  R {
+                    Os {
+                      Bo|1 { §empty }
+                      Co{ 'c' }
+                      Do|1 { §empty }
+                    }
+                    'i'
+                    't'
+                  }
+              }
+              'z'
+            }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun adyz() {
+        val sentence = "adyz"
 
         val expected = """
             S {
@@ -161,8 +217,8 @@ internal class test_nested_optionals : test_ScanOnDemandParserAbstract() {
               R {
                 Os {
                   Bo|1 { §empty }
-                  Co{ 'c' }
-                  Do|1 { §empty }
+                  Co|1{ §empty }
+                  Do { 'd' }
                 }
                 'y'
               }

@@ -21,7 +21,6 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.collections.mutableStackOf
 
 internal abstract class BuildCacheAbstract(
     val stateSet: ParserStateSet
@@ -37,7 +36,8 @@ internal abstract class BuildCacheAbstract(
 
     protected var _cacheOff = true
 
-    protected val firstFollowCache = FirstFollowCache(this.stateSet)
+    // must be lazy because FirstFollowCache uses lazy parts of ParserStateSet
+    protected val firstFollowCache by lazy { FirstFollowCache(this.stateSet) }
 
     //TODO: use smaller array for done, but would to map rule number!
     private val _firstOfNotEmpty = Array<FirstOfResult?>(this.stateSet.runtimeRuleSet.runtimeRules.size, { null })
@@ -60,7 +60,7 @@ internal abstract class BuildCacheAbstract(
     }
 
     fun firstOfInContext(prev: ParserState, fromState: ParserState): List<RuntimeRule> {
-TODO()
+        TODO()
     }
 
     override fun followInContext(prev: ParserState, runtimeRule: RuntimeRule): List<RuntimeRule> {

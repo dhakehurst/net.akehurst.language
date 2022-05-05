@@ -109,7 +109,7 @@ internal class BuildCacheLC1(
             val mergedTransInfo: Set<TransInfo> by lazy {
                 val tis = this.outTransInfo.values.flatten().toSet()
                 val tisAtEnd = tis.filter { it.to.first().isAtEnd }
-                need to split things at end!
+                //TODO: need to split things at end!
                 val mergedAtEnd = tisAtEnd.map {
                     val parent = it.parent?.let {listOf(it.rulePosition)} ?: emptyList()
                     val lookaheadSet = when (it.action) {
@@ -532,7 +532,8 @@ internal class BuildCacheLC1(
                             tgtParents.flatMap { tp ->
                                 tp.rulePosition.next().flatMap { parRpNxt ->
                                     val parFirstOrFollow = when {
-                                        tp.rulePosition.isAtEnd -> this.firstFollowCache.followInContext(tp.context, parRpNxt.runtimeRule)
+                                        //tp.rulePosition.isAtEnd -> this.firstFollowCache.followInContext(tp.context, parRpNxt.runtimeRule)
+                                        parRpNxt.isAtEnd -> this.firstFollowCache.followInContext(tp.context, parRpNxt.runtimeRule)
                                         else -> this.firstFollowCache.firstOfInContext(tp.context, parRpNxt)
                                     }
                                     if (parFirstOrFollow.isEmpty()) {
