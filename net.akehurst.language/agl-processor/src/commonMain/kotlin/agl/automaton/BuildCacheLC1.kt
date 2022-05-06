@@ -444,7 +444,7 @@ internal class BuildCacheLC1(
                     }
                 }
 
-            fun outTransitions(parentOf: Map<Pair<RulePosition, RuntimeRule>, L1State>): Set<L1Trans> {
+            fun outTransitions(parentOf: Map<Pair<RulePosition, RuntimeRule>, Set<L1State>>): Set<L1Trans> {
                 return when {
                     null == parent && rulePosition.isAtEnd -> emptySet() // G,0,EOR
                     rulePosition.isAtEnd -> {
@@ -465,9 +465,11 @@ internal class BuildCacheLC1(
                         val tgts = pFirstTerm(this.rulePosition)
                         val to = tgts.flatMap { t ->
                             val tParent = parentOf[Pair(parentPrev, t)]
-                            val ls = when {
-                                tParent!!.nextNotAtEnd.isEmpty() -> listOf(this.lhs)
-                                else -> tParent!!.nextNotAtEnd.map { n -> firstOf(n, this.lhs) }
+                            val ls = tParent!!.flatMap { tp ->
+                                when {
+                                    tp.nextNotAtEnd.isEmpty() -> listOf(this.lhs)
+                                    else -> tp.nextNotAtEnd.map { n -> firstOf(n, this.lhs) }
+                                }
                             }
                             ls.map { Pair(t.asTerminalRulePosition, it) }
                         }
@@ -539,7 +541,7 @@ internal class BuildCacheLC1(
         val finishRP = this.stateSet.finishRulePosition
         val finishState = L1State(null, finishRP, LookaheadSetPart.UP)
 
-        val parentOf = mutableMapOf<Pair<RulePosition, RuntimeRule>, L1State>()
+        val parentOf = lazyMutableMapNonNull<Pair<RulePosition, RuntimeRule>, MutableSet<L1State>> { mutableSetOf<L1State>() }
         val states = mutableSetOf(startState, finishState)
         val closures = mutableListOf<ClosureItem>()
         val done = mutableSetOf<Triple<RulePosition, RulePosition, List<RulePosition>>>()
@@ -561,7 +563,7 @@ internal class BuildCacheLC1(
                             val childState = L1State(state, childRP, childLhs)
                             if (states.contains(childState).not()) {
                                 states.add(childState)
-                                parentOf[Pair(state.prev, childRP.runtimeRule)] = state
+                                parentOf[Pair(state.prev, childRP.runtimeRule)].add(state)
                                 todo.push(childState)
                             } else {
                                 // already done
@@ -594,12 +596,23 @@ internal class BuildCacheLC1(
             }
         }
 
-        val merged = mutableMapOf<Set<RulePosition>,L0State>()
+        println("LR1 states")
+        for (state in states) {
+            if (state.rulePosition.isGoal || state.rulePosition.isAtStart.not()) {
+                val trs = state.outTransitions(parentOf)
+                trs.forEach { println("{${state.prev}}${state.rulePosition} -- ${it.action}[${it.to.second.fullContent.joinToString { it.tag }}](${it.up}) --> ${it.to.first}") }
+            }
+        }
+
+        println("")
+        println("LR0 states")
         for (s in l0States.values) {
             for (t in s.outTransitions) {
                 println("${t.prev} ${s} -- ${t.action}${t.lookahead.joinToString { "[${it.guard}](${it.up})" }} --> ${t.to}")
             }
         }
+
+        val merged = mutableMapOf<Set<RulePosition>,L0State>()
     }
 
 
