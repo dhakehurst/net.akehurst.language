@@ -1093,12 +1093,16 @@ internal class BuildCacheLC1(
         return if (done.contains(rp.runtimeRule)) {
             emptySet()
         } else {
-            done.add(rp.runtimeRule)
-             when {
+            when {
                 rp.isTerminal -> setOf(rp.runtimeRule)
                 rp.item!!.isTerminal -> setOf(rp.item!!)
-                else -> rp.item!!.rulePositionsAt[0].flatMap { pFirstTerm(it, done) }.toSet()
+                else -> {
+                    done.add(rp.runtimeRule)
+                    val x = rp.item!!.rulePositionsAt[0].flatMap { pFirstTerm(it, done) }.toSet()
+                    x
+                }
             }
+
         }
     }
 
