@@ -288,6 +288,13 @@ internal class test_b_aSc : test_AutomatonAbstract() {
         //then
         AutomatonTest.assertEquals(expected, actual)
     }
+
+    @Test
+    fun stateInfo() {
+        val bc = BuildCacheLC1(SM)
+
+        val actual = bc.stateInfo2()
+    }
 /*
 
     @Test

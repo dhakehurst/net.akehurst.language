@@ -30,10 +30,29 @@ internal abstract class test_AutomatonUtilsAbstract {
         val EOR = RulePosition.END_OF_RULE
         val SOR = RulePosition.START_OF_RULE
 
+        /**
+         * Option for SimpleList Item
+         */
         val OMI = RulePosition.OPTION_MULTI_ITEM
+
+        /**
+         * Option for SimpleList Empty
+         */
         val OME = RulePosition.OPTION_MULTI_EMPTY
+
+        /**
+         * Option for SeparatedList Empty
+         */
         val OLE = RulePosition.OPTION_SLIST_EMPTY
+
+        /**
+         * Option for SeparatedList Item
+         */
         val OLI = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
+
+        /**
+         * Option for SeparatedList Separator
+         */
         val OLS = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
 
         /**

@@ -89,7 +89,7 @@ internal data class TransInfo(
 )
 internal data class StateInfo(
     val rulePositions: List<RulePosition>,
-    val possibleTrans:List<TransInfo>
+    val possibleTrans:Set<TransInfo>
 ) {
     val possiblePrev: List<List<RulePosition>> get() = possibleTrans.flatMap { it.prev }.toSet().toList()
 }

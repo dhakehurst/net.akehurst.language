@@ -216,7 +216,7 @@ internal class test_abcz_OR_abcy : test_AutomatonAbstract() {
         sentences.forEach {
             val parser = ScanOnDemandParser(rrs)
             val (sppt, issues) = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
-            assertNotNull(sppt)
+            assertNotNull(sppt, issues.joinToString("\n") { it.toString() } )
             assertEquals(0, issues.size)
             assertEquals(1, sppt.maxNumHeads)
         }

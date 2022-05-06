@@ -235,9 +235,25 @@ internal class test_aObOcO : test_AutomatonAbstract() {
     }
 
     @Test
+    fun stateInfo() {
+        val bc = BuildCacheLC1(SM)
+
+        val actual = bc.stateInfo2()
+    }
+
+    @Test
     fun buildFor() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
+
+        val sentences = listOf("","a", "b","ab","c","ac","bc","abc")
+        sentences.forEach {
+            val parser = ScanOnDemandParser(rrs)
+            val (sppt, issues) = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
+            assertNotNull(sppt, issues.joinToString("\n") { it.toString() } )
+            assertEquals(0, issues.size)
+            assertEquals(1, sppt.maxNumHeads)
+        }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
             val s0 = state(RP(G, 0, SOR))

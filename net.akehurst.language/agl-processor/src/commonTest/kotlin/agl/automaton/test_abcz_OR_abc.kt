@@ -203,6 +203,16 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
+        val parser = ScanOnDemandParser(rrs)
+        val sentences = listOf("abcz","abc")
+        for (sent in sentences) {
+            println("Parsing sentence '$sent'")
+            val (sppt, issues) = parser.parseForGoal("S", sent, AutomatonKind.LOOKAHEAD_1)
+            assertNotNull(sppt, issues.joinToString("\n") { it.toString() } )
+            assertEquals(0, issues.size)
+            assertEquals(1, sppt.maxNumHeads)
+        }
+
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
 
         }
