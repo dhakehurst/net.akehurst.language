@@ -197,6 +197,12 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
         AutomatonTest.assertEquals(expected, actual)
     }
 
+    @Test
+    fun stateInfo() {
+        val bc = BuildCacheLC1(SM)
+
+        val actual = bc.stateInfo2()
+    }
 
     @Test
     fun buildFor() {

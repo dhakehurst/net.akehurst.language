@@ -271,9 +271,11 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
     }
 
     @Test
-    fun parse_aba() {
+    fun parse_a_aa_aaa() {
         val parser = ScanOnDemandParser(rrs)
-        parser.parseForGoal("S", "aba", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "a", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "aa", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "aaa", AutomatonKind.LOOKAHEAD_1)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
