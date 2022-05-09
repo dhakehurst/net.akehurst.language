@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -79,19 +78,27 @@ internal data class LookaheadSetPart(
     override fun toString(): String = "LHS(${this.fullContent.joinToString{it.tag}})"
 }
 
+internal data class LookaheadInfoPart(
+    val guard:LookaheadSetPart,
+    val up:LookaheadSetPart
+) {
+    companion object {
+        val EMPTY = LookaheadInfoPart(LookaheadSetPart.EMPTY,LookaheadSetPart.EMPTY)
+    }
+}
+
 internal data class TransInfo(
-    val prev:List<List<RulePosition>>,
-    val parent:List<RulePosition>,
-    val parentFirstOfNext: List<LookaheadSetPart>,
+    val prev:Set<Set<RulePosition>>,
+    val parent:Set<RulePosition>,
     val action: Transition.ParseAction,
-    val to:List<RulePosition>,
-    val lookaheadSet: LookaheadSetPart
+    val to:Set<RulePosition>,
+    val lookahead: Set<LookaheadInfoPart>
 )
 internal data class StateInfo(
     val rulePositions: List<RulePosition>,
     val possibleTrans:Set<TransInfo>
 ) {
-    val possiblePrev: List<List<RulePosition>> get() = possibleTrans.flatMap { it.prev }.toSet().toList()
+    val possiblePrev: Set<Set<RulePosition>> get() = possibleTrans.flatMap { it.prev }.toSet()
 }
 
 internal data class WidthInfo(
@@ -103,25 +110,10 @@ internal data class HeightGraftInfo(
     val action: Transition.ParseAction,
     val parent: List<RulePosition>,
     val parentNext: List<RulePosition>, // to state
-    val lhs: LookaheadSetPart,
-    val upLhs: Set<LookaheadSetPart>
+    val lhs:Set<LookaheadInfoPart>
 ) {
     override fun toString(): String {
-        val cont1 = mutableSetOf<RuntimeRule>()
-        if (lhs.includesUP) cont1.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        if (lhs.includesEOT) cont1.add(RuntimeRuleSet.END_OF_TEXT)
-        if (lhs.matchANY) cont1.add(RuntimeRuleSet.ANY_LOOKAHEAD)
-        cont1.addAll(lhs.content)
-        val ul = upLhs.map {
-            val cont2 = mutableSetOf<RuntimeRule>()
-            if (it.includesUP) cont2.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-            if (it.includesEOT) cont2.add(RuntimeRuleSet.END_OF_TEXT)
-            if (it.matchANY) cont2.add(RuntimeRuleSet.ANY_LOOKAHEAD)
-            cont2.addAll(it.content)
-            cont2
-        }
-        val lhsStr = cont1.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }
-        val upLhsStr = ul.joinToString(prefix = "[", postfix = "]", separator = "|") { it.joinToString(separator = ",") {  it.tag }}
-        return "HeightGraftInfo(action=$action, parent=$parent, parentNext=$parentNext, lhs=$lhsStr, upLhs=$upLhsStr)"
+        val lhsStr = lhs.joinToString(separator = "|") { "[${it.guard.fullContent.joinToString {  it.tag }}](${it.up.fullContent.joinToString {  it.tag }})" }
+        return "HeightGraftInfo(action=$action, parent=$parent, parentNext=$parentNext, lhs=$lhsStr)"
     }
 }

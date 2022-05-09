@@ -19,7 +19,6 @@ package net.akehurst.language.agl.automaton
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
@@ -102,8 +101,7 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
                 Transition.ParseAction.HEIGHT,
                 listOf(RP(E, 0, SOR), RP(E, 0, SOR)),
                 listOf(RP(E, 0, 1), RP(E, 0, 1)),
-                lhs_a.part,
-                setOf(LHS(UP))
+                setOf(LookaheadInfoPart(LHS(a),LHS(UP)))
             )
         )
         assertEquals(expected, actual)

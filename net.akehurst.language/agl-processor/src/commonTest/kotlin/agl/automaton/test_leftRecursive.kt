@@ -18,9 +18,11 @@ package net.akehurst.language.agl.automaton
 
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
-import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -129,15 +131,13 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
                 Transition.ParseAction.HEIGHT,
                 listOf(RP(S, 0, 0)),
                 listOf(RP(S, 0, EOR)),
-                lhs_U.part,
-                setOf(LHS(UP))
+                setOf(LookaheadInfoPart(LHS(UP),LHS(UP)))
             ),
             HeightGraftInfo(
                 Transition.ParseAction.HEIGHT,
                 listOf(RP(S, 0, 0)),
                 listOf(RP(S, 0, EOR)),
-                lhs_a.part,
-                setOf(LHS(a))
+                setOf(LookaheadInfoPart(LHS(a),LHS(a)))
             )
         )
         assertEquals(expected, actual)
@@ -175,23 +175,20 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
                 Transition.ParseAction.HEIGHT,
                 listOf(RP(G, 0, 0)),
                 listOf(RP(G, 0, EOR)),
-                lhs_U.part,
-                setOf(LHS(UP))
+                setOf(LookaheadInfoPart(LHS(UP),LHS(UP)))
             ),
             HeightGraftInfo(
                 Transition.ParseAction.HEIGHT,
                 listOf(RP(S1, 0, 0)),
                 listOf(RP(S1, 0, 1)),
-                lhs_a.part,
-                setOf(LHS(UP))
+                setOf(LookaheadInfoPart(LHS(a),LHS(UP)))
             )
             ,
             HeightGraftInfo(
                 Transition.ParseAction.HEIGHT,
                 listOf(RP(S1, 0, 0)),
                 listOf(RP(S1, 0, 1)),
-                lhs_a.part,
-                setOf(LHS(a))
+                setOf(LookaheadInfoPart(LHS(a),LHS(a)))
             )
         )
         assertEquals(expected, actual)
@@ -267,8 +264,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
                 Transition.ParseAction.HEIGHT,
                 listOf(RP(S1, 0, 1)),
                 listOf(RP(S1, 0, EOR)),
-                lhs_aU.part,
-                setOf(LHS(UP))
+                setOf(LookaheadInfoPart(LHS(UP,a),LHS(UP)))
             )
         )
         assertEquals(expected, actual)

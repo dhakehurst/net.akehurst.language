@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.runtime.graph
 
+import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.processor.AutomatonKind

@@ -16,8 +16,8 @@
 
 package net.akehurst.language.agl.runtime.graph
 
+import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.ParserState
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 
 internal class TreeData(

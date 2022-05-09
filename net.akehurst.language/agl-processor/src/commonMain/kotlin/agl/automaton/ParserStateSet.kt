@@ -66,7 +66,7 @@ internal class ParserStateSet(
     val startRulePosition by lazy { RulePosition(goalRule, 0, 0) }
     val finishRulePosition by lazy { RulePosition(goalRule, 0, RulePosition.END_OF_RULE) }
     val startState: ParserState by lazy { this.createState(listOf(startRulePosition)) }
-    val endState: ParserState by lazy { this.createState(listOf(finishRulePosition)) }
+    val finishState: ParserState by lazy { this.createState(listOf(finishRulePosition)) }
 
     /*
         // runtimeRule -> set of rulePositions where the rule is used
@@ -180,7 +180,7 @@ internal class ParserStateSet(
     }
 
     internal fun fetchState(rulePositions: List<RulePosition>): ParserState? =
-        this.allBuiltStates.firstOrNull { it.rulePositions == rulePositions }
+        this.allBuiltStates.firstOrNull { it.rulePositions.toSet() == rulePositions.toSet() }
 
     internal fun fetchCompatibleState(rulePositions: List<RulePosition>): ParserState? {
         val existing = this.allBuiltStates.firstOrNull {
@@ -380,32 +380,19 @@ internal class ParserStateSet(
         for (si in stateInfos) {
             val state = this.fetchState(si.rulePositions)!!
             for (ti in si.possibleTrans) {
-                val previousStates = ti.prev.map { p -> this.fetchState(p) ?: error("Internal error, state not created for $p") }
+                val previousStates = ti.prev.map { p -> this.fetchCompatibleState(p.toList()) ?: error("Internal error, state not created for $p") }
                 val action = ti.action
-                val to = this.fetchState(ti.to) ?: error("Internal error, state not created for ${ti.to}")
-                val lookahead = when (action) {
-                    Transition.ParseAction.GOAL-> LookaheadSet.EMPTY
-                    Transition.ParseAction.WIDTH,
-                    Transition.ParseAction.EMBED,
-                    Transition.ParseAction.HEIGHT,
-                    Transition.ParseAction.GRAFT -> ti.lookaheadSet.lhs(this)
-                }
-                val upLookahead = when (action) {
-                    Transition.ParseAction.GOAL,
-                    Transition.ParseAction.WIDTH,
-                    Transition.ParseAction.EMBED-> setOf(LookaheadSet.EMPTY)
-                    Transition.ParseAction.HEIGHT,
-                    Transition.ParseAction.GRAFT -> ti.parentFirstOfNext.map { it.lhs(this) }.toSet() // why a Set ?
-                }
+                val to = this.fetchCompatibleState(ti.to.toList()) ?: error("Internal error, state not created for ${ti.to}")
                 val prevGuard = when (action) {
                     Transition.ParseAction.GOAL,
                     Transition.ParseAction.WIDTH,
-                    Transition.ParseAction.EMBED -> null
-                    Transition.ParseAction.HEIGHT,
+                    Transition.ParseAction.EMBED,
+                    Transition.ParseAction.HEIGHT -> null
                     Transition.ParseAction.GRAFT -> ti.parent
                 }
+                val lhs = ti.lookahead.map { Lookahead(it.guard.lhs(this), it.up.lhs(this)) }.toSet()
                 val runtimeGuard: Transition.(GrowingNodeIndex, List<RulePosition>?) -> Boolean = { gn, previous -> true } //FIXME
-                state.createTransition(previousStates, action, to, lookahead, upLookahead, prevGuard, runtimeGuard)
+                state.createTransition(previousStates, action, to, lhs, prevGuard?.toList(), runtimeGuard)
             }
         }
 

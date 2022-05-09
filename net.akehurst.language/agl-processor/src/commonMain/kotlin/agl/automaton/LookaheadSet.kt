@@ -1,23 +1,16 @@
-/**
- * Copyright (C) 2021 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package net.akehurst.language.agl.automaton
 
-package net.akehurst.language.agl.runtime.structure
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 
-import net.akehurst.language.agl.automaton.LookaheadSetPart
-import net.akehurst.language.agl.automaton.ParserStateSet
+internal data class Lookahead(
+    val guard: LookaheadSet,
+    val up: LookaheadSet
+) {
+    companion object {
+        val EMPTY = Lookahead(LookaheadSet.EMPTY, LookaheadSet.EMPTY)
+    }
+}
 
 internal class LookaheadSet(
     val number: Int,
@@ -34,15 +27,20 @@ internal class LookaheadSet(
         val UNCACHED_NUMBER = -5
 
         fun createFromRuntimeRules(automaton: ParserStateSet, fullContent:Set<RuntimeRule>): LookaheadSet {
-            val includeUP = fullContent.contains(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-            val includeEOT = fullContent.contains(RuntimeRuleSet.END_OF_TEXT)
-            val matchAny = fullContent.contains(RuntimeRuleSet.ANY_LOOKAHEAD)
-            val content = fullContent.minus(RuntimeRuleSet.USE_PARENT_LOOKAHEAD).minus(RuntimeRuleSet.END_OF_TEXT).minus(RuntimeRuleSet.ANY_LOOKAHEAD)
-            return automaton.createLookaheadSet(includeUP, includeEOT, matchAny, content)
+            return when {
+                fullContent.isEmpty() -> LookaheadSet.EMPTY
+                else -> {
+                    val includeUP = fullContent.contains(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                    val includeEOT = fullContent.contains(RuntimeRuleSet.END_OF_TEXT)
+                    val matchAny = fullContent.contains(RuntimeRuleSet.ANY_LOOKAHEAD)
+                    val content = fullContent.minus(RuntimeRuleSet.USE_PARENT_LOOKAHEAD).minus(RuntimeRuleSet.END_OF_TEXT).minus(RuntimeRuleSet.ANY_LOOKAHEAD)
+                    automaton.createLookaheadSet(includeUP, includeEOT, matchAny, content)
+                }
+            }
         }
     }
 
-    val totalContent:Set<RuntimeRule> get() {
+    val fullContent:Set<RuntimeRule> get() {
         val c = mutableSetOf<RuntimeRule>()
         if (this.includesUP) c.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
         if (this.includesEOT) c.add(RuntimeRuleSet.END_OF_TEXT)
@@ -83,6 +81,12 @@ internal class LookaheadSet(
         val ma = this.matchANY || lookahead.matchANY
         return automaton.createLookaheadSet(up, eol, ma, this.content.union(lookahead.content))
     }
+    fun unionContent(automaton: ParserStateSet, additionalContent: Set<RuntimeRule>): LookaheadSet {
+        val up = this.includesUP
+        val eol = this.includesEOT
+        val ma = this.matchANY
+        return automaton.createLookaheadSet(up, eol, ma, this.content.union(additionalContent))
+    }
 
     override fun hashCode(): Int = number
     override fun equals(other: Any?): Boolean = when {
@@ -95,14 +99,7 @@ internal class LookaheadSet(
         this == ANY -> "LookaheadSet{$number,[ANY]}"
         this == UP -> "LookaheadSet{$number,[UP]}"
         this == EOT -> "LookaheadSet{$number,[EOT]}"
-        else -> {
-            val cont = mutableSetOf<RuntimeRule>()
-            if (this.includesUP) cont.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-            if (this.includesEOT) cont.add(RuntimeRuleSet.END_OF_TEXT)
-            if (this.matchANY) cont.add(RuntimeRuleSet.ANY_LOOKAHEAD)
-            cont.addAll(this.content)
-            "LookaheadSet{$number,${cont.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }}}"
-        }
+        else -> "LookaheadSet{$number,${this.fullContent.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }}}"
     }
 
 }

@@ -20,7 +20,6 @@ import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
@@ -138,13 +137,12 @@ internal class test_bodmas_sList_root_choicePriority : test_AutomatonAbstract() 
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-            HeightGraftInfo(Transition.ParseAction.HEIGHT, listOf(RP(S, 0, SOR)), listOf(RP(S, 0, EOR)), LHS(UP), setOf(LHS(UP))),
+            HeightGraftInfo(Transition.ParseAction.HEIGHT, listOf(RP(S, 0, SOR)), listOf(RP(S, 0, EOR)), setOf(LookaheadInfoPart(LHS(UP),LHS(UP)))),
             HeightGraftInfo(
                 action = Transition.ParseAction.HEIGHT,
                 parent = listOf(RP(div, 0, SOR)),
                 parentNext = listOf(RP(S, 0, EOR)),
-                lhs = LHS(UP),
-                upLhs = setOf(LHS(UP))
+                lhs = setOf(LookaheadInfoPart(LHS(UP),LHS(UP)))
             ),
         )
         assertEquals(expected, actual)
@@ -166,8 +164,7 @@ internal class test_bodmas_sList_root_choicePriority : test_AutomatonAbstract() 
                 Transition.ParseAction.HEIGHT,
                 listOf(RP(E, 0, SOR)),
                 listOf(RP(E, 0, EOR)),
-                LHS(d,m,a,s),
-                setOf(LHS(UP))
+                setOf(LookaheadInfoPart(LHS(d,m,a,s),LHS(UP)))
             )
         )
         assertEquals(expected, actual)

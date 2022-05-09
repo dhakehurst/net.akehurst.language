@@ -19,7 +19,9 @@ package net.akehurst.language.agl.automaton
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -99,8 +101,8 @@ internal class test_multi_0_n_literal : test_AutomatonAbstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-                HeightGraftInfo(Transition.ParseAction.HEIGHT,listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, PMI)), lhs_a.part, setOf(LHS(UP))),
-                HeightGraftInfo(Transition.ParseAction.HEIGHT,listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, EOR)), lhs_U.part, setOf(LHS(UP)))
+                HeightGraftInfo(Transition.ParseAction.HEIGHT,listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, PMI)), setOf(LookaheadInfoPart(LHS(a),LHS(UP)))),
+                HeightGraftInfo(Transition.ParseAction.HEIGHT,listOf(RP(S, 0, SOR)), listOf(RP(S, OMI, EOR)), setOf(LookaheadInfoPart(LHS(UP),LHS(UP))))
         )
         assertEquals(expected, actual)
 

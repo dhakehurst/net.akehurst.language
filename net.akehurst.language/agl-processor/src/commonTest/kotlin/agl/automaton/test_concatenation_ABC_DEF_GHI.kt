@@ -20,7 +20,6 @@ import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
@@ -125,8 +124,7 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
                 Transition.ParseAction.HEIGHT,
                 listOf(RulePosition(S, 0, 0)),
                 listOf(RulePosition(S, 0, 1)),
-                LHS(b),
-                setOf(LHS(UP))
+                setOf(LookaheadInfoPart(LHS(b),LHS(UP)))
             )
         )
         assertEquals(expected, actual)

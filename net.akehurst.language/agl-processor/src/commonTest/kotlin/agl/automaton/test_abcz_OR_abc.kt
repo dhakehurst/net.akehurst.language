@@ -20,8 +20,6 @@ import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
-import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
@@ -101,8 +99,7 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
                 Transition.ParseAction.HEIGHT,
                 listOf(RP(ABCZ, 0, SOR), RP(ABC, 0, SOR)),
                 listOf(RP(ABCZ, 0, 1), RP(ABC, 0, 1)),
-                LHS(b),
-                setOf(LHS(UP))
+                setOf(LookaheadInfoPart(LHS(b), LHS(UP)))
             )
         )
         assertEquals(expected, actual)

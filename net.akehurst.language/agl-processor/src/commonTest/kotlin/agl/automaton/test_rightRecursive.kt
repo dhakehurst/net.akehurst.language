@@ -19,7 +19,6 @@ package net.akehurst.language.agl.automaton
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
@@ -113,15 +112,13 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
                 Transition.ParseAction.HEIGHT,
                 listOf(RulePosition(S, 0, 0)),
                 listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)),
-                lhs_U.part,
-                setOf(LHS(UP))
+                setOf(LookaheadInfoPart(LHS(UP),LHS(UP)))
             ),
             HeightGraftInfo(
                 Transition.ParseAction.HEIGHT,
                 listOf(RulePosition(S1, 0, 0)),
                 listOf(RulePosition(S1, 0, 1)),
-                lhs_a.part,
-                setOf(LHS(UP))
+                setOf(LookaheadInfoPart(LHS(a),LHS(UP)))
             )
         )
         assertEquals(expected, actual)
@@ -153,8 +150,7 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
                 Transition.ParseAction.HEIGHT,
                 listOf(RulePosition(G, 0, 0)),
                 listOf(RulePosition(G, 0, RulePosition.END_OF_RULE)),
-                lhs_U.part,
-                setOf(LHS(UP))
+                setOf(LookaheadInfoPart(LHS(UP),LHS(UP)))
             )
         )
         assertEquals(expected, actual)
@@ -170,8 +166,7 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
                 Transition.ParseAction.HEIGHT,
                 listOf(RulePosition(S1, 0, 1)),
                 listOf(RulePosition(S1, 0, RulePosition.END_OF_RULE)),
-                lhs_U.part,
-                setOf(LHS(UP))
+                setOf(LookaheadInfoPart(LHS(UP),LHS(UP)))
             )
         )
         assertEquals(expected, actual)
@@ -206,8 +201,7 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
                 Transition.ParseAction.HEIGHT,
                 listOf(RulePosition(S, 1, 0)),
                 listOf(RulePosition(S, 1, RulePosition.END_OF_RULE)),
-                lhs_U.part,
-                setOf(LHS(UP))
+                setOf(LookaheadInfoPart(LHS(UP),LHS(UP)))
             )
         )
         assertEquals(expected, actual)

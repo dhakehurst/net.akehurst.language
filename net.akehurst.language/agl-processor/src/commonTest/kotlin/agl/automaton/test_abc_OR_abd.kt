@@ -19,7 +19,6 @@ package net.akehurst.language.agl.automaton
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
@@ -104,8 +103,7 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
                 Transition.ParseAction.HEIGHT,
                 listOf(RP(ABC, 0, SOR), RP(ABD, 0, SOR)),
                 listOf(RP(ABC, 0, 1), RP(ABD, 0, 1)),
-                lhs_b.part,
-                setOf(LHS(UP))
+                setOf(LookaheadInfoPart(LHS(b), LHS(UP)))
             )
         )
         assertEquals(expected, actual)
@@ -212,32 +210,32 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S   */
-            val s1 = state(RP(a, 0, EOR))     /* a .       */
-            val s2 = state(RP(ABC, 0, 1), RP(ABD, 0, 1)) /* ABC = a . bc | ABD = a . bd */
-            val s3 = state(RP(b, 0, EOR))     /* b . */
-            val s4 = state(RP(ABC, 0, 2), RP(ABD, 0, 2)) /* ABC = ab . c | ABD = ab . d */
-            val s5 = state(RP(c, 0, EOR))     /* c . */
-            val s6 = state(RP(d, 0, EOR))     /* c . */
-            val s7 = state(RP(ABC, 0, EOR))     /* ABC = abc . */
-            val s8 = state(RP(ABD, 0, EOR))     /* ABD = abd . */
-            val s9 = state(RP(S, 0, EOR))     /* S = ABC . */
-            val s10 = state(RP(S, 1, EOR))     /* S = ABD . */
-            val s11 = state(RP(G, 0, EOR))     /* G = S .   */
+            val s1 = state(RP(G, 0, EOR))     /* G = S .   */
+            val s2 = state(RP(S, 0, EOR))     /* S = ABC . */
+            val s3 = state(RP(S, 1, EOR))     /* S = ABD . */
+            val s4 = state(RP(ABD, 0, EOR))     /* ABD = abd . */
+            val s5 = state(RP(d, 0, EOR))     /* c . */
+            val s6 = state(RP(b, 0, EOR))     /* b . */
+            val s7 = state(RP(a, 0, EOR))     /* a .       */
+            val s8 = state(RP(ABC, 0, EOR))     /* ABC = abc . */
+            val s9 = state(RP(c, 0, EOR))     /* c . */
+            val s10 = state(RP(ABC, 0, 1), RP(ABD, 0, 1)) /* ABC = a . bc | ABD = a . bd */
+            val s11 = state(RP(ABC, 0, 2), RP(ABD, 0, 2)) /* ABC = ab . c | ABD = ab . d */
 
-            transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), listOf(RP(ABC, 0, SOR), RP(ABD, 0, SOR)))
-            transition(s0, s2, s3, WIDTH, setOf(c, d), setOf(), null)
-            transition(s2, s3, s4, GRAFT, setOf(c, d), setOf(setOf(UP)), listOf(RP(ABC, 0, 1), RP(ABD, 0, 1)))
-            transition(s0, s4, s5, WIDTH, setOf(UP), setOf(), null)
-            transition(s0, s4, s6, WIDTH, setOf(UP), setOf(), null)
-            transition(s4, s5, s7, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(ABC, 0, 2)))
-            transition(s4, s6, s8, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(ABD, 0, 2)))
-            transition(s0, s7, s9, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 0)))
-            transition(s0, s8, s10, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 1, 0)))
-            transition(s0, s9, s11, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
-            transition(s0, s10, s11, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
-            transition(null, s11, s11, GOAL, setOf(), setOf(), null)
-        }
+            transition(s0, s0, s7, WIDTH, setOf(b), setOf(), null)
+            transition(s0, s2, s1, GOAL, setOf(UP), setOf(setOf(UP)), null)
+            transition(s0, s3, s1, GOAL, setOf(UP), setOf(setOf(UP)), null)
+            transition(s0, s4, s3, HEIGHT, setOf(UP), setOf(setOf(UP)),null)
+            transition(s11, s5, s4, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(ABD, 0, 2)))
+            transition(s10, s6, s11, GRAFT, setOf(d), setOf(setOf(UP)), listOf(RP(ABD, 0, 1)))
+            transition(s10, s6, s11, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(ABC, 0, 1)))
+            transition(s0, s7, s10, HEIGHT, setOf(b), setOf(setOf(UP)), null)
+            transition(s0, s8, s2, HEIGHT, setOf(UP), setOf(setOf(UP)),null)
+            transition(s11, s9, s8, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(ABC, 0, 2)))
+            transition(s0, s10, s6, WIDTH, setOf(c, d), setOf(), null)
+            transition(s0, s11, s5, WIDTH, setOf(UP), setOf(), null)
+            transition(s0, s11, s9, WIDTH, setOf(UP), setOf(), null)
+         }
 
         AutomatonTest.assertEquals(expected, actual)
     }

@@ -183,17 +183,17 @@ internal class BuildCacheLC0(
                 parent.isAtStart -> Transition.ParseAction.HEIGHT
                 else -> Transition.ParseAction.GRAFT
             }
-            val upLhs = when (parent.runtimeRule.kind) {
+            val up = when (parent.runtimeRule.kind) {
                 RuntimeRuleKind.GOAL -> if (parent.isAtEnd) LookaheadSetPart.UP else LookaheadSetPart.ANY
                 else -> LookaheadSetPart.ANY
             }
             val pns = parent.next()
             pns.map { parentNext ->
-                val lhs = when (parentNext.runtimeRule.kind) {
+                val grd = when (parentNext.runtimeRule.kind) {
                     RuntimeRuleKind.GOAL -> LookaheadSetPart.UP
                     else -> LookaheadSetPart.ANY
                 }
-                HeightGraftInfo(action,listOf(parent), listOf(parentNext), lhs, setOf(upLhs))
+                HeightGraftInfo(action,listOf(parent), listOf(parentNext), setOf(LookaheadInfoPart(grd,up)))
             }
         }
         val grouped = res.groupBy { listOf(it.action, it.parentNext) }//, it.lhs) }
@@ -201,9 +201,8 @@ internal class BuildCacheLC0(
                 val action = it.key[0] as Transition.ParseAction
                 val parentNext = it.key[1] as List<RulePosition>
                 val parent = it.value[0].parent // should all be the same as ancestors are the same
-                val lhs = it.value.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e.lhs) }
-                val upLhs = it.value.flatMap { it.upLhs }.toSet()//.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e.upLhs) }
-                HeightGraftInfo(action,(parent), (parentNext), lhs, upLhs)
+                val lhs = it.value.map{it.lhs}.reduce { acc, e -> acc.union(e) }
+                HeightGraftInfo(action,(parent), (parentNext), lhs)
             }
         //val grouped2 = grouped.groupBy { listOf(it.lhs, it.upLhs, it.parentNext.map { it.position }) }
         //    .map {

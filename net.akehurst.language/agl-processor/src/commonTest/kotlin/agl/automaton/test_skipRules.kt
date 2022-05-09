@@ -21,7 +21,6 @@ import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -147,8 +146,7 @@ internal class test_skipRules : test_AutomatonAbstract() {
                 Transition.ParseAction.HEIGHT,
                 listOf(RulePosition(skC, 0, RulePosition.START_OF_RULE)),
                 listOf(RulePosition(skC, 0, RulePosition.END_OF_RULE)),
-                lhs_WS_CM_UP.part,
-                setOf(LHS(skWS,skCM,UP))
+                setOf(LookaheadInfoPart(LHS(skWS,skCM,UP),LHS(skWS,skCM,UP)))
             )
         )
         assertEquals(expected, actual)

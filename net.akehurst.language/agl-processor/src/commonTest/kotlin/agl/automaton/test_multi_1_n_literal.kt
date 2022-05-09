@@ -20,7 +20,6 @@ import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RulePosition
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -88,15 +87,13 @@ internal class test_multi_1_n_literal : test_AutomatonAbstract() {
                     Transition.ParseAction.HEIGHT,
                     listOf(RulePosition(S, 0, 0)),
                     listOf(RulePosition(S, 0, PMI)),
-                    lhs_a.part,
-                    setOf(LHS(UP))
+                    setOf(LookaheadInfoPart(LHS(a),LHS(UP)))
                 ),
                 HeightGraftInfo(
                     Transition.ParseAction.HEIGHT,
                     listOf(RulePosition(S, 0, 0)),
                     listOf(RulePosition(S, 0, EOR)),
-                    lhs_U.part,
-                    setOf(LHS(UP))
+                    setOf(LookaheadInfoPart(LHS(UP),LHS(UP)))
                 )
         )
         assertEquals(expected, actual)

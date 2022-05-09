@@ -20,7 +20,6 @@ import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
@@ -90,7 +89,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
         val s1 = SM.createState(listOf(RP(v, 0, EOR)))
         val actual = s0.transitions(s0)
         val expected = listOf(
-            Transition(s0, s1, WIDTH, LHS(UP,a,b).lhs(SM), LookaheadSet.EMPTY, null) { _, _ -> true }
+            Transition(s0, s1, WIDTH, LHS(UP, a, b).lhs(SM), LookaheadSet.EMPTY, null) { _, _ -> true }
         )
         assertEquals(expected, actual)
     }
@@ -107,8 +106,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
                 Transition.ParseAction.HEIGHT,
                 listOf(RP(E, 0, SOR)),
                 listOf(RP(E, 0, EOR)),
-                LHS(UP, a, b),
-                setOf(LHS(UP, a, b))
+                setOf(LookaheadInfoPart(LHS(UP, a, b), LHS(UP, a, b)))
             )
         )
         assertEquals(expected, actual)

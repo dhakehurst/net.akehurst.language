@@ -18,8 +18,6 @@ package net.akehurst.language.parser.scanondemand.whitespace
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.parser.scanondemand.multi.test_multi01
-import net.akehurst.language.parser.scanondemand.multi.test_multi_3_5_literal
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -17,15 +17,13 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 
 internal class Transition(
     val from: ParserState,
     val to: ParserState,
     val action: ParseAction,
-    val lookaheadGuard: LookaheadSet,
-    val upLookahead: Set<LookaheadSet>,
+    val lookahead: Set<Lookahead>,
     val prevGuard: List<RulePosition>?,
     val runtimeGuard: Transition.(current: GrowingNodeIndex, previous: List<RulePosition>?) -> Boolean
 ) {
@@ -40,7 +38,7 @@ internal class Transition(
     }
 
     private val hashCode_cache: Int by lazy {
-        arrayListOf(from, to, action, lookaheadGuard, upLookahead, prevGuard).hashCode()
+        arrayListOf(from, to, action, lookahead, prevGuard).hashCode()
     }
 
     override fun hashCode(): Int = this.hashCode_cache
@@ -51,8 +49,7 @@ internal class Transition(
                 if (this.from != other.from) return false
                 if (this.to != other.to) return false
                 if (this.action != other.action) return false
-                if (this.lookaheadGuard != other.lookaheadGuard) return false
-                if (this.upLookahead != other.upLookahead) return false
+                if (this.lookahead != other.lookahead) return false
                 if (this.prevGuard != other.prevGuard) return false
                 return true
             }
@@ -61,11 +58,7 @@ internal class Transition(
     }
 
     override fun toString(): String {
-        //val lh = " "+this.lookaheadGuard.number.toString()+":"+this.lookaheadGuard.content.map { it.tag }
-        val cont1 = lookaheadGuard.totalContent
-        val upLHS = upLookahead.map { it.totalContent }
-        val lh = cont1.joinToString(separator = ",") { it.tag }
-        val ulh = upLHS.joinToString(separator = "|") { it.joinToString(separator = ",") { it.tag } }
-        return "Transition { $from -- $action [$lh]($ulh) --> $to }"
+        val lhsStr = this.lookahead.joinToString(separator = "|") { "[${it.guard.fullContent.joinToString {  it.tag }}](${it.up.fullContent.joinToString {  it.tag }})" }
+        return "Transition { $from -- $action${lhsStr} --> $to }"
     }
 }

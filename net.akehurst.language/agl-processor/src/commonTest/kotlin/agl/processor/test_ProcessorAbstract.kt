@@ -16,8 +16,6 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
-import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.assertEquals
 

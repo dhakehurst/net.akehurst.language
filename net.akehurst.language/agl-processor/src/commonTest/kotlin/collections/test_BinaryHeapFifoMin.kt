@@ -16,7 +16,10 @@
 
 package net.akehurst.language.agl.collections
 
-import kotlin.test.*
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class test_BinaryHeapFifoMin {
 

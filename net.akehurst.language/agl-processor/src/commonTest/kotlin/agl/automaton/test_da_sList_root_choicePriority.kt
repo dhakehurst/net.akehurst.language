@@ -20,7 +20,6 @@ import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
@@ -116,7 +115,7 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-            HeightGraftInfo(Transition.ParseAction.HEIGHT, listOf(RP(vr, 0, SOR)), listOf(RP(vr, 0, EOR)), LHS(UP, d, a), setOf(LHS(UP), LHS(d), LHS(a)))
+            HeightGraftInfo(Transition.ParseAction.HEIGHT, listOf(RP(vr, 0, SOR)), listOf(RP(vr, 0, EOR)), setOf(LookaheadInfoPart(LHS(UP),LHS(UP))))
         )
         assertEquals(expected, actual)
     }
@@ -135,15 +134,13 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
                 Transition.ParseAction.HEIGHT,
                 listOf(RP(S, 0, SOR)),
                 listOf(RP(S, 0, EOR)),
-                LHS(UP),
-                setOf(LHS(UP))
+                setOf(LookaheadInfoPart(LHS(UP),LHS(UP)))
             ),
             HeightGraftInfo(
                 Transition.ParseAction.HEIGHT,
                 listOf(RP(div, 0, SOR), RP(add, 0, SOR)),
                 listOf(RP(div, 0, PLS), RP(add, 0, PLS)),
-                LHS(d, a),
-                setOf(LHS(UP), LHS(d), LHS(a))
+                setOf(LookaheadInfoPart(LHS(UP),LHS(UP)))
             )
         )
         assertEquals(expected, actual)
@@ -162,7 +159,7 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
         val actual = s4.transitions(s0)
         val expected = listOf(
             Transition(s4, s5, HEIGHT, LHS(UP).lhs(SM), LHS(UP).lhs(SM), listOf(RP(S, 0, SOR))) { _, _ -> true },
-            Transition(s4, s6, HEIGHT, LHS(d, a).lhs(SM), setOf(LHS(UP).lhs(SM), LHS(d).lhs(SM), LHS(a).lhs(SM)), listOf(RP(div, 0, SOR), RP(add, 0, SOR))) { _, _ -> true }
+            Transition(s4, s6, HEIGHT, setOf(Lookahead(LHS(UP).lhs(SM),LHS(UP).lhs(SM))), listOf(RP(div, 0, SOR), RP(add, 0, SOR))) { _, _ -> true }
         )
         assertEquals(expected, actual)
     }

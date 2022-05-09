@@ -16,11 +16,11 @@
 
 package net.akehurst.language.agl.parser
 
+import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -125,41 +125,38 @@ internal class ScanOnDemandParser(
             rp.tryGrowHeightOrGraft()
         }
 
-        val r = poss.map { (lg,prevs) ->
+        val r = poss.map { (lg, prevs) ->
             //val prevs = rp._lastGss.peek(lg)
             // compute next expected item/RuntimeRule
             when (lg.state.runtimeRules.first().kind) {
                 RuntimeRuleKind.GOAL -> {
                     val trs = lg.state.transitions(rp.stateSet.startState)
-                    val exp = trs.flatMap { tr ->
+                    val exp: Set<RuntimeRule> = trs.flatMap { tr ->
                         when (tr.action) {
                             Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
-                            Transition.ParseAction.WIDTH -> lg.runtimeLookaheadSet.flatMap{lg.state.firstOf(it).fullContent}.toSet() //TODO: needs prev as arg to firstOf
+                            Transition.ParseAction.WIDTH -> lg.runtimeLookaheadSet.flatMap { lg.state.firstOf(it).fullContent }.toSet() //TODO: needs prev as arg to firstOf
                             Transition.ParseAction.EMBED -> TODO()
-                            Transition.ParseAction.HEIGHT -> lg.runtimeLookaheadSet.flatMap{tr.lookaheadGuard.resolveUP(it).fullContent}.toSet()
-                            Transition.ParseAction.GRAFT -> prevs.flatMap {
-                                it.runtimeLookaheadSet.flatMap{tr.lookaheadGuard.resolveUP(it).fullContent}
-                            }.toSet()
+                            Transition.ParseAction.HEIGHT -> lg.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } }.toSet()
+                            Transition.ParseAction.GRAFT -> prevs.flatMap { it.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } } }
+                                .toSet()
                         }
-                    }
+                    }.toSet()
                     Pair(lg, exp)
                 }
                 else -> {
-                    val x = prevs.flatMap { prev ->
-                        val trs = lg.state.transitions(prev.state)
-                            .filter { it.runtimeGuard(it, prev, prev.state.rulePositions) }
+                    val x: Set<RuntimeRule> = prevs.flatMap { prev ->
+                        val trs = lg.state.transitions(prev.state).filter { it.runtimeGuard(it, prev, prev.state.rulePositions) }
                         val exp = trs.flatMap { tr ->
                             when (tr.action) {
                                 Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
-                                Transition.ParseAction.WIDTH -> lg.runtimeLookaheadSet.flatMap{lg.state.firstOf(it).fullContent}
-                                Transition.ParseAction.EMBED -> lg.runtimeLookaheadSet.flatMap{lg.state.firstOf(it).fullContent}
-                                Transition.ParseAction.HEIGHT -> lg.runtimeLookaheadSet.flatMap{tr.lookaheadGuard.resolveUP(it).fullContent}
-                                Transition.ParseAction.GRAFT -> prev.runtimeLookaheadSet.flatMap{tr.lookaheadGuard.resolveUP(it).fullContent}
+                                Transition.ParseAction.WIDTH -> lg.runtimeLookaheadSet.flatMap { lg.state.firstOf(it).fullContent }.toSet()
+                                Transition.ParseAction.EMBED -> lg.runtimeLookaheadSet.flatMap { lg.state.firstOf(it).fullContent }.toSet()
+                                Transition.ParseAction.HEIGHT -> lg.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } }.toSet()
+                                Transition.ParseAction.GRAFT -> prev.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } }.toSet()
                             }
-                        }
+                        }.toSet()
                         exp
-                    }
-
+                    }.toSet()
                     Pair(lg, x)
                 }
             }
@@ -202,9 +199,7 @@ internal class ScanOnDemandParser(
             val prev = gn_prev.second?.map { it.state }
             val trans = rp.transitionsEndingInNonEmptyFrom(gn.currentState, prev?.toSet())
             trans.flatMap { tr ->
-                val pairs = gn.runtimeLookahead
-                    .map{Pair(tr,tr.lookaheadGuard.resolveUP(it).content)}
-                    .toSet()
+                val pairs = gn.runtimeLookahead.map { rt -> Pair(tr, tr.lookahead.flatMap { it.guard.resolveUP(rt).content}) }.toSet()
                 pairs
             }
         }.toSet()

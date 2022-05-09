@@ -19,7 +19,6 @@ package net.akehurst.language.agl.automaton
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
@@ -104,8 +103,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
                 Transition.ParseAction.HEIGHT,
                 listOf(RulePosition(S, 0, 0)),
                 listOf(RulePosition(S, 0, 1)),
-                lhs_b.part,
-                setOf(LHS(UP))
+                setOf(LookaheadInfoPart(LHS(b), LHS(UP)))
             )
         )
         assertEquals(expected, actual)
@@ -176,7 +174,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
     @Test
     fun parse_abc() {
         val parser = ScanOnDemandParser(rrs)
-        val (sppt,issues) = parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        val (sppt, issues) = parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
         assertNotNull(sppt)
         assertEquals(0, issues.size)
         assertEquals(1, sppt.maxNumHeads)
@@ -211,7 +209,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val parser = ScanOnDemandParser(rrs)
-        val (sppt,issues) = parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        val (sppt, issues) = parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
         assertNotNull(sppt) { issues.joinToString("\n") { it.toString() } }
         assertEquals(0, issues.size)
         assertEquals(1, sppt.maxNumHeads)

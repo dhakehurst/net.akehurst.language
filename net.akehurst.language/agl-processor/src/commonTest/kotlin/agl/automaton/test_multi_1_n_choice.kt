@@ -19,7 +19,9 @@ package net.akehurst.language.agl.automaton
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -105,7 +107,7 @@ internal class test_multi_1_n_choice : test_AutomatonAbstract() {
         val actual = s1.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-            HeightGraftInfo(Transition.ParseAction.HEIGHT,listOf(RP(AB, 0, SOR)), listOf(RP(AB, 0, EOR)), lhs_abU.part, setOf(LHS(a,b,UP)))
+            HeightGraftInfo(Transition.ParseAction.HEIGHT,listOf(RP(AB, 0, SOR)), listOf(RP(AB, 0, EOR)), setOf(LookaheadInfoPart(LHS(a,b,UP),LHS(a,b,UP))))
         )
         assertEquals(expected, actual)
 
@@ -117,8 +119,8 @@ internal class test_multi_1_n_choice : test_AutomatonAbstract() {
         val actual = s3.heightOrGraftInto(s0).toList()
 
         val expected = listOf(
-            HeightGraftInfo(Transition.ParseAction.HEIGHT,listOf(RP(S, 0, SOR)), listOf(RP(S, 0, PMI)), lhs_ab.part, setOf(LHS(UP))),
-            HeightGraftInfo(Transition.ParseAction.HEIGHT,listOf(RP(S, 0, SOR)), listOf(RP(S, 0, EOR)), lhs_U.part, setOf(LHS(UP)))
+            HeightGraftInfo(Transition.ParseAction.HEIGHT,listOf(RP(S, 0, SOR)), listOf(RP(S, 0, PMI)), setOf(LookaheadInfoPart(LHS(a,b),LHS(UP)))),
+            HeightGraftInfo(Transition.ParseAction.HEIGHT,listOf(RP(S, 0, SOR)), listOf(RP(S, 0, EOR)), setOf(LookaheadInfoPart(LHS(UP),LHS(UP))))
         )
         assertEquals(expected, actual)
 

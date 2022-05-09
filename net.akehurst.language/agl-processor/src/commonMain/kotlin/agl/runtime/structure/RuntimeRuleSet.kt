@@ -386,14 +386,12 @@ internal class RuntimeRuleSet(
                 val prev = st.outTransitions.previousFor(tr)
                     .map { it?.number?.value } //transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }
                 val trStr = "${tr.from.number.value} --> ${tr.to.number.value}"
-                val trLh = tr.lookaheadGuard.totalContent
-                val trUpLh = tr.upLookahead.map { it.totalContent }
-                val trGrd = "[${trLh.joinToString { c -> c.tag }}](${trUpLh.joinToString(separator = "|") {  it.joinToString { c -> c.tag }}})"//${tr.upLookahead.content.joinToString(prefix = if(tr.upLookahead.includesUP) "UP," else "") { c -> c.tag }}]"
+                val lh = tr.lookahead.joinToString(separator = "|") { "[${it.guard.fullContent.joinToString { it.tag }}](${it.up.fullContent.joinToString { it.tag }})" }
                 val prvGrd = " [${tr.prevGuard?.joinToString()}]"
                 b.append("{${prev.joinToString()}} ")
                 b.append(trStr)
                 b.append(" ${tr.action} ")
-                b.append(trGrd)
+                b.append(lh)
                 b.append(prvGrd)
                 b.append("\n")
             }

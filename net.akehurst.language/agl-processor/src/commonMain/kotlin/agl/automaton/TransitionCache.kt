@@ -22,6 +22,7 @@ internal interface TransitionCache {
 
     fun addTransition(previousStates: List<ParserState?>, tr: Transition): Transition
 
+    // List because we don't want to convert to Set filtered list at runtime
     fun findTransitionByPrevious(previous: ParserState?): List<Transition>?
     fun previousFor(transition: Transition): List<ParserState?>
 }
@@ -71,29 +72,27 @@ internal class TransitionCacheLC1 : TransitionCache {
     // add the transition and return it, or return existing transition if it already exists
     override fun addTransition(previousStates: List<ParserState?>, tr: Transition): Transition {
         var set = _transitionsByTo[tr.to]
-        val exist = if (null == set) {
+        if (null == set) {
             set = mutableSetOf(tr)
             _transitionsByTo[tr.to] = set
-            tr
         } else {
-            val exist = set.firstOrNull { it == tr }
-            if (null == exist) {
-                set.add(tr)
-                tr
-            } else {
-                exist
-            }
+            set.add(tr)
         }
         for (pS in previousStates) {
-            var list = this._transitionsByPrevious[pS]
-            if (null == list) {
-                list = mutableListOf(exist)
-                this._transitionsByPrevious[pS] = list
+            var set = this._transitionsByPrevious[pS]
+            if (null == set) {
+                set = mutableListOf(tr)
+                this._transitionsByPrevious[pS] = set
             } else {
-                list.add(exist)
+                val existing = set.firstOrNull { it==tr }
+                if (null==existing) {
+                    set.add(tr)
+                } else {
+                    // not added
+                }
             }
         }
-        return exist
+        return tr
     }
 
     override fun findTransitionByPrevious(previous: ParserState?): List<Transition>? {

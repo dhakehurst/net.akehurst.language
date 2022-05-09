@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -38,10 +39,6 @@ internal class test_RulePosition_next {
         val PMI = RulePosition.POSITION_MULIT_ITEM
         val PLI = RulePosition.POSITION_SLIST_ITEM
         val PLS = RulePosition.POSITION_SLIST_SEPARATOR
-
-        val lhs_E = LookaheadSet.EMPTY
-        val lhs_U = LookaheadSet.UP
-        val lhs_T = LookaheadSet.EOT
 
         fun RP(rr: RuntimeRule, opt: Int, pos: Int): RulePosition = RulePosition(rr, opt, pos)
     }
