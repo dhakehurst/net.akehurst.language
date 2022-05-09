@@ -137,8 +137,8 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
             val s8 = state(RP(S, 0, EOR))       // S = C C .
             val s9 = state(RP(G, 0, EOR))       // G = S .
 
-            transition(null, s0, s1, WIDTH, setOf(T_c, T_d), emptySet(), null)
-            transition(null, s0, s2, WIDTH, setOf(T_c, T_d), emptySet(), null)
+            transition(s0, s0, s1, WIDTH, setOf(T_c, T_d), emptySet(), null)
+            transition(s0, s0, s2, WIDTH, setOf(T_c, T_d), emptySet(), null)
 
             transition(s0, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(T_c, T_d)), listOf(RP(C1, 0, 0)))
             transition(s3, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(UP)), listOf(RP(C1, 0, 0)))
@@ -170,7 +170,6 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
 
             transition(s0, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
 
-            transition(null, s9, s9, GOAL, setOf(), setOf(), null)
         }
 
         AutomatonTest.assertEquals(expected, actual)

@@ -45,7 +45,7 @@ internal class AutomatonBuilder(
     }
 
     fun transition(
-        previousState: ParserState?,
+        previousState: ParserState,
         from: ParserState,
         to: ParserState,
         action: Transition.ParseAction,
@@ -55,7 +55,7 @@ internal class AutomatonBuilder(
     ): Transition = transition(listOf(previousState), from, to, action, lookaheadGuardContent, upLookaheadContent, prevGuard)
 
     fun transition(
-        previousStates: List<ParserState?>,
+        previousStates: List<ParserState>,
         from: ParserState,
         to: ParserState,
         action: Transition.ParseAction,
@@ -67,7 +67,7 @@ internal class AutomatonBuilder(
     }
 
     fun transition1(
-        previousStates: List<ParserState?>,
+        previousStates: List<ParserState>,
         from: ParserState,
         to: ParserState,
         action: Transition.ParseAction,

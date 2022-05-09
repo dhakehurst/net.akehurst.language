@@ -18,12 +18,12 @@ package net.akehurst.language.agl.automaton
 
 internal interface TransitionCache {
     val allBuiltTransitions: Set<Transition>
-    val allPrevious : List<ParserState?>
+    val allPrevious : List<ParserState>
 
-    fun addTransition(previousStates: List<ParserState?>, tr: Transition): Transition
+    fun addTransition(previousStates: List<ParserState>, tr: Transition): Transition
 
     // List because we don't want to convert to Set filtered list at runtime
-    fun findTransitionByPrevious(previous: ParserState?): List<Transition>?
+    fun findTransitionByPrevious(previous: ParserState): List<Transition>?
     fun previousFor(transition: Transition): List<ParserState?>
 }
 
@@ -34,10 +34,10 @@ internal class TransitionCacheLC0 : TransitionCache {
     private var _transitions:MutableSet<Transition>? = null//mutableSetOf<Transition>()
 
     override val allBuiltTransitions: Set<Transition> get() = _transitions ?: emptySet()
-    override val allPrevious: List<ParserState?> = emptyList()
+    override val allPrevious: List<ParserState> = emptyList()
 
     // add the transition and return it, or return existing transition if it already exists
-    override fun addTransition(previousStates: List<ParserState?>, tr: Transition): Transition {
+    override fun addTransition(previousStates: List<ParserState>, tr: Transition): Transition {
         if (null==_transitions) {
             _transitions = mutableSetOf()
         }
@@ -51,7 +51,7 @@ internal class TransitionCacheLC0 : TransitionCache {
         }
     }
 
-    override fun findTransitionByPrevious(previous: ParserState?): List<Transition>? {
+    override fun findTransitionByPrevious(previous: ParserState): List<Transition>? {
         return _transitions?.toList()
     }
 
@@ -64,13 +64,13 @@ internal class TransitionCacheLC1 : TransitionCache {
     private val _transitionsByTo = mutableMapOf<ParserState, MutableSet<Transition>>()
 
     // transitions referenced here
-    private val _transitionsByPrevious: MutableMap<ParserState?, MutableList<Transition>?> = mutableMapOf()
+    private val _transitionsByPrevious: MutableMap<ParserState, MutableList<Transition>?> = mutableMapOf()
 
     override val allBuiltTransitions: Set<Transition> get() = _transitionsByTo.values.flatten().toSet()
-    override val allPrevious: List<ParserState?> get() = _transitionsByPrevious.keys.toList()
+    override val allPrevious: List<ParserState> get() = _transitionsByPrevious.keys.toList()
 
     // add the transition and return it, or return existing transition if it already exists
-    override fun addTransition(previousStates: List<ParserState?>, tr: Transition): Transition {
+    override fun addTransition(previousStates: List<ParserState>, tr: Transition): Transition {
         var set = _transitionsByTo[tr.to]
         if (null == set) {
             set = mutableSetOf(tr)
@@ -95,7 +95,7 @@ internal class TransitionCacheLC1 : TransitionCache {
         return tr
     }
 
-    override fun findTransitionByPrevious(previous: ParserState?): List<Transition>? {
+    override fun findTransitionByPrevious(previous: ParserState): List<Transition>? {
         return _transitionsByPrevious[previous]
     }
 

@@ -472,7 +472,11 @@ internal class BuildCacheLC1(
                         val action = Transition.ParseAction.WIDTH
                         val tgts = pFirstTerm(this.rulePosition)
                         val to = tgts.flatMap { t ->
-                            val tParent = parentOf[Pair(parentPrev, t)]
+                            val pr = when{
+                                this.rulePosition.isAtStart -> this.prev
+                                else -> this.rulePosition
+                            }
+                            val tParent = parentOf[Pair(pr, t)]
                             val ls = tParent!!.flatMap { tp ->
                                 when {
                                     tp.nextNotAtEnd.isEmpty() -> listOf(this.lhs)

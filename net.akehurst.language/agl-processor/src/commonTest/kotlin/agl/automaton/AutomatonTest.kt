@@ -38,10 +38,11 @@ internal object AutomatonTest {
     fun assertEquals(expected: ParserState, actual: ParserState) {
         kotlin.test.assertEquals(expected.rulePositions.toSet(), actual.rulePositions.toSet(), "RulePositions do not match")
 
-        kotlin.test.assertEquals(expected.outTransitions.allPrevious, actual.outTransitions.allPrevious, "Previous States for Transitions outgoing from ${expected} do not match")
+        kotlin.test.assertEquals(expected.outTransitions.allPrevious.size, actual.outTransitions.allPrevious.size, "Previous States for Transitions outgoing from ${expected} do not match")
         for(expected_prev in expected.outTransitions.allPrevious) {
             val expected_trs = expected.outTransitions.findTransitionByPrevious(expected_prev) ?: emptyList()
-            val actual_trs = actual.outTransitions.findTransitionByPrevious(expected_prev)?: emptyList()
+            val actual_prev = actual.stateSet.fetchState(expected_prev.rulePositions) ?: fail("actual State not found for: ${expected_prev}")
+            val actual_trs = actual.outTransitions.findTransitionByPrevious(actual_prev)?: emptyList()
             kotlin.test.assertEquals(expected_trs.size, actual_trs.size, "Number of Transitions outgoing from ${expected_prev} -> ${expected} do not match")
             for (i in expected_trs.indices) {
                 assertEquals(expected_prev, expected_trs[i], actual_trs[i])

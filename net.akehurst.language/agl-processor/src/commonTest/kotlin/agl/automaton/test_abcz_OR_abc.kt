@@ -139,7 +139,7 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
             val s8 = state(RP(S, 1, EOR))                                // S = ABC .
             val s9 = state(RP(G, 0, EOR))                                // G = S .
 
-            transition(null, s0, s1, WIDTH, setOf(b), emptySet(), null)
+            transition(s0, s0, s1, WIDTH, setOf(b), emptySet(), null)
             transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), listOf(RP(ABCZ,0,0), RP(ABC,0,0)))
             transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
             transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(ABCZ,0,1), RP(ABC,0,1)))
@@ -148,7 +148,7 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
             transition(s4, s5, s7, GRAFT, setOf(z), setOf(setOf(UP)), listOf(RP(ABCZ,0,2)))
             transition(s0, s6, s8, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S,1,SOR)))
             transition(s0, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G,0,SOR)))
-            transition(null, s9, s9, GOAL, setOf(), setOf(), null)
+
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -177,7 +177,7 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
             val s10 = state(RP(S, 0, EOR))                               // S = ABC .
             val s11 = state(RP(G, 0, EOR))                               // G = S .
 
-            transition(null, s0, s1, WIDTH, setOf(b), emptySet(), null)
+            transition(s0, s0, s1, WIDTH, setOf(b), emptySet(), null)
             transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), listOf(RP(ABCZ,0,0), RP(ABC,0,0)))
             transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
             transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(ABCZ,0,1), RP(ABC,0,1)))
@@ -188,7 +188,7 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
             transition(s6, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(ABCZ,0,3)))
             transition(s0, s9, s10, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S,0,SOR)))
             transition(s0, s10, s11, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G,0,SOR)))
-            transition(null, s11, s11, GOAL, setOf(), setOf(), null)
+
         }
 
         AutomatonTest.assertEquals(expected, actual)
