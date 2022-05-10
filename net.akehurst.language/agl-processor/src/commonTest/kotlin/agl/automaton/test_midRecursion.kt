@@ -103,11 +103,10 @@ internal class test_midRecursion : test_AutomatonAbstract() {
             val s3 = state(RP(S, 0, EOR))      // S = b .
             val s4 = state(RP(G, 0, EOR))      // G = S .
 
-            transition(null, s0, s1, WIDTH, setOf(UP), setOf(), null)
-            transition(null, s0, s2, WIDTH, setOf(a, b), setOf(), null)
+            transition(s0, s0, s1, WIDTH, setOf(UP), setOf(), null)
+            transition(s0, s0, s2, WIDTH, setOf(a, b), setOf(), null)
             transition(s0, s1, s3, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, SOR)))
             transition(s0, s3, s4, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, SOR)))
-            transition(null, s4, s4, GOAL, setOf(), setOf(), null)
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -132,8 +131,8 @@ internal class test_midRecursion : test_AutomatonAbstract() {
             val s8 = state(RP(S, 1, EOR))      // S = S1 .
             val s9 = state(RP(G, 0, EOR))      // G = S .
 
-            transition(null, s0, s1, WIDTH, setOf(UP), setOf(), null)
-            transition(null, s0, s2, WIDTH, setOf(a, b), setOf(), null)
+            transition(s0, s0, s1, WIDTH, setOf(UP), setOf(), null)
+            transition(s0, s0, s2, WIDTH, setOf(a, b), setOf(), null)
             transition(s3, s1, s4, HEIGHT, setOf(c), setOf(setOf(c)), listOf(RP(S, 0, 0)))
             transition(s0, s2, s3, HEIGHT, setOf(a, b), setOf(setOf(UP)), listOf(RP(S1, 0, SOR)))
             transition(s0, s3, s1, WIDTH, setOf(c), setOf(), null)
@@ -143,7 +142,6 @@ internal class test_midRecursion : test_AutomatonAbstract() {
             transition(s5, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(S1, 0, 2)))
             transition(s0, s7, s8, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 1, SOR)))
             transition(s0, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, SOR)))
-            transition(null, s9, s9, GOAL, setOf(), setOf(), null)
         }
 
         AutomatonTest.assertEquals(expected, actual)

@@ -217,7 +217,33 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+            val s0 = state(RP(G, 0, SOR))                                // G = . S
+            val s1 = state(RP(G, 0, EOR))                               // G = S .
+            val s2 = state(RP(S, 0, EOR))                               // S = ABCZ .
+            val s3 = state(RP(S, 1, EOR))                               // S = ABC .
+            val s4 = state(RP(ABC,0,EOR))                                // ABC = a b c .
+            val s5 = state(RP(c, 0, EOR))                                // c .
+            val s6 = state(RP(b, 0, EOR))                                // b .
+            val s7 = state(RP(a, 0, EOR))                                // a .
+            val s8 = state(RP(ABCZ, 0, EOR))                             // ABCZ = a b c z .
+            val s9 = state(RP(z, 0, EOR))                                // z .
+            val s10 = state(RP(ABCZ, 0, 1),RP(ABC,0,1))    // ABCZ = a . b c z , ABC = a . b c
+            val s11 = state(RP(ABCZ, 0, 2),RP(ABC,0,2))    // ABCZ = a b . c z , ABC = a b . c
+            val s12 = state(RP(ABCZ, 0, 3))                          // ABCZ = a b c . z
 
+            transition(s0, s0, s7, WIDTH, setOf(b), emptySet(), null)
+            transition(s0, s2, s1, GOAL, setOf(UP), setOf(setOf(UP)),null)
+            transition(s0, s3, s1, GOAL, setOf(UP), setOf(setOf(UP)), null)
+            transition(s0, s4, s3, HEIGHT, setOf(UP), setOf(setOf(UP)),null)
+            transition(s11, s5, s4, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(ABCZ,0,2), RP(ABC,0,2)))
+            transition(s11, s5, s12, GRAFT, setOf(z), setOf(setOf(UP)), listOf(RP(ABCZ,0,2), RP(ABC,0,2)))
+            transition(s10, s6, s11, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(ABCZ,0,1), RP(ABC,0,1)))
+            transition(s0, s7, s10, HEIGHT, setOf(b), setOf(setOf(UP)), null)
+            transition(s0, s8, s2, HEIGHT, setOf(UP), setOf(setOf(UP)), null)
+            transition(s12, s9, s8, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(ABCZ,0,3)))
+            transition(s0, s10, s6, WIDTH, setOf(c), setOf(), null)
+            transition(s0, s11, s5, WIDTH, setOf(UP,z), setOf(), null)
+            transition(s0, s12, s9, WIDTH, setOf(UP), setOf(), null)
         }
 
         AutomatonTest.assertEquals(expected, actual)

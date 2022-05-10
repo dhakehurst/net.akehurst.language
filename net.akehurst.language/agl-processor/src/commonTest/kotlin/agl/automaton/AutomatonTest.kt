@@ -67,13 +67,13 @@ internal object AutomatonTest {
          */
     }
 
-    fun assertEquals(expPrev: ParserState?, expected: Transition, actual: Transition) {
+    fun assertEquals(expPrev: ParserState, expected: Transition, actual: Transition) {
         kotlin.test.assertEquals(expected.from.rulePositions.toSet(), actual.from.rulePositions.toSet(), "From state does not match for ${expPrev} -> $expected")
         kotlin.test.assertEquals(expected.to.rulePositions.toSet(), actual.to.rulePositions.toSet(), "To state does not match for ${expPrev} -> $expected")
         kotlin.test.assertEquals(expected.action, actual.action, "Action does not match for ${expPrev} -> $expected")
         assertEquals(expected, expected.lookahead, actual.lookahead)//, "Lookahead content does not match for ${expPrev} -> $expected")
        //TODO kotlin.test.assertEquals(expected.upLookahead.includesUP, actual.upLookahead.includesUP, "Up lookahead content does not match for ${expPrev} -> $expected")
-        kotlin.test.assertEquals(expected.prevGuard, actual.prevGuard, "Previous guard does not match for ${expPrev} -> $expected")
+        kotlin.test.assertEquals(expected.prevGuard?.toSet(), actual.prevGuard?.toSet(), "Previous guard does not match for ${expPrev} -> $expected")
 
     }
 

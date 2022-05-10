@@ -227,8 +227,8 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
             val s19 = state(RP(S4, 0, EOR))
             val s20 = state(RP(S, 3, EOR))
 
-            transition(null, s0, s1, WIDTH, setOf(a, c), setOf(setOf(UP)), listOf())
-            transition(null, s0, s2, WIDTH, setOf(d), setOf(setOf(UP)), listOf())
+            transition(s0, s0, s1, WIDTH, setOf(a, c), setOf(setOf(UP)), listOf())
+            transition(s0, s0, s2, WIDTH, setOf(d), setOf(setOf(UP)), listOf())
 
             transition(s0, s1, s3, HEIGHT, setOf(a), setOf(setOf(a)), listOf(RP(rA, 0, 0)))
             transition(s0, s1, s4, HEIGHT, setOf(c), setOf(setOf(c)), listOf(RP(rB, 0, 0)))

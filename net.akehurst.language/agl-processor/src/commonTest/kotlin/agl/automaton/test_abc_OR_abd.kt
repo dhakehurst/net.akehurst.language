@@ -126,6 +126,7 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
     fun automaton_parse_abc() {
         val parser = ScanOnDemandParser(rrs)
         val (sppt, issues) = parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
         assertNotNull(sppt)
         assertEquals(0, issues.size)
         assertEquals(1, sppt.maxNumHeads)
@@ -162,6 +163,7 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
     fun automaton_parse_abd() {
         val parser = ScanOnDemandParser(rrs)
         val (sppt, issues) = parser.parseForGoal("S", "abd", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
         assertNotNull(sppt)
         assertEquals(0, issues.size)
         assertEquals(1, sppt.maxNumHeads)

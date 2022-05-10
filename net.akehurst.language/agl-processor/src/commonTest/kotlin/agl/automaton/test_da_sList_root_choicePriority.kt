@@ -187,14 +187,14 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
             val s7 = state(RP(G, 0, EOR))     /* G = . S   */
 
 
-            transition(null, s0, s1, WIDTH, setOf(UP, d, a), emptySet(), null)
+            transition(s0, s0, s1, WIDTH, setOf(UP, d, a), emptySet(), null)
             transition(s0, s1, s2, HEIGHT, setOf(UP, d, a), setOf(setOf(UP), setOf(d), setOf(a)), listOf(RP(vr,0,SOR)))
             transition(s0, s2, s3, HEIGHT, setOf(UP, d, a), setOf(setOf(UP), setOf(d), setOf(a)), listOf(RP(root,0,SOR)))
             transition(s0, s3, s4, HEIGHT, setOf(UP, d, a), setOf(setOf(UP), setOf(d), setOf(a)), listOf(RP(E,0,SOR)))
             transition(s0, s4, s5, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S,0,SOR)))
             transition(s0, s4, s6, HEIGHT, setOf( d, a), setOf(setOf(UP), setOf(d), setOf(a)), listOf(RP(div,0,SOR),RP(add,0,SOR)))
             transition(s0, s5, s7, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G,0,SOR)))
-            transition(null, s7, s7, GOAL, emptySet(), emptySet(), null)
+
 
         }
 
@@ -230,7 +230,7 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
             val s12 = state(RP(E, 1, EOR))       /* E = div . */
             val s1 = state(RP(G, 0, EOR))        /* G = S .   */
 
-            transition(null, s0, s1, WIDTH, setOf(UP, d, a), emptySet(), null)
+            transition(s0, s0, s1, WIDTH, setOf(UP, d, a), emptySet(), null)
             transition(s0, s1, s2, HEIGHT, setOf(UP, d, a), emptySet(), null)
             transition(s0, s2, s3, HEIGHT, setOf(UP, d, a), emptySet(), null)
             transition(s0, s3, s4, HEIGHT, setOf(UP, d, a), emptySet(), null)
@@ -273,9 +273,9 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
             val s14 = state(RP(E, 1, EOR))       /* E = div . */
             val s15 = state(RP(E, 2, EOR))       /* E = add . */
 
-            transition(null, s0, s1, HEIGHT, setOf(UP, d, a), emptySet(), null)
+            transition(s0, s0, s1, HEIGHT, setOf(UP, d, a), emptySet(), null)
             transition(s0, s1, s2, HEIGHT, setOf(UP, d, a), emptySet(), null)
-            transition(null, s0, s1, HEIGHT, setOf(UP, d, a), emptySet(), null)
+            transition(s0, s0, s1, HEIGHT, setOf(UP, d, a), emptySet(), null)
         }
 
         AutomatonTest.assertEquals(expected, actual)

@@ -388,7 +388,7 @@ internal class ParserStateSet(
                     Transition.ParseAction.WIDTH,
                     Transition.ParseAction.EMBED,
                     Transition.ParseAction.HEIGHT -> null
-                    Transition.ParseAction.GRAFT -> ti.parent
+                    Transition.ParseAction.GRAFT -> this.fetchCompatibleState(ti.parent.toList())!!.rulePositions
                 }
                 val lhs = ti.lookahead.map { Lookahead(it.guard.lhs(this), it.up.lhs(this)) }.toSet()
                 val runtimeGuard: Transition.(GrowingNodeIndex, List<RulePosition>?) -> Boolean = { gn, previous -> true } //FIXME

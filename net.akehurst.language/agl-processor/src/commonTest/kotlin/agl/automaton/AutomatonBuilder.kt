@@ -66,6 +66,21 @@ internal class AutomatonBuilder(
         return transition1(previousStates, from, to, action, lookaheadGuardContent, upLookaheadContent, prevGuard)
     }
 
+    fun transition(
+        previousStates: List<ParserState>,
+        from: ParserState,
+        to: ParserState,
+        action: Transition.ParseAction,
+        prevGuard: List<RulePosition>?,
+        init: TransitionBuilder.()->Unit
+    ): Transition {
+        val b = TransitionBuilder(result,from,to,action,prevGuard)
+        b.init()
+        val trans = b.build()
+        from.outTransitions.addTransition(previousStates, trans)
+        return trans
+    }
+
     fun transition1(
         previousStates: List<ParserState>,
         from: ParserState,

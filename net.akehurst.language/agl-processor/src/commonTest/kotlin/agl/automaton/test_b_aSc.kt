@@ -72,12 +72,12 @@ internal class test_b_aSc : test_AutomatonAbstract() {
     fun closures() {
         val ffc = FirstFollowCache(SM)
 
-        val actual = ffc.calcClosures(FirstFollowCache.Companion.ClosureItemRoot(RP(G,0,SOR),RP(S1,0,2), emptyList()))
+        val actual = ffc.calcClosures(FirstFollowCache.Companion.ClosureItemRoot(RP(G, 0, SOR), RP(S1, 0, 2), emptyList()))
         val expected = listOf(
-            FirstFollowCache.Companion.ClosureItemRoot(RP(G,0,SOR),RP(G,0,SOR), emptyList())
+            FirstFollowCache.Companion.ClosureItemRoot(RP(G, 0, SOR), RP(G, 0, SOR), emptyList())
         )
 
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -146,7 +146,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
             val s4 = state(RP(G, 0, EOR))     /* G = S .   */
 
             transition(s0, s0, s1, WIDTH, setOf(UP), setOf(), null)
-            transition(s0, s0, s2, WIDTH, setOf(b,a), setOf(), null)
+            transition(s0, s0, s2, WIDTH, setOf(b, a), setOf(), null)
             transition(s0, s1, s3, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 0)))
             transition(s0, s3, s4, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
             transition(s0, s4, s4, GOAL, setOf(), setOf(), null)
@@ -176,7 +176,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
             val s4 = state(RP(G, 0, EOR))     /* G = S .   */
 
             transition(s0, s0, s1, WIDTH, setOf(UP), setOf(), null)
-            transition(s0, s0, s2, WIDTH, setOf(b,a), setOf(), null)
+            transition(s0, s0, s2, WIDTH, setOf(b, a), setOf(), null)
             transition(s0, s1, s3, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 0)))
             transition(s0, s3, s4, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
             transition(s0, s4, s4, GOAL, setOf(), setOf(), null)
@@ -207,7 +207,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
             val s4 = state(RP(G, 0, EOR))     /* G = S .   */
 
             transition(s0, s0, s1, WIDTH, setOf(UP), setOf(), null)
-            transition(s0, s0, s2, WIDTH, setOf(b,a), setOf(), null)
+            transition(s0, s0, s2, WIDTH, setOf(b, a), setOf(), null)
             transition(s0, s1, s3, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 0)))
             transition(s0, s3, s4, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
             transition(s0, s4, s4, GOAL, setOf(), setOf(), null)
@@ -223,7 +223,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
         val parser = ScanOnDemandParser(rrs)
         val (sppt, issues) = parser.parseForGoal("S", "aabcc", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
-        assertNotNull(sppt, issues.joinToString(separator = "\n") { "$it" } )
+        assertNotNull(sppt, issues.joinToString(separator = "\n") { "$it" })
         assertEquals(0, issues.size)
         assertEquals(1, sppt.maxNumHeads)
         //when
@@ -242,7 +242,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
             val s9 = state(RP(G, 0, EOR))     /* G = S .   */
 
             transition(s0, s0, s1, WIDTH, setOf(UP), setOf(), null)
-            transition(s0, s0, s2, WIDTH, setOf(b,a), setOf(), null)
+            transition(s0, s0, s2, WIDTH, setOf(b, a), setOf(), null)
             transition(s3, s1, s4, HEIGHT, setOf(c), setOf(setOf(c)), listOf(RP(S, 0, 0)))
             transition(s0, s3, s4, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
             transition(s0, s4, s4, GOAL, setOf(), setOf(), null)
@@ -260,7 +260,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
         parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
         val (sppt, issues) = parser.parseForGoal("S", "aabcc", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
-        assertNotNull(sppt, issues.joinToString(separator = "\n") { "$it" } )
+        assertNotNull(sppt, issues.joinToString(separator = "\n") { "$it" })
         assertEquals(0, issues.size)
         assertEquals(1, sppt.maxNumHeads)
         //when
@@ -279,7 +279,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
             val s9 = state(RP(G, 0, EOR))     /* G = S .   */
 
             transition(s0, s0, s1, WIDTH, setOf(UP), setOf(), null)
-            transition(s0, s0, s2, WIDTH, setOf(b,a), setOf(), null)
+            transition(s0, s0, s2, WIDTH, setOf(b, a), setOf(), null)
             transition(s3, s1, s4, HEIGHT, setOf(c), setOf(setOf(c)), listOf(RP(S, 0, 0)))
             transition(s0, s3, s4, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
             transition(s0, s4, s4, GOAL, setOf(), setOf(), null)
@@ -295,52 +295,53 @@ internal class test_b_aSc : test_AutomatonAbstract() {
 
         val actual = bc.stateInfo2()
     }
-/*
+
 
     @Test
     fun buildFor() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val sentences = setOf("abc", "abd")
+        val sentences = setOf("b", "abc", "aabcc")
         sentences.forEach {
+            println(it)
             val parser = ScanOnDemandParser(rrs)
             val (sppt, issues) = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
-            assertNotNull(sppt)
+            assertNotNull(sppt, issues.joinToString(separator = "\n") { "$it" })
             assertEquals(0, issues.size)
             assertEquals(1, sppt.maxNumHeads)
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S   */
-            val s1 = state(RP(a, 0, EOR))     /* a .       */
-            val s2 = state(RP(ABC, 0, 1), RP(ABD, 0, 1)) /* ABC = a . bc | ABD = a . bd */
-            val s3 = state(RP(b, 0, EOR))     /* b . */
-            val s4 = state(RP(ABC, 0, 2), RP(ABD, 0, 2)) /* ABC = ab . c | ABD = ab . d */
-            val s5 = state(RP(c, 0, EOR))     /* c . */
-            val s6 = state(RP(d, 0, EOR))     /* c . */
-            val s7 = state(RP(ABC, 0, EOR))     /* ABC = abc . */
-            val s8 = state(RP(ABD, 0, EOR))     /* ABD = abd . */
-            val s9 = state(RP(S, 0, EOR))     /* S = ABC . */
-            val s10 = state(RP(S, 1, EOR))     /* S = ABD . */
-            val s11 = state(RP(G, 0, EOR))     /* G = S .   */
+            val s1 = state(RP(G, 0, EOR))     /* G = S .   */
+            val s2 = state(RP(S, 0, EOR))     /* S = b . */
+            val s3 = state(RP(S, 1, EOR))     /* S = S1 . */
+            val s4 = state(RP(S1, 0, EOR))     /* S1 = a S c . */
+            val s5 = state(RP(c, 0, EOR))     /* c .       */
+            val s6 = state(RP(a, 0, EOR))     /* a .       */
+            val s7 = state(RP(b, 0, EOR))     /* b . */
+            val s8 = state(RP(S1, 0, 1))     /* S1 = a . S c */
+            val s9 = state(RP(S1, 0, 2))     /* S1 = a S . c */
 
-            transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), listOf(RP(ABC, 0, SOR), RP(ABD, 0, SOR)))
-            transition(s0, s2, s3, WIDTH, setOf(c, d), setOf(), null)
-            transition(s2, s3, s4, GRAFT, setOf(c, d), setOf(setOf(UP)), listOf(RP(ABC, 0, 1), RP(ABD, 0, 1)))
-            transition(s0, s4, s5, WIDTH, setOf(UP), setOf(), null)
-            transition(s0, s4, s6, WIDTH, setOf(UP), setOf(), null)
-            transition(s4, s5, s7, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(ABC, 0, 2)))
-            transition(s4, s6, s8, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(ABD, 0, 2)))
-            transition(s0, s7, s9, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 0)))
-            transition(s0, s8, s10, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 1, 0)))
-            transition(s0, s9, s11, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
-            transition(s0, s10, s11, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
-            transition(null, s11, s11, GOAL, setOf(), setOf(), null)
+            transition(s0, s0, s7, WIDTH, setOf(UP), setOf(), null)
+            transition(s0, s0, s6, WIDTH, setOf(b, a), setOf(), null)
+            transition(s0, s2, s1, GOAL, setOf(UP), setOf(setOf(UP)), null)
+            transition(s8, s2, s9, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(S1, 0, 1)))
+            transition(s0, s3, s1, GOAL, setOf(UP), setOf(setOf(UP)), null)
+            transition(s8, s3, s9, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(S1, 0, 1))) // ** c-c
+            transition(listOf(s0), s4, s3, HEIGHT, setOf(UP), setOf(setOf(UP)), null)
+            transition(listOf(s8), s4, s3, HEIGHT, setOf(c), setOf(setOf(c)), null)
+            transition(listOf(s9), s5, s4, GRAFT, listOf(RP(S1, 0, 2))) { lookahead(setOf(UP), setOf(UP)); lookahead(setOf(c), setOf(c)) }
+            transition(listOf(s0, s8), s6, s8, HEIGHT, null) { lookahead(setOf(a, b), setOf(UP)) }
+            transition(listOf(s8), s7, s2, HEIGHT, null) { lookahead(setOf(c), setOf(c)) }
+            transition(listOf(s0), s7, s2, HEIGHT, null) { lookahead(setOf(UP), setOf(UP)) }
+            transition(listOf(s0, s8), s8, s7, WIDTH, setOf(c), setOf(), null)
+            transition(listOf(s0, s8), s8, s6, WIDTH, setOf(b, a), setOf(), null)
+            transition(listOf(s0, s8), s9, s5, WIDTH, setOf(UP, c), setOf(), null)
         }
 
         AutomatonTest.assertEquals(expected, actual)
     }
- */
+
 }

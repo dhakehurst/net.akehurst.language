@@ -211,14 +211,13 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
             val s16 = state(RP(c_T, 0, EOR))      // {}
             val s25 = state(RP(G, 0, EOR))      // {}
 
-            transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)
+            transition(s0, s0, s1, WIDTH, setOf(b), setOf(), null)
             transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), listOf(RP(S, 0, SOR)))
             transition(s0, s2, s3, WIDTH, setOf(c_T), setOf(), null)
             transition(s2, s3, s4, GRAFT, setOf(c_T), setOf(setOf(UP)), listOf(RP(S, 0, 1)))
             transition(s0, s4, s5, WIDTH, setOf(UP), setOf(), null)
             transition(s4, s5, s6, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 2)))
             transition(s0, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
-            transition(null, s7, s7, GOAL, setOf(), setOf(), null)
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -241,14 +240,13 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
             val s6 = state(RP(S, 0, EOR))
             val s7 = state(RP(G, 0, EOR))
 
-            transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)
+            transition(s0, s0, s1, WIDTH, setOf(b), setOf(), null)
             transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), listOf(RP(S, 0, SOR)))
             transition(s0, s2, s3, WIDTH, setOf(c_T), setOf(), null)
             transition(s2, s3, s4, GRAFT, setOf(c_T), setOf(setOf(UP)), listOf(RP(S, 0, 1)))
             transition(s0, s4, s5, WIDTH, setOf(UP), setOf(), null)
             transition(s4, s5, s6, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 2)))
             transition(s0, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
-            transition(null, s7, s7, GOAL, setOf(), setOf(), null)
         }
 
         AutomatonTest.assertEquals(expected, actual)

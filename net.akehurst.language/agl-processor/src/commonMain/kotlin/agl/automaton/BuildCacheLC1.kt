@@ -417,7 +417,7 @@ internal class BuildCacheLC1(
         class L1State(
             var parent: L1State?,
             val rulePosition: RulePosition, // position in rule (no need for position 0)
-            val lhs: LookaheadSetPart, // terminals expected at the end of the rule (same for all RPs for this rule)
+            val followAtEnd: LookaheadSetPart, // terminals expected at the end of the rule (same for all RPs for this rule)
         ) {
             val prev: RulePosition
                 get() = when {
@@ -430,12 +430,12 @@ internal class BuildCacheLC1(
                     null == parent -> this.prev // RP(G,0,0)
                     else -> parent!!.prev
                 }
-            val parentNextNotAtEnd: List<RulePosition>
+            val parentNextNotAtEnd: Set<RulePosition>
                 get() = when (parent) {
-                    null -> emptyList<RulePosition>()
+                    null -> emptySet<RulePosition>()
                     else -> parent!!.nextNotAtEnd
                 }
-            val nextNotAtEnd: List<RulePosition>
+            val nextNotAtEnd: Set<RulePosition>
                 get() = when {
                     rulePosition.isTerminal -> parentNextNotAtEnd
                     else -> rulePosition.next().flatMap { nxRp ->
@@ -443,13 +443,20 @@ internal class BuildCacheLC1(
                             nxRp.isAtEnd -> parentNextNotAtEnd
                             else -> listOf(nxRp)
                         }
-                    }
+                    }.toSet()
                 }
 
-            val parentLookahead = this.parent?.lhs ?: LookaheadSetPart.UP
+            val parentFollowAtEnd = this.parent?.followAtEnd ?: LookaheadSetPart.EMPTY //parent is null for G
             val follow = when {
-                rulePosition.isAtEnd -> listOf(parentLookahead)
-                else -> rulePosition.next().map { nx -> firstOf(nx, parentLookahead) }
+                rulePosition.isAtEnd -> followAtEnd
+                rulePosition.isGoal -> LookaheadSetPart.UP
+                else -> rulePosition.next().map { nx ->
+                    when {
+                        nx.isAtEnd -> followAtEnd
+                        nx.isGoal -> LookaheadSetPart.UP
+                        else -> firstOf(nx, followAtEnd)
+                    }
+                }.reduce { acc, l -> acc.union(l) }
             }
 
             fun outTransitions(parentOf: Map<Pair<RulePosition, RuntimeRule>, Set<L1State>>): Set<L1Trans> {
@@ -462,8 +469,8 @@ internal class BuildCacheLC1(
                             else -> Transition.ParseAction.GRAFT
                         }
                         val to = parent!!.rulePosition.next().map { t ->
-                            val grd = firstOf(t, parent!!.lhs)
-                            val up = parentLookahead
+                            val grd = firstOf(t, parent!!.follow)
+                            val up = parentFollowAtEnd
                             Triple(t, grd, up)
                         }
                         to.map { p -> L1Trans(parent!!.rulePosition, action, p.first, p.second, p.third) }.toSet()
@@ -472,15 +479,12 @@ internal class BuildCacheLC1(
                         val action = Transition.ParseAction.WIDTH
                         val tgts = pFirstTerm(this.rulePosition)
                         val to = tgts.flatMap { t ->
-                            val pr = when{
-                                this.rulePosition.isAtStart -> this.prev
-                                else -> this.rulePosition
-                            }
+                            val pr = this.rulePosition
                             val tParent = parentOf[Pair(pr, t)]
                             val ls = tParent!!.flatMap { tp ->
                                 when {
-                                    tp.nextNotAtEnd.isEmpty() -> listOf(this.lhs)
-                                    else -> tp.nextNotAtEnd.map { n -> firstOf(n, this.lhs) }
+                                    tp.nextNotAtEnd.isEmpty() -> listOf(tp.followAtEnd)
+                                    else -> tp.nextNotAtEnd.map { n -> firstOf(n, tp.followAtEnd) }
                                 }
                             }
                             ls.map { Pair(t.asTerminalRulePosition, it) }
@@ -491,14 +495,13 @@ internal class BuildCacheLC1(
                 }
             }
 
-            private val id = arrayOf(prev, rulePosition, lhs,nextNotAtEnd)
-            override fun hashCode(): Int = id.contentHashCode()
+            private val id = arrayOf(prev, rulePosition, followAtEnd,nextNotAtEnd)
+            override fun hashCode(): Int = id.contentDeepHashCode()
             override fun equals(other: Any?): Boolean = when {
                 other !is L1State -> false
-                else -> this.id.contentEquals(other.id)
+                else -> this.id.contentDeepEquals(other.id)
             }
-
-            override fun toString(): String = "State{$rulePosition[$lhs]}-->$parent"
+            override fun toString(): String = "State{$rulePosition[$followAtEnd]}-->$parent"
         }
 
         data class L0L1Lookahead(
@@ -556,9 +559,9 @@ internal class BuildCacheLC1(
         }
 
         val startRP = this.stateSet.startRulePosition
-        val startState = L1State(null, startRP, LookaheadSetPart.UP)
+        val startState = L1State(null, startRP, LookaheadSetPart.EMPTY)
         val finishRP = this.stateSet.finishRulePosition
-        val finishState = L1State(null, finishRP, LookaheadSetPart.UP)
+        val finishState = L1State(null, finishRP, LookaheadSetPart.EMPTY)
 
         val parentOf = lazyMutableMapNonNull<Pair<RulePosition, RuntimeRule>, MutableSet<L1State>> { mutableSetOf<L1State>() }
         val states = mutableSetOf(startState, finishState)
@@ -568,22 +571,21 @@ internal class BuildCacheLC1(
         while (todo.isNotEmpty) {
             val state = todo.pop()
             val rp = state.rulePosition
-            val stateLhs = state.lhs
+            val stateLhs = state.followAtEnd
             when {
                 rp.isAtEnd -> states.add(state)
                 else -> {
                     // item is only null if rp isTerminal (handled above)
                     for (childRP in rp.item!!.rulePositions) {
-                        val ls = state.follow
-                        for (childLhs in ls) {
-                            val childState = L1State(state, childRP, childLhs)
-                            if (states.contains(childState).not()) {
-                                states.add(childState)
-                                parentOf[Pair(state.prev, childRP.runtimeRule)].add(state)
-                                todo.push(childState)
-                            } else {
-                                // already done
-                            }
+                        val childLhs = state.follow
+                        val childState = L1State(state, childRP, childLhs)
+                        if (states.contains(childState).not()) {
+                            states.add(childState)
+                            val pr =  childState.prev
+                            parentOf[Pair(pr, childRP.runtimeRule)].add(state)
+                            todo.push(childState)
+                        } else {
+                            // already done
                         }
                     }
                 }
@@ -594,6 +596,7 @@ internal class BuildCacheLC1(
         for (state in states) {
             if (state.rulePosition.isGoal || state.rulePosition.isAtStart.not()) {
                 val trs = state.outTransitions(parentOf)
+                check(trs.isNotEmpty() || state.rulePosition.isGoal) { "No outTransitions for $state" }
                 trs.forEach { println("{${state.prev}}${state.rulePosition} -- ${it.action}[${it.guard.fullContent.joinToString { it.tag }}](${it.up}) --> ${it.to}") }
             }
         }
@@ -649,11 +652,11 @@ internal class BuildCacheLC1(
         val mergeAtEnd = atEnd.map { st ->
             val rp = st.rulePosition
             val trans = st.outTransitions
-            val groupTrans = trans.groupBy { tr -> Pair(tr.action, tr.to) }
+            val groupTrans = trans.groupBy { tr -> Triple(tr.prev,tr.action, tr.to) }
             val mergeTrans = groupTrans.map { me ->
-                val to = me.key.second
-                val action = me.key.first
-                val prev = me.value.flatMap { it.prev }.toSet()
+                val prev = me.key.first
+                val action = me.key.second
+                val to = me.key.third
                 val parent = me.value.flatMap { it.parent }.toSet()
                 val lhs = me.value.flatMap { it.lookahead }.toSet()
                     .groupBy { it.up }
@@ -666,16 +669,16 @@ internal class BuildCacheLC1(
             }.toSet()
             L0State(rp, mergeTrans)
         }
-        val groupNotAtEnd = notAtEnd.groupBy { st -> st.outTransitions.map { tr -> Pair(tr.action, tr.lookahead) }.toSet() }
+        val groupNotAtEnd = notAtEnd.groupBy { st -> st.outTransitions.map { tr -> Pair(tr.action, tr.to) }.toSet() }
         val mergeNotAtEnd = groupNotAtEnd.map {
             val rp = it.value.flatMap { it.rulePosition }.toSet()
             val trans = it.value.flatMap { it.outTransitions }.toSet()
-            val groupTrans = trans.groupBy { tr -> Pair(tr.action, tr.to) }
+            val groupTrans = trans.groupBy { tr -> Triple(tr.prev,tr.action, tr.to) }
             val mergeTrans = groupTrans.map { me ->
-                val to = me.key.second
-                val action = me.key.first
+                val prev = me.key.first
+                val action = me.key.second
+                val to = me.key.third
                 val parent = me.value.flatMap { it.parent }.toSet()
-                val prev = me.value.flatMap { it.prev }.toSet()
                 val lhs = me.value.flatMap { it.lookahead }.toSet()
                     .groupBy { it.up }
                     .map {
@@ -1182,20 +1185,19 @@ internal class BuildCacheLC1(
     }
 
 
-    private fun pFirstTerm(rp: RulePosition, done: MutableSet<RuntimeRule> = mutableSetOf()): Set<RuntimeRule> {
-        return if (done.contains(rp.runtimeRule)) {
+    private fun pFirstTerm(rp: RulePosition, done: MutableSet<RulePosition> = mutableSetOf()): Set<RuntimeRule> {
+        return if (done.contains(rp)) {
             emptySet()
         } else {
             when {
                 rp.isTerminal -> setOf(rp.runtimeRule)
                 rp.item!!.isTerminal -> setOf(rp.item!!)
                 else -> {
-                    done.add(rp.runtimeRule)
+                    done.add(rp)
                     val x = rp.item!!.rulePositionsAt[0].flatMap { pFirstTerm(it, done) }.toSet()
                     x
                 }
             }
-
         }
     }
 

@@ -141,8 +141,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
             transition(s0, s8, s10, WIDTH, setOf(UP), setOf(), null)
             transition(s8, s10, s11, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf( RP(cOpt, 1, SOR)))
             transition(s8, s11, s12, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(S, 0, 2)))
-            transition(s0, s12, s13, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(G, 0, SOR)))
-            transition(s0,s13,s13,GOAL, emptySet(), emptySet(),null)
+            transition(s0, s12, s13, GOAL, setOf(UP), setOf(setOf(UP)), null)
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -184,8 +183,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
             transition(s0, s8, s10, WIDTH, setOf(UP), setOf(), null)
             transition(s8, s10, s11, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf( RP(cOpt, 1, SOR)))
             transition(s8, s11, s12, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(S, 0, 2)))
-            transition(s0, s12, s13, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(G, 0, SOR)))
-            transition(s0,s13,s13,GOAL, emptySet(), emptySet(),null)
+            transition(s0, s12, s13, GOAL, setOf(UP), setOf(setOf(UP)),null)
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -227,8 +225,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
             transition(s0, s8, s10, WIDTH, setOf(UP), setOf(), null)
             transition(s8, s9, s11, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf( RP(cOpt, 0, SOR)))
             transition(s8, s11, s12, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(S, 0, 2)))
-            transition(s0, s12, s13, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(G, 0, SOR)))
-            transition(s0,s13,s13,GOAL, emptySet(), emptySet(),null)
+            transition(s0, s12, s13, GOAL, setOf(UP), setOf(setOf(UP)),null)
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -291,7 +288,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
             transition(s10, s12, s14, HEIGHT, setOf(UP), setOf(setOf(UP)), null)
             transition(s10, s13, s15, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(S, 0, 2)))
             transition(s10, s14, s15, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(S, 0, 2)))
-            transition(s0, s15, s16, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(G, 0, SOR)))
+            transition(s0, s15, s16, GOAL, setOf(UP), setOf(setOf(UP)),null)
         }
 
         AutomatonTest.assertEquals(expected, actual)
