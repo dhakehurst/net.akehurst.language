@@ -208,7 +208,7 @@ internal class RuntimeRule(
                                 )
                                 2 -> setOf(
                                     RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
-                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
                                     RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE)
                                 )
                                 else -> setOf(

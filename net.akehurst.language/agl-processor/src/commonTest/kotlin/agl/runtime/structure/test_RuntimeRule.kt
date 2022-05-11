@@ -22,7 +22,33 @@ import kotlin.test.assertEquals
 class test_RuntimeRule {
 
     @Test
-    fun list_separated_0_0() {
+    fun rulePositions_list_separated_0_0() {
+        // S = ['a'/',']?
+
+        //given
+        val rrs = runtimeRuleSet {
+            sList("S",0,0,"'a'","','")
+            literal("'a'","a")
+            literal("','",",")
+        }
+        val S = rrs.findRuntimeRule("S")
+
+        val expected = setOf(
+            RulePosition(S,RulePosition.OPTION_SLIST_EMPTY,RulePosition.START_OF_RULE),
+            RulePosition(S,RulePosition.OPTION_SLIST_EMPTY,RulePosition.END_OF_RULE),
+            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
+            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+        )
+
+        //when
+        val actual = S.rulePositions
+
+        //then
+        assertEquals(expected,actual)
+    }
+
+    @Test
+    fun rulePositions_list_separated_0_1() {
         // S = ['a'/',']?
 
         //given
@@ -48,12 +74,12 @@ class test_RuntimeRule {
     }
 
     @Test
-    fun list_separated_0_1() {
+    fun rulePositions_list_separated_0_2() {
         // S = ['a'/',']?
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",0,1,"'a'","','")
+            sList("S",0,2,"'a'","','")
             literal("'a'","a")
             literal("','",",")
         }
@@ -63,6 +89,7 @@ class test_RuntimeRule {
             RulePosition(S,RulePosition.OPTION_SLIST_EMPTY,RulePosition.START_OF_RULE),
             RulePosition(S,RulePosition.OPTION_SLIST_EMPTY,RulePosition.END_OF_RULE),
             RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
+            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),
             RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
         )
 
@@ -74,33 +101,7 @@ class test_RuntimeRule {
     }
 
     @Test
-    fun list_separated_0_2() {
-        // S = ['a'/',']?
-
-        //given
-        val rrs = runtimeRuleSet {
-            sList("S",0,1,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
-        }
-        val S = rrs.findRuntimeRule("S")
-
-        val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_EMPTY,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_EMPTY,RulePosition.END_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
-        )
-
-        //when
-        val actual = S.rulePositions
-
-        //then
-        assertEquals(expected,actual)
-    }
-
-    @Test
-    fun list_separated_0_5() {
+    fun rulePositions_list_separated_0_5() {
         // S = ['a'/',']0..5
 
         //given
@@ -128,12 +129,12 @@ class test_RuntimeRule {
     }
 
     @Test
-    fun list_separated_0_n() {
+    fun rulePositions_list_separated_0_n() {
         // S = ['a'/',']*
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",0,-1,"'a'","','")
+            sList("S",0,RuntimeRule.MULTIPLICITY_N,"'a'","','")
             literal("'a'","a")
             literal("','",",")
         }
@@ -156,7 +157,31 @@ class test_RuntimeRule {
     }
 
     @Test
-    fun list_separated_1_0() {
+    fun rulePositions_list_separated_1_0() {
+        // S = ['a'/',']1..1
+
+        //given
+        val rrs = runtimeRuleSet {
+            sList("S",1,0,"'a'","','")
+            literal("'a'","a")
+            literal("','",",")
+        }
+        val S = rrs.findRuntimeRule("S")
+
+        val expected = setOf(
+            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
+            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+        )
+
+        //when
+        val actual = S.rulePositions
+
+        //then
+        assertEquals(expected,actual)
+    }
+
+    @Test
+    fun rulePositions_list_separated_1_1() {
         // S = ['a'/',']1..1
 
         //given
@@ -180,12 +205,12 @@ class test_RuntimeRule {
     }
 
     @Test
-    fun list_separated_1_1() {
+    fun rulePositions_list_separated_1_2() {
         // S = ['a'/',']1..1
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",1,1,"'a'","','")
+            sList("S",1,2,"'a'","','")
             literal("'a'","a")
             literal("','",",")
         }
@@ -193,6 +218,7 @@ class test_RuntimeRule {
 
         val expected = setOf(
             RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
+            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),
             RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
         )
 
@@ -204,36 +230,12 @@ class test_RuntimeRule {
     }
 
     @Test
-    fun list_separated_1_2() {
-        // S = ['a'/',']1..1
-
-        //given
-        val rrs = runtimeRuleSet {
-            sList("S",1,1,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
-        }
-        val S = rrs.findRuntimeRule("S")
-
-        val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
-        )
-
-        //when
-        val actual = S.rulePositions
-
-        //then
-        assertEquals(expected,actual)
-    }
-
-    @Test
-    fun list_separated_1_5() {
+    fun rulePositions_list_separated_1_5() {
         // S = ['a'/',']1..5
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",0,5,"'a'","','")
+            sList("S",1,5,"'a'","','")
             literal("'a'","a")
             literal("','",",")
         }
@@ -254,12 +256,12 @@ class test_RuntimeRule {
     }
 
     @Test
-    fun list_separated_1_n() {
+    fun rulePositions_list_separated_1_n() {
         // S = ['a'/',']+
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",1,-1,"'a'","','")
+            sList("S",1,RuntimeRule.MULTIPLICITY_N,"'a'","','")
             literal("'a'","a")
             literal("','",",")
         }
@@ -280,12 +282,12 @@ class test_RuntimeRule {
     }
 
     @Test
-    fun list_separated_2_2() {
+    fun rulePositions_list_separated_2_2() {
         // S = ['a'/',']2..5
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",0,5,"'a'","','")
+            sList("S",2,2,"'a'","','")
             literal("'a'","a")
             literal("','",",")
         }
@@ -293,7 +295,6 @@ class test_RuntimeRule {
 
         val expected = setOf(
             RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_ITEM),
             RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),
             RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
         )
@@ -306,12 +307,12 @@ class test_RuntimeRule {
     }
 
     @Test
-    fun list_separated_2_5() {
+    fun rulePositions_list_separated_2_5() {
         // S = ['a'/',']2..5
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",0,5,"'a'","','")
+            sList("S",2,5,"'a'","','")
             literal("'a'","a")
             literal("','",",")
         }
@@ -332,12 +333,12 @@ class test_RuntimeRule {
     }
 
     @Test
-    fun list_separated_2_n() {
+    fun rulePositions_list_separated_2_n() {
         // S = ['a'/',']2+
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",0,5,"'a'","','")
+            sList("S",2,RuntimeRule.MULTIPLICITY_N,"'a'","','")
             literal("'a'","a")
             literal("','",",")
         }
@@ -358,12 +359,12 @@ class test_RuntimeRule {
     }
 
     @Test
-    fun list_separated_5_5() {
+    fun rulePositions_list_separated_5_5() {
         // S = ['a'/',']2..5
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",0,5,"'a'","','")
+            sList("S",5,5,"'a'","','")
             literal("'a'","a")
             literal("','",",")
         }
@@ -384,12 +385,12 @@ class test_RuntimeRule {
     }
 
     @Test
-    fun list_separated_5_7() {
+    fun rulePositions_list_separated_5_7() {
         // S = ['a'/',']2..5
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",0,5,"'a'","','")
+            sList("S",5,7,"'a'","','")
             literal("'a'","a")
             literal("','",",")
         }
@@ -410,12 +411,12 @@ class test_RuntimeRule {
     }
 
     @Test
-    fun list_separated_5_n() {
+    fun rulePositions_list_separated_5_n() {
         // S = ['a'/',']2+
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",0,5,"'a'","','")
+            sList("S",5,RuntimeRule.MULTIPLICITY_N,"'a'","','")
             literal("'a'","a")
             literal("','",",")
         }
