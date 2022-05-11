@@ -495,12 +495,13 @@ internal class BuildCacheLC1(
                 }
             }
 
-            private val id = arrayOf(prev, rulePosition, followAtEnd,nextNotAtEnd)
+            private val id = arrayOf(prev, rulePosition, followAtEnd, nextNotAtEnd)
             override fun hashCode(): Int = id.contentDeepHashCode()
             override fun equals(other: Any?): Boolean = when {
                 other !is L1State -> false
                 else -> this.id.contentDeepEquals(other.id)
             }
+
             override fun toString(): String = "State{$rulePosition[$followAtEnd]}-->$parent"
         }
 
@@ -581,7 +582,7 @@ internal class BuildCacheLC1(
                         val childState = L1State(state, childRP, childLhs)
                         if (states.contains(childState).not()) {
                             states.add(childState)
-                            val pr =  childState.prev
+                            val pr = childState.prev
                             parentOf[Pair(pr, childRP.runtimeRule)].add(state)
                             todo.push(childState)
                         } else {
@@ -592,12 +593,14 @@ internal class BuildCacheLC1(
             }
         }
 
-        println("LR1 states")
-        for (state in states) {
-            if (state.rulePosition.isGoal || state.rulePosition.isAtStart.not()) {
-                val trs = state.outTransitions(parentOf)
-                check(trs.isNotEmpty() || state.rulePosition.isGoal) { "No outTransitions for $state" }
-                trs.forEach { println("{${state.prev}}${state.rulePosition} -- ${it.action}[${it.guard.fullContent.joinToString { it.tag }}](${it.up}) --> ${it.to}") }
+        if (Debug.OUTPUT) {
+            println("LR1 states")
+            for (state in states) {
+                if (state.rulePosition.isGoal || state.rulePosition.isAtStart.not()) {
+                    val trs = state.outTransitions(parentOf)
+                    check(trs.isNotEmpty() || state.rulePosition.isGoal) { "No outTransitions for $state" }
+                    trs.forEach { println("{${state.prev}}${state.rulePosition} -- ${it.action}[${it.guard.fullContent.joinToString { it.tag }}](${it.up}) --> ${it.to}") }
+                }
             }
         }
 
@@ -639,11 +642,13 @@ internal class BuildCacheLC1(
             }
         }
 
-        println("")
-        println("LR0 states")
-        for (s in l0States.values) {
-            for (t in s.outTransitions) {
-                println("${t.prev} ${s} -- ${t.action}${t.lookahead.joinToString { "[${it.guard}](${it.up})" }} --> ${t.to}")
+        if (Debug.OUTPUT) {
+            println("")
+            println("LR0 states")
+            for (s in l0States.values) {
+                for (t in s.outTransitions) {
+                    println("${t.prev} ${s} -- ${t.action}${t.lookahead.joinToString { "[${it.guard}](${it.up})" }} --> ${t.to}")
+                }
             }
         }
 
@@ -652,7 +657,7 @@ internal class BuildCacheLC1(
         val mergeAtEnd = atEnd.map { st ->
             val rp = st.rulePosition
             val trans = st.outTransitions
-            val groupTrans = trans.groupBy { tr -> Triple(tr.prev,tr.action, tr.to) }
+            val groupTrans = trans.groupBy { tr -> Triple(tr.prev, tr.action, tr.to) }
             val mergeTrans = groupTrans.map { me ->
                 val prev = me.key.first
                 val action = me.key.second
@@ -673,7 +678,7 @@ internal class BuildCacheLC1(
         val mergeNotAtEnd = groupNotAtEnd.map {
             val rp = it.value.flatMap { it.rulePosition }.toSet()
             val trans = it.value.flatMap { it.outTransitions }.toSet()
-            val groupTrans = trans.groupBy { tr -> Triple(tr.prev,tr.action, tr.to) }
+            val groupTrans = trans.groupBy { tr -> Triple(tr.prev, tr.action, tr.to) }
             val mergeTrans = groupTrans.map { me ->
                 val prev = me.key.first
                 val action = me.key.second
@@ -691,14 +696,16 @@ internal class BuildCacheLC1(
             L0State(rp, mergeTrans)
         }
         val merged = mergeAtEnd + mergeNotAtEnd
-        println("")
-        println("merged LR0 states")
-        for (s in merged) {
-            for (t in s.outTransitions) {
-                println("${t.prev} ${s} -- ${t.action}${t.lookahead.joinToString { "[${it.guard}](${it.up})" }} --> ${t.to}")
+
+        if (Debug.OUTPUT) {
+            println("")
+            println("merged LR0 states")
+            for (s in merged) {
+                for (t in s.outTransitions) {
+                    println("${t.prev} ${s} -- ${t.action}${t.lookahead.joinToString { "[${it.guard}](${it.up})" }} --> ${t.to}")
+                }
             }
         }
-
         return merged.map {
             val rp = it.rulePosition.toList()
             val trans = it.outTransitions.map {

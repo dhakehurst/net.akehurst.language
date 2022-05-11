@@ -63,8 +63,16 @@ internal class RuntimeParser(
     private val readyForShiftPrevious = mutableMapOf<GrowingNode, MutableSet<GrowingNodeIndex>>()
     private val _skip_cache = mutableMapOf<Pair<Int, Set<LookaheadSet>>, TreeData?>()
 
+    // must use a different instance of Input, so it can be reset, reset clears cached leaves. //TODO: check this
+    private val skipParser = skipStateSet?.let { RuntimeParser(it, null, skipStateSet.userGoalRule, InputFromString(skipStateSet.usedTerminalRules.size, this.input.text)) }
+
+
     fun reset() {
         this.graph.reset()
+    }
+
+    fun buildSkipParser() {
+        skipParser?.stateSet?.build()
     }
 
     fun start(startPosition: Int, possibleEndOfText: Set<LookaheadSet>) {
@@ -693,9 +701,6 @@ internal class RuntimeParser(
             skipData
         }
     }
-
-    // must use a different instance of Input, so it can be reset, reset clears cached leaves. //TODO: check this
-    private val skipParser = skipStateSet?.let { RuntimeParser(it, null, skipStateSet.userGoalRule, InputFromString(skipStateSet.usedTerminalRules.size, this.input.text)) }
 
     private fun tryParseSkip(lookaheadSet: Set<LookaheadSet>, startPosition: Int, noLookahead: Boolean): TreeData? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
         skipParser!!.reset()

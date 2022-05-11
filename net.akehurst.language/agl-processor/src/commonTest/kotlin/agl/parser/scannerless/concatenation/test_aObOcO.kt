@@ -254,7 +254,6 @@ internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun c() {
-        val goal = "S"
         val sentence = "c"
 
         val expected = """
@@ -276,10 +275,9 @@ internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun cb_fails() {
-        val goal = "S"
         val sentence = "cb"
 
-        val (sppt, issues) = super.testFail(rrs, Companion.goal, sentence, 1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
         assertEquals(
             listOf(

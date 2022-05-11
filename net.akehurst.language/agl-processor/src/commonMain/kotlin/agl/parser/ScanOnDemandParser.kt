@@ -37,6 +37,7 @@ internal class ScanOnDemandParser(
     internal val runtimeRuleSet: RuntimeRuleSet
 ) : Parser {
 
+    // cached only so it can be interrupted
     private var runtimeParser: RuntimeParser? = null
 
     override fun interrupt(message: String) {
@@ -53,6 +54,7 @@ internal class ScanOnDemandParser(
         val s0 = runtimeRuleSet.fetchStateSetFor(goalRule, automatonKind).startState
         val skipStateSet = runtimeRuleSet.skipParserStateSet
         val rp = RuntimeParser(s0.stateSet, skipStateSet, goalRule, input)
+        if (s0.stateSet.preBuilt) rp.buildSkipParser()
         this.runtimeParser = rp
 
         rp.start(0, setOf(LookaheadSet.EOT))
@@ -80,7 +82,7 @@ internal class ScanOnDemandParser(
             val sppt = SPPTFromTreeData(match, input, seasons, maxNumHeads)
             Pair(sppt, emptyList())
         } else {
-            val nextExpected = this.findNextExpectedAfterError(rp, rp.graph, input) //this possibly modifies rp and hence may change the longestLastGrown
+            val nextExpected = this.findNextExpectedAfterError2(rp, rp.graph, input) //this possibly modifies rp and hence may change the longestLastGrown
             val issue = throwError(input, rp, nextExpected, seasons, maxNumHeads)
             val sppt = null//rp.longestLastGrown?.let{ SharedPackedParseTreeDefault(it, seasons, maxNumHeads) }
             Pair(sppt, listOf(issue))
@@ -124,7 +126,6 @@ internal class ScanOnDemandParser(
             rp.resetGraphToLastGrown()
             rp.tryGrowHeightOrGraft()
         }
-
         val r = poss.map { (lg, prevs) ->
             //val prevs = rp._lastGss.peek(lg)
             // compute next expected item/RuntimeRule
@@ -169,6 +170,75 @@ internal class ScanOnDemandParser(
         return Pair(maxLastLocation, res)
     }
 
+    private fun findNextExpectedAfterError2(rp: RuntimeParser, graph: ParseGraph, input: InputFromString): Pair<InputLocation, Set<RuntimeRule>> {
+        rp.resetGraphToLastGrown()
+        val poss =  rp.tryGrowHeightOrGraft()//graph.peekAllHeads()
+        val r = poss.map { (lg, prevs) ->
+            when {
+                lg.state.isGoal -> {
+                    val trs = lg.state.transitions(rp.stateSet.startState)
+                    val errors: Set<Pair<Int, Set<RuntimeRule>>> = trs.mapNotNull { tr ->
+                        when (tr.action) {
+                            Transition.ParseAction.GOAL -> null
+                            Transition.ParseAction.WIDTH,
+                            Transition.ParseAction.EMBED -> {
+                                // try grab 'to' token, if nothing then that is error else lookahead is error
+                                val l = graph.input.findOrTryCreateLeaf(tr.to.firstRule, lg.nextInputPosition)
+                                when (l) {
+                                    null -> Pair(lg.nextInputPosition, tr.to.runtimeRules.toSet())
+                                    else -> {
+                                        val expected = tr.lookahead.flatMap { lh -> lg.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }.toSet()
+                                        val pos = l.nextInputPosition
+                                        Pair(pos, expected)
+                                    }
+                                }
+                            }
+                            else -> TODO("")
+                        }
+                    }.toSet()
+                    Pair(lg, errors)
+                }
+                else -> {
+                    val errors: Set<Pair<Int, Set<RuntimeRule>>> = prevs.flatMap { prev ->
+                        val trs = lg.state.transitions(prev.state).filter { it.runtimeGuard(it, prev, prev.state.rulePositions) }
+                        val pairs: Set<Pair<Int, Set<RuntimeRule>>> = trs.mapNotNull { tr ->
+                            when (tr.action) {
+                                Transition.ParseAction.GOAL -> null
+                                Transition.ParseAction.WIDTH,
+                                Transition.ParseAction.EMBED -> {
+                                    // try grab 'to' token, if nothing then that is error else lookahead is error
+                                    val l = graph.input.findOrTryCreateLeaf(tr.to.firstRule, lg.nextInputPosition)
+                                    when (l) {
+                                        null -> Pair(lg.nextInputPosition, tr.to.runtimeRules.toSet())
+                                        else -> {
+                                            val expected = tr.lookahead.flatMap { lh -> lg.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }.toSet()
+                                            val pos = l.nextInputPosition
+                                            Pair(pos, expected)
+                                        }
+                                    }
+                                }
+                                else -> {
+                                    val expected = tr.lookahead.flatMap { lh -> lg.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }.toSet()
+                                    val pos = lg.nextInputPosition
+                                    Pair(pos, expected)
+                                }
+                            }
+                        }.toSet()
+                        pairs
+                    }.toSet()
+                    Pair(lg, errors)
+                }
+            }
+        }
+        val errorLocations = r.flatMap { (lg, errors) ->
+            errors.map { (pos, expected) -> Pair(input.locationFor(pos, 0), expected) } //FIXME: length maybe not correct
+        }
+        val maxLastLocation = errorLocations.maxByOrNull { it.first.endPosition } ?: error("Internal error")
+        val fr = errorLocations.filter { it.first.position == maxLastLocation.first.position }
+        val res = fr.flatMap { it.second }.toSet()
+        return Pair(maxLastLocation.first, res)
+    }
+
     private fun findNextExpected(rp: RuntimeParser, graph: ParseGraph, input: InputFromString, gns: List<Pair<GrowingNode, Set<GrowingNodeIndex>?>>): Set<RuntimeRule> {
         // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
 
@@ -199,7 +269,7 @@ internal class ScanOnDemandParser(
             val prev = gn_prev.second?.map { it.state }
             val trans = rp.transitionsEndingInNonEmptyFrom(gn.currentState, prev?.toSet())
             trans.flatMap { tr ->
-                val pairs = gn.runtimeLookahead.map { rt -> Pair(tr, tr.lookahead.flatMap { it.guard.resolveUP(rt).content}) }.toSet()
+                val pairs = gn.runtimeLookahead.map { rt -> Pair(tr, tr.lookahead.flatMap { it.guard.resolveUP(rt).content }) }.toSet()
                 pairs
             }
         }.toSet()

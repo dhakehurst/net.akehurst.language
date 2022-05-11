@@ -35,6 +35,10 @@ internal class RuntimeRule(
     val embeddedRuntimeRuleSet: RuntimeRuleSet? = null,
     val embeddedStartRule: RuntimeRule? = null
 ) {
+    companion object {
+        const val MULTIPLICITY_N = -1
+    }
+
     //TODO: neeeds properties:
     // isUnnamedLiteral - so we can eliminate from AsmSimple
     // isGenerated - also w.r.t. AsmSimple so we know if we should try and get a property name from the elements
@@ -113,7 +117,7 @@ internal class RuntimeRule(
     val rulePositions: Set<RulePosition> //TODO: make constants where possible for these sets
         get() {
             return when (kind) {
-                RuntimeRuleKind.GOAL -> rhs.items.mapIndexed { index, runtimeRule ->
+                RuntimeRuleKind.GOAL -> rhs.items.mapIndexed { index, _ ->
                     RulePosition(this, 0, index)
                 }.toSet() + RulePosition(this, 0, RulePosition.END_OF_RULE)
                 RuntimeRuleKind.TERMINAL -> setOf(RulePosition(this, 0, RulePosition.END_OF_RULE))
@@ -122,13 +126,13 @@ internal class RuntimeRule(
                         RulePosition(this, 0, RulePosition.START_OF_RULE),
                         RulePosition(this, 0, RulePosition.END_OF_RULE)
                     )
-                    RuntimeRuleRhsItemsKind.CHOICE -> rhs.items.mapIndexed { index, runtimeRule ->
+                    RuntimeRuleRhsItemsKind.CHOICE -> rhs.items.mapIndexed { index, _ ->
                         setOf(
                             RulePosition(this, index, RulePosition.START_OF_RULE),
                             RulePosition(this, index, RulePosition.END_OF_RULE)
                         )
                     }.flatMap { it }.toSet()
-                    RuntimeRuleRhsItemsKind.CONCATENATION -> rhs.items.mapIndexed { index, runtimeRule ->
+                    RuntimeRuleRhsItemsKind.CONCATENATION -> rhs.items.mapIndexed { index, _ ->
                         RulePosition(this, 0, index)
                     }.toSet() + RulePosition(this, 0, RulePosition.END_OF_RULE)
                     RuntimeRuleRhsItemsKind.LIST -> when (this.rhs.listKind) {
@@ -157,16 +161,31 @@ internal class RuntimeRule(
                                 RulePosition(this, RulePosition.OPTION_MULTI_ITEM, RulePosition.END_OF_RULE)
                             )
                         }
-                        RuntimeRuleListKind.SEPARATED_LIST -> if (0 == rhs.multiMin) {
-                            if (rhs.multiMax <= 1) { //TODO: doesn't really make sense, make sure we cant have this
-                                setOf(
+                        RuntimeRuleListKind.SEPARATED_LIST -> when(this.rhs.multiMin) {
+                            0 -> when(this.rhs.multiMax) {
+                                MULTIPLICITY_N -> setOf(
+                                    RulePosition(this, RulePosition.OPTION_SLIST_EMPTY, RulePosition.START_OF_RULE),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_EMPTY, RulePosition.END_OF_RULE),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE)
+                                )
+                                0 -> error("Multiplicity of 0..0 is meaningless")
+                                1 -> setOf(
                                     RulePosition(this, RulePosition.OPTION_SLIST_EMPTY, RulePosition.START_OF_RULE),
                                     RulePosition(this, RulePosition.OPTION_SLIST_EMPTY, RulePosition.END_OF_RULE),
                                     RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
                                     RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE)
                                 )
-                            } else {
-                                setOf(
+                                2 -> setOf(
+                                    RulePosition(this, RulePosition.OPTION_SLIST_EMPTY, RulePosition.START_OF_RULE),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_EMPTY, RulePosition.END_OF_RULE),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE)
+                                )
+                                else -> setOf(
                                     RulePosition(this, RulePosition.OPTION_SLIST_EMPTY, RulePosition.START_OF_RULE),
                                     RulePosition(this, RulePosition.OPTION_SLIST_EMPTY, RulePosition.END_OF_RULE),
                                     RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
@@ -175,13 +194,30 @@ internal class RuntimeRule(
                                     RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE)
                                 )
                             }
-                        } else {
-                            setOf(
-                                RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
-                                RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
-                                RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
-                                RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE)
-                            )
+                            else -> when(this.rhs.multiMax) {
+                                MULTIPLICITY_N -> setOf(
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE)
+                                )
+                                0 -> error("Multiplicity of X..0 is meaningless")
+                                1 -> setOf(
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE)
+                                )
+                                2 -> setOf(
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE)
+                                )
+                                else -> setOf(
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+                                    RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE)
+                                )
+                            }
                         }
                         RuntimeRuleListKind.UNORDERED -> TODO()
                         RuntimeRuleListKind.LEFT_ASSOCIATIVE_LIST -> TODO()
@@ -209,7 +245,7 @@ internal class RuntimeRule(
             RuntimeRuleRhsItemsKind.EMPTY -> return false
             RuntimeRuleRhsItemsKind.CHOICE -> return nextItemIndex == 0
             RuntimeRuleRhsItemsKind.CONCATENATION -> {
-                if (nextItemIndex != -1 && nextItemIndex < this.rhs.items.size) {
+                if (nextItemIndex != MULTIPLICITY_N && nextItemIndex < this.rhs.items.size) {
                     return true
                 } else {
                     return false // !reachedEnd;
@@ -218,12 +254,12 @@ internal class RuntimeRule(
             RuntimeRuleRhsItemsKind.LIST -> when (this.rhs.listKind) {
                 RuntimeRuleListKind.MULTI -> {
                     val max = this.rhs.multiMax
-                    return -1 != nextItemIndex && (-1 == max || nextItemIndex < max)
+                    return MULTIPLICITY_N != nextItemIndex && (MULTIPLICITY_N == max || nextItemIndex < max)
                 }
                 RuntimeRuleListKind.SEPARATED_LIST -> {
                     val max = this.rhs.multiMax
                     val x = nextItemIndex / 2
-                    return -1 != nextItemIndex && (-1 == max || x < max)
+                    return MULTIPLICITY_N != nextItemIndex && (MULTIPLICITY_N == max || x < max)
                 }
                 else -> TODO()
             }
@@ -385,7 +421,7 @@ internal class RuntimeRule(
                         if (n >= this.rhs.items.size) {
                             throw RuntimeException("Internal Error: No NextExpectedItem")
                         } else {
-                            if (-1 == n) {
+                            if (MULTIPLICITY_N == n) {
                                 emptySet<RuntimeRule>()
                             } else {
                                 var nextItem = this.rhs.items[n]
@@ -399,14 +435,14 @@ internal class RuntimeRule(
                         RuntimeRuleListKind.MULTI -> {
                             when {
                                 (0 == n && 0 == this.rhs.multiMin) -> setOf<RuntimeRule>(this.rhs.items[0])
-                                (n < this.rhs.multiMax || -1 == this.rhs.multiMax) -> setOf<RuntimeRule>(this.rhs.items[0])
+                                (n < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax) -> setOf<RuntimeRule>(this.rhs.items[0])
                                 else -> emptySet<RuntimeRule>()
                             }
                         }
                         RuntimeRuleListKind.SEPARATED_LIST -> {
                             when {
                                 (0 == n && 0 == this.rhs.multiMin) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
-                                (n % 2 == 0) -> if (n < this.rhs.multiMax || -1 == this.rhs.multiMax) {
+                                (n % 2 == 0) -> if (n < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax) {
                                     hashSetOf<RuntimeRule>(this.rhs.items[0])
                                 } else {
                                     emptySet<RuntimeRule>()
@@ -435,15 +471,15 @@ internal class RuntimeRule(
                 RuntimeRuleRhsItemsKind.EMPTY -> false
                 RuntimeRuleRhsItemsKind.CHOICE -> nextItemIndex == 0
                 RuntimeRuleRhsItemsKind.CONCATENATION -> {
-                    !(-1 == nextItemIndex || nextItemIndex >= this.rhs.items.size)
+                    !(MULTIPLICITY_N == nextItemIndex || nextItemIndex >= this.rhs.items.size)
                 }
                 RuntimeRuleRhsItemsKind.LIST -> when (this.rhs.listKind) {
                     RuntimeRuleListKind.NONE -> error("should not happen")
                     RuntimeRuleListKind.MULTI -> {
-                        !(-1 == nextItemIndex || (-1 != this.rhs.multiMax && nextItemIndex > this.rhs.multiMax))
+                        !(MULTIPLICITY_N == nextItemIndex || (MULTIPLICITY_N != this.rhs.multiMax && nextItemIndex > this.rhs.multiMax))
                     }
                     RuntimeRuleListKind.SEPARATED_LIST -> {
-                        !(-1 == nextItemIndex || (-1 != this.rhs.multiMax && (nextItemIndex / 2) > this.rhs.multiMax))
+                        !(MULTIPLICITY_N == nextItemIndex || (MULTIPLICITY_N != this.rhs.multiMax && (nextItemIndex / 2) > this.rhs.multiMax))
                     }
                     else -> TODO()
                 }
@@ -468,7 +504,7 @@ internal class RuntimeRule(
                     return if (nextItemIndex >= this.rhs.items.size) {
                         throw RuntimeException("Internal Error: No NextExpectedItem")
                     } else {
-                        if (-1 == nextItemIndex) {
+                        if (MULTIPLICITY_N == nextItemIndex) {
                             emptySet<RuntimeRule>()
                         } else {
                             var nextItem = this.rhs.items[nextItemIndex]
@@ -480,15 +516,15 @@ internal class RuntimeRule(
                 RuntimeRuleRhsItemsKind.MULTI -> {
                     return when {
                         (0 == nextItemIndex && 0 == this.rhs.multiMin) -> setOf<RuntimeRule>(this.rhs.items[0], this.emptyRuleItem)
-                        (nextItemIndex < this.rhs.multiMax || -1 == this.rhs.multiMax) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
+                        (nextItemIndex < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
                         else -> emptySet<RuntimeRule>()
                     }
                 }
                 RuntimeRuleRhsItemsKind.SEPARATED_LIST -> {
                     return when {
-                        (nextItemIndex % 2 == 1 && (((nextItemIndex + 1) / 2) < this.rhs.multiMax || -1 == this.rhs.multiMax)) -> setOf<RuntimeRule>(this.rhs.SLIST__separator)
+                        (nextItemIndex % 2 == 1 && (((nextItemIndex + 1) / 2) < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax)) -> setOf<RuntimeRule>(this.rhs.SLIST__separator)
                         (0 == nextItemIndex && 0 == this.rhs.multiMin) -> setOf<RuntimeRule>(this.rhs.items[0], this.emptyRuleItem)
-                        (nextItemIndex % 2 == 0 && ((nextItemIndex / 2) < this.rhs.multiMax || -1 == this.rhs.multiMax)) -> setOf<RuntimeRule>(this.rhs.items[0])
+                        (nextItemIndex % 2 == 0 && ((nextItemIndex / 2) < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax)) -> setOf<RuntimeRule>(this.rhs.items[0])
                         else -> emptySet<RuntimeRule>()
                     }
                 }
@@ -538,13 +574,13 @@ internal class RuntimeRule(
                                 )
                                 else -> error("should never happen")
                             }
-                            (position < this.rhs.multiMax || -1 == this.rhs.multiMax) -> setOf(
+                            (position < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax) -> setOf(
                                 RulePosition(this, RulePosition.OPTION_MULTI_ITEM, RulePosition.POSITION_MULIT_ITEM)
                             )
                             else -> error("should never happen")// emptySet()
                         }
                         RuntimeRuleListKind.SEPARATED_LIST -> when {
-                            (position % 2 == 1 && (((position + 1) / 2) < this.rhs.multiMax || -1 == this.rhs.multiMax)) -> setOf(
+                            (position % 2 == 1 && (((position + 1) / 2) < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax)) -> setOf(
                                 RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR)
                             )
                             0 == position -> when {
@@ -557,7 +593,7 @@ internal class RuntimeRule(
                                 )
                                 else -> error("should never happen")
                             }
-                            (position % 2 == 0 && ((position / 2) < this.rhs.multiMax || -1 == this.rhs.multiMax)) -> setOf(
+                            (position % 2 == 0 && ((position / 2) < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax)) -> setOf(
                                 RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM)
                             )
                             else -> error("should never happen")//emptySet()
@@ -599,13 +635,13 @@ internal class RuntimeRule(
                 RuntimeRuleRhsItemsKind.LIST -> when (this.rhs.listKind) {
                     RuntimeRuleListKind.MULTI -> when {
                         (0 == position && 0 == this.rhs.multiMin) -> setOf(this.rhs.items[0], this.emptyRuleItem)
-                        (position < this.rhs.multiMax || -1 == this.rhs.multiMax) -> setOf(this.rhs.items[0])
+                        (position < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax) -> setOf(this.rhs.items[0])
                         else -> emptySet<RuntimeRule>()
                     }
                     RuntimeRuleListKind.SEPARATED_LIST -> when {
-                        (position % 2 == 1 && (((position + 1) / 2) < this.rhs.multiMax || -1 == this.rhs.multiMax)) -> setOf(this.rhs.SLIST__separator)
+                        (position % 2 == 1 && (((position + 1) / 2) < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax)) -> setOf(this.rhs.SLIST__separator)
                         (0 == position && 0 == this.rhs.multiMin) -> setOf(this.rhs.items[0], this.emptyRuleItem)
-                        (position % 2 == 0 && ((position / 2) < this.rhs.multiMax || -1 == this.rhs.multiMax)) -> setOf(this.rhs.items[0])
+                        (position % 2 == 0 && ((position / 2) < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax)) -> setOf(this.rhs.items[0])
                         else -> emptySet()
                     }
                     else -> TODO()
@@ -627,7 +663,7 @@ internal class RuntimeRule(
                         // TODO: cache this
                         0 == atPosition && this.rhs.items.contains(possibleChild)
                     RuntimeRuleRhsItemsKind.CONCATENATION -> {
-                        if (-1 == atPosition || atPosition >= this.rhs.items.size)
+                        if (MULTIPLICITY_N == atPosition || atPosition >= this.rhs.items.size)
                             false
                         else
                             this.rhs.items[atPosition].number == possibleChild.number
@@ -656,13 +692,13 @@ internal class RuntimeRule(
 
     fun incrementNextItemIndex(currentIndex: Int): Int {
         when (this.rhs.itemsKind) {
-            RuntimeRuleRhsItemsKind.EMPTY -> return -1
-            RuntimeRuleRhsItemsKind.CHOICE -> return -1
-            RuntimeRuleRhsItemsKind.CONCATENATION -> return if (this.rhs.items.size == currentIndex + 1) -1 else currentIndex + 1
+            RuntimeRuleRhsItemsKind.EMPTY -> return MULTIPLICITY_N
+            RuntimeRuleRhsItemsKind.CHOICE -> return MULTIPLICITY_N
+            RuntimeRuleRhsItemsKind.CONCATENATION -> return if (this.rhs.items.size == currentIndex + 1) MULTIPLICITY_N else currentIndex + 1
 //            RuntimeRuleRhsItemsKind.MULTI -> return  currentIndex
-            RuntimeRuleRhsItemsKind.MULTI -> return if (-1 == this.rhs.multiMax || this.rhs.multiMax > currentIndex + 1) currentIndex + 1 else -1
+            RuntimeRuleRhsItemsKind.MULTI -> return if (MULTIPLICITY_N == this.rhs.multiMax || this.rhs.multiMax > currentIndex + 1) currentIndex + 1 else MULTIPLICITY_N
 //            RuntimeRuleRhsItemsKind.SEPARATED_LIST -> return if (currentIndex == 0) 1 else 0
-            RuntimeRuleRhsItemsKind.SEPARATED_LIST -> return if (-1 == this.rhs.multiMax || this.rhs.multiMax > (currentIndex / 2)) currentIndex + 1 else -1
+            RuntimeRuleRhsItemsKind.SEPARATED_LIST -> return if (MULTIPLICITY_N == this.rhs.multiMax || this.rhs.multiMax > (currentIndex / 2)) currentIndex + 1 else MULTIPLICITY_N
 
             else -> throw RuntimeException("Internal Error: Unknown RuleKind " + this.rhs.itemsKind)
         }

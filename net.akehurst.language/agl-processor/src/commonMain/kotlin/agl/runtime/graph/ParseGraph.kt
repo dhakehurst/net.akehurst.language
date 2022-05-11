@@ -135,6 +135,12 @@ internal class ParseGraph(
         return Pair(gn, previous)
     }
 
+    fun peekAllHeads() = this._growingHeadHeap.entries.map {
+        val gn = it.key
+        val prev = this._gss.peek(gn)
+        Pair(gn, prev)
+    }
+
     fun reset() {
         this.input.reset()
         //       this.completeNodes.clear()

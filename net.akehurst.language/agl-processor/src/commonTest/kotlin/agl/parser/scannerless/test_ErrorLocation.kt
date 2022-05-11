@@ -38,7 +38,7 @@ internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
 
         val expected = "S{ 'a' }"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,

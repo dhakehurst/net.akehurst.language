@@ -43,12 +43,12 @@ internal class test_literal_a0n : test_ScanOnDemandParserAbstract() {
 
         val expected = "S|1 { §empty }"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -58,12 +58,12 @@ internal class test_literal_a0n : test_ScanOnDemandParserAbstract() {
 
         val expected = "S { 'a' }"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = Companion.goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -84,12 +84,12 @@ internal class test_literal_a0n : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a' ',' 'a'}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -110,12 +110,12 @@ internal class test_literal_a0n : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a' ',' 'a' ',' 'a'}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -125,12 +125,12 @@ internal class test_literal_a0n : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a'"+" ',' 'a'".repeat(99)+"}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
