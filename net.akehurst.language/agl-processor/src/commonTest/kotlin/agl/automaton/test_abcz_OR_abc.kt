@@ -232,8 +232,8 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
             val s12 = state(RP(ABCZ, 0, 3))                          // ABCZ = a b c . z
 
             transition(s0, s0, s7, WIDTH, setOf(b), emptySet(), null)
-            transition(s0, s2, s1, GOAL, setOf(UP), setOf(setOf(UP)),null)
-            transition(s0, s3, s1, GOAL, setOf(UP), setOf(setOf(UP)), null)
+            transition(s0, s2, s1, GOAL, setOf(UP), setOf(setOf()),null)
+            transition(s0, s3, s1, GOAL, setOf(UP), setOf(setOf()), null)
             transition(s0, s4, s3, HEIGHT, setOf(UP), setOf(setOf(UP)),null)
             transition(s11, s5, s4, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(ABCZ,0,2), RP(ABC,0,2)))
             transition(s11, s5, s12, GRAFT, setOf(z), setOf(setOf(UP)), listOf(RP(ABCZ,0,2), RP(ABC,0,2)))

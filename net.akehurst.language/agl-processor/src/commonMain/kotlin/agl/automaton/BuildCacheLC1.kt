@@ -430,14 +430,14 @@ internal class BuildCacheLC1(
                     null == parent -> this.prev // RP(G,0,0)
                     else -> parent!!.prev
                 }
-            val parentNextNotAtEnd: Set<RulePosition>
+            private val parentNextNotAtEnd: Set<RulePosition>
                 get() = when (parent) {
                     null -> emptySet<RulePosition>()
                     else -> parent!!.nextNotAtEnd
                 }
             val nextNotAtEnd: Set<RulePosition>
                 get() = when {
-                    rulePosition.isTerminal -> parentNextNotAtEnd
+                    rulePosition.isAtEnd -> parentNextNotAtEnd
                     else -> rulePosition.next().flatMap { nxRp ->
                         when {
                             nxRp.isAtEnd -> parentNextNotAtEnd
@@ -481,12 +481,7 @@ internal class BuildCacheLC1(
                         val to = tgts.flatMap { t ->
                             val pr = this.rulePosition
                             val tParent = parentOf[Pair(pr, t)]
-                            val ls = tParent!!.flatMap { tp ->
-                                when {
-                                    tp.nextNotAtEnd.isEmpty() -> listOf(tp.followAtEnd)
-                                    else -> tp.nextNotAtEnd.map { n -> firstOf(n, tp.followAtEnd) }
-                                }
-                            }
+                            val ls = tParent!!.map { tp -> tp.follow }
                             ls.map { Pair(t.asTerminalRulePosition, it) }
                         }
                         val up = LookaheadSetPart.EMPTY
@@ -495,7 +490,7 @@ internal class BuildCacheLC1(
                 }
             }
 
-            private val id = arrayOf(prev, rulePosition, followAtEnd, nextNotAtEnd)
+            private val id = arrayOf(prev, rulePosition, followAtEnd, parentFollowAtEnd)
             override fun hashCode(): Int = id.contentDeepHashCode()
             override fun equals(other: Any?): Boolean = when {
                 other !is L1State -> false
@@ -577,7 +572,8 @@ internal class BuildCacheLC1(
                 rp.isAtEnd -> states.add(state)
                 else -> {
                     // item is only null if rp isTerminal (handled above)
-                    for (childRP in rp.item!!.rulePositions) {
+                    val rps = rp.item!!.rulePositions
+                    for (childRP in rps) {
                         val childLhs = state.follow
                         val childState = L1State(state, childRP, childLhs)
                         if (states.contains(childState).not()) {
@@ -674,7 +670,7 @@ internal class BuildCacheLC1(
             }.toSet()
             L0State(rp, mergeTrans)
         }
-        val groupNotAtEnd = notAtEnd.groupBy { st -> st.outTransitions.map { tr -> Pair(tr.action, tr.to) }.toSet() }
+        val groupNotAtEnd = notAtEnd.groupBy { st -> st.outTransitions.map { tr -> Triple( tr.action, tr.to,tr.parent.map { it.runtimeRule }) }.toSet() }
         val mergeNotAtEnd = groupNotAtEnd.map {
             val rp = it.value.flatMap { it.rulePosition }.toSet()
             val trans = it.value.flatMap { it.outTransitions }.toSet()
@@ -706,18 +702,34 @@ internal class BuildCacheLC1(
                 }
             }
         }
-        return merged.map {
-            val rp = it.rulePosition.toList()
-            val trans = it.outTransitions.map {
-                val prev = it.prev
-                val parent = it.parent
-                val action = it.action
-                val to = it.to
-                val lh = it.lookahead.map { LookaheadInfoPart(it.guard, it.up) }.toSet()
-                TransInfo(prev, parent, action, to, lh)
+        val stateInfo = merged.map { st ->
+            val rp = st.rulePosition.toList()
+            val trans = st.outTransitions.map { tr ->
+                val prev = tr.prev.map{ pr->merged.first{ it.rulePosition.containsAll(pr) }.rulePosition }.toSet()
+                val parent = tr.parent // only used for prevGuard - no need to map to state
+                val action = tr.action
+                val to = merged.first{ it.rulePosition.containsAll(tr.to) }
+                val lh = tr.lookahead.map { LookaheadInfoPart(it.guard, it.up) }.toSet()
+                TransInfo(prev, parent, action, to.rulePosition, lh)
+            }.toSet()
+            val grouped = trans.groupBy { tr -> Triple(tr.prev, tr.action, tr.to) }
+            val merged2 = grouped.map{ me->
+                val prev = me.key.first
+                val action = me.key.second
+                val to = me.key.third
+                val parent = me.value.flatMap { it.parent }.toSet()
+                val lhs = me.value.flatMap { it.lookahead }.toSet()
+                    .groupBy { it.guard }
+                    .map {
+                        val guard = it.key
+                        val up = it.value.map { it.up }.reduce { acc, l -> acc.union(l) }
+                        LookaheadInfoPart(guard, up)
+                    }.toSet()
+                TransInfo(prev, parent, action, to, lhs)
             }.toSet()
             StateInfo(rp, trans)
         }.toSet()
+        return stateInfo
     }
 
 

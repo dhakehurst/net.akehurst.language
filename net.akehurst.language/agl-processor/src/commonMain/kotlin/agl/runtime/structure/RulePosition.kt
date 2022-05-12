@@ -198,7 +198,7 @@ internal class RulePosition(
         }
     }
 
-    private val _hashCode = listOf(this.runtimeRule, this.option, this.position).hashCode()
+    private val _hashCode get()= arrayOf(this.runtimeRule, this.option, this.position).contentHashCode()
     override fun hashCode(): Int = _hashCode
 
     override fun equals(other: Any?): Boolean = when (other) {

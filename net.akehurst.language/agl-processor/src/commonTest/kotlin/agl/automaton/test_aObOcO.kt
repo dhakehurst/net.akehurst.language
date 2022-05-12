@@ -288,7 +288,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
             transition(s10, s12, s14, HEIGHT, setOf(UP), setOf(setOf(UP)), null)
             transition(s10, s13, s15, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(S, 0, 2)))
             transition(s10, s14, s15, GRAFT, setOf(UP), setOf(setOf(UP)), listOf( RP(S, 0, 2)))
-            transition(s0, s15, s16, GOAL, setOf(UP), setOf(setOf(UP)),null)
+            transition(s0, s15, s16, GOAL, setOf(UP), setOf(),null)
         }
 
         AutomatonTest.assertEquals(expected, actual)

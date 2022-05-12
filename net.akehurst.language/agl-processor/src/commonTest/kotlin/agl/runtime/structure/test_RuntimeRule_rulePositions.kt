@@ -19,7 +19,7 @@ package net.akehurst.language.agl.runtime.structure
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_RuntimeRule {
+class test_RuntimeRule_rulePositions {
 
     @Test
     fun rulePositions_list_separated_0_0() {

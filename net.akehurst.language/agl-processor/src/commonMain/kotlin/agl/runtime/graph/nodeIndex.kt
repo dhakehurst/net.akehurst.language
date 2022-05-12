@@ -86,19 +86,12 @@ internal  class GrowingNodeIndex(
     }
 
     override fun toString(): String {
-        val ct = runtimeLookaheadSet.map {
-            val cont = mutableSetOf<RuntimeRule>()
-            if (it.includesUP) cont += RuntimeRuleSet.USE_PARENT_LOOKAHEAD
-            if (it.includesEOT) cont += RuntimeRuleSet.END_OF_TEXT
-            if (it.matchANY) cont += RuntimeRuleSet.ANY_LOOKAHEAD
-            cont += it.content
-            cont
-        }
+        val ct = runtimeLookaheadSet.map { it.fullContent.joinToString { it.tag } }
         val ctStr = ct.joinToString(
             prefix = "[",
             postfix = "]",
-            separator = ","
-        ) { it.joinToString(separator = "|") { it.tag }}
+            separator = "|"
+        ) { it }
         return "GNI{state=$state,lhs=$ctStr,sp=${startPosition}, np=$nextInputPosition, len=$numNonSkipChildren}"
     }
 

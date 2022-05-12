@@ -77,6 +77,27 @@ internal class ParserState(
             }
         }
 
+        val graftRuntimeGuard: RuntimeGuard = { gn, previous ->
+            if (null == previous) {
+                true
+            } else {
+                val rr = previous.first().runtimeRule //FIXME: possibly more than one!!
+                when (rr.rhs.itemsKind) {
+                    RuntimeRuleRhsItemsKind.LIST -> when (rr.rhs.listKind) {
+                        RuntimeRuleListKind.MULTI -> ParserState.multiRuntimeGuard.invoke(this, gn)
+                        RuntimeRuleListKind.SEPARATED_LIST -> ParserState.sListRuntimeGuard.invoke(this, gn)
+                        else -> TODO()
+                    }
+                    else -> true
+                }
+            }
+        }
+        val defaultRuntimeGuard: RuntimeGuard = { gn, previous -> true }
+        fun runtimeGuardFor(action: Transition.ParseAction): Transition.(GrowingNodeIndex, List<RulePosition>?) -> Boolean = when (action) {
+            Transition.ParseAction.GRAFT -> graftRuntimeGuard
+            else -> defaultRuntimeGuard
+        }
+
         fun LookaheadSetPart.lhs(stateSet: ParserStateSet): LookaheadSet {
             return stateSet.createLookaheadSet(this.includesUP, this.includesEOT, this.matchANY, this.content)
         }
@@ -418,7 +439,7 @@ internal class ParserState(
 
     private fun createHeightTransition3(hg: HeightGraftInfo): Transition {
         val to = this.stateSet.fetchCompatibleOrCreateState(hg.parentNext)
-        val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet),it.up.lhs(this.stateSet)) }.toSet()
+        val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), it.up.lhs(this.stateSet)) }.toSet()
         val trs = Transition(this, to, Transition.ParseAction.HEIGHT, lookaheadInfo, hg.parent) { _, _ -> true }
         return trs
     }
@@ -440,10 +461,11 @@ internal class ParserState(
             }
         }
         val to = this.stateSet.fetchCompatibleOrCreateState(hg.parentNext)
-        val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet),it.up.lhs(this.stateSet)) }.toSet()
+        val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), it.up.lhs(this.stateSet)) }.toSet()
         val trs = Transition(this, to, Transition.ParseAction.GRAFT, lookaheadInfo, hg.parent, runtimeGuard)
         return trs
     }
+
     private fun createGoalTransition3(): Transition {
         val runtimeGuard: Transition.(GrowingNodeIndex, List<RulePosition>?) -> Boolean = { _, _ -> true }
         val to = this.stateSet.finishState

@@ -19,6 +19,8 @@ package net.akehurst.language.agl.automaton
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.structure.RulePosition
 
+internal typealias RuntimeGuard = Transition.(GrowingNodeIndex, List<RulePosition>?) -> Boolean
+
 internal class Transition(
     val from: ParserState,
     val to: ParserState,

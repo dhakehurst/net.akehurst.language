@@ -30,7 +30,7 @@ internal class test_bodmas_exprListOfOpExpr_Longest : test_ScanOnDemandParserAbs
     // E = var | I | '(' E ')'
     /* I = E (op E)+ */
     // I = E I1
-    // I1 = I+
+    // I1 = I2+
     // I2 = op E
     // op = '/' | 'M' | '+' | '-'
     // var = "[a-z]+"
@@ -42,11 +42,11 @@ internal class test_bodmas_exprListOfOpExpr_Longest : test_ScanOnDemandParserAbs
                 ref("I")
                 ref("par")
             }
-            concatenation("var") { pattern("[a-z]+") }
+            concatenation("var") { literal("v") }
             concatenation("par") { literal("("); ref("E"); literal(")") }
             concatenation("I") { ref("E"); ref("I1") }
-            concatenation("I2") { ref("op"); ref("E") }
             multi("I1", 1, -1, "I2")
+            concatenation("I2") { ref("op"); ref("E") }
             choice("op", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("/")
                 literal("*")
@@ -54,15 +54,15 @@ internal class test_bodmas_exprListOfOpExpr_Longest : test_ScanOnDemandParserAbs
                 literal("-")
             }
         }
+        val goal = "S"
     }
 
     @Test
-    fun a() {
-        val goal = "S"
-        val sentence = "a"
+    fun v() {
+        val sentence = "v"
 
         val expected = """
-            S { E { var { "[a-z]+":'a' } } }
+            S { E { var { 'v' } } }
         """.trimIndent()
 
         super.test(
@@ -76,15 +76,14 @@ internal class test_bodmas_exprListOfOpExpr_Longest : test_ScanOnDemandParserAbs
 
     @Test
     fun vav() {
-        val goal = "S"
         val sentence = "v+v"
 
         val expected = """
          S { E|1 { I {
-              E { var { "[a-z]+" : 'v' } }
+              E { var { 'v' } }
               I1 { I2 {
                   op|2 { '+' }
-                  E { var { "[a-z]+" : 'v' } }
+                  E { var { 'v' } }
                 } }
             } } }
         """.trimIndent()
@@ -105,15 +104,15 @@ internal class test_bodmas_exprListOfOpExpr_Longest : test_ScanOnDemandParserAbs
 
         val expected = """
          S { E|1 { I {
-              E { var { "[a-z]+" : 'v' } }
+              E { var { 'v' } }
               I1 {
                 I2 {
                   op|2 { '+' }
-                  E { var { "[a-z]+" : 'v' } }
+                  E { var {  'v' } }
                 }
                 I2 {
                   op|2 { '+' }
-                  E { var { "[a-z]+" : 'v' } }
+                  E { var { 'v' } }
                 }
               }
             } } }
@@ -135,19 +134,19 @@ internal class test_bodmas_exprListOfOpExpr_Longest : test_ScanOnDemandParserAbs
 
         val expected = """
          S { E|1 { I {
-              E { var { "[a-z]+" : 'v' } }
+              E { var {  'v' } }
               I1 {
                 I2 {
                   op|2 { '+' }
-                  E { var { "[a-z]+" : 'v' } }
+                  E { var {  'v' } }
                 }
                 I2 {
                   op|2 { '+' }
-                  E { var { "[a-z]+" : 'v' } }
+                  E { var {  'v' } }
                 }
                 I2 {
                   op|2 { '+' }
-                  E { var { "[a-z]+" : 'v' } }
+                  E { var {  'v' } }
                 }
               }
             } } }
@@ -169,23 +168,23 @@ internal class test_bodmas_exprListOfOpExpr_Longest : test_ScanOnDemandParserAbs
 
         val expected = """
          S { E|1 { I {
-              E { var { "[a-z]+" : 'v' } }
+              E { var {  'v' } }
               I1 {
                 I2 {
                   op|2 { '+' }
-                  E { var { "[a-z]+" : 'v' } }
+                  E { var { 'v' } }
                 }
                 I2 {
                   op|2 { '+' }
-                  E { var { "[a-z]+" : 'v' } }
+                  E { var {  'v' } }
                 }
                 I2 {
                   op|2 { '+' }
-                  E { var { "[a-z]+" : 'v' } }
+                  E { var {  'v' } }
                 }
                 I2 {
                   op|2 { '+' }
-                  E { var { "[a-z]+" : 'v' } }
+                  E { var {  'v' } }
                 }
               }
             } } }
@@ -207,23 +206,23 @@ internal class test_bodmas_exprListOfOpExpr_Longest : test_ScanOnDemandParserAbs
 
         val expected = """
          S { E|1 { I {
-              E { var { "[a-z]+" : 'v' } }
+              E { var { 'v' } }
               I1 {
                 I2 {
                   op { '/' }
-                  E { var { "[a-z]+" : 'v' } }
+                  E { var {  'v' } }
                 }
                 I2 {
                   op|1 { '*' }
-                  E { var { "[a-z]+" : 'v' } }
+                  E { var {  'v' } }
                 }
                 I2 {
                   op|2 { '+' }
-                  E { var { "[a-z]+" : 'v' } }
+                  E { var { 'v' } }
                 }
                 I2 {
                   op|3 { '-' }
-                  E { var { "[a-z]+" : 'v' } }
+                  E { var { 'v' } }
                 }
               }
             } } }

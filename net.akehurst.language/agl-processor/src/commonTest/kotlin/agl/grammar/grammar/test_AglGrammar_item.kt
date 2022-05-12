@@ -485,7 +485,7 @@ class test_AglGrammar_item {
     }
 
     @Test
-    fun priorityChoice__nonTerminala_a_b_c() {
+    fun priorityChoice__nonTerminals_a_b_c() {
         val (actual,issues) = parse("priorityChoice", "a < b < c")
         val expected = this.sppt(
             """
