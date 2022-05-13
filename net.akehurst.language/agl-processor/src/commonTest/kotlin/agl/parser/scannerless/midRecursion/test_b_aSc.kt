@@ -48,12 +48,12 @@ internal class test_b_aSc : test_ScanOnDemandParserAbstract() {
          S { 'b' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -66,12 +66,12 @@ internal class test_b_aSc : test_ScanOnDemandParserAbstract() {
          S|1 { S1 { { 'a' S { 'b' } 'c' } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -84,12 +84,12 @@ internal class test_b_aSc : test_ScanOnDemandParserAbstract() {
          S|1 { S1 { 'a' S|1 { S1 { 'a' S { 'b' } 'c' } } 'c' } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 

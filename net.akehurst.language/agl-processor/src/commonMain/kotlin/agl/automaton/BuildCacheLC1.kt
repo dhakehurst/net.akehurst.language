@@ -942,12 +942,12 @@ internal class BuildCacheLC1(
                 HeightGraftInfo(action, parent, parentNext, lhs)
             }
         val infoNotAtEnd = info.filter { it.parentNext.first().isAtEnd.not() }
-        val infoToMerge = infoNotAtEnd.groupBy { Pair(it.action, it.lhs) }
+        val infoToMerge = infoNotAtEnd.groupBy { Triple(it.action, it.lhs,it.parentNext) }
         val mergedInfo = infoToMerge.map { me ->
             val action = me.key.first
             val lhs = me.key.second
             val parent = me.value.flatMap { it.parent }.toSet().toList()
-            val parentNext = me.value.flatMap { it.parentNext }.toSet().toList()
+            val parentNext = me.key.third //me.value.flatMap { it.parentNext }.toSet().toList()
             //val upLhs = me.value.flatMap { it.upLhs }.toSet().fold(setOf<LookaheadSetPart>()) { acc, e -> if (acc.any { it.containsAll(e) }) acc else acc + e }
             HeightGraftInfo(action, parent, parentNext, lhs)
         }.toSet()
