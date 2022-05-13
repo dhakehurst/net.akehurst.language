@@ -49,12 +49,14 @@ internal class ScanOnDemandParser(
     }
 
     override fun parseForGoal(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): Pair<SharedPackedParseTree?, List<LanguageIssue>> {
+        //FIXME: currently only works  if build is called
+        //this.runtimeRuleSet.buildFor(goalRuleName,automatonKind)
+
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, inputText)
         val s0 = runtimeRuleSet.fetchStateSetFor(goalRule, automatonKind).startState
         val skipStateSet = runtimeRuleSet.skipParserStateSet
         val rp = RuntimeParser(s0.stateSet, skipStateSet, goalRule, input)
-        if (s0.stateSet.preBuilt) rp.buildSkipParser()
         this.runtimeParser = rp
 
         rp.start(0, setOf(LookaheadSet.EOT))

@@ -102,6 +102,8 @@ internal class AglGrammarSemanticAnalyser(
         val rrs = conv.runtimeRuleSet
         //TODO: pass in goalRuleName
         val goalRuleName = grammar.rule.first { it.isSkip.not() }.name
+        //TODO: optionally do this...as it builds the automaton..we don't always want to build it!
+        // and if built want to  reuse the build
         val automaton = rrs.automatonFor(goalRuleName, automatonKind)
 
         automaton.allBuiltStates.forEach { state ->

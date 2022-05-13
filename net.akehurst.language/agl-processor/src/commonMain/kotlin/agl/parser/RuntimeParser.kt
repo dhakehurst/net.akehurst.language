@@ -64,7 +64,10 @@ internal class RuntimeParser(
     private val _skip_cache = mutableMapOf<Pair<Int, Set<LookaheadSet>>, TreeData?>()
 
     // must use a different instance of Input, so it can be reset, reset clears cached leaves. //TODO: check this
-    private val skipParser = skipStateSet?.let { RuntimeParser(it, null, skipStateSet.userGoalRule, InputFromString(skipStateSet.usedTerminalRules.size, this.input.text)) }
+    private val skipParser = skipStateSet?.let {
+        if (this.stateSet.preBuilt) this.skipStateSet.build()
+        RuntimeParser(it, null, skipStateSet.userGoalRule, InputFromString(skipStateSet.usedTerminalRules.size, this.input.text))
+    }
 
 
     fun reset() {

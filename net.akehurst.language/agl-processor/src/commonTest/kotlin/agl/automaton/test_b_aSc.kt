@@ -72,8 +72,8 @@ internal class test_b_aSc : test_AutomatonAbstract() {
     fun closures() {
         val ffc = FirstFollowCache(SM)
 
-        val actual = ffc.calcClosures(FirstFollowCache.Companion.ClosureItemRoot(RP(G, 0, SOR), RP(S1, 0, 2), emptyList()))
-        val expected = listOf(
+        val actual = ffc.calcAllClosures(FirstFollowCache.Companion.ClosureItemRoot(RP(G, 0, SOR), RP(S1, 0, 2), emptyList()))
+        val expected = setOf(
             FirstFollowCache.Companion.ClosureItemRoot(RP(G, 0, SOR), RP(G, 0, SOR), emptyList())
         )
 

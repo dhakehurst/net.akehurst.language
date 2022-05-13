@@ -19,6 +19,7 @@ package net.akehurst.language.agl.automaton
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.collections.*
 
@@ -374,7 +375,8 @@ internal class ParserStateSet(
 
         for (si in stateInfos) {
             if (si.rulePositions != this.startState.rulePositions) {
-                val state = this.createState(si.rulePositions)
+                if(Debug.CHECK)  check(this.states.contains(si.rulePositions).not()) { "State already created for $si.rulePositions" }
+                val state = this.fetchCompatibleOrCreateState(si.rulePositions)
             }
         }
         for (si in stateInfos) {
@@ -484,5 +486,5 @@ internal class ParserStateSet(
         else -> false
     }
 
-    override fun toString(): String = "ParserStateSet{$number}"
+    override fun toString(): String = "ParserStateSet{$number (${this.userGoalRule.tag}) }"
 }

@@ -38,8 +38,9 @@ class test_VistraqQuery_Singles {
         var processor: LanguageProcessor = tgqlprocessor()
 
         fun tgqlprocessor(): LanguageProcessor {
+            Agl.registry.agl.grammar.processor?.buildForDefaultGoal()
             //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
-            return Agl.processorFromString(grammarStr)//.buildFor("query") //TODO: use build
+            return Agl.processorFromString(grammarStr).buildFor("query") //TODO: use build
         }
 
     }

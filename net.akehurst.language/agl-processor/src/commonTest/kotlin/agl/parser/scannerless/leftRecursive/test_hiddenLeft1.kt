@@ -74,7 +74,7 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2,
                 expectedTrees = arrayOf(expected)
         )
     }

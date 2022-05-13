@@ -70,6 +70,8 @@ internal class LanguageProcessorDefault(
         //TODO: interrupt processor
     }
 
+    override fun buildForDefaultGoal(): LanguageProcessor = this.buildFor(this.defaultGoalRuleName)
+
     override fun buildFor(goalRuleName: String, automatonKind: AutomatonKind): LanguageProcessor {
         this.parser.buildFor(goalRuleName, automatonKind)
         return this

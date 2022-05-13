@@ -53,6 +53,14 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
     internal companion object {
         enum class ReferenceFunc { FIRST_TERM, FIRST_OF }
 
+        /**
+         * Identified by :
+         *  - parent.rulePosition, used for HEIGHT/GRAFT decision
+         *  - prev, used for prev guard for transition
+         *  - rulePosition, used for state id
+         *  - followAtEnd, used for lookahead guard
+         *  - parentFollowAtEnd, used for lookahead up
+         */
         interface ClosureItem {
             val parent: ClosureItem
             val prev: RulePosition
@@ -66,13 +74,25 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
              * i.e. growing up from current rp until an rp NOT atEnd
              */
             val nextNotAtEnd: List<NextNotAtEnd>
+
+            val _id :Array<*>
+
         }
 
-        data class ClosureItemRoot(
+        abstract class ClosureItemAbstract() : ClosureItem {
+            override fun hashCode(): Int = this._id.contentDeepHashCode()
+            override fun equals(other: Any?): Boolean = when(other) {
+                !is ClosureItem -> false
+                else -> this._id.contentDeepEquals(other._id)
+            }
+            override fun toString(): String = "$prev<--$rulePosition"
+        }
+
+        class ClosureItemRoot(
             override val prev: RulePosition,
             override val rulePosition: RulePosition,
             override val parentNextNotAtEnd: List<NextNotAtEnd>,
-        ) : ClosureItem {
+        ) : ClosureItemAbstract() {
             override val parent: ClosureItem get() = error("ClosureItemRoot has no parent")
             override val prevPrev: RulePosition get() = error("ClosureItemRoot has no prevPrev")
             override val nextNotAtEnd: List<NextNotAtEnd>
@@ -86,13 +106,13 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                     }
                 }
 
-            override fun toString(): String = "$prev<--$rulePosition"
+            override val _id = arrayOf(prev, null, this.rulePosition, this.nextNotAtEnd, this.parentNextNotAtEnd)
         }
 
-        data class ClosureItemChild(
+        class ClosureItemChild(
             override val parent: ClosureItem,
             override val rulePosition: RulePosition
-        ) : ClosureItem {
+        ) : ClosureItemAbstract() {
             override val prev: RulePosition = when {
                 parent.rulePosition.isAtStart -> parent.prev
                 else -> parent.rulePosition
@@ -119,7 +139,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
             }
             override val parentNextNotAtEnd get() = parent.nextNotAtEnd
 
-            override fun toString(): String = "$parent-->$rulePosition"
+            override val _id = arrayOf(prev, this.parent.rulePosition, this.rulePosition, this.nextNotAtEnd, this.parentNextNotAtEnd)
         }
     }
 
@@ -286,7 +306,8 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
 
     private fun calcFirstTermClosure(closureStart: ClosureItem, calcFollow: Boolean): Boolean {
         if (Debug.OUTPUT) debug(Debug.IndentDelta.INC_AFTER) { "START calcFirstTermClosure: $closureStart, $calcFollow" }
-        val done = mutableSetOf<Triple<RulePosition, RulePosition, List<NextNotAtEnd>>>()
+        // Closures identified by (parent.rulePosition, prev, rulePosition, followAtEnd, parentFollowAtEnd)
+        val done = mutableSetOf<ClosureItem>()
         val todoList = mutableStackOf<ClosureItem>()
         todoList.push(closureStart)
         var needsNext = false
@@ -311,9 +332,9 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                     val childRulePositions = cls.rulePosition.item!!.rulePositionsAt[0]
                     for (childRp in childRulePositions) {
                         val childCls = ClosureItemChild(cls, childRp)
-                        val d = Triple(childCls.prev, childCls.rulePosition, childCls.parent.nextNotAtEnd)
-                        if (done.contains(d).not()) {
-                            done.add(d)
+                        //val d = Triple(childCls.prev, childCls.rulePosition, childCls.parent.nextNotAtEnd)
+                        if (done.contains(childCls).not()) {
+                            done.add(childCls)
                             todoList.push(childCls)
                         } else {
                             // already done
@@ -327,10 +348,9 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
     }
 
     //internal so can be tested
-    internal fun calcClosures(closureStart: ClosureItem): List<ClosureItem> {
+    internal fun calcAllClosures(closureStart: ClosureItem): Set<ClosureItem> {
         if (Debug.OUTPUT) debug(Debug.IndentDelta.INC_AFTER) { "START calcClosures: $closureStart" }
-        val completeClosures = mutableListOf<ClosureItem>()
-        val done = mutableSetOf<Triple<RulePosition, RulePosition, List<NextNotAtEnd>>>()
+        val completeClosures = mutableSetOf<ClosureItem>()
         val todoList = mutableStackOf<ClosureItem>()
         todoList.push(closureStart)
         while (todoList.isNotEmpty) {
@@ -346,8 +366,8 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                     for (childRp in childRulePositions) {
                         val childCls = ClosureItemChild(cls, childRp)
                         val d = Triple(childCls.prev, childCls.rulePosition, childCls.parent.nextNotAtEnd)
-                        if (done.contains(d).not()) {
-                            done.add(d)
+                        if (completeClosures.contains(childCls).not()) {
+                            completeClosures.add(childCls)
                             todoList.push(childCls)
                         } else {
                             // already done

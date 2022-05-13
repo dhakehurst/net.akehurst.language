@@ -45,7 +45,7 @@ class test_Java8_Singles_aglOptm {
     }
 
     @Test
-    fun literal() {
+    fun Literal__0() {
         val sentence = "0"
         val goal = "Literal"
 
@@ -70,7 +70,7 @@ class test_Java8_Singles_aglOptm {
     }
 
     @Test
-    fun Expressions_Type__int() {
+    fun UType__int() {
         val grammarStr = """
             namespace test
 
@@ -100,7 +100,7 @@ class test_Java8_Singles_aglOptm {
     }
 
     @Test
-    fun t1() {
+    fun CompilationUnit__import_annotation_interface() {
         //val sentence = "import x; @An() interface An {  }"
         val sentence = "import x; @An() interface An {  }"
         val goal = "CompilationUnit"
@@ -112,7 +112,7 @@ class test_Java8_Singles_aglOptm {
     }
 
     @Test
-    fun Java8_arrayIndex_Expression() {
+    fun Expression_arrayIndex() {
         val sentence = "a[0]"
         val goal = "Expression"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -122,7 +122,7 @@ class test_Java8_Singles_aglOptm {
     }
 
     @Test
-    fun Java8_arrayIndex_ArrayAccess() {
+    fun ArrayAccess__arrayIndex() {
         val sentence = "a[0]"
         val goal = "ArrayAccess"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -132,7 +132,7 @@ class test_Java8_Singles_aglOptm {
     }
 
     @Test
-    fun subgrammar_arrayIndex_ArrayAccess() {
+    fun subgrammar__ArrayAccess__arrayIndex() {
         val grammarStr = """
             namespace test
 
@@ -176,7 +176,7 @@ grammar Expressions {
     }
 
     @Test
-    fun t() {
+    fun Expression__arrayIndex_navigationToField() {
         val sentence = "a[0].b"
         val goal = "Expression"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -186,7 +186,7 @@ grammar Expressions {
     }
 
     @Test
-    fun FieldDeclaration() {
+    fun FieldDeclaration__int_valid_eq_0b0() {
         val sentence = "int valid = 0b0;"
         val goal = "FieldDeclaration"
         //proc.parse(goal, sentence)
@@ -196,7 +196,7 @@ grammar Expressions {
     }
 
     @Test
-    fun TypeDeclaration_FieldDeclaration() {
+    fun TypeDeclaration__class_fieldDeclaration() {
         val sentence = "class A { int valid = 0b0; }"
         val goal = "TypeDeclaration"
         val (sppt,issues) = proc.buildFor(goal).parse(sentence,goal)
@@ -205,7 +205,7 @@ grammar Expressions {
     }
 
     @Test
-    fun ClassBody_FieldDeclaration() {
+    fun ClassBody__fieldDeclaration() {
         val sentence = "{ int valid = 0b0; }"
         val goal = "ClassBody"
         val (sppt,issues) = proc.buildFor(goal).parse(sentence,goal)
@@ -214,7 +214,7 @@ grammar Expressions {
     }
 
     @Test
-    fun CompilationUnit_FieldDeclaration() {
+    fun CompilationUnit__fieldDeclaration() {
         val sentence = "class A { int valid = 0b0; }"
         val goal = "CompilationUnit"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -223,7 +223,7 @@ grammar Expressions {
     }
 
     @Test
-    fun bad_Binary_Literal() {
+    fun VariableInitializer__badBinaryLiteral() {
         val sentence = "0b012"
         val goal = "VariableInitializer"
 
@@ -239,7 +239,7 @@ grammar Expressions {
     }
 
     @Test
-    fun BadLiterals() {
+    fun CompilationUnit__badLiterals() {
         val sentence = """
 /*
  * @test /nodynamiccopyright/
@@ -268,7 +268,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    fun UnannQualifiedTypeReference1() {
+    fun BlockStatement__UnannQualifiedTypeReference1() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "BlockStatement"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -277,7 +277,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    fun UnannQualifiedTypeReference2() {
+    fun BlockStatement__UnannQualifiedTypeReference2() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "BlockStatement"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -286,7 +286,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    fun UnannQualifiedTypeReference() {
+    fun Block__UnannQualifiedTypeReference() {
         val sentence = "{ Map.@An Entry<Object,Object> x; }"
         val goal = "Block"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -295,7 +295,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    fun Enum() {
+    fun ClassDeclaration__enumDecl() {
         val sentence = "enum E { A, B, C }"
         val goal = "ClassDeclaration"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -307,7 +307,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    fun xx() {
+    fun CompilationUnit__interfaceDecl() {
         val sentence = "interface An { An[] value(); }"
         val goal = "CompilationUnit"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -319,7 +319,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    fun class_with_constructor() {
+    fun CompilationUnit__class_with_constructor() {
         val sentence = "class B {  B() {  } }"
         val goal = "CompilationUnit"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -331,7 +331,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    fun FormalParameterList_FormalParameter() {
+    fun FormalParameterList__A_a() {
         val sentence = "A a"
         val goal = "FormalParameterList"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -342,7 +342,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    fun FormalParameterList_ReceiverParameter() {
+    fun FormalParameterList__A_this() {
         val sentence = "A this"
         val goal = "FormalParameterList"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -353,7 +353,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    fun FormalParameterList_VarargsParameter() {
+    fun FormalParameterList__varargsParameter() {
         val sentence = "A... this"
         val goal = "FormalParameterList"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -364,7 +364,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    fun FormalParameterList_2() {
+    fun FormalParameterList__2parameters() {
         val sentence = "A a, B b"
         val goal = "FormalParameterList"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -375,7 +375,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    fun FormalParameterList_3() {
+    fun FormalParameterList__3parameters() {
         val sentence = "A a, B b, C c"
         val goal = "FormalParameterList"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -387,7 +387,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    fun ConstructorDeclaration() {
+    fun ConstructorDeclaration__head_body() {
         val sentence = "B() {  }"
         val goal = "ConstructorDeclaration"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -399,7 +399,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    fun ConstructorDeclarator() {
+    fun ConstructorDeclarator__head() {
         val sentence = "B()"
         val goal = "ConstructorDeclarator"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -411,7 +411,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    fun ConstructorBody() {
+    fun ConstructorBody__body() {
         val sentence = "{  }"
         val goal = "ConstructorBody"
         val (sppt,issues) = proc.parse(sentence,goal)
@@ -423,7 +423,7 @@ public class BadBinaryLiterals {
     }
 
     @Test//(timeout = 10000)
-    fun long_concatenation() {
+    fun Block__long_concatenation() {
 
         val sentence = """
           {
@@ -478,7 +478,7 @@ public class BadBinaryLiterals {
     }
 
     @Test
-    fun fromStdLib_CharBufferSpliterator() {
+    fun CompilationUnit__fromStdLib_CharBufferSpliterator() {
 
         val sentence = """
 /*
@@ -589,7 +589,7 @@ class CharBufferSpliterator implements Spliterator.OfInt {
     }
 
     @Test
-    fun fromStdLib_CharBufferSpliterator_1() {
+    fun Navigations__fromStdLib_CharBufferSpliterator_1() {
 
         val sentence = """
             action.accept(cb.getUnchecked(i++))
@@ -605,7 +605,7 @@ class CharBufferSpliterator implements Spliterator.OfInt {
     }
 
     @Test
-    fun fromStdLib_CharBufferSpliterator_2() {
+    fun MethodInvocation__fromStdLib_CharBufferSpliterator_2() {
 
         val sentence = """
             accept(cb.getUnchecked(i++))
@@ -621,7 +621,7 @@ class CharBufferSpliterator implements Spliterator.OfInt {
     }
 
     @Test
-    fun fromStdLib_CharBufferSpliterator_3() {
+    fun Navigations__fromStdLib_CharBufferSpliterator_3() {
 
         val sentence = """
             cb.getUnchecked(i++)
@@ -635,8 +635,9 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         val resultStr = SPPT2InputText().visitTree(sppt, "")
         assertEquals(sentence, resultStr)
     }
+
     @Test
-    fun fromStdLib_CharBufferSpliterator_3b() {
+    fun Navigations__fromStdLib_CharBufferSpliterator_3b() {
 
         val sentence = """
             cb.getUnchecked(i)
@@ -652,7 +653,7 @@ class CharBufferSpliterator implements Spliterator.OfInt {
     }
 
     @Test
-    fun fromStdLib_CharBufferSpliterator_4() {
+    fun NavigableExpression__fromStdLib_CharBufferSpliterator_4() {
 
         val sentence = """
             getUnchecked(i++)
@@ -668,7 +669,7 @@ class CharBufferSpliterator implements Spliterator.OfInt {
     }
 
     @Test
-    fun fromStdLib_CharBufferSpliterator_4b() {
+    fun NavigableExpression__fromStdLib_CharBufferSpliterator_4b() {
 
         val sentence = """
             getUnchecked(i)
@@ -684,7 +685,7 @@ class CharBufferSpliterator implements Spliterator.OfInt {
     }
 
     @Test
-    fun fromStdLib_CharBufferSpliterator_5() {
+    fun GenericMethodInvocation__fromStdLib_CharBufferSpliterator_5() {
 
         val sentence = """
             getUnchecked(i++)

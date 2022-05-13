@@ -22,11 +22,17 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class test_AglGrammar {
+
+    @BeforeTest
+    fun before() {
+        Agl.registry.agl.grammar.processor?.buildForDefaultGoal()
+    }
 
     @Test
     fun single_line_comment() {
@@ -919,7 +925,7 @@ class test_AglGrammar {
         assertEquals(expected5, actual5)
         assertEquals(emptyList(), issues5)
 
-        val (actual6, issues6) = p.parse("aaaaaa")
+        val (actual6, issues6) = p.parse("a,a,a,a,a,a")
         assertEquals(null, actual6)
         assertEquals(emptyList(), issues6)
     }
@@ -1183,20 +1189,4 @@ class test_AglGrammar {
         val (actual, issues) = p.process<AsmSimple, Any>("aca")
     }
 
-    @Test
-    fun weird() {
-        val grammarStr = """
-            namespace com.itemis.typedgraph.query
-            grammar Query {
-                //leaf x = y ;
-                
-                skip leaf WHITE_SPACE = "\s+" ;
-                skip leaf MULTI_LINE_COMMENT = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
-                skip leaf SINGLE_LINE_COMMENT = "//[^\n\r]*" ;
-            }
-    """.trimIndent()
-
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
-    }
 }

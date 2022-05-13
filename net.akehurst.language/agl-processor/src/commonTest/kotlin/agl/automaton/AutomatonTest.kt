@@ -78,7 +78,7 @@ internal object AutomatonTest {
     }
 
     fun assertEquals(expTrans:Transition, expected:Set<Lookahead>, actual: Set<Lookahead>) {
-        kotlin.test.assertEquals(expected.size, actual.size,"Lookahead does not match for ${expTrans}")
+        kotlin.test.assertEquals(expected.size, actual.size,"Lookahead size does not match for \nExpected: ${expTrans}\nActual:$actual")
         val expSorted = expected.sortedBy { it.guard.fullContent.map { it.tag }.joinToString() }
         val actSorted = actual.sortedBy { it.guard.fullContent.map { it.tag }.joinToString() }
         for(i in expSorted.indices) {

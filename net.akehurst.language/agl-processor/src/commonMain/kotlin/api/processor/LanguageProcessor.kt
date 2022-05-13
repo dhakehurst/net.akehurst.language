@@ -52,6 +52,8 @@ interface LanguageProcessor {
      */
     fun interrupt(message: String)
 
+    fun buildForDefaultGoal(): LanguageProcessor
+
     /**
      * build the parser before use. Optional, but will speed up the first use of the parser.
      */

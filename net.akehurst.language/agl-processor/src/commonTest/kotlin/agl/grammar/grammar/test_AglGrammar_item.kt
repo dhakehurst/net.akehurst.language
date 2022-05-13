@@ -1028,7 +1028,7 @@ class test_AglGrammar_item {
               rules { rule {
                 ruleTypeLabels {
                   isOverride { §empty }
-                  isSkip { §empty }
+                  isSkip { 'skip' WHITESPACE : ' ' }
                   isLeaf { §empty }
                 }
                 IDENTIFIER : 's' WHITESPACE : ' '
