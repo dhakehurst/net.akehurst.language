@@ -23,10 +23,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_literal_a1n : test_ScanOnDemandParserAbstract() {
+internal class test_literal_a1n : test_ScanOnDemandParserAbstract(true) {
 
-    // S = [a / ',']+
-    // a = 'a'
+    // S = ['a' / ',']+
 
     private companion object {
         val rrs = runtimeRuleSet {
@@ -116,6 +115,7 @@ internal class test_literal_a1n : test_ScanOnDemandParserAbstract() {
         val sentence = "a,a,"
 
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        println(rrs.usedAutomatonToString(goal))
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(4,5,1,1),"a,a,^",setOf("'a'"))

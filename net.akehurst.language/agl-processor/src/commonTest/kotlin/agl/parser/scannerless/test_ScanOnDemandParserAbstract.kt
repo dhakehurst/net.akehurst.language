@@ -25,28 +25,39 @@ import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.parser.scanondemand.leftRecursive.test_hiddenLeft1
 import test.assertEqualsWarning
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean = false) {
-
-    fun test(rrs: RuntimeRuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int, vararg expectedTrees: String): SharedPackedParseTree? {
+    fun test(rrs: RuntimeRuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int,vararg expectedTrees: String): SharedPackedParseTree? {
+        return this.test(
+            rrs,
+            goal,
+            sentence,
+            expectedNumGSSHeads,
+            false,
+            *expectedTrees
+        )
+    }
+    fun test(rrs: RuntimeRuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int, printAutomaton:Boolean, vararg expectedTrees: String): SharedPackedParseTree? {
         return this.test2(
             rrs,
             emptyMap(),
             goal,
             sentence,
             expectedNumGSSHeads,
+            printAutomaton,
             *expectedTrees
         )
     }
 
-    fun test2(rrs: RuntimeRuleSet, embeddedRuntimeRuleSets:Map<String,RuntimeRuleSet>, goal: String, sentence: String, expectedNumGSSHeads: Int, vararg expectedTrees: String): SharedPackedParseTree? {
+    fun test2(rrs: RuntimeRuleSet, embeddedRuntimeRuleSets:Map<String,RuntimeRuleSet>, goal: String, sentence: String, expectedNumGSSHeads: Int, printAutomaton:Boolean=false, vararg expectedTrees: String): SharedPackedParseTree? {
         val parser = ScanOnDemandParser(rrs)
         if(build)parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
         val (actual, issues) = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
-
+        if(printAutomaton) println(rrs.usedAutomatonToString(goal))
         assertNotNull(actual, issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(emptyList(), issues)
         val sppt = SPPTParserDefault(rrs, embeddedRuntimeRuleSets)

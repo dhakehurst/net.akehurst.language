@@ -193,16 +193,22 @@ class BinaryHeapComparable<K, V>(
     // elementKey  - of the element to sort (saves fetching it)
     // return new index of element
     private fun upHeap(index: Int, elementKey: K): Int {
-        var elementIndex = index
-        var parentIndex = parentIndexOf(elementIndex)
-        var parentKey = this._elements[parentIndex].key
-        while (0 > this.comparator.compare(parentKey, elementKey)) {
-            swap(parentIndex, elementIndex)
-            elementIndex = parentIndex
-            parentIndex = parentIndexOf(elementIndex)
-            parentKey = this._elements[parentIndex].key
+        //TODO: no need to compare with self
+        return when {
+            1 == this.size -> index
+            else -> {
+                var elementIndex = index
+                var parentIndex = parentIndexOf(elementIndex)
+                var parentKey = this._elements[parentIndex].key
+                while (parentKey!=elementKey && 0 > this.comparator.compare(parentKey, elementKey)) {
+                    swap(parentIndex, elementIndex)
+                    elementIndex = parentIndex
+                    parentIndex = parentIndexOf(elementIndex)
+                    parentKey = this._elements[parentIndex].key
+                }
+                elementIndex
+            }
         }
-        return elementIndex
     }
 
     // index - of the element to sort
@@ -243,7 +249,7 @@ class BinaryHeapComparable<K, V>(
     }
 
 
-    override fun toString(): String = when(this.size) {
+    override fun toString(): String = when (this.size) {
         0 -> "{}"
         else -> this._elements.joinToString(separator = "\n") { it.toString() }
     }

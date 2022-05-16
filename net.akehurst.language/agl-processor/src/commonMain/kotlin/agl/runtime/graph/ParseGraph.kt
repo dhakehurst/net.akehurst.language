@@ -91,13 +91,25 @@ internal class ParseGraph(
                         }
                         parent.state.isChoice -> -1 // do non choice child first
                         child.state.isChoice -> 1   // do non choice parent first
+                        else -> {
+                            0
+                        }
+                    }
+                    else -> when {
+                        // startPosition higher number first
+                        parent.startPosition < child.startPosition -> -1
+                        parent.startPosition > child.startPosition -> 1
                         else -> 0
                     }
-                    else -> 0 //TODO: how to order if not same choice point? - ideally 'lower' in the tree choice first
                 }
                 parent.state.isAtEnd -> -1 // shift child first
                 child.state.isAtEnd -> 1 // shift parent first
-                else -> 0
+                else -> when {
+                    // startPosition higher number first
+                    parent.startPosition < child.startPosition -> -1
+                    parent.startPosition > child.startPosition -> 1
+                    else -> 0
+                }
             }
         }
     }

@@ -38,6 +38,7 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         val B = runtimeRuleSet {
             concatenation("B") { literal("b") }
         }
+
         // S = a gB a ;
         // gB = grammar B.B ;
         val S = runtimeRuleSet {
@@ -53,9 +54,11 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
         val (sppt, issues) = super.testFail(Sn, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^d", setOf("'b'"))
-        ),issues)
+        assertEquals(
+            listOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^d", setOf("'b'"))
+            ), issues
+        )
     }
 
     @Test
@@ -71,11 +74,11 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = Sn,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = Sn,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -85,9 +88,11 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
         val (sppt, issues) = super.testFail(S, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-        ),issues)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), issues
+        )
     }
 
     @Test
@@ -96,9 +101,11 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
         val (sppt, issues) = super.testFail(S, Companion.goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^d",setOf("'a'"))
-        ),issues)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^d", setOf("'a'"))
+            ), issues
+        )
     }
 
     @Test
@@ -107,9 +114,11 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
         val (sppt, issues) = super.testFail(S, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"a^",setOf("'b'"))
-        ),issues)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'"))
+            ), issues
+        )
     }
 
     @Test
@@ -118,9 +127,11 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
         val (sppt, issues) = super.testFail(S, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(2,3,1,1),"ab^",setOf("'a'"))
-        ),issues)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'a'"))
+            ), issues
+        )
     }
 
     @Test
@@ -138,14 +149,15 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test2(
-                rrs = S,
+            rrs = S,
             embeddedRuntimeRuleSets = mapOf(
                 "B" to B
             ),
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            printAutomaton = true,
+            expectedTrees = arrayOf(expected)
         )
     }
 }

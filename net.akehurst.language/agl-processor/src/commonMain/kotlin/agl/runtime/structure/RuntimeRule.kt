@@ -112,7 +112,7 @@ internal class RuntimeRule(
         }
     }
 
-    val asTerminalRulePosition = RulePosition(this, 0, RulePosition.END_OF_RULE)
+    val asTerminalRulePosition by lazy{ RulePosition(this, 0, RulePosition.END_OF_RULE) }
 
     val rulePositions: Set<RulePosition> //TODO: make constants where possible for these sets
         get() {

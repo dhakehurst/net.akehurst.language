@@ -25,6 +25,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
+import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.processor.LanguageIssue
@@ -65,6 +66,7 @@ internal class ScanOnDemandParser(
         var totalWork = maxNumHeads
 
         while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
+            if (Debug.OUTPUT_GRAPH_TRACE) println("$seasons ===================================")
             val steps = rp.grow3(false)
             seasons += steps
             maxNumHeads = max(maxNumHeads, rp.graph.numberOfHeads)

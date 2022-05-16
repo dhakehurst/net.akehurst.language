@@ -187,7 +187,7 @@ internal class  test_a : test_ScanOnDemandParserAbstract() {
         )
     }
 
-    @Test
+    //@Test
     fun a2000() {
         val sentence = "a".repeat(2000)
 

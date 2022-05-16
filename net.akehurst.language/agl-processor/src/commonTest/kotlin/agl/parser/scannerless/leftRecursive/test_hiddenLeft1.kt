@@ -57,7 +57,7 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0,1,1,1),"^",setOf("'b'","'a'"))
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'b'", "'a'"))
             ), issues
         )
     }
@@ -71,11 +71,11 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 2,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -92,11 +92,11 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 2,//TODO can we make this 1 by merging states?
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,//TODO can we make this 1 by merging states?
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -113,11 +113,11 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -138,11 +138,13 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
+            printAutomaton = true,
+            expectedTrees = arrayOf(expected)
         )
+
     }
 }

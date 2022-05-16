@@ -417,7 +417,7 @@ internal class BuildCacheLC1(
         class L1State(
             var parent: L1State?,
             val rulePosition: RulePosition, // position in rule (no need for position 0)
-            val followAtEnd: LookaheadSetPart, // terminals expected at the end of the rule (same for all RPs for this rule)
+            val followAtEnd: Set<LookaheadSetPart>, // terminals expected at the end of the rule (same for all RPs for this rule)
         ) {
             val prev: RulePosition = when {
                     null == parent -> rulePosition // RP(G,0,0)
@@ -445,17 +445,17 @@ internal class BuildCacheLC1(
                     }.toSet()
                 }
 
-            val parentFollowAtEnd = this.parent?.followAtEnd ?: LookaheadSetPart.EMPTY //parent is null for G
+            val parentFollowAtEnd = this.parent?.followAtEnd ?: setOf(LookaheadSetPart.EMPTY) //parent is null for G
             val follow = when {
                 rulePosition.isAtEnd -> followAtEnd
-                rulePosition.isGoal -> LookaheadSetPart.UP
-                else -> rulePosition.next().map { nx ->
+                rulePosition.isGoal -> setOf(LookaheadSetPart.UP)
+                else -> rulePosition.next().flatMap { nx ->
                     when {
                         nx.isAtEnd -> followAtEnd
-                        nx.isGoal -> LookaheadSetPart.UP
-                        else -> firstOf(nx, followAtEnd)
+                        nx.isGoal -> setOf(LookaheadSetPart.UP)
+                        else -> followAtEnd.map{ firstOf(nx, it) }.toSet()
                     }
-                }.reduce { acc, l -> acc.union(l) }
+                }.toSet() //reduce { acc, l -> acc.union(l) }
             }
 
             fun outTransitions(parentOf: Map<Pair<RulePosition, RuntimeRule>, Set<L1State>>): Set<L1Trans> {
@@ -467,10 +467,18 @@ internal class BuildCacheLC1(
                             parent!!.rulePosition.isAtStart -> Transition.ParseAction.HEIGHT
                             else -> Transition.ParseAction.GRAFT
                         }
-                        val to = parent!!.rulePosition.next().map { t ->
-                            val grd = firstOf(t, parent!!.follow)
+                        val targets = parent!!.rulePosition.next()
+                        val to = targets.flatMap { tgt ->
+                            // grd = tgt.follow
+                            // tgt is an RP so we don't have its follow,
+                            // we can find parentOf(tgt) and follow(tgt)==follow(parentOf(tgt))
+                           // val pr = this.rulePosition
+                           // val tParent = parentOf[Pair(pr, tgt)]
+                            //val ls = tParent!!.flatMap { tp -> tp.follow }
+                            differnt targets map to diferent follow
+                            val grd = parent!!.follow.map{ firstOf(tgt, it) }.toSet()
                             val up = parentFollowAtEnd
-                            Triple(t, grd, up)
+                            grd.flatMap { g-> up.map{ u -> Triple(tgt, g, u) } }
                         }
                         to.map { p -> L1Trans(parent!!.rulePosition, action, p.first, p.second, p.third) }.toSet()
                     }
@@ -479,8 +487,10 @@ internal class BuildCacheLC1(
                         val tgts = pFirstTerm(this.rulePosition)
                         val to = tgts.flatMap { t ->
                             val pr = this.rulePosition
+                            // tgt is an RP so we don;t have its follow,
+                            // we can find parentOf(tgt) and follow(tgt)==follow(parentOf(tgt))
                             val tParent = parentOf[Pair(pr, t)]
-                            val ls = tParent!!.map { tp -> tp.follow }
+                            val ls = tParent!!.flatMap { tp -> tp.follow }
                             ls.map { Pair(t.asTerminalRulePosition, it) }
                         }
                         val up = LookaheadSetPart.EMPTY
@@ -528,9 +538,9 @@ internal class BuildCacheLC1(
         }
 
         val startRP = this.stateSet.startRulePosition
-        val startState = L1State(null, startRP, LookaheadSetPart.EMPTY)
+        val startState = L1State(null, startRP, setOf(LookaheadSetPart.EMPTY))
         val finishRP = this.stateSet.finishRulePosition
-        val finishState = L1State(null, finishRP, LookaheadSetPart.EMPTY)
+        val finishState = L1State(null, finishRP, setOf(LookaheadSetPart.EMPTY))
 
         val parentOf = lazyMutableMapNonNull<Pair<RulePosition, RuntimeRule>, MutableSet<L1State>> { mutableSetOf() }
         val l1States = mutableSetOf(startState, finishState)
@@ -566,8 +576,8 @@ internal class BuildCacheLC1(
                     val trs = state.outTransitions(parentOf)
                     if(Debug.CHECK) check(trs.isNotEmpty() || state.rulePosition.isGoal) { "No outTransitions for $state" }
                     trs.forEach { tr ->
-                        val prevStr = "{${state.prev}[${state.prevState.followAtEnd.fullContent.joinToString { it.tag }}]}"
-                        val fromStr = "${state.rulePosition}[${state.followAtEnd.fullContent.joinToString { it.tag }}]"
+                        val prevStr = "{${state.prev}[${state.prevState.followAtEnd.joinToString { it.fullContent.joinToString { it.tag }}}]}"
+                        val fromStr = "${state.rulePosition}[${state.followAtEnd.joinToString { it.fullContent.joinToString { it.tag }}}]"
                         val lh = "${tr.action}[${tr.guard.fullContent.joinToString { it.tag }}](${tr.up.fullContent.joinToString { it.tag }})"
                         println("$prevStr $fromStr -- $lh --> ${tr.to}")
                     }
@@ -786,7 +796,7 @@ internal class BuildCacheLC1(
             val follow = this.followInContext(fromState, rr).toSet()
             val lhs = LookaheadSetPart.createFromRuntimeRules(follow)
             if (Debug.CHECK) check(lhs_old.fullContent == follow) { "$lhs_old != [${follow.joinToString { it.tag }}] Follow($fromState,${rr.tag})" }
-            val rp = RulePosition(rr, 0, RulePosition.END_OF_RULE)
+            val rp = rr.asTerminalRulePosition
             WidthInfo(rp, lhs)
         }
         if (Debug.OUTPUT) Debug.debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcWidthInfo($prevState, $fromState)" }
@@ -889,9 +899,9 @@ internal class BuildCacheLC1(
 
                     val parentFirstOf = this.firstFollowCache.firstOfInContext(parentPrev, tgt)
                     val parentFollowAtEnd = this.firstFollowCache.followInContext(parentPrev, tgt.runtimeRule)
-                    val grd2 = LookaheadSetPart.createFromRuntimeRules(parentFirstOf.toSet())
+                    val grd2 = LookaheadSetPart.createFromRuntimeRules(firstOrFollow.toSet())
                     val up2 = LookaheadSetPart.createFromRuntimeRules(parentFollowAtEnd.toSet())
-                    HeightGraftInfo(action, listOf(parentRulePosition), listOf(tgt), setOf(LookaheadInfoPart(grd2, up2)))
+                    HeightGraftInfo(action, listOf(parentRulePosition), listOf(tgt), setOf(LookaheadInfoPart(grd, up)))
                 }
             }
         }.toSet()
@@ -942,12 +952,12 @@ internal class BuildCacheLC1(
                 HeightGraftInfo(action, parent, parentNext, lhs)
             }
         val infoNotAtEnd = info.filter { it.parentNext.first().isAtEnd.not() }
-        val infoToMerge = infoNotAtEnd.groupBy { Triple(it.action, it.lhs,it.parentNext) }
+        val infoToMerge = infoNotAtEnd.groupBy { Pair(it.action, it.lhs) }
         val mergedInfo = infoToMerge.map { me ->
             val action = me.key.first
             val lhs = me.key.second
             val parent = me.value.flatMap { it.parent }.toSet().toList()
-            val parentNext = me.key.third //me.value.flatMap { it.parentNext }.toSet().toList()
+            val parentNext = me.value.flatMap { it.parentNext }.toSet().toList()
             //val upLhs = me.value.flatMap { it.upLhs }.toSet().fold(setOf<LookaheadSetPart>()) { acc, e -> if (acc.any { it.containsAll(e) }) acc else acc + e }
             HeightGraftInfo(action, parent, parentNext, lhs)
         }.toSet()

@@ -385,7 +385,9 @@ internal class RuntimeRuleSet(
             st.outTransitions.allBuiltTransitions.forEach { tr ->
                 val prev = st.outTransitions.previousFor(tr)
                     .map { it?.number?.value } //transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }
-                val trStr = "${tr.from.number.value} --> ${tr.to.number.value}"
+                val frStr = "${tr.from.number.value}:${tr.from.rulePositions}"
+                val toStr = "${tr.to.number.value}:${tr.to.rulePositions}"
+                val trStr = "$frStr --> $toStr"
                 val lh = tr.lookahead.joinToString(separator = "|") { "[${it.guard.fullContent.joinToString { it.tag }}](${it.up.fullContent.joinToString { it.tag }})" }
                 val prvGrd = " [${tr.prevGuard?.joinToString()}]"
                 b.append("{${prev.joinToString()}} ")

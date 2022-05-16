@@ -4,8 +4,9 @@ fun debug(indentDelta: Debug.IndentDelta, lazyMessage:()->String) = Debug.debug(
 
 object Debug {
     enum class IndentDelta{NONE, INC_BEFORE, INC_AFTER, DEC_BEFORE, DEC_AFTER}
-    const val OUTPUT = false
+    const val OUTPUT = true
     const val CHECK = false
+    const val OUTPUT_GRAPH_TRACE = false
 
     val indentDeltaStr = "  "
     var currentIndent = ""
