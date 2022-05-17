@@ -33,8 +33,18 @@ class GraphStructuredStack<E>(previous:MutableMap<E,MutableSet<E>>, count:Mutabl
     }
 
     fun root(head: E) {
-        _previous[head] = hashSetOf()
-        _count[head] = 0
+        //_previous[head] = hashSetOf()
+        //_count[head] = 0
+
+        //TODO: should we need this? or should above be sufficient
+        val hc = this._count[head]
+        if (null == hc) {
+            _previous[head] = hashSetOf()
+            this._count[head] = 0
+        } else {
+            this._count[head] = hc + 1
+        }
+
         check() //TODO: remove
     }
 

@@ -70,7 +70,7 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
             Triple(RP(G, 0, SOR), lhs_U, LHS(T_c, T_d)),      // G = . S
             Triple(RP(G, 0, EOR), lhs_U, LHS(UP))             // G = S .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs.part)
+            val actual = SM.buildCache.expectedAt(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }

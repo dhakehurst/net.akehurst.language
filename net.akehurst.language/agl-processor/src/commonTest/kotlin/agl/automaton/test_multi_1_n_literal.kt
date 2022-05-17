@@ -58,7 +58,7 @@ internal class test_multi_1_n_literal : test_AutomatonAbstract() {
             Triple(RulePosition(S, 0, RulePosition.POSITION_MULIT_ITEM), lhs_a, LHS(a)), // S = a . a+
             Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, LHS(UP)) // S = a+ .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs.part)
+            val actual = SM.buildCache.expectedAt(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }

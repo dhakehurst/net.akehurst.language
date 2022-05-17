@@ -18,7 +18,6 @@ package net.akehurst.language.agl.automaton
 
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
-import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
@@ -69,7 +68,7 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
             Triple(RP(E, 0, EOR), LHS(UP), LHS(UP)),      // E = root .
 //TODO
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs)
+            val actual = SM.buildCache.expectedAt(rp, lhs)
             assertEquals(expected, actual, "failed $rp")
         }
     }

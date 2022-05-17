@@ -71,7 +71,7 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
             Triple(RP(ABC, 0, 2), lhs_U, LHS(c)),  // ABCY = a b . c
             Triple(RP(ABC, 0, EOR), lhs_U, LHS(UP))     // ABCY = a b c .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs.part)
+            val actual = SM.buildCache.expectedAt(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }

@@ -75,7 +75,7 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
             Triple(RP(G, 0, SOR), lhs_U, LHS(T_namespace)), // G = . grammarDefinition
             Triple(RP(G, 0, EOR), lhs_U, LHS(UP))        // G = grammarDefinition .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs.part)
+            val actual = SM.buildCache.expectedAt(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }

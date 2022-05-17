@@ -71,7 +71,7 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
             Triple(RulePosition(S1, 1, RulePosition.START_OF_RULE), lhs_U, LHS(a)), // S1 = a . S
             Triple(RulePosition(S1, 0, RulePosition.END_OF_RULE), lhs_U, LHS(UP)) // S1 = a S .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs.part)
+            val actual = SM.buildCache.expectedAt(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }

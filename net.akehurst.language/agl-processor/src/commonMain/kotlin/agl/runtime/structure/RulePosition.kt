@@ -111,7 +111,7 @@ internal class RulePosition(
                 RuntimeRuleKind.NON_TERMINAL -> when (this.runtimeRule.rhs.itemsKind) {
                     RuntimeRuleRhsItemsKind.EMPTY -> error("This should never happen!")
                     RuntimeRuleRhsItemsKind.CHOICE -> when {
-                        itemRule == this.runtimeRule.rhs.items[this.option] -> setOf(RulePosition(this.runtimeRule, this.option, END_OF_RULE))
+                        itemRule == this.runtimeRule.rhs.items[this.option] -> setOf(this.atEnd())
                         else -> emptySet() //throw ParseException("This should never happen!")
                     }
                     RuntimeRuleRhsItemsKind.CONCATENATION -> { //TODO: check itemRule?

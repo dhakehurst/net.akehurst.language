@@ -77,7 +77,7 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
             Triple(RP(S, 0, 2), LHS(UP), LHS(c_T)), // S = a b . c
             Triple(RP(S, 0, RulePosition.END_OF_RULE), LHS(UP), LHS(UP))   // S = a b c .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs)
+            val actual = SM.buildCache.expectedAt(rp, lhs)
             assertEquals(expected, actual, "failed $rp")
         }
     }

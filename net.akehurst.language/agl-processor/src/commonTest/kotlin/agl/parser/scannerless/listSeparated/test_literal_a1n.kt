@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_literal_a1n : test_ScanOnDemandParserAbstract(true) {
+internal class test_literal_a1n : test_ScanOnDemandParserAbstract() {
 
     // S = ['a' / ',']+
 

@@ -64,7 +64,7 @@ internal class test_multi_0_n_literal : test_AutomatonAbstract() {
             Triple(RP(S, 0, PMI), lhs_a, LHS(a)), // S = a . a*
             Triple(RP(S, 0, EOR), lhs_U, LHS(UP)) // S = a* .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs.part)
+            val actual = SM.buildCache.expectedAt(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }

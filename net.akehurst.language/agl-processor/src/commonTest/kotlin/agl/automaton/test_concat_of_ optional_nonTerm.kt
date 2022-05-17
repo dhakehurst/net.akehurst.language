@@ -77,7 +77,7 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
             /* G = S . */ Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, LHS(UP)),
             /* G = . S */ Triple(RulePosition(G, 0, 0), lhs_U, LHS(UP))
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs.part)
+            val actual = SM.buildCache.expectedAt(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }

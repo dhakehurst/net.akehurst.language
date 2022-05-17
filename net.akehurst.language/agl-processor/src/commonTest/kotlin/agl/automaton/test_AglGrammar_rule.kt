@@ -66,7 +66,7 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
             Triple(RP(G, 0, EOR), LHS(UP), LHS(UP))        // G = S .
 //TODO
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs)
+            val actual = SM.buildCache.expectedAt(rp, lhs)
             assertEquals(expected, actual, "failed $rp")
         }
     }

@@ -71,7 +71,7 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
             Triple(RP(S, 1, EOR), lhs_U, LHS(UP)),      // S = ABD .
 
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs.part)
+            val actual = SM.buildCache.expectedAt(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }

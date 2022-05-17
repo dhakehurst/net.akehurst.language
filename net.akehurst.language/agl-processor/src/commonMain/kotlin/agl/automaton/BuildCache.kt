@@ -27,7 +27,7 @@ internal interface BuildCache {
     fun widthInto(prevState:ParserState, fromState: ParserState): Set<WidthInfo>
     fun heightGraftInto(prevState:ParserState, fromState: ParserState) : Set<HeightGraftInfo>
 
-    fun firstOf(rulePosition: RulePosition, ifReachedEnd: LookaheadSetPart): LookaheadSetPart
+    fun expectedAt(rulePosition: RulePosition, ifReachedEnd: LookaheadSetPart): LookaheadSetPart
 
     // exposed on interface so we can test them
     fun firstTerminal(prev: ParserState, fromState: ParserState): List<RuntimeRule>

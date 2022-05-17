@@ -56,7 +56,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
             Triple(RP(S, 0, 2), lhs_U, LHS(c)), // S = a b . c
             Triple(RP(S, 0, RulePosition.END_OF_RULE), lhs_U, LHS(UP))   // S = a b c .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs.part)
+            val actual = SM.buildCache.expectedAt(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }

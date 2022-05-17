@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
-import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.processor.AutomatonKind
@@ -275,7 +274,7 @@ internal class ParserStateSet(
             rr.rulePositions.filter { rp -> rp.isAtStart.not() }
         }
         // compute RPs merged into one state - i.e. same ?
-        val allMergedStateRps = allStateRPs.groupBy { rp -> this.buildCache.firstOf(rp, LookaheadSetPart.UP) }.values //TODO: fix parameter to firstOf
+        val allMergedStateRps = allStateRPs.groupBy { rp -> this.buildCache.expectedAt(rp, LookaheadSetPart.UP) }.values //TODO: fix parameter to firstOf
         val allMergedStates = allMergedStateRps.map { rps -> this.createState(rps) }
 
         val stateInfos = this.buildCache.stateInfo()

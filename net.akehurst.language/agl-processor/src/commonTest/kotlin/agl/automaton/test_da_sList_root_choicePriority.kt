@@ -78,7 +78,7 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
             Triple(RP(E, 0, EOR), LHS(UP), LHS(UP)),      // E = root .
 //TODO
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs)
+            val actual = SM.buildCache.expectedAt(rp, lhs)
             assertEquals(expected, actual, "failed $rp")
         }
     }

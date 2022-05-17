@@ -70,7 +70,7 @@ internal class test_midRecursion : test_AutomatonAbstract() {
             Triple(RP(S1, 0, 2), lhs_U, LHS(c)),   // S1 = a S . c
             Triple(RP(S1, 0, EOR), lhs_U, LHS(UP))      // S1 = a S c .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs.part)
+            val actual = SM.buildCache.expectedAt(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }

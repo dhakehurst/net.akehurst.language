@@ -157,7 +157,7 @@ internal class ParserState(
 
 
     fun firstOf(ifReachedEnd: LookaheadSet): LookaheadSetPart = this.rulePositions.map {
-        stateSet.buildCache.firstOf(it, LookaheadSetPart(ifReachedEnd.includesUP, ifReachedEnd.includesEOT, ifReachedEnd.matchANY, ifReachedEnd.content))
+        stateSet.buildCache.expectedAt(it, LookaheadSetPart(ifReachedEnd.includesUP, ifReachedEnd.includesEOT, ifReachedEnd.matchANY, ifReachedEnd.content))
     }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
 
 

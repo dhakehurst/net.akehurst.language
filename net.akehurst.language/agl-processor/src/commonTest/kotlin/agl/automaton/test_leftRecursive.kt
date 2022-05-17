@@ -62,7 +62,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
             Triple(RP(S1, 1, SOR), lhs_U, LHS(a)), // S1 = S . a
             Triple(RP(S1, 0, EOR), lhs_U, LHS(UP)) // S1 = S a .
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs.part)
+            val actual = SM.buildCache.expectedAt(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }

@@ -87,7 +87,7 @@ internal class test_sList_compositeMulti : test_AutomatonAbstract() {
             Triple(RP(cnm, OME, SOR), lhs_U, LHS(UP)),      // cnm = E .
             Triple(RP(cn, 0, SOR), lhs_U, LHS(UP))        // cn = . ',' N
         ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.firstOf(rp, lhs.part)
+            val actual = SM.buildCache.expectedAt(rp, lhs.part)
             assertEquals(expected, actual, "failed $rp")
         }
     }
