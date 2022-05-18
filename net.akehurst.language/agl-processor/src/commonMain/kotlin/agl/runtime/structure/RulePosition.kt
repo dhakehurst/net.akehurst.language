@@ -215,7 +215,58 @@ internal class RulePosition(
             //runtimeRule.isTerminal -> if (runtimeRule.isPattern) "\"${runtimeRule.name}\"" else "'${runtimeRule.name}'"
             else -> runtimeRule.tag
         }
-        return "RP(${r},$option,$position)"
+        val o = when(runtimeRule.kind) {
+            RuntimeRuleKind.GOAL -> option
+            RuntimeRuleKind.TERMINAL -> option
+            RuntimeRuleKind.EMBEDDED -> option
+            RuntimeRuleKind.NON_TERMINAL -> when(runtimeRule.rhs.itemsKind) {
+                RuntimeRuleRhsItemsKind.EMPTY -> option
+                RuntimeRuleRhsItemsKind.CHOICE -> option
+                RuntimeRuleRhsItemsKind.CONCATENATION -> option
+                RuntimeRuleRhsItemsKind.LIST -> when(runtimeRule.rhs.listKind) {
+                    RuntimeRuleListKind.NONE -> option
+                    RuntimeRuleListKind.MULTI -> when(option) {
+                        OPTION_MULTI_EMPTY -> "ME"
+                        OPTION_MULTI_ITEM -> "MI"
+                        else -> option
+                    }
+                    RuntimeRuleListKind.SEPARATED_LIST -> when(option) {
+                        OPTION_SLIST_EMPTY -> "LE"
+                        OPTION_SLIST_ITEM_OR_SEPERATOR -> "LI"
+                        else -> option
+                    }
+                    else -> option //TODO other list types
+                }
+            }
+        }
+        val p = when(runtimeRule.kind) {
+            RuntimeRuleKind.GOAL -> position
+            RuntimeRuleKind.TERMINAL -> position
+            RuntimeRuleKind.EMBEDDED -> position
+            RuntimeRuleKind.NON_TERMINAL -> when(runtimeRule.rhs.itemsKind) {
+                RuntimeRuleRhsItemsKind.EMPTY -> position
+                RuntimeRuleRhsItemsKind.CHOICE -> position
+                RuntimeRuleRhsItemsKind.CONCATENATION -> position
+                RuntimeRuleRhsItemsKind.LIST -> when(runtimeRule.rhs.listKind) {
+                    RuntimeRuleListKind.NONE -> position
+                    RuntimeRuleListKind.MULTI -> when(position) {
+                        START_OF_RULE -> "SR"
+                        POSITION_MULIT_ITEM -> "MI"
+                        END_OF_RULE -> "ER"
+                        else -> position
+                    }
+                    RuntimeRuleListKind.SEPARATED_LIST -> when(position) {
+                        START_OF_RULE -> "SR"
+                        POSITION_SLIST_SEPARATOR -> "LS"
+                        POSITION_SLIST_ITEM -> "LI"
+                        END_OF_RULE -> "ER"
+                        else -> position
+                    }
+                    else -> position //TODO other list types
+                }
+            }
+        }
+        return "RP(${r},$o,$p)"
     }
 
 }

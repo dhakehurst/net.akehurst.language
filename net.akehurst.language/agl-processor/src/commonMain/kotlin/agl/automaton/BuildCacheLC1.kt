@@ -564,7 +564,7 @@ internal class BuildCacheLC1(
             }
         }
 
-        if (Debug.OUTPUT) {
+        if (Debug.OUTPUT_BUILD) {
             println("LR1 states")
             for (state in l1States) {
                 if (state.rulePosition.isGoal || state.rulePosition.isAtStart.not()) {
@@ -618,7 +618,7 @@ internal class BuildCacheLC1(
             }
         }
 
-        if (Debug.OUTPUT) {
+        if (Debug.OUTPUT_BUILD) {
             println("")
             println("LR0 states")
             for (s in l0States.values) {
@@ -697,7 +697,7 @@ internal class BuildCacheLC1(
         }
         val merged = mergeAtEnd + mergeNotAtEnd
 
-        if (Debug.OUTPUT) {
+        if (Debug.OUTPUT_BUILD) {
             println("")
             println("merged LR0 states")
             for (s in merged) {
@@ -781,7 +781,7 @@ internal class BuildCacheLC1(
         // if there are multiple fromState.rulePositions then they should have same firstOf or they would not be merged.
         // after a WIDTH, fromState becomes the prevState, therefore
         // the lookahead is the firstOf the parent.next of the 'to' state, in the context of the fromStateRulePositions
-        if (Debug.OUTPUT) Debug.debug(Debug.IndentDelta.INC_AFTER) { "START calcWidthInfo($prevState, $fromState) - ${fromState.rulePositions.map { it.item?.tag }}" }
+        if (Debug.OUTPUT_BUILD) Debug.debug(Debug.IndentDelta.INC_AFTER) { "START calcWidthInfo($prevState, $fromState) - ${fromState.rulePositions.map { it.item?.tag }}" }
         val firstTerminals = this.firstTerminal(prevState, fromState)
         val wis = firstTerminals.map { rr ->
             //TODO:remove old stuff
@@ -794,7 +794,7 @@ internal class BuildCacheLC1(
             val rp = rr.asTerminalRulePosition
             WidthInfo(rp, lhs)
         }
-        if (Debug.OUTPUT) Debug.debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcWidthInfo($prevState, $fromState)" }
+        if (Debug.OUTPUT_BUILD) Debug.debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcWidthInfo($prevState, $fromState)" }
         return wis.toSet()
     }
 

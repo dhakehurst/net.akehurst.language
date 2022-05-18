@@ -228,7 +228,7 @@ internal class RuntimeRule(
             }
         }
 
-    val rulePositionsAt = lazyMutableMapNonNull<Int, Set<RulePosition>> { index ->
+    val rulePositionsAt = lazyMutableMapNonNull<Int, List<RulePosition>> { index ->
         this.calcExpectedRulePositions(index)
     }
 
@@ -532,32 +532,32 @@ internal class RuntimeRule(
             }
         }
     */
-    internal fun calcExpectedRulePositions(position: Int): Set<RulePosition> {
+    internal fun calcExpectedRulePositions(position: Int): List<RulePosition> {
         return when {
-            position == RulePosition.END_OF_RULE -> emptySet()
+            position == RulePosition.END_OF_RULE -> emptyList()
             else -> when (kind) {
                 RuntimeRuleKind.GOAL -> TODO()
-                RuntimeRuleKind.TERMINAL -> emptySet() //setOf(RulePosition(this, 0, RulePosition.END_OF_RULE))
-                RuntimeRuleKind.EMBEDDED -> emptySet() //setOf(RulePosition(this, 0, RulePosition.END_OF_RULE))
+                RuntimeRuleKind.TERMINAL -> emptyList() //setOf(RulePosition(this, 0, RulePosition.END_OF_RULE))
+                RuntimeRuleKind.EMBEDDED -> emptyList() //setOf(RulePosition(this, 0, RulePosition.END_OF_RULE))
                 RuntimeRuleKind.NON_TERMINAL -> when (this.rhs.itemsKind) {
                     RuntimeRuleRhsItemsKind.EMPTY -> {
-                        emptySet()
+                        emptyList()
                     }
                     RuntimeRuleRhsItemsKind.CHOICE -> {
                         return if (position == 0) {
-                            this.rhs.items.mapIndexed { index, runtimeRule -> RulePosition(this, index, RulePosition.START_OF_RULE) }.toSet()
+                            this.rhs.items.mapIndexed { index, _ -> RulePosition(this, index, RulePosition.START_OF_RULE) }
                         } else {
-                            emptySet()
+                            emptyList()
                         }
                     }
                     RuntimeRuleRhsItemsKind.CONCATENATION -> {
                         return if (position >= this.rhs.items.size) {
-                            emptySet()
+                            emptyList()
                         } else {
                             if (position == this.rhs.items.size) {
-                                setOf(RulePosition(this, RulePosition.START_OF_RULE, RulePosition.END_OF_RULE))
+                                listOf(RulePosition(this, RulePosition.START_OF_RULE, RulePosition.END_OF_RULE))
                             } else {
-                                setOf(RulePosition(this, RulePosition.START_OF_RULE, position))
+                                listOf(RulePosition(this, RulePosition.START_OF_RULE, position))
                             }
                         }
                     }
@@ -565,35 +565,35 @@ internal class RuntimeRule(
                         RuntimeRuleListKind.NONE -> error("should not happen")
                         RuntimeRuleListKind.MULTI -> when {
                             0 == position -> when {
-                                0 == this.rhs.multiMin -> setOf(
+                                0 == this.rhs.multiMin -> listOf(
+                                    RulePosition(this, RulePosition.OPTION_MULTI_EMPTY, RulePosition.START_OF_RULE),
                                     RulePosition(this, RulePosition.OPTION_MULTI_ITEM, RulePosition.START_OF_RULE),
-                                    RulePosition(this, RulePosition.OPTION_MULTI_EMPTY, RulePosition.START_OF_RULE)
                                 )
-                                0 < this.rhs.multiMin -> setOf(
+                                0 < this.rhs.multiMin -> listOf(
                                     RulePosition(this, RulePosition.OPTION_MULTI_ITEM, RulePosition.START_OF_RULE)
                                 )
                                 else -> error("should never happen")
                             }
-                            (position < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax) -> setOf(
+                            (position < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax) -> listOf(
                                 RulePosition(this, RulePosition.OPTION_MULTI_ITEM, RulePosition.POSITION_MULIT_ITEM)
                             )
                             else -> error("should never happen")// emptySet()
                         }
                         RuntimeRuleListKind.SEPARATED_LIST -> when {
-                            (position % 2 == 1 && (((position + 1) / 2) < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax)) -> setOf(
+                            (position % 2 == 1 && (((position + 1) / 2) < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax)) -> listOf(
                                 RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR)
                             )
                             0 == position -> when {
-                                0 == this.rhs.multiMin -> setOf(
+                                0 == this.rhs.multiMin -> listOf(
+                                    RulePosition(this, RulePosition.OPTION_SLIST_EMPTY, RulePosition.START_OF_RULE),
                                     RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
-                                    RulePosition(this, RulePosition.OPTION_SLIST_EMPTY, RulePosition.START_OF_RULE)
                                 )
-                                0 < this.rhs.multiMin -> setOf(
+                                0 < this.rhs.multiMin -> listOf(
                                     RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE)
                                 )
                                 else -> error("should never happen")
                             }
-                            (position % 2 == 0 && ((position / 2) < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax)) -> setOf(
+                            (position % 2 == 0 && ((position / 2) < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax)) -> listOf(
                                 RulePosition(this, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM)
                             )
                             else -> error("should never happen")//emptySet()

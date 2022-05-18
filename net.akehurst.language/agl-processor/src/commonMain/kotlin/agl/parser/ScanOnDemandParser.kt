@@ -66,7 +66,7 @@ internal class ScanOnDemandParser(
         var totalWork = maxNumHeads
 
         while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
-            if (Debug.OUTPUT_GRAPH_TRACE) println("$seasons ===================================")
+            if (Debug.OUTPUT_RUNTIME) println("$seasons ===================================")
             val steps = rp.grow3(false)
             seasons += steps
             maxNumHeads = max(maxNumHeads, rp.graph.numberOfHeads)

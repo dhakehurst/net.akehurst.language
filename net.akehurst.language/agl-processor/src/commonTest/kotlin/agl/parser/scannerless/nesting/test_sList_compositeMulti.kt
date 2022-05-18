@@ -59,6 +59,7 @@ internal class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
+            printAutomaton = true,
                 expectedTrees = arrayOf(expected)
         )
     }

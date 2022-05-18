@@ -85,7 +85,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                 !is ClosureItem -> false
                 else -> this._id.contentDeepEquals(other._id)
             }
-            override fun toString(): String = "$prev<--$rulePosition"
+            abstract override fun toString(): String
         }
 
         class ClosureItemRoot(
@@ -107,6 +107,8 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                 }
 
             override val _id = arrayOf(prev, null, this.rulePosition, this.nextNotAtEnd, this.parentNextNotAtEnd)
+
+            override fun toString(): String = "$rulePosition[$nextNotAtEnd]"
         }
 
         class ClosureItemChild(
@@ -140,11 +142,13 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
             override val parentNextNotAtEnd get() = parent.nextNotAtEnd
 
             override val _id = arrayOf(prev, this.parent.rulePosition, this.rulePosition, this.nextNotAtEnd, this.parentNextNotAtEnd)
+
+            override fun toString(): String = "$parent<--$rulePosition[$nextNotAtEnd]"
         }
     }
 
     // prev/context -> ( RulePosition -> Boolean )
-    private val _doneFollow = lazyMutableMapNonNull<RulePosition, MutableMap<RulePosition, Boolean>> { mutableMapOf() }
+    private val _doneFollow = lazyMutableMapNonNull<RulePosition, MutableMap<Pair<RulePosition,List<NextNotAtEnd>>, Boolean>> { mutableMapOf() }
 
     // prev/context -> ( RulePosition -> Set<Terminal-RuntimeRule> )
     private val _firstTerminal = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RulePosition, MutableSet<RuntimeRule>>> { lazyMutableMapNonNull { hashSetOf() } }
@@ -153,7 +157,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
     private val _firstOfInContext = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RulePosition, MutableSet<RuntimeRule>>> { lazyMutableMapNonNull { hashSetOf() } }
 
     // prev/context -> ( RulePosition -> Boolean indicates if closure does not resolve an Empty terminal )
-    private val _needsNext = lazyMutableMapNonNull<RulePosition, MutableMap<RulePosition, Boolean>> { mutableMapOf() }
+    private val _needsNext = lazyMutableMapNonNull<RulePosition, MutableMap<Pair<RulePosition,List<NextNotAtEnd>>, Boolean>> { mutableMapOf() }
 
     // firstOfPrev -> ( firstOfRulePosition -> Set<Pair<firstTermPrev, firstTermRP>> )
     private val _firstOfInContextAsReferenceToFunc =
@@ -236,15 +240,15 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
      */
     // internal so we can use in testing
     internal fun processClosureFor(prev: RulePosition, rulePosition: RulePosition, nextNotAtEnd: List<NextNotAtEnd>, calcFollow: Boolean): Boolean {
-        val doit = when (this._doneFollow[prev][rulePosition]) {
+        val doit = when (this._doneFollow[prev][Pair(rulePosition,nextNotAtEnd)]) {
             null -> true
             false -> calcFollow == true
             true -> false
         }
         if (doit) {
-            this._doneFollow[prev][rulePosition] = calcFollow
+            this._doneFollow[prev][Pair(rulePosition,nextNotAtEnd)] = calcFollow
             val r = this.calcFirstTermClosure(ClosureItemRoot(prev, rulePosition, nextNotAtEnd), calcFollow)
-            this._needsNext[prev][rulePosition] = r
+            this._needsNext[prev][Pair(rulePosition,nextNotAtEnd)] = r
         }
         return false
     }
@@ -253,7 +257,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
      * only add firstOf if not empty
      */
     private fun addFirstTerminalAndFirstOfInContext(prev: RulePosition, rulePosition: RulePosition, terminal: RuntimeRule) {
-        if (Debug.OUTPUT) debug(Debug.IndentDelta.NONE) { "add firstTerm($prev,$rulePosition) = ${terminal.tag}" }
+        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.NONE) { "add firstTerm($prev,$rulePosition) = ${terminal.tag}" }
         if (Debug.CHECK) check(prev.isAtEnd.not())
         this._firstTerminal[prev][rulePosition].add(terminal)
         if (terminal.isEmptyRule) {
@@ -264,38 +268,38 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
     }
 
     private fun addFirstOfInContext(prev: RulePosition, rulePosition: RulePosition, terminal: RuntimeRule) {
-        if (Debug.OUTPUT) debug(Debug.IndentDelta.NONE) { "add firstOf($prev,$rulePosition) = ${terminal.tag}" }
+        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.NONE) { "add firstOf($prev,$rulePosition) = ${terminal.tag}" }
         if (Debug.CHECK) check(prev.isAtEnd.not())
         this._firstOfInContext[prev][rulePosition].add(terminal)
     }
 
     private fun addFirstOfInContextAsReferenceToFirstTerminal(tgtPrev: RulePosition, tgtRulePosition: RulePosition, srcPrev: RulePosition, srcRulePosition: RulePosition) {
-        if (Debug.OUTPUT) debug(Debug.IndentDelta.NONE) { "add firstOf($tgtPrev,$tgtRulePosition) = firstTerm($srcPrev,$srcRulePosition)" }
+        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.NONE) { "add firstOf($tgtPrev,$tgtRulePosition) = firstTerm($srcPrev,$srcRulePosition)" }
         if (Debug.CHECK) check(tgtPrev.isAtEnd.not() && srcPrev.isAtEnd.not())
         _firstOfInContextAsReferenceToFunc[tgtPrev][tgtRulePosition].add(Triple(ReferenceFunc.FIRST_TERM, srcPrev, srcRulePosition))
     }
 
     private fun addFirstOfInContextAsReferenceToFirstOf(tgtPrev: RulePosition, tgtRulePosition: RulePosition, srcPrev: RulePosition, srcRulePosition: RulePosition) {
-        if (Debug.OUTPUT) debug(Debug.IndentDelta.NONE) { "add firstOf($tgtPrev,$tgtRulePosition) = firstOf($srcPrev,$srcRulePosition)" }
+        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.NONE) { "add firstOf($tgtPrev,$tgtRulePosition) = firstOf($srcPrev,$srcRulePosition)" }
         if (Debug.CHECK) check(tgtPrev.isAtEnd.not() && srcPrev.isAtEnd.not())
         _firstOfInContextAsReferenceToFunc[tgtPrev][tgtRulePosition].add(Triple(ReferenceFunc.FIRST_OF, srcPrev, srcRulePosition))
 
     }
 
     private fun addFollowInContext(prev: RulePosition, runtimeRule: RuntimeRule, terminal: RuntimeRule) {
-        if (Debug.OUTPUT) debug(Debug.IndentDelta.NONE) { "add follow($prev,${runtimeRule.tag}) = ${terminal.tag}" }
+        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.NONE) { "add follow($prev,${runtimeRule.tag}) = ${terminal.tag}" }
         if (Debug.CHECK) check(prev.isAtEnd.not())
         this._followInContext[prev][runtimeRule].add(terminal)
     }
 
     private fun addFollowInContextAsReferenceToFirstOf(followPrev: RulePosition, followRuntimeRule: RuntimeRule, firstOfPrev: RulePosition, firstOfRulePosition: RulePosition) {
-        if (Debug.OUTPUT) debug(Debug.IndentDelta.NONE) { "add follow($followPrev,${followRuntimeRule.tag}) = firstOf($firstOfPrev,$firstOfRulePosition)" }
+        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.NONE) { "add follow($followPrev,${followRuntimeRule.tag}) = firstOf($firstOfPrev,$firstOfRulePosition)" }
         if (Debug.CHECK) check(followPrev.isAtEnd.not() && firstOfPrev.isAtEnd.not())
         _followInContextAsReferenceToFirstOf[followPrev][followRuntimeRule].add(Pair(firstOfPrev, firstOfRulePosition))
     }
 
     private fun addFollowInContextAsReferenceToFollow(followPrev: RulePosition, followRuntimeRule: RuntimeRule, refPrev: RulePosition, refRuntimeRule: RuntimeRule) {
-        if (Debug.OUTPUT) debug(Debug.IndentDelta.NONE) { "add follow($followPrev,${followRuntimeRule.tag}) = follow($refPrev,$refRuntimeRule)" }
+        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.NONE) { "add follow($followPrev,${followRuntimeRule.tag}) = follow($refPrev,$refRuntimeRule)" }
         if (Debug.CHECK) check(followPrev.isAtEnd.not() && refPrev.isAtEnd.not())
         _followInContextAsReferenceToFollow[followPrev][followRuntimeRule].add(Pair(refPrev, refRuntimeRule))
     }
@@ -305,7 +309,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
     }
 
     private fun calcFirstTermClosure(closureStart: ClosureItem, calcFollow: Boolean): Boolean {
-        if (Debug.OUTPUT) debug(Debug.IndentDelta.INC_AFTER) { "START calcFirstTermClosure: $closureStart, $calcFollow" }
+        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.INC_AFTER) { "START calcFirstTermClosure: $closureStart, $calcFollow" }
         // Closures identified by (parent.rulePosition, prev, rulePosition, followAtEnd, parentFollowAtEnd)
         val done = mutableSetOf<ClosureItem>()
         val todoList = mutableStackOf<ClosureItem>()
@@ -343,13 +347,13 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                 }
             }
         }
-        if (Debug.OUTPUT) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcFirstTermClosure: $closureStart, $calcFollow" }
+        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcFirstTermClosure: $closureStart, $calcFollow" }
         return needsNext
     }
 
     //internal so can be tested
     internal fun calcAllClosures(closureStart: ClosureItem): Set<ClosureItem> {
-        if (Debug.OUTPUT) debug(Debug.IndentDelta.INC_AFTER) { "START calcClosures: $closureStart" }
+        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.INC_AFTER) { "START calcClosures: $closureStart" }
         val completeClosures = mutableSetOf<ClosureItem>()
         val todoList = mutableStackOf<ClosureItem>()
         todoList.push(closureStart)
@@ -376,7 +380,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                 }
             }
         }
-        if (Debug.OUTPUT) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcClosures: $closureStart" }
+        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcClosures: $closureStart" }
         return completeClosures
     }
 
@@ -384,7 +388,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
      * iterate up a closure and set firstTerm,firstOf,follow as required
      */
     private fun processClosure(closureItem: ClosureItem, calcFollow: Boolean): Boolean {
-        if (Debug.OUTPUT) debug(Debug.IndentDelta.INC_AFTER) { "START processClosure: $closureItem" }
+        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.INC_AFTER) { "START processClosure: $closureItem" }
         var cls = closureItem
         val terminal = cls.rulePosition.runtimeRule
         if (Debug.CHECK) check(terminal.isTerminal)
@@ -395,7 +399,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
             childNeedsNext = this.setFirsts(cls, terminal, childNeedsNext, calcFollow)
             goUp = cls.rulePosition.isAtStart
         }
-        if (Debug.OUTPUT) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH processClosure: $closureItem" }
+        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH processClosure: $closureItem" }
         return childNeedsNext
     }
 
