@@ -108,7 +108,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
 
             override val _id = arrayOf(prev, null, this.rulePosition, this.nextNotAtEnd, this.parentNextNotAtEnd)
 
-            override fun toString(): String = "$rulePosition[$nextNotAtEnd]"
+            override fun toString(): String = "$rulePosition[${nextNotAtEnd.joinToString { it.rulePosition.toString() }}]"
         }
 
         class ClosureItemChild(
@@ -143,7 +143,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
 
             override val _id = arrayOf(prev, this.parent.rulePosition, this.rulePosition, this.nextNotAtEnd, this.parentNextNotAtEnd)
 
-            override fun toString(): String = "$parent<--$rulePosition[$nextNotAtEnd]"
+            override fun toString(): String = "$parent<--$rulePosition[${nextNotAtEnd.joinToString { it.rulePosition.toString() }}]"
         }
     }
 

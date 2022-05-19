@@ -18,6 +18,7 @@ package net.akehurst.language.parser.scanondemand.leftAndRightRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.parser.scanondemand.nesting.test_sList_compositeMulti
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
@@ -77,8 +78,7 @@ internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract
     fun vavav() {
         val sentence = "v+v+v"
 
-        //think this should be excluded because of priority I < 'a'
-        val expected1 = """
+        val expected = """
          S { E|1 { I {
               E {  'v'  }
               op|2 { '+' }
@@ -88,7 +88,14 @@ internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract
             } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1,expected1)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            printAutomaton = true,
+            expectedTrees = arrayOf(expected)
+        )
     }
 
 
