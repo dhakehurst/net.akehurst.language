@@ -85,7 +85,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
             val expected = list[4] as LookaheadSetPart
             println("($procPrev, $procRp, $followPrev, ${followRr.tag})")
             ffc.processClosureFor(procPrev, procRp, listOf(),true)
-            val actual = LHS(ffc.followInContext(followPrev, followRr).toSet())
+            val actual = LHS(ffc.followAtEndInContext(followPrev, followRr).toSet())
             assertEquals(expected, actual, "failed ($procPrev, $procRp, $followPrev, ${followRr.tag})")
         }
     }

@@ -37,7 +37,7 @@ internal abstract class BuildCacheAbstract(
     protected var _cacheOff = true
 
     // must be lazy because FirstFollowCache uses lazy parts of ParserStateSet
-    protected val firstFollowCache by lazy { FirstFollowCache(this.stateSet) }
+    protected val firstFollowCache by lazy { FirstFollowCache2(this.stateSet) }
 
     //TODO: use smaller array for done, but would to map rule number!
     private val _firstOfNotEmpty = Array<FirstOfResult?>(this.stateSet.runtimeRuleSet.runtimeRules.size, { null })
@@ -54,18 +54,14 @@ internal abstract class BuildCacheAbstract(
     override fun firstTerminal(prev: ParserState, fromState: ParserState): List<RuntimeRule> {
         return prev.rulePositions.flatMap { prevRp ->
             fromState.rulePositions.flatMap { fromRp ->
-                this.firstFollowCache.firstTerminal(prevRp, fromRp)
+                this.firstFollowCache.firstTerminalInContext(prevRp, fromRp)
             }
         }.toSet().toList()
     }
 
-    fun firstOfInContext(prev: ParserState, fromState: ParserState): List<RuntimeRule> {
-        TODO()
-    }
-
-    override fun followInContext(prev: ParserState, runtimeRule: RuntimeRule): List<RuntimeRule> {
+    override fun followAtEndInContext(prev: ParserState, runtimeRule: RuntimeRule): List<RuntimeRule> {
         return prev.rulePositions.flatMap { prevRp ->
-            this.firstFollowCache.followInContext(prevRp, runtimeRule)
+            this.firstFollowCache.followAtEndInContext(prevRp, runtimeRule)
         }.toSet().toList()
     }
 

@@ -174,7 +174,6 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
     private val _followInContextAsReferenceToFollow =
         lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<Pair<RulePosition, RuntimeRule>>>> { lazyMutableMapNonNull { hashSetOf() } }
 
-
     // prev/context -> ( TerminalRule -> ParentRulePosition )
     private val _parentInContext = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<ParentOfInContext>>> { lazyMutableMapNonNull { hashSetOf() } }
 
@@ -183,54 +182,78 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
         this.addFirstTerminalAndFirstOfInContext(this.stateSet.startRulePosition, this.stateSet.finishRulePosition, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
     }
 
-    fun firstTerminal(prev: RulePosition, rulePosition: RulePosition): Set<RuntimeRule> {
-        check(prev.isAtEnd.not()) { "firstTerminal($prev,$rulePosition)" }
-        val nextNotAtEnd = NextNotAtEnd(null, this.stateSet.startRulePosition, this.stateSet.finishRulePosition)
+    fun clear() {
+        this._doneFollow.clear()
+        this._firstTerminal.clear()
+        this._followInContext.clear()
+        this._needsNext.clear()
+        this._firstOfInContextAsReferenceToFunc.clear()
+        this._firstOfInContext.clear()
+        this._followInContextAsReferenceToFirstOf.clear()
+        this._followInContextAsReferenceToFollow.clear()
+        this._parentInContext.clear()
+    }
+
+    // entry point from calcWidth
+    fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition): Set<RuntimeRule> {
+        check(context.isAtEnd.not()) { "firstTerminal($context,$rulePosition)" }
+        val parentNextNotAtEnd = NextNotAtEnd(null, this.stateSet.startRulePosition, this.stateSet.finishRulePosition)
         // nextNotAtEnd of (startRp, finishRp) should always resolve to 'UP (see init).
         // the correct nextNotAtEnd, may not be (startRp, finishRp),
         // BUT it should also always resolve to 'UP'
-        processClosureFor(prev, rulePosition, listOf(nextNotAtEnd), true)
-        return this._firstTerminal[prev][rulePosition]
+        processClosureFor(context, rulePosition, listOf(parentNextNotAtEnd), true)
+        return this._firstTerminal[context][rulePosition]
     }
 
-    fun firstOfInContext(prev: RulePosition, rulePosition: RulePosition): Set<RuntimeRule> {
-        check(prev.isAtEnd.not()) { "firstOf($prev,$rulePosition)" }
+    // entry point from calcHeightGraft
+    fun parentInContext(context: RulePosition, completedRule: RuntimeRule): Set<ParentOfInContext> {
+        val parentNextNotAtEnd = NextNotAtEnd(null, this.stateSet.startRulePosition, this.stateSet.finishRulePosition)
+        // nextNotAtEnd of (startRp, finishRp) should always resolve to 'UP (see init).
+        // the correct nextNotAtEnd, may not be (startRp, finishRp),
+        // BUT it should also always resolve to 'UP'
+
+        for(ch in context.item!!.rulePositionsAt[0]) {
+
+        }
+
+        processClosureFor(context, context, listOf(parentNextNotAtEnd), true)
+        return this._parentInContext[context][completedRule]
+    }
+
+    fun followInContext(context: RulePosition, rulePosition: RulePosition): Set<RuntimeRule> {
+        check(context.isAtEnd.not()) { "firstOf($context,$rulePosition)" }
         // firstOf terminals could be added explicitly or via reference to firstTerminal
         // check for references, if there are any resolve them first and remove
-        if (this._firstOfInContextAsReferenceToFunc[prev].containsKey(rulePosition)) {
-            val list = this._firstOfInContextAsReferenceToFunc[prev].remove(rulePosition)!!
+        if (this._firstOfInContextAsReferenceToFunc[context].containsKey(rulePosition)) {
+            val list = this._firstOfInContextAsReferenceToFunc[context].remove(rulePosition)!!
             val firstTerm = list.flatMap { (func, p, rp) ->
                 when (func) {
-                    ReferenceFunc.FIRST_TERM -> this.firstTerminal(p, rp)
-                    ReferenceFunc.FIRST_OF -> this.firstOfInContext(p, rp)
+                    ReferenceFunc.FIRST_TERM -> this.firstTerminalInContext(p, rp)
+                    ReferenceFunc.FIRST_OF -> this.followInContext(p, rp)
                 }
             }.filter { it.isEmptyRule.not() }.toSet()
-            this._firstOfInContext[prev][rulePosition].addAll(firstTerm)
+            this._firstOfInContext[context][rulePosition].addAll(firstTerm)
         }
-        return this._firstOfInContext[prev][rulePosition]
+        return this._firstOfInContext[context][rulePosition]
     }
 
-    fun followInContext(prev: RulePosition, runtimeRule: RuntimeRule): Set<RuntimeRule> {
-        check(prev.isAtEnd.not()) { "follow($prev,$runtimeRule)" }
+    fun followAtEndInContext(context: RulePosition, runtimeRule: RuntimeRule): Set<RuntimeRule> {
+        check(context.isAtEnd.not()) { "follow($context,$runtimeRule)" }
         // follow terminals could be added explicitly or via reference to firstof
         // check for references, if there are any resolve them first and remove
-        if (this._followInContextAsReferenceToFirstOf[prev].containsKey(runtimeRule)) {
-            val list = this._followInContextAsReferenceToFirstOf[prev].remove(runtimeRule)!!
-            val firstOf = list.flatMap { (p, rp) -> this.firstOfInContext(p, rp) }.toSet()
-            this._followInContext[prev][runtimeRule].addAll(firstOf)
+        if (this._followInContextAsReferenceToFirstOf[context].containsKey(runtimeRule)) {
+            val list = this._followInContextAsReferenceToFirstOf[context].remove(runtimeRule)!!
+            val firstOf = list.flatMap { (p, rp) -> this.followInContext(p, rp) }.toSet()
+            this._followInContext[context][runtimeRule].addAll(firstOf)
         }
-        if (this._followInContextAsReferenceToFollow[prev].containsKey(runtimeRule)) {
-            val list = this._followInContextAsReferenceToFollow[prev].remove(runtimeRule)!!
-            val follow = list.flatMap { (p, rr) -> this.followInContext(p, rr) }.toSet()
-            this._followInContext[prev][runtimeRule].addAll(follow)
+        if (this._followInContextAsReferenceToFollow[context].containsKey(runtimeRule)) {
+            val list = this._followInContextAsReferenceToFollow[context].remove(runtimeRule)!!
+            val follow = list.flatMap { (p, rr) -> this.followAtEndInContext(p, rr) }.toSet()
+            this._followInContext[context][runtimeRule].addAll(follow)
         }
-        return this._followInContext[prev][runtimeRule]
+        return this._followInContext[context][runtimeRule]
     }
 
-    fun parentInContext(prev: RulePosition, completedRule: RuntimeRule): Set<ParentOfInContext> {
-        //should always already have been calculated
-        return this._parentInContext[prev][completedRule]
-    }
 
     /**
      * Calculate the first position closures for the given (context,rulePosition)

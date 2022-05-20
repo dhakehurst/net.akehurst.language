@@ -782,12 +782,13 @@ internal class BuildCacheLC1(
             val upCls = fromState.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
             val upFilt = upCls.filter { rr == it.rulePosition.item }
             val lhs_old = upFilt.map { it.lookaheadSet }.reduce { acc, it -> acc.union(it) }
-            val follow = this.followInContext(fromState, rr).toSet()
+            val follow = this.followAtEndInContext(fromState, rr).toSet()
             val lhs = LookaheadSetPart.createFromRuntimeRules(follow)
             if (Debug.CHECK) check(lhs_old.fullContent == follow) { "$lhs_old != [${follow.joinToString { it.tag }}] Follow($fromState,${rr.tag})" }
             val rp = rr.asTerminalRulePosition
             WidthInfo(rp, lhs)
         }
+        this.firstFollowCache.clear()
         if (Debug.OUTPUT_BUILD) Debug.debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcWidthInfo($prevState, $fromState)" }
         return wis.toSet()
     }
@@ -860,8 +861,8 @@ internal class BuildCacheLC1(
                 val targets = parentRulePosition.next()
                 targets.map { tgt ->
                     val firstOrFollow = when {
-                        tgt.isAtEnd -> this.firstFollowCache.followInContext(parentPrev, tgt.runtimeRule)
-                        else -> this.firstFollowCache.firstOfInContext(parentPrev, tgt)
+                        tgt.isAtEnd -> this.firstFollowCache.followAtEndInContext(parentPrev, tgt.runtimeRule)
+                        else -> this.firstFollowCache.followInContext(parentPrev, tgt)
                     }
                     val grd = LookaheadSetPart.createFromRuntimeRules(firstOrFollow)
                     val tgtParents = this.firstFollowCache.parentInContext(parentPrev, tgt.runtimeRule)
@@ -872,8 +873,8 @@ internal class BuildCacheLC1(
                                 tp.rulePosition.next().flatMap { parRpNxt ->
                                     val parFirstOrFollow = when {
                                         //tp.rulePosition.isAtEnd -> this.firstFollowCache.followInContext(tp.context, parRpNxt.runtimeRule)
-                                        parRpNxt.isAtEnd -> this.firstFollowCache.followInContext(tp.context, parRpNxt.runtimeRule)
-                                        else -> this.firstFollowCache.firstOfInContext(tp.context, parRpNxt)
+                                        parRpNxt.isAtEnd -> this.firstFollowCache.followAtEndInContext(tp.context, parRpNxt.runtimeRule)
+                                        else -> this.firstFollowCache.followInContext(tp.context, parRpNxt)
                                     }
                                     if (parFirstOrFollow.isEmpty()) {
                                         listOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
@@ -886,32 +887,40 @@ internal class BuildCacheLC1(
                     }
                     val up = LookaheadSetPart.createFromRuntimeRules(parentFollow.toSet())
 
-                    val parentFirstOf = this.firstFollowCache.firstOfInContext(parentPrev, tgt)
+                    val parentFirstOf = this.firstFollowCache.followInContext(parentPrev, tgt)
 
                     val old = HeightGraftInfo(action, listOf(parentRulePosition), listOf(tgt), setOf(LookaheadInfoPart(grd, up)))
 
-                    val lh = tgtParents.map { (tgtParPrev, tgtParRP) ->
-                        val tgtParAtEnd = this.firstFollowCache.followInContext(tgtParPrev, tgtParRP.runtimeRule)
-                        val tgtParFollow = tgtParRP.next().flatMap { tgtParRpNxt ->
-                            val parFirstOrFollow = when {
-                                tgtParRpNxt.isAtEnd -> this.firstFollowCache.followInContext(tgtParPrev, tgtParRpNxt.runtimeRule)
-                                else -> this.firstFollowCache.firstOfInContext(tgtParPrev, tgtParRpNxt)
+                    val lh = when(action) {
+                        Transition.ParseAction.HEIGHT -> tgtParents.map { (tgtParPrev, tgtParRP) ->
+                            val tgtParAtEnd = this.firstFollowCache.followAtEndInContext(tgtParPrev, tgtParRP.runtimeRule)
+                            val tgtParFollow = tgtParRP.next().flatMap { tgtParRpNxt ->
+                                val parFirstOrFollow = when {
+                                    tgtParRpNxt.isAtEnd -> this.firstFollowCache.followAtEndInContext(tgtParPrev, tgtParRpNxt.runtimeRule)
+                                    else -> this.firstFollowCache.followInContext(tgtParPrev, tgtParRpNxt)
+                                }
+                                if (parFirstOrFollow.isEmpty()) {
+                                    listOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                                } else {
+                                    parFirstOrFollow
+                                }
                             }
-                            if (parFirstOrFollow.isEmpty()) {
-                                listOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-                            } else {
-                                parFirstOrFollow
-                            }
+                            val grd2 = LookaheadSetPart.createFromRuntimeRules(tgtParFollow.toSet())
+                            val up2 = LookaheadSetPart.createFromRuntimeRules(tgtParAtEnd.toSet())
+                            LookaheadInfoPart(grd2, up2)
+                        }.toSet()
+                        else -> {
+                            val grd2 = LookaheadSetPart.EMPTY
+                            val up2 = LookaheadSetPart.createFromRuntimeRules(firstOrFollow)
+                            setOf(LookaheadInfoPart(grd2, up2))
                         }
-                        val grd2 = LookaheadSetPart.createFromRuntimeRules(tgtParFollow.toSet())
-                        val up2 = LookaheadSetPart.createFromRuntimeRules(tgtParAtEnd.toSet())
-                        LookaheadInfoPart(grd2, up2)
-                    }.toSet()
+                    }
                     val new = HeightGraftInfo(action, listOf(parentRulePosition), listOf(tgt), lh)
                     new
                 }
             }
         }.toSet()
+        this.firstFollowCache.clear()
 
         // upCls is the closure down from prev
         //TODO: can we reduce upCls at this point ?

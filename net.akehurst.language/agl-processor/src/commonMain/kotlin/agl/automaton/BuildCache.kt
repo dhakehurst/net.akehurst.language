@@ -31,5 +31,5 @@ internal interface BuildCache {
 
     // exposed on interface so we can test them
     fun firstTerminal(prev: ParserState, fromState: ParserState): List<RuntimeRule>
-    fun followInContext(prev: ParserState, runtimeRule: RuntimeRule): List<RuntimeRule>
+    fun followAtEndInContext(prev: ParserState, runtimeRule: RuntimeRule): List<RuntimeRule>
 }
