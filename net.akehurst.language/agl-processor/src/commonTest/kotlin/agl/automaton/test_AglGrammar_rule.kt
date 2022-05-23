@@ -60,30 +60,6 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
     // IMPORTANT, notice that userGoal rule is 'rule' (not 'grammar')
 
     @Test
-    override fun firstOf() {
-        listOf(
-            Triple(RP(G, 0, SOR), LHS(UP), LHS(T_override, T_skip, T_leaf,T_IDENTIFIER)), // G = . S
-            Triple(RP(G, 0, EOR), LHS(UP), LHS(UP))        // G = S .
-//TODO
-        ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.expectedAt(rp, lhs)
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
-
-    @Test
-    override fun s0_widthInto() {
-        val s0 = SM.startState
-        val actual = s0.widthInto(s0)
-
-        val expected = setOf(
-            WidthInfo(RP(T_override, 0, EOR), LHS(T_skip, T_leaf, T_IDENTIFIER)),
-            WidthInfo(RP(T_overrideEmpty, 0, EOR), LHS(T_skip, T_leaf, T_IDENTIFIER)),
-        )
-        assertEquals(expected, actual)
-    }
-
-    @Test
     fun automaton_parse__r_a() {
         val parser = ScanOnDemandParser(rrs)
         val (sppt, issues) = parser.parseForGoal(userGoalRuleName, "r=a;", AutomatonKind.LOOKAHEAD_1)

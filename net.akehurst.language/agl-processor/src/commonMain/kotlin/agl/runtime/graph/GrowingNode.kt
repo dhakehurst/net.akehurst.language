@@ -33,8 +33,9 @@ internal class GrowingNode(
     //FIXME: shouldn't really do this, shouldn't store these in sets!!
     private val hashCode_cache = arrayOf(this.currentState, this.startPosition).contentHashCode()
 
-    val currentState: ParserState get() = index.state
-    val runtimeLookahead: Set<LookaheadSet> get() = index.runtimeLookaheadSet
+    val runtimeState:RuntimeState get() = index.runtimeState
+    val currentState: ParserState get() = index.runtimeState.state
+    val runtimeLookahead: Set<LookaheadSet> get() = index.runtimeState.runtimeLookaheadSet
     val startPosition: Int get() = index.startPosition
     val nextInputPosition: Int get() = index.nextInputPosition
     val nextInputPositionAfterSkip: Int get() = index.nextInputPositionAfterSkip

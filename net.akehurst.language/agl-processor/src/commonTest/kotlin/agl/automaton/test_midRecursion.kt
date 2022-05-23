@@ -57,40 +57,6 @@ internal class test_midRecursion : test_AutomatonAbstract() {
     }
 
     @Test
-    override fun firstOf() {
-        listOf(
-            Triple(RP(G, 0, SOR), lhs_U, LHS(a, b)),     // G = . S
-            Triple(RP(G, 0, EOR), lhs_U, LHS(UP)),      // G = S .
-            Triple(RP(S, 0, SOR), lhs_U, LHS(b)),       // S = . b
-            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),      // S = b .
-            Triple(RP(S, 1, SOR), lhs_U, LHS(a)),       // S = . S1
-            Triple(RP(S, 1, EOR), lhs_U, LHS(UP)),      // S = S1 .
-            Triple(RP(S1, 0, SOR), lhs_U, LHS(a)),      // S1 = . a S c
-            Triple(RP(S1, 0, 1), lhs_U, LHS(a, b)), // S1 = a . S c
-            Triple(RP(S1, 0, 2), lhs_U, LHS(c)),   // S1 = a S . c
-            Triple(RP(S1, 0, EOR), lhs_U, LHS(UP))      // S1 = a S c .
-        ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.expectedAt(rp, lhs.part)
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
-
-    @Test
-    override fun s0_widthInto() {
-        val s0 = SM.startState
-        val actual = s0.widthInto(s0).toList()
-
-        val expected = listOf(
-            WidthInfo(RP(b, 0, EOR), lhs_U.part),
-            WidthInfo(RP(a, 0, EOR), lhs_ab.part)
-        )
-        assertEquals(expected.size, actual.size)
-        for (i in 0 until actual.size) {
-            assertEquals(expected[i], actual[i])
-        }
-    }
-
-    @Test
     fun parse_b() {
         val parser = ScanOnDemandParser(rrs)
         parser.parseForGoal("S", "b", AutomatonKind.LOOKAHEAD_1)

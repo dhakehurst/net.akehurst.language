@@ -58,30 +58,6 @@ internal class test_embedded : test_AutomatonAbstract() {
     }
 
     @Test
-    override fun firstOf() {
-        listOf(
-            Triple(RP(G, 0, SOR), lhs_U, LHS(a)),      // G = . S
-            Triple(RP(G, 0, EOR), lhs_U, LHS(UP)),     // G = S .
-            Triple(RP(S, 0, SOR), lhs_U, LHS(a)),      // S = . a gB a
-            Triple(RP(S, 0, 1), lhs_U, LHS(b_)),  // S = a . gB a
-            Triple(RP(S, 0, 2), lhs_U, LHS(a)),   // S = a gB . a
-            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),     // S = a gB a .
-            Triple(RP(gB, 0, SOR), lhs_U, LHS(UP)),     // gB = . grammar B
-            Triple(RP(gB, 0, EOR), lhs_U, LHS(a)),     // gB = grammar B .
-            Triple(RP(B, 0, SOR), lhs_U, LHS(UP)),     // B = . b
-            Triple(RP(B, 0, EOR), lhs_U, LHS(a))      // B = b .
-        ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.expectedAt(rp, lhs.part)
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
-
-    @Test
-    override fun s0_widthInto() {
-        TODO("not implemented")
-    }
-
-    @Test
     fun parse_aba() {
         val parser = ScanOnDemandParser(rrs)
         parser.parseForGoal("S", "aba", AutomatonKind.LOOKAHEAD_1)

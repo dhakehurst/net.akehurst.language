@@ -19,6 +19,7 @@ package net.akehurst.language.agl.automaton
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
@@ -54,75 +55,6 @@ internal class test_abcz_OR_abcy : test_AutomatonAbstract() {
     private val y = rrs.findRuntimeRule("'y'")
 
     private val lhs_b = SM.createLookaheadSet(false, false, false, setOf(b))
-
-
-    @Test
-    override fun firstOf() {
-        listOf(
-            Triple(RP(G, 0, SOR), lhs_U, LHS(a)),       // G = . S
-            Triple(RP(G, 0, EOR), lhs_U, LHS(UP)),      // G = S .
-            Triple(RP(S, 0, SOR), lhs_U, LHS(a)),       // S = . ABCZ
-            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),      // S = ABCZ .
-            Triple(RP(S, 1, SOR), lhs_U, LHS(a)),       // S = . ABCY
-            Triple(RP(S, 1, EOR), lhs_U, LHS(UP)),      // S = ABCY .
-            Triple(RP(ABCZ, 0, SOR), lhs_U, LHS(a)),     // ABCZ = . a b c z
-            Triple(RP(ABCZ, 0, 1), lhs_U, LHS(b)),  // ABCZ = a . b c z
-            Triple(RP(ABCZ, 0, 2), lhs_U, LHS(c)),  // ABCZ = a b . c z
-            Triple(RP(ABCZ, 0, 3), lhs_U, LHS(z)),  // ABCZ = a b c . z
-            Triple(RP(ABCZ, 0, EOR), lhs_U, LHS(UP)),    // ABCZ = a b c z .
-            Triple(RP(ABCY, 0, SOR), lhs_U, LHS(a)),     // ABCY = . a b c y
-            Triple(RP(ABCY, 0, 1), lhs_U, LHS(b)),  // ABCY = a . b c y
-            Triple(RP(ABCY, 0, 2), lhs_U, LHS(c)),  // ABCY = a b . c y
-            Triple(RP(ABCY, 0, 3), lhs_U, LHS(y)),  // ABCY = a b c . y
-            Triple(RP(ABCY, 0, EOR), lhs_U, LHS(UP))     // ABCY = a b c y .
-        ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.expectedAt(rp, lhs.part)
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
-
-    @Test
-    override fun s0_widthInto() {
-        val s0 = SM.startState
-        val actual = s0.widthInto(s0).toList()
-
-        val expected = listOf(
-            WidthInfo(RP(a, 0, EOR), lhs_b.part)
-        )
-        assertEquals(expected.size, actual.size)
-        for (i in 0 until actual.size) {
-            assertEquals(expected[i], actual[i])
-        }
-    }
-
-    @Test
-    fun s1_heightOrGraftInto_s0() {
-        val s0 = SM.startState
-        val s1 = SM.createState(listOf(RP(a, 0, RulePosition.END_OF_RULE)))
-        val actual = s1.heightOrGraftInto(s0).toList()
-
-        val expected = listOf(
-            HeightGraftInfo(
-                Transition.ParseAction.HEIGHT,
-                listOf(RP(ABCZ, 0, SOR), RP(ABCY, 0, SOR)),
-                listOf(RP(ABCZ, 0, 1), RP(ABCY, 0, 1)),
-                setOf(LookaheadInfoPart(LHS(b), LHS(UP)))
-            )
-        )
-        assertEquals(expected, actual)
-
-    }
-
-    @Test
-    fun s0_transitions() {
-        val s0 = SM.startState
-        val s1 = SM.createState(listOf(RP(a, 0, RulePosition.END_OF_RULE)))
-        val actual = s0.transitions(s0)
-        val expected = listOf(
-            Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_b, LookaheadSet.EMPTY, null) { _, _ -> true },
-        )
-        assertEquals(expected, actual)
-    }
 
     @Test
     fun automaton_parse_abcz() {

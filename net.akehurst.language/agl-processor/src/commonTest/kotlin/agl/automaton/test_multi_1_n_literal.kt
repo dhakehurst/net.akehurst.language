@@ -50,57 +50,6 @@ internal class test_multi_1_n_literal : test_AutomatonAbstract() {
     }
 
     @Test
-    override fun firstOf() {
-        listOf(
-            Triple(RulePosition(G, 0, RulePosition.START_OF_RULE), lhs_U, LHS(a)), // G = . S
-            Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, LHS(UP)), // G = S .
-            Triple(RulePosition(S, 0, RulePosition.START_OF_RULE), lhs_a, LHS(a)), // S = . a+
-            Triple(RulePosition(S, 0, RulePosition.POSITION_MULIT_ITEM), lhs_a, LHS(a)), // S = a . a+
-            Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, LHS(UP)) // S = a+ .
-        ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.expectedAt(rp, lhs.part)
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
-
-    @Test
-    override fun s0_widthInto() {
-        val s0 = SM.startState
-        val actual = s0.widthInto(s0).toList()
-
-        val expected = listOf(
-            WidthInfo(RP(a,0,EOR), lhs_aU.part)
-        )
-        assertEquals(expected.size, actual.size)
-        for (i in 0 until actual.size) {
-            assertEquals(expected[i], actual[i])
-        }
-    }
-
-    @Test
-    fun s1_heightOrGraftInto_s0() {
-
-        val actual = s1.heightOrGraftInto(s0).toList()
-
-        val expected = listOf(
-                HeightGraftInfo(
-                    Transition.ParseAction.HEIGHT,
-                    listOf(RulePosition(S, 0, 0)),
-                    listOf(RulePosition(S, 0, PMI)),
-                    setOf(LookaheadInfoPart(LHS(a),LHS(UP)))
-                ),
-                HeightGraftInfo(
-                    Transition.ParseAction.HEIGHT,
-                    listOf(RulePosition(S, 0, 0)),
-                    listOf(RulePosition(S, 0, EOR)),
-                    setOf(LookaheadInfoPart(LHS(UP),LHS(UP)))
-                )
-        )
-        assertEquals(expected, actual)
-
-    }
-
-    @Test
     fun parse_aba() {
         val parser = ScanOnDemandParser(rrs)
         parser.parseForGoal("S", "aba", AutomatonKind.LOOKAHEAD_1)

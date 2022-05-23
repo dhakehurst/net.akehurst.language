@@ -31,8 +31,7 @@ import net.akehurst.language.agl.runtime.structure.*
  */
 internal  class GrowingNodeIndex(
     val treeData: TreeData,
-    val state: ParserState,
-    val runtimeLookaheadSet: Set<LookaheadSet>,
+    val runtimeState: RuntimeState,
     val startPosition: Int,
     val nextInputPosition: Int,
     val nextInputPositionAfterSkip: Int,
@@ -67,32 +66,33 @@ internal  class GrowingNodeIndex(
         }
     }
 
-    private val _hashCode = arrayOf(state,runtimeLookaheadSet,startPosition,nextInputPosition,numNonSkipChildren).contentHashCode()
+    private val _hashCode = arrayOf(runtimeState,startPosition,nextInputPosition,numNonSkipChildren).contentHashCode()
     //TODO: don't store data twice..also prefer not to create 2 objects!
-    val complete = CompleteNodeIndex(treeData, state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)
+    val complete = CompleteNodeIndex(treeData, runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)
+
+    val state:ParserState get() = this.runtimeState.state
 
     override fun hashCode(): Int =_hashCode
 
     override fun equals(other: Any?): Boolean = when(other) {
         !is GrowingNodeIndex -> false
         else -> when {
-            this.state != other.state -> false
+            this.runtimeState != other.runtimeState -> false
             this.startPosition != other.startPosition -> false
             this.nextInputPosition != other.nextInputPosition -> false
             this.numNonSkipChildren != other.numNonSkipChildren -> false
-            this.runtimeLookaheadSet != other.runtimeLookaheadSet -> false
             else -> true
         }
     }
 
     override fun toString(): String {
-        val ct = runtimeLookaheadSet.map { it.fullContent.joinToString { it.tag } }
+        val ct = runtimeState.runtimeLookaheadSet.map { it.fullContent.joinToString { it.tag } }
         val ctStr = ct.joinToString(
             prefix = "[",
             postfix = "]",
             separator = "|"
         ) { it }
-        return "GNI{state=$state,lhs=$ctStr,sp=${startPosition}, np=$nextInputPosition, len=$numNonSkipChildren}"
+        return "GNI{state=$runtimeState.state,lhs=$ctStr,sp=${startPosition}, np=$nextInputPosition, len=$numNonSkipChildren}"
     }
 
 }

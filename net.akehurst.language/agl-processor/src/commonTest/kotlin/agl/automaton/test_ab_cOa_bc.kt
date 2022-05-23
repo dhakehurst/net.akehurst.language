@@ -36,14 +36,6 @@ internal class test_ab_cOa_bc : test_AutomatonAbstract() {
     private val b = rrs.findRuntimeRule("'b'")
     private val c = rrs.findRuntimeRule("'c'")
 
-    override fun firstOf() {
-        TODO("not implemented")
-    }
-
-    override fun s0_widthInto() {
-        TODO("not implemented")
-    }
-
     @Test
     fun buildFor() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)

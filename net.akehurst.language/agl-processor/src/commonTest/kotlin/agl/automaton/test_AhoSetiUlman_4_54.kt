@@ -19,6 +19,7 @@ package net.akehurst.language.agl.automaton
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
@@ -52,60 +53,6 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
     private val G = SM.startState.runtimeRules.first()
 
     private val lhs_cd = SM.createLookaheadSet(false, false, false, setOf(T_c, T_d))
-
-
-    @Test
-    override fun firstOf() {
-        listOf(
-            Triple(RP(C1, 0, SOR), lhs_U, LHS(T_c)),          // C1 = . c C
-            Triple(RP(C1, 0, 1), lhs_U, LHS(T_c, T_d)),  // C1 = c . C
-            Triple(RP(C1, 0, EOR), lhs_U, LHS(UP)),           // C1 = c C .
-            Triple(RP(C, 1, SOR), lhs_U, LHS(T_d)),           // C = . d
-            Triple(RP(C, 1, EOR), lhs_U, LHS(UP)),            // C = d .
-            Triple(RP(C, 0, SOR), lhs_U, LHS(T_c)),           // C = . C1
-            Triple(RP(C, 0, EOR), lhs_U, LHS(UP)),            // C = C1 .
-            Triple(RP(S, 0, SOR), lhs_U, LHS(T_c, T_d)),      // S = . C C
-            Triple(RP(S, 0, 1), lhs_U, LHS(T_c, T_d)),   // S = C . C
-            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),            // S = C C .
-            Triple(RP(G, 0, SOR), lhs_U, LHS(T_c, T_d)),      // G = . S
-            Triple(RP(G, 0, EOR), lhs_U, LHS(UP))             // G = S .
-        ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.expectedAt(rp, lhs.part)
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
-
-    override fun s0_widthInto() {
-        val s0 = SM.startState
-        val actual = s0.widthInto(s0).toList()
-
-        val expected = listOf(
-            WidthInfo(RP(T_c, 0, EOR), lhs_cd.part),
-            WidthInfo(RP(T_d, 0, EOR), lhs_cd.part)
-        )
-        assertEquals(expected.size, actual.size)
-        for (i in 0 until actual.size) {
-            assertEquals(expected[i], actual[i])
-        }
-    }
-
-    @Test
-    fun s0_transitions() {
-        val s0 = SM.startState
-        val s1 = SM.createState(listOf(RP(T_c, 0, EOR)))
-        val s2 = SM.createState(listOf(RP(T_d, 0, EOR)))
-
-        val actual = s0.transitions(s0)
-
-        val expected = listOf(
-            Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_cd, lhs_E, null) { _, _ -> true },
-            Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_cd, lhs_E, null) { _, _ -> true }
-        ).toList()
-        assertEquals(expected.size, actual.size)
-        for (i in 0 until actual.size) {
-            assertEquals(expected[i], actual[i])
-        }
-    }
 
     @Test
     fun parse_dd() {

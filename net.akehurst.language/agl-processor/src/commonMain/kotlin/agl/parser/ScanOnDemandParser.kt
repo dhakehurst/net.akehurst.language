@@ -21,6 +21,7 @@ import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
+import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -133,16 +134,16 @@ internal class ScanOnDemandParser(
         val r = poss.map { (lg, prevs) ->
             //val prevs = rp._lastGss.peek(lg)
             // compute next expected item/RuntimeRule
-            when (lg.state.runtimeRules.first().kind) {
+            when (lg.runtimeState.state.runtimeRules.first().kind) {
                 RuntimeRuleKind.GOAL -> {
-                    val trs = lg.state.transitions(rp.stateSet.startState)
+                    val trs = lg.runtimeState.transitions(RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY)))
                     val exp: Set<RuntimeRule> = trs.flatMap { tr ->
                         when (tr.action) {
                             Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
-                            Transition.ParseAction.WIDTH -> lg.runtimeLookaheadSet.flatMap { lg.state.firstOf(it).fullContent }.toSet() //TODO: needs prev as arg to firstOf
+                            Transition.ParseAction.WIDTH -> lg.runtimeState.runtimeLookaheadSet.flatMap { lg.runtimeState.state.firstOf(it).fullContent }.toSet() //TODO: needs prev as arg to firstOf
                             Transition.ParseAction.EMBED -> TODO()
-                            Transition.ParseAction.HEIGHT -> lg.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } }.toSet()
-                            Transition.ParseAction.GRAFT -> prevs.flatMap { it.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } } }
+                            Transition.ParseAction.HEIGHT -> lg.runtimeState.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } }.toSet()
+                            Transition.ParseAction.GRAFT -> prevs.flatMap { it.runtimeState.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } } }
                                 .toSet()
                         }
                     }.toSet()
@@ -150,14 +151,14 @@ internal class ScanOnDemandParser(
                 }
                 else -> {
                     val x: Set<RuntimeRule> = prevs.flatMap { prev ->
-                        val trs = lg.state.transitions(prev.state).filter { it.runtimeGuard(it, prev, prev.state.rulePositions) }
+                        val trs = lg.runtimeState.transitions(prev.runtimeState).filter { it.runtimeGuard(it, prev, prev.runtimeState.state.rulePositions) }
                         val exp = trs.flatMap { tr ->
                             when (tr.action) {
                                 Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
-                                Transition.ParseAction.WIDTH -> lg.runtimeLookaheadSet.flatMap { lg.state.firstOf(it).fullContent }.toSet()
-                                Transition.ParseAction.EMBED -> lg.runtimeLookaheadSet.flatMap { lg.state.firstOf(it).fullContent }.toSet()
-                                Transition.ParseAction.HEIGHT -> lg.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } }.toSet()
-                                Transition.ParseAction.GRAFT -> prev.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } }.toSet()
+                                Transition.ParseAction.WIDTH -> lg.runtimeState.runtimeLookaheadSet.flatMap { lg.runtimeState.state.firstOf(it).fullContent }.toSet()
+                                Transition.ParseAction.EMBED -> lg.runtimeState.runtimeLookaheadSet.flatMap { lg.runtimeState.state.firstOf(it).fullContent }.toSet()
+                                Transition.ParseAction.HEIGHT -> lg.runtimeState.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } }.toSet()
+                                Transition.ParseAction.GRAFT -> prev.runtimeState.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } }.toSet()
                             }
                         }.toSet()
                         exp
@@ -179,8 +180,8 @@ internal class ScanOnDemandParser(
         val poss =  rp.tryGrowHeightOrGraft()//graph.peekAllHeads()
         val r = poss.map { (lg, prevs) ->
             when {
-                lg.state.isGoal -> {
-                    val trs = lg.state.transitions(rp.stateSet.startState)
+                lg.runtimeState.state.isGoal -> {
+                    val trs = lg.runtimeState.transitions(RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY)))
                     val errors: Set<Pair<Int, Set<RuntimeRule>>> = trs.mapNotNull { tr ->
                         when (tr.action) {
                             Transition.ParseAction.GOAL -> null
@@ -191,7 +192,7 @@ internal class ScanOnDemandParser(
                                 when (l) {
                                     null -> Pair(lg.nextInputPosition, tr.to.runtimeRules.toSet())
                                     else -> {
-                                        val expected = tr.lookahead.flatMap { lh -> lg.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }.toSet()
+                                        val expected = tr.lookahead.flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }.toSet()
                                         val pos = l.nextInputPosition
                                         Pair(pos, expected)
                                     }
@@ -204,7 +205,7 @@ internal class ScanOnDemandParser(
                 }
                 else -> {
                     val errors: Set<Pair<Int, Set<RuntimeRule>>> = prevs.flatMap { prev ->
-                        val trs = lg.state.transitions(prev.state).filter { it.runtimeGuard(it, prev, prev.state.rulePositions) }
+                        val trs = lg.runtimeState.transitions(prev.runtimeState).filter { it.runtimeGuard(it, prev, prev.runtimeState.state.rulePositions) }
                         val pairs: Set<Pair<Int, Set<RuntimeRule>>> = trs.mapNotNull { tr ->
                             when (tr.action) {
                                 Transition.ParseAction.GOAL -> null
@@ -215,14 +216,14 @@ internal class ScanOnDemandParser(
                                     when (l) {
                                         null -> Pair(lg.nextInputPosition, tr.to.runtimeRules.toSet())
                                         else -> {
-                                            val expected = tr.lookahead.flatMap { lh -> lg.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }.toSet()
+                                            val expected = tr.lookahead.flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }.toSet()
                                             val pos = l.nextInputPosition
                                             Pair(pos, expected)
                                         }
                                     }
                                 }
                                 else -> {
-                                    val expected = tr.lookahead.flatMap { lh -> lg.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }.toSet()
+                                    val expected = tr.lookahead.flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }.toSet()
                                     val pos = lg.nextInputPosition
                                     Pair(pos, expected)
                                 }
@@ -243,7 +244,7 @@ internal class ScanOnDemandParser(
         return Pair(maxLastLocation.first, res)
     }
 
-    private fun findNextExpected(rp: RuntimeParser, graph: ParseGraph, input: InputFromString, gns: List<Pair<GrowingNode, Set<GrowingNodeIndex>?>>): Set<RuntimeRule> {
+    private fun findNextExpected(rp: RuntimeParser, graph: ParseGraph, input: InputFromString, gns: List<Pair<GrowingNode, Set<GrowingNodeIndex>>>): Set<RuntimeRule> {
         // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
 
         val matches = gns.toMutableList()
@@ -270,8 +271,8 @@ internal class ScanOnDemandParser(
 
         val trans_lh_pairs = matches.flatMap { gn_prev ->
             val gn = gn_prev.first
-            val prev = gn_prev.second?.map { it.state }
-            val trans = rp.transitionsEndingInNonEmptyFrom(gn.currentState, prev?.toSet())
+            val prev = gn_prev.second.map { it.runtimeState }
+            val trans = prev.flatMap { pr -> gn.runtimeState.transitions(pr) }.toSet()
             trans.flatMap { tr ->
                 val pairs = gn.runtimeLookahead.map { rt -> Pair(tr, tr.lookahead.flatMap { it.guard.resolveUP(rt).content }) }.toSet()
                 pairs
@@ -305,13 +306,13 @@ internal class ScanOnDemandParser(
         rp.start(0, setOf(LookaheadSet.EOT))
         var seasons = 1
 
-        val matches = mutableListOf<Pair<GrowingNode, Set<GrowingNodeIndex>?>>()
+        val matches = mutableListOf<Pair<GrowingNode, Set<GrowingNodeIndex>>>()
         do {
             rp.grow3(false)
             for (gn in rp.lastGrown) {
                 if (input.isEnd(gn.nextInputPosition)) {
-                    val prev = rp.grownInLastPassPrevious[gn]
-                    if (prev == null && gn.currentState.isGoal.not()) {
+                    val prev = rp.grownInLastPassPrevious[gn] ?: emptySet()
+                    if (gn.currentState.isGoal.not()) {
                         //don't include it TODO: why does this happen?
                     } else {
                         matches.add(Pair(gn, prev))

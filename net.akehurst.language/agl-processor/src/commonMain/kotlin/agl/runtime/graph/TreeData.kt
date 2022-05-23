@@ -53,7 +53,7 @@ internal class TreeData(
         numNonSkipChildren: Int
     ): GrowingNodeIndex {
         val listSize = GrowingNodeIndex.listSize(state.runtimeRules.first(), numNonSkipChildren)
-        return GrowingNodeIndex(this, state, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, listSize)
+        return GrowingNodeIndex(this, RuntimeState(state, runtimeLookaheadSet), startPosition, nextInputPosition, nextInputPositionAfterSkip, listSize)
     }
 
     fun childrenFor(runtimeRule: RuntimeRule, startPosition: Int, nextInputPosition: Int): List<Pair<List<Int>,List<CompleteNodeIndex>>> {
@@ -94,7 +94,7 @@ internal class TreeData(
     }
 
     fun setEmbeddedChild(parent: GrowingNodeIndex, child: CompleteNodeIndex) {
-        if (parent.state.isAtEnd) {
+        if (parent.runtimeState.isAtEnd) {
             val completeChildren = listOf(child)
             this.setCompletedBy(parent, completeChildren, true)  //might it ever not be preferred!
         } else {
@@ -103,7 +103,7 @@ internal class TreeData(
     }
 
     fun setFirstChild(parent: GrowingNodeIndex, child: GrowingNodeIndex, isAlternative: Boolean) {
-        if (parent.state.isAtEnd) {
+        if (parent.runtimeState.isAtEnd) {
             val completeChildren = listOf(child.complete)
             this.setCompletedBy(parent, completeChildren, isAlternative)
         } else {
@@ -144,7 +144,7 @@ internal class TreeData(
     fun setInGrowingParentChildAt(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, nextChild: GrowingNodeIndex, isAlternative: Boolean) {
         val nextChildIndex = newParent.numNonSkipChildren - 1
         val children = this._growing[oldParent]!! //should never be null
-        if (newParent.state.isAtEnd) {
+        if (newParent.runtimeState.isAtEnd) {
             //clone children so the other can keep growing if need be
             //TODO: performance don't want to copy
             val cpy = children.toMutableList()
@@ -201,7 +201,7 @@ internal class TreeData(
     private fun setCompletedBy(parent: GrowingNodeIndex, children: List<CompleteNodeIndex>, isAlternative: Boolean) {
         var alternatives = this._complete[parent.complete]
         if (null==alternatives) {
-            alternatives = mutableMapOf(parent.state.optionList to children)
+            alternatives = mutableMapOf(parent.runtimeState.optionList to children)
             this._complete[parent.complete] = alternatives
             if (isAlternative) {
                 //ensure other is not preferred
@@ -217,7 +217,7 @@ internal class TreeData(
                 this._preferred[parent.complete.preferred] = parent.complete
                 alternatives.clear()
             }
-            alternatives[parent.state.optionList] =children
+            alternatives[parent.runtimeState.optionList] =children
         }
     }
 

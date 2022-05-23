@@ -16,10 +16,22 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
+import net.akehurst.language.agl.runtime.structure.RulePosition
+
 internal interface TransitionCache {
     val allBuiltTransitions: Set<Transition>
     val allPrevious : List<ParserState>
 
+    fun createTransition(
+        previousStates: List<ParserState>,
+        from:ParserState,
+        action: Transition.ParseAction,
+        to: ParserState,
+        lookahead: Set<Lookahead>,
+        prevGuard: List<RulePosition>?,
+        runtimeGuard: Transition.(current: GrowingNodeIndex, previous: List<RulePosition>?) -> Boolean
+    )
     fun addTransition(previousStates: List<ParserState>, tr: Transition): Transition
 
     // List because we don't want to convert to Set filtered list at runtime
@@ -35,6 +47,18 @@ internal class TransitionCacheLC0 : TransitionCache {
 
     override val allBuiltTransitions: Set<Transition> get() = _transitions ?: emptySet()
     override val allPrevious: List<ParserState> = emptyList()
+
+    override fun createTransition(
+        previousStates: List<ParserState>,
+        from: ParserState,
+        action: Transition.ParseAction,
+        to: ParserState,
+        lookahead: Set<Lookahead>,
+        prevGuard: List<RulePosition>?,
+        runtimeGuard: Transition.(current: GrowingNodeIndex, previous: List<RulePosition>?) -> Boolean
+    ) {
+        TODO("not implemented")
+    }
 
     // add the transition and return it, or return existing transition if it already exists
     override fun addTransition(previousStates: List<ParserState>, tr: Transition): Transition {
@@ -102,4 +126,18 @@ internal class TransitionCacheLC1 : TransitionCache {
     override fun previousFor(transition: Transition): List<ParserState?> {
         return _transitionsByPrevious.entries.filter { it.value?.contains(transition) ?: false }.map { it.key }
     }
+
+    override fun createTransition(
+        previousStates: List<ParserState>,
+        from:ParserState,
+        action: Transition.ParseAction,
+        to: ParserState,
+        lookahead: Set<Lookahead>,
+        prevGuard: List<RulePosition>?,
+        runtimeGuard: Transition.(current: GrowingNodeIndex, previous: List<RulePosition>?) -> Boolean
+    ) {
+        val trans = Transition(from, to, action, lookahead, prevGuard, runtimeGuard)
+        this.addTransition(previousStates, trans)
+    }
+
 }

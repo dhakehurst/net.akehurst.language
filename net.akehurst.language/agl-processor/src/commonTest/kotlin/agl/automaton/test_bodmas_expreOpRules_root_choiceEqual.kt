@@ -58,27 +58,6 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
     private val a = rrs.findRuntimeRule("'a'")
     private val v = rrs.findRuntimeRule("'v'")
 
-
-    @Test
-    override fun firstOf() {
-        listOf(
-            Triple(RP(G, 0, SOR), LHS(UP), LHS(v)),       // G = . S
-            Triple(RP(G, 0, EOR), LHS(UP), LHS(UP)),      // G = S .
-            Triple(RP(S, 0, EOR), LHS(UP), LHS(UP)),      // E = . v
-            Triple(RP(E, 0, EOR), LHS(UP), LHS(UP)),      // E = root .
-//TODO
-        ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.expectedAt(rp, lhs)
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
-
-    @Test
-    override fun s0_widthInto() {
-
-    }
-
-
     @Test
     fun automaton_parse_v() {
         val parser = ScanOnDemandParser(rrs)

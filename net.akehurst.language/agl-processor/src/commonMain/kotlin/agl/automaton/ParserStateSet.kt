@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
+import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.processor.AutomatonKind
@@ -34,13 +35,14 @@ internal class ParserStateSet(
     private val lookaheadSets = mutableListOf<LookaheadSet>()
     private var nextStateNumber = 0
 
+    internal val runtimeTransitionCalculator = RuntimeTransitionCalculator(this)
+
     var preBuilt = false; private set
     internal val buildCache: BuildCache = when (automatonKind) {
         AutomatonKind.LOOKAHEAD_NONE -> BuildCacheLC0(this)
         AutomatonKind.LOOKAHEAD_SIMPLE -> TODO()
         AutomatonKind.LOOKAHEAD_1 -> BuildCacheLC1(this)
     }
-    //internal val buildCache:BuildCache = BuildCacheLC1(this)
 
     val usedRules: Set<RuntimeRule> by lazy {
         calcUsedRules(this.startState.runtimeRules.first())
@@ -255,119 +257,6 @@ internal class ParserStateSet(
         return this
     }
 
-    private fun buildAndTraverse2() {
-        // prev of startState = null
-        // closureDown(startState)
-        // FOR each RP in closure
-        //   stateX = RP.next
-        //   stateX.prev.add( startState )
-        //   IF RP.isNotAtEnd THEN
-        //     closureDown(stateX)
-        //     ...
-
-        //what about merged states!
-
-        val possiblePrev = LazyMutableMapNonNull<ParserState, MutableSet<ParserState?>>() { mutableSetOf() }
-
-        // Enumerate all rule-positions used in state definitions
-        val allStateRPs = this.usedRules.flatMap { rr ->
-            rr.rulePositions.filter { rp -> rp.isAtStart.not() }
-        }
-        // compute RPs merged into one state - i.e. same ?
-        val allMergedStateRps = allStateRPs.groupBy { rp -> this.buildCache.expectedAt(rp, LookaheadSetPart.UP) }.values //TODO: fix parameter to firstOf
-        val allMergedStates = allMergedStateRps.map { rps -> this.createState(rps) }
-
-        val stateInfos = this.buildCache.stateInfo()
-
-        // previous of start state is null
-        possiblePrev[this.startState].add(null)
-        val todo = mutableQueueOf(this.startState)
-        while (todo.isNotEmpty) {
-            val state = todo.dequeue()
-            val stateNexts = state.rulePositions.map { rp -> rp.next().map { rpn -> this.fetchCompatibleState(listOf(rpn)) } }
-            //val cls = this.buildCache.closureDownFrom(state.rulePositions)
-
-        }
-
-    }
-
-    private fun buildAndTraverse1() {
-        class StatesStack(prevStack: Stack<ParserState>, val state: ParserState) {
-            private val hashCode_cache = arrayOf(this.state, *(prevStack.elements.toTypedArray())).contentHashCode()
-
-            val stack: Stack<ParserState> = prevStack
-            val prev = stack.peekOrNull() ?: state.stateSet.startState
-
-            fun push(nextState: ParserState): StatesStack = StatesStack(this.stack.push(this.state), nextState)
-            fun pushPrev(nextState: ParserState): StatesStack = StatesStack(this.stack.clone(), nextState)
-            fun pushPrevPrev(nextState: ParserState): StatesStack = StatesStack(this.stack.pop().stack, nextState)
-
-            val isLooped: Boolean
-                get() {
-                    return when {
-                        stack.size < 1 -> false
-                        else -> {
-                            val p = Pair(this.state, this.prev)
-                            for (i in this.stack.elements.size - 1 downTo 0) {
-                                val os = this.stack.elements[i]
-                                val op = if (i > 1) this.stack.elements[i - 1] else null
-                                val opr = Pair(os, op)
-                                if (p == opr) {
-                                    return true
-                                }
-                            }
-                            false
-                        }
-                    }
-                }
-
-            override fun hashCode(): Int = hashCode_cache
-
-            override fun equals(other: Any?): Boolean = when {
-                this === other -> true
-                other !is StatesStack -> false
-                this.state != other.state -> false
-                else -> this.stack == other.stack
-            }
-
-            override fun toString(): String = when {
-                this.stack.isEmpty -> "$state-->null"
-                else -> "$state-->${stack.elements.reversed().joinToString(separator = "-->") { it.toString() }}-->null"
-            }
-        }
-//TODO: create valid states first ? and/or enable mering of states
-        val done = mutableSetOf<StatesStack>()
-        val transitions = MutableQueue<Pair<StatesStack, Transition>>()
-        var curStack = StatesStack(Stack(), this.startState)
-        val s0_trans = curStack.state.transitions(curStack.prev)
-        s0_trans.forEach { transitions.enqueue(Pair(curStack, it)) }
-        while (transitions.isEmpty.not()) {
-            val pair = transitions.dequeue()
-            curStack = pair.first
-            val tr = pair.second
-            // assume we take the transition
-            val curState = curStack.state
-            val nextState = tr.to
-            check(tr.from == curState) { "Error building Automaton" }
-            val newStack = when (tr.action) {
-                Transition.ParseAction.WIDTH -> curStack.push(nextState)
-                Transition.ParseAction.EMBED -> curStack.push(nextState)
-                Transition.ParseAction.HEIGHT -> curStack.pushPrev(nextState)
-                Transition.ParseAction.GRAFT -> curStack.pushPrevPrev(nextState)
-                Transition.ParseAction.GOAL -> curStack
-            }
-            val newTrans = newStack.state.transitions(newStack.prev)
-            if (newStack.isLooped) {
-                // do nothing
-                val i = 0
-            } else {
-                if (done.add(newStack)) {
-                    newTrans.forEach { transitions.enqueue(Pair(newStack, it)) }
-                }
-            }
-        }
-    }
-
     private fun buildAndTraverse() {
         // this.buildCache.buildCaches()
         val stateInfos = this.buildCache.stateInfo()
@@ -392,8 +281,8 @@ internal class ParserStateSet(
                     Transition.ParseAction.GRAFT -> ti.parent.toList()
                 }
                 val lhs = ti.lookahead.map { Lookahead(it.guard.lhs(this), it.up.lhs(this)) }.toSet()
-                val runtimeGuard = ParserState.runtimeGuardFor(action)
-                state.createTransition(previousStates, action, to, lhs, prevGuard?.toList(), runtimeGuard)
+                val runtimeGuard = Transition.runtimeGuardFor(action)
+                state.outTransitions.createTransition(previousStates, state, action, to, lhs, prevGuard?.toList(), runtimeGuard)
             }
         }
 

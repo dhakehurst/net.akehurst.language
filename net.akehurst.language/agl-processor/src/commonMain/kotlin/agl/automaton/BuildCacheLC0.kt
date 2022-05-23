@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.structure.*
 
 internal data class ClosureItemLC0(
@@ -82,21 +83,21 @@ internal class BuildCacheLC0(
 
     override fun stateInfo(): Set<StateInfo> = this._stateInfo.values.toSet()
 
-    override fun widthInto(prevState: ParserState, fromState: ParserState): Set<WidthInfo> {
-        return this._widthInto[fromState.rulePositions]?.values?.toSet() ?: run {
-            val dnCls = fromState.rulePositions.flatMap { this.dnClosureLR0(it) }.toSet()
+    override fun widthInto(prevState: RuntimeState, fromState: RuntimeState): Set<WidthInfo> {
+        return this._widthInto[fromState.state.rulePositions]?.values?.toSet() ?: run {
+            val dnCls = fromState.state.rulePositions.flatMap { this.dnClosureLR0(it) }.toSet()
             val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
             val bottomTerminals = filt.map { it.rulePosition.item!! }.toSet()
-            val calc = calcAndCacheWidthInfo(fromState.rulePositions, bottomTerminals)
+            val calc = calcAndCacheWidthInfo(fromState.state.rulePositions, bottomTerminals)
             calc
         }
     }
 
-    override fun heightGraftInto(prevState: ParserState, fromState:ParserState): Set<HeightGraftInfo> {
-        val key = Pair(prevState.rulePositions, fromState.runtimeRules)
+    override fun heightOrGraftInto(prevState: RuntimeState, fromState:RuntimeState): Set<HeightGraftInfo> {
+        val key = Pair(prevState.state.rulePositions, fromState.state.runtimeRules)
         return this._heightOrGraftInto[key] ?: run {
-            val upCls = prevState.rulePositions.flatMap { this.dnClosureLR0(it) }.toSet()
-            val calc = calcAndCacheHeightOrGraftInto(prevState.rulePositions, fromState.runtimeRules, upCls)
+            val upCls = prevState.state.rulePositions.flatMap { this.dnClosureLR0(it) }.toSet()
+            val calc = calcAndCacheHeightOrGraftInto(prevState.state.rulePositions, fromState.state.runtimeRules, upCls)
             calc
         }
     }

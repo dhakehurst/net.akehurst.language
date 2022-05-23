@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
@@ -23,7 +24,6 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.collections.MutableQueue
 import net.akehurst.language.collections.lazyMutableMapNonNull
-import net.akehurst.language.collections.mutableQueueOf
 import net.akehurst.language.collections.mutableStackOf
 
 internal class BuildCacheLC1(
@@ -219,11 +219,6 @@ internal class BuildCacheLC1(
     private val _calcClosureLR0 = mutableMapOf<RulePosition, Set<RulePosition>>()
     private val _closureItems = mutableMapOf<Pair<ParserState, ParserState>, List<ClosureItemLC1>>()
     private val _dnClosure = mutableMapOf<RulePosition, Set<ClosureItemLC1>>()
-    private val _stateInfo = mutableMapOf<List<RulePosition>, StateInfo>()
-
-    // from-state-listOf-rule-positions -> mapOf
-    //    to-state-terminal-rule -> WidthInfo
-    private val _widthInto = mutableMapOf<ParserState, MutableMap<RuntimeRule, WidthInfo>>()
 
     // Pair( listOf(RulePositions-of-previous-state), listOf(RuntimeRules-of-fromState) ) -> mapOf
     //    to-state-rule-positions -> HeightGraftInfo
@@ -236,99 +231,6 @@ internal class BuildCacheLC1(
     }
 
     override fun stateInfo(): Set<StateInfo> = this.stateInfo2()
-
-    internal fun stateInfo1(): Set<StateInfo> {
-        data class RpToDo(
-            val state: PossibleState,
-            val parentFirstOfNext: LookaheadSetPart,
-            val prev: PossibleState,
-            val prevForChildren: PossibleState,
-            val stateFirstOfNext: LookaheadSetPart
-        )
-
-        val firstOfCache = lazyMutableMapNonNull<RulePosition, MutableMap<RulePosition?, LookaheadSetPart>> { mutableMapOf() }
-        val possibleStates = mutableMapOf<RulePosition, PossibleState>()
-        val done = mutableSetOf<Pair<PossibleState, PossibleState?>>()
-
-        // Start State [G(0,0,SOR)]
-        val rpGstart = this.stateSet.startState.rulePositions.first()
-        val stateGstart = PossibleState(firstOfCache, rpGstart)
-        possibleStates[rpGstart] = stateGstart
-        val firstOfGstart = this.expectedAt(rpGstart, LookaheadSetPart.UP)
-        firstOfCache[rpGstart][null] = firstOfGstart
-        firstOfCache[rpGstart][rpGstart] = firstOfGstart
-        stateGstart.setTransInfo(rpGstart, null, LookaheadSetPart.EMPTY, firstOfGstart, LookaheadSetPart.UP)
-
-        // End State [G(0,0,EOR)]
-        val rpGend = rpGstart.atEnd()
-        val stateGend = PossibleState(firstOfCache, rpGend)
-        possibleStates[rpGend] = stateGend
-        stateGend.setTransInfo(rpGstart, null, LookaheadSetPart.EMPTY, LookaheadSetPart.EMPTY, LookaheadSetPart.EMPTY)
-
-        // Other states
-        val todo = mutableQueueOf(RpToDo(stateGstart, LookaheadSetPart.EMPTY, stateGstart, stateGstart, LookaheadSetPart.UP))
-        //TODO speed up! by eliminating calls to firstOf
-        while (todo.isNotEmpty) {
-            val stateToDo = todo.dequeue()
-            val state = stateToDo.state
-            val prevForChildren = stateToDo.prevForChildren
-            val stateFirstOfNext = stateToDo.stateFirstOfNext
-            val rule = stateToDo.state.rulePosition.item
-            if (null != rule) {
-                val ruleRps = rule.rulePositions
-                for (childRp in ruleRps) {
-                    val childRpState = possibleStates[childRp] ?: PossibleState(firstOfCache, childRp)
-                    val childParentFirstOfNext = when {
-                        childRpState.isAtEnd -> stateToDo.parentFirstOfNext
-                        else -> stateFirstOfNext
-                    }
-                    val childRpPrev = prevForChildren
-                    val d = Pair(childRpState, childRpPrev)
-                    if (done.contains(d).not()) {
-                        done.add(d)
-                        val childRpPrevForChildren = when {
-                            childRp.isAtStart -> childRpPrev
-                            else -> childRpState
-                        }
-                        val firstOf = this.expectedAt(childRp, stateFirstOfNext) //TODO: don't use firstOf Function
-                        firstOfCache[childRp][childRpPrev.rulePosition] = firstOf
-                        val firstOfNext = when {
-                            childRp.isAtEnd -> stateFirstOfNext
-                            else -> childRp.next().map { this.expectedAt(it, stateFirstOfNext) }.reduce { acc, it -> acc.union(it) } //TODO: don't use firstOf Function
-                        }
-                        if (childRp.isAtStart.not()) {
-                            childRpState.setTransInfo(childRpPrev.rulePosition, state, childParentFirstOfNext, firstOf, firstOfNext)
-                            possibleStates[childRp] = childRpState
-                        }
-                        todo.enqueue(RpToDo(childRpState, childParentFirstOfNext, childRpPrev, childRpPrevForChildren, firstOfNext))
-                    } else {
-                        //do not recurse
-                    }
-                }
-            } else {
-                //no items for rule
-            }
-        }
-
-        val mergedStates = mergeStates(possibleStates)
-
-        //return possibleStates.values.map { StateInfo(listOf(it.rulePosition), it.outTransInfo.keys.map { it?.let { listOf(it) } ?: emptyList() }) }.toSet()
-        return mergedStates
-    }
-
-    private fun calcAction(parent: PossibleState?, state: PossibleState) = when {
-        state.isGoalStart -> Transition.ParseAction.WIDTH
-        state.isGoalEnd -> Transition.ParseAction.GOAL
-        state.isAtEnd -> when {
-            null == parent -> error("should not happen")
-            parent.isAtStart -> when {
-                parent.isGoalStart -> Transition.ParseAction.GRAFT //special case for parent=RP(G,0,SOR)
-                else -> Transition.ParseAction.HEIGHT
-            }
-            else -> Transition.ParseAction.GRAFT
-        }
-        else -> Transition.ParseAction.WIDTH
-    }
 
     private fun mergeStates(unmerged: Map<RulePosition, PossibleState>): Set<StateInfo> {
         // merge states with transitions to the same (next) state with same action
@@ -734,52 +636,16 @@ internal class BuildCacheLC1(
         return stateInfo
     }
 
-    override fun widthInto(prevState: ParserState, fromState: ParserState): Set<WidthInfo> {
-        return if (this._cacheOff) {
-            val calc = calcWidthInfo(prevState, fromState)
-            calc
-        } else {
-            this._widthInto[fromState]?.values?.toSet() ?: run {
-                val calc = calcAndCacheWidthInfo(prevState, fromState)
-                calc
-            }
-        }
-    }
-
-    override fun heightGraftInto(prevState: ParserState, fromState: ParserState): Set<HeightGraftInfo> {
-        return if (this._cacheOff) {
-            // have to ensure somehow that from grows into prev
-            // have to do closure down from prev,
-            // upCls is the closure down from prev
-            val upCls = prevState.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
-            val calc = calcAndCacheHeightOrGraftInto(prevState.rulePositions, fromState.runtimeRules, upCls)
-            calc
-        } else {
-            val key = Pair(prevState.rulePositions, fromState.runtimeRules)
-            this._heightOrGraftInto[key]?.values?.toSet() ?: run {
-                val upCls = prevState.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
-                val calc = calcAndCacheHeightOrGraftInto(prevState.rulePositions, fromState.runtimeRules, upCls)
-                calc
-            }
-        }
-    }
-
-    private fun calcAndCacheWidthInfo(prevState: ParserState, fromState: ParserState): Set<WidthInfo> {
-        val wis = calcWidthInfo(prevState, fromState)
-        cacheWidthInfo(fromState, wis)
-        return wis
-    }
-
-    private fun calcWidthInfo(prevState: ParserState, fromState: ParserState): Set<WidthInfo> {
+    override fun widthInto(prevState: RuntimeState, fromState: RuntimeState): Set<WidthInfo> {
         // the 'to' state is the first Terminal the fromState.rulePosition
         // if there are multiple fromState.rulePositions then they should have same firstOf or they would not be merged.
         // after a WIDTH, fromState becomes the prevState, therefore
         // the lookahead is the firstOf the parent.next of the 'to' state, in the context of the fromStateRulePositions
-        if (Debug.OUTPUT_BUILD) Debug.debug(Debug.IndentDelta.INC_AFTER) { "START calcWidthInfo($prevState, $fromState) - ${fromState.rulePositions.map { it.item?.tag }}" }
+        if (Debug.OUTPUT_BUILD) Debug.debug(Debug.IndentDelta.INC_AFTER) { "START calcWidthInfo($prevState, $fromState) - ${fromState.state.rulePositions.map { it.item?.tag }}" }
         val firstTerminals = this.firstTerminal(prevState, fromState)
         val wis = firstTerminals.map { rr ->
             //TODO:remove old stuff
-            val upCls = fromState.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
+            val upCls = fromState.state.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
             val upFilt = upCls.filter { rr == it.rulePosition.item }
             val lhs_old = upFilt.map { it.lookaheadSet }.reduce { acc, it -> acc.union(it) }
             val follow = this.followAtEndInContext(fromState, rr).toSet()
@@ -791,6 +657,24 @@ internal class BuildCacheLC1(
         this.firstFollowCache.clear()
         if (Debug.OUTPUT_BUILD) Debug.debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcWidthInfo($prevState, $fromState)" }
         return wis.toSet()
+    }
+
+    override fun heightOrGraftInto(prevState: RuntimeState, fromState: RuntimeState): Set<HeightGraftInfo> {
+        // return if (this._cacheOff) {
+        // have to ensure somehow that from grows into prev
+        // have to do closure down from prev,
+        // upCls is the closure down from prev
+        val upCls = prevState.state.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
+        val calc = calcAndCacheHeightOrGraftInto(prevState, fromState, upCls)
+        return calc
+        //} else {
+        //    val key = Pair(prevState.rulePositions, fromState.runtimeRules)
+        //    this._heightOrGraftInto[key]?.values?.toSet() ?: run {
+        //        val upCls = prevState.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
+        //        val calc = calcAndCacheHeightOrGraftInto(prevState.rulePositions, fromState.runtimeRules, upCls)
+        //        calc
+        //    }
+        //}
     }
 
     private fun calcWidthInfo1(fromRulePositions: List<RulePosition>, dnCls: Set<ClosureItemLC1>): Set<WidthInfo> {
@@ -806,31 +690,14 @@ internal class BuildCacheLC1(
         return grouped
     }
 
-    private fun cacheWidthInfo(fromState: ParserState, wis: Set<WidthInfo>) {
-        val map = this._widthInto[fromState] ?: run {
-            val x = mutableMapOf<RuntimeRule, WidthInfo>()
-            this._widthInto[fromState] = x
-            x
-        }
-        for (wi in wis) {
-            val existing = map[wi.to.runtimeRule]
-            if (null == existing) {
-                map[wi.to.runtimeRule] = wi
-            } else {
-                val lhs = wi.lookaheadSet.union(existing.lookaheadSet)
-                map[wi.to.runtimeRule] = WidthInfo(wi.to, lhs)
-            }
-        }
-    }
-
-    private fun calcAndCacheHeightOrGraftInto(prev: List<RulePosition>, from: List<RuntimeRule>, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
+    private fun calcAndCacheHeightOrGraftInto(prev: RuntimeState, from: RuntimeState, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
         val hgi = calcHeightOrGraftInto(prev, from, upCls)
         cacheHeightOrGraftInto(prev, from, hgi)
         return hgi
     }
 
-    private fun cacheHeightOrGraftInto(prev: List<RulePosition>, from: List<RuntimeRule>, hgis: Set<HeightGraftInfo>) {
-        val key = Pair(prev, from)
+    private fun cacheHeightOrGraftInto(prev: RuntimeState, from: RuntimeState, hgis: Set<HeightGraftInfo>) {
+        val key = Pair(prev.state.rulePositions, from.state.runtimeRules)
         val map = this._heightOrGraftInto[key] ?: run {
             val x = mutableMapOf<List<RulePosition>, HeightGraftInfo>()
             this._heightOrGraftInto[key] = x
@@ -849,32 +716,56 @@ internal class BuildCacheLC1(
     }
 
     //for graft, previous must match prevGuard, for height must not match
-    private fun calcHeightOrGraftInto(prev: List<RulePosition>, from: List<RuntimeRule>, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
-        val info = prev.flatMap { pr ->
-            val parentsOfFrom = from.flatMap { fr -> this.firstFollowCache.parentInContext(pr, fr) }
-            parentsOfFrom.flatMap { (parentPrev, parentRulePosition) ->
-                val action = when {
-                    parentRulePosition.isGoal -> Transition.ParseAction.GOAL
-                    parentRulePosition.isAtStart -> Transition.ParseAction.HEIGHT
-                    else -> Transition.ParseAction.GRAFT
-                }
-                val targets = parentRulePosition.next()
-                targets.map { tgt ->
-                    val firstOrFollow = when {
-                        tgt.isAtEnd -> this.firstFollowCache.followAtEndInContext(parentPrev, tgt.runtimeRule)
-                        else -> this.firstFollowCache.followInContext(parentPrev, tgt)
+    private fun calcHeightOrGraftInto(prev: RuntimeState, from: RuntimeState, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
+        val info: Set<HeightGraftInfo> = prev.state.rulePositions.flatMap { prevRp ->
+            prev.runtimeLookaheadSet.flatMap { prevLh ->
+                val parentsOfFrom:Set<FirstFollowCache2.ParentOfInContext> = from.state.runtimeRules.flatMap { fr -> this.firstFollowCache.parentInContext(prevRp, prevLh.fullContent, fr) }.toSet()
+                parentsOfFrom.flatMap { (parentContext, parent) ->
+                    val action = when {
+                        parent.rulePosition.isGoal -> Transition.ParseAction.GOAL
+                        parent.rulePosition.isAtStart -> Transition.ParseAction.HEIGHT
+                        else -> Transition.ParseAction.GRAFT
                     }
-                    val grd = LookaheadSetPart.createFromRuntimeRules(firstOrFollow)
-                    val tgtParents = this.firstFollowCache.parentInContext(parentPrev, tgt.runtimeRule)
-                    val parentFollow = when {
-                        tgtParents.isEmpty() -> listOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD) // occurs eg. when GRAFT into RP(G,0,EOR) at end
-                        else -> {
-                            tgtParents.flatMap { tp ->
-                                tp.rulePosition.next().flatMap { parRpNxt ->
+                    val targets = parent.rulePosition.next()
+                    targets.map { tgt ->
+                        val firstOrFollow = when {
+                            tgt.isAtEnd -> this.firstFollowCache.followAtEndInContext(parentContext.rulePosition, parentContext.followAtEnd, tgt.runtimeRule)
+                            else -> this.firstFollowCache.followInContext(parentContext.rulePosition, parentContext.followAtEnd, tgt)
+                        }
+                        val grd = LookaheadSetPart.createFromRuntimeRules(firstOrFollow)
+                        val tgtParents = this.firstFollowCache.parentInContext(parentContext.rulePosition, parentContext.followAtEnd, tgt.runtimeRule)
+                        val parentFollow = when {
+                            tgtParents.isEmpty() -> listOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD) // occurs eg. when GRAFT into RP(G,0,EOR) at end
+                            else -> {
+                                tgtParents.flatMap { (tgtParContext, tgtPar) ->
+                                    tgtPar.rulePosition.next().flatMap { parRpNxt ->
+                                        val parFirstOrFollow = when {
+                                            //tp.rulePosition.isAtEnd -> this.firstFollowCache.followInContext(tp.context, parRpNxt.runtimeRule)
+                                            parRpNxt.isAtEnd -> this.firstFollowCache.followAtEndInContext(tgtParContext.rulePosition,tgtParContext.followAtEnd, parRpNxt.runtimeRule)
+                                            else -> this.firstFollowCache.followInContext(tgtParContext.rulePosition,tgtParContext.followAtEnd, parRpNxt)
+                                        }
+                                        if (parFirstOrFollow.isEmpty()) {
+                                            listOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                                        } else {
+                                            parFirstOrFollow
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        val up = LookaheadSetPart.createFromRuntimeRules(parentFollow.toSet())
+
+                        val parentFirstOf = this.firstFollowCache.followInContext(parentContext.rulePosition, parentContext.followAtEnd, tgt)
+
+                        val old = HeightGraftInfo(action, listOf(parent.rulePosition), listOf(tgt), setOf(LookaheadInfoPart(grd, up)))
+
+                        val lh = when (action) {
+                            Transition.ParseAction.HEIGHT -> tgtParents.map { (tgtParContext, tgtPar) ->
+                                val tgtParAtEnd = this.firstFollowCache.followAtEndInContext(tgtParContext.rulePosition,tgtParContext.followAtEnd, tgtPar.rulePosition.runtimeRule)
+                                val tgtParFollow = tgtPar.rulePosition.next().flatMap { tgtParRpNxt ->
                                     val parFirstOrFollow = when {
-                                        //tp.rulePosition.isAtEnd -> this.firstFollowCache.followInContext(tp.context, parRpNxt.runtimeRule)
-                                        parRpNxt.isAtEnd -> this.firstFollowCache.followAtEndInContext(tp.context, parRpNxt.runtimeRule)
-                                        else -> this.firstFollowCache.followInContext(tp.context, parRpNxt)
+                                        tgtParRpNxt.isAtEnd -> this.firstFollowCache.followAtEndInContext(tgtParContext.rulePosition,tgtParContext.followAtEnd, tgtParRpNxt.runtimeRule)
+                                        else -> this.firstFollowCache.followInContext(tgtParContext.rulePosition,tgtParContext.followAtEnd, tgtParRpNxt)
                                     }
                                     if (parFirstOrFollow.isEmpty()) {
                                         listOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
@@ -882,41 +773,19 @@ internal class BuildCacheLC1(
                                         parFirstOrFollow
                                     }
                                 }
+                                val grd2 = LookaheadSetPart.createFromRuntimeRules(tgtParFollow.toSet())
+                                val up2 = LookaheadSetPart.createFromRuntimeRules(tgtParAtEnd.toSet())
+                                LookaheadInfoPart(grd2, up2)
+                            }.toSet()
+                            else -> {
+                                val grd2 = LookaheadSetPart.EMPTY
+                                val up2 = LookaheadSetPart.createFromRuntimeRules(firstOrFollow)
+                                setOf(LookaheadInfoPart(grd2, up2))
                             }
                         }
+                        val new = HeightGraftInfo(action, listOf(parent.rulePosition), listOf(tgt), lh)
+                        new
                     }
-                    val up = LookaheadSetPart.createFromRuntimeRules(parentFollow.toSet())
-
-                    val parentFirstOf = this.firstFollowCache.followInContext(parentPrev, tgt)
-
-                    val old = HeightGraftInfo(action, listOf(parentRulePosition), listOf(tgt), setOf(LookaheadInfoPart(grd, up)))
-
-                    val lh = when(action) {
-                        Transition.ParseAction.HEIGHT -> tgtParents.map { (tgtParPrev, tgtParRP) ->
-                            val tgtParAtEnd = this.firstFollowCache.followAtEndInContext(tgtParPrev, tgtParRP.runtimeRule)
-                            val tgtParFollow = tgtParRP.next().flatMap { tgtParRpNxt ->
-                                val parFirstOrFollow = when {
-                                    tgtParRpNxt.isAtEnd -> this.firstFollowCache.followAtEndInContext(tgtParPrev, tgtParRpNxt.runtimeRule)
-                                    else -> this.firstFollowCache.followInContext(tgtParPrev, tgtParRpNxt)
-                                }
-                                if (parFirstOrFollow.isEmpty()) {
-                                    listOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-                                } else {
-                                    parFirstOrFollow
-                                }
-                            }
-                            val grd2 = LookaheadSetPart.createFromRuntimeRules(tgtParFollow.toSet())
-                            val up2 = LookaheadSetPart.createFromRuntimeRules(tgtParAtEnd.toSet())
-                            LookaheadInfoPart(grd2, up2)
-                        }.toSet()
-                        else -> {
-                            val grd2 = LookaheadSetPart.EMPTY
-                            val up2 = LookaheadSetPart.createFromRuntimeRules(firstOrFollow)
-                            setOf(LookaheadInfoPart(grd2, up2))
-                        }
-                    }
-                    val new = HeightGraftInfo(action, listOf(parentRulePosition), listOf(tgt), lh)
-                    new
                 }
             }
         }.toSet()
@@ -925,8 +794,8 @@ internal class BuildCacheLC1(
         // upCls is the closure down from prev
         //TODO: can we reduce upCls at this point ?
         val hgis = mutableListOf<HeightGraftInfo>()
-        for (fromRp in from) {
-            val upFilt = upCls.filter { fromRp == it.rulePosition.item }
+        for (fromRl in from.state.runtimeRules) {
+            val upFilt = upCls.filter { fromRl == it.rulePosition.item }
             val res = upFilt.flatMap { clsItem ->
                 val parent = clsItem.rulePosition
                 val action = when {

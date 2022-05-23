@@ -20,6 +20,7 @@ import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
@@ -55,62 +56,6 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
     private val a = rrs.findRuntimeRule("'a'")
     private val b = rrs.findRuntimeRule("'b'")
     private val v = rrs.findRuntimeRule("'v'")
-
-    @Test
-    override fun firstOf() {
-        listOf(
-            Triple(RP(G, 0, SOR), lhs_U, LHS(v)),       // G = . S
-            Triple(RP(G, 0, EOR), lhs_U, LHS(UP)),      // G = S .
-            Triple(RP(S, 0, SOR), lhs_U, LHS(a)),       // S = . E
-            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),      // E = . v
-            Triple(RP(S, 1, SOR), lhs_U, LHS(a)),       // E = . EA
-            Triple(RP(S, 1, EOR), lhs_U, LHS(UP)),      // E = . EB
-
-        ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.expectedAt(rp, lhs.part)
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
-
-    @Test
-    override fun s0_widthInto() {
-        val s0 = SM.startState
-        val actual = s0.widthInto(s0)
-
-        val expected = setOf(
-            WidthInfo(RP(v, 0, EOR), LHS(UP, a, b))
-        )
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun s0_transitions() {
-        val s0 = SM.startState
-        val s1 = SM.createState(listOf(RP(v, 0, EOR)))
-        val actual = s0.transitions(s0)
-        val expected = listOf(
-            Transition(s0, s1, WIDTH, LHS(UP, a, b).lhs(SM), LookaheadSet.EMPTY, null) { _, _ -> true }
-        )
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun s1_heightOrGraftInto_s0() {
-        val s0 = SM.startState
-        val s1 = SM.createState(listOf(RP(v, 0, EOR)))
-        s0.widthInto(s0)
-        val actual = s1.heightOrGraftInto(s0).toList()
-
-        val expected = listOf(
-            HeightGraftInfo(
-                Transition.ParseAction.HEIGHT,
-                listOf(RP(E, 0, SOR)),
-                listOf(RP(E, 0, EOR)),
-                setOf(LookaheadInfoPart(LHS(UP, a, b), LHS(UP, a, b)))
-            )
-        )
-        assertEquals(expected, actual)
-    }
 
     @Test
     fun automaton_parse_v() {

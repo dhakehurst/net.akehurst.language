@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 
@@ -24,12 +25,12 @@ internal interface BuildCache {
     fun clearAndOff()
 
     fun stateInfo(): Set<StateInfo>
-    fun widthInto(prevState:ParserState, fromState: ParserState): Set<WidthInfo>
-    fun heightGraftInto(prevState:ParserState, fromState: ParserState) : Set<HeightGraftInfo>
+    fun widthInto(prevState:RuntimeState, fromState: RuntimeState): Set<WidthInfo>
+    fun heightOrGraftInto(prevState: RuntimeState, fromState: RuntimeState) : Set<HeightGraftInfo>
 
     fun expectedAt(rulePosition: RulePosition, ifReachedEnd: LookaheadSetPart): LookaheadSetPart
 
     // exposed on interface so we can test them
-    fun firstTerminal(prev: ParserState, fromState: ParserState): List<RuntimeRule>
-    fun followAtEndInContext(prev: ParserState, runtimeRule: RuntimeRule): List<RuntimeRule>
+    fun firstTerminal(prev: RuntimeState, fromState: RuntimeState): List<RuntimeRule>
+    fun followAtEndInContext(prev: RuntimeState, runtimeRule: RuntimeRule): List<RuntimeRule>
 }

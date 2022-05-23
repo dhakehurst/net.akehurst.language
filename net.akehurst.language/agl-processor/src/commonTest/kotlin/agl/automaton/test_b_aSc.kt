@@ -51,23 +51,6 @@ internal class test_b_aSc : test_AutomatonAbstract() {
     private val b = rrs.findRuntimeRule("'b'")
     private val c = rrs.findRuntimeRule("'c'")
 
-
-    @Test
-    override fun firstOf() {
-        listOf(
-            Triple(RP(G, 0, SOR), lhs_U, LHS(a)),       // G = . S
-            Triple(RP(G, 0, EOR), lhs_U, LHS(UP)),      // G = S .
-            Triple(RP(S, 0, SOR), lhs_U, LHS(a)),       // S = . b
-            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),      // S = b .
-            Triple(RP(S, 1, SOR), lhs_U, LHS(a)),       // S = . S1
-            Triple(RP(S, 1, EOR), lhs_U, LHS(UP)),      // S = S1 .
-            //TODO:
-        ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.expectedAt(rp, lhs.part)
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
-
     @Test
     fun closures() {
         val ffc = FirstFollowCache(SM)
@@ -80,52 +63,6 @@ internal class test_b_aSc : test_AutomatonAbstract() {
         assertEquals(expected, actual)
     }
 
-    @Test
-    override fun s0_widthInto() {
-        val s0 = SM.startState
-        val actual = s0.widthInto(s0)
-
-        val expected = setOf(
-            WidthInfo(RP(b, 0, EOR), LHS(UP)),
-            WidthInfo(RP(a, 0, EOR), LHS(a, b)),
-        )
-        assertEquals(expected, actual)
-    }
-
-    /*
-        @Test
-        fun s1_heightOrGraftInto_s0() {
-            val s0 = SM.startState
-            val s1 = SM.createState(listOf(RP(a, 0, EOR)))
-            s0.widthInto(s0)
-            val actual = s1.heightOrGraftInto(s0)
-
-            val expected = setOf(
-                HeightGraftInfo(
-                    Transition.ParseAction.HEIGHT,
-                    listOf(RP(ABC, 0, SOR), RP(ABD, 0, SOR)),
-                    listOf(RP(ABC, 0, 1), RP(ABD, 0, 1)),
-                    lhs_b.part,
-                    setOf(LHS(UP))
-                )
-            )
-            assertEquals(expected, actual)
-
-        }
-    */
-    /*
-    @Test
-    fun s0_transitions() {
-        val s0 = SM.startState
-        val s1 = SM.createState(listOf(RP(a, 0, EOR)))
-        val actual = s0.transitions(s0)
-        val expected = listOf<Transition>(
-            Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_b, LookaheadSet.EMPTY, null) { _, _ -> true },
-            //    Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY, null) { _, _ -> true }
-        )
-        assertEquals(expected, actual)
-    }
-*/
     @Test
     fun automaton_parse_b() {
         //given

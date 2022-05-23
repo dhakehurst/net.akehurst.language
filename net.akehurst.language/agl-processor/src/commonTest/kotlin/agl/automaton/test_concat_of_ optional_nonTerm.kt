@@ -19,7 +19,6 @@ package net.akehurst.language.agl.automaton
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
@@ -69,31 +68,6 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
         val T_d = rrs.findRuntimeRule("'d'")
         val T_e = rrs.findRuntimeRule("'e'")
         val T_f = rrs.findRuntimeRule("'f'")
-    }
-
-    @Test
-    override fun firstOf() {
-        listOf(
-            /* G = S . */ Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, LHS(UP)),
-            /* G = . S */ Triple(RulePosition(G, 0, 0), lhs_U, LHS(UP))
-        ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.expectedAt(rp, lhs.part)
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
-
-    @Test
-    override fun s0_widthInto() {
-        val s0 = SM.startState
-        val actual = s0.widthInto(s0).toList()
-        TODO()
-        val expected = listOf<WidthInfo>(
-
-        )
-        assertEquals(expected.size, actual.size)
-        for (i in 0 until actual.size) {
-            assertEquals(expected[i], actual[i])
-        }
     }
 
     @Test

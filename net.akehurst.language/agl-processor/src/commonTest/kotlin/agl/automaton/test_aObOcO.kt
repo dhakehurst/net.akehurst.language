@@ -19,6 +19,7 @@ package net.akehurst.language.agl.automaton
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
@@ -57,52 +58,6 @@ internal class test_aObOcO : test_AutomatonAbstract() {
 
     private val lhs_bcU = SM.createLookaheadSet(true, false, false, setOf(b, c))
 
-    @Test
-    override fun firstOf() {
-        listOf(
-            Triple(RulePosition(cOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, LHS(UP)), // cOpt = . empty
-            Triple(RulePosition(cOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, LHS(c)),        // cOpt = . c
-            Triple(RulePosition(bOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, LHS(UP)), // bOpt = . empty
-            Triple(RulePosition(bOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, LHS(b)),        // bOpt = . b
-            Triple(RulePosition(aOpt, RuntimeRuleItem.MULTI__EMPTY_RULE, 0), lhs_U, LHS(UP)), // aOpt = . empty
-            Triple(RulePosition(aOpt, RuntimeRuleItem.MULTI__ITEM, 0), lhs_U, LHS(a)),        // aOpt = . a
-            Triple(RulePosition(S, 0, RulePosition.END_OF_RULE), lhs_U, LHS(UP)),              // S = a? b? c? .
-            Triple(RulePosition(S, 0, 2), lhs_U, LHS(c, UP)),                           // S = a? b? . c?
-            Triple(RulePosition(S, 0, 1), lhs_U, LHS(b, c, UP)),                        // S = a? . b? c?
-            Triple(RulePosition(S, 0, 0), lhs_U, LHS(a, b, c, UP)),                     // S = a? . b? c?
-            Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, LHS(UP)),               // G = S .
-            Triple(RulePosition(G, 0, 0), lhs_U, LHS(a, b, c, UP))                      // G = . S
-        ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.expectedAt(rp, lhs.part)
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
-
-    @Test
-    override fun s0_widthInto() {
-        val s0 = SM.startState
-        val actual = s0.widthInto(s0)
-
-        val expected = setOf(
-            WidthInfo(RP(aOpt_E, 0, EOR),  LHS(UP, b, c)),
-            WidthInfo(RP(a, 0, EOR), LHS(UP, b, c)),
-        )
-        assertEquals(expected, actual)
-
-    }
-
-    @Test
-    fun s0_transitions() {
-         val s0 = SM.startState
-         val s1 = SM.createState(listOf(RP(a, 0, EOR)))
-         val s2 = SM.createState(listOf(RP(aOpt_E, 0, EOR)))
-        val actual = s0.transitions(s0)
-        val expected = listOf(
-            Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY, null) { _, _ -> true },
-            Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY, null) { _, _ -> true }
-        )
-        assertEquals(expected, actual)
-    }
 
     @Test
     fun parse_a() {

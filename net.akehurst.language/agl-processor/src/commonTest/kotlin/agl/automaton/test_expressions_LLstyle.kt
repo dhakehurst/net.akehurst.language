@@ -59,67 +59,6 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
 
     private val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
 
-
-    @Test
-    override fun firstOf() {
-        listOf(
-            Triple(RP(G, 0, SOR), lhs_U, LHS(a)),       // G = . S
-            Triple(RP(G, 0, EOR), lhs_U, LHS(UP)),      // G = S .
-            Triple(RP(S, 0, SOR), lhs_U, LHS(a)),       // S = . ABC
-            Triple(RP(S, 0, EOR), lhs_U, LHS(UP)),      // S = ABC .
-            Triple(RP(S, 1, SOR), lhs_U, LHS(a)),       // S = . ABD
-            Triple(RP(S, 1, EOR), lhs_U, LHS(UP)),      // S = ABD .
-
-        ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.expectedAt(rp, lhs.part)
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
-
-    @Test
-    override fun s0_widthInto() {
-        val s0 = SM.startState
-        val actual = s0.widthInto(s0).toList()
-
-        val expected = listOf(
-            WidthInfo(RP(a, 0, EOR), lhs_a.part)
-        )
-        assertEquals(expected.size, actual.size)
-        for (i in 0 until actual.size) {
-            assertEquals(expected[i], actual[i])
-        }
-    }
-
-    @Test
-    fun s1_heightOrGraftInto_s0() {
-        val s0 = SM.startState
-        val s1 = SM.createState(listOf(RP(a, 0, EOR)))
-        val actual = s1.heightOrGraftInto(s0).toList()
-
-        val expected = listOf(
-            HeightGraftInfo(
-                Transition.ParseAction.HEIGHT,
-                listOf(RP(E, 0, SOR), RP(E, 0, SOR)),
-                listOf(RP(E, 0, 1), RP(E, 0, 1)),
-                setOf(LookaheadInfoPart(LHS(a),LHS(UP)))
-            )
-        )
-        assertEquals(expected, actual)
-
-    }
-
-    @Test
-    fun s0_transitions() {
-        val s0 = SM.startState
-        val s1 = SM.createState(listOf(RP(a, 0, EOR)))
-        val actual = s0.transitions(s0)
-        val expected = listOf<Transition>(
-            Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_a, LookaheadSet.EMPTY, null) { _, _ -> true },
-            //    Transition(s0, s2, Transition.ParseAction.WIDTH, lhs_bcU, LookaheadSet.EMPTY, null) { _, _ -> true }
-        )
-        assertEquals(expected, actual)
-    }
-
     @Test
     fun automaton_parse_aoa() {
         val parser = ScanOnDemandParser(rrs)

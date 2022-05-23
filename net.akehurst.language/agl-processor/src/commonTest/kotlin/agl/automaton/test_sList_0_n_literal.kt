@@ -45,41 +45,6 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
 
     private val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
 
-
-    @Test
-    override fun firstOf() {
-        TODO("not implemented")
-    }
-
-    @Test
-    override fun s0_widthInto() {
-        val s0 = SM.startState
-        val actual = s0.widthInto(s0).toList()
-
-        val expected = listOf(
-            WidthInfo(RulePosition(a, 0, 0), lhs_T.part)
-        )
-        assertEquals(expected.size, actual.size)
-        for (i in 0 until actual.size) {
-            assertEquals(expected[i], actual[i])
-        }
-    }
-
-    @Test
-    fun s0_transitions() {
-        val actual = s0.transitions(s0)
-        val s1 = s0.stateSet.fetchCompatibleOrCreateState(listOf(RulePosition(a, 0, RulePosition.END_OF_RULE)))
-
-        val expected = listOf(
-            Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_T, LookaheadSet.EMPTY, null) { _, _ -> true },
-            Transition(s0, s1, Transition.ParseAction.WIDTH, lhs_a, LookaheadSet.EMPTY, null) { _, _ -> true }
-        ).toList()
-        assertEquals(expected.size, actual.size)
-        for (i in actual.indices) {
-            assertEquals(expected[i], actual[i])
-        }
-    }
-
     @Test
     fun parse_aba() {
         val parser = ScanOnDemandParser(rrs)

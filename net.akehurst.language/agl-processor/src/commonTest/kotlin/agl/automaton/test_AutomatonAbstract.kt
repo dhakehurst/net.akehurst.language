@@ -44,30 +44,4 @@ internal abstract class test_AutomatonAbstract : test_AutomatonUtilsAbstract() {
         }
     }
 
-    /**
-    listOf(
-    /* G = S . */ Triple(RulePosition(G, 0, RulePosition.END_OF_RULE), lhs_U, setOf(UP)),
-    /* G = . S */ Triple(RulePosition(G, 0, 0), lhs_U, setOf(UP))
-    ).testAll { rp, lhs, expected ->
-    val actual = SM.buildCache.firstOf(rp, lhs)
-    assertEquals(expected, actual, "failed $rp")
-    }
-     */
-    @Test
-    abstract fun firstOf()
-
-    /**
-    val s0 = SM.startState
-    val actual = s0.widthInto(null).toList()
-
-    val expected = s0_widthInto_expected
-    assertEquals(expected.size, actual.size)
-    for (i in 0 until actual.size) {
-    assertEquals(expected[i], actual[i])
-    }
-     */
-    @Test
-    abstract fun s0_widthInto()
-
-
 }

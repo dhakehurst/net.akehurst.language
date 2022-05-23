@@ -63,38 +63,6 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
     }
 
     @Test
-    override fun firstOf() {
-        listOf(
-            Triple(RP(R_grammarDefinition, 0, SOR), lhs_U, LHS(T_namespace)), // grammarDefinition = . namespace grammars
-            Triple(RP(R_grammarDefinition, 0, 1), lhs_U, LHS(T_grammar)), // grammarDefinition = namespace . grammars
-            Triple(RP(R_grammarDefinition, 0, EOR), lhs_U, LHS(UP)),          // grammarDefinition = namespace grammars .
-            Triple(RP(R_namespace, 0, SOR), lhs_U, LHS(UP)), // namespace = . 'namespace' qualifiedName
-            Triple(RP(R_namespace, 0, 1), lhs_U, LHS(UP)), // namespace = 'namespace' . qualifiedName
-            Triple(RP(R_namespace, 0, EOR), lhs_U, LHS(UP)), // namespace = 'namespace' qualifiedName .
-//TODO
-            Triple(RP(G, 0, SOR), lhs_U, LHS(T_namespace)), // G = . grammarDefinition
-            Triple(RP(G, 0, EOR), lhs_U, LHS(UP))        // G = grammarDefinition .
-        ).testAll { rp, lhs, expected ->
-            val actual = SM.buildCache.expectedAt(rp, lhs.part)
-            assertEquals(expected, actual, "failed $rp")
-        }
-    }
-
-    @Test
-    override fun s0_widthInto() {
-        val s0 = SM.startState
-        val actual = s0.widthInto(s0).toList()
-
-        val expected = listOf(
-            WidthInfo(RP(T_namespace, 0, EOR), lhs_IDENTIFIER)
-        )
-        assertEquals(expected.size, actual.size)
-        for (i in 0 until actual.size) {
-            assertEquals(expected[i], actual[i])
-        }
-    }
-
-    @Test
     fun rule_firstTerminals() {
         // rule = ruleTypeLabels IDENTIFIER '='  choice';'
         // ruleTypeLabels = isOverride isSkip isLeaf

@@ -18,6 +18,8 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleListKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
 
 internal typealias RuntimeGuard = Transition.(GrowingNodeIndex, List<RulePosition>?) -> Boolean
 
@@ -29,6 +31,77 @@ internal class Transition(
     val prevGuard: List<RulePosition>?,
     val runtimeGuard: Transition.(current: GrowingNodeIndex, previous: List<RulePosition>?) -> Boolean
 ) {
+
+    companion object {
+        val multiRuntimeGuard: Transition.(GrowingNodeIndex) -> Boolean = { gn: GrowingNodeIndex ->
+            val previousRp = gn.runtimeState.state.rulePositions.first() //FIXME: first rule may not be correct
+            val runtimeRule = gn.runtimeState.state.firstRule //FIXME:
+            when {
+                previousRp.isAtEnd -> gn.numNonSkipChildren + 1 >= runtimeRule.rhs.multiMin
+                previousRp.position == RulePosition.POSITION_MULIT_ITEM -> {
+                    //if the to state creates a complete node then min must be >= multiMin
+                    if (this.to.rulePositions.first().isAtEnd) {
+                        val minSatisfied = gn.numNonSkipChildren + 1 >= runtimeRule.rhs.multiMin
+                        val maxSatisfied = -1 == runtimeRule.rhs.multiMax || gn.numNonSkipChildren + 1 <= runtimeRule.rhs.multiMax
+                        minSatisfied && maxSatisfied
+                    } else {
+                        -1 == runtimeRule.rhs.multiMax || gn.numNonSkipChildren + 1 <= runtimeRule.rhs.multiMax
+                    }
+
+                }
+                else -> true
+            }
+        }
+        val sListRuntimeGuard: Transition.(GrowingNodeIndex) -> Boolean = { gn: GrowingNodeIndex ->
+            val previousRp = gn.runtimeState.state.rulePositions.first() //FIXME: first rule may not be correct
+            val runtimeRule = gn.runtimeState.state.firstRule //FIXME:
+            when {
+                previousRp.isAtEnd -> (gn.numNonSkipChildren / 2) + 1 >= runtimeRule.rhs.multiMin
+                previousRp.position == RulePosition.POSITION_SLIST_ITEM -> {
+                    //if the to state creates a complete node then min must be >= multiMin
+                    if (this.to.rulePositions.first().isAtEnd) {
+                        val minSatisfied = (gn.numNonSkipChildren / 2) + 1 >= runtimeRule.rhs.multiMin
+                        val maxSatisfied = -1 == runtimeRule.rhs.multiMax || (gn.numNonSkipChildren / 2) + 1 <= runtimeRule.rhs.multiMax
+                        minSatisfied && maxSatisfied
+                    } else {
+                        -1 == runtimeRule.rhs.multiMax || (gn.numNonSkipChildren / 2) + 1 <= runtimeRule.rhs.multiMax
+                    }
+                }
+                previousRp.position == RulePosition.POSITION_SLIST_SEPARATOR -> {
+                    //if the to state creates a complete node then min must be >= multiMin
+                    if (this.to.rulePositions.first().isAtEnd) {
+                        val minSatisfied = (gn.numNonSkipChildren / 2) + 1 >= runtimeRule.rhs.multiMin
+                        val maxSatisfied = -1 == runtimeRule.rhs.multiMax || (gn.numNonSkipChildren / 2) + 1 < runtimeRule.rhs.multiMax
+                        minSatisfied && maxSatisfied
+                    } else {
+                        -1 == runtimeRule.rhs.multiMax || (gn.numNonSkipChildren / 2) + 1 < runtimeRule.rhs.multiMax
+                    }
+                }
+                else -> true
+            }
+        }
+
+        val graftRuntimeGuard: RuntimeGuard = { gn, previous ->
+            if (null == previous) {
+                true
+            } else {
+                val rr = previous.first().runtimeRule //FIXME: possibly more than one!!
+                when (rr.rhs.itemsKind) {
+                    RuntimeRuleRhsItemsKind.LIST -> when (rr.rhs.listKind) {
+                        RuntimeRuleListKind.MULTI -> multiRuntimeGuard.invoke(this, gn)
+                        RuntimeRuleListKind.SEPARATED_LIST -> sListRuntimeGuard.invoke(this, gn)
+                        else -> TODO()
+                    }
+                    else -> true
+                }
+            }
+        }
+        val defaultRuntimeGuard: RuntimeGuard = { gn, previous -> true }
+        fun runtimeGuardFor(action: Transition.ParseAction): Transition.(GrowingNodeIndex, List<RulePosition>?) -> Boolean = when (action) {
+            Transition.ParseAction.GRAFT -> graftRuntimeGuard
+            else -> defaultRuntimeGuard
+        }
+    }
 
     internal enum class ParseAction {
         HEIGHT, // reduce first
