@@ -31,6 +31,6 @@ internal interface BuildCache {
     fun expectedAt(rulePosition: RulePosition, ifReachedEnd: LookaheadSetPart): LookaheadSetPart
 
     // exposed on interface so we can test them
-    fun firstTerminal(prev: RuntimeState, fromState: RuntimeState): List<RuntimeRule>
-    fun followAtEndInContext(prev: RuntimeState, runtimeRule: RuntimeRule): List<RuntimeRule>
+    //fun firstTerminal(prev: RuntimeState, fromState: RuntimeState): List<RuntimeRule>
+    //fun followAtEndInContext(prev: RuntimeState, runtimeRule: RuntimeRule): List<RuntimeRule>
 }

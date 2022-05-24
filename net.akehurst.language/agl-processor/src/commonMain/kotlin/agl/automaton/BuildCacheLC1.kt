@@ -652,7 +652,7 @@ internal class BuildCacheLC1(
             val upCls = fromState.state.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
             val upFilt = upCls.filter { rr == it.rulePosition.item }
             val lhs_old = upFilt.map { it.lookaheadSet }.reduce { acc, it -> acc.union(it) }
-            val follow = this.followAtEndInContext(fromState, rr).toSet()
+            val follow = fromState.uncompressed.flatMap { from -> this.firstFollowCache.followAtEndInContext(from, rr)}.toSet()
             val lhs = LookaheadSetPart.createFromRuntimeRules(follow)
             if (Debug.CHECK) check(lhs_old.fullContent == follow) { "$lhs_old != [${follow.joinToString { it.tag }}] Follow($fromState,${rr.tag})" }
             val rp = rr.asTerminalRulePosition
@@ -744,24 +744,14 @@ internal class BuildCacheLC1(
                     }
                     val up = LookaheadSetPart.createFromRuntimeRules(parentFollow.toSet())
 
-                    val parentFirstOf = this.firstFollowCache.followFromContext(parentContext.rulePosition, parentContext.follow, tgt)
+                    //val parentFirstOf = this.firstFollowCache.followFromContext(parentContext.rulePosition, parentContext.follow, tgt)
 
                     val old = HeightGraftInfo(action, listOf(parent.rulePosition), listOf(tgt), setOf(LookaheadInfoPart(grd, up)))
 
                     val lh = when (action) {
                         Transition.ParseAction.HEIGHT -> tgtParents.map { (tgtParContext, tgtPar) ->
-                            val tgtParAtEnd = this.firstFollowCache.followAtEndInContext(tgtParContext.rulePosition, tgtPar.rulePosition.runtimeRule)
-                            val tgtParFollow = tgtPar.rulePosition.next().flatMap { tgtParRpNxt ->
-                                val parFirstOrFollow = when {
-                                    tgtParRpNxt.isAtEnd -> this.firstFollowCache.followAtEndInContext(tgtParContext.rulePosition, tgtParRpNxt.runtimeRule)
-                                    else -> this.firstFollowCache.followFromContext(tgtParContext.rulePosition,tgtParContext.follow, tgtParRpNxt)
-                                }
-                                if (parFirstOrFollow.isEmpty()) {
-                                    listOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-                                } else {
-                                    parFirstOrFollow
-                                }
-                            }
+                            val tgtParAtEnd = this.firstFollowCache.followAtEndInContext(tgtParContext, tgtPar.rulePosition.runtimeRule)
+                            val tgtParFollow = tgtPar.follow.terminals(this.firstFollowCache)
                             val grd2 = LookaheadSetPart.createFromRuntimeRules(tgtParFollow.toSet())
                             val up2 = LookaheadSetPart.createFromRuntimeRules(tgtParAtEnd.toSet())
                             LookaheadInfoPart(grd2, up2)

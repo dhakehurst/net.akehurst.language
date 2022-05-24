@@ -47,14 +47,6 @@ internal abstract class BuildCacheAbstract(
         _cacheOff = false
     }
 
-    override fun followAtEndInContext(prev: RuntimeState, runtimeRule: RuntimeRule): List<RuntimeRule> {
-        return prev.state.rulePositions.flatMap { prevRp ->
-            prev.runtimeLookaheadSet.flatMap { prevLh ->
-                this.firstFollowCache.followAtEndInContext(prevRp, runtimeRule)
-            }
-        }.toSet().toList()
-    }
-
     /*
      * return the LookaheadSet for the given RulePosition.
      * i.e. the set of all possible Terminals that would be expected in a sentence after the given RulePosition.
