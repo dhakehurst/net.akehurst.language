@@ -658,7 +658,7 @@ internal class BuildCacheLC1(
             val rp = rr.asTerminalRulePosition
             WidthInfo(rp, lhs)
         }
-        this.firstFollowCache.clear()
+        //this.firstFollowCache.clear()
         if (Debug.OUTPUT_BUILD) Debug.debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcWidthInfo($prevState, $fromState)" }
         return wis.toSet()
     }
@@ -763,7 +763,7 @@ internal class BuildCacheLC1(
                         }
                     }
                     val new = HeightGraftInfo(action, listOf(parent.rulePosition), listOf(tgt), lh)
-                    new
+                    old
                 }
             }
         }.toSet()

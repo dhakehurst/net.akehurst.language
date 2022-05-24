@@ -228,19 +228,19 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
 
     fun parentInContext(context: StateInfoDeferred, completedRule: RuntimeRule): Set<ParentOfInContext> {
         if (Debug.CHECK) check(context.rulePosition.isAtEnd.not()) { "parentInContext($context,$completedRule)" }
-        processClosureFor(context, true) //could stop at completedRule
-        return this._parentInContext[context][completedRule]
+        //processClosureFor(context, true) //could stop at completedRule
+        return this._parentInContext[context.rulePosition][completedRule]
     }
 
     // guard for HEIGHT or GRAFT transition (target maybe atEnd)
     // also used to resolve terminals in FollowDeferredCalculation
-    fun followFromContext(context: StateInfoDeferred, rulePosition: RulePosition): Set<RuntimeRule> {
-        processClosureFor(context, context, followAtEndOfContext, false)
-        return this._followInContext[context][rulePosition]
-    }
+    //fun followFromContext(context: StateInfoDeferred, rulePosition: RulePosition): Set<RuntimeRule> {
+    //    processClosureFor(context, context, followAtEndOfContext, false)
+   //     return this._followInContext[context][rulePosition]
+   // }
 
-    fun followInContext(context: StateInfoDeferred, rulePosition: RulePosition, followAtEnd: FollowDeferred): Set<RuntimeRule> {
-        processClosureFor(context, rulePosition, followAtEnd, false)
+    fun followInContext(context: StateInfoDeferred, rulePosition: RulePosition, follow: FollowDeferred): Set<RuntimeRule> {
+        processClosureFor(context, StateInfoDeferred(rulePosition, follow), false)
         return this._followInContext[context.rulePosition][rulePosition]
     }
 
@@ -441,8 +441,8 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
         when {
             cls.isRoot -> Unit
             else -> {
-                val parentContext = cls.asChild.parent.ancestorNotAtEnd.runtimeStateInfo(this)
-                val parent = cls.asChild.parent.runtimeStateInfo(this)
+                val parentContext = cls.asChild.parent.context
+                val parent = StateInfoDeferred(cls.asChild.parent.rulePosition, cls.asChild.parentFollow)
                 this.addParentInContext(prev, rr, ParentOfInContext(parentContext, parent))
             }
         }
