@@ -47,27 +47,10 @@ internal abstract class BuildCacheAbstract(
         _cacheOff = false
     }
 
-    /**
-     * return list of first terminals expected at the given RulePosition
-     * RulePosition should never be 'atEnd' and there should always be a
-     * non-empty list of "real" terminals ('empty' terminals permitted)
-     */
-    override fun firstTerminal(context: RuntimeState, fromState: RuntimeState): List<RuntimeRule> {
-        return context.state.rulePositions.flatMap { ctx ->
-            fromState.state.rulePositions.flatMap { rp ->
-                fromState.runtimeLookaheadSet.flatMap { lh ->
-                    val followAtEnd = lh.fullContent
-                    this.firstFollowCache.firstTerminalInContext(ctx, followAtEnd, rp)
-                }
-            }
-        }.toSet().toList()
-    }
-
     override fun followAtEndInContext(prev: RuntimeState, runtimeRule: RuntimeRule): List<RuntimeRule> {
         return prev.state.rulePositions.flatMap { prevRp ->
             prev.runtimeLookaheadSet.flatMap { prevLh ->
-                val followAtEnd = prevLh.fullContent
-                this.firstFollowCache.followAtEndInContext(prevRp, followAtEnd, runtimeRule)
+                this.firstFollowCache.followAtEndInContext(prevRp, runtimeRule)
             }
         }.toSet().toList()
     }
