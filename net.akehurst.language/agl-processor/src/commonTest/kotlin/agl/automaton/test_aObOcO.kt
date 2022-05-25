@@ -248,4 +248,40 @@ internal class test_aObOcO : test_AutomatonAbstract() {
 
         AutomatonTest.assertEquals(expected, actual)
     }
+
+    @Test
+    fun compare() {
+        val rrs_noBuild = runtimeRuleSet {
+            concatenation("S") { ref("aOpt"); ref("bOpt"); ref("cOpt") }
+            multi("aOpt", 0, 1, "'a'")
+            multi("bOpt", 0, 1, "'b'")
+            multi("cOpt", 0, 1, "'c'")
+            literal("'a'", "a")
+            literal("'b'", "b")
+            literal("'c'", "c")
+        }
+
+        val rrs_preBuild = runtimeRuleSet {
+            concatenation("S") { ref("aOpt"); ref("bOpt"); ref("cOpt") }
+            multi("aOpt", 0, 1, "'a'")
+            multi("bOpt", 0, 1, "'b'")
+            multi("cOpt", 0, 1, "'c'")
+            literal("'a'", "a")
+            literal("'b'", "b")
+            literal("'c'", "c")
+        }
+
+        val parser = ScanOnDemandParser(rrs_noBuild)
+        val sentences = listOf("","a", "b","ab","c","ac","bc","abc")
+        for(sen in sentences) {
+            val (sppt, issues) = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            assertNotNull(sppt)
+            assertEquals(0, issues.size)
+            assertEquals(1, sppt.maxNumHeads)
+        }
+        val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
+        val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)
+
+        AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild)
+    }
 }

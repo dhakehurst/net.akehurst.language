@@ -25,6 +25,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
     // S = ABC DEF GHI
@@ -132,5 +133,41 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
         }
 
         AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun compare() {
+        val rrs_noBuild = runtimeRuleSet {
+            concatenation("S") { ref("ABC"); ref("DEF"); ref("GHI") }
+            concatenation("ABC") { ref("AB"); ref("C") }
+            concatenation("DEF") { literal("d"); ref("EF") }
+            concatenation("GHI") { literal("g");literal("h");literal("i") }
+            concatenation("AB") { literal("a");literal("b") }
+            concatenation("C") { literal("c") }
+            concatenation("EF") { literal("e");literal("f") }
+        }
+
+        val rrs_preBuild = runtimeRuleSet {
+            concatenation("S") { ref("ABC"); ref("DEF"); ref("GHI") }
+            concatenation("ABC") { ref("AB"); ref("C") }
+            concatenation("DEF") { literal("d"); ref("EF") }
+            concatenation("GHI") { literal("g");literal("h");literal("i") }
+            concatenation("AB") { literal("a");literal("b") }
+            concatenation("C") { literal("c") }
+            concatenation("EF") { literal("e");literal("f") }
+        }
+
+        val parser = ScanOnDemandParser(rrs_noBuild)
+        val sentences = listOf("abcdefghi")
+        for(sen in sentences) {
+            val (sppt, issues) = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            assertNotNull(sppt)
+            assertEquals(0, issues.size)
+            assertEquals(1, sppt.maxNumHeads)
+        }
+        val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
+        val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)
+
+        AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild)
     }
 }

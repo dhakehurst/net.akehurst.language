@@ -29,7 +29,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual : test_ScanOnDemandP
     // S =  expr ;
     // expr = root | mul | add ;
     // root = 'v'
-    // mull = expr '*' expr ;
+    // mul = expr '*' expr ;
     // add = expr '+' expr ;
 
     private companion object {

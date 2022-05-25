@@ -19,8 +19,6 @@ package net.akehurst.language.agl.automaton
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.graph.RuntimeState
-import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -109,5 +107,29 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
         }
 
         AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun compare() {
+        val rrs_noBuild = runtimeRuleSet {
+            concatenation("S") { literal("a");literal("b");literal("c") }
+        }
+
+        val rrs_preBuild = runtimeRuleSet {
+            concatenation("S") { literal("a");literal("b");literal("c") }
+        }
+
+        val parser = ScanOnDemandParser(rrs_noBuild)
+        val sentences = listOf("abc")
+        for(sen in sentences) {
+            val (sppt, issues) = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            assertNotNull(sppt)
+            assertEquals(0, issues.size)
+            assertEquals(1, sppt.maxNumHeads)
+        }
+        val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
+        val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)
+
+        AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild)
     }
 }

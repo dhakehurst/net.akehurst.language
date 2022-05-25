@@ -184,6 +184,11 @@ internal class RuntimeRuleSet(
         return this.states_cache[gr]!! //findRuntimeRule would throw exception if not exist
     }
 
+    internal fun usedAutomatonFor(goalRuleName: String): ParserStateSet {
+        val gr = this.findRuntimeRule(goalRuleName)
+        return this.states_cache[gr]!!
+    }
+
     /*
         internal fun createAllSkipStates() {
             this.skipRules.forEach { skipRule ->
