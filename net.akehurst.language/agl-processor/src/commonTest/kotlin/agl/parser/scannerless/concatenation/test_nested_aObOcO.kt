@@ -50,7 +50,7 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0,1,1,1),"^d", setOf("'a'","'b'","'c'","'t'"))
+                parseError(InputLocation(0,1,1,1),"^", setOf("'a'","'b'","'c'","'t'"))
             ), issues
         )
     }

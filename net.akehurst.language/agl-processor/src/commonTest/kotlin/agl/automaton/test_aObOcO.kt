@@ -186,13 +186,6 @@ internal class test_aObOcO : test_AutomatonAbstract() {
     }
 
     @Test
-    fun stateInfo() {
-        val bc = BuildCacheLC1(SM)
-
-        val actual = bc.stateInfo2()
-    }
-
-    @Test
     fun buildFor() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))

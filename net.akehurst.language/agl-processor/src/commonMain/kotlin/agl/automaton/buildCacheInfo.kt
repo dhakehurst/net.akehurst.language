@@ -108,7 +108,7 @@ internal data class WidthInfo(
 
 internal data class HeightGraftInfo(
     val action: Transition.ParseAction,
-    val parent: List<RulePosition>,
+    val parent: List<RulePosition>, //needed for prevGuard on Transition
     val parentNext: List<RulePosition>, // to state
     val lhs:Set<LookaheadInfoPart>
 ) {

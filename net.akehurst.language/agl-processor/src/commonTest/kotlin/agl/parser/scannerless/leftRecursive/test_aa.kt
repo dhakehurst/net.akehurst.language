@@ -62,6 +62,7 @@ internal class test_aa : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aa() {
+        fail("did not terminate!")
         val sentence = "aa"
 
         val expected = """
