@@ -378,20 +378,23 @@ internal class RuntimeRuleSet(
         return rr
     }
 
-    internal fun usedAutomatonToString(goalRuleName: String): String {
+    internal fun usedAutomatonToString(goalRuleName: String, withStates: Boolean = false): String {
         val b = StringBuilder()
         val gr = this.findRuntimeRule(goalRuleName)
 
         val states = this.states_cache[gr]!!.allBuiltStates
         val transitions = states.flatMap { it.outTransitions.allBuiltTransitions.toSet() }.toSet()
 
-        states.forEach {
-            val str = "$it {${it.outTransitions.allPrevious.map { it?.number?.value }}}"
-            b.append(str).append("\n")
+        if (withStates) {
+            states.forEach {
+                val str = "$it {${it.outTransitions.allPrevious.map { it?.number?.value }}}"
+                b.append(str).append("\n")
+            }
         }
-        states.forEach { st ->
-            st.outTransitions.allBuiltTransitions.forEach { tr ->
-                val prev = st.outTransitions.previousFor(tr)
+        val trans = states.flatMap { it.outTransitions.allBuiltTransitions }
+        trans.sortedBy {it.from.rulePositions.toString()}.sortedBy{it.to.rulePositions.toString() }
+            .forEach { tr ->
+                val prev = tr.from.outTransitions.previousFor(tr)
                     .map { it?.number?.value } //transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }
                 val frStr = "${tr.from.number.value}:${tr.from.rulePositions}"
                 val toStr = "${tr.to.number.value}:${tr.to.rulePositions}"
@@ -405,8 +408,6 @@ internal class RuntimeRuleSet(
                 b.append(prvGrd)
                 b.append("\n")
             }
-        }
-
 
         return b.toString()
     }

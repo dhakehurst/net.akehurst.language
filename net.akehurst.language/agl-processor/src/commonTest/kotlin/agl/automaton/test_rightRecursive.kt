@@ -91,4 +91,40 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
 
         AutomatonTest.assertEquals(expected, actual)
     }
+
+    @Test
+    fun compare() {
+        //TODO: enable clone of rrs
+        val rrs_noBuild = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                ref("S1")
+            }
+            concatenation("S1") { literal("a"); ref("S") }
+        }
+
+        val rrs_preBuild = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                ref("S1")
+            }
+            concatenation("S1") { literal("a"); ref("S") }
+        }
+
+        val parser = ScanOnDemandParser(rrs_noBuild)
+        val sentences = listOf("a","aa","aaa", "aaaa")
+        for(sen in sentences) {
+            val (sppt, issues) = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            if (issues.isNotEmpty())  issues.forEach { println(it) }
+        }
+        val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
+        val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)
+
+        println("--No Build--")
+        println(rrs_preBuild.usedAutomatonToString("S"))
+        println("--Pre Build--")
+        println(rrs_noBuild.usedAutomatonToString("S"))
+
+        AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild)
+    }
 }

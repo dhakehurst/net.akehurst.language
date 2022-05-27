@@ -31,18 +31,18 @@ internal class test_sList_compositeMulti : test_AutomatonAbstract() {
     // nl = N cnm
     // cnm = cn*
     // cn = ',' N
-    // N = "[0-9]+"
+    // N = 'n'
 
     private companion object {
 
         val rrs = runtimeRuleSet {
             sList("S", 0, -1, "nl", "SMI")
-            concatenation("nl") { ref("N"); ref("cnm") }
+            concatenation("nl") { ref("'n'"); ref("cnm") }
             multi("cnm", 0, -1, "cn")
-            concatenation("cn") { ref("CMR"); ref("N"); }
+            concatenation("cn") { ref("CMR"); ref("'n'"); }
             literal("CMR", ",")
             literal("SMI", ";")
-            pattern("N", "[0-9]+")
+            literal("'n'", "n")
         }
 
         val S = rrs.findRuntimeRule("S")
@@ -54,17 +54,9 @@ internal class test_sList_compositeMulti : test_AutomatonAbstract() {
         val cn = rrs.findRuntimeRule("cn")
         val c = rrs.findRuntimeRule("CMR")
         val i = rrs.findRuntimeRule("SMI")
-        val n = rrs.findRuntimeRule("N")
+        val n = rrs.findRuntimeRule("'n'")
 
-        val lhs_n = SM.createLookaheadSet(false, false, false,setOf(n))
-        val lhs_c = SM.createLookaheadSet(false,false, false,setOf(c))
-        val lhs_i = SM.createLookaheadSet(false,false, false,setOf(i))
-        val lhs_nU = SM.createLookaheadSet(true,false, false, setOf(n))
-        val lhs_ciU = SM.createLookaheadSet(true, false, false,setOf(c, i))
 
-        val s0 = SM.startState
-        val s1 = SM.createState(listOf(RP(n, 0, EOR)))
-        val s2 = SM.createState(listOf(RP(Se, 0, EOR)))
     }
 
     @Test
@@ -90,5 +82,44 @@ internal class test_sList_compositeMulti : test_AutomatonAbstract() {
         }
 
         AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun compare() {
+        val rrs_noBuild = runtimeRuleSet {
+            sList("S", 0, -1, "nl", "SMI")
+            concatenation("nl") { ref("'n'"); ref("cnm") }
+            multi("cnm", 0, -1, "cn")
+            concatenation("cn") { ref("CMR"); ref("'n'"); }
+            literal("CMR", ",")
+            literal("SMI", ";")
+            literal("'n'", "n")
+        }
+
+        val rrs_preBuild = runtimeRuleSet {
+            sList("S", 0, -1, "nl", "SMI")
+            concatenation("nl") { ref("'n'"); ref("cnm") }
+            multi("cnm", 0, -1, "cn")
+            concatenation("cn") { ref("CMR"); ref("'n'"); }
+            literal("CMR", ",")
+            literal("SMI", ";")
+            literal("'n'", "n")
+        }
+
+        val parser = ScanOnDemandParser(rrs_noBuild)
+        val sentences = listOf("","n","n,n","n,n,n", "n;n","n;n;n","n,n;n,n","n,n,n;n,n,n;n,n,n")
+        for(sen in sentences) {
+            val (sppt, issues) = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            if (issues.isNotEmpty())  issues.forEach { println(it) }
+        }
+        val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
+        val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)
+
+        println("--No Build--")
+        println(rrs_preBuild.usedAutomatonToString("S"))
+        println("--Pre Build--")
+        println(rrs_noBuild.usedAutomatonToString("S"))
+
+        AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild)
     }
 }
