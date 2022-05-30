@@ -177,7 +177,7 @@ internal class ScanOnDemandParser(
 
     private fun findNextExpectedAfterError2(rp: RuntimeParser, graph: ParseGraph, input: InputFromString): Pair<InputLocation, Set<RuntimeRule>> {
         rp.resetGraphToLastGrown()
-        val poss =  rp.tryGrowHeightOrGraft()//graph.peekAllHeads()
+        val poss =  graph.peekAllHeads()//rp.tryGrowHeightOrGraft()//graph.peekAllHeads()
         val r = poss.map { (lg, prevs) ->
             when {
                 lg.runtimeState.state.isGoal -> {
@@ -190,11 +190,23 @@ internal class ScanOnDemandParser(
                                 // try grab 'to' token, if nothing then that is error else lookahead is error
                                 val l = graph.input.findOrTryCreateLeaf(tr.to.firstRule, lg.nextInputPosition)
                                 when (l) {
-                                    null -> Pair(lg.nextInputPosition, tr.to.runtimeRules.toSet())
+                                    null -> {
+                                        val expected = tr.to.runtimeRules.filter { it.isEmptyRule.not() }
+                                        if (expected.isEmpty()) {
+                                            null
+                                        } else {
+                                            Pair(lg.nextInputPosition, expected.toSet())
+                                        }
+                                    }
                                     else -> {
-                                        val expected = tr.lookahead.flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }.toSet()
-                                        val pos = l.nextInputPosition
-                                        Pair(pos, expected)
+                                        val expected = tr.lookahead
+                                            .flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }
+                                            .filter { it.isEmptyRule.not() }
+                                        if (expected.isEmpty()) {
+                                            null
+                                        } else {
+                                            Pair(l.nextInputPosition, expected.toSet())
+                                        }
                                     }
                                 }
                             }
@@ -214,11 +226,23 @@ internal class ScanOnDemandParser(
                                     // try grab 'to' token, if nothing then that is error else lookahead is error
                                     val l = graph.input.findOrTryCreateLeaf(tr.to.firstRule, lg.nextInputPosition)
                                     when (l) {
-                                        null -> Pair(lg.nextInputPosition, tr.to.runtimeRules.toSet())
+                                        null -> {
+                                            val expected = tr.to.runtimeRules.filter { it.isEmptyRule.not() }
+                                            if (expected.isEmpty()) {
+                                                null
+                                            } else {
+                                                Pair(lg.nextInputPosition, expected.toSet())
+                                            }
+                                        }
                                         else -> {
-                                            val expected = tr.lookahead.flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }.toSet()
-                                            val pos = l.nextInputPosition
-                                            Pair(pos, expected)
+                                            val expected = tr.lookahead
+                                                .flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }
+                                                .filter { it.isEmptyRule.not() }
+                                            if (expected.isEmpty()) {
+                                                null
+                                            } else {
+                                                Pair(l.nextInputPosition, expected.toSet())
+                                            }
                                         }
                                     }
                                 }

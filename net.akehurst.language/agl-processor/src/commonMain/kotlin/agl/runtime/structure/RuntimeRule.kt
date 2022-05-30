@@ -704,6 +704,7 @@ internal class RuntimeRule(
         }
     }
 */
+
     // --- Any ---
 
     private val _hashCode = listOf(this.runtimeRuleSetNumber, this.number).hashCode()

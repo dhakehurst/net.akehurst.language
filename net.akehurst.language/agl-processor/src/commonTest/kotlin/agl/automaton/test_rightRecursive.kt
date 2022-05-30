@@ -94,22 +94,8 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
 
     @Test
     fun compare() {
-        //TODO: enable clone of rrs
-        val rrs_noBuild = runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                literal("a")
-                ref("S1")
-            }
-            concatenation("S1") { literal("a"); ref("S") }
-        }
-
-        val rrs_preBuild = runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                literal("a")
-                ref("S1")
-            }
-            concatenation("S1") { literal("a"); ref("S") }
-        }
+        val rrs_noBuild = rrs.clone()
+        val rrs_preBuild = rrs.clone()
 
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("a","aa","aaa", "aaaa")

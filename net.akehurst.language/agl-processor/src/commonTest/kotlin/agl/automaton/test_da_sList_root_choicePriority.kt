@@ -185,4 +185,26 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
 
         AutomatonTest.assertEquals(expected, actual)
     }
+
+    @Test
+    fun compare() {
+        val rrs_noBuild = rrs.clone()
+        val rrs_preBuild = rrs.clone()
+
+        val parser = ScanOnDemandParser(rrs_noBuild)
+        val sentences = listOf("v","v+v","v+v+v","v/v","v/v/v","v+v/v","v/v+v")
+        for(sen in sentences) {
+            val (sppt, issues) = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            if (issues.isNotEmpty())  issues.forEach { println(it) }
+        }
+        val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
+        val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)
+
+        println("--No Build--")
+        println(rrs_preBuild.usedAutomatonToString("S"))
+        println("--Pre Build--")
+        println(rrs_noBuild.usedAutomatonToString("S"))
+
+        AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild)
+    }
 }

@@ -417,6 +417,44 @@ internal class RuntimeRuleSet(
         return this.usedAutomatonToString("S")
     }
 
+    fun clone(): RuntimeRuleSet {
+        val clone = RuntimeRuleSet()
+        val clonedRules = this.runtimeRules.map { rr ->
+            val clonedEmbeddedRuntimeRuleSet = rr.embeddedRuntimeRuleSet?.clone()
+            val clonedEmbeddedStartRule = rr.embeddedStartRule?.let { clonedEmbeddedRuntimeRuleSet?.runtimeRules?.get(it.number) }
+            RuntimeRule(
+                clone.number,
+                rr.number,
+                rr.name,
+                rr.value,
+                rr.kind,
+                rr.isPattern,
+                rr.isSkip,
+                clonedEmbeddedRuntimeRuleSet,
+                clonedEmbeddedStartRule
+            )
+        }
+        clone.setRules(clonedRules)
+        this.runtimeRules.forEach { rr ->
+            val clonedRuntimeRule = clonedRules.get(rr.number)
+            when(rr.kind) {
+                RuntimeRuleKind.NON_TERMINAL -> {
+                    val clonedItems = rr.rhs.items.map { clonedRules[it.number] }.toTypedArray()
+                    clonedRuntimeRule.rhsOpt = rr.rhsOpt?.let { RuntimeRuleItem(it.itemsKind, it.choiceKind, it.listKind, it.multiMin, it.multiMax, clonedItems) }
+                }
+                RuntimeRuleKind.TERMINAL -> {
+                    if(rr.isEmptyRule) {
+                        val clonedRuleThatIsEmpty = clonedRules.get(rr.rhs.EMPTY__ruleThatIsEmpty.number)
+                       val clonedRhs = RuntimeRuleItem(RuntimeRuleRhsItemsKind.EMPTY, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, arrayOf(clonedRuleThatIsEmpty))
+                        clonedRuntimeRule.rhsOpt = clonedRhs
+                    }
+                }
+                else -> Unit
+            }
+        }
+        return clone
+    }
+
     override fun toString(): String {
         val rulesStr = this.runtimeRules.map {
             "  " + it.toString()

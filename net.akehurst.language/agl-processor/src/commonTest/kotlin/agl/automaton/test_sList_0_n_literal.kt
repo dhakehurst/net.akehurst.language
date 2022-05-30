@@ -87,17 +87,8 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
 
     @Test
     fun compare() {
-        val rrs_noBuild = runtimeRuleSet {
-            sList("S", 0, -1, "'a'", "'b'")
-            literal("'a'", "a")
-            literal("'b'", "b")
-        }
-
-        val rrs_preBuild = runtimeRuleSet {
-            sList("S", 0, -1, "'a'", "'b'")
-            literal("'a'", "a")
-            literal("'b'", "b")
-        }
+        val rrs_noBuild = rrs.clone()
+        val rrs_preBuild = rrs.clone()
 
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("a","aba","ababa", "abababa")

@@ -86,25 +86,8 @@ internal class test_sList_compositeMulti : test_AutomatonAbstract() {
 
     @Test
     fun compare() {
-        val rrs_noBuild = runtimeRuleSet {
-            sList("S", 0, -1, "nl", "SMI")
-            concatenation("nl") { ref("'n'"); ref("cnm") }
-            multi("cnm", 0, -1, "cn")
-            concatenation("cn") { ref("CMR"); ref("'n'"); }
-            literal("CMR", ",")
-            literal("SMI", ";")
-            literal("'n'", "n")
-        }
-
-        val rrs_preBuild = runtimeRuleSet {
-            sList("S", 0, -1, "nl", "SMI")
-            concatenation("nl") { ref("'n'"); ref("cnm") }
-            multi("cnm", 0, -1, "cn")
-            concatenation("cn") { ref("CMR"); ref("'n'"); }
-            literal("CMR", ",")
-            literal("SMI", ";")
-            literal("'n'", "n")
-        }
+        val rrs_noBuild = rrs.clone()
+        val rrs_preBuild = rrs.clone()
 
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("","n","n,n","n,n,n", "n;n","n;n;n","n,n;n,n","n,n,n;n,n,n;n,n,n")

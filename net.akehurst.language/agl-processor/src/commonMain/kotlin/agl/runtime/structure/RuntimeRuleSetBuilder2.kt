@@ -24,7 +24,7 @@ internal annotation class RuntimeRuleSetDslMarker
 internal fun runtimeRuleSet(init: RuntimeRuleSetBuilder2.() -> Unit): RuntimeRuleSet {
     val b = RuntimeRuleSetBuilder2()
     b.init()
-    return b.ruleSet()
+    return b.build()
 }
 
 @RuntimeRuleSetDslMarker
@@ -40,7 +40,7 @@ internal class RuntimeRuleSetBuilder2() {
         }
     }
 
-    fun ruleSet(): RuntimeRuleSet {
+    fun build(): RuntimeRuleSet {
         if (this.runtimeRuleSet.runtimeRules.isEmpty()) {
             //build and validate
             val rules = this.ruleBuilders.mapIndexed { index, rb ->

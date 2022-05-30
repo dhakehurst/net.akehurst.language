@@ -118,25 +118,8 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
 
     @Test
     fun compare() {
-        val rrs_noBuild = runtimeRuleSet {
-            concatenation("S") { ref("E") }
-            choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                ref("P")
-                ref("E1")
-            }
-            concatenation("E1") { ref("E"); literal("o"); ref("P") }
-            concatenation("P") { literal("a") }
-        }
-
-        val rrs_preBuild = runtimeRuleSet {
-            concatenation("S") { ref("E") }
-            choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                ref("P")
-                ref("E1")
-            }
-            concatenation("E1") { ref("E"); literal("o"); ref("P") }
-            concatenation("P") { literal("a") }
-        }
+        val rrs_noBuild = rrs.clone()
+        val rrs_preBuild = rrs.clone()
 
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("a","aoa","aoaoa","aoaoaoa")

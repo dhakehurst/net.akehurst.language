@@ -81,15 +81,8 @@ internal class test_multi_0_n_literal : test_AutomatonAbstract() {
 
     @Test
     fun compare() {
-        val rrs_noBuild = runtimeRuleSet {
-            multi("S", 0, -1, "'a'")
-            literal("'a'", "a")
-        }
-
-        val rrs_preBuild = runtimeRuleSet {
-            multi("S", 0, -1, "'a'")
-            literal("'a'", "a")
-        }
+        val rrs_noBuild = rrs.clone()
+        val rrs_preBuild = rrs.clone()
 
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("","a","aa","aaa", "aaaa")

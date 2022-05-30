@@ -67,6 +67,14 @@ internal class AutomatonBuilder(
     }
 
     fun transition(
+        previousState: ParserState,
+        from: ParserState,
+        to: ParserState,
+        action: Transition.ParseAction,
+        prevGuard: List<RulePosition>?,
+        init: TransitionBuilder.()->Unit
+    ): Transition = transition(listOf(previousState), from, to, action, prevGuard, init)
+    fun transition(
         previousStates: List<ParserState>,
         from: ParserState,
         to: ParserState,
