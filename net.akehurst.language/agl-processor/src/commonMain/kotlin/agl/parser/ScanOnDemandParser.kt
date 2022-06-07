@@ -111,7 +111,7 @@ internal class ScanOnDemandParser(
         val contextInText = rp.graph.input.contextInText(location.position)
         return LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, location, contextInText, expected)
     }
-
+/*
     private fun findNextExpectedAfterError(rp: RuntimeParser, graph: ParseGraph, input: InputFromString): Pair<InputLocation, Set<RuntimeRule>> {
         //If there is an error, it is because parsing has stopped before finding a goal.
         // parsing could have stopped because
@@ -174,11 +174,11 @@ internal class ScanOnDemandParser(
         val res = fr.flatMap { it.second }.toSet()
         return Pair(maxLastLocation, res)
     }
-
+*/
     private fun findNextExpectedAfterError2(rp: RuntimeParser, graph: ParseGraph, input: InputFromString): Pair<InputLocation, Set<RuntimeRule>> {
-        rp.resetGraphToLastGrown()
-        val poss =  graph.peekAllHeads()//rp.tryGrowHeightOrGraft()//graph.peekAllHeads()
-        val r = poss.map { (lg, prevs) ->
+        //rp.resetGraphToLastGrown()
+        //val poss =  graph.peekAllHeads()//rp.tryGrowHeightOrGraft()//graph.peekAllHeads()
+        val r = rp.lastGrown.map { (lg, prevs) ->
             when {
                 lg.runtimeState.state.isGoal -> {
                     val trs = lg.runtimeState.transitions(RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY)))
@@ -188,7 +188,7 @@ internal class ScanOnDemandParser(
                             Transition.ParseAction.WIDTH,
                             Transition.ParseAction.EMBED -> {
                                 // try grab 'to' token, if nothing then that is error else lookahead is error
-                                val l = graph.input.findOrTryCreateLeaf(tr.to.firstRule, lg.nextInputPosition)
+                                val l = input.findOrTryCreateLeaf(tr.to.firstRule, lg.nextInputPosition)
                                 when (l) {
                                     null -> {
                                         val expected = tr.to.runtimeRules.filter { it.isEmptyRule.not() }
@@ -213,7 +213,7 @@ internal class ScanOnDemandParser(
                             else -> TODO("")
                         }
                     }.toSet()
-                    Pair(lg, errors)
+                     errors
                 }
                 else -> {
                     val errors: Set<Pair<Int, Set<RuntimeRule>>> = prevs.flatMap { prev ->
@@ -224,7 +224,7 @@ internal class ScanOnDemandParser(
                                 Transition.ParseAction.WIDTH,
                                 Transition.ParseAction.EMBED -> {
                                     // try grab 'to' token, if nothing then that is error else lookahead is error
-                                    val l = graph.input.findOrTryCreateLeaf(tr.to.firstRule, lg.nextInputPosition)
+                                    val l = input.findOrTryCreateLeaf(tr.to.firstRule, lg.nextInputPosition)
                                     when (l) {
                                         null -> {
                                             val expected = tr.to.runtimeRules.filter { it.isEmptyRule.not() }
@@ -255,11 +255,11 @@ internal class ScanOnDemandParser(
                         }.toSet()
                         pairs
                     }.toSet()
-                    Pair(lg, errors)
+                     errors
                 }
             }
         }
-        val errorLocations = r.flatMap { (lg, errors) ->
+        val errorLocations = r.flatMap {  errors ->
             errors.map { (pos, expected) -> Pair(input.locationFor(pos, 0), expected) } //FIXME: length maybe not correct
         }
         val maxLastLocation = errorLocations.maxByOrNull { it.first.endPosition } ?: error("Internal error")
@@ -273,6 +273,7 @@ internal class ScanOnDemandParser(
 
         val matches = gns.toMutableList()
         // try grow last leaf with no lookahead
+        /*
         rp.resetGraphToLastGrown()
         do {
             rp.grow3(true)
@@ -286,7 +287,7 @@ internal class ScanOnDemandParser(
                 }
             }
         } while (rp.canGrow && graph.goals.isEmpty())
-
+*/
         //val nextExpected = matches
         //    .filter { it.canGrowWidth }
         //    .flatMap { it.nextExpectedItems }
@@ -334,14 +335,15 @@ internal class ScanOnDemandParser(
         do {
             rp.grow3(false)
             for (gn in rp.lastGrown) {
-                if (input.isEnd(gn.nextInputPosition)) {
-                    val prev = rp.grownInLastPassPrevious[gn] ?: emptySet()
-                    if (gn.currentState.isGoal.not()) {
-                        //don't include it TODO: why does this happen?
-                    } else {
-                        matches.add(Pair(gn, prev))
-                    }
-                }
+                TODO()
+ //               if (input.isEnd(gn.nextInputPosition)) {
+//                    val prev = rp.grownInLastPassPrevious[gn] ?: emptySet()
+ //                   if (gn.currentState.isGoal.not()) {
+//                        //don't include it TODO: why does this happen?
+ //                   } else {
+ //                       matches.add(Pair(gn, prev))
+ //                   }
+ //               }
             }
             seasons++
         } while (rp.canGrow && rp.graph.goals.isEmpty())

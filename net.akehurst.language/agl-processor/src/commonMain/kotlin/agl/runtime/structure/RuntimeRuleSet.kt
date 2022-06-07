@@ -382,8 +382,12 @@ internal class RuntimeRuleSet(
         val b = StringBuilder()
         val gr = this.findRuntimeRule(goalRuleName)
 
+
         val states = this.states_cache[gr]!!.allBuiltStates
-        val transitions = states.flatMap { it.outTransitions.allBuiltTransitions.toSet() }.toSet()
+        val transitions = states.flatMap { it.outTransitions.allBuiltTransitions }
+
+        b.append("States: ${states.size}  Transitions: ${transitions.size} ")
+        b.append("\n")
 
         if (withStates) {
             states.forEach {
@@ -391,8 +395,8 @@ internal class RuntimeRuleSet(
                 b.append(str).append("\n")
             }
         }
-        val trans = states.flatMap { it.outTransitions.allBuiltTransitions }
-        trans.sortedBy {it.from.rulePositions.toString()}.sortedBy{it.to.rulePositions.toString() }
+
+        transitions.sortedBy {it.from.rulePositions.toString()}.sortedBy{it.to.rulePositions.toString() }
             .forEach { tr ->
                 val prev = tr.from.outTransitions.previousFor(tr)
                     .map { it?.number?.value } //transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }

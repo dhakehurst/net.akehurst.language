@@ -128,6 +128,11 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
         val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)
 
+        println("--Pre Build--")
+        println(rrs_preBuild.usedAutomatonToString("S"))
+        println("--No Build--")
+        println(rrs_noBuild.usedAutomatonToString("S"))
+
         AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild)
     }
 }

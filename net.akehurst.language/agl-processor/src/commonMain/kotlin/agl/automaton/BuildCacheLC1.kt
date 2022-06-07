@@ -477,7 +477,8 @@ internal class BuildCacheLC1(
         }
 
         if (Debug.OUTPUT_BUILD) {
-            println("LR1 states")
+            println("LR1 states: ${l1States.size}")
+            println("LR1 transitions: ${l1States.flatMap { it.outTransitions(parentOf) }.size}")
             for (state in l1States) {
                 if (state.rulePosition.isGoal || state.rulePosition.isAtStart.not()) {
                     val trs = state.outTransitions(parentOf)
@@ -660,6 +661,12 @@ internal class BuildCacheLC1(
             val rp = rr.asTerminalRulePosition
             WidthInfo(rp, lhs)
         }
+        val wisMerged = wis.groupBy { it.to }
+            .map { me ->
+                val rp = me.key
+                val lhs = me.value.map { it.lookaheadSet }.reduce { a, e -> a.union(e) }
+                WidthInfo(rp, lhs)
+            }
         //this.firstFollowCache.clear()
 
         /* FirstFollow2
@@ -682,7 +689,7 @@ internal class BuildCacheLC1(
          */
         //this.firstFollowCache.clear()
         if (Debug.OUTPUT_BUILD) Debug.debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcWidthInfo($prevState, $fromState)" }
-        return wis.toSet()
+        return wisMerged.toSet()
     }
 
     override fun heightOrGraftInto(prevState: RuntimeState, fromState: RuntimeState): Set<HeightGraftInfo> {

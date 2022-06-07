@@ -48,15 +48,15 @@ internal class RuntimeParser(
 
     //needs to be public so that expectedAt can use it
     //val lastGrown: Collection<GrowingNode> get() = this.grownInLastPass.toSet()
-    val lastGrown: Collection<GrowingNode> get() = TODO()
+    var lastGrown: List<Pair<GrowingNodeIndex, Set<GrowingNodeIndex>>> = emptyList()
     val canGrow: Boolean get() = this.graph.canGrow
 
     // copy of graph growing head for each iteration, cached to that we can find best match in case of error
-    private var grownInThisPass = mutableListOf<GrowingNode>()
-    internal var grownInThisPassPrevious = mutableMapOf<GrowingNode, MutableSet<GrowingNodeIndex>>()
-    private var grownInLastPass = mutableListOf<GrowingNode>()
-    internal var grownInLastPassPrevious = mutableMapOf<GrowingNode, MutableSet<GrowingNodeIndex>>()
-    internal lateinit var _lastGss: GraphStructuredStack<GrowingNodeIndex>
+    //private var grownInThisPass = mutableListOf<GrowingNode>()
+    //internal var grownInThisPassPrevious = mutableMapOf<GrowingNode, MutableSet<GrowingNodeIndex>>()
+    //private var grownInLastPass = mutableListOf<GrowingNode>()
+    //internal var grownInLastPassPrevious = mutableMapOf<GrowingNode, MutableSet<GrowingNodeIndex>>()
+    //internal lateinit var _lastGss: GraphStructuredStack<GrowingNodeIndex>
     private var interruptedMessage: String? = null
 
     private val readyForShift = mutableListOf<GrowingNode>()
@@ -102,6 +102,7 @@ internal class RuntimeParser(
         }
     }
 
+    /*
     fun resetGraphToLastGrown() {
         this.graph._gss = this._lastGss
         for (r in this.graph._gss.roots) {
@@ -121,7 +122,7 @@ internal class RuntimeParser(
         //     }
         // }
     }
-
+*/
     fun rememberForErrorComputation(gn: GrowingNode, previous: GrowingNodeIndex?) {
         //this.grownInThisPass.add(gn)
         //var set = this.grownInThisPassPrevious[gn]
@@ -134,17 +135,8 @@ internal class RuntimeParser(
         //}
     }
 
-    fun startPass() {
-        //this.grownInThisPassPrevious = mutableMapOf<GrowingNode, MutableSet<GrowingNodeIndex>>()
-        // this.grownInThisPass = mutableListOf<GrowingNode>()
-        this._lastGss = this.graph._gss.clone()
-    }
-
-    fun endPass() {
-        //if (this.grownInThisPass.isNotEmpty()) {
-        //    this.grownInLastPass = this.grownInThisPass
-        //    this.grownInLastPassPrevious = this.grownInThisPassPrevious
-        //}
+    fun cacheLastGrown() {
+        this.lastGrown = this.graph.peekAllHeads()
     }
 
     // used for finding error info
@@ -153,20 +145,20 @@ internal class RuntimeParser(
     }
 
     fun tryGrowWidthOnce1() {
-        this.startPass()
+        //this.startPass()
         val currentStartPosition = this.graph.nextHeadStartPosition
         while (this.graph.hasNextHead && this.graph.nextHeadStartPosition <= currentStartPosition) {
             val (gn, previous) = this.graph.nextHead()
             checkInterrupt()
             this.growWidthOnly(gn, previous)
         }
-        this.endPass()
+        //this.endPass()
     }
 
     // used for finding error info
     fun tryGrowHeightOrGraft(): Set<Pair<GrowingNodeIndex, Set<GrowingNodeIndex>>> {
         val lg = mutableSetOf<Pair<GrowingNodeIndex, Set<GrowingNodeIndex>>>()
-        this.startPass()
+        //this.startPass()
         // try height or graft
         val currentStartPosition = this.graph.nextHeadStartPosition
         while (this.graph.hasNextHead && this.graph.nextHeadStartPosition <= currentStartPosition) {
@@ -176,7 +168,7 @@ internal class RuntimeParser(
             lg.add(Pair(gn.index, previous))
             this.growHeightOrGraftOnly(gn, previous)
         }
-        this.endPass()
+        //this.endPass()
         //return this.lastGrown.toSet()
         return lg
     }
@@ -288,11 +280,12 @@ internal class RuntimeParser(
     }
 
     fun grow3(noLookahead: Boolean): Int {
-        this.startPass()
+        //this.startPass()
         var steps = 0
         val doneEmpties = mutableSetOf<ParserState>()
         val currentStartPosition = this.graph.nextHeadStartPosition
         while (this.graph.hasNextHead && this.graph.nextHeadStartPosition <= currentStartPosition) {
+            this.cacheLastGrown()
             checkInterrupt()
             val graph = this.graph //TODO: remove..for debug only
             if (Debug.OUTPUT_RUNTIME) {
@@ -309,7 +302,6 @@ internal class RuntimeParser(
                 steps++
             }
         }
-        this.endPass()
         return steps
     }
 
