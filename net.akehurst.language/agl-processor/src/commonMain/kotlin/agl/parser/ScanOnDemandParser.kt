@@ -111,74 +111,75 @@ internal class ScanOnDemandParser(
         val contextInText = rp.graph.input.contextInText(location.position)
         return LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, location, contextInText, expected)
     }
-/*
-    private fun findNextExpectedAfterError(rp: RuntimeParser, graph: ParseGraph, input: InputFromString): Pair<InputLocation, Set<RuntimeRule>> {
-        //If there is an error, it is because parsing has stopped before finding a goal.
-        // parsing could have stopped because
-        //  - no more input and we have not reached a goal
-        //  - no new growing-head because no action/transition taken, because
-        //  -- lookahead is wrong when doing an action
-        //  -- other guards eliminate the transition
-        //  - action causes no change (I think this should never happen)
-        // if it stopped because of lookahead...it maybe that we can parse one more leaf,
-        //
 
-        rp.resetGraphToLastGrown()
-        val grown = rp.tryGrowWidthOnce()
-        val poss = if (graph.canGrow) {
-            rp.tryGrowHeightOrGraft()
-        } else {
+    /*
+        private fun findNextExpectedAfterError(rp: RuntimeParser, graph: ParseGraph, input: InputFromString): Pair<InputLocation, Set<RuntimeRule>> {
+            //If there is an error, it is because parsing has stopped before finding a goal.
+            // parsing could have stopped because
+            //  - no more input and we have not reached a goal
+            //  - no new growing-head because no action/transition taken, because
+            //  -- lookahead is wrong when doing an action
+            //  -- other guards eliminate the transition
+            //  - action causes no change (I think this should never happen)
+            // if it stopped because of lookahead...it maybe that we can parse one more leaf,
+            //
+
             rp.resetGraphToLastGrown()
-            rp.tryGrowHeightOrGraft()
-        }
-        val r = poss.map { (lg, prevs) ->
-            //val prevs = rp._lastGss.peek(lg)
-            // compute next expected item/RuntimeRule
-            when (lg.runtimeState.state.runtimeRules.first().kind) {
-                RuntimeRuleKind.GOAL -> {
-                    val trs = lg.runtimeState.transitions(RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY)))
-                    val exp: Set<RuntimeRule> = trs.flatMap { tr ->
-                        when (tr.action) {
-                            Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
-                            Transition.ParseAction.WIDTH -> lg.runtimeState.runtimeLookaheadSet.flatMap { lg.runtimeState.state.firstOf(it).fullContent }.toSet() //TODO: needs prev as arg to firstOf
-                            Transition.ParseAction.EMBED -> TODO()
-                            Transition.ParseAction.HEIGHT -> lg.runtimeState.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } }.toSet()
-                            Transition.ParseAction.GRAFT -> prevs.flatMap { it.runtimeState.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } } }
-                                .toSet()
-                        }
-                    }.toSet()
-                    Pair(lg, exp)
-                }
-                else -> {
-                    val x: Set<RuntimeRule> = prevs.flatMap { prev ->
-                        val trs = lg.runtimeState.transitions(prev.runtimeState).filter { it.runtimeGuard(it, prev, prev.runtimeState.state.rulePositions) }
-                        val exp = trs.flatMap { tr ->
+            val grown = rp.tryGrowWidthOnce()
+            val poss = if (graph.canGrow) {
+                rp.tryGrowHeightOrGraft()
+            } else {
+                rp.resetGraphToLastGrown()
+                rp.tryGrowHeightOrGraft()
+            }
+            val r = poss.map { (lg, prevs) ->
+                //val prevs = rp._lastGss.peek(lg)
+                // compute next expected item/RuntimeRule
+                when (lg.runtimeState.state.runtimeRules.first().kind) {
+                    RuntimeRuleKind.GOAL -> {
+                        val trs = lg.runtimeState.transitions(RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY)))
+                        val exp: Set<RuntimeRule> = trs.flatMap { tr ->
                             when (tr.action) {
                                 Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
-                                Transition.ParseAction.WIDTH -> lg.runtimeState.runtimeLookaheadSet.flatMap { lg.runtimeState.state.firstOf(it).fullContent }.toSet()
-                                Transition.ParseAction.EMBED -> lg.runtimeState.runtimeLookaheadSet.flatMap { lg.runtimeState.state.firstOf(it).fullContent }.toSet()
+                                Transition.ParseAction.WIDTH -> lg.runtimeState.runtimeLookaheadSet.flatMap { lg.runtimeState.state.firstOf(it).fullContent }.toSet() //TODO: needs prev as arg to firstOf
+                                Transition.ParseAction.EMBED -> TODO()
                                 Transition.ParseAction.HEIGHT -> lg.runtimeState.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } }.toSet()
-                                Transition.ParseAction.GRAFT -> prev.runtimeState.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } }.toSet()
+                                Transition.ParseAction.GRAFT -> prevs.flatMap { it.runtimeState.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } } }
+                                    .toSet()
                             }
                         }.toSet()
-                        exp
-                    }.toSet()
-                    Pair(lg, x)
+                        Pair(lg, exp)
+                    }
+                    else -> {
+                        val x: Set<RuntimeRule> = prevs.flatMap { prev ->
+                            val trs = lg.runtimeState.transitions(prev.runtimeState).filter { it.runtimeGuard(it, prev, prev.runtimeState.state.rulePositions) }
+                            val exp = trs.flatMap { tr ->
+                                when (tr.action) {
+                                    Transition.ParseAction.GOAL -> emptySet<RuntimeRule>()
+                                    Transition.ParseAction.WIDTH -> lg.runtimeState.runtimeLookaheadSet.flatMap { lg.runtimeState.state.firstOf(it).fullContent }.toSet()
+                                    Transition.ParseAction.EMBED -> lg.runtimeState.runtimeLookaheadSet.flatMap { lg.runtimeState.state.firstOf(it).fullContent }.toSet()
+                                    Transition.ParseAction.HEIGHT -> lg.runtimeState.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } }.toSet()
+                                    Transition.ParseAction.GRAFT -> prev.runtimeState.runtimeLookaheadSet.flatMap { rt -> tr.lookahead.flatMap { it.guard.resolveUP(rt).fullContent } }.toSet()
+                                }
+                            }.toSet()
+                            exp
+                        }.toSet()
+                        Pair(lg, x)
+                    }
                 }
             }
+            val maxLastLocation: InputLocation = r.map { input.locationFor(it.first.startPosition, it.first.nextInputPosition - it.first.startPosition) }
+                .maxByOrNull { it.endPosition }
+                ?: error("Internal error")
+            val fr = r.filter { it.first.nextInputPosition == maxLastLocation.endPosition }
+            val res = fr.flatMap { it.second }.toSet()
+            return Pair(maxLastLocation, res)
         }
-        val maxLastLocation: InputLocation = r.map { input.locationFor(it.first.startPosition, it.first.nextInputPosition - it.first.startPosition) }
-            .maxByOrNull { it.endPosition }
-            ?: error("Internal error")
-        val fr = r.filter { it.first.nextInputPosition == maxLastLocation.endPosition }
-        val res = fr.flatMap { it.second }.toSet()
-        return Pair(maxLastLocation, res)
-    }
-*/
+    */
     private fun findNextExpectedAfterError2(rp: RuntimeParser, graph: ParseGraph, input: InputFromString): Pair<InputLocation, Set<RuntimeRule>> {
         //rp.resetGraphToLastGrown()
         //val poss =  graph.peekAllHeads()//rp.tryGrowHeightOrGraft()//graph.peekAllHeads()
-        val r = rp.lastGrown.map { (lg, prevs) ->
+        val r = rp.lastGrown.map { (lg, prev, remainingHead) ->
             when {
                 lg.runtimeState.state.isGoal -> {
                     val trs = lg.runtimeState.transitions(RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY)))
@@ -213,53 +214,50 @@ internal class ScanOnDemandParser(
                             else -> TODO("")
                         }
                     }.toSet()
-                     errors
+                    errors
                 }
                 else -> {
-                    val errors: Set<Pair<Int, Set<RuntimeRule>>> = prevs.flatMap { prev ->
-                        val trs = lg.runtimeState.transitions(prev.runtimeState).filter { it.runtimeGuard(it, prev, prev.runtimeState.state.rulePositions) }
-                        val pairs: Set<Pair<Int, Set<RuntimeRule>>> = trs.mapNotNull { tr ->
-                            when (tr.action) {
-                                Transition.ParseAction.GOAL -> null
-                                Transition.ParseAction.WIDTH,
-                                Transition.ParseAction.EMBED -> {
-                                    // try grab 'to' token, if nothing then that is error else lookahead is error
-                                    val l = input.findOrTryCreateLeaf(tr.to.firstRule, lg.nextInputPosition)
-                                    when (l) {
-                                        null -> {
-                                            val expected = tr.to.runtimeRules.filter { it.isEmptyRule.not() }
-                                            if (expected.isEmpty()) {
-                                                null
-                                            } else {
-                                                Pair(lg.nextInputPosition, expected.toSet())
-                                            }
+                    val trs = lg.runtimeState.transitions(prev!!.runtimeState).filter { it.runtimeGuard(it, prev, prev.runtimeState.state.rulePositions) }
+                    val pairs: Set<Pair<Int, Set<RuntimeRule>>> = trs.mapNotNull { tr ->
+                        when (tr.action) {
+                            Transition.ParseAction.GOAL -> null
+                            Transition.ParseAction.WIDTH,
+                            Transition.ParseAction.EMBED -> {
+                                // try grab 'to' token, if nothing then that is error else lookahead is error
+                                val l = input.findOrTryCreateLeaf(tr.to.firstRule, lg.nextInputPosition)
+                                when (l) {
+                                    null -> {
+                                        val expected = tr.to.runtimeRules.filter { it.isEmptyRule.not() }
+                                        if (expected.isEmpty()) {
+                                            null
+                                        } else {
+                                            Pair(lg.nextInputPosition, expected.toSet())
                                         }
-                                        else -> {
-                                            val expected = tr.lookahead
-                                                .flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }
-                                                .filter { it.isEmptyRule.not() }
-                                            if (expected.isEmpty()) {
-                                                null
-                                            } else {
-                                                Pair(l.nextInputPosition, expected.toSet())
-                                            }
+                                    }
+                                    else -> {
+                                        val expected = tr.lookahead
+                                            .flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }
+                                            .filter { it.isEmptyRule.not() }
+                                        if (expected.isEmpty()) {
+                                            null
+                                        } else {
+                                            Pair(l.nextInputPosition, expected.toSet())
                                         }
                                     }
                                 }
-                                else -> {
-                                    val expected = tr.lookahead.flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }.toSet()
-                                    val pos = lg.nextInputPosition
-                                    Pair(pos, expected)
-                                }
                             }
-                        }.toSet()
-                        pairs
+                            else -> {
+                                val expected = tr.lookahead.flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }.toSet()
+                                val pos = lg.nextInputPosition
+                                Pair(pos, expected)
+                            }
+                        }
                     }.toSet()
-                     errors
+                    pairs
                 }
             }
         }
-        val errorLocations = r.flatMap {  errors ->
+        val errorLocations = r.flatMap { errors ->
             errors.map { (pos, expected) -> Pair(input.locationFor(pos, 0), expected) } //FIXME: length maybe not correct
         }
         val maxLastLocation = errorLocations.maxByOrNull { it.first.endPosition } ?: error("Internal error")
@@ -336,14 +334,14 @@ internal class ScanOnDemandParser(
             rp.grow3(false)
             for (gn in rp.lastGrown) {
                 TODO()
- //               if (input.isEnd(gn.nextInputPosition)) {
+                //               if (input.isEnd(gn.nextInputPosition)) {
 //                    val prev = rp.grownInLastPassPrevious[gn] ?: emptySet()
- //                   if (gn.currentState.isGoal.not()) {
+                //                   if (gn.currentState.isGoal.not()) {
 //                        //don't include it TODO: why does this happen?
- //                   } else {
- //                       matches.add(Pair(gn, prev))
- //                   }
- //               }
+                //                   } else {
+                //                       matches.add(Pair(gn, prev))
+                //                   }
+                //               }
             }
             seasons++
         } while (rp.canGrow && rp.graph.goals.isEmpty())

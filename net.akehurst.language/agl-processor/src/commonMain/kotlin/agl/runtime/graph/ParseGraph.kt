@@ -32,6 +32,14 @@ internal class ParseGraph(
     numNonTerminalRules: Int
 ) {
 
+    companion object {
+        data class NextToProcess(
+            val growingNode: GrowingNode,
+            val previous: GrowingNodeIndex?,
+            val remainingHead:GrowingNodeIndex?
+        )
+    }
+
     enum class MergeOptions {
         /**
          * New head provides NON preferable parse due to higher priority or longer match
@@ -140,17 +148,40 @@ internal class ParseGraph(
      * extract head with min nextInputPosition
      * assumes there is one - check with hasNextHead
      */
-    fun nextHead(): Pair<GrowingNode, Set<GrowingNodeIndex>> {
+    fun nextToProcess(): List<NextToProcess> {
         val gn = this._growingHeadHeap.extractRoot()!!
         //val previous = this._gss.peek(gn.index)
         val previous = this._gss.pop(gn.index)
-        return Pair(gn, previous)
+        return if (previous.isEmpty()) {
+            listOf(NextToProcess(gn,null,null))
+        } else {
+            val result = previous.flatMap { prev ->
+                val heads = this._gss.pop(prev)
+                if (heads.isEmpty()) {
+                    listOf(NextToProcess(gn,prev,null))
+                } else {
+                    heads.map { hd -> NextToProcess(gn, prev, hd) }
+                }
+            }
+            result
+        }
     }
 
-    fun peekAllHeads() = this._growingHeadHeap.entries.map {
-        val gn = it.key
-        val prev = this._gss.peek(gn)
-        Pair(gn, prev)
+    fun peekNextToProcess(): List<NextToProcess> = this._growingHeadHeap.entries.flatMap {
+        val gn = it.value
+        val previous = this._gss.peek(gn.index)
+        if (previous.isEmpty()) {
+            listOf(NextToProcess(gn,null,null))
+        } else {
+            previous.flatMap { prev ->
+                val heads = this._gss.peek(prev)
+                if (heads.isEmpty()) {
+                    listOf(NextToProcess(gn,prev,null))
+                } else {
+                    heads.map { hd -> NextToProcess(gn, prev, hd) }
+                }
+            }
+        }
     }
 
     fun reset() {
@@ -391,15 +422,19 @@ internal class ParseGraph(
      * return true if grown
      */
     fun pushToStackOf(
+        toProcess: NextToProcess,
         newState: ParserState,
         runtimeLookaheadSet: Set<LookaheadSet>,
         startPosition: Int,
         nextInputPosition: Int,
-        oldHead: GrowingNode,
-        previous: GrowingNodeIndex?,
         skipData: TreeData?
     ): Boolean {
-        if (null != previous) this._gss.push(previous, oldHead.index)
+        val oldHead = toProcess.growingNode
+        val previous = toProcess.previous
+        previous?.let {
+            toProcess.remainingHead?.let { this._gss.push(toProcess.remainingHead, previous) }
+            this._gss.push(previous, oldHead.index)
+        }
         val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: nextInputPosition
         val newHead = this.treeData.createGrowingNodeIndex(newState, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0)
         if (null != skipData) {
@@ -414,16 +449,20 @@ internal class ParseGraph(
      */
     // for embedded segments
     fun pushEmbeddedToStackOf(
+        toProcess: NextToProcess,
         newState: ParserState,
         runtimeLookaheadSet: Set<LookaheadSet>,
         startPosition: Int,
         nextInputPosition: Int,
-        oldHead: GrowingNode,
-        previous: GrowingNodeIndex,
         embeddedTreeData: TreeData,
         skipData: TreeData?
     ): Boolean {
-        this._gss.push(previous, oldHead.index)
+        val oldHead = toProcess.growingNode
+        val previous = toProcess.previous
+        previous?.let {
+            toProcess.remainingHead?.let { this._gss.push(toProcess.remainingHead, previous) }
+            this._gss.push(previous, oldHead.index)
+        }
         //TODO: something different for embedded ?
         val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: nextInputPosition
         val newHead = this.treeData.createGrowingNodeIndex(newState, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0)
@@ -445,9 +484,15 @@ internal class ParseGraph(
     fun createWithFirstChild(
         parentState: ParserState,
         parentRuntimeLookaheadSet: Set<LookaheadSet>,
-        childNode: GrowingNode,
-        previous: GrowingNodeIndex
+        toProcess:NextToProcess
     ): Boolean {
+        val childNode = toProcess.growingNode
+        val previous = toProcess.previous!!
+        if (null==toProcess.remainingHead) {
+            this._gss.root(previous)
+        } else {
+            this._gss.push(toProcess.remainingHead, previous)
+        }
         val nextInputPosition = if (childNode.isLeaf) childNode.nextInputPositionAfterSkip else childNode.nextInputPosition
         val parent = this.treeData.createGrowingNodeIndex(parentState, parentRuntimeLookaheadSet, childNode.startPosition, nextInputPosition, nextInputPosition, 1)
         val child = childNode.index
@@ -550,15 +595,14 @@ internal class ParseGraph(
      * return true if grown
      */
     fun growNextChild(
-        oldParentNode: GrowingNodeIndex,
-        nextChildNode: GrowingNode,
+        toProcess:NextToProcess,
         newParentState: ParserState,
         newParentRuntimeLookaheadSet: Set<LookaheadSet>
     ): Boolean {
+        val nextChildNode = toProcess.growingNode
+        val oldParentNode = toProcess.previous!!
+        val previous = toProcess.remainingHead?.let { setOf(it) }?: emptySet<GrowingNodeIndex>()
         val newParentNumNonSkipChildren = oldParentNode.numNonSkipChildren + 1
-        // pop oldParentNode here, because its previous will be linked to the newParentNode
-        //val previous = this.previousOf(oldParentNode)
-        val previous = this._gss.pop(oldParentNode)
         val nextInputPosition = if (nextChildNode.isLeaf) nextChildNode.nextInputPositionAfterSkip else nextChildNode.nextInputPosition
         val newParent = this.treeData.createGrowingNodeIndex(
             newParentState,
