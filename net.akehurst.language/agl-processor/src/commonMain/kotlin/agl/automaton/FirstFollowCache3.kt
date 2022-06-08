@@ -511,43 +511,38 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         // set follow for each runtime-rule - HEIGHT/GRAFT needs it
         this.addFollowInContext(prev, rr, cls.parentNextNotAtEndFollow)
 
-        val thisNeedsNext = when {
-            cls.rulePosition.isTerminal -> { // terminals only
-                // if it is a terminal and isEmptyRule then needNext
-                rr.isEmptyRule
-            }
+        when {
+            cls.rulePosition.isTerminal -> Unit
             cls is ClosureItemRoot -> {
                 // for targetState
                 firstTerminalInfo?.let { this.addFirstTerminalAndFirstOfInContext(prev, rp, firstTerminalInfo) }
                 if (childNeedsNext) {
+                    this.addFollowInContext(prev, rp, cls.nextNotAtEndFollow)
                     cls.nextNotAtEndFollow.containsEmptyRules(this)
                 } else {
-                    false
+                    Unit
                 }
             }
             cls.rulePosition.isAtStart -> {
                 if (childNeedsNext) {
                     cls.nextNotAtEndFollow.containsEmptyRules(this)
                 } else {
-                    false
+                    Unit
                 }
             }
             else -> {
                 error("should not happen")
             }
         }
-        val needsNext = if (childNeedsNext) {
-            rp.next().any { it.isAtEnd }
-        } else {
-            false
-        }
+        val nextAtEnd = rp.next().any { it.isAtEnd }
+        val needsNext = (childNeedsNext && nextAtEnd) || rr.isEmptyRule
         when {
             rr.isTerminal -> Unit
             rp.isAtStart -> Unit
-            else -> this.setNeedsNext(cls.context, cls.rulePosition, needsNext)
+            else -> this.setNeedsNext(cls.context, cls.rulePosition, childNeedsNext)
         }
 
-        return thisNeedsNext || needsNext
+        return needsNext
     }
 
 }

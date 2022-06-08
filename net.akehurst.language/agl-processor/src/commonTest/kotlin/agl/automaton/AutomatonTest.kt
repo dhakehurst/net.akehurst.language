@@ -37,8 +37,8 @@ internal object AutomatonTest {
             }
         }
         when {
-            expected.size > foundThis.size -> kotlin.test.fail("Elements of $setName do not match, missing ${expected - foundThis}")
-            actual.size > foundOther.size -> kotlin.test.fail("Elements of $setName do not match, missing ${actual - foundOther}")
+            expected.size > foundThis.size -> kotlin.test.fail("Elements of $setName do not match, missing:\n${(expected - foundThis).joinToString(separator = "\n") { it.toString() }}")
+            actual.size > foundOther.size -> kotlin.test.fail("Elements of $setName do not match, missing:\n${(actual - foundOther).joinToString(separator = "\n") { it.toString() }}")
             else -> Unit
         }
     }

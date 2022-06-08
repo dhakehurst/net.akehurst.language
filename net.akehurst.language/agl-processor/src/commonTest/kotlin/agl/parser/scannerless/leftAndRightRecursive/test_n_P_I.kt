@@ -23,9 +23,8 @@ import kotlin.test.Test
 
 internal class test_n_P_I : test_ScanOnDemandParserAbstract() {
 
-    // S = n | P | I        // name | propertyCall | infix
-    // n = 'a' ;             // "[a-z]+"
-    // P = S 'p' n ;         // S '.' name
+    // S = a | P | I         // name | propertyCall | infix
+    // P = S 'p' a ;         // S '.' name
     // I = S 'o' S ;         // S '+' S
 
     private companion object {

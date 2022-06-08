@@ -92,7 +92,7 @@ internal  class GrowingNodeIndex(
             postfix = "]",
             separator = "|"
         ) { it }
-        return "GNI{state=$runtimeState.state,lhs=$ctStr,sp=${startPosition}, np=$nextInputPosition, len=$numNonSkipChildren}"
+        return "GNI{state=${runtimeState.state},lhs=$ctStr,sp=${startPosition},np=$nextInputPosition,len=$numNonSkipChildren}"
     }
 
 }
