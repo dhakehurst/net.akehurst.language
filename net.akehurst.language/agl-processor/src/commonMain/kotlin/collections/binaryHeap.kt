@@ -79,6 +79,7 @@ interface BinaryHeap<K, V> : Iterable<V> {
     fun extractRoot(): V?
     fun extractRootAndThenInsert(key: K, value: V): V?
     fun insertAndThenExtractRoot(key: K, value: V): V
+    fun remove(key: K): V?
 
     fun clear()
 }
@@ -165,6 +166,25 @@ class BinaryHeapComparable<K, V>(
         }
     }
 
+    override fun remove(key: K): V? {
+        return when {
+            0 == this.size -> null
+            key == this._elements[0].key -> this.extractRoot()
+            key == this._elements.last().key -> this._elements.removeAt(this._elements.size-1).value
+            else -> {
+                val index = this._elements.indexOfFirst { it.key==key }
+                if (index >=0) {
+                    this.swap(index, this._elements.size - 1)
+                    val old = this._elements.removeAt(this._elements.size - 1)
+                    this.downHeap(index)
+                    old.value
+                } else {
+                    null
+                }
+            }
+        }
+    }
+
     override fun peekOneOf(key: K): V? = searchSubTreeFor(0, key).firstOrNull()
 
     override fun peekAll(key: K): List<V> = searchSubTreeFor(0, key)
@@ -200,7 +220,7 @@ class BinaryHeapComparable<K, V>(
                 var elementIndex = index
                 var parentIndex = parentIndexOf(elementIndex)
                 var parentKey = this._elements[parentIndex].key
-                while (parentKey!=elementKey && 0 > this.comparator.compare(parentKey, elementKey)) {
+                while (parentKey != elementKey && 0 > this.comparator.compare(parentKey, elementKey)) {
                     swap(parentIndex, elementIndex)
                     elementIndex = parentIndex
                     parentIndex = parentIndexOf(elementIndex)

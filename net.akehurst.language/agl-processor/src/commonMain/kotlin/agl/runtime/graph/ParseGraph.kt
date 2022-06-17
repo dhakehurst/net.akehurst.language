@@ -262,7 +262,7 @@ internal class ParseGraph(
      */
     private fun createNewHeadAndDropExisting(existing: CompleteNodeIndex, newHead: GrowingNodeIndex, previous: GrowingNodeIndex) {
         this._gss.pop(existing.gni!!)
-        //TODO: maybe this._growingHeadHeap.remove(existing.gni)
+        this._growingHeadHeap.remove(existing.gni)
         val nn = this.createGrowingNode(newHead)
         this.addGrowingHead(previous, nn)
     }
@@ -289,7 +289,7 @@ internal class ParseGraph(
      */
     private fun createNewHeadAndDropExisting(existing: CompleteNodeIndex, newHead: GrowingNodeIndex, previous: Set<GrowingNodeIndex>) {
         this._gss.pop(existing.gni!!)
-        //TODO: maybe this._growingHeadHeap.remove(existing.gni)
+        this._growingHeadHeap.remove(existing.gni)
         val nn = this.createGrowingNode(newHead)
         this.addGrowingHead(previous, nn)
     }

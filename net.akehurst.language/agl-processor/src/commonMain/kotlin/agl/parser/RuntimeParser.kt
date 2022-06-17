@@ -206,7 +206,7 @@ internal class RuntimeParser(
             }
         }
     }
-
+/*
     internal fun growHeightOrGraftOnly(toProcess: ParseGraph.Companion.NextToProcess) {
             val transitions = toProcess.growingNode.runtimeState.transitions(toProcess.previous!!.runtimeState)
             for (transition in transitions) {
@@ -220,7 +220,7 @@ internal class RuntimeParser(
                 }
             }
     }
-
+*/
     var debugCount = 0
     fun debugOutput() {
         fun GrowingNodeIndex.asString() = "(s${runtimeState.state.number.value},${startPosition}-${nextInputPosition}{${numNonSkipChildren}}${

@@ -34,9 +34,9 @@ internal class test_nested_optionals : test_ScanOnDemandParserAbstract() {
         ruleTypeLabels = ...
      */
     /*
-        S = 'a' Rs 'z' ;
+        S = 'i' 'a' Rs 'z' ;
         Rs = R+ ;
-        R = Os 's' 't' ;
+        R = Os 'i' 't' ;
         Os = Bo Co Do ;
         Bo = 'b'?
         Co = 'c'?
@@ -66,37 +66,10 @@ internal class test_nested_optionals : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'i'"))
             ), issues
         )
     }
-
-    @Test
-    fun m_fails() {
-        val sentence = "m"
-
-        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
-        assertNull(sppt)
-        assertEquals(
-            listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^m", setOf("'a'"))
-            ), issues
-        )
-    }
-
-    @Test
-    fun a_fails() {
-        val sentence = "a"
-
-        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
-        assertNull(sppt)
-        assertEquals(
-            listOf(
-                parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'","'c'","'d'","'y'"))
-            ), issues
-        )
-    }
-
 
     @Test
     fun iaitz() {
@@ -163,19 +136,6 @@ internal class test_nested_optionals : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun ba_fails() {
-        val sentence = "ba"
-
-        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
-        assertNull(sppt)
-        assertEquals(
-            listOf(
-                parseError(InputLocation(1, 2, 1, 1), "b^a", setOf("'c'", "'t'"))
-            ), issues
-        )
-    }
-
-    @Test
     fun iacitz() {
         val sentence = "iacitz"
 
@@ -207,177 +167,5 @@ internal class test_nested_optionals : test_ScanOnDemandParserAbstract() {
         )
     }
 
-    @Test
-    fun adyz() {
-        val sentence = "adyz"
-
-        val expected = """
-            S {
-              'a'
-              R {
-                Os {
-                  Bo|1 { §empty }
-                  Co|1{ §empty }
-                  Do { 'd' }
-                }
-                'y'
-              }
-              'z'
-            }
-        """.trimIndent()
-
-        super.test(
-            rrs = rrs,
-            goal = goal,
-            sentence = sentence,
-            expectedNumGSSHeads = 1,
-            expectedTrees = arrayOf(expected)
-        )
-    }
-
-    @Test
-    fun abct() {
-        val sentence = "abct"
-
-        val expected = """
-            S { Opts {
-                aOpt { 'a' }
-                bOpt { 'b' }
-                cOpt { 'c' }
-                }
-                't'
-            }
-        """.trimIndent()
-
-        super.test(
-            rrs = rrs,
-            goal = goal,
-            sentence = sentence,
-            expectedNumGSSHeads = 1,
-            expectedTrees = arrayOf(expected)
-        )
-    }
-
-    @Test
-    fun adc_fails() {
-        val sentence = "adc"
-
-        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
-        assertNull(sppt)
-        assertEquals(
-            listOf(
-                parseError(InputLocation(1, 2, 1, 1), "a^dc", setOf("'b'", "'c'", "'t'"))
-            ), issues
-        )
-    }
-
-    @Test
-    fun abd_fails() {
-        val sentence = "abd"
-
-        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
-        assertNull(sppt)
-        assertEquals(
-            listOf(
-                parseError(InputLocation(2, 3, 1, 1), "ab^d", setOf("'c'", "'t'"))
-            ), issues
-        )
-    }
-
-    @Test
-    fun abcd_fails() {
-        val sentence = "abcd"
-
-        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
-        assertNull(sppt)
-        assertEquals(
-            listOf(
-                parseError(InputLocation(3, 4, 1, 1), "abc^d", setOf("'t'"))
-            ), issues
-        )
-    }
-
-    @Test
-    fun bt() {
-        val sentence = "bt"
-
-        val expected = """
-            S { Opts {
-                aOpt|1 { §empty }
-                bOpt { 'b' }
-                cOpt|1 { §empty }
-                }
-                't'
-            }
-        """.trimIndent()
-
-        super.test(
-            rrs = rrs,
-            goal = goal,
-            sentence = sentence,
-            expectedNumGSSHeads = 1,
-            expectedTrees = arrayOf(expected)
-        )
-    }
-
-    @Test
-    fun bct() {
-        val sentence = "bct"
-
-        val expected = """
-            S { Opts {
-                aOpt|1 { §empty }
-                bOpt { 'b' }
-                cOpt { 'c' }
-                }
-                't'
-            }
-        """.trimIndent()
-
-        super.test(
-            rrs = rrs,
-            goal = goal,
-            sentence = sentence,
-            expectedNumGSSHeads = 1,
-            expectedTrees = arrayOf(expected)
-        )
-    }
-
-    @Test
-    fun ct() {
-        val goal = "S"
-        val sentence = "ct"
-
-        val expected = """
-            S { Opts {
-                aOpt|1 { §empty }
-                bOpt|1 { §empty }
-                cOpt { 'c' }
-               }
-               't'
-            }
-        """.trimIndent()
-
-        super.test(
-            rrs = rrs,
-            goal = goal,
-            sentence = sentence,
-            expectedNumGSSHeads = 1,
-            expectedTrees = arrayOf(expected)
-        )
-    }
-
-    @Test
-    fun cb_fails() {
-        val goal = "S"
-        val sentence = "cb"
-
-        val (sppt, issues) = super.testFail(rrs, Companion.goal, sentence, 1)
-        assertNull(sppt)
-        assertEquals(
-            listOf(
-                parseError(InputLocation(1, 2, 1, 1), "c^b", setOf("'t'"))
-            ), issues
-        )
-    }
+    //TODO: more tests
 }

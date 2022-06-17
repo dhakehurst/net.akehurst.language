@@ -374,7 +374,13 @@ internal class BuildCacheLC1(
                         val to = targets.map { tgt ->
                             // expectedAt(tgt) - follow(parent) if atEnd
                             val grd = expectedAt(tgt, parentFollowAtEnd)
-                            val up = parentFollowAtEnd
+                            val up = when(action) {
+                                Transition.ParseAction.HEIGHT -> parentFollowAtEnd
+                                Transition.ParseAction.EMBED,
+                                Transition.ParseAction.WIDTH,
+                                Transition.ParseAction.GRAFT,
+                                Transition.ParseAction.GOAL -> LookaheadSetPart.EMPTY
+                            }
                             Triple(tgt, grd, up)
                         }
                         to.map { p -> L1Trans(parent!!.rulePosition, action, p.first, p.second, p.third) }.toSet()
@@ -765,7 +771,10 @@ internal class BuildCacheLC1(
                     val followResolved = follow.resolveTerminals(this.firstFollowCache)
                     val grd = LookaheadSetPart.createFromRuntimeRules(followResolved)
                     val parentFollowAtEndResolved = parentFollowAtEnd.resolveTerminals(this.firstFollowCache)
-                    val up = LookaheadSetPart.createFromRuntimeRules(parentFollowAtEndResolved)
+                    val up = when(action) {
+                        Transition.ParseAction.HEIGHT ->LookaheadSetPart.createFromRuntimeRules(parentFollowAtEndResolved)
+                        Transition.ParseAction.EMBED,Transition.ParseAction.WIDTH,Transition.ParseAction.GRAFT,Transition.ParseAction.GOAL -> LookaheadSetPart.EMPTY
+                    }
                     val old = HeightGraftInfo(action, listOf(parent), listOf(tgt), setOf(LookaheadInfoPart(grd, up)))
                     old
                 }

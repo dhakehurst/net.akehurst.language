@@ -23,6 +23,7 @@ import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
 import net.akehurst.language.collections.LazyMutableMapNonNull
 import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.collections.mutableQueueOf
 import net.akehurst.language.collections.mutableStackOf
 
 internal class FirstFollowCache3(val stateSet: ParserStateSet) {
@@ -34,6 +35,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         interface FollowDeferred {
             fun containsEmptyRules(ff: FirstFollowCache3): Boolean
             fun resolveTerminals(ff: FirstFollowCache3): Set<RuntimeRule>
+            val parentInfo:Set<RulePosition>
         }
 
         data class FollowDeferredLiteral(
@@ -44,6 +46,8 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
                 val EMPTY = FollowDeferredLiteral(emptySet())
             }
 
+            override val parentInfo: Set<RulePosition> = emptySet()
+
             override fun containsEmptyRules(ff: FirstFollowCache3): Boolean = _terminals.any { it.isEmptyRule }
 
             override fun resolveTerminals(ff: FirstFollowCache3): Set<RuntimeRule> = _terminals
@@ -53,6 +57,15 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         data class FollowDeferredComposite(
             val parts: Set<FollowDeferred>
         ) : FollowDeferred {
+
+            override val parentInfo: Set<RulePosition> = parts.flatMap {
+                when(it) {
+                    is FollowDeferredLiteral -> emptySet()
+                    is FollowDeferredComposite -> it.parts.flatMap { it.parentInfo }.toSet()
+                    is FollowDeferredCalculation -> setOf(it.rulePosition)
+                    else -> TODO()
+                }
+            }.toSet()
             override fun containsEmptyRules(ff: FirstFollowCache3): Boolean = parts.map { it.containsEmptyRules(ff) }.reduce { acc, b -> acc || b }
             override fun resolveTerminals(ff: FirstFollowCache3): Set<RuntimeRule> = parts.flatMap { it.resolveTerminals(ff) }.toSet()
             override fun toString(): String = parts.joinToString(separator = "&") { "$it" }
@@ -66,6 +79,13 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
 
             private var _resolvedFollow: FollowDeferred? = null
             private var _resolvedContainsEmpty: Boolean? = null
+
+            override val parentInfo: Set<RulePosition> = when(parentFollow) {
+                is FollowDeferredLiteral -> emptySet()
+                is FollowDeferredComposite -> parentFollow.parts.flatMap { it.parentInfo }.toSet()
+                is FollowDeferredCalculation -> setOf(parentFollow.rulePosition)
+                else -> TODO()
+            }
 
             override fun containsEmptyRules(ff: FirstFollowCache3): Boolean {
                 if (null == this._resolvedFollow) {
@@ -83,7 +103,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
                 return _resolvedFollow!!.resolveTerminals(ff)
             }
 
-            private val _id = arrayOf(context, rulePosition)
+            private val _id = arrayOf(context, rulePosition, parentInfo)
             override fun hashCode(): Int = _id.contentHashCode()
             override fun equals(other: Any?): Boolean = when {
                 other !is FollowDeferredCalculation -> false
@@ -140,7 +160,13 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
 
             val _id: Array<*>
 
+            val shortString:String get() = when (this) {
+                is ClosureItemRoot -> this.rulePosition.runtimeRule.tag
+                else -> "${parent.shortString}-${this.rulePosition.runtimeRule.tag}"
+            }
+
         }
+
 
         abstract class ClosureItemAbstract() : ClosureItem {
 
@@ -365,10 +391,10 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.INC_AFTER) { "START calcFirstTermClosure: $closureStart" }
         // Closures identified by (parent.rulePosition, prev, rulePosition, followAtEnd, parentFollowAtEnd)
         val done = mutableSetOf<ClosureItem>()
-        val todoList = mutableStackOf<ClosureItem>()
-        todoList.push(closureStart)
+        val todoList = mutableQueueOf<ClosureItem>()
+        todoList.enqueue(closureStart)
         while (todoList.isNotEmpty) {
-            val cls = todoList.pop()
+            val cls = todoList.dequeue()
             when {
                 /*cls.rulePosition.isAtEnd -> when {
                     cls.rulePosition.isGoal -> {
@@ -388,7 +414,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
                 }
                 cls.rulePosition.item!!.isTerminal -> {
                     val childRp = cls.rulePosition.item!!.asTerminalRulePosition
-                    todoList.push(ClosureItemChild(cls, childRp))
+                    todoList.enqueue(ClosureItemChild(cls, childRp))
                 }
                 else -> {
                     val childRulePositions = cls.rulePosition.item!!.rulePositionsAt[0]
@@ -397,8 +423,9 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
                         //val d = Triple(childCls.prev, childCls.rulePosition, childCls.parent.nextNotAtEnd)
                         if (done.contains(childCls).not()) {
                             done.add(childCls)
-                            todoList.push(childCls)
+                            todoList.enqueue(childCls)
                         } else {
+                            val i =childCls.shortString
                             // already done
                         }
                     }
@@ -444,7 +471,8 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
      * iterate up a closure and set firstTerm,firstOf,follow as required
      */
     private fun processClosure(closureItem: ClosureItem) {
-        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.INC_AFTER) { "START processClosure: $closureItem" }
+        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.INC_AFTER) { "START processClosure: ${closureItem.shortString}" }
+        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.NONE) { "START processClosure: $closureItem" }
         var cls = closureItem
         val firstTerminalInfo = when {
             cls.rulePosition.isTerminal -> FirstTerminalInfo(cls.rulePosition.runtimeRule, cls.parentNextNotAtEndFollow)

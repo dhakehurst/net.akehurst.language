@@ -137,6 +137,8 @@ internal class RuntimeRuleSetBuilder2() {
         when (listKind) {
             RuntimeRuleListKind.MULTI -> if (min == 0) rhsB.addEmptyRule = true
             RuntimeRuleListKind.SEPARATED_LIST -> if (min == 0) rhsB.addEmptyRule = true
+            RuntimeRuleListKind.NONE -> Unit
+            else -> TODO()
         }
         rhsB.init()
         val rb = RuntimeRuleBuilder(this, tag, "", RuntimeRuleKind.NON_TERMINAL, false, false, rhsB)

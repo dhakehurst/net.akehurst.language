@@ -287,6 +287,7 @@ internal class RuntimeRule(
                         }
                         else ->  TODO()//TODO: L/R-Assoc and unorderd
                     }
+                    else -> TODO()
                 }
                 return firstItems
             }

@@ -51,9 +51,9 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
     private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
     private val G = SM.startState.runtimeRules.first()
     private val E = rrs.findRuntimeRule("E")
-    private val root = rrs.findRuntimeRule("R")
-    private val mul = rrs.findRuntimeRule("M")
-    private val add = rrs.findRuntimeRule("A")
+    private val R = rrs.findRuntimeRule("R")
+    private val rM = rrs.findRuntimeRule("M")
+    private val rA = rrs.findRuntimeRule("A")
     private val m = rrs.findRuntimeRule("'m'")
     private val a = rrs.findRuntimeRule("'a'")
     private val v = rrs.findRuntimeRule("'v'")
@@ -75,12 +75,55 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
     }
 
     @Test
+    fun automaton_parse_vmv() {
+        val parser = ScanOnDemandParser(rrs)
+        val (sppt, issues) = parser.parseForGoal("S", "vmv", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+        assertNotNull(sppt)
+        assertEquals(0, issues.size)
+        assertEquals(1, sppt.maxNumHeads)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+            val s0 = state(RP(G, 0, SOR))   // G = . S
+            val s1 = state(RP(v, 0, EOR))   // v
+            val s2 = state(RP(R, 0, EOR))   // R = v .
+            val s3 = state(RP(E, 0, EOR))   // E = R .
+            val s4 = state(RP(S, 0, EOR))   // S = E .
+            val s5 = state(RP(rA, 0, 1))   // M = E . m E
+            val s6 = state(RP(rM, 0, 1))   // A = E . a E
+            val s7 = state(RP(m, 0, EOR))   // m
+            val s8 = state(RP(rM, 0, 2))   // M = E m . E
+            val s9 = state(RP(rM, 0, EOR))   // M = E m E .
+            val s10 = state(RP(E, 1, EOR))   // E = M .
+            val s11 = state(RP(G, 0, EOR))   // G = S .
+
+            transition(s0, s6, s7, WIDTH, null) { lookahead(setOf(v)) }
+            transition(s0, s0, s1, WIDTH, null) { lookahead(setOf(UP, m, a)) }
+            transition(s0, s8, s1, WIDTH, null) { lookahead(setOf(UP, m, a)) }
+            transition(s0, s4, s11, GOAL, null) { lookahead(setOf(UP)) }
+            transition(listOf(s0, s8), s3, s6, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
+            transition(s0, s10, s5, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
+            transition(listOf(s0, s8), s2, s3, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(UP), setOf(UP)) }
+            transition(s0, s9, s10, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(UP), setOf(UP));lookahead(setOf(a), setOf(a)) }
+            transition(s8, s3, s9, GRAFT, listOf(RP(rM, 0, 2))) { lookahead(setOf(UP)) }
+            transition(listOf(s0, s8), s3, s6, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(m), setOf(a));lookahead(setOf(m), setOf(UP)) }
+            transition(s0, s10, s6, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(m), setOf(a));lookahead(setOf(m), setOf(UP)) }
+            transition(s6, s7, s8, GRAFT, listOf(RP(rM, 0, 2))) { lookahead(setOf(v)) }
+            transition(listOf(s0, s8), s1, s2, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(UP), setOf(UP)) }
+            transition(s0, s3, s4, HEIGHT, null) { lookahead(setOf(UP), setOf(UP)) }
+            transition(s0, s10, s4, HEIGHT, null) { lookahead(setOf(UP), setOf(UP)) }
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
     fun automaton_parse_sentences() {
         val parser = ScanOnDemandParser(rrs)
-        val sentences = listOf("v","vav", "vmv","vmvav","vavmv")
+        val sentences = listOf("v", "vav", "vavav", "vmv", "vmvmv", "vmvav", "vavmv")
         sentences.forEach {
             val (sppt, issues) = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
-            assertNotNull(sppt, issues.joinToString("\n") { it.toString() } )
+            assertNotNull(sppt, issues.joinToString("\n") { it.toString() })
             assertEquals(0, issues.size)
             assertEquals(1, sppt.maxNumHeads)
         }
@@ -88,7 +131,48 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+            val s0 = state(RP(G, 0, SOR))   // G = . S
+            val s1 = state(RP(v, 0, EOR))   // v
+            val s2 = state(RP(R, 0, EOR))   // R = v .
+            val s3 = state(RP(E, 0, EOR))   // E = R .
+            val s4 = state(RP(S, 0, EOR))   // S = E .
+            val s5 = state(RP(rA, 0, 1))   // A = E . a E
+            val s6 = state(RP(rM, 0, 1))   // M = E . m E
+            val s7 = state(RP(G, 0, EOR))   // G = S .
+            val s8 = state(RP(a, 0, EOR))   // a
+            val s9 = state(RP(rA, 0, 2))   // A = E a . E
+            val s10 = state(RP(rA, 0, EOR))   // A = E a E .
+            val s11 = state(RP(E, 2, EOR))   // E = M .
+            val s12 = state(RP(m, 0, EOR))   // m
+            val s13 = state(RP(rM, 0, 2))   // M = E m . E
+            val s14 = state(RP(rM, 0, EOR))   // M = E m E .
+            val s15 = state(RP(E, 1, EOR))   // E = A .
 
+            transition(listOf(s0, s13), s5, s8, WIDTH, null) { lookahead(setOf(v)) }
+            transition(listOf(s0, s9), s6, s12, WIDTH, null) { lookahead(setOf(v)) }
+            transition(s0, s0, s1, WIDTH, null) { lookahead(setOf(UP, m, a)) }
+            transition(listOf(s0, s13), s9, s1, WIDTH, null) { lookahead(setOf(UP, m, a)) }
+            transition(listOf(s0, s9), s13, s1, WIDTH, null) { lookahead(setOf(UP, m, a)) }
+            transition(s0, s4, s7, GOAL, null) { lookahead(setOf(UP)) }
+            transition(s9, s3, s10, GRAFT, listOf(RP(rA, 0, 2))) { lookahead(setOf(UP)) }
+            transition(s9, s15, s10, GRAFT, listOf(RP(rA, 0, 2))) { lookahead(setOf(UP)) }
+            transition(listOf(s0, s9, s13), s3, s5, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
+            transition(listOf(s0, s9), s15, s5, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
+            transition(listOf(s0, s13), s11, s5, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
+            transition(s5, s8, s9, GRAFT, listOf(RP(rA, 0, 1))) { lookahead(setOf(v)) }
+            //transition(GRAFT) { prv("A", 0, 1); src("'a'", 0, EOR); tgt("A", 0, 2); lhg("'v'"); rtg("A", 0, 1) }
+
+            transition(listOf(s0, s8), s3, s6, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
+            transition(s0, s10, s5, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
+            transition(listOf(s0, s8), s2, s3, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(UP), setOf(UP)) }
+            transition(s0, s9, s10, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(UP), setOf(UP));lookahead(setOf(a), setOf(a)) }
+            transition(s8, s3, s9, GRAFT, listOf(RP(rM, 0, 2))) { lookahead(setOf(UP)) }
+            transition(listOf(s0, s8), s3, s6, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(m), setOf(a));lookahead(setOf(m), setOf(UP)) }
+            transition(s0, s10, s6, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(m), setOf(a));lookahead(setOf(m), setOf(UP)) }
+            transition(s6, s7, s8, GRAFT, listOf(RP(rM, 0, 2))) { lookahead(setOf(v)) }
+            transition(listOf(s0, s8), s1, s2, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(UP), setOf(UP)) }
+            transition(s0, s3, s4, HEIGHT, null) { lookahead(setOf(UP), setOf(UP)) }
+            transition(s0, s10, s4, HEIGHT, null) { lookahead(setOf(UP), setOf(UP)) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -99,22 +183,87 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        //TODO val sentences = listOf("v","vav", "vmv","vmvav","vavmv")
-        val sentences = listOf("vmv")
+        val sentences = listOf("v", "vav", "vavav", "vmv", "vmvmv", "vmvav", "vavmv")
         sentences.forEach {
             val parser = ScanOnDemandParser(rrs)
             val (sppt, issues) = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
-            assertNotNull(sppt, issues.joinToString("\n") { it.toString() } )
+            assertNotNull(sppt, issues.joinToString("\n") { it.toString() })
             assertEquals(0, issues.size)
             assertEquals(1, sppt.maxNumHeads)
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
-            val s0 = state(RP(G, 0, SOR))      /* G = . S   */
-            val s1 = state(RP(v, 0, EOR))      /* 'v' .   */
+            val s0 = state(RP(G, 0, SOR))   // G = . S
+            val s1 = state(RP(G, 0, EOR))   // G = S .
+            val s2 = state(RP(S, 0, EOR))   // S = E .
+            val s3 = state(RP(E, 0, EOR))   // E = R .
+            val s4 = state(RP(E, 1, EOR))   // E = M .
+            val s5 = state(RP(E, 2, EOR))   // E = A .
+            val s6 = state(RP(rA, 0, EOR))   // M = E m E .
+            val s7 = state(RP(a, 0, EOR))   // v
+            val s8 = state(RP(rM, 0, EOR))   // A = E a E .
+            val s9 = state(RP(m, 0, EOR))   // m
+            val s10 = state(RP(R, 0, EOR))   // R = v .
+            val s11 = state(RP(v, 0, EOR))   // v
+            val s12 = state(RP(rA, 0, 1))   // A = E . a E
+            val s13 = state(RP(rA, 0, 2))   // A = E a . E
+            val s14 = state(RP(rM, 0, 1))   // M = E . m E
+            val s15 = state(RP(rM, 0, 2))   // M = E m . E
 
+            transition(listOf(s0, s13, s15), s12, s7, WIDTH, null) { lookahead(setOf(v)) }
+            transition(listOf(s0, s13, s15), s14, s9, WIDTH, null) { lookahead(setOf(v)) }
+            transition(s0, s0, s11, WIDTH, null) { lookahead(setOf(UP, m, a)) }
+            transition(listOf(s0, s13, s15), s13, s11, WIDTH, null) { lookahead(setOf(UP, m, a)) }
+            transition(listOf(s0, s13, s15), s15, s11, WIDTH, null) { lookahead(setOf(UP, m, a)) }
+            transition(s0, s2, s1, GOAL, null) { lookahead(setOf(UP)) }
+            transition(s13, s3, s6, GRAFT, listOf(RP(rA, 0, 2))) { lookahead(setOf(UP, a, m)) }
+            transition(s13, s4, s6, GRAFT, listOf(RP(rA, 0, 2))) { lookahead(setOf(UP, a, m)) }
+            transition(s13, s5, s6, GRAFT, listOf(RP(rA, 0, 2))) { lookahead(setOf(UP, a, m)) }
+            transition(listOf(s0, s13, s15), s3, s12, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
+            transition(listOf(s0, s13, s15), s4, s12, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
+            transition(listOf(s0, s13, s15), s5, s12, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
+            transition(s12, s7, s13, GRAFT, listOf(RP(rA, 0, 1))) { lookahead(setOf(v)) }
+            transition(listOf(s0, s13, s15), s10, s3, HEIGHT, null) { lookahead(setOf(a), setOf(a)); lookahead(setOf(m), setOf(m));lookahead(setOf(UP), setOf(UP)) }
+            transition(listOf(s0, s13, s15), s8, s4, HEIGHT, null) { lookahead(setOf(a), setOf(a)); lookahead(setOf(m), setOf(m));lookahead(setOf(UP), setOf(UP)) }
+            transition(listOf(s0, s13, s15), s6, s5, HEIGHT, null) { lookahead(setOf(a), setOf(a)); lookahead(setOf(m), setOf(m));lookahead(setOf(UP), setOf(UP)) }
+            transition(s13, s3, s8, GRAFT, listOf(RP(rM, 0, 2))) { lookahead(setOf(UP, a, m)) }
+            transition(s13, s4, s8, GRAFT, listOf(RP(rM, 0, 2))) { lookahead(setOf(UP, a, m)) }
+            transition(s13, s5, s8, GRAFT, listOf(RP(rM, 0, 2))) { lookahead(setOf(UP, a, m)) }
+            transition(listOf(s0, s13, s15), s3, s14, HEIGHT, null) { lookahead(setOf(m), setOf(a)); lookahead(setOf(m), setOf(m));lookahead(setOf(m), setOf(UP)) }
+            transition(listOf(s0, s13, s15), s4, s14, HEIGHT, null) { lookahead(setOf(m), setOf(a)); lookahead(setOf(m), setOf(m));lookahead(setOf(m), setOf(UP)) }
+            transition(listOf(s0, s13, s15), s5, s14, HEIGHT, null) { lookahead(setOf(m), setOf(a)); lookahead(setOf(m), setOf(m));lookahead(setOf(m), setOf(UP)) }
+            transition(s14, s9, s15, GRAFT, listOf(RP(rM, 0, 1))) { lookahead(setOf(v)) }
+            transition(listOf(s0, s13, s15), s11, s10, HEIGHT, null) { lookahead(setOf(a), setOf(a)); lookahead(setOf(m), setOf(m));lookahead(setOf(UP), setOf(UP)) }
+            transition(s0, s3, s2, HEIGHT, null) { lookahead(setOf(UP), setOf(UP)) }
+            transition(s0, s4, s2, HEIGHT, null) { lookahead(setOf(UP), setOf(UP)) }
+            transition(s0, s5, s2, HEIGHT, null) { lookahead(setOf(UP), setOf(UP)) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun compare() {
+        val rrs_noBuild = rrs.clone()
+        val rrs_preBuild = rrs.clone()
+
+        val parser = ScanOnDemandParser(rrs_noBuild)
+        val sentences = listOf("v", "vav", "vavav", "vmv", "vmvmv", "vmvav", "vavmv")
+        for (sen in sentences) {
+            val (sppt, issues) = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            if (issues.isNotEmpty()) {
+                println("Sentence: $sen")
+                issues.forEach { println(it) }
+            }
+        }
+        val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
+        val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)
+
+        println("--Pre Build--")
+        println(rrs_preBuild.usedAutomatonToString("S"))
+        println("--No Build--")
+        println(rrs_noBuild.usedAutomatonToString("S"))
+
+        AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild)
     }
 }

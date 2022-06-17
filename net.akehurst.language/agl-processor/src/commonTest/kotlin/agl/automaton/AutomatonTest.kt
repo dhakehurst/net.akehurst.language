@@ -21,7 +21,7 @@ internal object AutomatonTest {
                 foundOther.add(otherElement)
             }
         }
-        return foundThis.size == foundOther.size
+        return foundThis.size == foundOther.size && foundThis.size==thisList.size
     }
 
     fun <E> assertMatches(setName: String, expected: Set<E>, actual: Set<E>, matches: (t: E, o: E) -> Boolean) {

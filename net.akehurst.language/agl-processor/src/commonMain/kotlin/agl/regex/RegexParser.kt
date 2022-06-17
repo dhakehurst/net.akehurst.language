@@ -144,6 +144,7 @@ internal class RegexParser(
                                         needConcat.push(true)
                                     }
                                 }
+                                EscapeKind.OPTIONS -> TODO()
                             }
                             c = this.next()
                         }
