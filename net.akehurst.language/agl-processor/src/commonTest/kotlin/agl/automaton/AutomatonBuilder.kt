@@ -146,20 +146,27 @@ internal class TransitionBuilder(
     fun ctx(states: Set<ParserState>) {
         _context = states
     }
-    fun ctx(vararg rulePositions:RulePosition) {
-        val state = this.stateSet.fetchOrCreateState(rulePositions.toList())
-        this.ctx(setOf(state))
+
+    fun ctx(vararg rulePositions: RulePosition) {
+        val states = rulePositions.map{ this.stateSet.fetchOrCreateState(listOf(it)) }.toSet()
+        this.ctx(states)
     }
+
     fun ctx(runtimeRule: RuntimeRule, option: Int, position: Int) {
         val state = this.stateSet.fetchOrCreateState(listOf(RulePosition(runtimeRule, option, position)))
         this.ctx(setOf(state))
     }
 
+    fun src(runtimeRule: RuntimeRule) {
+        check(this.action==Transition.ParseAction.HEIGHT || this.action==Transition.ParseAction.GRAFT)
+        src(runtimeRule, 0, RulePosition.END_OF_RULE)
+    }
     fun src(runtimeRule: RuntimeRule, option: Int, position: Int) {
         val state = this.stateSet.fetchOrCreateState(listOf(RulePosition(runtimeRule, option, position)))
         this.src(state)
     }
 
+    fun tgt(runtimeRule: RuntimeRule) = tgt(runtimeRule, 0, RulePosition.END_OF_RULE)
     fun tgt(runtimeRule: RuntimeRule, option: Int, position: Int) {
         val state = this.stateSet.fetchOrCreateState(listOf(RulePosition(runtimeRule, option, position)))
         this.tgt(state)
@@ -173,9 +180,9 @@ internal class TransitionBuilder(
         _tgt = state
     }
 
-    fun lhg(guard: RuntimeRule) {
-        this._lhg.add(Lookahead(LookaheadSet.createFromRuntimeRules(this.stateSet, setOf(guard)), LookaheadSet.EMPTY))
-    }
+    fun lhg(guard: RuntimeRule) = lhg(setOf(guard))
+
+    fun lhg(guard: RuntimeRule, up: RuntimeRule) = lhg(setOf(guard), setOf(up))
 
     fun lhg(guard: Set<RuntimeRule>) {
         this._lhg.add(Lookahead(LookaheadSet.createFromRuntimeRules(this.stateSet, guard), LookaheadSet.EMPTY))
@@ -191,6 +198,7 @@ internal class TransitionBuilder(
     fun rtg(runtimeGuard: Set<RulePosition>?) {
         _rtg = runtimeGuard
     }
+
     fun rtg(runtimeRule: RuntimeRule, option: Int, position: Int) {
         val set = setOf(RulePosition(runtimeRule, option, position))
         this.rtg(set)

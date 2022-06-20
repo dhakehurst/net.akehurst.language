@@ -36,7 +36,7 @@ internal interface TransitionCache {
 
     // List because we don't want to convert to Set filtered list at runtime
     fun findTransitionByPrevious(previous: ParserState): List<Transition>?
-    fun previousFor(transition: Transition): List<ParserState?>
+    fun previousFor(transition: Transition): List<ParserState>
 }
 
 internal class TransitionCacheLC0 : TransitionCache {
@@ -79,7 +79,7 @@ internal class TransitionCacheLC0 : TransitionCache {
         return _transitions?.toList()
     }
 
-    override fun previousFor(transition: Transition): List<ParserState?> = emptyList()
+    override fun previousFor(transition: Transition): List<ParserState> = emptyList()
 }
 
 internal class TransitionCacheLC1 : TransitionCache {
@@ -123,7 +123,7 @@ internal class TransitionCacheLC1 : TransitionCache {
         return _transitionsByPrevious[previous]
     }
 
-    override fun previousFor(transition: Transition): List<ParserState?> {
+    override fun previousFor(transition: Transition): List<ParserState> {
         return _transitionsByPrevious.entries.filter { it.value?.contains(transition) ?: false }.map { it.key }
     }
 

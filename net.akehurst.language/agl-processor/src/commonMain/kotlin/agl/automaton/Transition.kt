@@ -112,6 +112,10 @@ internal class Transition(
 //        GRAFT_OR_HEIGHT // try graft if fails do height -- reduces ambiguity on recursive rules
     }
 
+    val context by lazy {
+        this.from.outTransitions.previousFor(this)
+    }
+
     private val hashCode_cache: Int by lazy {
         arrayListOf(from, to, action, lookahead, prevGuard).hashCode()
     }
@@ -133,7 +137,8 @@ internal class Transition(
     }
 
     override fun toString(): String {
+        val ctx = this.context.joinToString { it.rulePositions.toString() }
         val lhsStr = this.lookahead.joinToString(separator = "|") { "[${it.guard.fullContent.joinToString {  it.tag }}](${it.up.fullContent.joinToString {  it.tag }})" }
-        return "Transition { $from -- $action${lhsStr} --> $to }"
+        return "Transition[$ctx] { $from -- $action${lhsStr} --> $to }"
     }
 }

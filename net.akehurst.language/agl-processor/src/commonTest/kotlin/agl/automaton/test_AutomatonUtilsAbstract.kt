@@ -22,62 +22,63 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 
 internal abstract class test_AutomatonUtilsAbstract {
     companion object {
+        const val o0 = 0
+        const val o1 = 1
+        const val o2 = 2
+        const val p1 = 1
+        const val p2 = 2
+        const val p3 = 3
         val EOT = RuntimeRuleSet.END_OF_TEXT
         val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
         val ANY = RuntimeRuleSet.ANY_LOOKAHEAD
 
-        val EOR = RulePosition.END_OF_RULE
-        val SOR = RulePosition.START_OF_RULE
+        const val EOR = RulePosition.END_OF_RULE
+        const val SOR = RulePosition.START_OF_RULE
 
         /**
          * Option for SimpleList Item
          */
-        val OMI = RulePosition.OPTION_MULTI_ITEM
+        const val OMI = RulePosition.OPTION_MULTI_ITEM
 
         /**
          * Option for SimpleList Empty
          */
-        val OME = RulePosition.OPTION_MULTI_EMPTY
+        const val OME = RulePosition.OPTION_MULTI_EMPTY
 
         /**
          * Option for SeparatedList Empty
          */
-        val OLE = RulePosition.OPTION_SLIST_EMPTY
+        const val OLE = RulePosition.OPTION_SLIST_EMPTY
 
         /**
          * Option for SeparatedList Item
          */
-        val OLI = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
+        const val OLI = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
 
         /**
          * Option for SeparatedList Separator
          */
-        val OLS = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
+        const val OLS = RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR
 
         /**
          * Position of SimpleList Item
          */
-        val PMI = RulePosition.POSITION_MULIT_ITEM
+        const val PMI = RulePosition.POSITION_MULIT_ITEM
 
         /**
          * Position of SeparatedList Item
          */
-        val PLI = RulePosition.POSITION_SLIST_ITEM
+        const val PLI = RulePosition.POSITION_SLIST_ITEM
 
         /**
          * Position of SeparatedList Separator
          */
-        val PLS = RulePosition.POSITION_SLIST_SEPARATOR
+        const val PLS = RulePosition.POSITION_SLIST_SEPARATOR
 
         val WIDTH = Transition.ParseAction.WIDTH
         val HEIGHT = Transition.ParseAction.HEIGHT
         val GRAFT = Transition.ParseAction.GRAFT
         val GOAL = Transition.ParseAction.GOAL
-        //  val GRAFT_OR_HEIGHT = Transition.ParseAction.GRAFT_OR_HEIGHT
-
-        val lhs_E = LookaheadSet.EMPTY
-        val lhs_U = LookaheadSet.UP
-        val lhs_T = LookaheadSet.EOT
 
         fun RP(rr: RuntimeRule, opt: Int, pos: Int): RulePosition = RulePosition(rr, opt, pos)
         fun LHS(content: Set<RuntimeRule>) = LookaheadSetPart(content.contains(UP), content.contains(EOT), false, content.minus(UP))

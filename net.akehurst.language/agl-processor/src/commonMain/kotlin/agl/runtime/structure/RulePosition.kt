@@ -34,19 +34,19 @@ internal class RulePosition(
 ) {
 
     companion object {
-        val START_OF_RULE = 0
-        val END_OF_RULE = -1
+        const val START_OF_RULE = 0
+        const val END_OF_RULE = -1
 
-        val OPTION_MULTI_ITEM = 0
-        val OPTION_MULTI_EMPTY = 1
+        const val OPTION_MULTI_ITEM = 0
+        const val OPTION_MULTI_EMPTY = 1
 
-        val OPTION_SLIST_ITEM_OR_SEPERATOR = 0
-        val OPTION_SLIST_EMPTY = 1
+        const val OPTION_SLIST_ITEM_OR_SEPERATOR = 0
+        const val OPTION_SLIST_EMPTY = 1
 
         //for use in multi and separated list
-        val POSITION_MULIT_ITEM = 1 //TODO: make -ve maybe
-        val POSITION_SLIST_SEPARATOR = 1 //TODO: make -ve maybe
-        val POSITION_SLIST_ITEM = 2 //TODO: make -ve maybe
+        const val POSITION_MULIT_ITEM = 1 //TODO: make -ve maybe
+        const val POSITION_SLIST_SEPARATOR = 1 //TODO: make -ve maybe
+        const val POSITION_SLIST_ITEM = 2 //TODO: make -ve maybe
     }
 
     val identity: RuleOptionId = RuleOption(runtimeRule, option) //TODO: Make this an Int

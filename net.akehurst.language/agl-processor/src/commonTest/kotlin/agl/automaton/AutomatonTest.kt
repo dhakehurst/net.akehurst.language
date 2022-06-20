@@ -59,6 +59,7 @@ internal object AutomatonTest {
         this.to.matches(other.to).not() -> false
         this.action != other.action -> false
         this.lookahead.matches(other.lookahead) { t, o -> t.matches(o) }.not() -> false
+        this.from.outTransitions.previousFor(this).toSet().matches(other.from.outTransitions.previousFor(other).toSet()){t, o -> t.matches(o) }.not() -> false
         else -> true
     }
 
