@@ -184,6 +184,9 @@ internal class ParserStateSet(
     internal fun fetchState(rulePositions: List<RulePosition>): ParserState? =
         this.allBuiltStates.firstOrNull { it.rulePositions.toSet() == rulePositions.toSet() }
 
+    internal fun fetchOrCreateState(rulePositions: List<RulePosition>): ParserState =
+        fetchState(rulePositions) ?: this.createState(rulePositions)
+
     internal fun fetchCompatibleState(rulePositions: List<RulePosition>): ParserState? {
         val existing = this.allBuiltStates.firstOrNull {
             it.rulePositions.containsAll(rulePositions)
@@ -278,11 +281,11 @@ internal class ParserStateSet(
                     Transition.ParseAction.WIDTH,
                     Transition.ParseAction.EMBED,
                     Transition.ParseAction.HEIGHT -> null
-                    Transition.ParseAction.GRAFT -> ti.parent.toList()
+                    Transition.ParseAction.GRAFT -> ti.parent.toSet()
                 }
                 val lhs = ti.lookahead.map { Lookahead(it.guard.lhs(this), it.up.lhs(this)) }.toSet()
                 val runtimeGuard = Transition.runtimeGuardFor(action)
-                state.outTransitions.createTransition(previousStates, state, action, to, lhs, prevGuard?.toList(), runtimeGuard)
+                state.outTransitions.createTransition(previousStates.toSet(), state, action, to, lhs, prevGuard, runtimeGuard)
             }
         }
 

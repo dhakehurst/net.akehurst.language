@@ -84,8 +84,8 @@ internal class test_b_aSc : test_AutomatonAbstract() {
 
             transition(s0, s0, s1, WIDTH, setOf(UP), setOf(), null)
             transition(s0, s0, s2, WIDTH, setOf(b, a), setOf(), null)
-            transition(s0, s1, s3, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 0)))
-            transition(s0, s3, s4, GOAL, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
+            transition(s0, s1, s3, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 0, 0)))
+            transition(s0, s3, s4, GOAL, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, 0)))
         }
 
         //then
@@ -118,15 +118,15 @@ internal class test_b_aSc : test_AutomatonAbstract() {
 
             transition(s0, s0, s1, WIDTH, setOf(UP), setOf(), null)
             transition(s0, s0, s2, WIDTH, setOf(a, b), setOf(), null)
-            transition(s3, s1, s4, HEIGHT, setOf(c), setOf(setOf(c)), listOf(RP(S, 0, 0)))
-            transition(s0, s2, s3, HEIGHT, setOf(a, b), setOf(setOf(UP)), listOf(RP(S1, 0, SOR)))
+            transition(s3, s1, s4, HEIGHT, setOf(c), setOf(setOf(c)), setOf(RP(S, 0, 0)))
+            transition(s0, s2, s3, HEIGHT, setOf(a, b), setOf(setOf(UP)), setOf(RP(S1, 0, SOR)))
             transition(s0, s3, s1, WIDTH, setOf(c), setOf(), null)
             transition(s0, s3, s2, WIDTH, setOf(a, b), setOf(), null)
-            transition(s3, s4, s5, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(S1, 0, 1)))
+            transition(s3, s4, s5, GRAFT, setOf(c), setOf(setOf(UP)), setOf(RP(S1, 0, 1)))
             transition(s0, s5, s6, WIDTH, setOf(UP), setOf(), null)
-            transition(s5, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(S1, 0, 2)))
-            transition(s0, s7, s8, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 1, SOR)))
-            transition(s0, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, SOR)))
+            transition(s5, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(S1, 0, 2)))
+            transition(s0, s7, s8, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 1, SOR)))
+            transition(s0, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, SOR)))
 
         }
 
@@ -161,17 +161,17 @@ internal class test_b_aSc : test_AutomatonAbstract() {
 
             transition(s0, s0, s1, WIDTH, setOf(UP), setOf(), null)
             transition(s0, s0, s2, WIDTH, setOf(b, a), setOf(), null)
-            transition(s0, s1, s3, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 0)))
-            transition(s0, s1, s3, HEIGHT, setOf(c), setOf(setOf(c)), listOf(RP(S, 0, 0)))
-            transition(s0, s2, s5, HEIGHT, setOf(b,a), setOf(setOf(UP)), listOf(RP(S1, 0, 0)))
+            transition(s0, s1, s3, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 0, 0)))
+            transition(s0, s1, s3, HEIGHT, setOf(c), setOf(setOf(c)), setOf(RP(S, 0, 0)))
+            transition(s0, s2, s5, HEIGHT, setOf(b,a), setOf(setOf(UP)), setOf(RP(S1, 0, 0)))
             transition(s0, s3, s4, GOAL, setOf(UP), setOf(setOf(UP)), null)
-            transition(s5, s3, s6, GRAFT,  listOf(RP(G, 0, 0))) { lookahead(setOf(c), setOf(c)); lookahead(setOf(c), setOf(UP)) }
+            transition(s5, s3, s6, GRAFT,  setOf(RP(G, 0, 0))) { lhg(setOf(c), setOf(c)); lhg(setOf(c), setOf(UP)) }
             transition(s0, s5, s2, WIDTH, setOf(b, a), setOf(), null)
             transition(s0, s5, s1, WIDTH, setOf(c), setOf(), null)
             transition(s0, s6, s7, WIDTH, setOf(UP), setOf(), null)
-            transition(s6, s7, s8, GRAFT,  listOf(RP(S1, 0, 2))) { lookahead(setOf(UP), setOf(UP)) }
-            transition(s0, s8, s9, HEIGHT, listOf(RP(S, 1, 0))) { lookahead(setOf(UP), setOf(UP)) }
-            transition(s0, s9, s4, GOAL, null) { lookahead(setOf(UP), setOf()) }
+            transition(s6, s7, s8, GRAFT,  setOf(RP(S1, 0, 2))) { lhg(setOf(UP), setOf(UP)) }
+            transition(s0, s8, s9, HEIGHT, setOf(RP(S, 1, 0))) { lhg(setOf(UP), setOf(UP)) }
+            transition(s0, s9, s4, GOAL, null) { lhg(setOf(UP), setOf()) }
         }
 
         //then
@@ -202,20 +202,20 @@ internal class test_b_aSc : test_AutomatonAbstract() {
             val s7 = state(RP(S1, 0, EOR))    /* S1 = a S c . */
             val s8 = state(RP(S, 1, EOR))    /*  S = S1 . */
 
-            transition(s0, s0, s1, WIDTH, null) { lookahead(setOf(b,a)) }
-            transition(s0, s0, s2, WIDTH, null) { lookahead(setOf(UP)) }
-            transition(s0, s1, s3, HEIGHT, setOf(b,a), setOf(setOf(UP)), listOf(RP(S1, 0, 0)))
-            transition(s3, s1, s3, HEIGHT, setOf(b,a), setOf(setOf(c)), listOf(RP(S1, 0, 0)))
-            transition(s0, s2, s4, HEIGHT, setOf(c), setOf(setOf(c)), listOf(RP(S, 0, 0)))
-            transition(listOf(s0,s3), s3, s1, WIDTH, null) { lookahead(setOf(b,a)) }
-            transition(listOf(s0,s3), s3, s2, WIDTH,  null) { lookahead(setOf(c)) }
-            transition(s3, s4, s5, GRAFT, null) { lookahead(setOf(c), setOf(UP)); lookahead(setOf(c), setOf(c)) }
-            transition(listOf(s0, s3), s5, s6, WIDTH, null) { lookahead(setOf(UP)) }
+            transition(s0, s0, s1, WIDTH, null) { lhg(setOf(b,a)) }
+            transition(s0, s0, s2, WIDTH, null) { lhg(setOf(UP)) }
+            transition(s0, s1, s3, HEIGHT, setOf(b,a), setOf(setOf(UP)), setOf(RP(S1, 0, 0)))
+            transition(s3, s1, s3, HEIGHT, setOf(b,a), setOf(setOf(c)), setOf(RP(S1, 0, 0)))
+            transition(s0, s2, s4, HEIGHT, setOf(c), setOf(setOf(c)), setOf(RP(S, 0, 0)))
+            transition(setOf(s0,s3), s3, s1, WIDTH, null) { lhg(setOf(b,a)) }
+            transition(setOf(s0,s3), s3, s2, WIDTH,  null) { lhg(setOf(c)) }
+            transition(s3, s4, s5, GRAFT, null) { lhg(setOf(c), setOf(UP)); lhg(setOf(c), setOf(c)) }
+            transition(setOf(s0, s3), s5, s6, WIDTH, null) { lhg(setOf(UP)) }
             transition(s5, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)), null)
-            transition(s0, s7, s8, HEIGHT,  listOf(RP(S, 1, 0))) { lookahead(setOf(UP), setOf(UP)) }
-            transition(s3, s7, s8, HEIGHT, listOf(RP(S, 1, 0))) { lookahead(setOf(c), setOf(c)) }
-            transition(s3, s8, s5, GRAFT, listOf(RP(S1, 0, 1))){ lookahead(setOf(c), setOf(UP)) }
-            transition(s0, s8, s9, GOAL, listOf(RP(S1, 0, 1))){ lookahead(setOf(UP)) }
+            transition(s0, s7, s8, HEIGHT,  setOf(RP(S, 1, 0))) { lhg(setOf(UP), setOf(UP)) }
+            transition(s3, s7, s8, HEIGHT, setOf(RP(S, 1, 0))) { lhg(setOf(c), setOf(c)) }
+            transition(s3, s8, s5, GRAFT, setOf(RP(S1, 0, 1))){ lhg(setOf(c), setOf(UP)) }
+            transition(s0, s8, s9, GOAL, setOf(RP(S1, 0, 1))){ lhg(setOf(UP)) }
         }
 
         //then
@@ -250,8 +250,8 @@ internal class test_b_aSc : test_AutomatonAbstract() {
 
             transition(s0, s0, s1, WIDTH, setOf(UP), setOf(), null)
             transition(s0, s0, s2, WIDTH, setOf(b, a), setOf(), null)
-            transition(s3, s1, s4, HEIGHT, setOf(c), setOf(setOf(c)), listOf(RP(S, 0, 0)))
-            transition(s0, s3, s4, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
+            transition(s3, s1, s4, HEIGHT, setOf(c), setOf(setOf(c)), setOf(RP(S, 0, 0)))
+            transition(s0, s3, s4, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, 0)))
             transition(s0, s4, s4, GOAL, setOf(), setOf(), null)
         }
 
@@ -290,19 +290,19 @@ internal class test_b_aSc : test_AutomatonAbstract() {
             transition(s0, s0, s7, WIDTH, setOf(UP), setOf(), null)
             transition(s0, s0, s6, WIDTH, setOf(b, a), setOf(), null)
             transition(s0, s2, s1, GOAL, setOf(UP), setOf(), null)
-            transition(s8, s2, s9, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(S1,0,1)))
+            transition(s8, s2, s9, GRAFT, setOf(c), setOf(setOf(UP)), setOf(RP(S1,0,1)))
             transition(s0, s3, s1, GOAL, setOf(UP), setOf(), null)
-            transition(s8, s3, s9, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(S1,0,1)))// ** c-c
-            transition(listOf(s0), s4, s3, HEIGHT, setOf(UP), setOf(setOf(UP)), null)
-            transition(listOf(s8), s4, s3, HEIGHT, setOf(c), setOf(setOf(c)), null)
-            transition(listOf(s9), s5, s4, GRAFT, listOf(RP(S1, 0, 2))) { lookahead(setOf(UP), setOf(UP)); lookahead(setOf(c), setOf(c)) }
-            transition(listOf(s8), s6, s8, HEIGHT, null) { lookahead(setOf(a, b), setOf(c)) }
-            transition(listOf(s0), s6, s8, HEIGHT, null) { lookahead(setOf(a, b), setOf(UP)) }
-            transition(listOf(s8), s7, s2, HEIGHT, null) { lookahead(setOf(c), setOf(c)) }
-            transition(listOf(s0), s7, s2, HEIGHT, null) { lookahead(setOf(UP), setOf(UP)) }
-            transition(listOf(s0, s8), s8, s7, WIDTH, setOf(c), setOf(), null)
-            transition(listOf(s0, s8), s8, s6, WIDTH, setOf(b, a), setOf(), null)
-            transition(listOf(s0, s8), s9, s5, WIDTH, setOf(UP, c), setOf(), null)
+            transition(s8, s3, s9, GRAFT, setOf(c), setOf(setOf(UP)), setOf(RP(S1,0,1)))// ** c-c
+            transition(setOf(s0), s4, s3, HEIGHT, setOf(UP), setOf(setOf(UP)), null)
+            transition(setOf(s8), s4, s3, HEIGHT, setOf(c), setOf(setOf(c)), null)
+            transition(setOf(s9), s5, s4, GRAFT, setOf(RP(S1, 0, 2))) { lhg(setOf(UP), setOf(UP)); lhg(setOf(c), setOf(c)) }
+            transition(setOf(s8), s6, s8, HEIGHT, null) { lhg(setOf(a, b), setOf(c)) }
+            transition(setOf(s0), s6, s8, HEIGHT, null) { lhg(setOf(a, b), setOf(UP)) }
+            transition(setOf(s8), s7, s2, HEIGHT, null) { lhg(setOf(c), setOf(c)) }
+            transition(setOf(s0), s7, s2, HEIGHT, null) { lhg(setOf(UP), setOf(UP)) }
+            transition(setOf(s0, s8), s8, s7, WIDTH, setOf(c), setOf(), null)
+            transition(setOf(s0, s8), s8, s6, WIDTH, setOf(b, a), setOf(), null)
+            transition(setOf(s0, s8), s9, s5, WIDTH, setOf(UP, c), setOf(), null)
         }
 
         AutomatonTest.assertEquals(expected, actual)

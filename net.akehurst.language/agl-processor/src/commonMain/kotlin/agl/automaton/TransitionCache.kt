@@ -24,15 +24,15 @@ internal interface TransitionCache {
     val allPrevious : List<ParserState>
 
     fun createTransition(
-        previousStates: List<ParserState>,
+        previousStates: Set<ParserState>,
         from:ParserState,
         action: Transition.ParseAction,
         to: ParserState,
         lookahead: Set<Lookahead>,
-        prevGuard: List<RulePosition>?,
-        runtimeGuard: Transition.(current: GrowingNodeIndex, previous: List<RulePosition>?) -> Boolean
+        prevGuard: Set<RulePosition>?,
+        runtimeGuard: Transition.(current: GrowingNodeIndex, previous: ParserState?) -> Boolean
     )
-    fun addTransition(previousStates: List<ParserState>, tr: Transition): Transition
+    fun addTransition(previousStates: Set<ParserState>, tr: Transition): Transition
 
     // List because we don't want to convert to Set filtered list at runtime
     fun findTransitionByPrevious(previous: ParserState): List<Transition>?
@@ -49,19 +49,19 @@ internal class TransitionCacheLC0 : TransitionCache {
     override val allPrevious: List<ParserState> = emptyList()
 
     override fun createTransition(
-        previousStates: List<ParserState>,
+        previousStates: Set<ParserState>,
         from: ParserState,
         action: Transition.ParseAction,
         to: ParserState,
         lookahead: Set<Lookahead>,
-        prevGuard: List<RulePosition>?,
-        runtimeGuard: Transition.(current: GrowingNodeIndex, previous: List<RulePosition>?) -> Boolean
+        prevGuard: Set<RulePosition>?,
+        runtimeGuard: Transition.(current: GrowingNodeIndex, previous: ParserState?) -> Boolean
     ) {
         TODO("not implemented")
     }
 
     // add the transition and return it, or return existing transition if it already exists
-    override fun addTransition(previousStates: List<ParserState>, tr: Transition): Transition {
+    override fun addTransition(previousStates: Set<ParserState>, tr: Transition): Transition {
         if (null==_transitions) {
             _transitions = mutableSetOf()
         }
@@ -94,7 +94,7 @@ internal class TransitionCacheLC1 : TransitionCache {
     override val allPrevious: List<ParserState> get() = _transitionsByPrevious.keys.toList()
 
     // add the transition and return it, or return existing transition if it already exists
-    override fun addTransition(previousStates: List<ParserState>, tr: Transition): Transition {
+    override fun addTransition(previousStates: Set<ParserState>, tr: Transition): Transition {
         var set = _transitionsByTo[tr.to]
         if (null == set) {
             set = mutableSetOf(tr)
@@ -128,13 +128,13 @@ internal class TransitionCacheLC1 : TransitionCache {
     }
 
     override fun createTransition(
-        previousStates: List<ParserState>,
+        previousStates: Set<ParserState>,
         from:ParserState,
         action: Transition.ParseAction,
         to: ParserState,
         lookahead: Set<Lookahead>,
-        prevGuard: List<RulePosition>?,
-        runtimeGuard: Transition.(current: GrowingNodeIndex, previous: List<RulePosition>?) -> Boolean
+        prevGuard: Set<RulePosition>?,
+        runtimeGuard: Transition.(current: GrowingNodeIndex, previous: ParserState?) -> Boolean
     ) {
         val trans = Transition(from, to, action, lookahead, prevGuard, runtimeGuard)
         this.addTransition(previousStates, trans)

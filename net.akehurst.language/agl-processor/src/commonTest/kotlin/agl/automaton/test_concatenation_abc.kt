@@ -65,12 +65,12 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
             val s7 = state(RP(G, 0, EOR))
 
             transition(s0, s0, s1, WIDTH, setOf(b), setOf(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), listOf(RP(S, 0, SOR)))
+            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), setOf(RP(S, 0, SOR)))
             transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
-            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(S, 0, 1)))
+            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)), setOf(RP(S, 0, 1)))
             transition(s0, s4, s5, WIDTH, setOf(UP), setOf(), null)
-            transition(s4, s5, s6, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 2)))
-            transition(s0, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
+            transition(s4, s5, s6, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 0, 2)))
+            transition(s0, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, 0)))
             transition(s0, s7, s7, GOAL, setOf(), setOf(), null)
         }
         AutomatonTest.assertEquals(expected, actual)
@@ -100,10 +100,10 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
             transition(s0, s0, s5, WIDTH, setOf(b), setOf(), null)
             transition(s0, s1, s6, WIDTH, setOf(c), setOf(), null)
             transition(s0, s2, s7, WIDTH, setOf(UP), setOf(), null)
-            transition(s0, s4, s3, GOAL, setOf(UP), setOf(), listOf(RP(G, 0, 0)))
-            transition(s0, s5, s1, HEIGHT, setOf(b), setOf(setOf(UP)), listOf(RP(S, 0, SOR)))
-            transition(s1, s6, s2, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(S, 0, 1)))
-            transition(s2, s7, s4, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 2)))
+            transition(s0, s4, s3, GOAL, setOf(UP), setOf(), setOf(RP(G, 0, 0)))
+            transition(s0, s5, s1, HEIGHT, setOf(b), setOf(setOf(UP)), setOf(RP(S, 0, SOR)))
+            transition(s1, s6, s2, GRAFT, setOf(c), setOf(setOf(UP)), setOf(RP(S, 0, 1)))
+            transition(s2, s7, s4, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 0, 2)))
         }
 
         AutomatonTest.assertEquals(expected, actual)

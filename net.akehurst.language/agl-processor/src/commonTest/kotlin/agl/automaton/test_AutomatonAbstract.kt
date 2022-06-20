@@ -22,16 +22,6 @@ import kotlin.test.Test
 
 internal abstract class test_AutomatonAbstract : test_AutomatonUtilsAbstract() {
 
-    fun Transition(
-        from: ParserState,
-        to: ParserState,
-        action: Transition.ParseAction,
-        guard: LookaheadSet,
-        up: LookaheadSet,
-        prevGuard: List<RulePosition>?,
-        runtimeGuard: Transition.(current: GrowingNodeIndex, previous: List<RulePosition>?) -> Boolean
-    ) = net.akehurst.language.agl.automaton.Transition(from, to, action, setOf(Lookahead(guard,up)), prevGuard, runtimeGuard)
-
     fun <T1, T2, T3> List<Triple<T1, T2, T3>>.testAll(f: (arg1: T1, arg2: T2, arg3: T3) -> Unit) {
         for (data in this) {
             f.invoke(data.first, data.second, data.third)

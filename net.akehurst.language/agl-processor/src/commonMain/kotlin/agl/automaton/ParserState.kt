@@ -16,8 +16,6 @@
 
 package net.akehurst.language.agl.automaton
 
-//import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
-//import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
@@ -25,7 +23,6 @@ import net.akehurst.language.api.processor.AutomatonKind
 
 internal class ParserState(
     val number: StateNumber,
-    //val rulePosition: RulePosition,
     val rulePositions: List<RulePosition>, //must be a list so that we can index against Growing children
     val stateSet: ParserStateSet
 ) {
@@ -88,7 +85,7 @@ internal class ParserState(
         val trans = if (null == cache) {
             check(this.stateSet.preBuilt.not(), { "Transitions not built for $this -previous-> $previousState" })
             val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calcFilteredTransitions(previousState,sourceState).toList()
-            val storedTrans = filteredTransitions.map { this.outTransitions.addTransition(listOf(previousState.state), it) }
+            val storedTrans = filteredTransitions.map { this.outTransitions.addTransition(setOf(previousState.state), it) }
             storedTrans
         } else {
             cache

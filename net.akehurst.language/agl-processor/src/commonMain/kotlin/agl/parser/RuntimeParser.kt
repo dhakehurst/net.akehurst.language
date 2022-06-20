@@ -405,7 +405,7 @@ internal class RuntimeParser(
     }
 
     private fun doGoal(toProcess: ParseGraph.Companion.NextToProcess, transition: Transition, noLookahead: Boolean):Boolean {
-        return if (transition.runtimeGuard(transition, toProcess.previous!!, toProcess.previous.runtimeState.state.rulePositions)) {
+        return if (transition.runtimeGuard(transition, toProcess.previous!!, toProcess.previous.runtimeState.state)) {
             val lhWithMatch = toProcess.previous.runtimeState.runtimeLookaheadSet.filter {
                 transition.lookahead.any { lh ->
                     this.graph.isLookingAt(lh.guard, it, toProcess.growingNode.nextInputPositionAfterSkip)
@@ -489,7 +489,7 @@ internal class RuntimeParser(
     }
 
     private fun doGraft(toProcess: ParseGraph.Companion.NextToProcess, transition: Transition, noLookahead: Boolean): Boolean {
-        return if (transition.runtimeGuard(transition, toProcess.previous!!, toProcess.previous.runtimeState.state.rulePositions)) {
+        return if (transition.runtimeGuard(transition, toProcess.previous!!, toProcess.previous.runtimeState.state)) {
             //val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, previous.runtimeLookaheadSet, curGn.nextInputPositionAfterSkip)
             val lhWithMatch = toProcess.previous.runtimeState.runtimeLookaheadSet.filter {
                 transition.lookahead.any { lh ->

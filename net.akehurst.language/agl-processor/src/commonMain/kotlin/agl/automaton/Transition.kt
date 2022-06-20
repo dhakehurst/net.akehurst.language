@@ -21,15 +21,15 @@ import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleListKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
 
-internal typealias RuntimeGuard = Transition.(GrowingNodeIndex, List<RulePosition>?) -> Boolean
+internal typealias RuntimeGuard = Transition.(GrowingNodeIndex, ParserState?) -> Boolean
 
 internal class Transition(
     val from: ParserState,
     val to: ParserState,
     val action: ParseAction,
     val lookahead: Set<Lookahead>,
-    val prevGuard: List<RulePosition>?,
-    val runtimeGuard: Transition.(current: GrowingNodeIndex, previous: List<RulePosition>?) -> Boolean
+    val prevGuard: Set<RulePosition>?,
+    val runtimeGuard: RuntimeGuard
 ) {
 
     companion object {
@@ -85,7 +85,7 @@ internal class Transition(
             if (null == previous) {
                 true
             } else {
-                val rr = previous.first().runtimeRule //FIXME: possibly more than one!!
+                val rr = previous.firstRule //FIXME: possibly more than one!!
                 when (rr.rhs.itemsKind) {
                     RuntimeRuleRhsItemsKind.LIST -> when (rr.rhs.listKind) {
                         RuntimeRuleListKind.MULTI -> multiRuntimeGuard.invoke(this, gn)
@@ -97,7 +97,7 @@ internal class Transition(
             }
         }
         val defaultRuntimeGuard: RuntimeGuard = { gn, previous -> true }
-        fun runtimeGuardFor(action: Transition.ParseAction): Transition.(GrowingNodeIndex, List<RulePosition>?) -> Boolean = when (action) {
+        fun runtimeGuardFor(action: Transition.ParseAction): RuntimeGuard = when (action) {
             Transition.ParseAction.GRAFT -> graftRuntimeGuard
             else -> defaultRuntimeGuard
         }

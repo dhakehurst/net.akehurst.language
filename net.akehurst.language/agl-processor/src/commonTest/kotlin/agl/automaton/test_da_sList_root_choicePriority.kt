@@ -93,12 +93,12 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
 
 
             transition(s0, s0, s1, WIDTH, setOf(UP, d, a), emptySet(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(UP, d, a), setOf(setOf(UP), setOf(d), setOf(a)), listOf(RP(vr,0,SOR)))
-            transition(s0, s2, s3, HEIGHT, setOf(UP, d, a), setOf(setOf(UP), setOf(d), setOf(a)), listOf(RP(root,0,SOR)))
-            transition(s0, s3, s4, HEIGHT, setOf(UP, d, a), setOf(setOf(UP), setOf(d), setOf(a)), listOf(RP(E,0,SOR)))
-            transition(s0, s4, s5, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S,0,SOR)))
-            transition(s0, s4, s6, HEIGHT, setOf( d, a), setOf(setOf(UP), setOf(d), setOf(a)), listOf(RP(div,0,SOR),RP(add,0,SOR)))
-            transition(s0, s5, s7, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G,0,SOR)))
+            transition(s0, s1, s2, HEIGHT, setOf(UP, d, a), setOf(setOf(UP), setOf(d), setOf(a)), setOf(RP(vr,0,SOR)))
+            transition(s0, s2, s3, HEIGHT, setOf(UP, d, a), setOf(setOf(UP), setOf(d), setOf(a)), setOf(RP(root,0,SOR)))
+            transition(s0, s3, s4, HEIGHT, setOf(UP, d, a), setOf(setOf(UP), setOf(d), setOf(a)), setOf(RP(E,0,SOR)))
+            transition(s0, s4, s5, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(S,0,SOR)))
+            transition(s0, s4, s6, HEIGHT, setOf( d, a), setOf(setOf(UP), setOf(d), setOf(a)), setOf(RP(div,0,SOR),RP(add,0,SOR)))
+            transition(s0, s5, s7, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G,0,SOR)))
 
 
         }

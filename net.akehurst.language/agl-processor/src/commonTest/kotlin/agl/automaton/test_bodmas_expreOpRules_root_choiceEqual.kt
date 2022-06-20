@@ -97,21 +97,21 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
             val s10 = state(RP(E, 1, EOR))   // E = M .
             val s11 = state(RP(G, 0, EOR))   // G = S .
 
-            transition(s0, s6, s7, WIDTH, null) { lookahead(setOf(v)) }
-            transition(s0, s0, s1, WIDTH, null) { lookahead(setOf(UP, m, a)) }
-            transition(s0, s8, s1, WIDTH, null) { lookahead(setOf(UP, m, a)) }
-            transition(s0, s4, s11, GOAL, null) { lookahead(setOf(UP)) }
-            transition(listOf(s0, s8), s3, s6, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
-            transition(s0, s10, s5, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
-            transition(listOf(s0, s8), s2, s3, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(UP), setOf(UP)) }
-            transition(s0, s9, s10, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(UP), setOf(UP));lookahead(setOf(a), setOf(a)) }
-            transition(s8, s3, s9, GRAFT, listOf(RP(rM, 0, 2))) { lookahead(setOf(UP)) }
-            transition(listOf(s0, s8), s3, s6, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(m), setOf(a));lookahead(setOf(m), setOf(UP)) }
-            transition(s0, s10, s6, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(m), setOf(a));lookahead(setOf(m), setOf(UP)) }
-            transition(s6, s7, s8, GRAFT, listOf(RP(rM, 0, 2))) { lookahead(setOf(v)) }
-            transition(listOf(s0, s8), s1, s2, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(UP), setOf(UP)) }
-            transition(s0, s3, s4, HEIGHT, null) { lookahead(setOf(UP), setOf(UP)) }
-            transition(s0, s10, s4, HEIGHT, null) { lookahead(setOf(UP), setOf(UP)) }
+            transition(s0, s6, s7, WIDTH, null) { lhg(setOf(v)) }
+            transition(s0, s0, s1, WIDTH, null) { lhg(setOf(UP, m, a)) }
+            transition(s0, s8, s1, WIDTH, null) { lhg(setOf(UP, m, a)) }
+            transition(s0, s4, s11, GOAL, null) { lhg(setOf(UP)) }
+            transition(setOf(s0, s8), s3, s6, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
+            transition(s0, s10, s5, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
+            transition(setOf(s0, s8), s2, s3, HEIGHT, null) { lhg(setOf(m), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(UP), setOf(UP)) }
+            transition(s0, s9, s10, HEIGHT, null) { lhg(setOf(m), setOf(m)); lhg(setOf(UP), setOf(UP));lhg(setOf(a), setOf(a)) }
+            transition(s8, s3, s9, GRAFT, setOf(RP(rM, 0, 2))) { lhg(setOf(UP)) }
+            transition(setOf(s0, s8), s3, s6, HEIGHT, null) { lhg(setOf(m), setOf(m)); lhg(setOf(m), setOf(a));lhg(setOf(m), setOf(UP)) }
+            transition(s0, s10, s6, HEIGHT, null) { lhg(setOf(m), setOf(m)); lhg(setOf(m), setOf(a));lhg(setOf(m), setOf(UP)) }
+            transition(s6, s7, s8, GRAFT, setOf(RP(rM, 0, 2))) { lhg(setOf(v)) }
+            transition(setOf(s0, s8), s1, s2, HEIGHT, null) { lhg(setOf(m), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(UP), setOf(UP)) }
+            transition(s0, s3, s4, HEIGHT, null) { lhg(setOf(UP), setOf(UP)) }
+            transition(s0, s10, s4, HEIGHT, null) { lhg(setOf(UP), setOf(UP)) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -148,31 +148,32 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
             val s14 = state(RP(rM, 0, EOR))   // M = E m E .
             val s15 = state(RP(E, 1, EOR))   // E = A .
 
-            transition(listOf(s0, s13), s5, s8, WIDTH, null) { lookahead(setOf(v)) }
-            transition(listOf(s0, s9), s6, s12, WIDTH, null) { lookahead(setOf(v)) }
-            transition(s0, s0, s1, WIDTH, null) { lookahead(setOf(UP, m, a)) }
-            transition(listOf(s0, s13), s9, s1, WIDTH, null) { lookahead(setOf(UP, m, a)) }
-            transition(listOf(s0, s9), s13, s1, WIDTH, null) { lookahead(setOf(UP, m, a)) }
-            transition(s0, s4, s7, GOAL, null) { lookahead(setOf(UP)) }
-            transition(s9, s3, s10, GRAFT, listOf(RP(rA, 0, 2))) { lookahead(setOf(UP)) }
-            transition(s9, s15, s10, GRAFT, listOf(RP(rA, 0, 2))) { lookahead(setOf(UP)) }
-            transition(listOf(s0, s9, s13), s3, s5, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
-            transition(listOf(s0, s9), s15, s5, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
-            transition(listOf(s0, s13), s11, s5, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
-            transition(s5, s8, s9, GRAFT, listOf(RP(rA, 0, 1))) { lookahead(setOf(v)) }
-            //transition(GRAFT) { prv("A", 0, 1); src("'a'", 0, EOR); tgt("A", 0, 2); lhg("'v'"); rtg("A", 0, 1) }
+            transition(WIDTH) { ctx(RP(G, 0, SOR), RP(rM, 0, 2)); src(rA, 0, 1); tgt(a, 0, EOR); lhg(setOf(v)) }
+            transition(setOf(s0, s9), s6, s12, WIDTH, null) { lhg(setOf(v)) }
+            transition(s0, s0, s1, WIDTH, null) { lhg(setOf(UP, m, a)) }
+            transition(setOf(s0, s13), s9, s1, WIDTH, null) { lhg(setOf(UP, m, a)) }
+            transition(setOf(s0, s9), s13, s1, WIDTH, null) { lhg(setOf(UP, m, a)) }
+            transition(s0, s4, s7, GOAL, null) { lhg(setOf(UP)) }
+            transition(s9, s3, s10, GRAFT, setOf(RP(rA, 0, 2))) { lhg(setOf(UP)) }
+            transition(s9, s15, s10, GRAFT, setOf(RP(rA, 0, 2))) { lhg(setOf(UP)) }
+            transition(setOf(s0, s9, s13), s3, s5, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
+            transition(setOf(s0, s9), s15, s5, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
+            transition(setOf(s0, s13), s11, s5, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
+            transition(s5, s8, s9, GRAFT, setOf(RP(rA, 0, 1))) { lhg(setOf(v)) }
+            transition(GRAFT) { ctx(rA, 0, 1); src(a, 0, EOR); tgt(rA, 0, 2); lhg(v); rtg(rA, 0, 1) }
+            transition(HEIGHT) { ctx(RP(),RP(),RP()); src(R,0,EOR); tgt(E,0,EOR); lhg(setOf(m), setOf(m));lhg(setOf(UP), setOf(UP));lhg(setOf(a), setOf(a)) }
 
-            transition(listOf(s0, s8), s3, s6, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
-            transition(s0, s10, s5, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
-            transition(listOf(s0, s8), s2, s3, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(UP), setOf(UP)) }
-            transition(s0, s9, s10, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(UP), setOf(UP));lookahead(setOf(a), setOf(a)) }
-            transition(s8, s3, s9, GRAFT, listOf(RP(rM, 0, 2))) { lookahead(setOf(UP)) }
-            transition(listOf(s0, s8), s3, s6, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(m), setOf(a));lookahead(setOf(m), setOf(UP)) }
-            transition(s0, s10, s6, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(m), setOf(a));lookahead(setOf(m), setOf(UP)) }
-            transition(s6, s7, s8, GRAFT, listOf(RP(rM, 0, 2))) { lookahead(setOf(v)) }
-            transition(listOf(s0, s8), s1, s2, HEIGHT, null) { lookahead(setOf(m), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(UP), setOf(UP)) }
-            transition(s0, s3, s4, HEIGHT, null) { lookahead(setOf(UP), setOf(UP)) }
-            transition(s0, s10, s4, HEIGHT, null) { lookahead(setOf(UP), setOf(UP)) }
+            transition(setOf(s0, s8), s3, s6, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
+            transition(s0, s10, s5, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
+            transition(setOf(s0, s8), s2, s3, HEIGHT, null) { lhg(setOf(m), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(UP), setOf(UP)) }
+            transition(s0, s9, s10, HEIGHT, null) { lhg(setOf(m), setOf(m)); lhg(setOf(UP), setOf(UP));lhg(setOf(a), setOf(a)) }
+            transition(s8, s3, s9, GRAFT, setOf(RP(rM, 0, 2))) { lhg(setOf(UP)) }
+            transition(setOf(s0, s8), s3, s6, HEIGHT, null) { lhg(setOf(m), setOf(m)); lhg(setOf(m), setOf(a));lhg(setOf(m), setOf(UP)) }
+            transition(s0, s10, s6, HEIGHT, null) { lhg(setOf(m), setOf(m)); lhg(setOf(m), setOf(a));lhg(setOf(m), setOf(UP)) }
+            transition(s6, s7, s8, GRAFT, setOf(RP(rM, 0, 2))) { lhg(setOf(v)) }
+            transition(setOf(s0, s8), s1, s2, HEIGHT, null) { lhg(setOf(m), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(UP), setOf(UP)) }
+            transition(s0, s3, s4, HEIGHT, null) { lhg(setOf(UP), setOf(UP)) }
+            transition(s0, s10, s4, HEIGHT, null) { lhg(setOf(UP), setOf(UP)) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -210,33 +211,33 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
             val s14 = state(RP(rM, 0, 1))   // M = E . m E
             val s15 = state(RP(rM, 0, 2))   // M = E m . E
 
-            transition(listOf(s0, s13, s15), s12, s7, WIDTH, null) { lookahead(setOf(v)) }
-            transition(listOf(s0, s13, s15), s14, s9, WIDTH, null) { lookahead(setOf(v)) }
-            transition(s0, s0, s11, WIDTH, null) { lookahead(setOf(UP, m, a)) }
-            transition(listOf(s0, s13, s15), s13, s11, WIDTH, null) { lookahead(setOf(UP, m, a)) }
-            transition(listOf(s0, s13, s15), s15, s11, WIDTH, null) { lookahead(setOf(UP, m, a)) }
-            transition(s0, s2, s1, GOAL, null) { lookahead(setOf(UP)) }
-            transition(s13, s3, s6, GRAFT, listOf(RP(rA, 0, 2))) { lookahead(setOf(UP, a, m)) }
-            transition(s13, s4, s6, GRAFT, listOf(RP(rA, 0, 2))) { lookahead(setOf(UP, a, m)) }
-            transition(s13, s5, s6, GRAFT, listOf(RP(rA, 0, 2))) { lookahead(setOf(UP, a, m)) }
-            transition(listOf(s0, s13, s15), s3, s12, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
-            transition(listOf(s0, s13, s15), s4, s12, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
-            transition(listOf(s0, s13, s15), s5, s12, HEIGHT, null) { lookahead(setOf(a), setOf(m)); lookahead(setOf(a), setOf(a));lookahead(setOf(a), setOf(UP)) }
-            transition(s12, s7, s13, GRAFT, listOf(RP(rA, 0, 1))) { lookahead(setOf(v)) }
-            transition(listOf(s0, s13, s15), s10, s3, HEIGHT, null) { lookahead(setOf(a), setOf(a)); lookahead(setOf(m), setOf(m));lookahead(setOf(UP), setOf(UP)) }
-            transition(listOf(s0, s13, s15), s8, s4, HEIGHT, null) { lookahead(setOf(a), setOf(a)); lookahead(setOf(m), setOf(m));lookahead(setOf(UP), setOf(UP)) }
-            transition(listOf(s0, s13, s15), s6, s5, HEIGHT, null) { lookahead(setOf(a), setOf(a)); lookahead(setOf(m), setOf(m));lookahead(setOf(UP), setOf(UP)) }
-            transition(s13, s3, s8, GRAFT, listOf(RP(rM, 0, 2))) { lookahead(setOf(UP, a, m)) }
-            transition(s13, s4, s8, GRAFT, listOf(RP(rM, 0, 2))) { lookahead(setOf(UP, a, m)) }
-            transition(s13, s5, s8, GRAFT, listOf(RP(rM, 0, 2))) { lookahead(setOf(UP, a, m)) }
-            transition(listOf(s0, s13, s15), s3, s14, HEIGHT, null) { lookahead(setOf(m), setOf(a)); lookahead(setOf(m), setOf(m));lookahead(setOf(m), setOf(UP)) }
-            transition(listOf(s0, s13, s15), s4, s14, HEIGHT, null) { lookahead(setOf(m), setOf(a)); lookahead(setOf(m), setOf(m));lookahead(setOf(m), setOf(UP)) }
-            transition(listOf(s0, s13, s15), s5, s14, HEIGHT, null) { lookahead(setOf(m), setOf(a)); lookahead(setOf(m), setOf(m));lookahead(setOf(m), setOf(UP)) }
-            transition(s14, s9, s15, GRAFT, listOf(RP(rM, 0, 1))) { lookahead(setOf(v)) }
-            transition(listOf(s0, s13, s15), s11, s10, HEIGHT, null) { lookahead(setOf(a), setOf(a)); lookahead(setOf(m), setOf(m));lookahead(setOf(UP), setOf(UP)) }
-            transition(s0, s3, s2, HEIGHT, null) { lookahead(setOf(UP), setOf(UP)) }
-            transition(s0, s4, s2, HEIGHT, null) { lookahead(setOf(UP), setOf(UP)) }
-            transition(s0, s5, s2, HEIGHT, null) { lookahead(setOf(UP), setOf(UP)) }
+            transition(setOf(s0, s13, s15), s12, s7, WIDTH, null) { lhg(setOf(v)) }
+            transition(setOf(s0, s13, s15), s14, s9, WIDTH, null) { lhg(setOf(v)) }
+            transition(s0, s0, s11, WIDTH, null) { lhg(setOf(UP, m, a)) }
+            transition(setOf(s0, s13, s15), s13, s11, WIDTH, null) { lhg(setOf(UP, m, a)) }
+            transition(setOf(s0, s13, s15), s15, s11, WIDTH, null) { lhg(setOf(UP, m, a)) }
+            transition(s0, s2, s1, GOAL, null) { lhg(setOf(UP)) }
+            transition(s13, s3, s6, GRAFT, setOf(RP(rA, 0, 2))) { lhg(setOf(UP, a, m)) }
+            transition(s13, s4, s6, GRAFT, setOf(RP(rA, 0, 2))) { lhg(setOf(UP, a, m)) }
+            transition(s13, s5, s6, GRAFT, setOf(RP(rA, 0, 2))) { lhg(setOf(UP, a, m)) }
+            transition(setOf(s0, s13, s15), s3, s12, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
+            transition(setOf(s0, s13, s15), s4, s12, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
+            transition(setOf(s0, s13, s15), s5, s12, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
+            transition(s12, s7, s13, GRAFT, setOf(RP(rA, 0, 1))) { lhg(setOf(v)) }
+            transition(setOf(s0, s13, s15), s10, s3, HEIGHT, null) { lhg(setOf(a), setOf(a)); lhg(setOf(m), setOf(m));lhg(setOf(UP), setOf(UP)) }
+            transition(setOf(s0, s13, s15), s8, s4, HEIGHT, null) { lhg(setOf(a), setOf(a)); lhg(setOf(m), setOf(m));lhg(setOf(UP), setOf(UP)) }
+            transition(setOf(s0, s13, s15), s6, s5, HEIGHT, null) { lhg(setOf(a), setOf(a)); lhg(setOf(m), setOf(m));lhg(setOf(UP), setOf(UP)) }
+            transition(s13, s3, s8, GRAFT, setOf(RP(rM, 0, 2))) { lhg(setOf(UP, a, m)) }
+            transition(s13, s4, s8, GRAFT, setOf(RP(rM, 0, 2))) { lhg(setOf(UP, a, m)) }
+            transition(s13, s5, s8, GRAFT, setOf(RP(rM, 0, 2))) { lhg(setOf(UP, a, m)) }
+            transition(setOf(s0, s13, s15), s3, s14, HEIGHT, null) { lhg(setOf(m), setOf(a)); lhg(setOf(m), setOf(m));lhg(setOf(m), setOf(UP)) }
+            transition(setOf(s0, s13, s15), s4, s14, HEIGHT, null) { lhg(setOf(m), setOf(a)); lhg(setOf(m), setOf(m));lhg(setOf(m), setOf(UP)) }
+            transition(setOf(s0, s13, s15), s5, s14, HEIGHT, null) { lhg(setOf(m), setOf(a)); lhg(setOf(m), setOf(m));lhg(setOf(m), setOf(UP)) }
+            transition(s14, s9, s15, GRAFT, setOf(RP(rM, 0, 1))) { lhg(setOf(v)) }
+            transition(setOf(s0, s13, s15), s11, s10, HEIGHT, null) { lhg(setOf(a), setOf(a)); lhg(setOf(m), setOf(m));lhg(setOf(UP), setOf(UP)) }
+            transition(s0, s3, s2, HEIGHT, null) { lhg(setOf(UP), setOf(UP)) }
+            transition(s0, s4, s2, HEIGHT, null) { lhg(setOf(UP), setOf(UP)) }
+            transition(s0, s5, s2, HEIGHT, null) { lhg(setOf(UP), setOf(UP)) }
         }
 
         AutomatonTest.assertEquals(expected, actual)

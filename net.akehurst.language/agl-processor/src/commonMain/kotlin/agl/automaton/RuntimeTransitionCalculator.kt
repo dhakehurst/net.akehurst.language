@@ -277,7 +277,7 @@ internal class RuntimeTransitionCalculator(
     private fun createHeightTransition3(sourceState:ParserState,hg: HeightGraftInfo): Transition {
         val to = this.stateSet.fetchCompatibleOrCreateState(hg.parentNext)
         val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), it.up.lhs(this.stateSet)) }.toSet()
-        val trs = Transition(sourceState, to, Transition.ParseAction.HEIGHT, lookaheadInfo, hg.parent) { _, _ -> true }
+        val trs = Transition(sourceState, to, Transition.ParseAction.HEIGHT, lookaheadInfo, hg.parent.toSet()) { _, _ -> true }
         return trs
     }
 
@@ -285,7 +285,7 @@ internal class RuntimeTransitionCalculator(
         val runtimeGuard = Transition.graftRuntimeGuard
         val to = this.stateSet.fetchCompatibleOrCreateState(hg.parentNext)
         val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), it.up.lhs(this.stateSet)) }.toSet()
-        val trs = Transition(sourceState, to, Transition.ParseAction.GRAFT, lookaheadInfo, hg.parent, runtimeGuard)
+        val trs = Transition(sourceState, to, Transition.ParseAction.GRAFT, lookaheadInfo, hg.parent.toSet(), runtimeGuard)
         return trs
     }
 

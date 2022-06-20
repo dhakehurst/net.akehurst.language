@@ -217,7 +217,7 @@ internal class ScanOnDemandParser(
                     errors
                 }
                 else -> {
-                    val trs = lg.runtimeState.transitions(prev!!.runtimeState).filter { it.runtimeGuard(it, prev, prev.runtimeState.state.rulePositions) }
+                    val trs = lg.runtimeState.transitions(prev!!.runtimeState).filter { it.runtimeGuard(it, prev, prev.runtimeState.state) }
                     val pairs: Set<Pair<Int, Set<RuntimeRule>>> = trs.mapNotNull { tr ->
                         when (tr.action) {
                             Transition.ParseAction.GOAL -> null

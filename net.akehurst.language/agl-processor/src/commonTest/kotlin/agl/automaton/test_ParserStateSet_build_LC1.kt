@@ -44,15 +44,15 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S",1, false) {
+        val expected = automaton(rrs, automatonKind, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
             val s1 = state(RP(G, 0, EOR))      // G = S .
             val s2 = state(RP(S, 0, EOR))      // S = 'a' .
             val s3 = state(RP(a, 0, EOR))      // 'a'
 
             transition(s0, s0, s3, WIDTH, setOf(UP), setOf(), null)
-            transition(s0, s3, s2, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, SOR)))
-            transition(s0, s2, s1, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, SOR)))
+            transition(s0, s3, s2, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 0, SOR)))
+            transition(s0, s2, s1, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, SOR)))
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -84,7 +84,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1,false) {
+        val expected = automaton(rrs, automatonKind, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
             val s1 = state(RP(a, 0, EOR))      // a
             val s2 = state(RP(S, 0, 1))   // S = a . b c d
@@ -97,14 +97,14 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
             val s9 = state(RP(G, 0, EOR))      // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(b), setOf(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), listOf(RP(S, 0, SOR)))
+            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), setOf(RP(S, 0, SOR)))
             transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
-            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(S, 0, 1)))
+            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)), setOf(RP(S, 0, 1)))
             transition(s0, s4, s5, WIDTH, setOf(d), setOf(), null)
-            transition(s4, s5, s6, GRAFT, setOf(d), setOf(setOf(UP)), listOf(RP(S, 0, 2)))
+            transition(s4, s5, s6, GRAFT, setOf(d), setOf(setOf(UP)), setOf(RP(S, 0, 2)))
             transition(s0, s6, s7, WIDTH, setOf(UP), setOf(), null)
-            transition(s6, s7, s8, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 3)))
-            transition(s0, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)),listOf(RP(G, 0, SOR)))
+            transition(s6, s7, s8, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 0, 3)))
+            transition(s0, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, SOR)))
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -139,7 +139,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
 
         val actual = SM.build()
 
-        val expected = automaton(rrs, automatonKind, "S", 1,false) {
+        val expected = automaton(rrs, automatonKind, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
             val s1 = state(RP(a, 0, EOR))      // a
             val s2 = state(RP(b, 0, EOR))      // b
@@ -155,14 +155,14 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
             transition(s0, s0, s2, WIDTH, setOf(UP), setOf(), null)
             transition(s0, s0, s3, WIDTH, setOf(UP), setOf(), null)
             transition(s0, s0, s4, WIDTH, setOf(UP), setOf(), null)
-            transition(s0, s1, s5, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, SOR)))
-            transition(s0, s2, s6, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 1, SOR)))
-            transition(s0, s3, s7, HEIGHT, setOf(UP), setOf(setOf(UP)),listOf(RP(S, 2, SOR)))
-            transition(s0, s4, s8, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 3, SOR)))
-            transition(s0, s5, s9, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, SOR)))
-            transition(s0, s6, s9, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, SOR)))
-            transition(s0, s7, s9, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, SOR)))
-            transition(s0, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, SOR)))
+            transition(s0, s1, s5, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 0, SOR)))
+            transition(s0, s2, s6, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 1, SOR)))
+            transition(s0, s3, s7, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 2, SOR)))
+            transition(s0, s4, s8, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 3, SOR)))
+            transition(s0, s5, s9, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, SOR)))
+            transition(s0, s6, s9, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, SOR)))
+            transition(s0, s7, s9, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, SOR)))
+            transition(s0, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, SOR)))
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -200,7 +200,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
 
         val actual = SM.build()
 
-        val expected = automaton(rrs, automatonKind, "S", 1,false) {
+        val expected = automaton(rrs, automatonKind, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
             val s1 = state(RP(a, 0, EOR))      // a
             val s2 = state(RP(A, 0, EOR))      // A = a .
@@ -214,15 +214,15 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
             val s10 = state(RP(G, 0, EOR))      // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(b), setOf(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(b)), listOf(RP(A, 0, SOR)))
-            transition(s0, s2, s3, HEIGHT, setOf(b), setOf(setOf(UP)), listOf(RP(S, 0, SOR)))
+            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(b)), setOf(RP(A, 0, SOR)))
+            transition(s0, s2, s3, HEIGHT, setOf(b), setOf(setOf(UP)), setOf(RP(S, 0, SOR)))
             transition(s0, s3, s4, WIDTH, setOf(c), setOf(), null)
-            transition(s3, s4, s5, HEIGHT, setOf(c), setOf(setOf(c)),listOf(RP(B, 0, SOR)))
-            transition(s3, s5, s6, GRAFT, setOf(c), setOf(setOf(UP)), listOf(RP(S, 0, 1)))
+            transition(s3, s4, s5, HEIGHT, setOf(c), setOf(setOf(c)), setOf(RP(B, 0, SOR)))
+            transition(s3, s5, s6, GRAFT, setOf(c), setOf(setOf(UP)), setOf(RP(S, 0, 1)))
             transition(s0, s6, s7, WIDTH, setOf(UP), setOf(), null)
-            transition(s6, s7, s8, HEIGHT, setOf(UP), setOf(setOf(UP)),listOf(RP(C, 0, SOR)))
-            transition(s6, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 2)))
-            transition(s0, s9, s10, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, SOR)))
+            transition(s6, s7, s8, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(C, 0, SOR)))
+            transition(s6, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 0, 2)))
+            transition(s0, s9, s10, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, SOR)))
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -249,15 +249,15 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
 
         val actual = SM.build()
 
-        val expected = automaton(rrs, automatonKind, "S", 1,false) {
+        val expected = automaton(rrs, automatonKind, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
             val s1 = state(RP(eS, 0, EOR))      // eS
             val s2 = state(RP(S, 0, EOR))      // S = eS .
             val s3 = state(RP(G, 0, EOR))      // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(UP), setOf(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, SOR)))
-            transition(s0, s2, s3, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, SOR)))
+            transition(s0, s1, s2, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 0, SOR)))
+            transition(s0, s2, s3, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, SOR)))
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -296,7 +296,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1,false) {
+        val expected = automaton(rrs, automatonKind, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
             val s1 = state(RP(a, 0, EOR))      // a
             val s2 = state(RP(eoA, 0, EOR))    // empty-oA
@@ -317,23 +317,23 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
 
             transition(s0, s0, s1, WIDTH, setOf(b, c, UP), setOf(), null)
             transition(s0, s0, s2, WIDTH, setOf(b, c, UP), setOf(), null)
-            transition(s0, s1, s3, HEIGHT, setOf(b, c, UP), setOf(setOf(b, c, UP)), listOf(RP(oA, 0, SOR)))
-            transition(s0, s2, s4, HEIGHT, setOf(b, c, UP), setOf(setOf(b, c, UP)), listOf(RP(oA, 1, SOR)))
-            transition(s0, s3, s5, HEIGHT, setOf(b, c, UP), setOf(setOf(UP)), listOf(RP(S, 0, 0)))
-            transition(s0, s4, s5, HEIGHT, setOf(b, c, UP), setOf(setOf(UP)), listOf(RP(S, 0, 0)))
+            transition(s0, s1, s3, HEIGHT, setOf(b, c, UP), setOf(setOf(b, c, UP)), setOf(RP(oA, 0, SOR)))
+            transition(s0, s2, s4, HEIGHT, setOf(b, c, UP), setOf(setOf(b, c, UP)), setOf(RP(oA, 1, SOR)))
+            transition(s0, s3, s5, HEIGHT, setOf(b, c, UP), setOf(setOf(UP)), setOf(RP(S, 0, 0)))
+            transition(s0, s4, s5, HEIGHT, setOf(b, c, UP), setOf(setOf(UP)), setOf(RP(S, 0, 0)))
             transition(s0, s5, s6, WIDTH, setOf(c, UP), setOf(), null)
             transition(s0, s5, s7, WIDTH, setOf(c, UP), setOf(), null)
-            transition(s5, s6, s8, HEIGHT, setOf(c, UP), setOf(setOf(UP,c)),listOf(RP(oB, 0, SOR)))
-            transition(s5, s7, s9, HEIGHT, setOf(c, UP),setOf(setOf(UP,c)),listOf(RP(oB, 1, SOR)))
-            transition(s5, s8, s10, GRAFT, setOf(c, UP), setOf(setOf(UP)), listOf(RP(S, 0, 1)))
-            transition(s5, s9, s10, GRAFT, setOf(c, UP), setOf(setOf(UP)),listOf(RP(S, 0, 1)))
+            transition(s5, s6, s8, HEIGHT, setOf(c, UP), setOf(setOf(UP, c)), setOf(RP(oB, 0, SOR)))
+            transition(s5, s7, s9, HEIGHT, setOf(c, UP), setOf(setOf(UP, c)), setOf(RP(oB, 1, SOR)))
+            transition(s5, s8, s10, GRAFT, setOf(c, UP), setOf(setOf(UP)), setOf(RP(S, 0, 1)))
+            transition(s5, s9, s10, GRAFT, setOf(c, UP), setOf(setOf(UP)), setOf(RP(S, 0, 1)))
             transition(s0, s10, s11, WIDTH, setOf(UP), setOf(), null)
             transition(s0, s10, s12, WIDTH, setOf(UP), setOf(), null)
-            transition(s10, s11, s13, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(oC, 0, SOR)))
-            transition(s10, s12, s14, HEIGHT, setOf(UP), setOf(setOf(UP)), listOf(RP(oC, 1, SOR)))
-            transition(s10, s13, s15, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 2)))
-            transition(s10, s14, s15, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(S, 0, 2)))
-            transition(s0, s15, s16, GRAFT, setOf(UP), setOf(setOf(UP)), listOf(RP(G, 0, 0)))
+            transition(s10, s11, s13, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(oC, 0, SOR)))
+            transition(s10, s12, s14, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(oC, 1, SOR)))
+            transition(s10, s13, s15, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 0, 2)))
+            transition(s10, s14, s15, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 0, 2)))
+            transition(s0, s15, s16, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, 0)))
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -372,7 +372,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         //val actual = SM.build()
         //println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1,false) {
+        val expected = automaton(rrs, automatonKind, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -409,7 +409,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1,false) {
+        val expected = automaton(rrs, automatonKind, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -446,7 +446,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         //println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1,false) {
+        val expected = automaton(rrs, automatonKind, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -483,7 +483,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         //println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1,false) {
+        val expected = automaton(rrs, automatonKind, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -519,7 +519,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         //println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1,false) {
+        val expected = automaton(rrs, automatonKind, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -562,7 +562,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         //println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1,false) {
+        val expected = automaton(rrs, automatonKind, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -616,7 +616,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1,false) {
+        val expected = automaton(rrs, automatonKind, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -660,7 +660,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         //val actual = SM.build()
         //println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1,false) {
+        val expected = automaton(rrs, automatonKind, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -698,7 +698,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         //val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1,false) {
+        val expected = automaton(rrs, automatonKind, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -736,7 +736,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1,false) {
+        val expected = automaton(rrs, automatonKind, "S", 1, false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
             val s1 = state(RP(a, 0, EOR))      // a
             val s2 = state(RP(S, 0, EOR))      // S = a .

@@ -51,17 +51,17 @@ internal class AutomatonBuilder(
         action: Transition.ParseAction,
         lookaheadGuardContent: Set<RuntimeRule>,
         upLookaheadContent: Set<Set<RuntimeRule>>,
-        prevGuard: List<RulePosition>?
-    ): Transition = transition(listOf(previousState), from, to, action, lookaheadGuardContent, upLookaheadContent, prevGuard)
+        prevGuard: Set<RulePosition>?
+    ): Transition = transition(setOf(previousState), from, to, action, lookaheadGuardContent, upLookaheadContent, prevGuard)
 
     fun transition(
-        previousStates: List<ParserState>,
+        previousStates: Set<ParserState>,
         from: ParserState,
         to: ParserState,
         action: Transition.ParseAction,
         lookaheadGuardContent: Set<RuntimeRule>,
         upLookaheadContent: Set<Set<RuntimeRule>>,
-        prevGuard: List<RulePosition>?
+        prevGuard: Set<RulePosition>?
     ): Transition {
         return transition1(previousStates, from, to, action, lookaheadGuardContent, upLookaheadContent, prevGuard)
     }
@@ -71,32 +71,46 @@ internal class AutomatonBuilder(
         from: ParserState,
         to: ParserState,
         action: Transition.ParseAction,
-        prevGuard: List<RulePosition>?,
-        init: TransitionBuilder.()->Unit
-    ): Transition = transition(listOf(previousState), from, to, action, prevGuard, init)
+        prevGuard: Set<RulePosition>?,
+        init: TransitionBuilder.() -> Unit
+    ): Transition = transition(setOf(previousState), from, to, action, prevGuard, init)
+
     fun transition(
-        previousStates: List<ParserState>,
+        previousStates: Set<ParserState>,
         from: ParserState,
         to: ParserState,
         action: Transition.ParseAction,
-        prevGuard: List<RulePosition>?,
-        init: TransitionBuilder.()->Unit
+        prevGuard: Set<RulePosition>?,
+        init: TransitionBuilder.() -> Unit
     ): Transition {
-        val b = TransitionBuilder(result,from,to,action,prevGuard)
+        val b = TransitionBuilder(result, action)
+        b.ctx(previousStates)
+        b.src(from)
+        b.tgt(to)
+        b.rtg(prevGuard)
         b.init()
         val trans = b.build()
         from.outTransitions.addTransition(previousStates, trans)
         return trans
     }
 
+    fun transition(
+        action: Transition.ParseAction,
+        init: TransitionBuilder.() -> Unit
+    ): Transition {
+        val b = TransitionBuilder(result, action)
+        b.init()
+        return b.build()
+    }
+
     fun transition1(
-        previousStates: List<ParserState>,
+        previousStates: Set<ParserState>,
         from: ParserState,
         to: ParserState,
         action: Transition.ParseAction,
         lookaheadGuardContent: Set<RuntimeRule>,
         upLookaheadContent: Set<Set<RuntimeRule>>,
-        prevGuard: List<RulePosition>?
+        prevGuard: Set<RulePosition>?
     ): Transition {
         //TODO: fix builder here to build Set<Lookahead>
         val guard = when {
@@ -120,23 +134,71 @@ internal class AutomatonBuilder(
 @AglAutomatonDslMarker
 internal class TransitionBuilder(
     val stateSet: ParserStateSet,
-    val from: ParserState,
-    val to: ParserState,
-    val action: Transition.ParseAction,
-    val prevGuard: List<RulePosition>?
+    val action: Transition.ParseAction
 ) {
 
-    val lh = mutableSetOf<Lookahead>()
+    private var _context = emptySet<ParserState>()
+    private lateinit var _src: ParserState
+    private lateinit var _tgt: ParserState
+    private val _lhg = mutableSetOf<Lookahead>()
+    private var _rtg: Set<RulePosition>? = null
 
-    fun lookahead(guard: Set<RuntimeRule>) {
-        this.lh.add(Lookahead(LookaheadSet.createFromRuntimeRules(this.stateSet, guard), LookaheadSet.EMPTY))
+    fun ctx(states: Set<ParserState>) {
+        _context = states
+    }
+    fun ctx(vararg rulePositions:RulePosition) {
+        val state = this.stateSet.fetchOrCreateState(rulePositions.toList())
+        this.ctx(setOf(state))
+    }
+    fun ctx(runtimeRule: RuntimeRule, option: Int, position: Int) {
+        val state = this.stateSet.fetchOrCreateState(listOf(RulePosition(runtimeRule, option, position)))
+        this.ctx(setOf(state))
     }
 
-    fun lookahead(guard: Set<RuntimeRule>, up: Set<RuntimeRule>) {
-        this.lh.add(Lookahead(LookaheadSet.createFromRuntimeRules(this.stateSet, guard), LookaheadSet.createFromRuntimeRules(this.stateSet, up)))
+    fun src(runtimeRule: RuntimeRule, option: Int, position: Int) {
+        val state = this.stateSet.fetchOrCreateState(listOf(RulePosition(runtimeRule, option, position)))
+        this.src(state)
+    }
+
+    fun tgt(runtimeRule: RuntimeRule, option: Int, position: Int) {
+        val state = this.stateSet.fetchOrCreateState(listOf(RulePosition(runtimeRule, option, position)))
+        this.tgt(state)
+    }
+
+    fun src(state: ParserState) {
+        _src = state
+    }
+
+    fun tgt(state: ParserState) {
+        _tgt = state
+    }
+
+    fun lhg(guard: RuntimeRule) {
+        this._lhg.add(Lookahead(LookaheadSet.createFromRuntimeRules(this.stateSet, setOf(guard)), LookaheadSet.EMPTY))
+    }
+
+    fun lhg(guard: Set<RuntimeRule>) {
+        this._lhg.add(Lookahead(LookaheadSet.createFromRuntimeRules(this.stateSet, guard), LookaheadSet.EMPTY))
+    }
+
+    fun lhg(guard: Set<RuntimeRule>, up: Set<RuntimeRule>) {
+        this._lhg.add(Lookahead(LookaheadSet.createFromRuntimeRules(this.stateSet, guard), LookaheadSet.createFromRuntimeRules(this.stateSet, up)))
+    }
+
+    /**
+     * runtime guard (or prev guard)
+     */
+    fun rtg(runtimeGuard: Set<RulePosition>?) {
+        _rtg = runtimeGuard
+    }
+    fun rtg(runtimeRule: RuntimeRule, option: Int, position: Int) {
+        val set = setOf(RulePosition(runtimeRule, option, position))
+        this.rtg(set)
     }
 
     fun build(): Transition {
-        return Transition(from, to, action, lh, prevGuard) { _, _ -> true }
+        val trans = Transition(_src, _tgt, action, _lhg, _rtg) { _, _ -> true }
+        _src.outTransitions.addTransition(_context, trans)
+        return trans
     }
 }
