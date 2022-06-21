@@ -28,9 +28,9 @@ internal class RuntimeTransitionCalculator(
 ) {
 
     private val __filteredTransitions = mutableSetOf<Transition>() // to save time allocating when calcFilteredTransitions is called
-    internal fun calcFilteredTransitions(previousState: RuntimeState, sourceState: RuntimeState): Set<Transition> {
+    internal fun calcFilteredTransitions(prevPrev: RuntimeState, previousState: RuntimeState, sourceState: RuntimeState): Set<Transition> {
         __filteredTransitions.clear()
-        val transitions = this.calcTransitions(previousState,sourceState)//, gn.lookaheadStack.peek())
+        val transitions = this.calcTransitions(prevPrev, previousState,sourceState)//, gn.lookaheadStack.peek())
         for (tr in transitions) {
             val filter = when (tr.action) {
                 Transition.ParseAction.GOAL -> true
@@ -52,7 +52,7 @@ internal class RuntimeTransitionCalculator(
     // must use previousState.rulePosition as starting point for finding
     // lookahead for height/graft, and previousLookahead to use if end up at End of rule
     // due to position or empty rules.
-    internal fun calcTransitions(previousState: RuntimeState, sourceState: RuntimeState): Set<Transition> {//TODO: add previous in order to filter parent relations
+    internal fun calcTransitions(prevPrev: RuntimeState, previousState: RuntimeState, sourceState: RuntimeState): Set<Transition> {//TODO: add previous in order to filter parent relations
         __transitions.clear()
         when {
             sourceState.state.isGoal -> {
@@ -66,7 +66,7 @@ internal class RuntimeTransitionCalculator(
                 }
             }
             sourceState.isAtEnd -> {
-                val heightOrGraftInto = this.stateSet.buildCache.heightOrGraftInto(previousState,sourceState)
+                val heightOrGraftInto = this.stateSet.buildCache.heightOrGraftInto(prevPrev, previousState,sourceState)
                 for (hg in heightOrGraftInto) {
                     val kind = hg.parent.first().runtimeRule.kind
                     if (kind == RuntimeRuleKind.GOAL) {

@@ -291,8 +291,9 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
 
     // target states for HEIGHT or GRAFT transition, rulePosition should BE atEnd
     // entry point from calcHeightGraft
-    fun parentInContext(context: RulePosition, completedRule: RuntimeRule): Set<ParentOfInContext> {
-        processClosureFor(RulePosition_UNKNOWN, context, FollowDeferredLiteral.UP)
+    fun parentInContext(contextContext:RulePosition, context: RulePosition, completedRule: RuntimeRule): Set<ParentOfInContext> {
+        //processClosureFor(RulePosition_UNKNOWN, context, FollowDeferredLiteral.UP)
+        processClosureFor(contextContext, context, FollowDeferredLiteral.UP)
 
         when {
             context.item!!.isTerminal -> {
@@ -313,7 +314,8 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
                 //}
             }
         }
-        val ctx = if (context.isAtStart) RulePosition_UNKNOWN else context
+        //val ctx = if (context.isAtStart) RulePosition_UNKNOWN else context
+        val ctx = if (context.isAtStart) contextContext else context
         return this._parentInContext[ctx][completedRule]
     }
 

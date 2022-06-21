@@ -113,7 +113,7 @@ internal class Transition(
     }
 
     val context by lazy {
-        this.from.outTransitions.previousFor(this)
+        this.from.outTransitions.previousFor(this).toSet()
     }
 
     private val hashCode_cache: Int by lazy {

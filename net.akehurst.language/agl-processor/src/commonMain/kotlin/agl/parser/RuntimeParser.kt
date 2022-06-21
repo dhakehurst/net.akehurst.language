@@ -21,7 +21,6 @@ import net.akehurst.language.agl.automaton.LookaheadSetPart
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.automaton.Transition
-import net.akehurst.language.agl.collections.GraphStructuredStack
 import net.akehurst.language.agl.runtime.graph.*
 import net.akehurst.language.agl.runtime.structure.RuleOption
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
@@ -174,6 +173,7 @@ internal class RuntimeParser(
     }
 */
     // used for finding error info
+    /*
     internal fun growWidthOnly(toProcess: ParseGraph.Companion.NextToProcess) {
         when (toProcess.growingNode.runtimeRules.first().kind) { //FIXME
             RuntimeRuleKind.GOAL -> {
@@ -206,6 +206,7 @@ internal class RuntimeParser(
             }
         }
     }
+     */
 /*
     internal fun growHeightOrGraftOnly(toProcess: ParseGraph.Companion.NextToProcess) {
             val transitions = toProcess.growingNode.runtimeState.transitions(toProcess.previous!!.runtimeState)
@@ -331,7 +332,7 @@ internal class RuntimeParser(
 
     private fun growGoalNode(toProcess: ParseGraph.Companion.NextToProcess, noLookahead: Boolean) {
         //no previous, so gn must be the Goal node
-        val transitions = toProcess.growingNode.runtimeState.transitions(RuntimeState(stateSet.startState, setOf(LookaheadSet.EMPTY)))
+        val transitions = toProcess.growingNode.runtimeState.transitions(RuntimeState(stateSet.startState, setOf(LookaheadSet.EMPTY)), RuntimeState(stateSet.startState, setOf(LookaheadSet.EMPTY)))
         for (it in transitions) {
             when (it.action) {
                 Transition.ParseAction.GOAL -> error("Should never happen")
@@ -354,7 +355,8 @@ internal class RuntimeParser(
 
     private fun growWithPrev(toProcess: ParseGraph.Companion.NextToProcess, noLookahead: Boolean): Boolean {
         var grown = false
-        val transitions = toProcess.growingNode.runtimeState.transitions(toProcess.previous!!.runtimeState)
+        val prevPrev = toProcess.remainingHead?.runtimeState ?: RuntimeState(stateSet.startState, setOf(LookaheadSet.EMPTY))
+        val transitions = toProcess.growingNode.runtimeState.transitions(prevPrev, toProcess.previous!!.runtimeState)
         //TODO: do we need to do something here? due to filtered out trans from the list
         val grouped = transitions.groupBy { it.to.runtimeRulesSet }
         for (it in grouped) {

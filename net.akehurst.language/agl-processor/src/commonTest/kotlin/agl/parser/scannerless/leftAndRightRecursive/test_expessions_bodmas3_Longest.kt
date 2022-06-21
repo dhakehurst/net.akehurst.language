@@ -25,15 +25,17 @@ import kotlin.test.Test
 internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract() {
 
     // S = E
-    // E = 'v' | I | '(' E ')'
-    // I = [E / '+']2+ ;
+    // E = 'v' | I | P
+    // I = [E / op]2+ ;
+    // op = '/' | '*' | '+' | '-'
+    // P = '(' E ')'
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("E") }
             choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("v")
                 ref("I")
-                ref("par")
+                ref("P")
             }
             sList("I",2,-1,"E","op")
             choice("op", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
@@ -42,7 +44,7 @@ internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract
                 literal("+")
                 literal("-")
             }
-            concatenation("par") { literal("("); ref("E"); literal(")") }
+            concatenation("P") { literal("("); ref("E"); literal(")") }
 
         }
         val goal = "S"

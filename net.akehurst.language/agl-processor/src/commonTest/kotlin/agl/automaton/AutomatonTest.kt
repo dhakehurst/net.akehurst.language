@@ -24,7 +24,7 @@ internal object AutomatonTest {
         return foundThis.size == foundOther.size && foundThis.size==thisList.size
     }
 
-    fun <E> assertMatches(setName: String, expected: Set<E>, actual: Set<E>, matches: (t: E, o: E) -> Boolean) {
+    fun <O, E> assertMatches(expectedObject:O, actualObject:O, setName: String, expected: Set<E>, actual: Set<E>, matches: (t: E, o: E) -> Boolean) {
         val thisList = expected.toList()
         val foundThis = mutableListOf<E>()
         val foundOther = mutableListOf<E>()
@@ -37,8 +37,8 @@ internal object AutomatonTest {
             }
         }
         when {
-            expected.size > foundThis.size -> kotlin.test.fail("Elements of $setName do not match, missing:\n${(expected - foundThis).joinToString(separator = "\n") { it.toString() }}")
-            actual.size > foundOther.size -> kotlin.test.fail("Elements of $setName do not match, missing:\n${(actual - foundOther).joinToString(separator = "\n") { it.toString() }}")
+            expected.size > foundThis.size -> kotlin.test.fail("Elements of $setName do not match for,\nexpected: $expectedObject\n  $expected\nactual: $actualObject\n  $actual\nmissing:\n${(expected - foundThis).joinToString(separator = "\n") { "  $it" }}")
+            actual.size > foundOther.size -> kotlin.test.fail("Elements of $setName do not match for,\nexpected: $expectedObject\n  $expected\nactual: $actualObject\n  $actual\\nmissing:\n${(actual - foundOther).joinToString(separator = "\n") { "  $it" }}")
             else -> Unit
         }
     }
@@ -47,9 +47,16 @@ internal object AutomatonTest {
         val expected_states = expected.allBuiltStates.toSet()
         val actual_states = actual.allBuiltStates.toSet()
 
-        assertMatches("allBuiltStates", expected_states, actual_states) { t, o -> t.matches(o) }
-        assertMatches("allBuiltTransitions", expected.allBuiltTransitions.toSet(), actual.allBuiltTransitions.toSet()) { t, o -> t.matches(o) }
+        assertMatches(expected,actual,"allBuiltStates", expected_states, actual_states) { t, o -> t.matches(o) }
+        assertMatches(expected,actual,"allBuiltTransitions", expected.allBuiltTransitions.toSet(), actual.allBuiltTransitions.toSet()) { t, o -> t.matches(o) }
 
+        for(exp_state in expected_states) {
+            val act_state = actual_states.first { it.matches(exp_state) }
+            for(exp_trans in exp_state.outTransitions.allBuiltTransitions) {
+                val act_trans = act_state.outTransitions.allBuiltTransitions.first{ it.matches(exp_trans) }
+                assertMatches(exp_trans, act_trans,"context",exp_trans.context,act_trans.context) { t, o -> t.matches(o) }
+            }
+        }
     }
 
 
@@ -59,7 +66,6 @@ internal object AutomatonTest {
         this.to.matches(other.to).not() -> false
         this.action != other.action -> false
         this.lookahead.matches(other.lookahead) { t, o -> t.matches(o) }.not() -> false
-        this.from.outTransitions.previousFor(this).toSet().matches(other.from.outTransitions.previousFor(other).toSet()){t, o -> t.matches(o) }.not() -> false
         else -> true
     }
 

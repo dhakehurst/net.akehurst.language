@@ -26,7 +26,7 @@ internal interface BuildCache {
 
     fun stateInfo(): Set<StateInfo>
     fun widthInto(prevState:RuntimeState, fromState: RuntimeState): Set<WidthInfo>
-    fun heightOrGraftInto(prevState: RuntimeState, fromState: RuntimeState) : Set<HeightGraftInfo>
+    fun heightOrGraftInto(prevPrev: RuntimeState, prevState: RuntimeState, fromState: RuntimeState) : Set<HeightGraftInfo>
 
     fun expectedAt(rulePosition: RulePosition, ifReachedEnd: LookaheadSetPart): LookaheadSetPart
 

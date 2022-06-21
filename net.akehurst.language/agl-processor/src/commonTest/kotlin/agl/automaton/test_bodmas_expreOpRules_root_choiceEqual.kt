@@ -120,8 +120,10 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
     @Test
     fun automaton_parse_sentences() {
         val parser = ScanOnDemandParser(rrs)
-        val sentences = listOf("v", "vav", "vavav", "vmv", "vmvmv", "vmvav", "vavmv")
+        val sentences = listOf("v", "vav", "vavav", "vavav", "vmv", "vmvmv", "vmvav", "vavmv")
+        //val sentences = listOf( "vav")
         sentences.forEach {
+            println(it)
             val (sppt, issues) = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
             assertNotNull(sppt, issues.joinToString("\n") { it.toString() })
             assertEquals(0, issues.size)
@@ -148,13 +150,15 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
             val s14 = state(RP(rM, 0, EOR))   // M = E m E .
             val s15 = state(RP(E, 1, EOR))   // E = A .
 
-            transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rA, o0, p1); tgt(a); lhg(v) }
-            transition(setOf(s0, s9), s6, s12, WIDTH, null) { lhg(setOf(v)) }
+            // because GRAFT is done before HEIGHT, RP(A,0,2) never becomes context for this trans, even though prebuild allows for it
+            transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rM, o0, p2)); src(rA, o0, p1); tgt(a); lhg(v) }
+            // because GRAFT is done before HEIGHT, RP(M,0,2) never becomes context for this trans, even though prebuild allows for it
+            transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2)); src(rM, o0, p1); tgt(m); lhg(v) }
             transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(v); lhg(setOf(UP, m, a)) }
             transition(setOf(s0, s13), s9, s1, WIDTH, null) { lhg(setOf(UP, m, a)) }
             transition(setOf(s0, s9), s13, s1, WIDTH, null) { lhg(setOf(UP, m, a)) }
             transition(s0, s4, s7, GOAL, null) { lhg(setOf(UP)) }
-            transition(s9, s3, s10, GRAFT, setOf(RP(rA, 0, 2))) { lhg(setOf(UP)) }
+            transition(GRAFT) { ctx(rA, o0, p2); src(E); tgt(rA); lhg(setOf(UP)); rtg(rA, o0, p2) } // lhg == [UP,a,m] for prebuild?
             transition(s9, s15, s10, GRAFT, setOf(RP(rA, 0, 2))) { lhg(setOf(UP)) }
             transition(setOf(s0, s9, s13), s3, s5, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
             transition(setOf(s0, s9), s15, s5, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
@@ -194,30 +198,30 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
-            val s0 = state(RP(G, 0, SOR))   // G = . S
-            val s1 = state(RP(G, 0, EOR))   // G = S .
-            val s2 = state(RP(S, 0, EOR))   // S = E .
-            val s3 = state(RP(E, 0, EOR))   // E = R .
-            val s4 = state(RP(E, 1, EOR))   // E = M .
-            val s5 = state(RP(E, 2, EOR))   // E = A .
-            val s6 = state(RP(rA, 0, EOR))   // M = E m E .
-            val s7 = state(RP(a, 0, EOR))   // v
-            val s8 = state(RP(rM, 0, EOR))   // A = E a E .
-            val s9 = state(RP(m, 0, EOR))   // m
-            val s10 = state(RP(R, 0, EOR))   // R = v .
-            val s11 = state(RP(v, 0, EOR))   // v
-            val s12 = state(RP(rA, 0, 1))   // A = E . a E
-            val s13 = state(RP(rA, 0, 2))   // A = E a . E
-            val s14 = state(RP(rM, 0, 1))   // M = E . m E
-            val s15 = state(RP(rM, 0, 2))   // M = E m . E
+            val s0 = state(RP(G, o0, SOR))    // G = . S
+            val s1 = state(RP(G, o0, EOR))    // G = S .
+            val s2 = state(RP(S, o0, EOR))    // S = E .
+            val s3 = state(RP(E, o0, EOR))    // E = R .
+            val s4 = state(RP(E, o1, EOR))    // E = M .
+            val s5 = state(RP(E, o2, EOR))    // E = A .
+            val s6 = state(RP(rA, o0, EOR))   // A = E a E .
+            val s7 = state(RP(a, o0, EOR))    // v
+            val s8 = state(RP(rM, o0, EOR))   // M = E m E .
+            val s9 = state(RP(m, o0, EOR))    // m
+            val s10 = state(RP(R, o0, EOR))   // R = v .
+            val s11 = state(RP(v, o0, EOR))   // v
+            val s12 = state(RP(rA, o0, p1))   // A = E . a E
+            val s13 = state(RP(rA, o0, p2))   // A = E a . E
+            val s14 = state(RP(rM, o0, p1))   // M = E . m E
+            val s15 = state(RP(rM, o0, p2))   // M = E m . E
 
             transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rA, o0, p1); tgt(a); lhg(v) }
-            transition(setOf(s0, s13, s15), s14, s9, WIDTH, null) { lhg(setOf(v)) }
-            transition(s0, s0, s11, WIDTH, null) { lhg(setOf(UP, m, a)) }
+            transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rM, o0, p1); tgt(m); lhg(v) }
+            transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(v); lhg(setOf(UP, m, a)) }
             transition(setOf(s0, s13, s15), s13, s11, WIDTH, null) { lhg(setOf(UP, m, a)) }
             transition(setOf(s0, s13, s15), s15, s11, WIDTH, null) { lhg(setOf(UP, m, a)) }
             transition(s0, s2, s1, GOAL, null) { lhg(UP) }
-            transition(s13, s3, s6, GRAFT, setOf(RP(rA, 0, 2))) { lhg(setOf(UP, a, m)) }
+            transition(GRAFT) { ctx(rA, o0, p2); src(E); tgt(rA); lhg(setOf(UP, a, m)); rtg(rA, o0, p2) }
             transition(s13, s4, s6, GRAFT, setOf(RP(rA, 0, 2))) { lhg(setOf(UP, a, m)) }
             transition(s13, s5, s6, GRAFT, setOf(RP(rA, 0, 2))) { lhg(setOf(UP, a, m)) }
             transition(setOf(s0, s13, s15), s3, s12, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }

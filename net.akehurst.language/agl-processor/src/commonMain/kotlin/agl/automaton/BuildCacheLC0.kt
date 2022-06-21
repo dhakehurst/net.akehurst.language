@@ -93,7 +93,7 @@ internal class BuildCacheLC0(
         }
     }
 
-    override fun heightOrGraftInto(prevState: RuntimeState, fromState:RuntimeState): Set<HeightGraftInfo> {
+    override fun heightOrGraftInto(prevPrev: RuntimeState,prevState: RuntimeState, fromState:RuntimeState): Set<HeightGraftInfo> {
         val key = Pair(prevState.state.rulePositions, fromState.state.runtimeRules)
         return this._heightOrGraftInto[key] ?: run {
             val upCls = prevState.state.rulePositions.flatMap { this.dnClosureLR0(it) }.toSet()

@@ -158,7 +158,7 @@ internal class TransitionBuilder(
     }
 
     fun src(runtimeRule: RuntimeRule) {
-        check(this.action==Transition.ParseAction.HEIGHT || this.action==Transition.ParseAction.GRAFT)
+        check(this.action==Transition.ParseAction.HEIGHT || this.action==Transition.ParseAction.GRAFT|| this.action==Transition.ParseAction.GOAL)
         src(runtimeRule, 0, RulePosition.END_OF_RULE)
     }
     fun src(runtimeRule: RuntimeRule, option: Int, position: Int) {

@@ -80,11 +80,11 @@ internal class ParserState(
     internal fun createLookaheadSet(includesUP: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet =
         this.stateSet.createLookaheadSet(includesUP, includeEOT, matchAny, content)
 
-    fun transitions(previousState: RuntimeState, sourceState: RuntimeState): List<Transition> {
+    fun transitions(prevPrev: RuntimeState, previousState: RuntimeState, sourceState: RuntimeState): List<Transition> {
         val cache: List<Transition>? = this.outTransitions.findTransitionByPrevious(previousState.state)
         val trans = if (null == cache) {
-            check(this.stateSet.preBuilt.not(), { "Transitions not built for $this -previous-> $previousState" })
-            val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calcFilteredTransitions(previousState,sourceState).toList()
+            check(this.stateSet.preBuilt.not()) { "Transitions not built for $this -previous-> $previousState -previous-> $prevPrev" }
+            val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calcFilteredTransitions(prevPrev, previousState,sourceState).toList()
             val storedTrans = filteredTransitions.map { this.outTransitions.addTransition(setOf(previousState.state), it) }
             storedTrans
         } else {

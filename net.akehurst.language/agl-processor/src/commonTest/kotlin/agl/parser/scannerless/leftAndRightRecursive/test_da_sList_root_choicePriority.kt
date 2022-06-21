@@ -239,7 +239,7 @@ internal class test_da_sList_root_choicePriority : test_ScanOnDemandParserAbstra
     }
 
     @Test
-    fun a_add_b_add_c_add_d_add_e_add_f() {
+    fun v_add_v_add_v_add_v_add_v_add_v() {
         val sentence = "v+v+v+v+v+v+v"
 
         val expected = """
