@@ -461,18 +461,24 @@ internal class BuildCacheLC1(
                     when(merged.size) {
                         1 -> merged
                         else -> {
-                            val sortedMerged = merged.sortedBy { it.guard.fullContent.size }
+                            val sortedMerged = merged.sortedByDescending { it.guard.fullContent.size }
                             val result = mutableSetOf<L0L1Lookahead>()
+                            val mergedIntoOther = mutableSetOf<L0L1Lookahead>()
                             for (i in sortedMerged.indices) {
-                                val lh1 = sortedMerged[i]
-                                for (j in i + 1 until sortedMerged.size) {
-                                    val lh2 = sortedMerged[j]
-                                    if(lh1.guard.containsAll(lh2.guard)) {
-                                        val  mergedLh = L0L1Lookahead(lh1.guard,lh1.up.union(lh2.up))
-                                        result.add(mergedLh)
-                                    } else {
-                                        TODO()
+                                var lh1 = sortedMerged[i]
+                                if (mergedIntoOther.contains(lh1)) {
+                                    //do nothing
+                                } else {
+                                    for (j in i + 1 until sortedMerged.size) {
+                                        val lh2 = sortedMerged[j]
+                                        if (lh1.guard.containsAll(lh2.guard)) {
+                                            lh1 = L0L1Lookahead(lh1.guard, lh1.up.union(lh2.up))
+                                            mergedIntoOther.add(lh2)
+                                        } else {
+                                            result.add(lh2)
+                                        }
                                     }
+                                    result.add(lh1)
                                 }
                             }
                             result
