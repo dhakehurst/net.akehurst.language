@@ -81,8 +81,10 @@ internal class test_ifThenElse_NoWS_Inverted : test_ScanOnDemandParserAbstract()
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+                expectedTrees = arrayOf(expected),
+            printAutomaton = true
         )
+
     }
 
     @Test

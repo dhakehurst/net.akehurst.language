@@ -694,10 +694,13 @@ internal class ParseGraph(
         }
     }
 
-    fun drop(previous: GrowingNodeIndex?) {
-        if (null != previous) {
-            this._gss.removeStack(previous)
+    fun drop(toProcess: NextToProcess) {
+        if (null != toProcess.remainingHead) {
+            this._gss.removeStack(toProcess.remainingHead)
+            //TODO: is it necessary to remove dropped stuff from treeData ?
+            //this.treeData.
         }
+        this.treeData.removeTree(toProcess.growingNode.index)
     }
 
     fun isLookingAt(lookaheadGuard: LookaheadSet, runtimeLookahead: LookaheadSet?, nextInputPosition: Int): Boolean {

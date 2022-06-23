@@ -26,14 +26,15 @@ internal class TreeData(
 
     private val _growing = mutableMapOf<GrowingNodeIndex, MutableList<CompleteNodeIndex>>()
 
-    // index --> set-of-alternative-lists-of-children
+    // index --> mpa-of-alternatives (optionList,lists-of-children)
     //maybe optimise because only ambiguous choice nodes have multiple child options
-    private val _complete = mutableMapOf<CompleteNodeIndex, MutableMap<List<Int>,List<CompleteNodeIndex>>>()
+    private val _complete = mutableMapOf<CompleteNodeIndex, MutableMap<List<Int>, List<CompleteNodeIndex>>>()
+    private val _numberOfParents = mutableMapOf<CompleteNodeIndex, Int>()
     private val _preferred = mutableMapOf<PreferredChildIndex, CompleteNodeIndex>()
 
     private val _skipDataAfter = hashMapOf<CompleteNodeIndex, TreeData>()
 
-    val completeChildren: Map<CompleteNodeIndex, Map<List<Int>,List<CompleteNodeIndex>>> = this._complete
+    val completeChildren: Map<CompleteNodeIndex, Map<List<Int>, List<CompleteNodeIndex>>> = this._complete
 
     //val completedBy: Map<CompleteNodeIndex, CompleteNodeIndex> = _completedBy
     val growing: Map<GrowingNodeIndex, List<CompleteNodeIndex>> = _growing
@@ -56,7 +57,7 @@ internal class TreeData(
         return GrowingNodeIndex(this, RuntimeState(state, runtimeLookaheadSet), startPosition, nextInputPosition, nextInputPositionAfterSkip, listSize)
     }
 
-    fun childrenFor(runtimeRule: RuntimeRule, startPosition: Int, nextInputPosition: Int): List<Pair<List<Int>,List<CompleteNodeIndex>>> {
+    fun childrenFor(runtimeRule: RuntimeRule, startPosition: Int, nextInputPosition: Int): List<Pair<List<Int>, List<CompleteNodeIndex>>> {
         val keys = this._complete.keys.filter {
             it.startPosition == startPosition
                     && it.nextInputPosition == nextInputPosition
@@ -64,12 +65,12 @@ internal class TreeData(
         }
         return when (keys.size) {
             0 -> emptyList()
-            1 -> this._complete[keys[0]]!!.entries.map { Pair(it.key,it.value) }
+            1 -> this._complete[keys[0]]!!.entries.map { Pair(it.key, it.value) }
             else -> if (_preferred.containsKey(keys[0].preferred)) {
-                this._complete[_preferred[keys[0].preferred]]!!.entries.map { Pair(it.key,it.value) }
+                this._complete[_preferred[keys[0].preferred]]!!.entries.map { Pair(it.key, it.value) }
             } else {
                 keys.flatMap {
-                    this._complete[it]!!.entries.map { Pair(it.key,it.value) }
+                    this._complete[it]!!.entries.map { Pair(it.key, it.value) }
                 }
             }
         }
@@ -91,6 +92,37 @@ internal class TreeData(
         this._complete.remove(node)
         this._preferred.remove(node.preferred)
         this._skipDataAfter.remove(node)
+    }
+
+    /**
+     * remove the (completed) tree and recursively all its child-nodes - unless they have other parents
+     *
+     */
+    fun removeTree(node: GrowingNodeIndex) {
+        if (node.runtimeState.isAtEnd) {
+            removeTreeComplete(node.complete)
+        } else {
+            removeTreeGrowing(node)
+        }
+    }
+    private fun removeTreeGrowing(node:GrowingNodeIndex) {
+        val childrenOfRemoved = this._growing.remove(node)
+        childrenOfRemoved?.forEach { child ->
+                val n = this._numberOfParents[child] ?: error("Internal Error: can't remove child with no recorded parents")
+                this._numberOfParents[child] = n - 1
+                if (1 == n) removeTreeComplete(child)
+        }
+    }
+    private fun removeTreeComplete(node:CompleteNodeIndex) {
+        val childrenOfRemoved = this._complete[node]
+        this.remove(node)
+        childrenOfRemoved?.entries?.forEach { (optionList, children) ->
+            children.forEach { child ->
+                val n = this._numberOfParents[child] ?: error("Internal Error: can't remove child with no recorded parents")
+                this._numberOfParents[child] = n - 1
+                if (1 == n) removeTreeComplete(child)
+            }
+        }
     }
 
     fun setEmbeddedChild(parent: GrowingNodeIndex, child: CompleteNodeIndex) {
@@ -117,6 +149,7 @@ internal class TreeData(
                 this._growing[parent] = growing
             }
         }
+        this.incrementParents(child.complete)
     }
 
     /*
@@ -143,7 +176,7 @@ internal class TreeData(
      */
     fun setInGrowingParentChildAt(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, nextChild: GrowingNodeIndex, isAlternative: Boolean) {
         val nextChildIndex = newParent.numNonSkipChildren - 1
-        val children = this._growing[oldParent]!! //should never be null
+        val children = this._growing[oldParent]!! //should never be null //TODO: remove it
         if (newParent.runtimeState.isAtEnd) {
             //clone children so the other can keep growing if need be
             //TODO: performance don't want to copy
@@ -154,6 +187,7 @@ internal class TreeData(
                 else -> error("Internal error: should never happen")
             }
             this.setCompletedBy(newParent, cpy, isAlternative)
+            cpy.forEach { ch -> incrementParents(ch) }
         } else {
             //TODO: performance don't want to copy
             val cpy = children.toMutableList()
@@ -163,7 +197,9 @@ internal class TreeData(
                 else -> error("Internal error: should never happen")
             }
             this._growing[newParent] = cpy
+            cpy.forEach { ch -> incrementParents(ch) }
         }
+
     }
 
     fun inGrowingParentChildAt(parent: GrowingNodeIndex, childIndex: Int): CompleteNodeIndex? {
@@ -180,7 +216,7 @@ internal class TreeData(
     }
 
     fun setUserGoalChildrenAfterInitialSkip(nug: CompleteNodeIndex, userGoalChildren: List<CompleteNodeIndex>) {
-        this._complete[nug] = mutableMapOf(listOf(0)to userGoalChildren.toMutableList())
+        this._complete[nug] = mutableMapOf(listOf(0) to userGoalChildren.toMutableList())
     }
 
     fun setSkipDataAfter(leafNodeIndex: CompleteNodeIndex, skipData: TreeData) {
@@ -188,7 +224,6 @@ internal class TreeData(
     }
 
     fun skipChildrenAfter(nodeIndex: CompleteNodeIndex) = this._skipDataAfter[nodeIndex]
-
 
     override fun hashCode(): Int = this.forStateSetNumber
     override fun equals(other: Any?): Boolean = when {
@@ -200,7 +235,7 @@ internal class TreeData(
 
     private fun setCompletedBy(parent: GrowingNodeIndex, children: List<CompleteNodeIndex>, isAlternative: Boolean) {
         var alternatives = this._complete[parent.complete]
-        if (null==alternatives) {
+        if (null == alternatives) {
             alternatives = mutableMapOf(parent.runtimeState.optionList to children)
             this._complete[parent.complete] = alternatives
             if (isAlternative) {
@@ -217,8 +252,12 @@ internal class TreeData(
                 this._preferred[parent.complete.preferred] = parent.complete
                 alternatives.clear()
             }
-            alternatives[parent.runtimeState.optionList] =children
+            alternatives[parent.runtimeState.optionList] = children
         }
     }
 
+    private fun incrementParents(child: CompleteNodeIndex) {
+        val n = this._numberOfParents[child] ?: 0
+        this._numberOfParents[child] = n + 1
+    }
 }

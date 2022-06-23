@@ -349,7 +349,7 @@ internal class RuntimeParser(
             if (grown) {
                 //do nothing
             } else {
-                graph.drop(toProcess.remainingHead)
+                graph.drop(toProcess)
             }
     }
 

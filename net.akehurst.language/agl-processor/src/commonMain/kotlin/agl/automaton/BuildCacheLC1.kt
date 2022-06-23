@@ -584,6 +584,7 @@ internal class BuildCacheLC1(
 
         val atEnd = l0States.values.filter { it.rulePosition.first().isAtEnd || it.rulePosition.first().isGoal }
         val notAtEnd = l0States.values.filter { it.rulePosition.first().isAtEnd.not() && it.rulePosition.first().isGoal.not() }
+        /*
         val mergeAtEnd = atEnd.map { st ->
             val rp = st.rulePosition
             val trans = st.outTransitions
@@ -599,6 +600,24 @@ internal class BuildCacheLC1(
             }.toSet()
             L0State(rp, mergeTrans)
         }
+        */
+        ///*
+        val mergeAtEnd = atEnd.map { st ->
+            val rp = st.rulePosition
+            val trans = st.outTransitions
+            val groupTrans = trans.groupBy { tr -> Pair( tr.action, tr.to) }
+            val mergeTrans = groupTrans.map { me ->
+                val prev = me.value.flatMap { it.prev }.toSet()
+                val action = me.key.first
+                val to = me.key.second
+                val parent = me.value.flatMap { it.parent }.toSet()
+                val lh = me.value.flatMap { it.lookahead }.toSet()
+                val mergedLh = mergeL0L1Lookahead(lh)
+                L0L1Trans(prev, parent, to, action, mergedLh)
+            }.toSet()
+            L0State(rp, mergeTrans)
+        }
+        // */
         /*
         val groupNotAtEnd = notAtEnd.groupBy { st ->
             st.outTransitions.map { tr -> Triple(tr.action, tr.to,tr.parent.map { it.runtimeRule }) }.toSet()
