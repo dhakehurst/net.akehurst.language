@@ -100,7 +100,8 @@ internal class TreeData(
      */
     fun removeTree(node: GrowingNodeIndex) {
         if (node.runtimeState.isAtEnd) {
-            removeTreeComplete(node.complete)
+            val n = this._numberOfParents[node.complete] ?: 0
+            if (0==n) removeTreeComplete(node.complete)
         } else {
             removeTreeGrowing(node)
         }

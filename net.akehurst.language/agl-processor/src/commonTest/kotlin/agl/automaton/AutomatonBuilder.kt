@@ -87,7 +87,7 @@ internal class AutomatonBuilder(
         b.ctx(previousStates)
         b.src(from)
         b.tgt(to)
-        b.rtg(prevGuard)
+        b.gpg(prevGuard)
         b.init()
         val trans = b.build()
         from.outTransitions.addTransition(previousStates, trans)
@@ -193,15 +193,18 @@ internal class TransitionBuilder(
     }
 
     /**
-     * runtime guard (or prev guard)
+     * graft prev guard
      */
-    fun rtg(runtimeGuard: Set<RulePosition>?) {
+    fun gpg(runtimeGuard: Set<RulePosition>?) {
         _rtg = runtimeGuard
     }
 
-    fun rtg(runtimeRule: RuntimeRule, option: Int, position: Int) {
+    /**
+     * graft prev guard
+     */
+    fun gpg(runtimeRule: RuntimeRule, option: Int, position: Int) {
         val set = setOf(RulePosition(runtimeRule, option, position))
-        this.rtg(set)
+        this.gpg(set)
     }
 
     fun build(): Transition {

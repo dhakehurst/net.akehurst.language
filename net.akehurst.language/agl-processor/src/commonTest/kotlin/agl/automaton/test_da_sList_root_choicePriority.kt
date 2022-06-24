@@ -18,7 +18,6 @@ package net.akehurst.language.agl.automaton
 
 import agl.automaton.AutomatonTest
 import agl.automaton.automaton
-import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
@@ -165,15 +164,15 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
             transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(rA, OLI, PLI); tgt(v); lhg(setOf(UP, a, m)) }
             transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(rM, OLI, PLI); tgt(v); lhg(setOf(UP, a, m)) }
             transition(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(UP) }
-            transition(GRAFT) { ctx(rA, OLI, PLI); src(E, o0, EOR); tgt(rA, OLI, EOR); lhg(setOf(UP, a, m)); rtg(rA, OLI, PLI) }
-            transition(GRAFT) { ctx(rA, OLI, PLI); src(E, o1, EOR); tgt(rA, OLI, EOR); lhg(setOf(UP, a, m)); rtg(rA, OLI, PLI) }
-            transition(GRAFT) { ctx(rA, OLI, PLI); src(E, o2, EOR); tgt(rA, OLI, EOR); lhg(setOf(UP, a, m)); rtg(rA, OLI, PLI) }
-            transition(GRAFT) { ctx(rA, OLI, PLS); src(a); tgt(rA, OLI, PLI); lhg(v); rtg(rA, OLI, PLS) }
-            transition(GRAFT) { ctx(rA, OLI, PLI); src(E); tgt(rA, OLI, PLS); lhg(a); rtg(rA, OLI, PLI) }
+            transition(GRAFT) { ctx(rA, OLI, PLI); src(E, o0, EOR); tgt(rA, OLI, EOR); lhg(setOf(UP, a, m)); gpg(rA, OLI, PLI) }
+            transition(GRAFT) { ctx(rA, OLI, PLI); src(E, o1, EOR); tgt(rA, OLI, EOR); lhg(setOf(UP, a, m)); gpg(rA, OLI, PLI) }
+            transition(GRAFT) { ctx(rA, OLI, PLI); src(E, o2, EOR); tgt(rA, OLI, EOR); lhg(setOf(UP, a, m)); gpg(rA, OLI, PLI) }
+            transition(GRAFT) { ctx(rA, OLI, PLS); src(a); tgt(rA, OLI, PLI); lhg(v); gpg(rA, OLI, PLS) }
+            transition(GRAFT) { ctx(rA, OLI, PLI); src(E); tgt(rA, OLI, PLS); lhg(a); gpg(rA, OLI, PLI) }
             transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(E); tgt(rA, OLI, PLS); lhg(setOf(a), setOf(UP, a, m)) }
-            transition(GRAFT) { ctx(rA, OLI, PLI); src(E, o1, EOR); tgt(rA, OLI, PLS); lhg(a); rtg(rA, OLI, PLI) }
+            transition(GRAFT) { ctx(rA, OLI, PLI); src(E, o1, EOR); tgt(rA, OLI, PLS); lhg(a); gpg(rA, OLI, PLI) }
             transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(E, o1, EOR); tgt(rA, OLI, PLS); lhg(setOf(a), setOf(UP, a, m)) }
-            transition(GRAFT) { ctx(rA, OLI, PLI); src(E, o2, EOR); tgt(rA, OLI, PLS); lhg(a); rtg(rA, OLI, PLI) }
+            transition(GRAFT) { ctx(rA, OLI, PLI); src(E, o2, EOR); tgt(rA, OLI, PLS); lhg(a); gpg(rA, OLI, PLI) }
             transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(E, o2, EOR); tgt(rA, OLI, PLS); lhg(setOf(a), setOf(UP, a, m)) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(R); tgt(E); lhg(m, m); lhg(UP, UP); lhg(a, a) }
 

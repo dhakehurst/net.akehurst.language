@@ -18,8 +18,6 @@ package net.akehurst.language.agl.parser
 
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.Transition
-import net.akehurst.language.agl.runtime.graph.GrowingNode
-import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
@@ -267,7 +265,7 @@ internal class ScanOnDemandParser(
         return Pair(maxLastLocation.first, res)
     }
 
-    private fun findNextExpected(rp: RuntimeParser, graph: ParseGraph, input: InputFromString, gns: List<ParseGraph.Companion.NextToProcess>): Set<RuntimeRule> {
+    private fun findNextExpected(rp: RuntimeParser, graph: ParseGraph, input: InputFromString, gns: List<ParseGraph.Companion.ToProcessTriple>): Set<RuntimeRule> {
         // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
 
         val matches = gns.toMutableList()
@@ -329,7 +327,7 @@ internal class ScanOnDemandParser(
         rp.start(0, setOf(LookaheadSet.EOT))
         var seasons = 1
 
-        val matches = mutableListOf<ParseGraph.Companion.NextToProcess>()
+        val matches = mutableListOf<ParseGraph.Companion.ToProcessTriple>()
         do {
             rp.grow3(false)
             for (gn in rp.lastGrown) {

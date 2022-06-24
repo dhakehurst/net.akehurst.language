@@ -208,7 +208,7 @@ internal class test_n_P_Im : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 3, //TODO: can we make this less anyhow?
+                expectedNumGSSHeads = 1,
                 expectedTrees = arrayOf(expected)
         )
     }
@@ -249,7 +249,7 @@ internal class test_n_P_Im : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 3, //TODO: can we make this less anyhow?
+                expectedNumGSSHeads = 1,
                 expectedTrees = arrayOf(expected)
         )
     }

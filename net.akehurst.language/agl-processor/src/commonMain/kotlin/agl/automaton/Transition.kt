@@ -28,7 +28,7 @@ internal class Transition(
     val to: ParserState,
     val action: ParseAction,
     val lookahead: Set<Lookahead>,
-    val prevGuard: Set<RulePosition>?,
+    val graftPrevGuard: Set<RulePosition>?,
     val runtimeGuard: RuntimeGuard
 ) {
 
@@ -117,7 +117,7 @@ internal class Transition(
     }
 
     private val hashCode_cache: Int by lazy {
-        arrayListOf(from, to, action, lookahead, prevGuard).hashCode()
+        arrayListOf(from, to, action, lookahead, graftPrevGuard).hashCode()
     }
 
     override fun hashCode(): Int = this.hashCode_cache
@@ -129,7 +129,7 @@ internal class Transition(
                 if (this.to != other.to) return false
                 if (this.action != other.action) return false
                 if (this.lookahead != other.lookahead) return false
-                if (this.prevGuard != other.prevGuard) return false
+                if (this.graftPrevGuard != other.graftPrevGuard) return false
                 return true
             }
             else -> return false
@@ -139,6 +139,6 @@ internal class Transition(
     override fun toString(): String {
         val ctx = this.context.joinToString { it.rulePositions.toString() }
         val lhsStr = this.lookahead.joinToString(separator = "|") { "[${it.guard.fullContent.joinToString {  it.tag }}](${it.up.fullContent.joinToString {  it.tag }})" }
-        return "Transition[$ctx] { $from -- $action${lhsStr} --> $to }"
+        return "Transition[$ctx] { $from -- $action${lhsStr} --> $to }${graftPrevGuard?:"[]"}"
     }
 }

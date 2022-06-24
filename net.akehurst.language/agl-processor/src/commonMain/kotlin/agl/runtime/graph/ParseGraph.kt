@@ -33,7 +33,26 @@ internal class ParseGraph(
 ) {
 
     companion object {
+        data class ToProcessPrevious(
+            val previous: GrowingNodeIndex?,
+            val remainingHeads:Set<GrowingNodeIndex>
+        )
         data class NextToProcess(
+            val growingNode:GrowingNode,
+            val previous:List<ToProcessPrevious>
+        ) {
+            //no need for overhead of a Set, previous is a Set so should be no duplicates
+            val triples:List<ToProcessTriple> get() = previous.flatMap { prv ->
+                if(prv.remainingHeads.isEmpty()) {
+                    listOf(ToProcessTriple(growingNode,prv.previous,null))
+                } else {
+                    prv.remainingHeads.map {hd ->
+                        ToProcessTriple(growingNode, prv.previous, hd)
+                    }
+                }
+            }
+        }
+        data class ToProcessTriple(
             val growingNode: GrowingNode,
             val previous: GrowingNodeIndex?,
             val remainingHead:GrowingNodeIndex?
@@ -148,37 +167,33 @@ internal class ParseGraph(
      * extract head with min nextInputPosition
      * assumes there is one - check with hasNextHead
      */
-    fun nextToProcess(): List<NextToProcess> {
+    fun nextToProcess(): NextToProcess {
         val gn = this._growingHeadHeap.extractRoot()!!
         //val previous = this._gss.peek(gn.index)
         val previous = this._gss.pop(gn.index)
         return if (previous.isEmpty()) {
-            listOf(NextToProcess(gn,null,null))
+            NextToProcess(gn, emptyList())
         } else {
-            val result = previous.flatMap { prev ->
+            val prv = previous.map { prev ->
                 val heads = this._gss.pop(prev)
-                if (heads.isEmpty()) {
-                    listOf(NextToProcess(gn,prev,null))
-                } else {
-                    heads.map { hd -> NextToProcess(gn, prev, hd) }
-                }
+                ToProcessPrevious(prev,heads)
             }
-            result
+            NextToProcess(gn, prv)
         }
     }
 
-    fun peekNextToProcess(): List<NextToProcess> = this._growingHeadHeap.entries.flatMap {
+    fun peekNextToProcess(): List<ToProcessTriple> = this._growingHeadHeap.entries.flatMap {
         val gn = it.value
         val previous = this._gss.peek(gn.index)
         if (previous.isEmpty()) {
-            listOf(NextToProcess(gn,null,null))
+            listOf(ToProcessTriple(gn,null,null))
         } else {
             previous.flatMap { prev ->
                 val heads = this._gss.peek(prev)
                 if (heads.isEmpty()) {
-                    listOf(NextToProcess(gn,prev,null))
+                    listOf(ToProcessTriple(gn,prev,null))
                 } else {
-                    heads.map { hd -> NextToProcess(gn, prev, hd) }
+                    heads.map { hd -> ToProcessTriple(gn, prev, hd) }
                 }
             }
         }
@@ -422,7 +437,7 @@ internal class ParseGraph(
      * return true if grown
      */
     fun pushToStackOf(
-        toProcess: NextToProcess,
+        toProcess: ToProcessTriple,
         newState: ParserState,
         runtimeLookaheadSet: Set<LookaheadSet>,
         startPosition: Int,
@@ -449,7 +464,7 @@ internal class ParseGraph(
      */
     // for embedded segments
     fun pushEmbeddedToStackOf(
-        toProcess: NextToProcess,
+        toProcess: ToProcessTriple,
         newState: ParserState,
         runtimeLookaheadSet: Set<LookaheadSet>,
         startPosition: Int,
@@ -484,7 +499,7 @@ internal class ParseGraph(
     fun createWithFirstChild(
         parentState: ParserState,
         parentRuntimeLookaheadSet: Set<LookaheadSet>,
-        toProcess:NextToProcess
+        toProcess:ToProcessTriple
     ): Boolean {
         val childNode = toProcess.growingNode
         val previous = toProcess.previous!!
@@ -595,7 +610,7 @@ internal class ParseGraph(
      * return true if grown
      */
     fun growNextChild(
-        toProcess:NextToProcess,
+        toProcess:ToProcessTriple,
         newParentState: ParserState,
         newParentRuntimeLookaheadSet: Set<LookaheadSet>
     ): Boolean {
@@ -694,13 +709,12 @@ internal class ParseGraph(
         }
     }
 
-    fun drop(toProcess: NextToProcess) {
-        if (null != toProcess.remainingHead) {
-            this._gss.removeStack(toProcess.remainingHead)
-            //TODO: is it necessary to remove dropped stuff from treeData ?
-            //this.treeData.
-        }
-        this.treeData.removeTree(toProcess.growingNode.index)
+    fun dropHead(head:GrowingNodeIndex) {
+        this._gss.removeStack(head)
+    }
+
+    fun dropData(node:GrowingNodeIndex) {
+        this.treeData.removeTree(node)
     }
 
     fun isLookingAt(lookaheadGuard: LookaheadSet, runtimeLookahead: LookaheadSet?, nextInputPosition: Int): Boolean {

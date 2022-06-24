@@ -44,7 +44,7 @@ internal class test_aa : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a() {
-        fail("did not terminate!")
+        fail("does not terminate! for no pre-build, ok if pre-built")
         val sentence = "a"
 
         val expected = """
@@ -62,7 +62,7 @@ internal class test_aa : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aa() {
-        fail("did not terminate!")
+        fail("does not terminate! for no pre-build, ok if pre-built")
         val sentence = "aa"
 
         val expected = """

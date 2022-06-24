@@ -133,47 +133,48 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
-            val s0 = state(RP(G, 0, SOR))   // G = . S
-            val s1 = state(RP(v, 0, EOR))   // v
-            val s2 = state(RP(R, 0, EOR))   // R = v .
-            val s3 = state(RP(E, 0, EOR))   // E = R .
-            val s4 = state(RP(S, 0, EOR))   // S = E .
-            val s5 = state(RP(rA, 0, 1))   // A = E . a E
-            val s6 = state(RP(rM, 0, 1))   // M = E . m E
-            val s7 = state(RP(G, 0, EOR))   // G = S .
-            val s8 = state(RP(a, 0, EOR))   // a
-            val s9 = state(RP(rA, 0, 2))   // A = E a . E
-            val s10 = state(RP(rA, 0, EOR))   // A = E a E .
-            val s11 = state(RP(E, 2, EOR))   // E = M .
-            val s12 = state(RP(m, 0, EOR))   // m
-            val s13 = state(RP(rM, 0, 2))   // M = E m . E
-            val s14 = state(RP(rM, 0, EOR))   // M = E m E .
-            val s15 = state(RP(E, 1, EOR))   // E = A .
+            val s0 = state(RP(G, o0, SOR))    // G = . S
+            val s1 = state(RP(v, o0, EOR))    // v
+            val s2 = state(RP(R, o0, EOR))    // R = v .
+            val s3 = state(RP(E, o0, EOR))    // E = R .
+            val s4 = state(RP(S, o0, EOR))    // S = E .
+            val s5 = state(RP(rA, o0, p1))    // A = E . a E
+            val s6 = state(RP(rM, o0, p1))    // M = E . m E
+            val s7 = state(RP(G, o0, EOR))    // G = S .
+            val s8 = state(RP(a, o0, EOR))    // a
+            val s9 = state(RP(rA, o0, p2))    // A = E a . E
+            val s10 = state(RP(rA, o0, EOR))  // A = E a E .
+            val s11 = state(RP(E, o2, EOR))   // E = M .
+            val s12 = state(RP(m, o0, EOR))   // m
+            val s13 = state(RP(rM, o0, p2))   // M = E m . E
+            val s14 = state(RP(rM, o0, EOR))  // M = E m E .
+            val s15 = state(RP(E, o1, EOR))   // E = A .
 
             // because GRAFT is done before HEIGHT, RP(A,0,2) never becomes context for this trans, even though prebuild allows for it
             transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rM, o0, p2)); src(rA, o0, p1); tgt(a); lhg(v) }
             // because GRAFT is done before HEIGHT, RP(M,0,2) never becomes context for this trans, even though prebuild allows for it
             transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2)); src(rM, o0, p1); tgt(m); lhg(v) }
             transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(v); lhg(setOf(UP, m, a)) }
-            transition(setOf(s0, s13), s9, s1, WIDTH, null) { lhg(setOf(UP, m, a)) }
-            transition(setOf(s0, s9), s13, s1, WIDTH, null) { lhg(setOf(UP, m, a)) }
-            transition(s0, s4, s7, GOAL, null) { lhg(setOf(UP)) }
-            transition(GRAFT) { ctx(rA, o0, p2); src(E); tgt(rA); lhg(setOf(UP)); rtg(rA, o0, p2) } // lhg == [UP,a,m] for prebuild?
-            transition(s9, s15, s10, GRAFT, setOf(RP(rA, 0, 2))) { lhg(setOf(UP)) }
+            transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rM, o0, p2)); src(rA, o0, p2); tgt(v); lhg(setOf(UP, a, m)) }
+            transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2)); src(rM, o0, p2); tgt(v); lhg(setOf(UP, a, m)) }
+            transition(GOAL) { ctx(RP(G, o0, SOR)); src(S); tgt(G); lhg(UP); }
+            transition(GRAFT) { ctx(rA, o0, p2); src(E, o0, EOR); tgt(rA); lhg(setOf(UP)); gpg(rA, o0, p2) } // lhg == [UP,a,m] for prebuild?
+            transition(GRAFT) { ctx(rA, o0, p2); src(E, o1, EOR); tgt(rA); lhg(setOf(UP)); gpg(rA, o0, p2) } // lhg == [UP,a,m] for prebuild?
+            //transition(GRAFT) { ctx(rA, o0, p2); src(E,o2,EOR); tgt(rA); lhg(setOf(UP)); rtg(rA, o0, p2) } //never gets created
             transition(setOf(s0, s9, s13), s3, s5, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
             transition(setOf(s0, s9), s15, s5, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
             transition(setOf(s0, s13), s11, s5, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
             transition(s5, s8, s9, GRAFT, setOf(RP(rA, 0, 1))) { lhg(setOf(v)) }
-            transition(GRAFT) { ctx(rA, o0, p1); src(a); tgt(rA, o0, p2); lhg(v); rtg(rA, o0, p1) }
+            transition(GRAFT) { ctx(rA, o0, p1); src(a); tgt(rA, o0, p2); lhg(v); gpg(rA, o0, p1) }
             transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(R); tgt(E); lhg(m, m); lhg(UP, UP); lhg(a, a) }
             transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2)); src(rM); tgt(E, o1, EOR); lhg(m, m); lhg(UP, UP); lhg(a, a) }
             transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rM, o0, p2)); src(rA); tgt(E, o2, EOR); lhg(m, m); lhg(UP, UP); lhg(a, a) }
-            transition(GRAFT) { ctx(rM, o0, p2); src(E); tgt(rM); lhg(UP); rtg(rM, o0, SOR) }
-            transition(GRAFT) { ctx(rM, o0, p2); src(E, o2, EOR); tgt(rM); lhg(UP); rtg(rM, o0, SOR) }
+            transition(GRAFT) { ctx(rM, o0, p2); src(E, o0, EOR); tgt(rM); lhg(UP); gpg(rM, o0, p2) }
+            transition(GRAFT) { ctx(rM, o0, p2); src(E, o2, EOR); tgt(rM); lhg(UP); gpg(rM, o0, p2) }
             transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2));src(E); tgt(rM, o0, p1); lhg(m, m); lhg(m, a); lhg(m, UP) }
             transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2)); src(E, o1, EOR); tgt(rM, o0, p1); lhg(m, m); lhg(m, a); lhg(m, UP) }
             transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rM, o0, p2)); src(E, o2, EOR); tgt(rM, o0, p1); lhg(m, m); lhg(m, a); lhg(m, UP) }
-            transition(GRAFT) { ctx(rM, o0, p1); src(m); tgt(rM, o0, p2); lhg(v); rtg(rM, o0, p1) }
+            transition(GRAFT) { ctx(rM, o0, p1); src(m); tgt(rM, o0, p2); lhg(v); gpg(rM, o0, p1) }
             transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(v); tgt(R); lhg(m, m); lhg(UP, UP); lhg(a, a) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(E, o0, EOR); tgt(S); lhg(UP, UP) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(E, o1, EOR); tgt(S); lhg(UP, UP) }
@@ -218,27 +219,27 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
             transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rA, o0, p1); tgt(a); lhg(v) }
             transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rM, o0, p1); tgt(m); lhg(v) }
             transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(v); lhg(setOf(UP, m, a)) }
-            transition(setOf(s0, s13, s15), s13, s11, WIDTH, null) { lhg(setOf(UP, m, a)) }
-            transition(setOf(s0, s13, s15), s15, s11, WIDTH, null) { lhg(setOf(UP, m, a)) }
-            transition(s0, s2, s1, GOAL, null) { lhg(UP) }
-            transition(GRAFT) { ctx(rA, o0, p2); src(E); tgt(rA); lhg(setOf(UP, a, m)); rtg(rA, o0, p2) }
-            transition(s13, s4, s6, GRAFT, setOf(RP(rA, 0, 2))) { lhg(setOf(UP, a, m)) }
-            transition(s13, s5, s6, GRAFT, setOf(RP(rA, 0, 2))) { lhg(setOf(UP, a, m)) }
-            transition(setOf(s0, s13, s15), s3, s12, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
-            transition(setOf(s0, s13, s15), s4, s12, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
-            transition(setOf(s0, s13, s15), s5, s12, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(UP)) }
-            transition(s12, s7, s13, GRAFT, setOf(RP(rA, 0, 1))) { lhg(setOf(v)) }
-            transition(setOf(s0, s13, s15), s10, s3, HEIGHT, null) { lhg(setOf(a), setOf(a)); lhg(setOf(m), setOf(m));lhg(setOf(UP), setOf(UP)) }
-            transition(setOf(s0, s13, s15), s8, s4, HEIGHT, null) { lhg(setOf(a), setOf(a)); lhg(setOf(m), setOf(m));lhg(setOf(UP), setOf(UP)) }
-            transition(setOf(s0, s13, s15), s6, s5, HEIGHT, null) { lhg(setOf(a), setOf(a)); lhg(setOf(m), setOf(m));lhg(setOf(UP), setOf(UP)) }
-            transition(s15, s3, s8, GRAFT, setOf(RP(rM, 0, 2))) { lhg(setOf(UP, a, m)) }
-            transition(s15, s4, s8, GRAFT, setOf(RP(rM, 0, 2))) { lhg(setOf(UP, a, m)) }
-            transition(s15, s5, s8, GRAFT, setOf(RP(rM, 0, 2))) { lhg(setOf(UP, a, m)) }
-            transition(setOf(s0, s13, s15), s3, s14, HEIGHT, null) { lhg(setOf(m), setOf(a)); lhg(setOf(m), setOf(m));lhg(setOf(m), setOf(UP)) }
-            transition(setOf(s0, s13, s15), s4, s14, HEIGHT, null) { lhg(setOf(m), setOf(a)); lhg(setOf(m), setOf(m));lhg(setOf(m), setOf(UP)) }
-            transition(setOf(s0, s13, s15), s5, s14, HEIGHT, null) { lhg(setOf(m), setOf(a)); lhg(setOf(m), setOf(m));lhg(setOf(m), setOf(UP)) }
-            transition(s14, s9, s15, GRAFT, setOf(RP(rM, 0, 1))) { lhg(setOf(v)) }
-            transition(setOf(s0, s13, s15), s11, s10, HEIGHT, null) { lhg(setOf(a), setOf(a)); lhg(setOf(m), setOf(m));lhg(setOf(UP), setOf(UP)) }
+            transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rA, o0, p2); tgt(v); lhg(setOf(UP, a, m)) }
+            transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rM, o0, p2); tgt(v); lhg(setOf(UP, a, m)) }
+            transition(GOAL) { ctx(RP(G, o0, SOR)); src(S); tgt(G); lhg(UP) }
+            transition(GRAFT) { ctx(rA, o0, p2); src(E, o0, EOR); tgt(rA); lhg(setOf(UP, a, m)); gpg(rA, o0, p2) }
+            transition(GRAFT) { ctx(rA, o0, p2); src(E, o1, EOR); tgt(rA); lhg(setOf(UP, a, m)); gpg(rA, o0, p2) }
+            transition(GRAFT) { ctx(rA, o0, p2); src(E, o2, EOR); tgt(rA); lhg(setOf(UP, a, m)); gpg(rA, o0, p2) }  //never gets created in on-demand-build !
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o0, EOR); tgt(rA, o0, p1); lhg(setOf(a), setOf(UP, a, m)) }
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o1, EOR); tgt(rA, o0, p1); lhg(setOf(a), setOf(UP, a, m)) }
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o2, EOR); tgt(rA, o0, p1); lhg(setOf(a), setOf(UP, a, m)) }
+            transition(GRAFT) { ctx(rA, o0, p1); src(a); tgt(rA, o0, p2); lhg(v); gpg(rA, o0, p1) }
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(R); tgt(E, o0, EOR); lhg(UP, UP); lhg(m, m); lhg(a, a) }
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rM); tgt(E, o1, EOR); lhg(UP, UP); lhg(m, m); lhg(a, a) }
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rA); tgt(E, o2, EOR); lhg(UP, UP); lhg(m, m); lhg(a, a) }
+            transition(GRAFT) { ctx(rM, o0, p2); src(E, o0, EOR); tgt(rM); lhg(setOf(UP, a, m)); gpg(rM, o0, p2) }
+            transition(GRAFT) { ctx(rM, o0, p2); src(E, o1, EOR); tgt(rM); lhg(setOf(UP, a, m)); gpg(rM, o0, p2) }
+            transition(GRAFT) { ctx(rM, o0, p2); src(E, o2, EOR); tgt(rM); lhg(setOf(UP, a, m)); gpg(rM, o0, p2) }
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o0, EOR); tgt(rM, o0, p1); lhg(setOf(m), setOf(UP, a, m)) }
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o1, EOR); tgt(rM, o0, p1); lhg(setOf(m), setOf(UP, a, m)) }
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o2, EOR); tgt(rM, o0, p1); lhg(setOf(m), setOf(UP, a, m)) }
+            transition(GRAFT) { ctx(rM, o0, p1); src(m); tgt(rM, o0, p2); lhg(v); gpg(rM, 0, p1) }
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(v); tgt(R); lhg(UP, UP); lhg(m, m); lhg(a, a) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(E, o0, EOR); tgt(S); lhg(UP, UP) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(E, o1, EOR); tgt(S); lhg(UP, UP) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(E, o2, EOR); tgt(S); lhg(UP, UP) }

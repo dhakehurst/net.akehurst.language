@@ -20,8 +20,6 @@ import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleListKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
 
 internal class RuntimeTransitionCalculator(
     val stateSet: ParserStateSet
@@ -38,7 +36,7 @@ internal class RuntimeTransitionCalculator(
                 Transition.ParseAction.EMBED -> true
                 Transition.ParseAction.HEIGHT -> true
                 Transition.ParseAction.GRAFT -> {
-                    tr.prevGuard?.let {
+                    tr.graftPrevGuard?.let {
                         previousState.state.rulePositions.containsAll(it)
                     } ?: true
                 }
@@ -277,7 +275,7 @@ internal class RuntimeTransitionCalculator(
     private fun createHeightTransition3(sourceState:ParserState,hg: HeightGraftInfo): Transition {
         val to = this.stateSet.fetchCompatibleOrCreateState(hg.parentNext)
         val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), it.up.lhs(this.stateSet)) }.toSet()
-        val trs = Transition(sourceState, to, Transition.ParseAction.HEIGHT, lookaheadInfo, hg.parent.toSet()) { _, _ -> true }
+        val trs = Transition(sourceState, to, Transition.ParseAction.HEIGHT, lookaheadInfo, null) { _, _ -> true }
         return trs
     }
 

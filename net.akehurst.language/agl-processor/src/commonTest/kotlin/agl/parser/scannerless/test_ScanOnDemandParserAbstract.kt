@@ -30,7 +30,7 @@ import test.assertEqualsWarning
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean=true) {
+internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean=false) {
     fun test(rrs: RuntimeRuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int,vararg expectedTrees: String): SharedPackedParseTree? {
         return this.test(
             rrs,

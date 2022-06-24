@@ -21,10 +21,10 @@ internal object AutomatonTest {
                 foundOther.add(otherElement)
             }
         }
-        return foundThis.size == foundOther.size && foundThis.size==thisList.size
+        return foundThis.size == foundOther.size && foundThis.size == thisList.size
     }
 
-    fun <O, E> assertMatches(expectedObject:O, actualObject:O, setName: String, expected: Set<E>, actual: Set<E>, matches: (t: E, o: E) -> Boolean) {
+    fun <O, E> assertMatches(expectedObject: O, actualObject: O, setName: String, expected: Set<E>, actual: Set<E>, matches: (t: E, o: E) -> Boolean) {
         val thisList = expected.toList()
         val foundThis = mutableListOf<E>()
         val foundOther = mutableListOf<E>()
@@ -37,8 +37,20 @@ internal object AutomatonTest {
             }
         }
         when {
-            expected.size > foundThis.size -> kotlin.test.fail("Elements of $setName do not match for,\nexpected: $expectedObject\n  $expected\nactual: $actualObject\n  $actual\nmissing:\n${(expected - foundThis).joinToString(separator = "\n") { "  $it" }}")
-            actual.size > foundOther.size -> kotlin.test.fail("Elements of $setName do not match for,\nexpected: $expectedObject\n  $expected\nactual: $actualObject\n  $actual\\nmissing:\n${(actual - foundOther).joinToString(separator = "\n") { "  $it" }}")
+            expected.size > foundThis.size -> kotlin.test.fail(
+                "Elements of $setName do not match for,\nexpected: $expectedObject\n  $expected\nactual: $actualObject\n  $actual\nmissing:\n${
+                    (expected - foundThis).joinToString(
+                        separator = "\n"
+                    ) { "  $it" }
+                }"
+            )
+            actual.size > foundOther.size -> kotlin.test.fail(
+                "Elements of $setName do not match for,\nexpected: $expectedObject\n  $expected\nactual: $actualObject\n  $actual\nmissing:\n${
+                    (actual - foundOther).joinToString(
+                        separator = "\n"
+                    ) { "  $it" }
+                }"
+            )
             else -> Unit
         }
     }
@@ -47,14 +59,15 @@ internal object AutomatonTest {
         val expected_states = expected.allBuiltStates.toSet()
         val actual_states = actual.allBuiltStates.toSet()
 
-        assertMatches(expected,actual,"allBuiltStates", expected_states, actual_states) { t, o -> t.matches(o) }
-        assertMatches(expected,actual,"allBuiltTransitions", expected.allBuiltTransitions.toSet(), actual.allBuiltTransitions.toSet()) { t, o -> t.matches(o) }
+        assertMatches(expected, actual, "allBuiltStates", expected_states, actual_states) { t, o -> t.matches(o) }
+        assertMatches(expected, actual, "allBuiltTransitions", expected.allBuiltTransitions.toSet(), actual.allBuiltTransitions.toSet()) { t, o -> t.matches(o) }
 
-        for(exp_state in expected_states) {
+        for (exp_state in expected_states) {
             val act_state = actual_states.first { it.matches(exp_state) }
-            for(exp_trans in exp_state.outTransitions.allBuiltTransitions) {
-                val act_trans = act_state.outTransitions.allBuiltTransitions.first{ it.matches(exp_trans) }
-                assertMatches(exp_trans, act_trans,"context",exp_trans.context,act_trans.context) { t, o -> t.matches(o) }
+            for (exp_trans in exp_state.outTransitions.allBuiltTransitions) {
+                val act_trans = act_state.outTransitions.allBuiltTransitions.first { it.matches(exp_trans) }
+                assertMatches(exp_trans, act_trans, "context", exp_trans.context, act_trans.context) { t, o -> t.matches(o) }
+                assertMatches(exp_trans, act_trans, "prevGuard",exp_trans.graftPrevGuard?: emptySet(), act_trans.graftPrevGuard?: emptySet()) { t, o -> t.matches(o) }
             }
         }
     }
@@ -81,7 +94,7 @@ internal object AutomatonTest {
         this.kind != other.kind -> false
         this.isPattern != other.isPattern -> false
         this.isSkip != other.isSkip -> false
-        this.kind==RuntimeRuleKind.NON_TERMINAL && this.rhs.matches(other.rhs).not() -> false
+        this.kind == RuntimeRuleKind.NON_TERMINAL && this.rhs.matches(other.rhs).not() -> false
         //TODO: this.embeddedRuntimeRuleSet != other.embeddedRuntimeRuleSet -> false
         //TODO: this.embeddedStartRule?.matches(other.embeddedStartRule)?.not() -> false
         else -> true
@@ -151,7 +164,7 @@ internal object AutomatonTest {
         kotlin.test.assertEquals(expected.action, actual.action, "Action does not match for ${expPrev} -> $expected")
         assertEquals(expected, expected.lookahead, actual.lookahead)//, "Lookahead content does not match for ${expPrev} -> $expected")
         //TODO kotlin.test.assertEquals(expected.upLookahead.includesUP, actual.upLookahead.includesUP, "Up lookahead content does not match for ${expPrev} -> $expected")
-        kotlin.test.assertEquals(expected.prevGuard?.toSet(), actual.prevGuard?.toSet(), "Previous guard does not match for ${expPrev} -> $expected")
+        kotlin.test.assertEquals(expected.graftPrevGuard?.toSet(), actual.graftPrevGuard?.toSet(), "Previous guard does not match for ${expPrev} -> $expected")
 
     }
 

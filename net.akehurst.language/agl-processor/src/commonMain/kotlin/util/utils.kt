@@ -20,11 +20,12 @@ import net.akehurst.language.collections.LazyMap
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
+internal fun <E> MutableSet<E>.addIfNotNull(e: E?) = e?.let { this.add(it) }
 
 internal fun <V> cached(initializer: () -> V) = CachedValue(initializer)
 
 
-class CachedValue<V>(initializer:()->V)  {
+class CachedValue<V>(initializer: () -> V) {
     companion object {
         internal object UNINITIALIZED_VALUE
     }
@@ -33,13 +34,14 @@ class CachedValue<V>(initializer:()->V)  {
     private var _value: Any? = UNINITIALIZED_VALUE
 
 
-    val value:V get() {
-        if (_value === UNINITIALIZED_VALUE) {
-            _value = initializer.invoke()
+    val value: V
+        get() {
+            if (_value === UNINITIALIZED_VALUE) {
+                _value = initializer.invoke()
+            }
+            @Suppress("UNCHECKED_CAST")
+            return _value as V
         }
-        @Suppress("UNCHECKED_CAST")
-        return _value as V
-    }
 
     // no point is making this a delegate..no way to access the delegate to enable reset
     //operator fun getValue(thisRef: Any?, property: KProperty<*>): V = value
