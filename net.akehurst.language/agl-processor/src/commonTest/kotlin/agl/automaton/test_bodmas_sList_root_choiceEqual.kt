@@ -174,7 +174,6 @@ internal class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
             transition(HEIGHT) { ctx(G,o0,SOR); src(E,o2,EOR); tgt(S); lhg(UP,UP) }
 
         }
-
         AutomatonTest.assertEquals(expected, actual)
     }
 
