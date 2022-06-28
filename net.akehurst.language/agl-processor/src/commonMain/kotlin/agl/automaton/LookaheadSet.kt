@@ -9,6 +9,52 @@ internal data class Lookahead(
 ) {
     companion object {
         val EMPTY = Lookahead(LookaheadSet.EMPTY, LookaheadSet.EMPTY)
+        fun merge(automaton: ParserStateSet, initial: Set<Lookahead>): Set<Lookahead> {
+            return when (initial.size) {
+                1 -> initial
+                else -> {
+                    val merged = initial
+                        .groupBy { it.up }
+                        .map { me2 ->
+                            val up = me2.key
+                            val guard = me2.value.map { it.guard }.reduce { acc, l -> acc.union(automaton, l) }
+                            Lookahead(guard, up)
+                        }.toSet()
+                        .groupBy { it.guard }
+                        .map { me ->
+                            val guard = me.key
+                            val up = me.value.map { it.up }.reduce { acc, l -> acc.union(automaton, l) }
+                            Lookahead(guard, up)
+                        }.toSet()
+                    when (merged.size) {
+                        1 -> merged
+                        else -> {
+                            val sortedMerged = merged.sortedByDescending { it.guard.fullContent.size }
+                            val result = mutableSetOf<Lookahead>()
+                            val mergedIntoOther = mutableSetOf<Lookahead>()
+                            for (i in sortedMerged.indices) {
+                                var lh1 = sortedMerged[i]
+                                if (mergedIntoOther.contains(lh1)) {
+                                    //do nothing
+                                } else {
+                                    for (j in i + 1 until sortedMerged.size) {
+                                        val lh2 = sortedMerged[j]
+                                        if (lh1.guard.containsAll(lh2.guard)) {
+                                            lh1 = Lookahead(lh1.guard, lh1.up.union(automaton, lh2.up))
+                                            mergedIntoOther.add(lh2)
+                                        } else {
+                                            //result.add(lh2)
+                                        }
+                                    }
+                                    result.add(lh1)
+                                }
+                            }
+                            result
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -26,7 +72,7 @@ internal class LookaheadSet(
         val UP = LookaheadSet(-4, true, false, false, emptySet())
         val UNCACHED_NUMBER = -5
 
-        fun createFromRuntimeRules(automaton: ParserStateSet, fullContent:Set<RuntimeRule>): LookaheadSet {
+        fun createFromRuntimeRules(automaton: ParserStateSet, fullContent: Set<RuntimeRule>): LookaheadSet {
             return when {
                 fullContent.isEmpty() -> LookaheadSet.EMPTY
                 else -> {
@@ -40,14 +86,15 @@ internal class LookaheadSet(
         }
     }
 
-    val fullContent:Set<RuntimeRule> get() {
-        val c = mutableSetOf<RuntimeRule>()
-        if (this.includesUP) c.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
-        if (this.includesEOT) c.add(RuntimeRuleSet.END_OF_TEXT)
-        if (this.matchANY) c.add(RuntimeRuleSet.ANY_LOOKAHEAD)
-        c.addAll(this.content)
-        return c
-    }
+    val fullContent: Set<RuntimeRule>
+        get() {
+            val c = mutableSetOf<RuntimeRule>()
+            if (this.includesUP) c.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+            if (this.includesEOT) c.add(RuntimeRuleSet.END_OF_TEXT)
+            if (this.matchANY) c.add(RuntimeRuleSet.ANY_LOOKAHEAD)
+            c.addAll(this.content)
+            return c
+        }
 
     val regex by lazy {
         val str = this.content.joinToString(prefix = "(", separator = ")|(", postfix = ")") {
@@ -81,11 +128,19 @@ internal class LookaheadSet(
         val ma = this.matchANY || lookahead.matchANY
         return automaton.createLookaheadSet(up, eol, ma, this.content.union(lookahead.content))
     }
+
     fun unionContent(automaton: ParserStateSet, additionalContent: Set<RuntimeRule>): LookaheadSet {
         val up = this.includesUP
         val eol = this.includesEOT
         val ma = this.matchANY
         return automaton.createLookaheadSet(up, eol, ma, this.content.union(additionalContent))
+    }
+
+    fun containsAll(other: LookaheadSet): Boolean = when {
+        this.matchANY -> true
+        this.includesEOT.not() && other.includesEOT -> false
+        this.includesUP.not() && other.includesUP -> false
+        else -> this.fullContent.containsAll(other.fullContent)
     }
 
     override fun hashCode(): Int = number

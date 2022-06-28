@@ -84,39 +84,64 @@ internal class TransitionCacheLC0 : TransitionCache {
 
 internal class TransitionCacheLC1 : TransitionCache {
 
+    companion object {
+        fun merge(automaton:ParserStateSet, set:Set<Transition>):Transition {
+            val grouped = set.groupBy { listOf(it.from, it.action, it.to, it.graftPrevGuard, it.runtimeGuard) }
+            val merged = grouped.map { me ->
+                val from = me.key[0] as ParserState
+                val action = me.key[1] as Transition.ParseAction
+                val to = me.key[2] as ParserState
+                val gpg = me.key[3] as Set<RulePosition>?
+                val rtg = me.key[4] as RuntimeGuard
+                val lhs = Lookahead.merge(automaton, me.value.flatMap { it.lookahead }.toSet())
+                Transition(from,to,action,lhs,gpg,rtg)
+            }
+            return if(merged.size ==1 ) {
+                 merged.first()
+            } else {
+                error("Internal Error: transitions not merged")
+            }
+        }
+    }
+
     // transitions stored here
-    private val _transitionsByTo = mutableMapOf<ParserState, MutableSet<Transition>>()
+    // (action,to) --> Pair<previous, transition>
+    private val _transitionsByTo = mutableMapOf<Pair<Transition.ParseAction,ParserState>, Pair<Set<ParserState>, Transition>>()
 
     // transitions referenced here
-    private val _transitionsByPrevious: MutableMap<ParserState, MutableList<Transition>?> = mutableMapOf()
+    private val _transitionsByPrevious: MutableMap<ParserState, MutableList<Transition>> = mutableMapOf()
 
-    override val allBuiltTransitions: Set<Transition> get() = _transitionsByTo.values.flatten().toSet()
+    override val allBuiltTransitions: Set<Transition> get() = _transitionsByPrevious.values.flatten().toSet()
     override val allPrevious: List<ParserState> get() = _transitionsByPrevious.keys.toList()
 
     // add the transition and return it, or return existing transition if it already exists
     override fun addTransition(previousStates: Set<ParserState>, tr: Transition): Transition {
-        var set = _transitionsByTo[tr.to]
-        if (null == set) {
-            set = mutableSetOf(tr)
-            _transitionsByTo[tr.to] = set
+        val automaton = tr.from.stateSet
+        val key = Pair(tr.action, tr.to)
+        val existing = _transitionsByTo[key]
+        return if (null == existing) {
+            _transitionsByTo[key] = Pair(previousStates, tr)
+            this.updateByPrevious(previousStates, null, tr)
+            tr
         } else {
-            set.add(tr)
+            val mergedTr = merge(automaton, setOf(tr, existing.second))
+            val mergedPrev = existing.first + previousStates
+            _transitionsByTo[key] = Pair(mergedPrev, mergedTr)
+            this.updateByPrevious(mergedPrev, existing.second, mergedTr)
+            mergedTr
         }
+    }
+    private fun updateByPrevious(previousStates: Set<ParserState>, oldTransition: Transition?, newTransition: Transition) {
         for (pS in previousStates) {
-            var set = this._transitionsByPrevious[pS]
-            if (null == set) {
-                set = mutableListOf(tr)
-                this._transitionsByPrevious[pS] = set
+            var trans = this._transitionsByPrevious[pS]
+            if (null == trans) {
+                trans = mutableListOf(newTransition)
+                this._transitionsByPrevious[pS] = trans
             } else {
-                val existing = set.firstOrNull { it==tr }
-                if (null==existing) {
-                    set.add(tr)
-                } else {
-                    // not added
-                }
+                if(null!=oldTransition) trans.remove(oldTransition)
+                trans.add(newTransition)
             }
         }
-        return tr
     }
 
     override fun findTransitionByPrevious(previous: ParserState): List<Transition>? {

@@ -18,11 +18,10 @@ package net.akehurst.language.parser.scanondemand.leftAndRightRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.parser.scanondemand.nesting.test_sList_compositeMulti
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract() {
+internal class test_bodmas_infix_sList_choiceEqual_simple : test_ScanOnDemandParserAbstract() {
 
     // S = E
     // E = 'v' | I | P
@@ -156,6 +155,37 @@ internal class test_expessions_bodmas3_Longest : test_ScanOnDemandParserAbstract
               E { 'v' }
               op|3 { '-' }
               E { 'v' }
+            } } }
+        """.trimIndent()
+
+        super.test(rrs, goal, sentence, 1,expected)
+    }
+
+    @Test
+    fun pvdvpmpvavsvp() {
+        val sentence = "(v/v)*(v+v-v)"
+
+        val expected = """
+            S { E { I {
+              E { P {
+                '('
+                E { I {
+                  E { 'v' } op { '/' } E { 'v' }
+                } }
+                ')'
+              } }
+              op { '*' }
+              E { P {
+                '('
+                E { I {
+                  E { 'v' }
+                  op|2 { '+' }
+                  E { 'v' }
+                  op|3 { '-' }
+                  E { 'v' }
+                } }
+                ')'
+              } }
             } } }
         """.trimIndent()
 

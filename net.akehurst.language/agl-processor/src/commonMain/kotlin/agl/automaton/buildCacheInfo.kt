@@ -84,7 +84,54 @@ internal data class LookaheadInfoPart(
 ) {
     companion object {
         val EMPTY = LookaheadInfoPart(LookaheadSetPart.EMPTY,LookaheadSetPart.EMPTY)
+        fun merge(initial: Set<LookaheadInfoPart>): Set<LookaheadInfoPart> {
+            return when(initial.size) {
+                1 -> initial
+                else -> {
+                    val merged = initial
+                        .groupBy { it.up }
+                        .map { me2 ->
+                            val up = me2.key
+                            val guard = me2.value.map { it.guard }.reduce { acc, l -> acc.union(l) }
+                            LookaheadInfoPart(guard, up)
+                        }.toSet()
+                        .groupBy { it.guard }
+                        .map { me ->
+                            val guard = me.key
+                            val up = me.value.map { it.up }.reduce { acc, l -> acc.union(l) }
+                            LookaheadInfoPart(guard, up)
+                        }.toSet()
+                    when(merged.size) {
+                        1 -> merged
+                        else -> {
+                            val sortedMerged = merged.sortedByDescending { it.guard.fullContent.size }
+                            val result = mutableSetOf<LookaheadInfoPart>()
+                            val mergedIntoOther = mutableSetOf<LookaheadInfoPart>()
+                            for (i in sortedMerged.indices) {
+                                var lh1 = sortedMerged[i]
+                                if (mergedIntoOther.contains(lh1)) {
+                                    //do nothing
+                                } else {
+                                    for (j in i + 1 until sortedMerged.size) {
+                                        val lh2 = sortedMerged[j]
+                                        if (lh1.guard.containsAll(lh2.guard)) {
+                                            lh1 = LookaheadInfoPart(lh1.guard, lh1.up.union(lh2.up))
+                                            mergedIntoOther.add(lh2)
+                                        } else {
+                                            //result.add(lh2)
+                                        }
+                                    }
+                                    result.add(lh1)
+                                }
+                            }
+                            result
+                        }
+                    }
+                }
+            }
+        }
     }
+
 }
 
 internal data class TransInfo(

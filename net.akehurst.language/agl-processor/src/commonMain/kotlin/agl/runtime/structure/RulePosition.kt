@@ -44,9 +44,9 @@ internal class RulePosition(
         const val OPTION_SLIST_EMPTY = 1
 
         //for use in multi and separated list
-        const val POSITION_MULIT_ITEM = 1 //TODO: make -ve maybe
-        const val POSITION_SLIST_SEPARATOR = 1 //TODO: make -ve maybe
-        const val POSITION_SLIST_ITEM = 2 //TODO: make -ve maybe
+        const val POSITION_MULIT_ITEM = 1 //TODO: make -ve
+        const val POSITION_SLIST_SEPARATOR = 1 //TODO: make -ve
+        const val POSITION_SLIST_ITEM = 2 //TODO: make -ve
     }
 
     val identity: RuleOptionId = RuleOption(runtimeRule, option) //TODO: Make this an Int
