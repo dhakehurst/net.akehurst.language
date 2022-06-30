@@ -59,6 +59,7 @@ class LanguageRegistry {
                 grammar = AglGrammarGrammar(),
                 targetGrammar = null,
                 defaultGoalRule = AglGrammarGrammar.goalRuleName,
+                buildForDefaultGoal = true,
                 style = """
                     'namespace' {
                       foreground: darkgreen;
@@ -108,6 +109,7 @@ class LanguageRegistry {
                 grammar = AglStyleGrammar(),
                 targetGrammar = null,
                 defaultGoalRule = AglStyleGrammar.goalRuleName,
+                buildForDefaultGoal = true,
                 style = """
                     META_IDENTIFIER {
                       foreground: orange;
@@ -143,6 +145,7 @@ class LanguageRegistry {
                 grammar = AglFormatGrammar(),
                 targetGrammar = null,
                 defaultGoalRule = AglFormatGrammar.goalRuleName,
+                buildForDefaultGoal = true,
                 style = """
                 """.trimIndent(),
                 format = """
@@ -158,6 +161,7 @@ class LanguageRegistry {
                 grammar = AglScopesGrammar(),
                 targetGrammar = null,
                 defaultGoalRule = AglScopesGrammar.goalRuleName,
+                buildForDefaultGoal = true,
                 style = """
                     'scope' {
                       foreground: darkgreen;
@@ -222,11 +226,11 @@ class LanguageRegistry {
     }
 
     fun register(
-        identity: String, grammar: String?, targetGrammar:String?, defaultGoalRule: String?,
+        identity: String, grammar: String?, targetGrammar:String?, defaultGoalRule: String?, buildForDefaultGoal:Boolean,
         style: String?, format: String?, syntaxAnalyser: SyntaxAnalyser<*,*>?, semanticAnalyser: SemanticAnalyser<*,*>?
     ): LanguageDefinition = this.registerFromDefinition(
         LanguageDefinitionDefault(
-            identity, grammar, targetGrammar, defaultGoalRule,
+            identity, grammar, targetGrammar, defaultGoalRule, buildForDefaultGoal,
             style, format, syntaxAnalyser, semanticAnalyser
         )
     )
@@ -242,7 +246,10 @@ class LanguageRegistry {
     fun findOrPlaceholder(identity: String): LanguageDefinition {
         val existing = this.findOrNull(identity)
         return if (null == existing) {
-            val placeholder = LanguageDefinitionDefault(identity, null)
+            val placeholder = LanguageDefinitionDefault(
+                identity, null, null, null, false,
+                null,null,null,null
+            )
             registerFromDefinition(placeholder)
         } else {
             existing

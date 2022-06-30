@@ -19,11 +19,13 @@ import com.github.gmazzo.gradle.plugins.BuildConfigExtension
 
 plugins {
     kotlin("multiplatform") version ("1.7.0") apply false
-    id("org.jetbrains.dokka") version ("1.6.21") apply false
-    id("com.github.gmazzo.buildconfig") version("3.0.3") apply false
+    id("org.jetbrains.dokka") version ("1.7.0") apply false
+    id("com.github.gmazzo.buildconfig") version("3.1.0") apply false
     id("nu.studer.credentials") version ("3.0")
     id("net.akehurst.kotlin.gradle.plugin.exportPublic") version("1.7.0") apply false
 }
+val kotlin_languageVersion = "1.7"
+val kotlin_apiVersion:String = "1.7"
 
 allprojects {
     val version_project: String by project
@@ -67,15 +69,15 @@ subprojects {
         jvm("jvm8") {
             val main by compilations.getting {
                 kotlinOptions {
-                    languageVersion = "1.5"
-                    apiVersion = "1.5"
+                    languageVersion = kotlin_languageVersion
+                    apiVersion = kotlin_apiVersion
                     jvmTarget = JavaVersion.VERSION_1_8.toString()
                 }
             }
             val test by compilations.getting {
                 kotlinOptions {
-                    languageVersion = "1.5"
-                    apiVersion = "1.5"
+                    languageVersion = kotlin_languageVersion
+                    apiVersion = kotlin_apiVersion
                     jvmTarget = JavaVersion.VERSION_1_8.toString()
                 }
             }

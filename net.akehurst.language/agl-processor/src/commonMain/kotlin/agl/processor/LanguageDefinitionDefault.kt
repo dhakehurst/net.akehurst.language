@@ -30,19 +30,22 @@ class LanguageDefinitionDefault(
     grammarStrArg: String?,
     targetGrammarArg: String?,
     defaultGoalRuleArg: String?,
+    buildForDefaultGoal:Boolean,
     style: String?,
     format: String?,
     syntaxAnalyser: SyntaxAnalyser<*, *>?,
-    semanticAnalyser: SemanticAnalyser<*,*>?
+    semanticAnalyser: SemanticAnalyser<*, *>?
 ) : LanguageDefinition {
-    constructor(identity: String, grammarStrArg: String?) : this(identity, grammarStrArg, null,null, null, null, null, null)
+    //constructor(identity: String, grammarStrArg: String?) : this(identity, grammarStrArg, null, null, null, null, null, null)
 
     private val _processor_cache: CachedValue<LanguageProcessor?> = cached {
         val g = this.grammarStr
         if (null == g) {
             null
         } else {
-            Agl.processorFromString(g,targetGrammar,defaultGoalRule, syntaxAnalyser,  semanticAnalyser, null)
+            val proc = Agl.processorFromString(g, targetGrammar, defaultGoalRule, syntaxAnalyser, semanticAnalyser, null)
+            if(buildForDefaultGoal) proc.buildForDefaultGoal()
+            proc
         }
     }
 

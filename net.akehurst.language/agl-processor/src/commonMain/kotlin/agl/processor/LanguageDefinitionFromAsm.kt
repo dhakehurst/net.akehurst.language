@@ -31,16 +31,19 @@ class LanguageDefinitionFromAsm(
     grammar: Grammar,
     override var targetGrammar: String?,
     override var defaultGoalRule: String?,
+    buildForDefaultGoal:Boolean,
     style: String?,
     format: String?,
     syntaxAnalyser: SyntaxAnalyser<*, *>?,
     semanticAnalyser: SemanticAnalyser<*, *>?
 ) : LanguageDefinition {
-    constructor(identity: String, grammar: Grammar) : this(identity, grammar, null, null, null, null, null, null)
+    //constructor(identity: String, grammar: Grammar) : this(identity, grammar, null, null, null, null, null, null)
 
     private val _grammarAsm: Grammar = grammar
     private val _processor_cache: CachedValue<LanguageProcessor?> = cached {
-        Agl.processorFromGrammar(_grammarAsm, defaultGoalRule, syntaxAnalyser, semanticAnalyser, null)
+        val proc = Agl.processorFromGrammar(_grammarAsm, defaultGoalRule, syntaxAnalyser, semanticAnalyser, null)
+        if (buildForDefaultGoal) proc.buildForDefaultGoal()
+        proc
     }
 
     override val grammarObservers = mutableListOf<(String?, String?) -> Unit>()
