@@ -24,7 +24,7 @@ class GrammarDefault(
 ) : GrammarAbstract(namespace, name) {
 
     // override this so that property is correctly exported/defined in JS and available for serialisation
-    override val rule: MutableList<Rule> get() = super.rule
+    //override val rule: MutableList<Rule> get() = super.rule
 }
 
 abstract class GrammarAbstract(

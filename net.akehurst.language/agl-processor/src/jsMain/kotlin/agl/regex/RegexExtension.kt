@@ -1,5 +1,11 @@
 package net.akehurst.language.agl.regex
 
+actual fun String.asRegexLiteral() :Regex {
+    val p = this
+    val escaped = js("String(p).replace(/([\\.\\\\\\+\\*\\?\\[\\^\\]\\\$\\(\\)\\{\\}])/g,'\\\\$1')")
+    return Regex(escaped)
+}
+
 //actual fun Regex.matchAtStart(input: String): String? {
 //    this.matchAt(input, 0)?.value
 //}

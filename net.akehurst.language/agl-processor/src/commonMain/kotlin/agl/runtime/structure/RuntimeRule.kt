@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.agl.regex.asRegexLiteral
 import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.collections.lazyArray
 import net.akehurst.language.collections.lazyMutableMapNonNull
@@ -82,7 +83,7 @@ internal class RuntimeRule(
         if (this.isPattern) {
             Regex(this.value)
         } else {
-            Regex("\\Q$value\\E")
+            this.value.asRegexLiteral()
         }
     }
 

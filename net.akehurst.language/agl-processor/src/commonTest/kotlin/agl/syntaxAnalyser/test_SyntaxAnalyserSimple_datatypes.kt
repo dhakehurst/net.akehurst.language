@@ -59,7 +59,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         val typeModel by lazy {
             val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
             assertNotNull(grammars)
-            assertTrue(gramIssues.isEmpty())
+            assertTrue(gramIssues.none { it.kind == LanguageIssueKind.ERROR },gramIssues.joinToString(separator = "\n") { "$it" })
             TypeModelFromGrammar(grammars.last()).derive()
         }
         val syntaxAnalyser = SyntaxAnalyserSimple(typeModel)
