@@ -39,7 +39,7 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
             literal("'b'", "b")
             literal("'c'", "c")
         }
-        val goal = "S"
+        const val goal = "S"
     }
 
     @Test

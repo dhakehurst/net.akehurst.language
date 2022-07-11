@@ -18,6 +18,7 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.util.Debug
 
 internal interface TransitionCache {
     val allBuiltTransitions: Set<Transition>
@@ -85,21 +86,25 @@ internal class TransitionCacheLC0 : TransitionCache {
 internal class TransitionCacheLC1 : TransitionCache {
 
     companion object {
-        fun merge(automaton:ParserStateSet, set:Set<Transition>):Transition {
-            val grouped = set.groupBy { listOf(it.from, it.action, it.to, it.graftPrevGuard, it.runtimeGuard) }
+        private fun merge(automaton:ParserStateSet, set:Set<Transition>):Transition {
+            val grouped = set.groupBy { listOf(it.from, it.action, it.to, it.graftPrevGuard) }
             val merged = grouped.map { me ->
                 val from = me.key[0] as ParserState
                 val action = me.key[1] as Transition.ParseAction
                 val to = me.key[2] as ParserState
                 val gpg = me.key[3] as Set<RulePosition>?
-                val rtg = me.key[4] as RuntimeGuard
+                val rtg = when(action) {
+                    Transition.ParseAction.GRAFT -> Transition.graftRuntimeGuard
+                    else -> Transition.defaultRuntimeGuard
+                }
                 val lhs = Lookahead.merge(automaton, me.value.flatMap { it.lookahead }.toSet())
                 Transition(from,to,action,lhs,gpg,rtg)
             }
             return if(merged.size ==1 ) {
                  merged.first()
             } else {
-                error("Internal Error: transitions not merged")
+                if (Debug.OUTPUT_RUNTIME_BUILD) Debug.debug(Debug.IndentDelta.NONE) { "Tried to Merge:\n  ${set.joinToString(separator = "\n  ") { it.toString() }}" }
+                error("Internal Error: transitions not merged\n${merged.joinToString(separator = "\n") { it.toString() }}")
             }
         }
     }
@@ -124,10 +129,14 @@ internal class TransitionCacheLC1 : TransitionCache {
             this.updateByPrevious(previousStates, null, tr)
             tr
         } else {
-            val mergedTr = merge(automaton, setOf(tr, existing.second))
+            val toMerge = setOf(tr, existing.second)
+            val mergedTr = merge(automaton, toMerge)
             val mergedPrev = existing.first + previousStates
             _transitionsByTo[key] = Pair(mergedPrev, mergedTr)
             this.updateByPrevious(mergedPrev, existing.second, mergedTr)
+            if (Debug.OUTPUT_RUNTIME_BUILD) Debug.debug(Debug.IndentDelta.NONE) { "Merged:\n  ${toMerge.joinToString(separator = "\n  ") { it.toString() }}" }
+            if (Debug.OUTPUT_RUNTIME_BUILD) Debug.debug(Debug.IndentDelta.NONE) { "Into:\n  $mergedTr" }
+
             mergedTr
         }
     }

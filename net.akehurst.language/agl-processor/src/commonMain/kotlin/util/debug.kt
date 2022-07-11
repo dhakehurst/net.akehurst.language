@@ -7,13 +7,14 @@ object Debug {
 
     const val CHECK = false
     const val OUTPUT_BUILD = false
+    const val OUTPUT_RUNTIME_BUILD = false
     const val OUTPUT_RUNTIME = false
 
     val indentDeltaStr = "  "
     var currentIndent = ""
 
     fun debug(indentDelta:IndentDelta,lazyMessage:()->String) {
-        if (OUTPUT_BUILD || OUTPUT_RUNTIME) {
+        if (OUTPUT_BUILD || OUTPUT_RUNTIME || OUTPUT_RUNTIME_BUILD) {
             when(indentDelta){
                 IndentDelta.DEC_BEFORE -> currentIndent = currentIndent.substring(indentDeltaStr.length)
                 IndentDelta.INC_BEFORE -> currentIndent += indentDeltaStr

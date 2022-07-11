@@ -18,6 +18,7 @@ package net.akehurst.language.parser.scanondemand.listSeparated
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -35,7 +36,7 @@ internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
             literal("'b'","b")
         }
 
-        val goal = "S"
+        const val goal = "S"
     }
 
     @Test
@@ -77,12 +78,12 @@ internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a' 'b' 'a'}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -92,12 +93,12 @@ internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a' 'b' 'a' 'b' 'a'}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -107,12 +108,12 @@ internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a' 'b' 'a' 'b' 'a' 'b' 'a'}"
 
-        val actual = super.test(
+       super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -122,18 +123,20 @@ internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a' 'b' 'a' 'b' 'a' 'b' 'a' 'b' 'a'}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun a6_fails() {
         val sentence = "abababababa"
+
+        println(rrs.fullAutomatonToString(goal,AutomatonKind.LOOKAHEAD_1))
 
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)

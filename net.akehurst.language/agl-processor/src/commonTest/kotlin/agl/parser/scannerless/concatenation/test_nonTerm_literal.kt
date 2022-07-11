@@ -29,7 +29,7 @@ internal class test_nonTerm_literal : test_ScanOnDemandParserAbstract() {
             concatenation("S") { ref("ab"); literal("c") }
             concatenation("ab") { literal("a"); literal("b") }
         }
-        val goal = "S"
+        const val goal = "S"
     }
 
     @Test
@@ -40,12 +40,12 @@ internal class test_nonTerm_literal : test_ScanOnDemandParserAbstract() {
             S{ ab {'a' 'b'} 'c' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 }

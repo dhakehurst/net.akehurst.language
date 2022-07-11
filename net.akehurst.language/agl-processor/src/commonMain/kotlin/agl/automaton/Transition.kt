@@ -96,7 +96,7 @@ internal class Transition(
                 }
             }
         }
-        val defaultRuntimeGuard: RuntimeGuard = { gn, previous -> true }
+        val defaultRuntimeGuard: RuntimeGuard = { _, _ -> true }
         fun runtimeGuardFor(action: Transition.ParseAction): RuntimeGuard = when (action) {
             Transition.ParseAction.GRAFT -> graftRuntimeGuard
             else -> defaultRuntimeGuard

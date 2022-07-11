@@ -260,7 +260,7 @@ internal class RuntimeTransitionCalculator(
         val lookaheadInfo = Lookahead(wi.lookaheadSet.lhs(this.stateSet), LookaheadSet.EMPTY)
         val to = this.stateSet.fetchCompatibleOrCreateState(listOf(toRp))
         // upLookahead and prevGuard are unused
-        return Transition(sourceState, to, Transition.ParseAction.WIDTH, setOf(lookaheadInfo), null) { _, _ -> true }
+        return Transition(sourceState, to, Transition.ParseAction.WIDTH, setOf(lookaheadInfo), null,Transition.defaultRuntimeGuard)
     }
 
     private fun createEmbeddedTransition(sourceState:ParserState,wi: WidthInfo): Transition {
@@ -269,13 +269,13 @@ internal class RuntimeTransitionCalculator(
         val toRp = RulePosition(rp.runtimeRule, rp.option, RulePosition.END_OF_RULE) //TODO: is this not passed in ?
         val to = this.stateSet.fetchCompatibleOrCreateState(listOf(toRp))
         // upLookahead and prevGuard are unused
-        return Transition(sourceState, to, Transition.ParseAction.EMBED, setOf(lookaheadInfo), null) { _, _ -> true }
+        return Transition(sourceState, to, Transition.ParseAction.EMBED, setOf(lookaheadInfo), null,Transition.defaultRuntimeGuard)
     }
 
     private fun createHeightTransition3(sourceState:ParserState,hg: HeightGraftInfo): Transition {
         val to = this.stateSet.fetchCompatibleOrCreateState(hg.parentNext)
         val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), it.up.lhs(this.stateSet)) }.toSet()
-        val trs = Transition(sourceState, to, Transition.ParseAction.HEIGHT, lookaheadInfo, null) { _, _ -> true }
+        val trs = Transition(sourceState, to, Transition.ParseAction.HEIGHT, lookaheadInfo, null,Transition.defaultRuntimeGuard)
         return trs
     }
 
@@ -289,7 +289,7 @@ internal class RuntimeTransitionCalculator(
 
     private fun createGoalTransition3(sourceState:ParserState): Transition {
         val to = this.stateSet.finishState
-        val trs = Transition(sourceState, to, Transition.ParseAction.GOAL, setOf(Lookahead(LookaheadSet.UP, LookaheadSet.EMPTY)), null) { _, _ -> true }
+        val trs = Transition(sourceState, to, Transition.ParseAction.GOAL, setOf(Lookahead(LookaheadSet.UP, LookaheadSet.EMPTY)), null,Transition.defaultRuntimeGuard)
         return trs
     }
 

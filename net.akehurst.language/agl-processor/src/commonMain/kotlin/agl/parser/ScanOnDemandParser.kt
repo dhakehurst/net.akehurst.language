@@ -18,8 +18,10 @@ package net.akehurst.language.agl.parser
 
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.Transition
+import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.RuntimeState
+import net.akehurst.language.agl.runtime.graph.TreeData
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -215,44 +217,29 @@ internal class ScanOnDemandParser(
                     errors
                 }
                 else -> {
-                    val prevPrev = remainingHead?.runtimeState ?: RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY))
-                    val trs = lg.runtimeState.transitions(prevPrev, prev!!.runtimeState).filter { it.runtimeGuard(it, prev, prev.runtimeState.state) }
-                    val pairs: Set<Pair<Int, Set<RuntimeRule>>> = trs.mapNotNull { tr ->
-                        when (tr.action) {
-                            Transition.ParseAction.GOAL -> null
-                            Transition.ParseAction.WIDTH,
-                            Transition.ParseAction.EMBED -> {
-                                // try grab 'to' token, if nothing then that is error else lookahead is error
-                                val l = input.findOrTryCreateLeaf(tr.to.firstRule, lg.nextInputPosition)
-                                when (l) {
-                                    null -> {
-                                        val expected = tr.to.runtimeRules.filter { it.isEmptyRule.not() }
-                                        if (expected.isEmpty()) {
-                                            null
-                                        } else {
-                                            Pair(lg.nextInputPosition, expected.toSet())
-                                        }
-                                    }
-                                    else -> {
-                                        val expected = tr.lookahead
-                                            .flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }
-                                            .filter { it.isEmptyRule.not() }
-                                        if (expected.isEmpty()) {
-                                            null
-                                        } else {
-                                            Pair(l.nextInputPosition, expected.toSet())
-                                        }
-                                    }
-                                }
-                            }
-                            else -> {
-                                val expected = tr.lookahead.flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }.toSet()
-                                val pos = lg.nextInputPosition
-                                Pair(pos, expected)
-                            }
+                    //FIXME: error option may not be correct, need to find the original
+                    val prevPrev = remainingHead
+                        ?: graph.treeData.createGrowingNodeIndex( rp.stateSet.startState, setOf(LookaheadSet.EMPTY),0,0,0,0)
+                    val trs = lg.runtimeState.transitions(prevPrev.runtimeState, prev!!.runtimeState)
+                        .filter { it.runtimeGuard(it, prev, prev.runtimeState.state) }
+                    if (trs.isNotEmpty()) {
+                        val pairs: Set<Pair<Int, Set<RuntimeRule>>> = trs.mapNotNull { tr ->
+                            errorPairs(input,lg.index,tr)
+                        }.toSet()
+                        pairs
+                    } else {
+                        //no transitions so have to assume we parsed something we didn't want.
+                        val ntp = graph.peekNextToProcess()
+                        val lg2 = prev
+                        val prev2 = prevPrev
+                        ntp.flatMap { tpt ->
+                            val prevPrev2 = tpt.previous?.runtimeState ?: RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY))
+                            val trs2 = lg2.runtimeState.transitions(prevPrev2, prev2.runtimeState)
+                                .filter { it.runtimeGuard(it, prev2, prev2.state) }
+                            trs2.mapNotNull { tr2 -> errorPairs(input,lg.index,tr2) }
                         }
-                    }.toSet()
-                    pairs
+
+                    }
                 }
             }
         }
@@ -263,6 +250,42 @@ internal class ScanOnDemandParser(
         val fr = errorLocations.filter { it.first.position == maxLastLocation.first.position }
         val res = fr.flatMap { it.second }.toSet()
         return Pair(maxLastLocation.first, res)
+    }
+
+    private fun errorPairs(input: InputFromString, lg:GrowingNodeIndex, tr:Transition) :Pair<Int,Set<RuntimeRule>>? {
+        return when (tr.action) {
+            Transition.ParseAction.GOAL -> null
+            Transition.ParseAction.WIDTH,
+            Transition.ParseAction.EMBED -> {
+                // try grab 'to' token, if nothing then that is error else lookahead is error
+                val l = input.findOrTryCreateLeaf(tr.to.firstRule, lg.nextInputPosition)
+                when (l) {
+                    null -> {
+                        val expected = tr.to.runtimeRules.filter { it.isEmptyRule.not() }
+                        if (expected.isEmpty()) {
+                            null
+                        } else {
+                            Pair(lg.nextInputPosition, expected.toSet())
+                        }
+                    }
+                    else -> {
+                        val expected = tr.lookahead
+                            .flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }
+                            .filter { it.isEmptyRule.not() }
+                        if (expected.isEmpty()) {
+                            null
+                        } else {
+                            Pair(l.nextInputPosition, expected.toSet())
+                        }
+                    }
+                }
+            }
+            else -> {
+                val expected = tr.lookahead.flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }.toSet()
+                val pos = lg.nextInputPosition
+                Pair(pos, expected)
+            }
+        }
     }
 
     private fun findNextExpected(rp: RuntimeParser, graph: ParseGraph, input: InputFromString, gns: List<ParseGraph.Companion.ToProcessTriple>): Set<RuntimeRule> {

@@ -55,7 +55,7 @@ internal class test_nested_optionals : test_ScanOnDemandParserAbstract() {
             literal("'c'", "c")
             literal("'d'", "d")
         }
-        val goal = "S"
+        const val goal = "S"
     }
 
     @Test

@@ -669,12 +669,12 @@ internal class BuildCacheLC1(
         }.toSet()
         val wis = firstTerminals.map { (rr,follow) ->
             //TODO:remove old stuff
-            val upCls = fromState.state.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
-            val upFilt = upCls.filter { rr == it.rulePosition.item }
-            val lhs_old = upFilt.map { it.lookaheadSet }.reduce { acc, it -> acc.union(it) }
+            //val upCls = fromState.state.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
+            //val upFilt = upCls.filter { rr == it.rulePosition.item }
+            //val lhs_old = upFilt.map { it.lookaheadSet }.reduce { acc, it -> acc.union(it) }
             val followResolved = follow.resolveTerminals(this.firstFollowCache)
             val lhs = LookaheadSetPart.createFromRuntimeRules(followResolved)
-            if (Debug.CHECK) check(lhs_old.fullContent == follow) { "$lhs_old != [${followResolved.joinToString { it.tag }}] Follow($fromState,${rr.tag})" }
+            //if (Debug.CHECK) check(lhs_old.fullContent == follow) { "$lhs_old != [${followResolved.joinToString { it.tag }}] Follow($fromState,${rr.tag})" }
             val rp = rr.asTerminalRulePosition
             WidthInfo(rp, lhs)
         }
@@ -714,8 +714,8 @@ internal class BuildCacheLC1(
         // have to ensure somehow that from grows into prev
         // have to do closure down from prev,
         // upCls is the closure down from prev
-        val upCls = prevState.state.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
-        val calc = calcAndCacheHeightOrGraftInto(prevPrev, prevState, fromState, upCls)
+        //val upCls = prevState.state.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
+        val calc = calcAndCacheHeightOrGraftInto(prevPrev, prevState, fromState)//, upCls)
         return calc
         //} else {
         //    val key = Pair(prevState.rulePositions, fromState.runtimeRules)
@@ -740,8 +740,8 @@ internal class BuildCacheLC1(
         return grouped
     }
 
-    private fun calcAndCacheHeightOrGraftInto(prevPrev: RuntimeState, prev: RuntimeState, from: RuntimeState, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
-        val hgi = calcHeightOrGraftInto(prevPrev, prev, from, upCls)
+    private fun calcAndCacheHeightOrGraftInto(prevPrev: RuntimeState, prev: RuntimeState, from: RuntimeState): Set<HeightGraftInfo> {//, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
+        val hgi = calcHeightOrGraftInto(prevPrev, prev, from)//, upCls)
         cacheHeightOrGraftInto(prev, from, hgi)
         return hgi
     }
@@ -766,7 +766,7 @@ internal class BuildCacheLC1(
     }
 
     //for graft, previous must match prevGuard, for height must not match
-    private fun calcHeightOrGraftInto(prevPrev:RuntimeState, prev: RuntimeState, from: RuntimeState, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
+    private fun calcHeightOrGraftInto(prevPrev:RuntimeState, prev: RuntimeState, from: RuntimeState): Set<HeightGraftInfo> {//, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
         //FirstFollow3
         val info: Set<HeightGraftInfo> = prevPrev.state.rulePositions.flatMap { contextContext ->
             prev.state.rulePositions.flatMap { context ->
@@ -816,7 +816,7 @@ internal class BuildCacheLC1(
         }.toSet()
          */
         // this.firstFollowCache.clear()
-
+/*
         // upCls is the closure down from prev
         //TODO: can we reduce upCls at this point ?
         val hgis = mutableListOf<HeightGraftInfo>()
@@ -839,19 +839,20 @@ internal class BuildCacheLC1(
 
             hgis.addAll(res)
         }
+ */
 //group if not at end and outgoing (action,to) are the same
-        val atEnd = hgis.filter { it.parentNext.first().isAtEnd }
-        val notAtEnd = hgis.filter { it.parentNext.first().isAtEnd.not() }
-        val toMerge = notAtEnd.groupBy { listOf(it.action, it.lhs) }
-        val merged = toMerge.map { me ->
-            val action = me.key[0] as Transition.ParseAction
-            val lhs = me.key[1] as Set<LookaheadInfoPart>
-            val parent = me.value.flatMap { it.parent }.toSet().toList()
-            val parentNext = me.value.flatMap { it.parentNext }.toSet().toList()
-            // val upLhs = me.value.flatMap { it.upLhs }.toSet().fold(setOf<LookaheadSetPart>()) { acc, e -> if (acc.any { it.containsAll(e) }) acc else acc + e }
-            HeightGraftInfo(action, parent, parentNext, lhs)
-        }
-        val old = (atEnd + merged).toSet()
+//        val atEnd = hgis.filter { it.parentNext.first().isAtEnd }
+//        val notAtEnd = hgis.filter { it.parentNext.first().isAtEnd.not() }
+//        val toMerge = notAtEnd.groupBy { listOf(it.action, it.lhs) }
+//        val merged = toMerge.map { me ->
+//            val action = me.key[0] as Transition.ParseAction
+//            val lhs = me.key[1] as Set<LookaheadInfoPart>
+//            val parent = me.value.flatMap { it.parent }.toSet().toList()
+//            val parentNext = me.value.flatMap { it.parentNext }.toSet().toList()
+//            // val upLhs = me.value.flatMap { it.upLhs }.toSet().fold(setOf<LookaheadSetPart>()) { acc, e -> if (acc.any { it.containsAll(e) }) acc else acc + e }
+//            HeightGraftInfo(action, parent, parentNext, lhs)
+ //       }
+//        val old = (atEnd + merged).toSet()
         val infoAtEnd = info.filter { it.parentNext.first().isAtEnd }
         val infoAtEndMerged = infoAtEnd.groupBy { Pair(it.action, it.parentNext) }
             .map { me ->
