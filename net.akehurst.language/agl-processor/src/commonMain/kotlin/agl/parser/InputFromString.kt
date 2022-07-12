@@ -106,9 +106,18 @@ internal class InputFromString(
         return if (null!=r) {
              r
         } else {
-            val v = terminalRule.regex.matchesAt(this.text, position)
-            isLookingAt_cache[Pair(position,terminalRule.number)] = v
-            v
+            //val v = terminalRule.regex.matchesAt(this.text, position)
+            //isLookingAt_cache[Pair(position,terminalRule.number)] = v
+            //v
+            val matched = when {
+                this.isEnd(position) -> if (terminalRule.value == END_OF_TEXT) true else false //TODO: do we need this
+                terminalRule.isPattern -> terminalRule.regex.matchesAt(this.text, position)
+                else -> this.text.regionMatches(position, terminalRule.value, 0, terminalRule.value.length)
+                //else ->pattern.match(this.text, position)
+            }
+            isLookingAt_cache[Pair(position,terminalRule.number)] = matched
+            matched
+
         }
     }
 

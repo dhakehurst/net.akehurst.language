@@ -263,7 +263,6 @@ internal class test_InputFromString {
     }
     //TODO:....tryMatchText
 
-
     @Test
     fun locationFor_singleLine() {
         val inputText = "abc"

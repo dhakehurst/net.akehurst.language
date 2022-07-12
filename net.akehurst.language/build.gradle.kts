@@ -18,7 +18,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import com.github.gmazzo.gradle.plugins.BuildConfigExtension
 
 plugins {
-    kotlin("multiplatform") version ("1.7.0") apply false
+    kotlin("multiplatform") version ("1.7.10") apply false
     id("org.jetbrains.dokka") version ("1.7.0") apply false
     id("com.github.gmazzo.buildconfig") version("3.1.0") apply false
     id("nu.studer.credentials") version ("3.0")
@@ -83,10 +83,21 @@ subprojects {
             }
         }
         js("js", IR) {
-            nodejs()
+            nodejs{
+                testTask {
+                    useMocha {
+                        timeout = "5000"
+                    }
+                }
+            }
             browser {
                 webpackTask {
                     outputFileName = "${project.group}-${project.name}.js"
+                }
+                testTask {
+                    useMocha {
+                        timeout = "5000"
+                    }
                 }
             }
         }
