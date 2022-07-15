@@ -94,7 +94,7 @@ internal class test_bodmas_infix_sList_choiceEqual_simple : test_ScanOnDemandPar
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            printAutomaton = true,
+            //printAutomaton = true,
             expectedTrees = arrayOf(expected)
         )
     }

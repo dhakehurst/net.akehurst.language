@@ -58,7 +58,7 @@ class test_VistraqQuery_Singles {
         val (sppt, issues) = processor.parse("0", "REAL")
         assertNull(sppt)
         assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"")
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^0", setOf("\"[0-9]+[.][0-9]+\""))
         ), issues)
     }
 
@@ -67,7 +67,7 @@ class test_VistraqQuery_Singles {
         val (sppt, issues) = processor.parse(".0", "REAL")
         assertNull(sppt)
         assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"")
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^.0",setOf("\"[0-9]+[.][0-9]+\""))
         ), issues)
 
     }
