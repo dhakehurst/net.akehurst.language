@@ -91,7 +91,7 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
         val rrs_preBuild = rrs.clone()
 
         val parser = ScanOnDemandParser(rrs_noBuild)
-        val sentences = listOf("a","aba","ababa", "abababa")
+        val sentences = listOf("","a","aba","ababa", "abababa")
         for(sen in sentences) {
             val (sppt, issues) = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
             if (issues.isNotEmpty())  issues.forEach { println(it) }

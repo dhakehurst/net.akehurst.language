@@ -61,14 +61,15 @@ internal class ScanOnDemandParser(
         val rp = RuntimeParser(s0.stateSet, skipStateSet, goalRule, input)
         this.runtimeParser = rp
 
-        rp.start(0, setOf(LookaheadSet.EOT))
+        val possibleEndOfText = setOf(LookaheadSet.EOT)
+        rp.start(0, possibleEndOfText)
         var seasons = 1
         var maxNumHeads = rp.graph.numberOfHeads
         var totalWork = maxNumHeads
 
         while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
             if (Debug.OUTPUT_RUNTIME) println("$seasons ===================================")
-            val steps = rp.grow3(false)
+            val steps = rp.grow3(possibleEndOfText,false)
             seasons += steps
             maxNumHeads = max(maxNumHeads, rp.graph.numberOfHeads)
             totalWork += rp.graph.numberOfHeads
@@ -347,12 +348,13 @@ internal class ScanOnDemandParser(
         val rp = RuntimeParser(ss, skipStateSet, goalRule, input)
         this.runtimeParser = rp
 
-        rp.start(0, setOf(LookaheadSet.EOT))
+        val possibleEndOfText = setOf(LookaheadSet.EOT)
+        rp.start(0, possibleEndOfText)
         var seasons = 1
 
         val matches = mutableListOf<ParseGraph.Companion.ToProcessTriple>()
         do {
-            rp.grow3(false)
+            rp.grow3(possibleEndOfText,false)
             for (gn in rp.lastGrown) {
                 TODO()
                 //               if (input.isEnd(gn.nextInputPosition)) {

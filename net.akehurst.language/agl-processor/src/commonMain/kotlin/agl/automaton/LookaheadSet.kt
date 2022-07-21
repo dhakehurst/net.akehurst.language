@@ -3,10 +3,11 @@ package net.akehurst.language.agl.automaton
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 
-internal data class Lookahead(
+internal class Lookahead(
     val guard: LookaheadSet,
-    val up: LookaheadSet
+    _up: LookaheadSet
 ) {
+    val up: LookaheadSet = _up //if (_up.includesUP) LookaheadSet.UP else LookaheadSet.EMPTY
     companion object {
         val EMPTY = Lookahead(LookaheadSet.EMPTY, LookaheadSet.EMPTY)
         fun merge(automaton: ParserStateSet, initial: Set<Lookahead>): Set<Lookahead> {
@@ -56,6 +57,17 @@ internal data class Lookahead(
             }
         }
     }
+
+    val _id = arrayOf(guard, up)
+    override fun hashCode(): Int = _id.contentHashCode()
+    override fun equals(other: Any?): Boolean = when {
+        other !is Lookahead -> false
+        this.up != other.up -> false
+        this.guard != other.guard -> false
+        else -> true
+    }
+
+    override fun toString(): String = "LH($guard, $up)"
 }
 
 internal class LookaheadSet(

@@ -82,11 +82,50 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
 
             transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(v); lhg(setOf(UP, m, a)) }
             transition(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(setOf(UP)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(E); tgt(rA, OLI, PLS); lhg(a, m); lhg(a, a); lhg(a, UP) }
+            transition(HEIGHT) { ctx(G, o0, SOR); src(E); tgt(rA, OLI, PLS); lhg(setOf(a), setOf(UP,m,a)) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(R); tgt(E); lhg(m, m); lhg(UP, UP); lhg(a, a) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(E); tgt(rM, OLI, PLS); lhg(m, a); lhg(m, UP); lhg(m, m) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(v); tgt(R); lhg(m, m); lhg(UP, UP); lhg(a, a) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(E); tgt(S); lhg(UP, UP); }
+
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun automaton_parse_vavav() {
+        val parser = ScanOnDemandParser(rrs)
+        val (sppt, issues) = parser.parseForGoal("S", "vavav", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+        assertNotNull(sppt)
+        assertEquals(0, issues.size)
+        assertEquals(1, sppt.maxNumHeads)
+
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+            val s0 = state(RP(G, 0, SOR))      /* G = . S   */
+            val s2 = state(RP(v, 0, EOR))      /* 'v' .   */
+            val s4 = state(RP(R, 0, EOR))   /* root = vr .   */
+            val s5 = state(RP(E, 0, EOR))      /* E = root .   */
+            val s6 = state(RP(S, 0, EOR))      /* S = E .   */
+
+            val s8 = state(RP(m, 0, EOR))        /* '/' . */
+            val s9 = state(RP(a, 0, EOR))        /* '/' . */
+            val s10 = state(RP(rM, 0, PLI))    /* div = [E ... '/' . E ...]2+ */
+            val s11 = state(RP(rM, 0, EOR))     /* div = [E / '/']2+ . . */
+            val s12 = state(RP(E, 1, EOR))       /* E = div . */
+            val s1 = state(RP(G, 0, EOR))        /* G = S .   */
+
+            transition(s0, s0, s1, WIDTH, setOf(UP, m, a), emptySet(), null)
+            transition(s0, s1, s2, HEIGHT, setOf(UP, m, a), emptySet(), null)
+            //transition(s0, s2, s3, HEIGHT, setOf(UP, m, a), emptySet(), null)
+            //transition(s0, s3, s4, HEIGHT, setOf(UP, m, a), emptySet(), null)
+            transition(s0, s4, s5, HEIGHT, setOf(UP, m, a), emptySet(), null)
+            transition(s0, s4, s6, HEIGHT, setOf(UP, m, a), emptySet(), null)
+            //transition(s0, s5, s7, GRAFT, setOf(UP, m, a), emptySet(), null)
+            //transition(s0, s7, s7, GOAL, setOf(UP, m, a), emptySet(), null)
 
         }
 
