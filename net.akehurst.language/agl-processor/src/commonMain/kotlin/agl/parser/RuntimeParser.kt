@@ -337,10 +337,7 @@ internal class RuntimeParser(
     private fun growGoalNode(nextToProcess: ParseGraph.Companion.NextToProcess, possibleEndOfText: Set<LookaheadSet>, noLookahead: Boolean) {
         //no previous, so gn must be the Goal node
         val toProcess = ParseGraph.Companion.ToProcessTriple(nextToProcess.growingNode, null, null)
-        val transitions = toProcess.growingNode.runtimeState.transitions(
-            RuntimeState(stateSet.startState, setOf(LookaheadSet.EMPTY)),
-            RuntimeState(stateSet.startState, setOf(LookaheadSet.EMPTY))
-        )
+        val transitions = toProcess.growingNode.runtimeState.transitions(stateSet.startState, stateSet.startState)
         for (it in transitions) {
             when (it.action) {
                 Transition.ParseAction.GOAL -> error("Should never happen")
@@ -383,8 +380,8 @@ internal class RuntimeParser(
 
     private fun growWithPrev(toProcess: ParseGraph.Companion.ToProcessTriple, possibleEndOfText: Set<LookaheadSet>, noLookahead: Boolean): Boolean {
         var grown = false
-        val prevPrev = toProcess.remainingHead?.runtimeState ?: RuntimeState(stateSet.startState, setOf(LookaheadSet.EMPTY))
-        val transitions = toProcess.growingNode.runtimeState.transitions(prevPrev, toProcess.previous!!.runtimeState)
+        val prevPrev = toProcess.remainingHead?.runtimeState?.state ?: stateSet.startState
+        val transitions = toProcess.growingNode.runtimeState.transitions(prevPrev, toProcess.previous!!.runtimeState.state)
         //TODO: do we need to do something here? due to filtered out trans from the list
         val grouped = transitions.groupBy { it.to.runtimeRulesSet }
         for (it in grouped) {
@@ -482,15 +479,19 @@ internal class RuntimeParser(
         return if (null != l) {
             val lh = transition.lookahead.map { it.guard }.reduce { acc, e -> acc.union(this.stateSet, e) } //TODO:reduce to 1 in SM
             val runtimeLhs = toProcess.growingNode.runtimeState.runtimeLookaheadSet
-            val skipLh = if (lh.includesEOT) {
-                //possibleEndOfText.map { eot -> this.stateSet.createWithParent(lh, eot) }.toSet()
-                runtimeLhs.flatMap { rt ->
-                    possibleEndOfText.map { eot -> this.stateSet.createLookaheadSet(lh.resolve(eot, rt)) }
-                }.toSet()
+
+            val skipData = if(null==skipParser) {
+                //this is a skipParser, so no skipData
+                null
             } else {
-                setOf(lh)
+                val skipLh = if (lh.includesEOT || lh.includesRT) {
+                    //possibleEndOfText.map { eot -> this.stateSet.createWithParent(lh, eot) }.toSet()
+                    runtimeLhs.flatMap { rt -> possibleEndOfText.map { eot -> this.stateSet.createLookaheadSet(lh.resolve(eot, rt)) } }.toSet()
+                } else {
+                    setOf(lh)
+                }
+                this.tryParseSkipUntilNone(skipLh, l.nextInputPosition, noLookahead)
             }
-            val skipData = this.tryParseSkipUntilNone(skipLh, l.nextInputPosition, noLookahead)
             val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: l.nextInputPosition
 
             // val lhWithMatch = possibleEndOfText.filter {

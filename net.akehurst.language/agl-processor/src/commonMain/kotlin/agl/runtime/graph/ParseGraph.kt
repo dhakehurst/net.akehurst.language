@@ -731,12 +731,12 @@ internal class ParseGraph(
             lookaheadGuard.matchANY -> true
             runtimeLookahead.includesRT -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
             eotLookahead.includesRT -> error("EOT lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
-            LookaheadSet.RT == lookaheadGuard -> when { // EOT should already be resolved in runtimeLookahead
-                runtimeLookahead.matchANY -> true
-                runtimeLookahead.includesEOT && this.input.isEnd(nextInputPosition) -> true
-                runtimeLookahead.content.isEmpty() -> false
-                else -> runtimeLookahead.content.any { this.input.isLookingAt(nextInputPosition, it) }
-            }
+            //LookaheadSet.RT == lookaheadGuard -> when {
+           //     runtimeLookahead.matchANY -> true
+           //     runtimeLookahead.includesEOT && this.input.isEnd(nextInputPosition) -> true
+           //     runtimeLookahead.content.isEmpty() -> false
+           //     else -> runtimeLookahead.content.any { this.input.isLookingAt(nextInputPosition, it) }
+           // }
            // lookaheadGuard.includesRT.not() -> when {
            //     lookaheadGuard.matchANY -> true
            //     lookaheadGuard.includesEOT && eotLookahead.includesEOT && this.input.isEnd(nextInputPosition) -> true

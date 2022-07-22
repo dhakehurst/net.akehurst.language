@@ -124,11 +124,16 @@ internal class LookaheadSet(
         return when {
             eotLookahead.includesRT -> error("EOT lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
             runtimeLookahead.includesRT -> error("EOT lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
-            EOT == this -> eotLookahead.part
-            RT == this -> runtimeLookahead.part
+            //EOT == this -> eotLookahead.part
+            //RT == this -> runtimeLookahead.part
             else -> {
                 var resolvedContent = this.content
-                resolvedContent = if (this.includesRT) resolvedContent.union(runtimeLookahead.content) else resolvedContent
+                resolvedContent = if (this.includesRT) {
+                    val resolvedRT = if(runtimeLookahead.includesEOT) runtimeLookahead.content.union(eotLookahead.content) else runtimeLookahead.content
+                    resolvedContent.union(resolvedRT)
+                } else {
+                    resolvedContent
+                }
                 resolvedContent = if (this.includesEOT) resolvedContent.union(eotLookahead.content) else resolvedContent
                 val eot = this.includesEOT || (this.includesRT && runtimeLookahead.includesEOT)
                 val ma = this.matchANY || (this.includesRT && eotLookahead.matchANY)

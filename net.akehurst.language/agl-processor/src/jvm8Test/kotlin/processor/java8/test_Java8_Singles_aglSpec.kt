@@ -41,7 +41,7 @@ class test_Java8_Singles_aglSpec {
             val grammarStr = this::class.java.getResource(path).readText()
             val proc = Agl.processorFromString(grammarStr)
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
-            proc.buildFor(forRule)
+            //proc.buildFor(forRule) //TODO: use build
             return proc
         }
     }
@@ -64,7 +64,7 @@ class test_Java8_Singles_aglSpec {
         val p = Agl.processorFromString(grammarStr,goal)
 
         val sentence = "int"
-        val (sppt,issues) = p.buildFor(goal).parse(sentence,goal)
+        val (sppt,issues) = p.parse(sentence,goal)
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
         assertEqualsWarning(1, sppt.maxNumHeads)
@@ -92,7 +92,7 @@ class test_Java8_Singles_aglSpec {
         val p = Agl.processorFromString(grammarStr,goal)
 
         val sentence = "int"
-        val (sppt,issues) = p.buildFor(goal).parse(sentence,goal)
+        val (sppt,issues) = p.parse(sentence,goal)
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
 

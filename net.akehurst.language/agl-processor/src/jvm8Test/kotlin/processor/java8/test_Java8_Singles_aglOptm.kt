@@ -63,7 +63,7 @@ class test_Java8_Singles_aglOptm {
         val p = Agl.processorFromString(grammarStr, goal)
 
         val sentence = "int"
-        val (sppt,issues) = p.buildFor("Type").parse(sentence,"Type")//TODO: use build
+        val (sppt,issues) = p.parse(sentence,"Type")//TODO: use build
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
         assertEquals(1, sppt.maxNumHeads)
@@ -91,8 +91,7 @@ class test_Java8_Singles_aglOptm {
         val p = Agl.processorFromString(grammarStr, goal)
 
         val sentence = "int"
-        //val t = p.buildFor(goal).parse(goal, sentence)//TODO: use build
-        val (sppt,issues) = p.parse(sentence,goal)//TODO: use build
+        val (sppt,issues) = p.parse(sentence,goal)
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
 
@@ -190,7 +189,7 @@ grammar Expressions {
         val sentence = "int valid = 0b0;"
         val goal = "FieldDeclaration"
         //proc.parse(goal, sentence)
-        val (sppt,issues) = proc.buildFor(goal).parse(sentence,goal)
+        val (sppt,issues) = proc.parse(sentence,goal)
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
     }
@@ -199,7 +198,7 @@ grammar Expressions {
     fun TypeDeclaration__class_fieldDeclaration() {
         val sentence = "class A { int valid = 0b0; }"
         val goal = "TypeDeclaration"
-        val (sppt,issues) = proc.buildFor(goal).parse(sentence,goal)
+        val (sppt,issues) = proc.parse(sentence,goal)
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
     }
@@ -208,7 +207,7 @@ grammar Expressions {
     fun ClassBody__fieldDeclaration() {
         val sentence = "{ int valid = 0b0; }"
         val goal = "ClassBody"
-        val (sppt,issues) = proc.buildFor(goal).parse(sentence,goal)
+        val (sppt,issues) = proc.parse(sentence,goal)
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
     }

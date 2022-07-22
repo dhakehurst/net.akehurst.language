@@ -45,7 +45,7 @@ internal class RuntimeState(
         }.toSet()
     }
 
-    fun transitions(prevPrev: RuntimeState, previousState: RuntimeState): List<Transition> = this.state.transitions(prevPrev, previousState, this)
+    fun transitions(prevPrev: ParserState, previousState: ParserState): List<Transition> = this.state.transitions(prevPrev, previousState, this.state)
 
     private val hashCode_cache = arrayOf(state, runtimeLookaheadSet).contentHashCode()
     override fun hashCode(): Int = this.hashCode_cache

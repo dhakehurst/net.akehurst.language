@@ -189,10 +189,7 @@ internal class ScanOnDemandParser(
         val r = rp.lastGrown.map { (lg, prev, remainingHead) ->
             when {
                 lg.runtimeState.state.isGoal -> {
-                    val trs = lg.runtimeState.transitions(
-                        RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY)),
-                        RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY))
-                    )
+                    val trs = lg.runtimeState.transitions(rp.stateSet.startState, rp.stateSet.startState)
                     val errors: Set<Pair<Int, Set<RuntimeRule>>> = trs.mapNotNull { tr ->
                         when (tr.action) {
                             Transition.ParseAction.GOAL -> null
@@ -231,7 +228,7 @@ internal class ScanOnDemandParser(
                     //FIXME: error option may not be correct, need to find the original
                     val prevPrev = remainingHead
                         ?: graph.treeData.createGrowingNodeIndex(rp.stateSet.startState, setOf(LookaheadSet.EMPTY), 0, 0, 0, 0)
-                    val trs = lg.runtimeState.transitions(prevPrev.runtimeState, prev!!.runtimeState)
+                    val trs = lg.runtimeState.transitions(prevPrev.runtimeState.state, prev!!.runtimeState.state)
                         .filter { it.runtimeGuard(it, prev, prev.runtimeState.state) }
                     if (trs.isNotEmpty()) {
                         val rtLh = lg.runtimeState.runtimeLookaheadSet
@@ -246,7 +243,7 @@ internal class ScanOnDemandParser(
                         val prev2 = prevPrev
                         ntp.flatMap { tpt ->
                             val prevPrev2 = tpt.previous?.runtimeState ?: RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY))
-                            val trs2 = lg2.runtimeState.transitions(prevPrev2, prev2.runtimeState)
+                            val trs2 = lg2.runtimeState.transitions(prevPrev2.state, prev2.runtimeState.state)
                                 .filter { it.runtimeGuard(it, prev2, prev2.state) }
                             val rtLh = lg2.runtimeState.runtimeLookaheadSet
                             trs2.mapNotNull { tr2 -> errorPairs(input, lg.index, tr2, possibleEndOfText, rtLh) }
@@ -342,7 +339,7 @@ internal class ScanOnDemandParser(
         val trans_lh_pairs = matches.flatMap { (gn, previous, remainingHead) ->
             val prevPrev = remainingHead?.runtimeState ?: RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY))
             val prev = previous?.runtimeState ?: RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY))
-            val trans = gn.runtimeState.transitions(prevPrev, prev).toSet()
+            val trans = gn.runtimeState.transitions(prevPrev.state, prev.state).toSet()
             val rtLh = gn.runtimeState.runtimeLookaheadSet
             trans.flatMap { tr ->
                 val pairs = possibleEndOfText.flatMap { eot ->

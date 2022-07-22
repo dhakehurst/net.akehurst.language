@@ -26,7 +26,7 @@ internal class RuntimeTransitionCalculator(
 ) {
 
     private val __filteredTransitions = mutableSetOf<Transition>() // to save time allocating when calcFilteredTransitions is called
-    internal fun calcFilteredTransitions(prevPrev: RuntimeState, previousState: RuntimeState, sourceState: RuntimeState): Set<Transition> {
+    internal fun calcFilteredTransitions(prevPrev: ParserState, previousState: ParserState, sourceState: ParserState): Set<Transition> {
         __filteredTransitions.clear()
         val transitions = this.calcTransitions(prevPrev, previousState,sourceState)//, gn.lookaheadStack.peek())
         for (tr in transitions) {
@@ -37,7 +37,7 @@ internal class RuntimeTransitionCalculator(
                 Transition.ParseAction.HEIGHT -> true
                 Transition.ParseAction.GRAFT -> {
                     tr.graftPrevGuard?.let {
-                        previousState.state.rulePositions.containsAll(it)
+                        previousState.rulePositions.containsAll(it)
                     } ?: true
                 }
             }
@@ -50,15 +50,15 @@ internal class RuntimeTransitionCalculator(
     // must use previousState.rulePosition as starting point for finding
     // lookahead for height/graft, and previousLookahead to use if end up at End of rule
     // due to position or empty rules.
-    internal fun calcTransitions(prevPrev: RuntimeState, previousState: RuntimeState, sourceState: RuntimeState): Set<Transition> {//TODO: add previous in order to filter parent relations
+    internal fun calcTransitions(prevPrev: ParserState, previousState: ParserState, sourceState: ParserState): Set<Transition> {//TODO: add previous in order to filter parent relations
         __transitions.clear()
         when {
-            sourceState.state.isGoal -> {
+            sourceState.isGoal -> {
                 val widthInto = this.stateSet.buildCache.widthInto(previousState,sourceState)
                 for (wi in widthInto) {
                     when (wi.to.runtimeRule.kind) {
-                        RuntimeRuleKind.TERMINAL -> __transitions.add(this.createWidthTransition(sourceState.state,wi))
-                        RuntimeRuleKind.EMBEDDED -> __transitions.add(this.createEmbeddedTransition(sourceState.state,wi))
+                        RuntimeRuleKind.TERMINAL -> __transitions.add(this.createWidthTransition(sourceState,wi))
+                        RuntimeRuleKind.EMBEDDED -> __transitions.add(this.createEmbeddedTransition(sourceState,wi))
                         RuntimeRuleKind.GOAL, RuntimeRuleKind.NON_TERMINAL -> error("Should never happen")
                     }
                 }
@@ -69,13 +69,13 @@ internal class RuntimeTransitionCalculator(
                     val kind = hg.parent.first().runtimeRule.kind
                     if (kind == RuntimeRuleKind.GOAL) {
                         when {
-                            (sourceState.state.isGoal && this.stateSet.isSkip) -> {
+                            (sourceState.isGoal && this.stateSet.isSkip) -> {
                                 // must be end of skip. TODO: can do something better than this!
-                                val to = sourceState.state
-                                __transitions.add(Transition(sourceState.state, to, Transition.ParseAction.GOAL, setOf(Lookahead.EMPTY), null) { _, _ -> true })
+                                val to = sourceState
+                                __transitions.add(Transition(sourceState, to, Transition.ParseAction.GOAL, setOf(Lookahead.EMPTY), null) { _, _ -> true })
                             }
                             else -> {
-                                val ts = this.createGoalTransition3(sourceState.state)
+                                val ts = this.createGoalTransition3(sourceState)
                                 __transitions.add(ts)//, addLh, parentLh))
                             }
                         }
@@ -83,11 +83,11 @@ internal class RuntimeTransitionCalculator(
                         val isAtStart = hg.parent.first().isAtStart //FIXME: what about things not the first?
                         when (isAtStart) {
                             true -> {
-                                val ts = this.createHeightTransition3(sourceState.state,hg)
+                                val ts = this.createHeightTransition3(sourceState,hg)
                                 __transitions.add(ts)
                             }
                             false -> {
-                                val ts = this.createGraftTransition3(sourceState.state,hg)
+                                val ts = this.createGraftTransition3(sourceState,hg)
                                 __transitions.add(ts)
                             }
                         }
@@ -99,11 +99,11 @@ internal class RuntimeTransitionCalculator(
                 for (wi in widthInto) {
                     when (wi.to.runtimeRule.kind) {
                         RuntimeRuleKind.TERMINAL -> {
-                            val ts = this.createWidthTransition(sourceState.state,wi)
+                            val ts = this.createWidthTransition(sourceState,wi)
                             __transitions.add(ts)
                         }
                         RuntimeRuleKind.EMBEDDED -> {
-                            val ts = this.createEmbeddedTransition(sourceState.state,wi)
+                            val ts = this.createEmbeddedTransition(sourceState,wi)
                             __transitions.add(ts)
                         }
                         else -> error("should never happen")

@@ -69,10 +69,10 @@ class test_piLanguages {
             ListJoinType = identifier ;
             
             // rules for "PiScoperDef"
-            PiScoperDef = 'scoper' identifier 'for' 'language' stringLiteral ( 'isnamespace' '\{' [ __pi_reference / ',' ]* '}' )?
+            PiScoperDef = 'scoper' identifier 'for' 'language' stringLiteral ( 'isnamespace' '{' [ __pi_reference / ',' ]* '}' )?
                  ScopeConceptDef* ;
             
-            ScopeConceptDef = __pi_reference '\{' PiNamespaceAddition? PiAlternativeScope? '}' ;
+            ScopeConceptDef = __pi_reference '{' PiNamespaceAddition? PiAlternativeScope? '}' ;
             
             PiNamespaceAddition = 'namespace_addition' '=' [ PiLangExp / ' +' ]* ';' ;
             
@@ -82,7 +82,7 @@ class test_piLanguages {
             PiStructureDef = 'language' identifier PiModelDescription? PiUnitDescription* PiInterface*
                  __pi_super_PiConcept* ;
             
-            PiModelDescription = 'model' identifier '\{'
+            PiModelDescription = 'model' identifier '{'
                  ( PiProperty ';' )*
                  '}' ;
             
@@ -96,45 +96,45 @@ class test_piLanguages {
             
             PiBooleanValue = booleanLiteral ;
             
-            PiUnitDescription = 'modelunit' identifier '\{'
+            PiUnitDescription = 'modelunit' identifier '{'
                  ( PiProperty ';' )*
                  'file-extension' '=' stringLiteral ';'
                  '}' ;
             
             PiConcept = 'public'? 'abstract'? 'concept' identifier ( 'base' __pi_reference )?
                  ( 'implements' [ __pi_reference / ',' ]* )?
-                 '\{'
+                 '{'
                  ( PiProperty ';' )*
                  '}' ;
             
             PiExpressionConcept = 'public'? 'abstract'? 'expression' identifier ( 'base' __pi_reference )?
                  ( 'implements' [ __pi_reference / ',' ]* )?
-                 '\{'
+                 '{'
                  ( PiProperty ';' )*
                  '}' ;
             
             PiBinaryExpressionConcept = 'public'? 'abstract'? 'binary' 'expression' identifier ( 'base' __pi_reference )?
                  ( 'implements' [ __pi_reference / ',' ]* )?
-                 '\{'
+                 '{'
                  ( PiProperty ';' )*
                  ( 'priority' '=' numberLiteral ';' )?
                  '}' ;
             
             PiLimitedConcept = 'public'? 'limited' identifier ( 'base' __pi_reference )?
                  ( 'implements' [ __pi_reference / ',' ]* )?
-                 '\{'
+                 '{'
                  ( PiProperty ';' )*
                  PiInstance*
                  '}' ;
             
-            PiInstance = identifier '=' '\{'
+            PiInstance = identifier '=' '{'
                  [ PiPropertyInstance / ',' ]*
                  '}' ;
             
             PiPropertyInstance = identifier ':' PiPrimitiveValue ;
             
             PiInterface = 'public'? 'interface' identifier ( 'base' [ __pi_reference / ',' ]* )?
-                 '\{'
+                 '{'
                  ( PiProperty ';' )*
                  '}' ;
             
@@ -288,13 +288,27 @@ class test_piLanguages {
             }
         """.trimIndent()
         val processor = Agl.processorFromString(grammarStr)
-        const val goal = "PiEditorDef"
+    }
+
+    @Test
+    fun t() {
+        val sentence = """
+            language Example
+
+            model Demo {
+                name: identifier;
+                units: ExampleUnit();
+            }
+        """.trimIndent()
+        val (sppt,issues) =  processor.parse(sentence,"PiStructureDef")
+        assertNotNull(sppt,issues.joinToString(separator = "\n"){it.toString()})
+        assertEquals(emptyList(),issues)
     }
 
     @Test
     fun sentence1() {
         val sentence = """
-            editor Eg for language "Example"
+            language Example
             
             // TODO because the chars '['and ']' can not yet be escaped in the .edit file,
             // here they are replaced by '(' and ')'
@@ -459,7 +473,7 @@ class test_piLanguages {
                 priority = 10;
             }
         """.trimIndent()
-        val (sppt,issues) =  processor.parse(sentence,goal)
+        val (sppt,issues) =  processor.parse(sentence,"PiStructureDef")
         assertNotNull(sppt,issues.joinToString(separator = "\n"){it.toString()})
         assertEquals(emptyList(),issues)
     }
