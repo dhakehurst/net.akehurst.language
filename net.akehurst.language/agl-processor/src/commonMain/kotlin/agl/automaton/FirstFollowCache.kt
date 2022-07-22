@@ -179,7 +179,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
 
     init {
         // firstTerm(context=RP(G,0,SOR), rulePosition=RP(G,0,EOR) ) = UP
-        this.addFirstTerminalAndFirstOfInContext(this.stateSet.startRulePosition, this.stateSet.finishRulePosition, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+        this.addFirstTerminalAndFirstOfInContext(this.stateSet.startRulePosition, this.stateSet.finishRulePosition, RuntimeRuleSet.END_OF_TEXT)
     }
 
     fun clear() {
@@ -343,7 +343,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
             when {
                 cls.rulePosition.isAtEnd -> when {
                     cls.rulePosition.isGoal -> {
-                        this.addFirstTerminalAndFirstOfInContext(cls.prev, cls.rulePosition, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                        this.addFirstTerminalAndFirstOfInContext(cls.prev, cls.rulePosition, RuntimeRuleSet.END_OF_TEXT)
                     }
                     cls.rulePosition.isTerminal -> {
                         val r = this.processClosure(cls, calcFollow)
@@ -463,7 +463,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
         }
         // set follow for each runtime-rule - HEIGHT/GRAFT needs it
         if (cls.parentNextNotAtEnd.isEmpty()) {
-            this.addFollowInContext(prev, rr, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+            this.addFollowInContext(prev, rr, RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD)
         } else {
             for (pn in cls.parentNextNotAtEnd) {
                 val nnae = pn.previousNextNotAtEnd?.let { listOf(it) } ?: emptyList()
@@ -486,7 +486,7 @@ internal class FirstFollowCache(val stateSet: ParserStateSet) {
                         if (rpNxt.isAtEnd) {
                             thisNeedsNext = true
                             if (cls.nextNotAtEnd.isEmpty()) {
-                                this.addFirstOfInContext(prev, rp, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                                this.addFirstOfInContext(prev, rp, RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD)
                                 thisNeedsNext = true
                             } else {
                                 for (np in cls.nextNotAtEnd) {

@@ -25,7 +25,7 @@ internal class test_RulePosition_next {
 
     private companion object {
         val EOT = RuntimeRuleSet.END_OF_TEXT
-        val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
+        val RT = RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD
 
         val EOR = RulePosition.END_OF_RULE
         val SOR = RulePosition.START_OF_RULE

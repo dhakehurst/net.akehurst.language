@@ -148,27 +148,31 @@ internal class TransitionBuilder(
     }
 
     fun ctx(vararg rulePositions: RulePosition) {
-        val states = rulePositions.map{ this.stateSet.fetchOrCreateState(listOf(it)) }.toSet()
+        val states = rulePositions.map { this.stateSet.fetchState(listOf(it)) ?: error("State for $it not defined") }.toSet()
         this.ctx(states)
     }
 
     fun ctx(runtimeRule: RuntimeRule, option: Int, position: Int) {
-        val state = this.stateSet.fetchOrCreateState(listOf(RulePosition(runtimeRule, option, position)))
+        val rp = RulePosition(runtimeRule, option, position)
+        val state = this.stateSet.fetchState(listOf(rp)) ?: error("State for $rp not defined")
         this.ctx(setOf(state))
     }
 
     fun src(runtimeRule: RuntimeRule) {
-        check(this.action==Transition.ParseAction.HEIGHT || this.action==Transition.ParseAction.GRAFT|| this.action==Transition.ParseAction.GOAL)
+        check(this.action == Transition.ParseAction.HEIGHT || this.action == Transition.ParseAction.GRAFT || this.action == Transition.ParseAction.GOAL)
         src(runtimeRule, 0, RulePosition.END_OF_RULE)
     }
+
     fun src(runtimeRule: RuntimeRule, option: Int, position: Int) {
-        val state = this.stateSet.fetchOrCreateState(listOf(RulePosition(runtimeRule, option, position)))
+        val rp = RulePosition(runtimeRule, option, position)
+        val state = this.stateSet.fetchState(listOf(rp)) ?: error("State for $rp not defined")
         this.src(state)
     }
 
     fun tgt(runtimeRule: RuntimeRule) = tgt(runtimeRule, 0, RulePosition.END_OF_RULE)
     fun tgt(runtimeRule: RuntimeRule, option: Int, position: Int) {
-        val state = this.stateSet.fetchOrCreateState(listOf(RulePosition(runtimeRule, option, position)))
+        val rp = RulePosition(runtimeRule, option, position)
+        val state = this.stateSet.fetchState(listOf(rp)) ?: error("State for $rp not defined")
         this.tgt(state)
     }
 

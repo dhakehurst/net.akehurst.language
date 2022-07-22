@@ -369,7 +369,7 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
             when {
                 cls.rulePosition.isAtEnd -> when {
                     cls.rulePosition.isGoal -> {
-                        this.addFirstTerminalAndFirstOfInContext(cls.context, cls.rulePosition, RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                        this.addFirstTerminalAndFirstOfInContext(cls.context, cls.rulePosition, RuntimeRuleSet.END_OF_TEXT)
                     }
                     cls.rulePosition.isTerminal -> {
                         val r = this.processClosure(cls, calcFollow)

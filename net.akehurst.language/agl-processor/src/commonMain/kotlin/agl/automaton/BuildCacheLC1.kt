@@ -114,10 +114,10 @@ internal class BuildCacheLC1(
                 val mergedAtEnd = tisAtEnd.map {
                     val parent = it.parent?.let { listOf(it.rulePosition) } ?: emptyList()
                     val lhs = when (it.action) {
-                        Transition.ParseAction.GOAL -> LookaheadSetPart.UP
+                        Transition.ParseAction.GOAL -> LookaheadSetPart.EOT
                         Transition.ParseAction.WIDTH, Transition.ParseAction.EMBED -> {
                             it.to.map { tgt ->
-                                if (tgt.runtimeRule == RuntimeRuleSet.USE_PARENT_LOOKAHEAD) {
+                                if (tgt.runtimeRule == RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD) {
                                     LookaheadSetPart.EMPTY
                                 } else {
                                     this.firstOfCache[tgt]!![this.rulePosition]!!
@@ -141,7 +141,7 @@ internal class BuildCacheLC1(
                     val action = me.key.first
                     val to = me.key.second
                     val lookaheadSet = when (action) {
-                        Transition.ParseAction.GOAL -> LookaheadSetPart.UP
+                        Transition.ParseAction.GOAL -> LookaheadSetPart.EOT
                         Transition.ParseAction.WIDTH, Transition.ParseAction.EMBED -> me.value.map { tr ->
                             val p = when {
                                 this.isAtStart -> tr.prev ?: this.rulePosition
@@ -348,14 +348,14 @@ internal class BuildCacheLC1(
                     }.toSet()
                 }
 
-            val parentFollowAtEnd = this.parent?.followAtEnd ?: LookaheadSetPart.UP //parent is null for G & UP comes after (G,0,-1)
+            val parentFollowAtEnd = this.parent?.followAtEnd ?: LookaheadSetPart.EOT //parent is null for G & UP comes after (G,0,-1)
             val expectedAt = when {
                 rulePosition.isAtEnd -> followAtEnd
-                rulePosition.isGoal -> LookaheadSetPart.UP // follow of (G,0,0) is UP
+                rulePosition.isGoal -> LookaheadSetPart.EOT // follow of (G,0,0) is UP
                 else -> rulePosition.next().map { nx ->
                     when {
                         nx.isAtEnd -> followAtEnd
-                        nx.isGoal -> LookaheadSetPart.UP
+                        nx.isGoal -> LookaheadSetPart.EOT
                         else -> expectedAt(nx, followAtEnd)
                     }
                 }.reduce { acc, l -> acc.union(l) }
@@ -443,9 +443,9 @@ internal class BuildCacheLC1(
 
         val startRP = this.stateSet.startRulePosition
         // G ends at G = S . but we have an implied UP after that, so followAtEnd of G is UP
-        val startState = L1State(null, startRP, LookaheadSetPart.UP)
+        val startState = L1State(null, startRP, LookaheadSetPart.EOT)
         val finishRP = this.stateSet.finishRulePosition
-        val finishState = L1State(null, finishRP, LookaheadSetPart.UP)
+        val finishState = L1State(null, finishRP, LookaheadSetPart.EOT)
 
         val parentOf = lazyMutableMapNonNull<Pair<RulePosition, RuntimeRule>, MutableSet<L1State>> { mutableSetOf() }
         val l1States = mutableSetOf(startState, finishState)
@@ -662,9 +662,12 @@ internal class BuildCacheLC1(
         if (Debug.OUTPUT_BUILD) Debug.debug(Debug.IndentDelta.INC_AFTER) { "START calcWidthInfo($prevState, $fromState) - ${fromState.state.rulePositions.map { it.item?.tag }}" }
         this.firstFollowCache.clear()
         //FirstFollow3
+        val rtLh = fromState.runtimeLookaheadSet
         val firstTerminals = prevState.state.rulePositions.flatMap { prev ->
             fromState.state.rulePositions.flatMap { from ->
-                this.firstFollowCache.firstTerminalInContext(prev, from)
+                rtLh.flatMap { rt ->
+                    this.firstFollowCache.firstTerminalInContext(prev, from, rt.fullContent)
+                }
             }
         }.toSet()
         val wis = firstTerminals.map { (rr,follow) ->
@@ -768,9 +771,14 @@ internal class BuildCacheLC1(
     //for graft, previous must match prevGuard, for height must not match
     private fun calcHeightOrGraftInto(prevPrev:RuntimeState, prev: RuntimeState, from: RuntimeState): Set<HeightGraftInfo> {//, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
         //FirstFollow3
+        val rtLh = prev.runtimeLookaheadSet
         val info: Set<HeightGraftInfo> = prevPrev.state.rulePositions.flatMap { contextContext ->
             prev.state.rulePositions.flatMap { context ->
-                val parentsOfFrom = from.state.runtimeRules.flatMap { fr -> this.firstFollowCache.parentInContext(contextContext, context, fr) }.toSet()
+                val parentsOfFrom = from.state.runtimeRules.flatMap { fr ->
+                    rtLh.flatMap { rt ->
+                        this.firstFollowCache.parentInContext(contextContext, context, fr, rt.fullContent)
+                    }
+                }.toSet()
                 parentsOfFrom.flatMap { (parentFollowAtEnd, parentNextInfo, parent) ->
                     val action = when {
                         parent.isGoal -> Transition.ParseAction.GOAL
@@ -1016,7 +1024,7 @@ return when {
 }
 }
 */
-
+/*
     private fun dnClosureLC1(rp: RulePosition): Set<ClosureItemLC1> {
         val upLhs: LookaheadSetPart = LookaheadSetPart.UP
         return when {
@@ -1037,7 +1045,8 @@ return when {
             }
         }
     }
-
+*/
+    /*
     private fun calcLookaheadDown(rulePosition: RulePosition, ifReachEnd: LookaheadSetPart): LookaheadSetPart {
         return when {
             rulePosition.isAtEnd -> ifReachEnd
@@ -1051,7 +1060,7 @@ return when {
             }
         }
     }
-
+*/
     // does not go all the way down to terminals,
 // stops just above,
 // when item.rulePosition.items is a TERMINAL/EMBEDDED
@@ -1134,7 +1143,6 @@ return when {
         }
         return items
     }
-
 
     private fun pFirstTerm(rp: RulePosition, done: MutableSet<RulePosition> = mutableSetOf()): Set<RuntimeRule> {
         return if (done.contains(rp)) {

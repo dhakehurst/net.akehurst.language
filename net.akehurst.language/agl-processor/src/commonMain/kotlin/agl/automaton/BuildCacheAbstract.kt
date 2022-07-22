@@ -120,7 +120,7 @@ internal abstract class BuildCacheAbstract(
                 RuntimeRuleSet.EOT_RULE_NUMBER == rule.number -> TODO()
                 RuntimeRuleSet.SKIP_RULE_NUMBER == rule.number -> TODO()
                 RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER == rule.number -> firstOfNotEmptySafe(rule, doneRp, done)
-                RuntimeRuleSet.USE_PARENT_LOOKAHEAD_RULE_NUMBER == rule.number -> TODO()
+                RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD_RULE_NUMBER == rule.number -> TODO()
                 else -> error("unsupported rule number $rule")
             }
             done[rule.number] -> _firstOfNotEmpty[rule.number] ?: FirstOfResult(false, LookaheadSetPart.EMPTY)

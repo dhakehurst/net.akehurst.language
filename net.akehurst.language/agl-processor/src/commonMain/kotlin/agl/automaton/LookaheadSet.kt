@@ -5,9 +5,8 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 
 internal class Lookahead(
     val guard: LookaheadSet,
-    _up: LookaheadSet
+    val up: LookaheadSet
 ) {
-    val up: LookaheadSet = _up //if (_up.includesUP) LookaheadSet.UP else LookaheadSet.EMPTY
     companion object {
         val EMPTY = Lookahead(LookaheadSet.EMPTY, LookaheadSet.EMPTY)
         fun merge(automaton: ParserStateSet, initial: Set<Lookahead>): Set<Lookahead> {
@@ -58,8 +57,7 @@ internal class Lookahead(
         }
     }
 
-    val _id = arrayOf(guard, up)
-    override fun hashCode(): Int = _id.contentHashCode()
+    override fun hashCode(): Int = arrayOf(guard, up).contentHashCode()
     override fun equals(other: Any?): Boolean = when {
         other !is Lookahead -> false
         this.up != other.up -> false
@@ -72,7 +70,7 @@ internal class Lookahead(
 
 internal class LookaheadSet(
     val number: Int,
-    val includesUP: Boolean,
+    val includesRT: Boolean,
     val includesEOT: Boolean,
     val matchANY: Boolean,
     val content: Set<RuntimeRule>
@@ -81,17 +79,17 @@ internal class LookaheadSet(
         val EMPTY = LookaheadSet(-1, false, false, false, emptySet())
         val ANY = LookaheadSet(-2, false, false, true, emptySet())
         val EOT = LookaheadSet(-3, false, true, false, emptySet())
-        val UP = LookaheadSet(-4, true, false, false, emptySet())
+        val RT = LookaheadSet(-4, true, false, false, emptySet())
         val UNCACHED_NUMBER = -5
 
         fun createFromRuntimeRules(automaton: ParserStateSet, fullContent: Set<RuntimeRule>): LookaheadSet {
             return when {
                 fullContent.isEmpty() -> LookaheadSet.EMPTY
                 else -> {
-                    val includeUP = fullContent.contains(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+                    val includeUP = fullContent.contains(RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD)
                     val includeEOT = fullContent.contains(RuntimeRuleSet.END_OF_TEXT)
                     val matchAny = fullContent.contains(RuntimeRuleSet.ANY_LOOKAHEAD)
-                    val content = fullContent.minus(RuntimeRuleSet.USE_PARENT_LOOKAHEAD).minus(RuntimeRuleSet.END_OF_TEXT).minus(RuntimeRuleSet.ANY_LOOKAHEAD)
+                    val content = fullContent.minus(RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD).minus(RuntimeRuleSet.END_OF_TEXT).minus(RuntimeRuleSet.ANY_LOOKAHEAD)
                     automaton.createLookaheadSet(includeUP, includeEOT, matchAny, content)
                 }
             }
@@ -101,7 +99,7 @@ internal class LookaheadSet(
     val fullContent: Set<RuntimeRule>
         get() {
             val c = mutableSetOf<RuntimeRule>()
-            if (this.includesUP) c.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+            if (this.includesRT) c.add(RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD)
             if (this.includesEOT) c.add(RuntimeRuleSet.END_OF_TEXT)
             if (this.matchANY) c.add(RuntimeRuleSet.ANY_LOOKAHEAD)
             c.addAll(this.content)
@@ -115,43 +113,48 @@ internal class LookaheadSet(
         Regex(str)
     }
 
-    val part get() = LookaheadSetPart(this.includesUP, this.includesEOT, this.matchANY, this.content)
+    val part get() = LookaheadSetPart(this.includesRT, this.includesEOT, this.matchANY, this.content)
 
     /**
-     * runtimeLookahead must not include UP
-     * replace UP in this with runtimeLookahead
+     * eotLookahead && runtimeLookahead must not include RT
+     * replace RT in this with runtimeLookahead
+     * replace EOT in this with eotLookahead
      */
-    fun resolveUP(runtimeLookahead: LookaheadSet): LookaheadSetPart {
+    fun resolve(eotLookahead: LookaheadSet, runtimeLookahead: LookaheadSet): LookaheadSetPart {
         return when {
-            runtimeLookahead.includesUP -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
-            UP == this -> runtimeLookahead.part
+            eotLookahead.includesRT -> error("EOT lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
+            runtimeLookahead.includesRT -> error("EOT lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
+            EOT == this -> eotLookahead.part
+            RT == this -> runtimeLookahead.part
             else -> {
-                val content = if (this.includesUP) this.content.union(runtimeLookahead.content) else this.content
-                val eol = this.includesEOT || (this.includesUP && runtimeLookahead.includesEOT)
-                val ma = this.matchANY || (this.includesUP && runtimeLookahead.matchANY)
-                LookaheadSetPart(false, eol, ma, content)
+                var resolvedContent = this.content
+                resolvedContent = if (this.includesRT) resolvedContent.union(runtimeLookahead.content) else resolvedContent
+                resolvedContent = if (this.includesEOT) resolvedContent.union(eotLookahead.content) else resolvedContent
+                val eot = this.includesEOT || (this.includesRT && runtimeLookahead.includesEOT)
+                val ma = this.matchANY || (this.includesRT && eotLookahead.matchANY)
+                LookaheadSetPart(false, eot, ma, resolvedContent)
             }
         }
     }
 
     fun union(automaton: ParserStateSet, lookahead: LookaheadSet): LookaheadSet {
-        val up = this.includesUP || lookahead.includesUP
-        val eol = this.includesEOT || lookahead.includesEOT
+        val rt = this.includesRT || lookahead.includesRT
+        val eot = this.includesEOT || lookahead.includesEOT
         val ma = this.matchANY || lookahead.matchANY
-        return automaton.createLookaheadSet(up, eol, ma, this.content.union(lookahead.content))
+        return automaton.createLookaheadSet(rt, eot, ma, this.content.union(lookahead.content))
     }
 
     fun unionContent(automaton: ParserStateSet, additionalContent: Set<RuntimeRule>): LookaheadSet {
-        val up = this.includesUP
-        val eol = this.includesEOT
+        val rt = this.includesRT
+        val eot = this.includesEOT
         val ma = this.matchANY
-        return automaton.createLookaheadSet(up, eol, ma, this.content.union(additionalContent))
+        return automaton.createLookaheadSet(rt, eot, ma, this.content.union(additionalContent))
     }
 
     fun containsAll(other: LookaheadSet): Boolean = when {
         this.matchANY -> true
         this.includesEOT.not() && other.includesEOT -> false
-        this.includesUP.not() && other.includesUP -> false
+        this.includesRT.not() && other.includesRT -> false
         else -> this.fullContent.containsAll(other.fullContent)
     }
 
@@ -164,7 +167,7 @@ internal class LookaheadSet(
     override fun toString(): String = when {
         this == EMPTY -> "LookaheadSet{$number,[EMPTY]}"
         this == ANY -> "LookaheadSet{$number,[ANY]}"
-        this == UP -> "LookaheadSet{$number,[UP]}"
+        this == RT -> "LookaheadSet{$number,[RT]}"
         this == EOT -> "LookaheadSet{$number,[EOT]}"
         else -> "LookaheadSet{$number,${this.fullContent.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }}}"
     }

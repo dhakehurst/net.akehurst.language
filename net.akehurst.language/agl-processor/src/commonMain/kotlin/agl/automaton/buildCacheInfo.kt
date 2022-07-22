@@ -21,23 +21,23 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 
 internal data class LookaheadSetPart(
-    val includesUP: Boolean,
+    val includesRT: Boolean,
     val includesEOT:Boolean,
     val matchANY:Boolean,
     val content: Set<RuntimeRule>
 ) {
     companion object {
         val EMPTY = LookaheadSetPart(false, false, false, emptySet())
-        val UP = LookaheadSetPart(true, false, false, emptySet())
+        val RT = LookaheadSetPart(true, false, false, emptySet())
         val ANY = LookaheadSetPart(false, false, true, emptySet())
         val EOT = LookaheadSetPart(false, true, false,emptySet())
 
         fun createFromRuntimeRules(fullContent:Set<RuntimeRule>): LookaheadSetPart {
-            val includeUP = fullContent.contains(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+            val includeRT = fullContent.contains(RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD)
             val includeEOT = fullContent.contains(RuntimeRuleSet.END_OF_TEXT)
             val matchAny = fullContent.contains(RuntimeRuleSet.ANY_LOOKAHEAD)
-            val content = fullContent.minus(RuntimeRuleSet.USE_PARENT_LOOKAHEAD).minus(RuntimeRuleSet.END_OF_TEXT).minus(RuntimeRuleSet.ANY_LOOKAHEAD)
-            return LookaheadSetPart(includeUP, includeEOT, matchAny, content)
+            val content = fullContent.minus(RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD).minus(RuntimeRuleSet.END_OF_TEXT).minus(RuntimeRuleSet.ANY_LOOKAHEAD)
+            return LookaheadSetPart(includeRT, includeEOT, matchAny, content)
         }
     }
 
@@ -50,7 +50,7 @@ internal data class LookaheadSetPart(
 
     val fullContent:Set<RuntimeRule> get() {
         val cont = mutableSetOf<RuntimeRule>()
-        if (this.includesUP) cont.add(RuntimeRuleSet.USE_PARENT_LOOKAHEAD)
+        if (this.includesRT) cont.add(RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD)
         if (this.includesEOT) cont.add(RuntimeRuleSet.END_OF_TEXT)
         if (this.matchANY) cont.add(RuntimeRuleSet.ANY_LOOKAHEAD)
         cont.addAll(this.content)
@@ -61,7 +61,7 @@ internal data class LookaheadSetPart(
         this.matchANY -> ANY
         lhs.matchANY -> ANY
         else -> LookaheadSetPart(
-            this.includesUP || lhs.includesUP,
+            this.includesRT || lhs.includesRT,
             this.includesEOT || lhs.includesEOT,
             false,
             this.content.union(lhs.content)
@@ -71,7 +71,7 @@ internal data class LookaheadSetPart(
     fun containsAll(other: LookaheadSetPart):Boolean = when {
         this.matchANY -> true
         this.includesEOT.not() && other.includesEOT -> false
-        this.includesUP.not() && other.includesUP -> false
+        this.includesRT.not() && other.includesRT -> false
         else -> this.fullContent.containsAll(other.fullContent)
     }
 

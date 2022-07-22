@@ -76,14 +76,14 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
             val s9 = state(RP(G, 0, EOR))                                // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(b), emptySet(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), setOf(RP(ABCZ,0,0), RP(ABC,0,0)))
+            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(EOT)), setOf(RP(ABCZ,0,0), RP(ABC,0,0)))
             transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
-            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)), setOf(RP(ABCZ,0,1), RP(ABC,0,1)))
-            transition(s0, s4, s5, WIDTH, setOf(UP,z), setOf(), null)
-            transition(s4, s5, s6, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(ABC,0,2)))
-            transition(s4, s5, s7, GRAFT, setOf(z), setOf(setOf(UP)), setOf(RP(ABCZ,0,2)))
-            transition(s0, s6, s8, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(S,1,SOR)))
-            transition(s0, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G,0,SOR)))
+            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(EOT)), setOf(RP(ABCZ,0,1), RP(ABC,0,1)))
+            transition(s0, s4, s5, WIDTH, setOf(EOT,z), setOf(), null)
+            transition(s4, s5, s6, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(ABC,0,2)))
+            transition(s4, s5, s7, GRAFT, setOf(z), setOf(setOf(EOT)), setOf(RP(ABCZ,0,2)))
+            transition(s0, s6, s8, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(S,1,SOR)))
+            transition(s0, s8, s9, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(G,0,SOR)))
 
         }
 
@@ -114,16 +114,16 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
             val s11 = state(RP(G, 0, EOR))                               // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(b), emptySet(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), setOf(RP(ABCZ,0,0), RP(ABC,0,0)))
+            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(EOT)), setOf(RP(ABCZ,0,0), RP(ABC,0,0)))
             transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
-            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)), setOf(RP(ABCZ,0,1), RP(ABC,0,1)))
-            transition(s0, s4, s5, WIDTH, setOf(UP,z), setOf(), null)
-            transition(s4, s5, s6, GRAFT, setOf(z), setOf(setOf(UP)), setOf(RP(ABCZ,0,2)))
-            transition(s4, s5, s7, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(ABC,0,2)))
-            transition(s0, s6, s8, WIDTH, setOf(UP), setOf(), null)
-            transition(s6, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(ABCZ,0,3)))
-            transition(s0, s9, s10, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(S,0,SOR)))
-            transition(s0, s10, s11, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G,0,SOR)))
+            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(EOT)), setOf(RP(ABCZ,0,1), RP(ABC,0,1)))
+            transition(s0, s4, s5, WIDTH, setOf(EOT,z), setOf(), null)
+            transition(s4, s5, s6, GRAFT, setOf(z), setOf(setOf(EOT)), setOf(RP(ABCZ,0,2)))
+            transition(s4, s5, s7, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(ABC,0,2)))
+            transition(s0, s6, s8, WIDTH, setOf(EOT), setOf(), null)
+            transition(s6, s8, s9, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(ABCZ,0,3)))
+            transition(s0, s9, s10, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(S,0,SOR)))
+            transition(s0, s10, s11, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(G,0,SOR)))
 
         }
 
@@ -168,18 +168,18 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
             val s12 = state(RP(ABCZ, 0, 3))                          // ABCZ = a b c . z
 
             transition(s0, s0, s7, WIDTH, setOf(b), emptySet(), null)
-            transition(s0, s2, s1, GOAL, setOf(UP), setOf(setOf()),null)
-            transition(s0, s3, s1, GOAL, setOf(UP), setOf(setOf()), null)
-            transition(s0, s4, s3, HEIGHT, setOf(UP), setOf(setOf(UP)),null)
-            transition(s11, s5, s4, GRAFT, setOf(UP), setOf(setOf(UP)),setOf(RP(ABCZ,0,2), RP(ABC,0,2)))
-            transition(s11, s5, s12, GRAFT, setOf(z), setOf(setOf(UP)), setOf(RP(ABCZ,0,2), RP(ABC,0,2)))
-            transition(s10, s6, s11, GRAFT, setOf(c), setOf(setOf(UP)), setOf(RP(ABCZ,0,1), RP(ABC,0,1)))
-            transition(s0, s7, s10, HEIGHT, setOf(b), setOf(setOf(UP)), null)
-            transition(s0, s8, s2, HEIGHT, setOf(UP), setOf(setOf(UP)), null)
-            transition(s12, s9, s8, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(ABCZ,0,3)))
+            transition(s0, s2, s1, GOAL, setOf(EOT), setOf(setOf()),null)
+            transition(s0, s3, s1, GOAL, setOf(EOT), setOf(setOf()), null)
+            transition(s0, s4, s3, HEIGHT, setOf(EOT), setOf(setOf(EOT)),null)
+            transition(s11, s5, s4, GRAFT, setOf(EOT), setOf(setOf(EOT)),setOf(RP(ABCZ,0,2), RP(ABC,0,2)))
+            transition(s11, s5, s12, GRAFT, setOf(z), setOf(setOf(EOT)), setOf(RP(ABCZ,0,2), RP(ABC,0,2)))
+            transition(s10, s6, s11, GRAFT, setOf(c), setOf(setOf(EOT)), setOf(RP(ABCZ,0,1), RP(ABC,0,1)))
+            transition(s0, s7, s10, HEIGHT, setOf(b), setOf(setOf(EOT)), null)
+            transition(s0, s8, s2, HEIGHT, setOf(EOT), setOf(setOf(EOT)), null)
+            transition(s12, s9, s8, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(ABCZ,0,3)))
             transition(s0, s10, s6, WIDTH, setOf(c), setOf(), null)
-            transition(s0, s11, s5, WIDTH, setOf(UP,z), setOf(), null)
-            transition(s0, s12, s9, WIDTH, setOf(UP), setOf(), null)
+            transition(s0, s11, s5, WIDTH, setOf(EOT,z), setOf(), null)
+            transition(s0, s12, s9, WIDTH, setOf(EOT), setOf(), null)
         }
 
         AutomatonTest.assertEquals(expected, actual)

@@ -29,7 +29,7 @@ internal abstract class test_AutomatonUtilsAbstract {
         const val p2 = 2
         const val p3 = 3
         val EOT = RuntimeRuleSet.END_OF_TEXT
-        val UP = RuntimeRuleSet.USE_PARENT_LOOKAHEAD
+        val RT = RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD
         val ANY = RuntimeRuleSet.ANY_LOOKAHEAD
 
         const val EOR = RulePosition.END_OF_RULE
@@ -81,7 +81,7 @@ internal abstract class test_AutomatonUtilsAbstract {
         val GOAL = Transition.ParseAction.GOAL
 
         fun RP(rr: RuntimeRule, opt: Int, pos: Int): RulePosition = RulePosition(rr, opt, pos)
-        fun LHS(content: Set<RuntimeRule>) = LookaheadSetPart(content.contains(UP), content.contains(EOT), false, content.minus(UP))
+        fun LHS(content: Set<RuntimeRule>) = LookaheadSetPart(content.contains(RT), content.contains(EOT), false, content.minus(RT).minus(EOT))
         fun LHS(vararg rrs: RuntimeRule) = LHS(rrs.toSet())
     }
 

@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.runtime.graph
 
+import net.akehurst.language.agl.automaton.Lookahead
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.collections.BinaryHeap
@@ -424,9 +425,9 @@ internal class ParseGraph(
 
     fun previousOf(gn: GrowingNodeIndex): Set<GrowingNodeIndex> = this._gss.peek(gn)
 
-    fun start(goalState: ParserState, startPosition: Int, lookahead: Set<LookaheadSet>, initialSkipData: TreeData?) {
+    fun start(goalState: ParserState, startPosition: Int, runtimeLookahead: Set<LookaheadSet>, initialSkipData: TreeData?) {
         val nextInputPositionAfterSkip = initialSkipData?.nextInputPosition ?: startPosition
-        val st = this.treeData.createGrowingNodeIndex(goalState, lookahead, nextInputPositionAfterSkip, nextInputPositionAfterSkip, nextInputPositionAfterSkip, 0)
+        val st = this.treeData.createGrowingNodeIndex(goalState, runtimeLookahead, nextInputPositionAfterSkip, nextInputPositionAfterSkip, nextInputPositionAfterSkip, 0)
         val goalGN = this.createGrowingNode(st)
         this._gss.root(st)
         this._growingHeadHeap[st] = goalGN
@@ -717,28 +718,33 @@ internal class ParseGraph(
         this.treeData.removeTree(node)
     }
 
-    fun isLookingAt(lookaheadGuard: LookaheadSet, runtimeLookahead: LookaheadSet?, nextInputPosition: Int): Boolean {
+    /**
+     * eotLookahead && runtimeLookahead must not include RT
+     */
+    fun isLookingAt(lookaheadGuard: LookaheadSet, eotLookahead: LookaheadSet, runtimeLookahead: LookaheadSet, nextInputPosition: Int): Boolean {
         //runtimeLookahead should never includeUP
+        val eotResolvedContent = when {
+            lookaheadGuard.includesEOT -> lookaheadGuard.content + eotLookahead
+            else -> lookaheadGuard.content
+        }
         return when {
             lookaheadGuard.matchANY -> true
-            null != runtimeLookahead && runtimeLookahead.includesUP -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
-            null == runtimeLookahead -> lookaheadGuard.content.any {
-                this.input.isLookingAt(nextInputPosition, it)
-            } //this.input.isLookingAt(nextInputPosition, lookaheadGuard.regex)
-            LookaheadSet.UP == lookaheadGuard -> when {
+            runtimeLookahead.includesRT -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
+            eotLookahead.includesRT -> error("EOT lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
+            LookaheadSet.RT == lookaheadGuard -> when { // EOT should already be resolved in runtimeLookahead
                 runtimeLookahead.matchANY -> true
                 runtimeLookahead.includesEOT && this.input.isEnd(nextInputPosition) -> true
                 runtimeLookahead.content.isEmpty() -> false
                 else -> runtimeLookahead.content.any { this.input.isLookingAt(nextInputPosition, it) }
             }
-            lookaheadGuard.includesUP.not() -> when {
-                lookaheadGuard.matchANY -> true
-                lookaheadGuard.includesEOT && this.input.isEnd(nextInputPosition) -> true
-                lookaheadGuard.content.isEmpty() -> false
-                else -> lookaheadGuard.content.any { this.input.isLookingAt(nextInputPosition, it) }
-            }
+           // lookaheadGuard.includesRT.not() -> when {
+           //     lookaheadGuard.matchANY -> true
+           //     lookaheadGuard.includesEOT && eotLookahead.includesEOT && this.input.isEnd(nextInputPosition) -> true
+           //     lookaheadGuard.content.isEmpty() -> false
+           //     else -> lookaheadGuard.content.any { this.input.isLookingAt(nextInputPosition, it) }
+            //}
             else -> {
-                val lhs = lookaheadGuard.resolveUP(runtimeLookahead)
+                val lhs = lookaheadGuard.resolve(eotLookahead, runtimeLookahead)
                 when {
                     lhs.matchANY -> true
                     lhs.includesEOT && this.input.isEnd(nextInputPosition) -> true

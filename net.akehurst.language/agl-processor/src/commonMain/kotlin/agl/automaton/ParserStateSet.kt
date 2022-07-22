@@ -197,24 +197,24 @@ internal class ParserStateSet(
     internal fun fetchCompatibleOrCreateState(rulePositions: List<RulePosition>): ParserState =
         fetchCompatibleState(rulePositions) ?: this.createState(rulePositions)
 
-    internal fun createLookaheadSet(includeUP: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet {
+    internal fun createLookaheadSet(includeRT: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet {
         return when {
             content.isEmpty() -> when {
-                includeUP && includeEOT.not() && matchAny.not() -> LookaheadSet.UP
-                includeUP.not() && includeEOT && matchAny.not() -> LookaheadSet.EOT
-                includeUP.not() && includeEOT.not() && matchAny -> LookaheadSet.ANY
+                includeRT && includeEOT.not() && matchAny.not() -> LookaheadSet.RT
+                includeRT.not() && includeEOT && matchAny.not() -> LookaheadSet.EOT
+                includeRT.not() && includeEOT.not() && matchAny -> LookaheadSet.ANY
                 else -> LookaheadSet.EMPTY
             }
             else -> {
                 val existing = this.lookaheadSets.firstOrNull {
-                    it.includesUP == includeUP &&
+                    it.includesRT == includeRT &&
                             it.includesEOT == includeEOT &&
                             it.matchANY == matchAny &&
                             it.content == content  //TODO: slow
                 }
                 if (null == existing) {
                     val num = this.nextLookaheadSetId++
-                    val lhs = LookaheadSet(num, includeUP, includeEOT, matchAny, content)
+                    val lhs = LookaheadSet(num, includeRT, includeEOT, matchAny, content)
                     this.lookaheadSets.add(lhs)
                     lhs
                 } else {
@@ -224,17 +224,20 @@ internal class ParserStateSet(
         }
     }
 
+    internal fun createLookaheadSet(part:LookaheadSetPart):LookaheadSet = createLookaheadSet(part.includesRT, part.includesEOT,part.matchANY,part.content)
+
     private val createWithParent_cache = mutableMapOf<Pair<Int, Int>, LookaheadSet>()
     fun createWithParent(upLhs: LookaheadSet, runtimeLookahead: LookaheadSet): LookaheadSet {
-        return if (upLhs.includesUP) {
+        TODO("needs fixing to resolve eot")
+        return if (upLhs.includesRT) {
             val res = createWithParent_cache[Pair(upLhs.number, runtimeLookahead.number)]
             if (null == res) {
                 val lhs = when {
-                    LookaheadSet.UP == upLhs -> runtimeLookahead
+                    LookaheadSet.RT == upLhs -> runtimeLookahead
                     else -> {
-                        val content = if (upLhs.includesUP) upLhs.content.union(runtimeLookahead.content) else upLhs.content
-                        val eol = upLhs.includesEOT || (upLhs.includesUP && runtimeLookahead.includesEOT)
-                        val ma = upLhs.matchANY || (upLhs.includesUP && runtimeLookahead.matchANY)
+                        val content = if (upLhs.includesRT) upLhs.content.union(runtimeLookahead.content) else upLhs.content
+                        val eol = upLhs.includesEOT || (upLhs.includesRT && runtimeLookahead.includesEOT)
+                        val ma = upLhs.matchANY || (upLhs.includesRT && runtimeLookahead.matchANY)
                         this.createLookaheadSet(false, eol, ma, content)
                     }
                 }
@@ -263,7 +266,6 @@ internal class ParserStateSet(
     private fun buildAndTraverse() {
         // this.buildCache.buildCaches()
         val stateInfos = this.buildCache.stateInfo()
-
         for (si in stateInfos) {
             if (si.rulePositions != this.startState.rulePositions) {
                 if(Debug.CHECK)  check(this.states.contains(si.rulePositions).not()) { "State already created for $si.rulePositions" }
@@ -288,7 +290,6 @@ internal class ParserStateSet(
                 state.outTransitions.createTransition(previousStates.toSet(), state, action, to, lhs, prevGuard, runtimeGuard)
             }
         }
-
     }
 
     private fun calcUsedRules(

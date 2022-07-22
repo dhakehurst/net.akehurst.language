@@ -130,16 +130,16 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
             val s19 = state(RP(S4, 0, EOR))
             val s20 = state(RP(S, 3, EOR))
 
-            transition(s0, s0, s1, WIDTH, setOf(a, c), setOf(setOf(UP)), setOf())
-            transition(s0, s0, s2, WIDTH, setOf(d), setOf(setOf(UP)), setOf())
+            transition(s0, s0, s1, WIDTH, setOf(a, c), setOf(setOf(EOT)), setOf())
+            transition(s0, s0, s2, WIDTH, setOf(d), setOf(setOf(EOT)), setOf())
 
             transition(s0, s1, s3, HEIGHT, setOf(a), setOf(setOf(a)), setOf(RP(rA, 0, 0)))
             transition(s0, s1, s4, HEIGHT, setOf(c), setOf(setOf(c)), setOf(RP(rB, 0, 0)))
             transition(s14, s1, s3, HEIGHT, setOf(c), setOf(setOf(c)), setOf(RP(rA, 0, 0)))
             transition(s14, s1, s4, HEIGHT, setOf(a), setOf(setOf(a)), setOf(RP(rB, 0, 0)))
 
-            transition(s0, s2, s4, HEIGHT, setOf(a, c), setOf(setOf(UP)), setOf())
-            transition(s0, s0, s1, HEIGHT, setOf(a, c), setOf(setOf(UP)), setOf())
+            transition(s0, s2, s4, HEIGHT, setOf(a, c), setOf(setOf(EOT)), setOf())
+            transition(s0, s0, s1, HEIGHT, setOf(a, c), setOf(setOf(EOT)), setOf())
         }
 
         AutomatonTest.assertEquals(expected, actual)

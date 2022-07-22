@@ -52,7 +52,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
 
             transition(s0, s0, s3, WIDTH, setOf(ANY), setOf(), null)
             transition(s0, s3, s2, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, 0, SOR)))
-            transition(s0, s2, s1, GRAFT, setOf(UP), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
+            transition(s0, s2, s1, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -103,7 +103,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             transition(s4, s5, s6, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, 0, 2)))
             transition(s0, s6, s7, WIDTH, setOf(ANY), setOf(), null)
             transition(s6, s7, s8, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, 0, 3)))
-            transition(s0, s8, s9, GRAFT, setOf(UP), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
+            transition(s0, s8, s9, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -158,10 +158,10 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             transition(s0, s2, s6, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, 1, SOR)))
             transition(s0, s3, s7, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, 2, SOR)))
             transition(s0, s4, s8, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, 3, SOR)))
-            transition(s0, s5, s9, GRAFT, setOf(UP), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
-            transition(s0, s6, s9, GRAFT, setOf(UP), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
-            transition(s0, s7, s9, GRAFT, setOf(UP), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
-            transition(s0, s8, s9, GRAFT, setOf(UP), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
+            transition(s0, s5, s9, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
+            transition(s0, s6, s9, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
+            transition(s0, s7, s9, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
+            transition(s0, s8, s9, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
 
         }
 
@@ -222,7 +222,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             transition(s0, s6, s7, WIDTH, setOf(ANY), setOf(), null)
             transition(s6, s7, s8, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(C, 0, SOR)))
             transition(s6, s8, s9, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, 0, 2)))
-            transition(s0, s9, s10, GRAFT, setOf(UP), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
+            transition(s0, s9, s10, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
 
         }
 
@@ -259,7 +259,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
 
             transition(s0, s0, s1, WIDTH, setOf(ANY), setOf(), null)
             transition(s0, s1, s2, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, 0, SOR)))
-            transition(s0, s2, s3, GRAFT, setOf(UP), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
+            transition(s0, s2, s3, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
 
         }
 
@@ -335,7 +335,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             transition(s10, s12, s14, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(oC, 1, SOR)))
             transition(s10, s13, s15, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, 0, 2)))
             transition(s10, s14, s15, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, 0, 2)))
-            transition(s0, s15, s16, GRAFT, setOf(UP), setOf(setOf(ANY)), setOf(RP(G, 0, 0)))
+            transition(s0, s15, s16, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, 0, 0)))
 
         }
 
@@ -397,7 +397,7 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             transition(s0, s4, s5, WIDTH, setOf(ANY), setOf(setOf(ANY)), null)
             transition(s0, s5, s6, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(ABC1, 0, 2), RP(ABC2, 0, 2)))
             transition(s0, s6, s7, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, 0, SOR), RP(S, 1, SOR)))
-            transition(s0, s7, s8, GRAFT, setOf(UP), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
+            transition(s0, s7, s8, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
 
         }
 
@@ -772,13 +772,13 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
             transition(s0, s0, s1, WIDTH, setOf(ANY), emptySet(), null)
             transition(setOf(s0, s3), s1, s2, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, 0, SOR)))
             transition(setOf(s0, s3), s1, s3, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S1, 0, SOR)))
-            transition(s0, s2, s4, GRAFT, setOf(UP), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
+            transition(s0, s2, s4, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
             transition(s3, s2, s5, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S1, 0, 1)))
             transition(setOf(s0, s3), s3, s1, WIDTH, setOf(ANY), emptySet(), null)
             transition(setOf(s0, s3), s5, s6, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, 1, SOR)))
             transition(s3, s5, s6, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, 1, SOR)))
             transition(s3, s6, s5, GRAFT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S1, 0, 1)))
-            transition(s0, s6, s4, GRAFT, setOf(UP), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
+            transition(s0, s6, s4, GRAFT, setOf(EOT), setOf(setOf(ANY)), setOf(RP(G, 0, SOR)))
 
         }
 

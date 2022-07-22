@@ -82,15 +82,15 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
             val s9 = state(RP(E, 1, EOR))     /* E = E1 . */
             val s10 = state(RP(G,0,EOR))      /* G = S . */
 
-            transition(s0, s0, s1, WIDTH, setOf(UP,o), setOf(), null)
-            transition(setOf(s0,s7), s1, s2, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(P, 0, SOR)))
+            transition(s0, s0, s1, WIDTH, setOf(EOT,o), setOf(), null)
+            transition(setOf(s0,s7), s1, s2, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(P, 0, SOR)))
             //transition(s0, s2, s3, WIDTH, setOf(c, d), setOf(), null)
-            //transition(s2, s3, s4, GRAFT, setOf(c, d), setOf(UP), listOf(RP(ABC, 0, 1), RP(ABD, 0, 1)))
-            //transition(s0, s4, s5, WIDTH, setOf(UP), setOf(), null)
-            //transition(s0, s4, s6, WIDTH, setOf(UP), setOf(), null)
-            //transition(s4, s5, s7, GRAFT, setOf(UP), setOf(UP), listOf(RP(ABC, 0, 2)))
-           // transition(s0, s7, s8, HEIGHT, setOf(UP), setOf(UP), listOf(RP(S, 0, 0)))
-           // transition(s0, s8, s9, GRAFT, setOf(UP), setOf(UP), listOf(RP(G, 0, 0)))
+            //transition(s2, s3, s4, GRAFT, setOf(c, d), setOf(EOT), listOf(RP(ABC, 0, 1), RP(ABD, 0, 1)))
+            //transition(s0, s4, s5, WIDTH, setOf(EOT), setOf(), null)
+            //transition(s0, s4, s6, WIDTH, setOf(EOT), setOf(), null)
+            //transition(s4, s5, s7, GRAFT, setOf(EOT), setOf(EOT), listOf(RP(ABC, 0, 2)))
+           // transition(s0, s7, s8, HEIGHT, setOf(EOT), setOf(EOT), listOf(RP(S, 0, 0)))
+           // transition(s0, s8, s9, GRAFT, setOf(EOT), setOf(EOT), listOf(RP(G, 0, 0)))
            // transition(null, s9, s9, GOAL, setOf(), setOf(), null)
         }
 

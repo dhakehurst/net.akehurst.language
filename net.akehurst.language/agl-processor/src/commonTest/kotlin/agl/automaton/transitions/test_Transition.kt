@@ -62,7 +62,7 @@ internal class test_Transition : test_AutomatonUtilsAbstract() {
             from = s1,
             to = s2,
             action = Transition.ParseAction.HEIGHT,
-            lookahead = setOf(Lookahead(LHS(UP, d).lhs(stateSet), LHS(UP, d).lhs(stateSet)), Lookahead(LHS(a).lhs(stateSet), LHS(a).lhs(stateSet))),
+            lookahead = setOf(Lookahead(LHS(EOT, d).lhs(stateSet), LHS(EOT, d).lhs(stateSet)), Lookahead(LHS(a).lhs(stateSet), LHS(a).lhs(stateSet))),
             graftPrevGuard = null,
             runtimeGuard = Transition.defaultRuntimeGuard
         )
@@ -71,7 +71,7 @@ internal class test_Transition : test_AutomatonUtilsAbstract() {
             to = s2,
             action = Transition.ParseAction.HEIGHT,
             lookahead = setOf(
-                Lookahead(LHS(UP).lhs(stateSet), LHS(UP).lhs(stateSet)),
+                Lookahead(LHS(EOT).lhs(stateSet), LHS(EOT).lhs(stateSet)),
                 Lookahead(LHS(d).lhs(stateSet), LHS(d).lhs(stateSet)),
                 Lookahead(LHS(a).lhs(stateSet), LHS(a).lhs(stateSet))
             ),

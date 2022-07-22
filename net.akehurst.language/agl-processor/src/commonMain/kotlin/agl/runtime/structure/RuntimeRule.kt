@@ -238,7 +238,7 @@ internal class RuntimeRule(
             calcItemsAt(index).toTypedArray()
         }
     }
-
+/*
     fun canGrowWidth(nextItemIndex: Int): Boolean {
         // nextItemIndex and numNonskip children are not always the same, especially for multi.
         //TODO: other kinds!
@@ -266,7 +266,7 @@ internal class RuntimeRule(
             }
         }
     }
-
+*/
     fun findTerminalAt(n: Int): Set<RuntimeRule> {
         return when (kind) {
             RuntimeRuleKind.GOAL -> TODO()
@@ -294,56 +294,6 @@ internal class RuntimeRule(
             }
         }
     }
-/*
-    fun items(option: Int, position: Int): List<RuntimeRule> { //TODO: do we need to return a set here?
-        return when (kind) {
-            RuntimeRuleKind.GOAL -> when (position) {
-                0 -> listOf(rhs.items[position])
-                else -> error("Should not happen")
-            }// always a concatenation
-            RuntimeRuleKind.TERMINAL -> emptyList()
-            RuntimeRuleKind.EMBEDDED -> emptyList() //an embedded grammar is treated like a terminal, matches or not, so no 'items'
-            RuntimeRuleKind.NON_TERMINAL -> when (rhs.itemsKind) {
-                RuntimeRuleRhsItemsKind.EMPTY -> emptyList()
-                RuntimeRuleRhsItemsKind.CHOICE -> listOf(rhs.items[option])
-                RuntimeRuleRhsItemsKind.CONCATENATION -> listOf(rhs.items[position])
-                RuntimeRuleRhsItemsKind.UNORDERED -> TODO() // will require a multiple items in the set
-                RuntimeRuleRhsItemsKind.MULTI -> when (option) {
-                    RuntimeRuleItem.MULTI__ITEM -> when (position) {
-                        RulePosition.START_OF_RULE -> listOf(rhs.items[RuntimeRuleItem.MULTI__ITEM])
-                        RulePosition.POSITION_MULIT_ITEM -> listOf(rhs.items[RuntimeRuleItem.MULTI__ITEM])
-                        RulePosition.END_OF_RULE -> emptyList()
-                        else -> error("Should not happen")
-                    }
-                    RuntimeRuleItem.MULTI__EMPTY_RULE -> when (position) {
-                        RulePosition.START_OF_RULE -> listOf(rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE])
-                        RulePosition.END_OF_RULE -> emptyList()
-                        else -> error("Should not happen")
-                    }
-                    else -> error("Should not happen")
-                }
-                RuntimeRuleRhsItemsKind.SEPARATED_LIST -> when (option) {
-                    RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR -> when (position) {
-                        RulePosition.START_OF_RULE -> listOf(rhs.items[RuntimeRuleItem.SLIST__ITEM])
-                        RulePosition.POSITION_SLIST_ITEM -> listOf(rhs.items[RuntimeRuleItem.SLIST__ITEM])
-                        RulePosition.POSITION_SLIST_SEPARATOR -> listOf(rhs.items[RuntimeRuleItem.SLIST__SEPARATOR])
-                        RulePosition.END_OF_RULE -> emptyList()
-                        else -> error("Should not happen")
-                    }
-                    RulePosition.OPTION_SLIST_EMPTY -> when (position) {
-                        RulePosition.START_OF_RULE -> listOf(rhs.items[RuntimeRuleItem.SLIST__EMPTY_RULE])
-                        RulePosition.END_OF_RULE -> emptyList()
-                        else -> error("Should not happen")
-                    }
-                    else -> error("Should not happen")
-
-                }
-                RuntimeRuleRhsItemsKind.LEFT_ASSOCIATIVE_LIST -> TODO()
-                RuntimeRuleRhsItemsKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
-            }
-        }
-    }
-    */
 
     fun item(option: Int, position: Int): RuntimeRule? {
         return when (kind) {
@@ -408,15 +358,15 @@ internal class RuntimeRule(
         //TODO: 'ALL' bit !
         return when (kind) {
             RuntimeRuleKind.GOAL -> TODO()
-            RuntimeRuleKind.TERMINAL -> emptySet<RuntimeRule>()
+            RuntimeRuleKind.TERMINAL -> emptySet()
             RuntimeRuleKind.NON_TERMINAL -> {
                 when (this.rhs.itemsKind) {
-                    RuntimeRuleRhsItemsKind.EMPTY -> emptySet<RuntimeRule>()
+                    RuntimeRuleRhsItemsKind.EMPTY -> emptySet()
                     RuntimeRuleRhsItemsKind.CHOICE -> {
                         if (n == 0) {
                             this.rhs.items.toSet()
                         } else {
-                            emptySet<RuntimeRule>()
+                            emptySet()
                         }
                     }
                     RuntimeRuleRhsItemsKind.CONCATENATION -> {
@@ -424,9 +374,9 @@ internal class RuntimeRule(
                             throw RuntimeException("Internal Error: No NextExpectedItem")
                         } else {
                             if (MULTIPLICITY_N == n) {
-                                emptySet<RuntimeRule>()
+                                emptySet()
                             } else {
-                                var nextItem = this.rhs.items[n]
+                                val nextItem = this.rhs.items[n]
                                 val res = mutableSetOf(nextItem)
                                 res
                             }
@@ -436,20 +386,20 @@ internal class RuntimeRule(
                         RuntimeRuleListKind.NONE -> error("should not happen")
                         RuntimeRuleListKind.MULTI -> {
                             when {
-                                (0 == n && 0 == this.rhs.multiMin) -> setOf<RuntimeRule>(this.rhs.items[0])
-                                (n < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax) -> setOf<RuntimeRule>(this.rhs.items[0])
-                                else -> emptySet<RuntimeRule>()
+                                (0 == n && 0 == this.rhs.multiMin) -> setOf(this.rhs.items[0])
+                                (n < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax) -> setOf(this.rhs.items[0])
+                                else -> emptySet()
                             }
                         }
                         RuntimeRuleListKind.SEPARATED_LIST -> {
                             when {
-                                (0 == n && 0 == this.rhs.multiMin) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
+                                (0 == n && 0 == this.rhs.multiMin) -> hashSetOf(this.rhs.items[0])
                                 (n % 2 == 0) -> if (n < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax) {
-                                    hashSetOf<RuntimeRule>(this.rhs.items[0])
+                                    hashSetOf(this.rhs.items[0])
                                 } else {
-                                    emptySet<RuntimeRule>()
+                                    emptySet()
                                 }
-                                else -> emptySet<RuntimeRule>()
+                                else -> emptySet()
                             }
                         }
                         RuntimeRuleListKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
@@ -458,82 +408,15 @@ internal class RuntimeRule(
                     }
                 }
             }
-            RuntimeRuleKind.EMBEDDED -> emptySet<RuntimeRule>()
+            RuntimeRuleKind.EMBEDDED -> emptySet()
         }
     }
 
     fun findSubRulesAt(n: Int): Set<RuntimeRule> {
-        var result = setOf(this).transitiveClosure { it.findAllNonTerminalAt(n) + it.findTerminalAt(n) }
+        val result = setOf(this).transitiveClosure { it.findAllNonTerminalAt(n) + it.findTerminalAt(n) }
         return result
     }
 
-    /*
-        fun findHasNextExpectedItem(nextItemIndex: Int): Boolean {
-            return when (this.rhs.itemsKind) {
-                RuntimeRuleRhsItemsKind.EMPTY -> false
-                RuntimeRuleRhsItemsKind.CHOICE -> nextItemIndex == 0
-                RuntimeRuleRhsItemsKind.CONCATENATION -> {
-                    !(MULTIPLICITY_N == nextItemIndex || nextItemIndex >= this.rhs.items.size)
-                }
-                RuntimeRuleRhsItemsKind.LIST -> when (this.rhs.listKind) {
-                    RuntimeRuleListKind.NONE -> error("should not happen")
-                    RuntimeRuleListKind.MULTI -> {
-                        !(MULTIPLICITY_N == nextItemIndex || (MULTIPLICITY_N != this.rhs.multiMax && nextItemIndex > this.rhs.multiMax))
-                    }
-                    RuntimeRuleListKind.SEPARATED_LIST -> {
-                        !(MULTIPLICITY_N == nextItemIndex || (MULTIPLICITY_N != this.rhs.multiMax && (nextItemIndex / 2) > this.rhs.multiMax))
-                    }
-                    else -> TODO()
-                }
-            }
-        }
-
-        //TODO: this should be able to be removed
-        fun findNextExpectedItems(nextItemIndex: Int): Set<RuntimeRule> {
-            //TODO: would it be faster to return an array here?
-            when (this.rhs.itemsKind) {
-                RuntimeRuleRhsItemsKind.EMPTY -> {
-                    return emptySet<RuntimeRule>()
-                }
-                RuntimeRuleRhsItemsKind.CHOICE -> {
-                    return if (nextItemIndex == 0) {
-                        this.rhs.items.toSet()
-                    } else {
-                        emptySet<RuntimeRule>()
-                    }
-                }
-                RuntimeRuleRhsItemsKind.CONCATENATION -> {
-                    return if (nextItemIndex >= this.rhs.items.size) {
-                        throw RuntimeException("Internal Error: No NextExpectedItem")
-                    } else {
-                        if (MULTIPLICITY_N == nextItemIndex) {
-                            emptySet<RuntimeRule>()
-                        } else {
-                            var nextItem = this.rhs.items[nextItemIndex]
-                            val res = mutableSetOf(nextItem)
-                            res
-                        }
-                    }
-                }
-                RuntimeRuleRhsItemsKind.MULTI -> {
-                    return when {
-                        (0 == nextItemIndex && 0 == this.rhs.multiMin) -> setOf<RuntimeRule>(this.rhs.items[0], this.emptyRuleItem)
-                        (nextItemIndex < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax) -> hashSetOf<RuntimeRule>(this.rhs.items[0])
-                        else -> emptySet<RuntimeRule>()
-                    }
-                }
-                RuntimeRuleRhsItemsKind.SEPARATED_LIST -> {
-                    return when {
-                        (nextItemIndex % 2 == 1 && (((nextItemIndex + 1) / 2) < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax)) -> setOf<RuntimeRule>(this.rhs.SLIST__separator)
-                        (0 == nextItemIndex && 0 == this.rhs.multiMin) -> setOf<RuntimeRule>(this.rhs.items[0], this.emptyRuleItem)
-                        (nextItemIndex % 2 == 0 && ((nextItemIndex / 2) < this.rhs.multiMax || MULTIPLICITY_N == this.rhs.multiMax)) -> setOf<RuntimeRule>(this.rhs.items[0])
-                        else -> emptySet<RuntimeRule>()
-                    }
-                }
-                else -> throw RuntimeException("Internal Error: rule kind not recognised")
-            }
-        }
-    */
     internal fun calcExpectedRulePositions(position: Int): List<RulePosition> {
         return when {
             position == RulePosition.END_OF_RULE -> emptyList()
@@ -629,7 +512,7 @@ internal class RuntimeRule(
                     if (position >= this.rhs.items.size) {
                         throw RuntimeException("Internal Error: No NextExpectedItem")
                     } else {
-                        var nextItem = this.rhs.items[position]
+                        val nextItem = this.rhs.items[position]
                         val res = setOf(nextItem)
                         res
                     }
@@ -651,64 +534,8 @@ internal class RuntimeRule(
             }
         }
     }
-/*
-    fun couldHaveChild(possibleChild: RuntimeRule, atPosition: Int): Boolean {
-        return when (kind) {
-            RuntimeRuleKind.GOAL -> TODO()
-            RuntimeRuleKind.TERMINAL -> false
-            RuntimeRuleKind.NON_TERMINAL -> if (possibleChild.isSkip) {
-                true
-            } else {
-                when (this.rhs.itemsKind) {
-                    RuntimeRuleRhsItemsKind.EMPTY -> false
-                    RuntimeRuleRhsItemsKind.CHOICE ->
-                        // TODO: cache this
-                        0 == atPosition && this.rhs.items.contains(possibleChild)
-                    RuntimeRuleRhsItemsKind.CONCATENATION -> {
-                        if (MULTIPLICITY_N == atPosition || atPosition >= this.rhs.items.size)
-                            false
-                        else
-                            this.rhs.items[atPosition].number == possibleChild.number
-                    }
-                    RuntimeRuleRhsItemsKind.MULTI -> this.rhs.items[0].number == possibleChild.number || (this.rhs.multiMin == 0 && atPosition == 0
-                            && possibleChild.isEmptyRule && possibleChild.ruleThatIsEmpty.number == this.number)
-                    RuntimeRuleRhsItemsKind.SEPARATED_LIST -> {
-                        if (possibleChild.isEmptyRule) {
-                            this.rhs.multiMin == 0 && possibleChild.ruleThatIsEmpty.number == this.number
-                        } else {
-                            if (atPosition % 2 == 0) {
-                                this.rhs.items[0].number == possibleChild.number
-                            } else {
-                                this.rhs.SLIST__separator.number == possibleChild.number
-                            }
-                        }
-                    }
-                    RuntimeRuleRhsItemsKind.LEFT_ASSOCIATIVE_LIST -> TODO()
-                    RuntimeRuleRhsItemsKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
-                    RuntimeRuleRhsItemsKind.UNORDERED -> TODO()
-                }
-            }
-            RuntimeRuleKind.EMBEDDED -> TODO()
-        }
-    }
-
-    fun incrementNextItemIndex(currentIndex: Int): Int {
-        when (this.rhs.itemsKind) {
-            RuntimeRuleRhsItemsKind.EMPTY -> return MULTIPLICITY_N
-            RuntimeRuleRhsItemsKind.CHOICE -> return MULTIPLICITY_N
-            RuntimeRuleRhsItemsKind.CONCATENATION -> return if (this.rhs.items.size == currentIndex + 1) MULTIPLICITY_N else currentIndex + 1
-//            RuntimeRuleRhsItemsKind.MULTI -> return  currentIndex
-            RuntimeRuleRhsItemsKind.MULTI -> return if (MULTIPLICITY_N == this.rhs.multiMax || this.rhs.multiMax > currentIndex + 1) currentIndex + 1 else MULTIPLICITY_N
-//            RuntimeRuleRhsItemsKind.SEPARATED_LIST -> return if (currentIndex == 0) 1 else 0
-            RuntimeRuleRhsItemsKind.SEPARATED_LIST -> return if (MULTIPLICITY_N == this.rhs.multiMax || this.rhs.multiMax > (currentIndex / 2)) currentIndex + 1 else MULTIPLICITY_N
-
-            else -> throw RuntimeException("Internal Error: Unknown RuleKind " + this.rhs.itemsKind)
-        }
-    }
-*/
 
     // --- Any ---
-
     private val _hashCode = listOf(this.runtimeRuleSetNumber, this.number).hashCode()
     override fun hashCode(): Int = _hashCode
 
@@ -727,7 +554,7 @@ internal class RuntimeRule(
             this.kind == RuntimeRuleKind.NON_TERMINAL -> " ($tag) = " + this.rhs
             this.isPattern -> if (this.tag == this.value) "\"${this.value}\"" else "${this.tag}(\"${this.value}\")"
             this === RuntimeRuleSet.END_OF_TEXT -> " <EOT>"
-            this === RuntimeRuleSet.USE_PARENT_LOOKAHEAD -> " <UP>"
+            this === RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD -> " <RT>"
             else -> if (this.tag == this.value) "'${this.value}'" else "${this.tag}('${this.value}')"
         }
     }

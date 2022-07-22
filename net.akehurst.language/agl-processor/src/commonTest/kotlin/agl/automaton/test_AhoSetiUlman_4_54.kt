@@ -88,34 +88,34 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
             transition(s0, s0, s2, WIDTH, setOf(T_c, T_d), emptySet(), null)
 
             transition(s0, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(T_c, T_d)), setOf(RP(C1, 0, 0)))
-            transition(s3, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(UP)), setOf(RP(C1, 0, 0)))
-            transition(s7, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(UP)), setOf(RP(C1, 0, 0)))
+            transition(s3, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(EOT)), setOf(RP(C1, 0, 0)))
+            transition(s7, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(EOT)), setOf(RP(C1, 0, 0)))
 
-            transition(s3, s2, s4, HEIGHT, setOf(UP),setOf( setOf(UP)), setOf(RP(C, 1, 0)))
-            transition(s7, s2, s4, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(C, 1, 0)))
+            transition(s3, s2, s4, HEIGHT, setOf(EOT),setOf( setOf(EOT)), setOf(RP(C, 1, 0)))
+            transition(s7, s2, s4, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(C, 1, 0)))
             transition(s0, s2, s4, HEIGHT, setOf(T_c, T_d), setOf(setOf(T_c, T_d)), setOf(RP(C, 1, 0)))
 
             transition(s0, s3, s1, WIDTH, setOf(T_c, T_d), emptySet(), null)
             transition(s0, s3, s2, WIDTH, setOf(T_c, T_d), emptySet(), null)
             transition(s3, s3, s1, WIDTH, setOf(T_c, T_d), emptySet(), null)
-            transition(s3, s3, s2, WIDTH, setOf(UP), emptySet(), null)
+            transition(s3, s3, s2, WIDTH, setOf(EOT), emptySet(), null)
             transition(s7, s3, s1, WIDTH, setOf(T_c, T_d), emptySet(), null)
-            transition(s7, s3, s2, WIDTH, setOf(UP), emptySet(), null)
+            transition(s7, s3, s2, WIDTH, setOf(EOT), emptySet(), null)
 
-            transition(s3, s4, s5, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(C1, 0, 1)))
-            transition(s7, s4, s8, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 0, 1)))
-            transition(s0, s4, s7, HEIGHT, setOf(T_c, T_d), setOf(setOf(UP)), setOf(RP(S, 0, 0)))
+            transition(s3, s4, s5, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(C1, 0, 1)))
+            transition(s7, s4, s8, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(S, 0, 1)))
+            transition(s0, s4, s7, HEIGHT, setOf(T_c, T_d), setOf(setOf(EOT)), setOf(RP(S, 0, 0)))
 
-            transition(s3, s5, s6, HEIGHT, setOf(UP), setOf(setOf(UP)), setOf(RP(C, 0, 0)))
+            transition(s3, s5, s6, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(C, 0, 0)))
             transition(s0, s5, s6, HEIGHT, setOf(T_c, T_d), setOf(setOf(T_c, T_d)), setOf(RP(C, 0, 0)))
 
-            transition(s3, s6, s5, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(C1, 0, 1)))
-            transition(s0, s6, s7, HEIGHT, setOf(T_c, T_d), setOf(setOf(UP)), setOf(RP(S, 0, 0)))
+            transition(s3, s6, s5, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(C1, 0, 1)))
+            transition(s0, s6, s7, HEIGHT, setOf(T_c, T_d), setOf(setOf(EOT)), setOf(RP(S, 0, 0)))
 
             transition(s0, s7, s1, WIDTH, setOf(T_c, T_d), emptySet(), null)
-            transition(s0, s7, s2, WIDTH, setOf(UP), emptySet(), null)
+            transition(s0, s7, s2, WIDTH, setOf(EOT), emptySet(), null)
 
-            transition(s0, s8, s9, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, 0)))
+            transition(s0, s8, s9, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(G, 0, 0)))
 
         }
 

@@ -35,19 +35,22 @@ internal class RuntimeRuleSet(
         val EOT_RULE_NUMBER = -2
         val SKIP_RULE_NUMBER = -3
         val SKIP_CHOICE_RULE_NUMBER = -4
-        val USE_PARENT_LOOKAHEAD_RULE_NUMBER = -5
-        val ANY_LOOKAHEAD_RULE_NUMBER = -6
-        val UNKNOWN_LOOKAHEAD_RULE_NUMBER = -7
+        //val USE_PARENT_LOOKAHEAD_RULE_NUMBER = -5
+        val USE_RUNTIME_LOOKAHEAD_RULE_NUMBER = -6
+        val ANY_LOOKAHEAD_RULE_NUMBER = -7
+        val UNKNOWN_LOOKAHEAD_RULE_NUMBER = -8
         val END_OF_TEXT_TAG = "<EOT>"
         val GOAL_TAG = "<GOAL>"
         val SKIP_RULE_TAG = "<SKIP-MULTI>"
         val SKIP_CHOICE_RULE_TAG = "<SKIP-CHOICE>"
         val USE_PARENT_LOOKAHEAD_RULE_TAG = "<UP>"
+        val USE_RUNTIME_LOOKAHEAD_RULE_TAG = "<RT>"
         val ANY_LOOKAHEAD_RULE_TAG = "<ANY>"
         val UNKNOWN_LOOKAHEAD_RULE_TAG = "<UNKNOWN>"
 
         val END_OF_TEXT = RuntimeRule(-1, EOT_RULE_NUMBER, END_OF_TEXT_TAG, InputFromString.END_OF_TEXT, RuntimeRuleKind.TERMINAL, false, false)
-        val USE_PARENT_LOOKAHEAD = RuntimeRule(-1, USE_PARENT_LOOKAHEAD_RULE_NUMBER, USE_PARENT_LOOKAHEAD_RULE_TAG, 0.toChar().toString(), RuntimeRuleKind.TERMINAL, false, false)
+        //val USE_PARENT_LOOKAHEAD = RuntimeRule(-1, USE_PARENT_LOOKAHEAD_RULE_NUMBER, USE_PARENT_LOOKAHEAD_RULE_TAG, 0.toChar().toString(), RuntimeRuleKind.TERMINAL, false, false)
+        val USE_RUNTIME_LOOKAHEAD = RuntimeRule(-1, USE_RUNTIME_LOOKAHEAD_RULE_NUMBER, USE_RUNTIME_LOOKAHEAD_RULE_TAG, 0.toChar().toString(), RuntimeRuleKind.TERMINAL, false, false)
         val ANY_LOOKAHEAD = RuntimeRule(-1, ANY_LOOKAHEAD_RULE_NUMBER, ANY_LOOKAHEAD_RULE_TAG, 0.toChar().toString(), RuntimeRuleKind.TERMINAL, false, false)
         val UNKNOWN_RULE = RuntimeRule(-1, UNKNOWN_LOOKAHEAD_RULE_NUMBER, UNKNOWN_LOOKAHEAD_RULE_TAG, 0.toChar().toString(), RuntimeRuleKind.TERMINAL, false, false)
 

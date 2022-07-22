@@ -289,7 +289,7 @@ internal class RuntimeTransitionCalculator(
 
     private fun createGoalTransition3(sourceState:ParserState): Transition {
         val to = this.stateSet.finishState
-        val trs = Transition(sourceState, to, Transition.ParseAction.GOAL, setOf(Lookahead(LookaheadSet.UP, LookaheadSet.EMPTY)), null,Transition.defaultRuntimeGuard)
+        val trs = Transition(sourceState, to, Transition.ParseAction.GOAL, setOf(Lookahead(LookaheadSet.EOT, LookaheadSet.EMPTY)), null,Transition.defaultRuntimeGuard)
         return trs
     }
 

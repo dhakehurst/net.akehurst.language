@@ -57,7 +57,7 @@ internal class GrowingNode(
         r += if (this.currentState.isAtEnd) "C" else this.currentState.rulePositions.first().position
         val ct = this.runtimeLookahead.map {
             val cont = mutableSetOf<RuntimeRule>()
-            if (it.includesUP) cont += RuntimeRuleSet.USE_PARENT_LOOKAHEAD
+            if (it.includesRT) cont += RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD
             if (it.includesEOT) cont += RuntimeRuleSet.END_OF_TEXT
             if (it.matchANY) cont += RuntimeRuleSet.ANY_LOOKAHEAD
             cont += it.content

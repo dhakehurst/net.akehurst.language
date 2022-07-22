@@ -63,8 +63,8 @@ internal class test_ab_cOa_bc : test_AutomatonAbstract() {
 
 
             transition(s0, s0, s7, WIDTH, setOf(b), setOf(), null)
-            transition(s0, s2, s1, GOAL, setOf(UP), setOf(setOf(UP)), null)
-            transition(s0, s3, s1, GOAL, setOf(UP), setOf(setOf(UP)), null)
+            transition(s0, s2, s1, GOAL, setOf(EOT), setOf(setOf(EOT)), null)
+            transition(s0, s3, s1, GOAL, setOf(EOT), setOf(setOf(EOT)), null)
         }
 
         AutomatonTest.assertEquals(expected, actual)

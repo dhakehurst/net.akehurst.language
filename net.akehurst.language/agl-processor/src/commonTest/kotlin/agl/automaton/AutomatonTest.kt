@@ -117,7 +117,7 @@ internal object AutomatonTest {
 
     private fun LookaheadSet.matches(other: LookaheadSet): Boolean = when {
         this.includesEOT != other.includesEOT -> false
-        this.includesUP != other.includesUP -> false
+        this.includesRT != other.includesRT -> false
         this.matchANY != other.matchANY -> false
         else -> this.content.matches(other.content) { t, o -> t.matches(o) }
     }

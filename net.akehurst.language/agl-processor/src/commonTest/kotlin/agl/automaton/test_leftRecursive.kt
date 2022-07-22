@@ -55,12 +55,12 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
     fun follow() {
         val ffc = FirstFollowCache(SM)
         listOf(
-            listOf(RP(G, 0, SOR), RP(G, 0, SOR), RP(G, 0, SOR), a, LHS(UP, a)),     //  (G = . S) <-- (S = . a)  <==  a
+            listOf(RP(G, 0, SOR), RP(G, 0, SOR), RP(G, 0, SOR), a, LHS(EOT, a)),     //  (G = . S) <-- (S = . a)  <==  a
             //  (G = . S)    <==  S
-            listOf(RP(G, 0, SOR), RP(G, 0, SOR), RP(G, 0, SOR), S, LHS(UP, a)),     //  (G = . S) <-- (S = . S1) <-- (S1 = . S a)  <==  S
-            listOf(RP(G, 0, SOR), RP(G, 0, SOR), RP(G, 0, SOR), S1, LHS(UP, a)),     //  (G = . S) <-- (S = . S1)   <==  S1
-            listOf(RP(G, 0, SOR), RP(G, 0, SOR), RP(S1, 0, 1), a, LHS(UP)),    // (S1 = S . a)  <==  a
-            listOf(RP(G, 0, SOR), RP(G, 0, SOR), RP(G, 0, SOR), G, LHS(UP)),        // (G = . S)  <==  G
+            listOf(RP(G, 0, SOR), RP(G, 0, SOR), RP(G, 0, SOR), S, LHS(EOT, a)),     //  (G = . S) <-- (S = . S1) <-- (S1 = . S a)  <==  S
+            listOf(RP(G, 0, SOR), RP(G, 0, SOR), RP(G, 0, SOR), S1, LHS(EOT, a)),     //  (G = . S) <-- (S = . S1)   <==  S1
+            listOf(RP(G, 0, SOR), RP(G, 0, SOR), RP(S1, 0, 1), a, LHS(EOT)),    // (S1 = S . a)  <==  a
+            listOf(RP(G, 0, SOR), RP(G, 0, SOR), RP(G, 0, SOR), G, LHS(EOT)),        // (G = . S)  <==  G
         ).testAll { list ->
             val procPrev = list[0] as RulePosition
             val procRp = list[1] as RulePosition
@@ -90,10 +90,10 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
             val s3 = state(RP(G, 0, EOR))     /* G = S .    */
             val s4 = state(RP(S1, 0, 1)) /* S1 = S . a */
 
-            transition(s0, s0, s1, WIDTH, setOf(UP, a), emptySet(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(UP, a), setOf(setOf(UP), setOf(a)), setOf(RP(S, 0, SOR)))
-            transition(s0, s2, s4, HEIGHT, setOf(a), setOf(setOf(UP), setOf(a)), setOf(RP(S1, 0, SOR)))
-            transition(s0, s2, s3, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, SOR)))
+            transition(s0, s0, s1, WIDTH, setOf(EOT, a), emptySet(), null)
+            transition(s0, s1, s2, HEIGHT, setOf(EOT, a), setOf(setOf(EOT), setOf(a)), setOf(RP(S, 0, SOR)))
+            transition(s0, s2, s4, HEIGHT, setOf(a), setOf(setOf(EOT), setOf(a)), setOf(RP(S1, 0, SOR)))
+            transition(s0, s2, s3, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(G, 0, SOR)))
             transition(s0, s3, s3, GOAL, emptySet(), emptySet(), null)
         }
         AutomatonTest.assertEquals(expected, actual)
@@ -140,16 +140,16 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
             val s5 = state(RP(S1, 0, EOR))    /* {0}    S1 = S a . */
             val s6 = state(RP(S, 1, EOR))     /* {0}    S = S1 .   */
 
-            transition(s0, s0, s1, WIDTH, setOf(UP, a), emptySet(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(UP, a), setOf(setOf(UP), setOf(a)), setOf(RP(S, 0, SOR)))
-            transition(s4, s1, s5, GRAFT, setOf(UP, a), setOf(setOf(UP, a)), setOf(RP(S1, 0, 1)))
-            transition(s0, s2, s4, HEIGHT, setOf(a), setOf(setOf(UP), setOf(a)), setOf(RP(S1, 0, SOR)))
-            transition(s0, s2, s3, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, SOR)))
+            transition(s0, s0, s1, WIDTH, setOf(EOT, a), emptySet(), null)
+            transition(s0, s1, s2, HEIGHT, setOf(EOT, a), setOf(setOf(EOT), setOf(a)), setOf(RP(S, 0, SOR)))
+            transition(s4, s1, s5, GRAFT, setOf(EOT, a), setOf(setOf(EOT, a)), setOf(RP(S1, 0, 1)))
+            transition(s0, s2, s4, HEIGHT, setOf(a), setOf(setOf(EOT), setOf(a)), setOf(RP(S1, 0, SOR)))
+            transition(s0, s2, s3, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(G, 0, SOR)))
             transition(s0, s3, s3, GOAL, emptySet(), emptySet(), null)
-            transition(s0, s4, s1, WIDTH, setOf(UP), emptySet(), null)
-            transition(s0, s5, s6, HEIGHT, setOf(UP, a), setOf(setOf(UP), setOf(a)), setOf(RP(S, 1, SOR)))
-            transition(s0, s6, s4, HEIGHT, setOf(a), setOf(setOf(UP), setOf(a)), setOf(RP(S1, 0, SOR)))
-            transition(s0, s6, s3, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, SOR)))
+            transition(s0, s4, s1, WIDTH, setOf(EOT), emptySet(), null)
+            transition(s0, s5, s6, HEIGHT, setOf(EOT, a), setOf(setOf(EOT), setOf(a)), setOf(RP(S, 1, SOR)))
+            transition(s0, s6, s4, HEIGHT, setOf(a), setOf(setOf(EOT), setOf(a)), setOf(RP(S1, 0, SOR)))
+            transition(s0, s6, s3, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(G, 0, SOR)))
         }
         AutomatonTest.assertEquals(expected, actual)
     }

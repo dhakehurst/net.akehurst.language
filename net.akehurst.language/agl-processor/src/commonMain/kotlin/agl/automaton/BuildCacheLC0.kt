@@ -185,13 +185,13 @@ internal class BuildCacheLC0(
                 else -> Transition.ParseAction.GRAFT
             }
             val up = when (parent.runtimeRule.kind) {
-                RuntimeRuleKind.GOAL -> if (parent.isAtEnd) LookaheadSetPart.UP else LookaheadSetPart.ANY
+                RuntimeRuleKind.GOAL -> if (parent.isAtEnd) LookaheadSetPart.RT else LookaheadSetPart.ANY
                 else -> LookaheadSetPart.ANY
             }
             val pns = parent.next()
             pns.map { parentNext ->
                 val grd = when (parentNext.runtimeRule.kind) {
-                    RuntimeRuleKind.GOAL -> LookaheadSetPart.UP
+                    RuntimeRuleKind.GOAL -> LookaheadSetPart.RT
                     else -> LookaheadSetPart.ANY
                 }
                 HeightGraftInfo(action,listOf(parent), listOf(parentNext), setOf(LookaheadInfoPart(grd,up)))

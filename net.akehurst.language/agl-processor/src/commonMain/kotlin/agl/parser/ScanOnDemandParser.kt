@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.parser
 
+import net.akehurst.language.agl.automaton.Lookahead
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
@@ -69,7 +70,7 @@ internal class ScanOnDemandParser(
 
         while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
             if (Debug.OUTPUT_RUNTIME) println("$seasons ===================================")
-            val steps = rp.grow3(possibleEndOfText,false)
+            val steps = rp.grow3(possibleEndOfText, false)
             seasons += steps
             maxNumHeads = max(maxNumHeads, rp.graph.numberOfHeads)
             totalWork += rp.graph.numberOfHeads
@@ -88,7 +89,7 @@ internal class ScanOnDemandParser(
             val sppt = SPPTFromTreeData(match, input, seasons, maxNumHeads)
             Pair(sppt, emptyList())
         } else {
-            val nextExpected = this.findNextExpectedAfterError2(rp, rp.graph, input) //this possibly modifies rp and hence may change the longestLastGrown
+            val nextExpected = this.findNextExpectedAfterError2(rp, rp.graph, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
             val issue = throwError(input, rp, nextExpected, seasons, maxNumHeads)
             val sppt = null//rp.longestLastGrown?.let{ SharedPackedParseTreeDefault(it, seasons, maxNumHeads) }
             Pair(sppt, listOf(issue))
@@ -177,13 +178,21 @@ internal class ScanOnDemandParser(
             return Pair(maxLastLocation, res)
         }
     */
-    private fun findNextExpectedAfterError2(rp: RuntimeParser, graph: ParseGraph, input: InputFromString): Pair<InputLocation, Set<RuntimeRule>> {
+    private fun findNextExpectedAfterError2(
+        rp: RuntimeParser,
+        graph: ParseGraph,
+        input: InputFromString,
+        possibleEndOfText: Set<LookaheadSet>
+    ): Pair<InputLocation, Set<RuntimeRule>> {
         //rp.resetGraphToLastGrown()
         //val poss =  graph.peekAllHeads()//rp.tryGrowHeightOrGraft()//graph.peekAllHeads()
         val r = rp.lastGrown.map { (lg, prev, remainingHead) ->
             when {
                 lg.runtimeState.state.isGoal -> {
-                    val trs = lg.runtimeState.transitions(RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY)),RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY)))
+                    val trs = lg.runtimeState.transitions(
+                        RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY)),
+                        RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY))
+                    )
                     val errors: Set<Pair<Int, Set<RuntimeRule>>> = trs.mapNotNull { tr ->
                         when (tr.action) {
                             Transition.ParseAction.GOAL -> null
@@ -201,8 +210,9 @@ internal class ScanOnDemandParser(
                                         }
                                     }
                                     else -> {
+                                        val rtLh = lg.runtimeState.runtimeLookaheadSet
                                         val expected = tr.lookahead
-                                            .flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }
+                                            .flatMap { lh -> possibleEndOfText.flatMap { eot -> rtLh.flatMap{rt->lh.guard.resolve(eot,rt).fullContent } }}
                                             .filter { it.isEmptyRule.not() }
                                         if (expected.isEmpty()) {
                                             null
@@ -220,12 +230,13 @@ internal class ScanOnDemandParser(
                 else -> {
                     //FIXME: error option may not be correct, need to find the original
                     val prevPrev = remainingHead
-                        ?: graph.treeData.createGrowingNodeIndex( rp.stateSet.startState, setOf(LookaheadSet.EMPTY),0,0,0,0)
+                        ?: graph.treeData.createGrowingNodeIndex(rp.stateSet.startState, setOf(LookaheadSet.EMPTY), 0, 0, 0, 0)
                     val trs = lg.runtimeState.transitions(prevPrev.runtimeState, prev!!.runtimeState)
                         .filter { it.runtimeGuard(it, prev, prev.runtimeState.state) }
                     if (trs.isNotEmpty()) {
+                        val rtLh = lg.runtimeState.runtimeLookaheadSet
                         val pairs: Set<Pair<Int, Set<RuntimeRule>>> = trs.mapNotNull { tr ->
-                            errorPairs(input,lg.index,tr)
+                            errorPairs(input, lg.index, tr, possibleEndOfText,rtLh)
                         }.toSet()
                         pairs
                     } else {
@@ -237,7 +248,8 @@ internal class ScanOnDemandParser(
                             val prevPrev2 = tpt.previous?.runtimeState ?: RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY))
                             val trs2 = lg2.runtimeState.transitions(prevPrev2, prev2.runtimeState)
                                 .filter { it.runtimeGuard(it, prev2, prev2.state) }
-                            trs2.mapNotNull { tr2 -> errorPairs(input,lg.index,tr2) }
+                            val rtLh = lg2.runtimeState.runtimeLookaheadSet
+                            trs2.mapNotNull { tr2 -> errorPairs(input, lg.index, tr2, possibleEndOfText, rtLh) }
                         }
 
                     }
@@ -253,7 +265,13 @@ internal class ScanOnDemandParser(
         return Pair(maxLastLocation.first, res)
     }
 
-    private fun errorPairs(input: InputFromString, lg:GrowingNodeIndex, tr:Transition) :Pair<Int,Set<RuntimeRule>>? {
+    private fun errorPairs(
+        input: InputFromString,
+        lg: GrowingNodeIndex,
+        tr: Transition,
+        possibleEndOfText: Set<LookaheadSet>,
+        runtimeLookahead: Set<LookaheadSet>
+    ): Pair<Int, Set<RuntimeRule>>? {
         return when (tr.action) {
             Transition.ParseAction.GOAL -> null
             Transition.ParseAction.WIDTH,
@@ -271,7 +289,7 @@ internal class ScanOnDemandParser(
                     }
                     else -> {
                         val expected = tr.lookahead
-                            .flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }
+                            .flatMap { lh -> possibleEndOfText.flatMap { eot -> runtimeLookahead.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }
                             .filter { it.isEmptyRule.not() }
                         if (expected.isEmpty()) {
                             null
@@ -282,14 +300,20 @@ internal class ScanOnDemandParser(
                 }
             }
             else -> {
-                val expected = tr.lookahead.flatMap { lh -> lg.runtimeState.runtimeLookaheadSet.flatMap { lh.guard.resolveUP(it).fullContent } }.toSet()
+                val expected = tr.lookahead.flatMap { lh -> possibleEndOfText.flatMap { eot -> runtimeLookahead.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }.toSet()
                 val pos = lg.nextInputPosition
                 Pair(pos, expected)
             }
         }
     }
 
-    private fun findNextExpected(rp: RuntimeParser, graph: ParseGraph, input: InputFromString, gns: List<ParseGraph.Companion.ToProcessTriple>): Set<RuntimeRule> {
+    private fun findNextExpected(
+        rp: RuntimeParser,
+        graph: ParseGraph,
+        input: InputFromString,
+        gns: List<ParseGraph.Companion.ToProcessTriple>,
+        possibleEndOfText: Set<LookaheadSet>
+    ): Set<RuntimeRule> {
         // TODO: when the last leaf is followed by the next expected leaf, if the result could be the last leaf
 
         val matches = gns.toMutableList()
@@ -318,9 +342,14 @@ internal class ScanOnDemandParser(
         val trans_lh_pairs = matches.flatMap { (gn, previous, remainingHead) ->
             val prevPrev = remainingHead?.runtimeState ?: RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY))
             val prev = previous?.runtimeState ?: RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY))
-            val trans = gn.runtimeState.transitions(prevPrev,prev).toSet()
+            val trans = gn.runtimeState.transitions(prevPrev, prev).toSet()
+            val rtLh = gn.runtimeState.runtimeLookaheadSet
             trans.flatMap { tr ->
-                val pairs = gn.runtimeLookahead.map { rt -> Pair(tr, tr.lookahead.flatMap { it.guard.resolveUP(rt).content }) }.toSet()
+                val pairs = possibleEndOfText.flatMap { eot ->
+                    rtLh.map { rt ->
+                        Pair(tr, tr.lookahead.flatMap { it.guard.resolve(eot, rt).content })
+                    }
+                }.toSet()
                 pairs
             }
         }.toSet()
@@ -354,7 +383,7 @@ internal class ScanOnDemandParser(
 
         val matches = mutableListOf<ParseGraph.Companion.ToProcessTriple>()
         do {
-            rp.grow3(possibleEndOfText,false)
+            rp.grow3(possibleEndOfText, false)
             for (gn in rp.lastGrown) {
                 TODO()
                 //               if (input.isEnd(gn.nextInputPosition)) {
@@ -368,7 +397,7 @@ internal class ScanOnDemandParser(
             }
             seasons++
         } while (rp.canGrow && rp.graph.goals.isEmpty())
-        val nextExpected = this.findNextExpected(rp, rp.graph, input, matches)
+        val nextExpected = this.findNextExpected(rp, rp.graph, input, matches, possibleEndOfText)
         return nextExpected
     }
 

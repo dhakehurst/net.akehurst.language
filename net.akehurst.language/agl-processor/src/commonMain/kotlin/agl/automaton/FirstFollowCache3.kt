@@ -42,7 +42,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
             private val _terminals: Set<RuntimeRule>
         ) : FollowDeferred {
             companion object {
-                val UP = FollowDeferredLiteral(setOf(RuntimeRuleSet.USE_PARENT_LOOKAHEAD))
+                val RT = FollowDeferredLiteral(setOf(RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD))
                 val EMPTY = FollowDeferredLiteral(emptySet())
             }
 
@@ -313,17 +313,19 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
 
     // entry point from calcWidth
     // target states for WIDTH transition, rulePosition should NOT be atEnd
-    fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition): Set<FirstTerminalInfo> {
+    fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, runtimeLookahead: Set<RuntimeRule> ): Set<FirstTerminalInfo> {
         check(context.isAtEnd.not()) { "firstTerminal($context,$rulePosition)" }
-        processClosureFor(context, rulePosition, FollowDeferredLiteral.UP)
+        //processClosureFor(context, rulePosition, FollowDeferredLiteral.RT)
+        processClosureFor(context, rulePosition, FollowDeferredLiteral(runtimeLookahead))
         return this._firstTerminal[context][rulePosition]
     }
 
     // target states for HEIGHT or GRAFT transition, rulePosition should BE atEnd
     // entry point from calcHeightGraft
-    fun parentInContext(contextContext: RulePosition, context: RulePosition, completedRule: RuntimeRule): Set<ParentOfInContext> {
+    fun parentInContext(contextContext: RulePosition, context: RulePosition, completedRule: RuntimeRule, runtimeLookahead: Set<RuntimeRule> ): Set<ParentOfInContext> {
         //processClosureFor(RulePosition_UNKNOWN, context, FollowDeferredLiteral.UP)
-        processClosureFor(contextContext, context, FollowDeferredLiteral.UP)
+        //processClosureFor(contextContext, context, FollowDeferredLiteral.RT)
+        processClosureFor(contextContext, context, FollowDeferredLiteral(runtimeLookahead))
 
         when {
             context.item!!.isTerminal -> {

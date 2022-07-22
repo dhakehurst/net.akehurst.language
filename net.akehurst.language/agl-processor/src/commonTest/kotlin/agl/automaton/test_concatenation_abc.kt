@@ -41,37 +41,33 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
     private val b = rrs.findRuntimeRule("'b'")
     private val c = rrs.findRuntimeRule("'c'")
 
-    private val lhs_b = SM.createLookaheadSet(false, false, false, setOf(b))
-    private val lhs_c = SM.createLookaheadSet(false, false, false, setOf(c))
-
     @Test
     fun parse_abc() {
         val parser = ScanOnDemandParser(rrs)
         val (sppt, issues) = parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
         assertNotNull(sppt)
         assertEquals(0, issues.size)
         assertEquals(1, sppt.maxNumHeads)
-        println(rrs.usedAutomatonToString("S"))
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
-            val s0 = state(RP(G, 0, SOR))
-            val s1 = state(RP(a, 0, EOR))
-            val s2 = state(RP(S, 0, 1))
-            val s3 = state(RP(b, 0, EOR))
-            val s4 = state(RP(S, 0, 2))
-            val s5 = state(RP(c, 0, EOR))
-            val s6 = state(RP(S, 0, EOR))
-            val s7 = state(RP(G, 0, EOR))
+            val s0 = state(RP(G, o0, SOR))
+            val s1 = state(RP(a, o0, EOR))
+            val s2 = state(RP(S, o0, p1))
+            val s3 = state(RP(b, o0, EOR))
+            val s4 = state(RP(S, o0, p2))
+            val s5 = state(RP(c, o0, EOR))
+            val s6 = state(RP(S, o0, EOR))
+            val s7 = state(RP(G, o0, EOR))
 
-            transition(s0, s0, s1, WIDTH, setOf(b), setOf(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(UP)), setOf(RP(S, 0, SOR)))
-            transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
-            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(UP)), setOf(RP(S, 0, 1)))
-            transition(s0, s4, s5, WIDTH, setOf(UP), setOf(), null)
-            transition(s4, s5, s6, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 0, 2)))
-            transition(s0, s6, s7, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(G, 0, 0)))
-            transition(s0, s7, s7, GOAL, setOf(), setOf(), null)
+            transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(a); lhg(b) }
+            transition(WIDTH) { ctx(G, o0, SOR); src(S, o0, p1); tgt(b); lhg(c) }
+            transition(WIDTH) { ctx(G, o0, SOR); src(S, o0, p2); tgt(c); lhg(EOT) }
+            transition(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(EOT) }
+            transition(GRAFT) { ctx(S, o0, p2); src(c); tgt(S); lhg(EOT); gpg(S,o0,p2) }
+            transition(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(S,o0,p1); lhg(setOf(b), setOf(EOT)) }
+            transition(GRAFT) { ctx(S, o0, p1); src(b); tgt(S,o0,p2); lhg(c); gpg(S,o0,p1) }
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -97,13 +93,13 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
             val s6 = state(RP(b, 0, EOR))
             val s7 = state(RP(c, 0, EOR))
 
-            transition(s0, s0, s5, WIDTH, setOf(b), setOf(), null)
-            transition(s0, s1, s6, WIDTH, setOf(c), setOf(), null)
-            transition(s0, s2, s7, WIDTH, setOf(UP), setOf(), null)
-            transition(s0, s4, s3, GOAL, setOf(UP), setOf(), setOf(RP(G, 0, 0)))
-            transition(s0, s5, s1, HEIGHT, setOf(b), setOf(setOf(UP)), setOf(RP(S, 0, SOR)))
-            transition(s1, s6, s2, GRAFT, setOf(c), setOf(setOf(UP)), setOf(RP(S, 0, 1)))
-            transition(s2, s7, s4, GRAFT, setOf(UP), setOf(setOf(UP)), setOf(RP(S, 0, 2)))
+            transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(a); lhg(b) }
+            transition(WIDTH) { ctx(G, o0, SOR); src(S, o0, p1); tgt(b); lhg(c) }
+            transition(WIDTH) { ctx(G, o0, SOR); src(S, o0, p2); tgt(c); lhg(EOT) }
+            transition(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(EOT) }
+            transition(GRAFT) { ctx(S, o0, p2); src(c); tgt(S); lhg(EOT); gpg(S,o0,p2) }
+            transition(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(S,o0,p1); lhg(setOf(b), setOf(EOT)) }
+            transition(GRAFT) { ctx(S, o0, p1); src(b); tgt(S,o0,p2); lhg(c); gpg(S,o0,p1) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -121,12 +117,13 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
 
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("abc")
-        for(sen in sentences) {
+        for (sen in sentences) {
             val (sppt, issues) = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
-            if (issues.isNotEmpty())  issues.forEach { println(it) }
+            //val (sppt, issues) = parser.parseForGoal("S", "", AutomatonKind.LOOKAHEAD_1)
+            if (issues.isNotEmpty()) issues.forEach { println(it) }
         }
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
-        val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)
+        val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         println("--Pre Build--")
         println(rrs_preBuild.usedAutomatonToString("S"))

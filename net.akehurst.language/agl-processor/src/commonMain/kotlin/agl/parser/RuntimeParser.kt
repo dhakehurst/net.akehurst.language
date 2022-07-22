@@ -23,6 +23,7 @@ import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.*
 import net.akehurst.language.agl.runtime.structure.RuleOption
+import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
@@ -83,10 +84,11 @@ internal class RuntimeParser(
             null
         } else {
             val skipLhsp = gState.rulePositions.map { this.stateSet.buildCache.expectedAt(it, LookaheadSetPart.EOT) }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
-            val endOfSkipLookaheadSet = this.stateSet.createLookaheadSet(skipLhsp.includesUP, skipLhsp.includesEOT, skipLhsp.matchANY, skipLhsp.content)
+            val endOfSkipLookaheadSet = this.stateSet.createLookaheadSet(skipLhsp)
             this.tryParseSkipUntilNone(setOf(endOfSkipLookaheadSet), startPosition, false) //TODO: think this might allow some wrong things, might be a better way
         }
-        this.graph.start(gState, startPosition, possibleEndOfText, initialSkipData) //TODO: remove LH
+        val runtimeLookahead = setOf(LookaheadSet.EOT)
+        this.graph.start(gState, startPosition, runtimeLookahead, initialSkipData) //TODO: remove LH
     }
 
     fun interrupt(message: String) {
@@ -394,6 +396,19 @@ internal class RuntimeParser(
                 }
                 else -> {
                     val trgs = it.value.filter { it.action == Transition.ParseAction.GRAFT }
+                        // if multiple GRAFT trans to same rule, prefer left most target
+                        .sortedWith(Comparator { t1, t2 ->
+                            val p1 = t1.to.rulePositions.first().position
+                            val p2 = t2.to.rulePositions.first().position
+                            when {
+                                p1 == p2 -> 0
+                                RulePosition.END_OF_RULE == p1 -> 1
+                                RulePosition.END_OF_RULE == p2 -> -1
+                                p1 > p2 -> 1
+                                p1 < p2 -> -1
+                                else -> 0// should never happen !
+                            }
+                        })
                     val trhs = it.value.filter { it.action == Transition.ParseAction.HEIGHT }
                     if (trgs.isNotEmpty() && trhs.isNotEmpty()) {
                         var doneIt = false
@@ -432,16 +447,19 @@ internal class RuntimeParser(
         }
     }
 
+    // Use previous runtimeLookahead
     private fun doGoal(toProcess: ParseGraph.Companion.ToProcessTriple, transition: Transition, possibleEndOfText: Set<LookaheadSet>, noLookahead: Boolean): Boolean {
         return if (transition.runtimeGuard(transition, toProcess.previous!!, toProcess.previous.runtimeState.state)) {
-            val lhWithMatch = toProcess.previous.runtimeState.runtimeLookaheadSet.filter {
-                transition.lookahead.any { lh ->
-                    this.graph.isLookingAt(lh.guard, it, toProcess.growingNode.nextInputPositionAfterSkip)
+            val runtimeLhs = toProcess.growingNode.runtimeState.runtimeLookaheadSet
+            val lhWithMatch = transition.lookahead.filter { lh -> //TODO: should always be only one I think!!
+                possibleEndOfText.any { eot ->
+                    runtimeLhs.any { rt ->
+                        this.graph.isLookingAt(lh.guard, eot, rt, toProcess.growingNode.nextInputPositionAfterSkip)
+                    }
                 }
             }
             val hasLh = lhWithMatch.isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {
             if (noLookahead || hasLh) {
-                val runtimeLhs = toProcess.previous.runtimeState.runtimeLookaheadSet
                 if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking Transition: $transition" }
                 this.graph.growNextChild(
                     toProcess,
@@ -457,24 +475,32 @@ internal class RuntimeParser(
 
     }
 
+    // Use current/growing runtimeLookahead
     private fun doWidth(toProcess: ParseGraph.Companion.ToProcessTriple, transition: Transition, possibleEndOfText: Set<LookaheadSet>, noLookahead: Boolean): Boolean {
         rememberForErrorComputation(toProcess)
         val l = this.graph.input.findOrTryCreateLeaf(transition.to.firstRule, toProcess.growingNode.nextInputPosition)
         return if (null != l) {
             val lh = transition.lookahead.map { it.guard }.reduce { acc, e -> acc.union(this.stateSet, e) } //TODO:reduce to 1 in SM
-            val skipLh = if (lh.includesUP) {
-                toProcess.growingNode.runtimeLookahead.map { this.stateSet.createWithParent(lh, it) }.toSet()
+            val runtimeLhs = toProcess.growingNode.runtimeState.runtimeLookaheadSet
+            val skipLh = if (lh.includesEOT) {
+                //possibleEndOfText.map { eot -> this.stateSet.createWithParent(lh, eot) }.toSet()
+                runtimeLhs.flatMap { rt ->
+                    possibleEndOfText.map { eot -> this.stateSet.createLookaheadSet(lh.resolve(eot, rt)) }
+                }.toSet()
             } else {
                 setOf(lh)
             }
             val skipData = this.tryParseSkipUntilNone(skipLh, l.nextInputPosition, noLookahead)
             val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: l.nextInputPosition
 
-            //val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, curGn.runtimeLookahead, nextInput)
-            val lhWithMatch = toProcess.growingNode.runtimeLookahead.filter {
-                this.graph.isLookingAt(lh, it, nextInputPositionAfterSkip)
+            // val lhWithMatch = possibleEndOfText.filter {
+            //     this.graph.isLookingAt(lh, it, nextInputPositionAfterSkip)
+            // }
+            val hasLh = possibleEndOfText.any { eot ->
+                runtimeLhs.any { rt ->
+                    this.graph.isLookingAt(lh, eot, rt, nextInputPositionAfterSkip)
+                }
             }
-            val hasLh = lhWithMatch.isNotEmpty()
             if (noLookahead || hasLh) {
                 //val runtimeLhs = lhWithMatch
                 val startPosition = l.startPosition
@@ -490,20 +516,26 @@ internal class RuntimeParser(
         }
     }
 
+    // Use previous runtimeLookahead
     private fun doHeight(toProcess: ParseGraph.Companion.ToProcessTriple, transition: Transition, possibleEndOfText: Set<LookaheadSet>, noLookahead: Boolean): Boolean {
+        val runtimeLhs = toProcess.previous!!.runtimeState.runtimeLookaheadSet
         val lhWithMatch = transition.lookahead.flatMap { lh ->
-            toProcess.previous!!.runtimeState.runtimeLookaheadSet.mapNotNull { rtLh ->
-                val b = this.graph.isLookingAt(lh.guard, rtLh, toProcess.growingNode.nextInputPositionAfterSkip) //TODO: if(transition.lookaheadGuard.includesUP) {
-                if (b) Pair(rtLh, lh.up) else null
+            possibleEndOfText.flatMap { eot ->
+                runtimeLhs.mapNotNull { rt ->
+                    val b = this.graph.isLookingAt(lh.guard, eot, rt, toProcess.growingNode.nextInputPositionAfterSkip) //TODO: if(transition.lookaheadGuard.includesUP) {
+                    if (b) Triple(eot, rt, lh.up) else null
+                }
             }
         }
         val hasLh = lhWithMatch.isNotEmpty()
-        return if (noLookahead || hasLh) {
-            val runtimeLhs = lhWithMatch.map { p ->
-                val rtLh = p.first
-                val up = p.second
-                if (up.includesUP) {
-                    this.stateSet.createWithParent(up, rtLh)
+        return if (noLookahead || hasLh) { //TODO: don't resolve EOT
+            val newRuntimeLhs = lhWithMatch.map { t ->
+                val eot = t.first
+                val rt = t.second
+                val up = t.third
+                if (up.includesRT) {
+                    //this.stateSet.createWithParent(up, rt)
+                    this.stateSet.createLookaheadSet(up.resolve(eot, rt))
                 } else {
                     up
                 }
@@ -511,7 +543,7 @@ internal class RuntimeParser(
             if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking Transition: $transition" }
             this.graph.createWithFirstChild(
                 parentState = transition.to,
-                parentRuntimeLookaheadSet = runtimeLhs,
+                parentRuntimeLookaheadSet = newRuntimeLhs,
                 toProcess = toProcess
             )
         } else {
@@ -519,17 +551,19 @@ internal class RuntimeParser(
         }
     }
 
+    // Use previous runtimeLookahead
     private fun doGraft(toProcess: ParseGraph.Companion.ToProcessTriple, transition: Transition, possibleEndOfText: Set<LookaheadSet>, noLookahead: Boolean): Boolean {
         return if (transition.runtimeGuard(transition, toProcess.previous!!, toProcess.previous.runtimeState.state)) {
-            //val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, previous.runtimeLookaheadSet, curGn.nextInputPositionAfterSkip)
-            val lhWithMatch = toProcess.previous.runtimeState.runtimeLookaheadSet.filter {
-                transition.lookahead.any { lh ->
-                    this.graph.isLookingAt(lh.guard, it, toProcess.growingNode.nextInputPositionAfterSkip)
+            val runtimeLhs = toProcess.previous.runtimeState.runtimeLookaheadSet
+            val lhWithMatch = transition.lookahead.filter { lh -> //TODO: should always be only one I think!!
+                possibleEndOfText.any { eot ->
+                    runtimeLhs.any { rt ->
+                        this.graph.isLookingAt(lh.guard, eot, rt, toProcess.growingNode.nextInputPositionAfterSkip)
+                    }
                 }
             }
             val hasLh = lhWithMatch.isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {
             if (noLookahead || hasLh) {
-                val runtimeLhs = toProcess.previous.runtimeState.runtimeLookaheadSet
                 if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking Transition: $transition" }
                 this.graph.growNextChild(
                     toProcess = toProcess,
@@ -544,26 +578,26 @@ internal class RuntimeParser(
         }
     }
 
-    private fun tryParseSkipUntilNone(lookaheadSet: Set<LookaheadSet>, startPosition: Int, noLookahead: Boolean): TreeData? {
-        val key = Pair(startPosition, lookaheadSet)
+    private fun tryParseSkipUntilNone(possibleEndOfSkip: Set<LookaheadSet>, startPosition: Int, noLookahead: Boolean): TreeData? {
+        val key = Pair(startPosition, possibleEndOfSkip)
         return if (_skip_cache.containsKey(key)) {
             // can cache null as a valid result
             _skip_cache[key]
         } else {
-            val skipData = when (skipParser) {
+            val skipData = when (skipParser) { //TODO: raise test to outer level
                 null -> null
-                else -> tryParseSkip(lookaheadSet, startPosition, noLookahead)
+                else -> tryParseSkip(possibleEndOfSkip, startPosition, noLookahead)
             }
             _skip_cache[key] = skipData
             skipData
         }
     }
 
-    private fun tryParseSkip(lookaheadSet: Set<LookaheadSet>, startPosition: Int, noLookahead: Boolean): TreeData? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
+    private fun tryParseSkip(possibleEndOfSkip: Set<LookaheadSet>, startPosition: Int, noLookahead: Boolean): TreeData? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
         skipParser!!.reset()
-        skipParser.start(startPosition, lookaheadSet)
+        skipParser.start(startPosition, possibleEndOfSkip)
         do {
-            skipParser.grow3(lookaheadSet, noLookahead)
+            skipParser.grow3(possibleEndOfSkip, noLookahead)
         } while (skipParser.graph.canGrow && (skipParser.graph.goals.isEmpty() || skipParser.graph.goalMatchedAll.not()))
         //TODO: get longest skip match
         return when {
@@ -574,6 +608,7 @@ internal class RuntimeParser(
         }
     }
 
+    // Use current/growing runtimeLookahead
     private fun doEmbedded(toProcess: ParseGraph.Companion.ToProcessTriple, transition: Transition, possibleEndOfText: Set<LookaheadSet>, noLookahead: Boolean): Boolean {
         val embeddedRule = transition.to.runtimeRules.first() // should only ever be one
         val endingLookahead = transition.lookahead.first().guard //should ony ever be one
@@ -585,7 +620,7 @@ internal class RuntimeParser(
         val startPosition = toProcess.growingNode.nextInputPosition
         val skipTerms = this.stateSet.runtimeRuleSet.firstSkipTerminals.toSet()
         val embeddedPossibleEOT = endingLookahead.unionContent(embeddedS0.stateSet, skipTerms)
-        val embeddedEOT = toProcess.growingNode.runtimeLookahead.map { this.stateSet.createWithParent(embeddedPossibleEOT, it) }.toSet()
+        val embeddedEOT = toProcess.growingNode.runtimeLookahead.map { this.stateSet.createWithParent(embeddedPossibleEOT, it) }.toSet() //FIXME: use resolve
         embeddedParser.start(startPosition, embeddedEOT)
         var seasons = 1
         var maxNumHeads = embeddedParser.graph.numberOfHeads

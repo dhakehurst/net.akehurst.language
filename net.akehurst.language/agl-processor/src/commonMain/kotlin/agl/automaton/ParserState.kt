@@ -29,7 +29,7 @@ internal class ParserState(
 
     companion object {
         fun LookaheadSetPart.lhs(stateSet: ParserStateSet): LookaheadSet {
-            return stateSet.createLookaheadSet(this.includesUP, this.includesEOT, this.matchANY, this.content)
+            return stateSet.createLookaheadSet(this.includesRT, this.includesEOT, this.matchANY, this.content)
         }
     }
 
@@ -74,7 +74,7 @@ internal class ParserState(
     val isUserGoal = this.firstRule == this.stateSet.userGoalRule
 
     fun firstOf(ifReachedEnd: LookaheadSet): LookaheadSetPart = this.rulePositions.map {
-        stateSet.buildCache.expectedAt(it, LookaheadSetPart(ifReachedEnd.includesUP, ifReachedEnd.includesEOT, ifReachedEnd.matchANY, ifReachedEnd.content))
+        stateSet.buildCache.expectedAt(it, LookaheadSetPart(ifReachedEnd.includesRT, ifReachedEnd.includesEOT, ifReachedEnd.matchANY, ifReachedEnd.content))
     }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
 
     internal fun createLookaheadSet(includesUP: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet =
