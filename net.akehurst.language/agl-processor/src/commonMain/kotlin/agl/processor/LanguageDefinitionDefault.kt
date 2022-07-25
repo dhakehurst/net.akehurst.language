@@ -44,7 +44,7 @@ class LanguageDefinitionDefault(
             null
         } else {
             val proc = Agl.processorFromString(g, targetGrammar, defaultGoalRule, syntaxAnalyser, semanticAnalyser, null)
-            if(buildForDefaultGoal) proc.buildForDefaultGoal()
+            if(buildForDefaultGoal) proc.buildFor(null) //null options will use default goal
             proc
         }
     }

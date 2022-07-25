@@ -17,6 +17,8 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.processor.aglOptions
+import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.Test
 
 internal class test_Agl {
@@ -30,7 +32,7 @@ internal class test_Agl {
             }
         """.trimIndent()
         val p = Agl.processorFromString(grammarStr)
-        p.parse("a", "a")
+        p.parse("a", parserOptions { goalRule("a") })
     }
 
     @Test
@@ -43,7 +45,7 @@ internal class test_Agl {
             }
         """.trimIndent()
         val p = Agl.processorFromString(grammarStr)
-        p.parse("a", "a")
+        p.parse("a", parserOptions { goalRule("a") })
     }
 
     @Test
@@ -56,7 +58,7 @@ internal class test_Agl {
             }
         """.trimIndent()
         val p = Agl.processorFromString(grammarStr)
-        p.parse("b", "b")
+        p.parse("b", parserOptions { goalRule("b") })
     }
 
     @Test

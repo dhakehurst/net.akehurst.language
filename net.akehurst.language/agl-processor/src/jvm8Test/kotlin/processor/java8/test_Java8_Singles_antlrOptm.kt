@@ -41,7 +41,7 @@ class test_Java8_Singles_antlrOptm {
             val grammarStr = this::class.java.getResource(path).readText()
             val proc = Agl.processorFromString(grammarStr)
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
-            //proc.buildFor(forRule)
+            //proc.buildFor(forRule) //TODO: use build
             return proc
         }
     }
@@ -136,8 +136,6 @@ class test_Java8_Singles_antlrOptm {
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
     }
-
-
 
     @Test
     fun t() {

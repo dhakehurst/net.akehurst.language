@@ -70,66 +70,6 @@ internal class ParserStateSet(
     val startState: ParserState by lazy { this.createState(listOf(startRulePosition)) }
     val finishState: ParserState by lazy { this.createState(listOf(finishRulePosition)) }
 
-    /*
-        // runtimeRule -> set of rulePositions where the rule is used
-        internal val parentPosition = lazyMapNonNull<RuntimeRule, Set<RulePosition>> { childRR ->
-            //TODO: possibly faster to pre cache this! and goal rules currently not included!
-            when {
-                (childRR === RuntimeRuleSet.END_OF_TEXT) -> { //TODO: should this check for contains in possibleEndOfText, and what if something in endOfText is also valid mid text!
-                    setOf(RulePosition(this.startState.runtimeRule, 0, 1))
-                }
-                childRR.isSkip -> when {
-                    //this must be the skipParserStateSet, could test this.isSkip to be sure!
-                    childRR.number == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
-                        setOf(this.startState.rulePosition)
-                    }
-                    childRR.number == RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER -> {
-                        val option = this.runtimeRuleSet.skipRules.indexOf(childRR)
-                        setOf(RulePosition(this.userGoalRule, 0, 0), RulePosition(this.userGoalRule, 0, RulePosition.MULIT_ITEM_POSITION))
-                    }
-                    else -> {
-                        val option = this.runtimeRuleSet.skipRules.indexOf(childRR)
-                        val chRule = this.userGoalRule.rhs.items[RuntimeRuleItem.MULTI__ITEM]
-                        setOf(RulePosition(chRule, option, 0))
-                    }
-                }
-                else -> {
-                    val s = this.runtimeRuleSet.parentPosition[childRR].filter { this.usedNonTerminalRules.contains(it.runtimeRule) }.toSet()
-                    if (childRR == this.userGoalRule) {
-                        s + this.startState.rulePosition
-                    } else {
-                        s
-                    }
-                }
-            }
-        }
-
-        internal val _parentRelations = mutableMapOf<RuntimeRule, Set<ParentRelation>>()
-        internal fun parentRelation(runtimeRule: RuntimeRule): Set<ParentRelation> {
-            var set = _parentRelations[runtimeRule]
-            return if (null == set) {
-                val t = if (runtimeRule == this.userGoalRule) {
-                    setOf(ParentRelation(this.startState.rulePosition, LookaheadSet.UP))
-                } else {
-                    emptySet()
-                }
-                set = t + this.calcParentRelation(runtimeRule)
-                _parentRelations[runtimeRule] = set
-                set
-            } else {
-                set
-            }
-        }
-
-        private fun calcParentRelation(childRR: RuntimeRule): Set<ParentRelation> {
-            val x = this.parentPosition[childRR].map { rp ->
-                val lhc = calcLookaheadUp2(rp)
-                val lhs = createLookaheadSet(lhc)
-                ParentRelation(rp, lhs)
-            }.toSet()
-            return x
-        }
-    */
     internal val firstTerminals = lazyMutableMapNonNull<RulePosition, List<RuntimeRule>> { rp ->
         when (rp.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> listOf(rp.runtimeRule)

@@ -78,6 +78,8 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
             val parentFollow: FollowDeferred
         ) : FollowDeferred {
 
+            // used to resolve recursion issue
+            private var _resolvedFollow_resolveTerminals: Set<RuntimeRule>? = null
             private var _resolvedFollow: FollowDeferred? = null
             private var _resolvedContainsEmpty: Boolean? = null
 
@@ -101,7 +103,12 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
                     this._resolvedFollow = ff.followInContext(context, rulePosition, parentFollow)
                     this._resolvedContainsEmpty = ff.needsNext(context, rulePosition)
                 }
-                return _resolvedFollow!!.resolveTerminals(ff)
+                if (null == _resolvedFollow_resolveTerminals) {
+                    // resolveTerminals could be recursive, so set to empty set before calling to recursion terminates
+                    _resolvedFollow_resolveTerminals = emptySet()
+                    _resolvedFollow_resolveTerminals = _resolvedFollow!!.resolveTerminals(ff)
+                }
+                return _resolvedFollow_resolveTerminals!!
             }
 
             private val _id = arrayOf(context, rulePosition, parentInfo)
@@ -313,7 +320,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
 
     // entry point from calcWidth
     // target states for WIDTH transition, rulePosition should NOT be atEnd
-    fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition ): Set<FirstTerminalInfo> {
+    fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition): Set<FirstTerminalInfo> {
         check(context.isAtEnd.not()) { "firstTerminal($context,$rulePosition)" }
         processClosureFor(context, rulePosition, FollowDeferredLiteral.RT)
         //processClosureFor(context, rulePosition, FollowDeferredLiteral(runtimeLookahead))

@@ -24,10 +24,7 @@ import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
@@ -68,7 +65,11 @@ class SyntaxAnalyserSimple(
         val proc = Agl.registry.agl.scopes.processor ?: error("Scopes language not found!")
         val (sm, issues) = proc.process<ScopeModel, SentenceContext>(
             sentence = configuration,
-            context = configurationContext
+            aglOptions<ScopeModel, SentenceContext> {
+                syntaxAnalyser {
+                    context(configurationContext)
+                }
+            }
         )
         if (null == sm) {
         } else {

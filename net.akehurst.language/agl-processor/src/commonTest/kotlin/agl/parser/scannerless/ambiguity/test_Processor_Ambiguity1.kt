@@ -25,7 +25,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
-    //TODO: make this use || ambiguouse choice
+    //TODO: make this use || ambiguous choice
     /**
      * S : 'a' | 'a' S B B ;
      * B : 'b' ? ;

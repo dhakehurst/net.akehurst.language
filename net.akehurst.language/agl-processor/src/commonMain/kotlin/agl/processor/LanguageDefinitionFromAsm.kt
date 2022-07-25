@@ -42,7 +42,7 @@ class LanguageDefinitionFromAsm(
     private val _grammarAsm: Grammar = grammar
     private val _processor_cache: CachedValue<LanguageProcessor?> = cached {
         val proc = Agl.processorFromGrammar(_grammarAsm, defaultGoalRule, syntaxAnalyser, semanticAnalyser, null)
-        if (buildForDefaultGoal) proc.buildForDefaultGoal()
+        if(buildForDefaultGoal) proc.buildFor(null) //null options will use default goal
         proc
     }
 

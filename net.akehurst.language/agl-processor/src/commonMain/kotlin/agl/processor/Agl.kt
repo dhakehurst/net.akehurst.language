@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
@@ -69,7 +70,14 @@ object Agl {
     ): LanguageProcessor {
         try {
             val aglProc = this.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
-            val (grammars, issues) = aglProc.process<List<Grammar>, Any>(grammarDefinitionStr, "grammarDefinition", AutomatonKind.LOOKAHEAD_1, null)
+            val (grammars, issues) = aglProc.process<List<Grammar>, Any>(grammarDefinitionStr, aglOptions {
+                parser {
+                    goalRule(AglGrammarGrammar.goalRuleName)
+                }
+                semanticAnalyser {
+                    active(false) // switch off for performance
+                }
+            })
             if (null != grammars) {
                 val goal = goalRuleName ?: grammars.last().rule.first { it.isSkip.not() }.name
                 //TODO: what to do with issues if there are any?

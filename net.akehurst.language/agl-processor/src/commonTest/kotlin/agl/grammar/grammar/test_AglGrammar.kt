@@ -22,6 +22,7 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -31,7 +32,7 @@ class test_AglGrammar {
 
     @BeforeTest
     fun before() {
-        Agl.registry.agl.grammar.processor?.buildForDefaultGoal()
+        Agl.registry.agl.grammar.processor?.buildFor()
     }
 
     @Test
@@ -1123,7 +1124,7 @@ class test_AglGrammar {
         val p = Agl.processorFromString(grammarStr,"Original","S1")
         assertNotNull(p)
 
-        val (actual1,issues1) = p.parse("abc", "S1")
+        val (actual1,issues1) = p.parse("abc", parserOptions { goalRule("S1") })
         val expected1 = p.spptParser.parse(
             """
              S1 { ABC { 'a' B { 'b' } 'c' } }
@@ -1135,7 +1136,7 @@ class test_AglGrammar {
 
         val p2 = Agl.processorFromString(grammarStr,"Extended","S1")
         assertNotNull(p2)
-        val (actual2,issues2) = p2.parse("adc", "S1")
+        val (actual2,issues2) = p2.parse("adc", parserOptions { goalRule("S1") })
         val expected2 = p2.spptParser.parse(
             """
              S1 { ABC { 'a' B { 'd' } 'c' } }
