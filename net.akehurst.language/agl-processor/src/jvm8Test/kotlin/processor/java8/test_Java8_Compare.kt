@@ -19,6 +19,7 @@ package net.akehurst.language.processor.java8
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.parserOptions
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -132,7 +133,7 @@ class test_Java8_Compare(val data: Data) {
     private fun testParse(proc: LanguageProcessor, toUpper: Boolean = false) {
             val queryStr = this.data.sentence
             val grammarRule = if (toUpper) this.data.grammarRule.capitalize() else this.data.grammarRule
-            val (sppt,issues) = proc.parse(queryStr,grammarRule)
+            val (sppt,issues) = proc.parse(queryStr, parserOptions { goalRule(grammarRule) })
             assertNotNull(sppt)
             assertEquals(emptyList(),issues)
             val resultStr = clean(sppt.asString)

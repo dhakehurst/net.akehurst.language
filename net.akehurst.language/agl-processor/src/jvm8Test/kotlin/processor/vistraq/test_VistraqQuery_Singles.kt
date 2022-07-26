@@ -18,10 +18,7 @@ package net.akehurst.language.agl.processor.vistraq
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.*
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -38,50 +35,62 @@ class test_VistraqQuery_Singles {
         var processor: LanguageProcessor = tgqlprocessor()
 
         fun tgqlprocessor(): LanguageProcessor {
-            Agl.registry.agl.grammar.processor?.buildForDefaultGoal()
             //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
-            return Agl.processorFromString(grammarStr).buildFor("query") //TODO: use build
+            return Agl.processorFromString(grammarStr) //TODO: use build
         }
 
     }
 
     @Test
     fun NULL() {
-        val (sppt, issues) = processor.parse("null", "NULL")
+        val sentence = "null"
+        val goal = "NULL"
+        val (sppt, issues) = processor.parse(sentence, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
 
     @Test
     fun REAL_0() {
-
-        val (sppt, issues) = processor.parse("0", "REAL")
+        val sentence = "0"
+        val goal = "REAL"
+        val (sppt, issues) = processor.parse(sentence, parserOptions { goalRule(goal) })
         assertNull(sppt)
-        assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^0", setOf("\"[0-9]+[.][0-9]+\""))
-        ), issues)
+        assertEquals(
+            listOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^0", setOf("\"[0-9]+[.][0-9]+\""))
+            ), issues
+        )
     }
 
     @Test
     fun REAL_p0() {
-        val (sppt, issues) = processor.parse(".0", "REAL")
+        val sentence =".0"
+        val goal = "REAL"
+        val (sppt, issues) = processor.parse(sentence, parserOptions { goalRule(goal) })
         assertNull(sppt)
-        assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^.0",setOf("\"[0-9]+[.][0-9]+\""))
-        ), issues)
+        assertEquals(
+            listOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^.0", setOf("\"[0-9]+[.][0-9]+\""))
+            ), issues
+        )
 
     }
 
     @Test
     fun REAL_0p0() {
-        val (sppt, issues) = processor.parse("0.0", "REAL")
+        val sentence ="0.0"
+        val goal = "REAL"
+        val (sppt, issues) = processor.parse(sentence, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
 
     @Test
     fun REAL_3p14() {
-        val (sppt, issues) = processor.parse("3.14", "REAL")
+        val sentence ="3.14"
+        val goal = "REAL"
+        val (sppt, issues) = processor.parse(sentence, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
@@ -89,7 +98,8 @@ class test_VistraqQuery_Singles {
     @Test
     fun expression_1() {
         val queryStr = "1"
-        val (sppt, issues) = processor.parse(queryStr, "expression")
+        val goal = "expression"
+        val (sppt, issues) = processor.parse(queryStr, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -99,7 +109,8 @@ class test_VistraqQuery_Singles {
     @Test
     fun literalValue_0p1() {
         val queryStr = "0.1"
-        val (sppt, issues) = processor.parse(queryStr, "literalValue")
+        val goal = "literalValue"
+        val (sppt, issues) = processor.parse(queryStr,parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -109,7 +120,8 @@ class test_VistraqQuery_Singles {
     @Test
     fun expression_0p1() {
         val queryStr = "0.1"
-        val (sppt, issues) = processor.parse(queryStr, "expression")
+        val goal = "expression"
+        val (sppt, issues) = processor.parse(queryStr, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -119,7 +131,8 @@ class test_VistraqQuery_Singles {
     @Test
     fun nodeSelector_NOT_A() {
         val queryStr = "NOT A"
-        val (sppt, issues) = processor.parse(queryStr, "nodeSelector")
+        val goal = "nodeSelector"
+        val (sppt, issues) = processor.parse(queryStr,parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -129,7 +142,8 @@ class test_VistraqQuery_Singles {
     @Test
     fun pathExpression_NOT_A() {
         val queryStr = "NOT A"
-        val (sppt, issues) = processor.parse(queryStr, "pathExpression")
+        val goal = "pathExpression"
+        val (sppt, issues) = processor.parse(queryStr,parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -139,7 +153,8 @@ class test_VistraqQuery_Singles {
     @Test
     fun pathQuery_MATCH_NOT_A() {
         val queryStr = "MATCH NOT A"
-        val (sppt, issues) = processor.parse(queryStr, "pathQuery")
+        val goal = "pathQuery"
+        val (sppt, issues) = processor.parse(queryStr, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -149,8 +164,8 @@ class test_VistraqQuery_Singles {
     @Test
     fun expression_literalValue_true() {
         val queryStr = "true"
-
-        val (sppt, issues) = processor.parse(queryStr, "expression")
+        val goal = "expression"
+        val (sppt, issues) = processor.parse(queryStr, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -160,8 +175,8 @@ class test_VistraqQuery_Singles {
     @Test(timeout = 5000)
     fun expression_long_3() {
         val queryStr = "a.p AND b.p AND c.p AND d.p"
-
-        val (sppt, issues) = processor.parse(queryStr, "expression")
+        val goal = "expression"
+        val (sppt, issues) = processor.parse(queryStr, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -172,8 +187,8 @@ class test_VistraqQuery_Singles {
     @Test(timeout = 5000)
     fun expression_long_5() {
         val queryStr = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p"
-
-        val (sppt, issues) = processor.parse(queryStr, "expression")
+        val goal = "expression"
+        val (sppt, issues) = processor.parse(queryStr, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -183,8 +198,8 @@ class test_VistraqQuery_Singles {
     @Test//(timeout = 5000)
     fun expression_long_11() {
         val queryStr = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p AND g.p AND h.p AND i.p AND j.p AND k.p AND l.p"
-
-        val (sppt, issues) = processor.parse(queryStr, "expression")
+        val goal = "expression"
+        val (sppt, issues) = processor.parse(queryStr, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -207,8 +222,8 @@ class test_VistraqQuery_Singles {
      AND binary.version == ms.version
      AND binary.publishedDate < ms.dueDate
         """.trimIndent()
-
-        val (sppt, issues) = processor.parse(queryStr, "expression")
+        val goal = "expression"
+        val (sppt, issues) = processor.parse(queryStr,parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -218,8 +233,8 @@ class test_VistraqQuery_Singles {
     @Test
     fun whereClause_expression_literalValue_true() {
         val queryStr = "WHERE true"
-
-        val (sppt, issues) = processor.parse(queryStr, "whereClause")
+        val goal = "whereClause"
+        val (sppt, issues) = processor.parse(queryStr, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -229,8 +244,8 @@ class test_VistraqQuery_Singles {
     @Test
     fun pathQuery1() {
         val queryStr = "MATCH Milestone WHERE true"
-
-        val (sppt, issues) = processor.parse(queryStr, "pathQuery")
+        val goal = "pathQuery"
+        val (sppt, issues) = processor.parse(queryStr, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -240,8 +255,8 @@ class test_VistraqQuery_Singles {
     @Test
     fun singleQuery1() {
         val queryStr = "MATCH Milestone RETURN 1"
-
-        val (sppt, issues) = processor.parse(queryStr, "singleQuery")
+        val goal = "singleQuery"
+        val (sppt, issues) = processor.parse(queryStr,parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -253,8 +268,8 @@ class test_VistraqQuery_Singles {
         val queryStr = """
    MATCH Milestone WHERE true RETURN 1
         """.trimIndent()
-
-        val (sppt, issues) = processor.parse(queryStr, "singleQuery")
+        val goal = "singleQuery"
+        val (sppt, issues) = processor.parse(queryStr, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -272,8 +287,8 @@ class test_VistraqQuery_Singles {
              COLUMN X CONTAINING Name WHERE Name=='X'
              COLUMN Y CONTAINING Name WHERE Name=='Y'
         """.trimIndent()
-
-        val (sppt, issues) = processor.parse(queryStr, "query")
+        val goal = "query"
+        val (sppt, issues) = processor.parse(queryStr, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -284,8 +299,8 @@ class test_VistraqQuery_Singles {
     fun query1() {
         val queryStr = "MATCH A WHERE a == b AND a == b AND true RETURN TABLE COLUMN a CONTAINING a"
         //val queryStr = "MATCH A  RETURN 1"
-
-        val (sppt, issues) = processor.parse(queryStr, "query")
+        val goal = "query"
+        val (sppt, issues) = processor.parse(queryStr, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -319,7 +334,8 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
         """.trimIndent()
         //val queryStr = "MATCH A  RETURN 1"
 
-        val (sppt, issues) = processor.parse(queryStr, "query")
+        val goal = "query"
+        val (sppt, issues) = processor.parse(queryStr, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
@@ -362,10 +378,11 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
 
         try {
             println("parse")
-            processor.parse(queryStr, "query")
+            val goal = "query"
+            processor.parse(queryStr, parserOptions { goalRule(goal) })
             println("timed parse")
             val v = measureTimedValue {
-                processor.parse(queryStr, "query")
+                processor.parse(queryStr, parserOptions { goalRule(goal) })
             }
             println(v.duration)
             val (sppt, issues) = v.value

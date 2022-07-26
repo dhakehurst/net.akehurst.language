@@ -20,10 +20,7 @@ import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SemanticAnalyserException
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.*
 
 
 internal class AglGrammarSemanticAnalyser(
@@ -37,12 +34,13 @@ internal class AglGrammarSemanticAnalyser(
         _locationMap = null
     }
 
-    override fun analyse(asm: List<Grammar>, locationMap: Map<*, InputLocation>?, context: GrammarContext?): List<LanguageIssue> {
+    override fun analyse(asm: List<Grammar>, locationMap: Map<*, InputLocation>?, context: GrammarContext?): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
-        return when (asm) {
+        val issues =  when (asm) {
             is List<*> -> checkGrammar(asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
             else -> throw SemanticAnalyserException("This SemanticAnalyser is for an ASM of type List<Grammar>", null)
         }
+        return SemanticAnalysisResult(issues)
     }
 
     private fun checkGrammar(grammarList: List<Grammar>, automatonKind: AutomatonKind): List<LanguageIssue> {

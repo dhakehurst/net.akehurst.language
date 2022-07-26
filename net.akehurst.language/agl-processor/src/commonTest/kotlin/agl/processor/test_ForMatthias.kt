@@ -16,10 +16,15 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.api.processor.aglOptions
+import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.Test
 
 internal class test_ForMatthias {
-    private val grammarStr = """
+
+    private companion object {
+        const val goal = ""
+        val grammarStr = """
             namespace test
             grammar Matthias {
               skip WHITESPACE = "\s+";
@@ -33,6 +38,8 @@ internal class test_ForMatthias {
               leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*" ;
             }
         """.trimIndent()
+    }
+
     private val p = Agl.processorFromString(grammarStr)
 
     @Test
@@ -43,7 +50,8 @@ internal class test_ForMatthias {
               properties {
               }
             }
-        """.trimIndent(), "conceptDefinition"
+        """.trimIndent(),
+            parserOptions { goalRule(goal) }
         )
     }
 
@@ -56,7 +64,8 @@ internal class test_ForMatthias {
                  p1 : Int [1]
               }
             }
-        """.trimIndent(), "conceptDefinition"
+        """.trimIndent(),
+            parserOptions { goalRule(goal) }
         )
     }
 
@@ -70,7 +79,8 @@ internal class test_ForMatthias {
                  p2 : Int [0..1]
               }
             }
-        """.trimIndent(), "conceptDefinition"
+        """.trimIndent(),
+            parserOptions { goalRule(goal) }
         )
     }
 
@@ -81,7 +91,8 @@ internal class test_ForMatthias {
             properties {
 
             }
-        """.trimIndent(), "properties"
+        """.trimIndent(),
+            parserOptions { goalRule(goal) }
         )
     }
 }

@@ -18,6 +18,7 @@ package net.akehurst.language.agl.processor.dot
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.parserOptions
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
@@ -76,7 +77,7 @@ class test_AnsiC(val data:Data) {
 
     @Test
     fun test() {
-        val (sppt,issues) = processor.parse( this.data.text,"expression")
+        val (sppt,issues) = processor.parse( this.data.text, parserOptions { goalRule("expression") })
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
         val resultStr = sppt.asString

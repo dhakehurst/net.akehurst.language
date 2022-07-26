@@ -18,6 +18,7 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -257,7 +258,7 @@ FQN = ID ('.' ID)*;
 
     @Test
     fun t1() {
-        val (sppt,issues) = processor.parse("after 10 s / raise ABC.intEvent","StateScope")
+        val (sppt,issues) = processor.parse("after 10 s / raise ABC.intEvent", parserOptions { goalRule("StateScope") })
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
         val actual = sppt.tokensByLine(0)

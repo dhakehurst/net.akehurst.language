@@ -30,6 +30,7 @@ import org.junit.runners.Parameterized.Parameters
 
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.parserOptions
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlin.test.assertEquals
@@ -43,7 +44,7 @@ class test_Java8Agl_Literals(val data:Data) {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
         val processor : LanguageProcessor by lazy {
-            Agl.processorFromString(grammarStr, "Literals","Literal").buildFor("Literal")
+            Agl.processorFromString(grammarStr, "Literals","Literal").buildFor( parserOptions { goalRule("Literal") })
         }
         var sourceFiles = arrayOf("/java8/sentences/literals-valid.txt")
 

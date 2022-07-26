@@ -18,6 +18,8 @@ package net.akehurst.language.agl.processor.statecharttools
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.aglOptions
+import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -37,9 +39,9 @@ class test_StatechartTools_Singles {
     fun ConditionalExpression_integer() {
         val goal = "Expression"
         val sentence = "integer"
-        val (sppt,issues) = processor.parse(sentence,goal)
+        val (sppt, issues) = processor.parse(sentence, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
         assertEquals(sentence, resultStr)
     }
@@ -48,9 +50,9 @@ class test_StatechartTools_Singles {
     fun ConditionalExpression_97() {
         val goal = "Expression"
         val sentence = "97"
-        val (sppt,issues) = processor.parse(sentence,goal)
+        val (sppt, issues) = processor.parse(sentence, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
         assertEquals(sentence, resultStr)
     }
@@ -59,9 +61,9 @@ class test_StatechartTools_Singles {
     fun AssignmentExpression_integer_AS_97() {
         val goal = "Expression"
         val sentence = "integer = 97"
-        val (sppt,issues) = processor.parse(sentence,goal)
+        val (sppt, issues) = processor.parse(sentence, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
         assertEquals(sentence, resultStr)
     }
@@ -70,9 +72,9 @@ class test_StatechartTools_Singles {
     fun ScopeDeclaration_integer_AS_97() {
         val goal = "ScopeDeclaration"
         val sentence = "var MyVar : integer = 97"
-        val (sppt,issues) = processor.parse(sentence,goal)
+        val (sppt, issues) = processor.parse(sentence, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
         assertEquals(sentence, resultStr)
     }
@@ -81,9 +83,9 @@ class test_StatechartTools_Singles {
     fun expectedAt_TransitionSpecification_0() {
         val goal = "TransitionSpecification"
         val sentence = ""
-        val actual = processor.expectedAt(sentence,0,1,goal).map { it.text }
+        val actual = processor.expectedAt(sentence, 0, 1, aglOptions { parser { goalRule(goal) } }).items.map { it.text }
 
-        val expected = listOf<String>("ID", "after", "every","entry","exit","always","oncycle","[","default","else","/","#")
+        val expected = listOf<String>("ID", "after", "every", "entry", "exit", "always", "oncycle", "[", "default", "else", "/", "#")
         assertEquals(expected, actual)
     }
 }

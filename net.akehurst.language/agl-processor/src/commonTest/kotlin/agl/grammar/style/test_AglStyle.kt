@@ -1,6 +1,8 @@
 package net.akehurst.language.agl.grammar.style
 
+import net.akehurst.language.agl.grammar.scopes.AglScopesGrammar
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.aglOptions
 import net.akehurst.language.api.style.AglStyleRule
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -20,7 +22,7 @@ class test_AglStyle {
             // single line comment
         """.trimIndent()
 
-        val (p,i) = aglProc.process<List<AglStyleRule>, Any>(text,"rules")
+        val (p,i) = aglProc.process<List<AglStyleRule>, Any>(text, aglOptions { parser { goalRule(AglStyleGrammar.goalRuleName) } })
 
         assertNotNull(p)
         assertEquals(0, p.size)
@@ -36,7 +38,7 @@ class test_AglStyle {
             */
         """.trimIndent()
 
-        val (p,i) = aglProc.process<List<AglStyleRule>, Any>(text,"rules")
+        val (p,i) = aglProc.process<List<AglStyleRule>, Any>(text,aglOptions { parser { goalRule(AglStyleGrammar.goalRuleName) } })
 
         assertNotNull(p)
         assertEquals(0, p.size)
@@ -49,7 +51,7 @@ class test_AglStyle {
             selector { }
         """.trimIndent()
 
-        val (actual,i) = aglProc.process<List<AglStyleRule>, Any>(text,"rules")
+        val (actual,i) = aglProc.process<List<AglStyleRule>, Any>(text,aglOptions { parser { goalRule(AglStyleGrammar.goalRuleName) } })
 
         assertNotNull(actual)
         assertEquals(1, actual.size)
@@ -65,7 +67,7 @@ class test_AglStyle {
             }
         """.trimIndent()
 
-        val (actual,i) = aglProc.process<List<AglStyleRule>, Any>(text,"rules")
+        val (actual,i) = aglProc.process<List<AglStyleRule>, Any>(text,aglOptions { parser { goalRule(AglStyleGrammar.goalRuleName) } })
 
         assertNotNull(actual)
         assertEquals(1, actual.size)
@@ -87,7 +89,7 @@ class test_AglStyle {
             }
         """.trimIndent()
 
-        val (actual,i) = aglProc.process<List<AglStyleRule>, Any>(text,"rules")
+        val (actual,i) = aglProc.process<List<AglStyleRule>, Any>(text,aglOptions { parser { goalRule(AglStyleGrammar.goalRuleName) } })
 
         assertNotNull(actual)
         assertEquals(2, actual.size)
@@ -102,7 +104,7 @@ class test_AglStyle {
             }
         """.trimIndent()
 
-        val (actual,i) = aglProc.process<List<AglStyleRule>, Any>(text,"rules")
+        val (actual,i) = aglProc.process<List<AglStyleRule>, Any>(text,aglOptions { parser { goalRule(AglStyleGrammar.goalRuleName) } })
 
         assertNotNull(actual)
         assertEquals(1, actual.size)
@@ -115,7 +117,7 @@ class test_AglStyle {
             selector1,selector2,selector { }
         """.trimIndent()
 
-        val (actual,i) = aglProc.process<List<AglStyleRule>, Any>(text,"rules")
+        val (actual,i) = aglProc.process<List<AglStyleRule>, Any>(text,aglOptions { parser { goalRule(AglStyleGrammar.goalRuleName) } })
 
         assertNotNull(actual)
         assertEquals(1, actual.size)

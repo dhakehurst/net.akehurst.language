@@ -20,10 +20,7 @@ import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.parser.scanondemand.leftRecursive.test_hiddenLeft1
 import test.assertEqualsWarning
@@ -70,7 +67,7 @@ internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean=false)
         return actual
     }
 
-    fun testFail(rrs: RuntimeRuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int): Pair<SharedPackedParseTree?, List<LanguageIssue>> {
+    fun testFail(rrs: RuntimeRuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int): ParseResult {
         val parser = ScanOnDemandParser(rrs)
         if(build)parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
         val p = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)

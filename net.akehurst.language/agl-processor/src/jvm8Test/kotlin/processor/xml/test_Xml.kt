@@ -29,6 +29,7 @@ import org.junit.runners.Parameterized.Parameters
 
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -71,7 +72,8 @@ class test_Xml(val data:Data) {
 
     @Test
     fun test() {
-        val (sppt,issues) = processor.parse(this.data.text,"file")
+        val goal = "file"
+        val (sppt,issues) = processor.parse(this.data.text, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
         val resultStr = sppt.asString

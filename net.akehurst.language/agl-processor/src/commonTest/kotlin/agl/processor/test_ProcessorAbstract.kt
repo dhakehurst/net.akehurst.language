@@ -17,12 +17,13 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.assertEquals
 
 abstract class test_ProcessorAbstract {
 
     fun test(processor:LanguageProcessor, goal:String, sentence:String, vararg expectedTrees:String) {
-        val (actual,issues) = processor.parse(sentence,goal)
+        val (actual,issues) = processor.parse(sentence, parserOptions { goalRule(goal) })
 
         val sppt = processor.spptParser
         expectedTrees.forEach { sppt.parse(it, true) }

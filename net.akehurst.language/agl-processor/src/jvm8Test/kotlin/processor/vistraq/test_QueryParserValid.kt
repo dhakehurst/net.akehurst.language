@@ -17,6 +17,7 @@ package net.akehurst.language.agl.processor.vistraq
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.parserOptions
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -81,7 +82,8 @@ class test_QueryParserValid(val data: Data) {
     @Test(timeout = 2000)
     fun test() {
         val queryStr = this.data.queryStr
-        val (sppt,issues) = processor.parse(queryStr, "query")
+        val goal = "query"
+        val (sppt,issues) = processor.parse(queryStr, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
         val resultStr = sppt.asString

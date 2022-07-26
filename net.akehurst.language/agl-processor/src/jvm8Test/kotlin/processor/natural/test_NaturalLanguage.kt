@@ -17,6 +17,7 @@ package net.akehurst.language.agl.processor.natural
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.parserOptions
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -89,7 +90,7 @@ class test_NaturalLanguage(val data: Data) {
                 throw RuntimeException("Found unknown words '${l.matchedText}', at ${l.location}")
             }
         }
-        val (sppt, issues) = processor.parse(this.data.sentence, this.data.goal)
+        val (sppt, issues) = processor.parse(this.data.sentence, parserOptions { goalRule(data.goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
 

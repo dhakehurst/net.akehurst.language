@@ -21,6 +21,7 @@ import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.ParseResult
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import test.assertEqualsWarning
 import kotlin.test.Test
@@ -36,7 +37,7 @@ class test_AglGrammar_item {
 
     private val spptParser = SPPTParserDefault(converterToRuntimeRules.runtimeRuleSet)
 
-    private fun parse(goalRule: String, inputText: String): Pair<SharedPackedParseTree?, List<LanguageIssue>> {
+    private fun parse(goalRule: String, inputText: String): ParseResult {
         //parser.buildFor(goalRule,AutomatonKind.LOOKAHEAD_1)
         return parser.parseForGoal(goalRule, inputText, AutomatonKind.LOOKAHEAD_1)
     }

@@ -39,7 +39,7 @@ class test_Multi0N {
         val sentence = ""
         val position = 0
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedAt<Any,Any>(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
                 "a", "b"
         )
@@ -51,7 +51,7 @@ class test_Multi0N {
         val sentence = "a"
         val position = 0
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedAt<Any,Any>(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
                 "a", "b"
         )
@@ -63,7 +63,7 @@ class test_Multi0N {
         val sentence = "a"
         val position = 1
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedAt<Any,Any>(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
                 "a",
                 "b"
@@ -76,7 +76,7 @@ class test_Multi0N {
         val sentence = "ab"
         val position = 1
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedAt<Any,Any>(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
                 "a",
                 "b"

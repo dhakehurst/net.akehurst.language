@@ -17,6 +17,7 @@ package net.akehurst.language.agl.processor.dot
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.parserOptions
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
@@ -33,7 +34,7 @@ class test_Dot(val data: Data) {
     companion object {
 
         private val grammarStr = this::class.java.getResource("/dot/Dot.agl")?.readText() ?: error("File not found")
-        var processor: LanguageProcessor = Agl.processorFromString(grammarStr).buildFor("graph") //TODO: use build
+        var processor: LanguageProcessor = Agl.processorFromString(grammarStr).buildFor(parserOptions { goalRule("graph") })
 
         val validDirectory = "/dot/valid/"
         var validFiles = this::class.java.getResourceAsStream(validDirectory).use { if (null == it) emptyList<String>() else BufferedReader(InputStreamReader(it)).readLines() }
@@ -61,7 +62,7 @@ class test_Dot(val data: Data) {
 
     @Test
     fun test() {
-        val (sppt,issues) = processor.parse(this.data.text,"graph")
+        val (sppt,issues) = processor.parse(this.data.text,parserOptions { goalRule("graph") })
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
         val resultStr = sppt.asString

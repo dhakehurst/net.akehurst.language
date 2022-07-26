@@ -1,6 +1,7 @@
 package thridparty.projectIT
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -300,7 +301,7 @@ class test_piLanguages {
                 units: ExampleUnit();
             }
         """.trimIndent()
-        val (sppt,issues) =  processor.parse(sentence,"PiStructureDef")
+        val (sppt,issues) =  processor.parse(sentence, parserOptions { goalRule("PiStructureDef") })
         assertNotNull(sppt,issues.joinToString(separator = "\n"){it.toString()})
         assertEquals(emptyList(),issues)
     }
@@ -473,7 +474,7 @@ class test_piLanguages {
                 priority = 10;
             }
         """.trimIndent()
-        val (sppt,issues) =  processor.parse(sentence,"PiStructureDef")
+        val (sppt,issues) =  processor.parse(sentence,parserOptions { goalRule("PiStructureDef") })
         assertNotNull(sppt,issues.joinToString(separator = "\n"){it.toString()})
         assertEquals(emptyList(),issues)
     }

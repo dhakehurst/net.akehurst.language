@@ -23,9 +23,7 @@ import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -145,9 +143,13 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         """.trimIndent()
 
-        val (actual, issues) = processor.process<AsmSimple, Any>(
+        val (actual, issues) = processor.process<AsmSimple, ContextSimple>(
             sentence = sentence,
-            context = ContextSimple()
+            aglOptions {
+                syntaxAnalyser {
+                    context(ContextSimple())
+                }
+            }
         )
         assertNotNull(actual)
 
@@ -186,9 +188,13 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         """.trimIndent()
 
-        val (actual, issues) = processor.process<AsmSimple, Any>(
+        val (actual, issues) = processor.process<AsmSimple, ContextSimple>(
             sentence = sentence,
-            context = ContextSimple()
+            aglOptions {
+                syntaxAnalyser {
+                    context(ContextSimple())
+                }
+            }
         )
         assertNotNull(actual)
         assertEquals(emptyList(), issues)

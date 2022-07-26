@@ -1,6 +1,7 @@
 package thridparty.projectIT
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.Test
 
 class test_ExpressionLibraryGrammar {
@@ -68,7 +69,7 @@ class test_ExpressionLibraryGrammar {
                 | 4567 | ;
                 | ( true - false + "aap" ) | ;
         """.trimIndent()
-        processor.parse(sentence,goal)
+        processor.parse(sentence, parserOptions { goalRule(goal) })
     }
 
 }

@@ -22,6 +22,7 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.aglOptions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -38,7 +39,7 @@ class test_AglScopes {
             // single line comment
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process<ScopeModel, Any>(text, AglScopesGrammar.goalRuleName)
+        val (asm, issues) = aglProc.process<ScopeModel, Any>(text, aglOptions { parser { goalRule(AglScopesGrammar.goalRuleName) } })
 
         val expected = ScopeModel()
 
@@ -58,7 +59,7 @@ class test_AglScopes {
             */
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process<ScopeModel, Any>(text, AglScopesGrammar.goalRuleName)
+        val (asm, issues) = aglProc.process<ScopeModel, Any>(text, aglOptions { parser { goalRule(AglScopesGrammar.goalRuleName) } })
 
         val expected = ScopeModel()
 
@@ -77,7 +78,7 @@ class test_AglScopes {
                     rule1 = 'a' ;
                 }
             """.trimIndent()
-        ).first!![0]
+        ).asm!![0]
 
         val text = """
             scope rule1 { }
@@ -85,8 +86,10 @@ class test_AglScopes {
 
         val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
             sentence = text,
-            goalRuleName = AglScopesGrammar.goalRuleName,
-            context = ContextFromGrammar(grammar)
+            aglOptions {
+                parser { goalRule(AglScopesGrammar.goalRuleName) }
+                syntaxAnalyser { context(ContextFromGrammar(grammar)) }
+            }
         )
 
         val expected = ScopeModel().apply {
@@ -108,7 +111,7 @@ class test_AglScopes {
                     rule1 = 'a' ;
                 }
             """.trimIndent()
-        ).first!![0]
+        ).asm!![0]
 
         val text = """
             scope ruleX { }
@@ -116,8 +119,10 @@ class test_AglScopes {
 
         val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
             sentence = text,
-            goalRuleName = AglScopesGrammar.goalRuleName,
-            context = ContextFromGrammar(grammar)
+            aglOptions {
+                parser { goalRule(AglScopesGrammar.goalRuleName) }
+                syntaxAnalyser { context(ContextFromGrammar(grammar)) }
+            }
         )
 
         val expected = ScopeModel().apply {
@@ -145,7 +150,7 @@ class test_AglScopes {
                     rule3 = "[a-z]" ;
                 }
             """.trimIndent()
-        ).first!![0]
+        ).asm!![0]
 
         val text = """
             scope rule1 {
@@ -155,8 +160,10 @@ class test_AglScopes {
 
         val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
             sentence = text,
-            goalRuleName = AglScopesGrammar.goalRuleName,
-            context = ContextFromGrammar(grammar)
+            aglOptions {
+                parser { goalRule(AglScopesGrammar.goalRuleName) }
+                syntaxAnalyser { context(ContextFromGrammar(grammar)) }
+            }
         )
 
         val expected = ScopeModel().apply {
@@ -182,7 +189,7 @@ class test_AglScopes {
                     rule3 = "[a-z]" ;
                 }
             """.trimIndent()
-        ).first!![0]
+        ).asm!![0]
 
         val text = """
             scope rule1 {
@@ -192,8 +199,10 @@ class test_AglScopes {
 
         val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
             sentence = text,
-            goalRuleName = AglScopesGrammar.goalRuleName,
-            context = ContextFromGrammar(grammar)
+            aglOptions {
+                parser { goalRule(AglScopesGrammar.goalRuleName) }
+                syntaxAnalyser { context(ContextFromGrammar(grammar)) }
+            }
         )
 
         val expected = ScopeModel().apply {
@@ -228,7 +237,7 @@ class test_AglScopes {
                     rule3 = "[a-z]" ;
                 }
             """.trimIndent()
-        ).first!![0]
+        ).asm!![0]
 
         val text = """
             scope rule1 {
@@ -238,8 +247,10 @@ class test_AglScopes {
 
         val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
             sentence = text,
-            goalRuleName = AglScopesGrammar.goalRuleName,
-            context = ContextFromGrammar(grammar)
+            aglOptions {
+                parser { goalRule(AglScopesGrammar.goalRuleName) }
+                syntaxAnalyser { context(ContextFromGrammar(grammar)) }
+            }
         )
 
         val expected = ScopeModel().apply {
@@ -274,7 +285,7 @@ class test_AglScopes {
                     rule3 = "[a-z]" ;
                 }
             """.trimIndent()
-        ).first!![0]
+        ).asm!![0]
 
         val text = """
             references {
@@ -284,8 +295,10 @@ class test_AglScopes {
 
         val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
             sentence = text,
-            goalRuleName = AglScopesGrammar.goalRuleName,
-            context = ContextFromGrammar(grammar)
+            aglOptions {
+                parser { goalRule(AglScopesGrammar.goalRuleName) }
+                syntaxAnalyser { context(ContextFromGrammar(grammar)) }
+            }
         )
 
         val expected = ScopeModel().apply {
@@ -309,7 +322,7 @@ class test_AglScopes {
                     rule3 = "[a-z]" ;
                 }
             """.trimIndent()
-        ).first!![0]
+        ).asm!![0]
 
         val text = """
             references {
@@ -319,8 +332,10 @@ class test_AglScopes {
 
         val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
             sentence = text,
-            goalRuleName = AglScopesGrammar.goalRuleName,
-            context = ContextFromGrammar(grammar)
+            aglOptions {
+                parser { goalRule(AglScopesGrammar.goalRuleName) }
+                syntaxAnalyser { context(ContextFromGrammar(grammar)) }
+            }
         )
 
         val expected = ScopeModel().apply {
@@ -348,7 +363,7 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process<ScopeModel, Any>(text, AglScopesGrammar.goalRuleName)
+        val (asm, issues) = aglProc.process<ScopeModel, Any>(text, aglOptions { parser { goalRule(AglScopesGrammar.goalRuleName) } })
 
         val expected = ScopeModel().apply {
             references.add(ReferenceDefinition("type1", "prop", listOf("type2", "type3", "type4")))

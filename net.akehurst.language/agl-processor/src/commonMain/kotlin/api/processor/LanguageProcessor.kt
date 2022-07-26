@@ -72,17 +72,17 @@ interface LanguageProcessor {
      * @param sentence the sentence to parse
      * @param automatonKind default LOOKAHEAD_1
      */
-    fun parse(sentence: String, options: ParserOptions? = null): Pair<SharedPackedParseTree?, List<LanguageIssue>>
+    fun parse(sentence: String, options: ParserOptions? = null): ParseResult//Pair<SharedPackedParseTree?, List<LanguageIssue>>
 
     /**
      * Converts the SharedPackedParseTree into a language specific Abstract Syntax Tree/Model
      */
-    fun <AsmType : Any, ContextType : Any> syntaxAnalysis(sppt: SharedPackedParseTree, options: LanguageProcessorOptions<AsmType, ContextType>? = null): Triple<AsmType?, List<LanguageIssue>, Map<*, InputLocation>>
+    fun <AsmType : Any, ContextType : Any> syntaxAnalysis(sppt: SharedPackedParseTree, options: LanguageProcessorOptions<AsmType, ContextType>? = null): SyntaxAnalysisResult<AsmType>
 
     /**
      *
      */
-    fun <AsmType : Any, ContextType : Any> semanticAnalysis(asm: AsmType, options: LanguageProcessorOptions<AsmType, ContextType>? = null): List<LanguageIssue>
+    fun <AsmType : Any, ContextType : Any> semanticAnalysis(asm: AsmType, options: LanguageProcessorOptions<AsmType, ContextType>? = null): SemanticAnalysisResult
 
     /**
      * Process the sentence, performing all phases where possible.
@@ -90,16 +90,16 @@ interface LanguageProcessor {
     fun <AsmType : Any, ContextType : Any> process(
         sentence: String,
         options: LanguageProcessorOptions<AsmType, ContextType>? = null
-    ): Pair<AsmType?, List<LanguageIssue>>
+    ): ProcessResult<AsmType>
 
     //fun <T> process(reader: Reader, goalRuleName: String, targetType: Class<T>): T
 
     /**
      *
      */
-    fun <AsmType : Any, ContextType : Any> format(sentence: String, options: LanguageProcessorOptions<AsmType, ContextType>? = null): String?
+    fun <AsmType : Any, ContextType : Any> format(sentence: String, options: LanguageProcessorOptions<AsmType, ContextType>? = null): FormatResult
 
-    fun <AsmType : Any, ContextType : Any> formatAsm(asm: AsmType, options: LanguageProcessorOptions<AsmType, ContextType>? = null): String?
+    fun <AsmType : Any, ContextType : Any> formatAsm(asm: AsmType, options: LanguageProcessorOptions<AsmType, ContextType>? = null): FormatResult
 
     /**
      * returns list of names of expected rules
@@ -112,7 +112,7 @@ interface LanguageProcessor {
      * @throws ParseFailedException
      * @throws ParseTreeException
      */
-    fun <AsmType : Any, ContextType : Any> expectedAt(sentence: String, position: Int, desiredDepth: Int, options: LanguageProcessorOptions<AsmType, ContextType>? = null): List<CompletionItem>
+    fun <AsmType : Any, ContextType : Any> expectedAt(sentence: String, position: Int, desiredDepth: Int, options: LanguageProcessorOptions<AsmType, ContextType>? = null): ExpectedAtResult
 
     //List<CompletionItem> expectedAt(Reader reader, String goalRuleName, int position, int desiredDepth)
 

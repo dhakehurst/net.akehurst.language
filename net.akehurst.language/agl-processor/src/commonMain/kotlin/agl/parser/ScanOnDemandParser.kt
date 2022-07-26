@@ -29,10 +29,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.math.max
 
@@ -51,7 +48,7 @@ internal class ScanOnDemandParser(
         this.runtimeRuleSet.buildFor(goalRuleName, automatonKind)
     }
 
-    override fun parseForGoal(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): Pair<SharedPackedParseTree?, List<LanguageIssue>> {
+    override fun parseForGoal(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): ParseResult { //Pair<SharedPackedParseTree?, List<LanguageIssue>> {
         //FIXME: currently only works  if build is called
         //this.runtimeRuleSet.buildFor(goalRuleName,automatonKind)
 
@@ -87,12 +84,12 @@ internal class ScanOnDemandParser(
         return if (match.root != null) {
             //val sppt = SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
             val sppt = SPPTFromTreeData(match, input, seasons, maxNumHeads)
-            Pair(sppt, emptyList())
+            ParseResult(sppt, emptyList())
         } else {
             val nextExpected = this.findNextExpectedAfterError2(rp, rp.graph, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
             val issue = throwError(input, rp, nextExpected, seasons, maxNumHeads)
             val sppt = null//rp.longestLastGrown?.let{ SharedPackedParseTreeDefault(it, seasons, maxNumHeads) }
-            Pair(sppt, listOf(issue))
+            ParseResult(sppt, listOf(issue))
         }
     }
 

@@ -17,6 +17,7 @@ package net.akehurst.language.agl.processor.natural
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.parserOptions
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -41,7 +42,7 @@ class test_NaturalLanguage_Singles {
         val goal = "subject"
         val sentence = "my name"
 
-        val (sppt, issues) = processor.parse(sentence, goal)
+        val (sppt, issues) = processor.parse(sentence, parserOptions { goalRule(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString

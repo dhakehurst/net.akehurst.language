@@ -27,7 +27,7 @@ class test_AglGrammar_expectedAt {
     fun empty() {
 
         val sentence = ""
-        val actual = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 0, 1)
+        val (actual,issues) = Agl.registry.agl.grammar.processor!!.expectedAt<Any,Any>(sentence, 0, 1)
 
         val expected = listOf<CompletionItem>(
                 CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("namespace").name, "namespace")
@@ -40,7 +40,7 @@ class test_AglGrammar_expectedAt {
     fun WS() {
 
         val sentence = " "
-        val actual = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 0, 1)
+        val (actual,issues) = Agl.registry.agl.grammar.processor!!.expectedAt<Any,Any>(sentence, 0, 1)
 
         val expected = listOf<CompletionItem>(
                 CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("namespace").name, "namespace")
@@ -53,7 +53,7 @@ class test_AglGrammar_expectedAt {
     fun namespace() {
 
         val sentence = "namespace"
-        val actual = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 9, 1)
+        val (actual,issues) = Agl.registry.agl.grammar.processor!!.expectedAt<Any,Any>(sentence, 9, 1)
 
         val expected = listOf<CompletionItem>(
                 CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("IDENTIFIER").name, "IDENTIFIER")
@@ -66,7 +66,7 @@ class test_AglGrammar_expectedAt {
     fun namespace_WS() {
 
         val sentence = "namespace "
-        val actual = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 10, 1)
+        val (actual,issues) = Agl.registry.agl.grammar.processor!!.expectedAt<Any,Any>(sentence, 10, 1)
 
         val expected = listOf<CompletionItem>(
                 CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("IDENTIFIER").name, "IDENTIFIER")
@@ -79,7 +79,7 @@ class test_AglGrammar_expectedAt {
     fun namespace_WS_n() {
 
         val sentence = "namespace n"
-        val actual = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 11, 1)
+        val (actual,issues) = Agl.registry.agl.grammar.processor!!.expectedAt<Any,Any>(sentence, 11, 1)
 
         val expected = listOf<CompletionItem>(
                 CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("qualifiedName").name, "."),
@@ -93,7 +93,7 @@ class test_AglGrammar_expectedAt {
     fun namespace_WS_n_grammar() {
 
         val sentence = "namespace n grammar"
-        val actual = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, sentence.length, 1)
+        val (actual,issues) = Agl.registry.agl.grammar.processor!!.expectedAt<Any,Any>(sentence, sentence.length, 1)
 
         val expected = listOf<CompletionItem>(
                 CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("IDENTIFIER").name, "IDENTIFIER")

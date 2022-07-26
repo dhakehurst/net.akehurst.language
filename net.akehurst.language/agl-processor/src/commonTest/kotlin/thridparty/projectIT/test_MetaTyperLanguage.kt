@@ -1,6 +1,7 @@
 package thridparty.projectIT
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -215,7 +216,7 @@ UnitOfMeasurement {
 //    }
 //}
         """.trimIndent()
-        val (sppt,issues) =  processor.parse(sentence,goal)
+        val (sppt,issues) =  processor.parse(sentence, parserOptions { goalRule(goal) })
         assertNotNull(sppt,issues.joinToString(separator = "\n"){it.toString()})
         assertEquals(emptyList(),issues)
     }

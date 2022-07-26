@@ -34,7 +34,7 @@ class test_SingleTerminalLiteral {
 
         val sentence = ""
         val position = 0
-        val actual = sut.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = sut.expectedAt<Any,Any>(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
                 "a"
         )
@@ -53,7 +53,7 @@ class test_SingleTerminalLiteral {
 
         val sentence = "a"
         val position = 0
-        val actual = sut.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = sut.expectedAt<Any,Any>(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
                 "a"
         )
@@ -72,7 +72,7 @@ class test_SingleTerminalLiteral {
 
         val sentence = "a"
         val position = 1
-        val actual = sut.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = sut.expectedAt<Any,Any>(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
         )
         assertEquals(expected,actual)

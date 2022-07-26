@@ -93,6 +93,7 @@ subprojects {
             browser {
                 webpackTask {
                     outputFileName = "${project.group}-${project.name}.js"
+
                 }
                 testTask {
                     useMocha {

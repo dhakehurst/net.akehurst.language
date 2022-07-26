@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -70,7 +71,7 @@ grammar Mdl {
 
     @Test
     fun literal_BOOLEAN() {
-        val (actual,issues) = processor.parse("on", "literal")
+        val (actual,issues) = processor.parse("on",  parserOptions { goalRule("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -85,7 +86,7 @@ grammar Mdl {
 
     @Test
     fun literal_INTEGER() {
-        val (actual,issues) = processor.parse("1", "literal")
+        val (actual,issues) = processor.parse("1",  parserOptions { goalRule("literal") })
         val expected = processor.spptParser.parse(
             """
             literal|1 { INTEGER : '1' }
@@ -99,7 +100,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_1() {
-        val (actual,issues) = processor.parse("3.14", "literal")
+        val (actual,issues) = processor.parse("3.14",  parserOptions { goalRule("literal") })
         val expected = processor.spptParser.parse(
             """
             literal|2 { REAL : '3.14' }
@@ -113,7 +114,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_2() {
-        val (actual,issues) = processor.parse(".14", "literal")
+        val (actual,issues) = processor.parse(".14",  parserOptions { goalRule("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -128,7 +129,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_3() {
-        val (actual,issues) = processor.parse("3.14e-05", "literal")
+        val (actual,issues) = processor.parse("3.14e-05",  parserOptions { goalRule("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -143,7 +144,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_4() {
-        val (actual,issues) = processor.parse("3.0e5", "literal")
+        val (actual,issues) = processor.parse("3.0e5",  parserOptions { goalRule("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -158,7 +159,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_5() {
-        val (actual,issues) = processor.parse(".3e5", "literal")
+        val (actual,issues) = processor.parse(".3e5",  parserOptions { goalRule("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -173,7 +174,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_6() {
-        val (actual,issues) = processor.parse("1e-05", "literal")
+        val (actual,issues) = processor.parse("1e-05",  parserOptions { goalRule("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -188,7 +189,7 @@ grammar Mdl {
 
     @Test
     fun stringList_1() {
-        val (actual,issues) = processor.parse("\"hello\"", "stringList")
+        val (actual,issues) = processor.parse("\"hello\"",  parserOptions { goalRule("stringList") })
 
         val expected = processor.spptParser.parse(
             """
@@ -203,7 +204,7 @@ grammar Mdl {
 
     @Test
     fun stringList_2() {
-        val (actual,issues) = processor.parse("\"hello\" \"world\"", "stringList")
+        val (actual,issues) = processor.parse("\"hello\" \"world\"",  parserOptions { goalRule("stringList") })
 
         val expected = processor.spptParser.parse(
             """
@@ -221,7 +222,7 @@ grammar Mdl {
 
     @Test
     fun stringList_3() {
-        val (actual,issues) = processor.parse("\"aa\" \"bb\" \"cc\"", "stringList")
+        val (actual,issues) = processor.parse("\"aa\" \"bb\" \"cc\"",  parserOptions { goalRule("stringList") })
 
         val expected = processor.spptParser.parse(
             """
@@ -240,7 +241,7 @@ grammar Mdl {
 
     @Test
     fun value_stringList_1() {
-        val (actual,issues) = processor.parse("\"hello\"", "value")
+        val (actual,issues) = processor.parse("\"hello\"",  parserOptions { goalRule("value") })
 
         val expected = processor.spptParser.parse(
             """
@@ -255,7 +256,7 @@ grammar Mdl {
 
     @Test
     fun value_stringList_2() {
-        val (actual,issues) = processor.parse("\"hello\" \"world\"", "value")
+        val (actual,issues) = processor.parse("\"hello\" \"world\"", parserOptions { goalRule("value") })
 
         val expected = processor.spptParser.parse(
             """
@@ -273,7 +274,7 @@ grammar Mdl {
 
     @Test
     fun value_stringList_3() {
-        val (actual,issues) = processor.parse("\"aa\" \"bb\" \"cc\"", "value")
+        val (actual,issues) = processor.parse("\"aa\" \"bb\" \"cc\"", parserOptions { goalRule("value") })
 
         val expected = processor.spptParser.parse(
             """
@@ -292,7 +293,7 @@ grammar Mdl {
 
     @Test
     fun array() {
-        val (actual,issues) = processor.parse("[ on, 1, 3.14, \"hello\" ]", "matrix")
+        val (actual,issues) = processor.parse("[ on, 1, 3.14, \"hello\" ]", parserOptions { goalRule("matrix") })
 
         val expected = processor.spptParser.parse(
             """
@@ -319,7 +320,7 @@ grammar Mdl {
 
     @Test
     fun array1() {
-        val (actual,issues) = processor.parse("[ 1.0,2.0,3.0 ]", "matrix")
+        val (actual,issues) = processor.parse("[ 1.0,2.0,3.0 ]", parserOptions { goalRule("matrix") })
 
         val expected = processor.spptParser.parse(
             """
@@ -344,7 +345,7 @@ grammar Mdl {
 
     @Test
     fun array2() {
-        val (actual,issues) = processor.parse("[ 1.0, 2.0 ]", "matrix")
+        val (actual,issues) = processor.parse("[ 1.0, 2.0 ]", parserOptions { goalRule("matrix") })
 
         val expected = processor.spptParser.parse(
             """
@@ -367,7 +368,7 @@ grammar Mdl {
 
     @Test
     fun row1() {
-        val (actual,issues) = processor.parse("1.1,2.2", "row")
+        val (actual,issues) = processor.parse("1.1,2.2", parserOptions { goalRule("row") })
 
         val expected = processor.spptParser.parse(
             """
@@ -386,7 +387,7 @@ grammar Mdl {
 
     @Test
     fun matrix() {
-        val (actual,issues) = processor.parse("[ 0,1; 2,3 ]", "matrix")
+        val (actual,issues) = processor.parse("[ 0,1; 2,3 ]", parserOptions { goalRule("matrix") })
 
         val expected = processor.spptParser.parse(
             """
@@ -426,7 +427,7 @@ grammar Mdl {
 			}
         """.trimIndent()
 
-        val (actual,issues) = processor.parse(text, "section")
+        val (actual,issues) = processor.parse(text, parserOptions { goalRule("section") })
 
         val expected = processor.spptParser.parse(
             """
@@ -465,7 +466,7 @@ grammar Mdl {
 		}
         """.trimIndent()
 
-        val (actual,issues) = processor.parse(text, "section")
+        val (actual,issues) = processor.parse(text, parserOptions { goalRule("section") })
 
         val expected = processor.spptParser.parse(
             """
@@ -506,7 +507,8 @@ grammar Mdl {
                 StringParam    "abc"
                 OnParam        on
             }
-        """.trimIndent(), "section"
+        """.trimIndent(),
+            parserOptions { goalRule("section") }
         )
 
         val expected = processor.spptParser.parse(
@@ -551,7 +553,8 @@ grammar Mdl {
                   IsActive		      [1]
                   Location		      [705.0, 195.0, 1025.0, 639.0]
 		    }
-        """.trimIndent(),"section"
+        """.trimIndent(),
+            parserOptions { goalRule("section") }
         )
 
         assertNotNull(actual)
