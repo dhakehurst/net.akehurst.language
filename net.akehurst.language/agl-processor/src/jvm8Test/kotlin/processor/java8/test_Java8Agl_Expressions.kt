@@ -42,9 +42,11 @@ class test_Java8Agl_Expressions(val data: Data) {
     private companion object {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
-        val processor: LanguageProcessor by lazy {
-            Agl.processorFromString(grammarStr, "Expressions","Expression")
+
+        val processor : LanguageProcessor<Any,Any> by lazy {
+            Agl.processorFromString(grammarStr, Agl.configuration { targetGrammarName("Expressions"); defaultGoalRuleName("Expression") })
         }
+
         var sourceFiles = arrayOf(
                 "/java8/sentences/literals-valid.txt",
                 "/java8/sentences/expressions-valid.txt"

@@ -19,8 +19,26 @@ describe('test_LanguageProcessor', function () {
         assert.notEqual('hello', result.toArray()[0]);
     });
 
-    it('parse', function () {
+    it('parse_noOptions', function () {
         let result = proc.parse('hello world !');
+
+        assert.notEqual(null, result.sppt);
+        console.log( result.sppt.toStringAll );
+    });
+
+    it('parse_defaultOptions', function () {
+        let options = proc.parserOptionsDefault();
+        options.goalRuleName="H";
+        let result = proc.parse('hello world !');
+
+        assert.notEqual(null, result.sppt);
+        console.log( result.sppt.toStringAll );
+    });
+
+    it('parse_buildOptions', function () {
+        let result = proc.parse("world !", proc.parserOptions(b => {
+            b.goalRuleName("H");
+        }));
 
         assert.notEqual(null, result.sppt);
         console.log( result.sppt.toStringAll );
@@ -46,9 +64,19 @@ describe('test_LanguageProcessor', function () {
         assert.notEqual(0, result.issues.size);
     });
 
-    it('process', function () {
+    it('process_noOptions', function () {
         let result = proc.process('hello world !');
-        let expected = '2022';
+
+        assert.notEqual(null, result.asm);
+        assert.notEqual(null, result.issues);
+    });
+
+    it('process_defaultOptions', function () {
+        let options = proc.optionsDefault();
+        options.parser.goalRuleName = "H"
+
+        let result = proc.process('world !', options);
+
         assert.notEqual(null, result.asm);
         assert.notEqual(null, result.issues);
     });

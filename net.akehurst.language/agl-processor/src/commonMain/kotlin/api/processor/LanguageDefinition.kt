@@ -19,17 +19,17 @@ package net.akehurst.language.api.processor
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 
-interface LanguageDefinition {
+interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val identity: String
     var grammarStr: String?
     var targetGrammar:String?
     var defaultGoalRule: String?
     var style: String?
     var format: String?
-    var syntaxAnalyser: SyntaxAnalyser<*,*>?
-    var semanticAnalyser: SemanticAnalyser<*,*>?
+    var syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
+    var semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
 
-    val processor: LanguageProcessor?
+    val processor: LanguageProcessor<AsmType, ContextType>?
 
     val grammarObservers: MutableList<(String?, String?) -> Unit>
     val styleObservers: MutableList<(String?, String?) -> Unit>

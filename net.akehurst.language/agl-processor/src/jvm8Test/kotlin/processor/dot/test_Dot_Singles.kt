@@ -18,9 +18,10 @@ package net.akehurst.language.agl.processor.dot
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -30,7 +31,7 @@ class test_Dot_Singles {
     private companion object {
 
         private val grammarStr = this::class.java.getResource("/dot/Dot.agl")?.readText() ?: error("File not found")
-        var processor: LanguageProcessor = Agl.processorFromString(grammarStr)
+        var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr)
 
     }
 
@@ -41,7 +42,7 @@ class test_Dot_Singles {
           // a comment
           graph { }
         """.trimIndent()
-        val (sppt, issues) = processor.parse(sentence, parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
@@ -53,7 +54,7 @@ class test_Dot_Singles {
           /* a comment */
           graph { }
         """.trimIndent()
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
@@ -65,7 +66,7 @@ class test_Dot_Singles {
         val sentence = """
         < <xml >xxxx</xml> >
         """.trimIndent()
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         println(sppt.toStringAll)
@@ -111,7 +112,7 @@ class test_Dot_Singles {
         label = "<f0> 0x10ba8| <f1>"
         shape = "record"
         """
-        val (sppt, issues) = processor.parse(sentence, parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
@@ -123,7 +124,7 @@ class test_Dot_Singles {
         label = "<f0> 0x10ba8| <f1>"
         shape = "record"
         ]"""
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
@@ -134,7 +135,7 @@ class test_Dot_Singles {
         val sentence = """
             edge [ ]
         """.trimIndent()
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
@@ -153,7 +154,7 @@ class test_Dot_Singles {
             edge [
             ];
         """.trimIndent()
-        val (sppt, issues) = processor.parse(sentence, parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
@@ -178,7 +179,7 @@ class test_Dot_Singles {
             ];
             }
         """.trimIndent()
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
 
@@ -188,7 +189,7 @@ class test_Dot_Singles {
     fun stmt_list__1() {
         val goal = "stmt_list"
         val sentence = "graph[a=a ]; node [b=b c=c]; edge[];"
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
@@ -197,7 +198,7 @@ class test_Dot_Singles {
     fun attr_list__2s() {
         val goal = "attr_list"
         val sentence = "[x = x; y=y]"
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
 
@@ -207,7 +208,7 @@ class test_Dot_Singles {
     fun attr_list__2n() {
         val goal = "attr_list"
         val sentence = "[x = x y=y]"
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
 
@@ -219,7 +220,7 @@ class test_Dot_Singles {
         val sentence = """
             "001"
         """.trimIndent()
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
@@ -231,7 +232,7 @@ class test_Dot_Singles {
             [shape=box     , regular=1,style=filled,fillcolor=white   ]
         """.trimIndent()
 
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
@@ -243,7 +244,7 @@ class test_Dot_Singles {
             "001" [shape=box     , regular=1,style=filled,fillcolor=white   ]
         """.trimIndent()
 
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
 
@@ -268,7 +269,7 @@ class test_Dot_Singles {
         val goal = "stmt_list"
         val sentence = "a -> b ;"
 
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
@@ -283,7 +284,7 @@ class test_Dot_Singles {
             "marr0017" -> "028" [dir=none, weight=2] ;
         """.trimIndent()
 
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
@@ -392,7 +393,7 @@ class test_Dot_Singles {
             "marr0017" -> "028" [dir=none, weight=2] ;
         """.trimIndent()
 
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
@@ -511,8 +512,8 @@ class test_Dot_Singles {
             "marr0017" -> "028" [dir=none, weight=2] ;
             }
             """.trimIndent()
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
-        assertNotNull(sppt,)
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
+        assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
 
@@ -523,7 +524,7 @@ class test_Dot_Singles {
             ""
         """.trimIndent()
 
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
@@ -535,7 +536,7 @@ class test_Dot_Singles {
             node[style=filled,label=""]
         """.trimIndent()
 
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }
@@ -646,7 +647,7 @@ digraph G {
 }
         """.trimIndent()
 
-        val (sppt, issues) = processor.parse(sentence,  parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
     }

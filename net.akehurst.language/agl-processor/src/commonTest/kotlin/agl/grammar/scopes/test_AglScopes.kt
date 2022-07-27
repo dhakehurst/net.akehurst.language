@@ -22,7 +22,6 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.processor.aglOptions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -39,7 +38,7 @@ class test_AglScopes {
             // single line comment
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process<ScopeModel, Any>(text, aglOptions { parser { goalRule(AglScopesGrammar.goalRuleName) } })
+        val (asm, issues) = aglProc.process(text)
 
         val expected = ScopeModel()
 
@@ -59,7 +58,7 @@ class test_AglScopes {
             */
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process<ScopeModel, Any>(text, aglOptions { parser { goalRule(AglScopesGrammar.goalRuleName) } })
+        val (asm, issues) = aglProc.process(text)
 
         val expected = ScopeModel()
 
@@ -71,7 +70,7 @@ class test_AglScopes {
 
     @Test
     fun one_empty_scope() {
-        val grammar = Agl.registry.agl.grammar.processor!!.process<List<Grammar>, Any>(
+        val grammar = Agl.registry.agl.grammar.processor!!.process(
             sentence = """
                 namespace test
                 grammar Test {
@@ -84,11 +83,10 @@ class test_AglScopes {
             scope rule1 { }
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
+        val (asm, issues) = aglProc.process(
             sentence = text,
-            aglOptions {
-                parser { goalRule(AglScopesGrammar.goalRuleName) }
-                syntaxAnalyser { context(ContextFromGrammar(grammar)) }
+            aglProc.options {
+                syntaxAnalysis { context(ContextFromGrammar(grammar)) }
             }
         )
 
@@ -104,7 +102,7 @@ class test_AglScopes {
 
     @Test
     fun one_empty_scope_wrong_scope_ruleName() {
-        val grammar = Agl.registry.agl.grammar.processor!!.process<List<Grammar>, Any>(
+        val grammar = Agl.registry.agl.grammar.processor!!.process(
             sentence = """
                 namespace test
                 grammar Test {
@@ -117,11 +115,10 @@ class test_AglScopes {
             scope ruleX { }
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
+        val (asm, issues) = aglProc.process(
             sentence = text,
-            aglOptions {
-                parser { goalRule(AglScopesGrammar.goalRuleName) }
-                syntaxAnalyser { context(ContextFromGrammar(grammar)) }
+            aglProc.options {
+                syntaxAnalysis { context(ContextFromGrammar(grammar)) }
             }
         )
 
@@ -141,7 +138,7 @@ class test_AglScopes {
 
     @Test
     fun scope_one_identifiable() {
-        val grammar = Agl.registry.agl.grammar.processor!!.process<List<Grammar>, Any>(
+        val grammar = Agl.registry.agl.grammar.processor!!.process(
             sentence = """
                 namespace test
                 grammar Test {
@@ -158,11 +155,10 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
+        val (asm, issues) = aglProc.process(
             sentence = text,
-            aglOptions {
-                parser { goalRule(AglScopesGrammar.goalRuleName) }
-                syntaxAnalyser { context(ContextFromGrammar(grammar)) }
+            aglProc.options {
+                syntaxAnalysis { context(ContextFromGrammar(grammar)) }
             }
         )
 
@@ -180,7 +176,7 @@ class test_AglScopes {
 
     @Test
     fun scope_one_identifiable_wrong_type_ruleName() {
-        val grammar = Agl.registry.agl.grammar.processor!!.process<List<Grammar>, Any>(
+        val grammar = Agl.registry.agl.grammar.processor!!.process(
             sentence = """
                 namespace test
                 grammar Test {
@@ -197,11 +193,10 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
+        val (asm, issues) = aglProc.process(
             sentence = text,
-            aglOptions {
-                parser { goalRule(AglScopesGrammar.goalRuleName) }
-                syntaxAnalyser { context(ContextFromGrammar(grammar)) }
+            aglProc.options {
+                syntaxAnalysis { context(ContextFromGrammar(grammar)) }
             }
         )
 
@@ -228,7 +223,7 @@ class test_AglScopes {
 
     @Test
     fun scope_one_identifiable_wrong_property_ruleName() {
-        val grammar = Agl.registry.agl.grammar.processor!!.process<List<Grammar>, Any>(
+        val grammar = Agl.registry.agl.grammar.processor!!.process(
             sentence = """
                 namespace test
                 grammar Test {
@@ -245,11 +240,10 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
+        val (asm, issues) = aglProc.process(
             sentence = text,
-            aglOptions {
-                parser { goalRule(AglScopesGrammar.goalRuleName) }
-                syntaxAnalyser { context(ContextFromGrammar(grammar)) }
+            aglProc.options {
+                syntaxAnalysis { context(ContextFromGrammar(grammar)) }
             }
         )
 
@@ -276,7 +270,7 @@ class test_AglScopes {
 
     @Test
     fun one_reference() {
-        val grammar = Agl.registry.agl.grammar.processor!!.process<List<Grammar>, Any>(
+        val grammar = Agl.registry.agl.grammar.processor!!.process(
             sentence = """
                 namespace test
                 grammar Test {
@@ -293,11 +287,10 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
+        val (asm, issues) = aglProc.process(
             sentence = text,
-            aglOptions {
-                parser { goalRule(AglScopesGrammar.goalRuleName) }
-                syntaxAnalyser { context(ContextFromGrammar(grammar)) }
+            aglProc.options {
+                syntaxAnalysis { context(ContextFromGrammar(grammar)) }
             }
         )
 
@@ -313,7 +306,7 @@ class test_AglScopes {
 
     @Test
     fun one_reference_unknown_rules() {
-        val grammar = Agl.registry.agl.grammar.processor!!.process<List<Grammar>, Any>(
+        val grammar = Agl.registry.agl.grammar.processor!!.process(
             sentence = """
                 namespace test
                 grammar Test {
@@ -330,11 +323,10 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process<ScopeModel, ContextFromGrammar>(
+        val (asm, issues) = aglProc.process(
             sentence = text,
-            aglOptions {
-                parser { goalRule(AglScopesGrammar.goalRuleName) }
-                syntaxAnalyser { context(ContextFromGrammar(grammar)) }
+            aglProc.options {
+                syntaxAnalysis { context(ContextFromGrammar(grammar)) }
             }
         )
 
@@ -363,7 +355,7 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process<ScopeModel, Any>(text, aglOptions { parser { goalRule(AglScopesGrammar.goalRuleName) } })
+        val (asm, issues) = aglProc.process(text)
 
         val expected = ScopeModel().apply {
             references.add(ReferenceDefinition("type1", "prop", listOf("type2", "type3", "type4")))

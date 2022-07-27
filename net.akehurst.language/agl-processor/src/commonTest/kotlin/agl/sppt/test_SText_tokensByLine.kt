@@ -18,7 +18,6 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -252,13 +251,13 @@ FQN = ID ('.' ID)*;
 }
         """.trimIndent()
 
-        val exprProcessor = Agl.processorFromString(grammarStr1)
-        var processor: LanguageProcessor = Agl.processorFromString(grammarStr2)
+        val exprProcessor = Agl.processorFromString<Any,Any>(grammarStr1)
+        var processor: LanguageProcessor<Any,Any> = Agl.processorFromString(grammarStr2)
     }
 
     @Test
     fun t1() {
-        val (sppt,issues) = processor.parse("after 10 s / raise ABC.intEvent", parserOptions { goalRule("StateScope") })
+        val (sppt,issues) = processor.parse("after 10 s / raise ABC.intEvent", processor.parserOptions { goalRuleName("StateScope") })
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
         val actual = sppt.tokensByLine(0)

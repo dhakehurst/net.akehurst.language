@@ -16,114 +16,55 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.parser.InputLocation
 
-class LanguageProcessorOptions<AsmType : Any,ContextType : Any> {
-    val parser = ParserOptions()
-    val syntaxAnalyser = SyntaxAnalyserOptions<AsmType,ContextType>()
-    val semanticAnalyser = SemanticAnalyserOptions<AsmType,ContextType>()
+/**
+ * Options to configure the building of a language processor
+ * @param targetGrammarName name of one of the grammars in the grammarDefinitionString to generate parser for (if null use last grammar found)
+ * @param goalRuleName name of the default goal rule to use, it must be one of the rules in the target grammar or its super grammars (if null use first non-skip rule found in target grammar)
+ * @param syntaxAnalyser a syntax analyser (if null use SyntaxAnalyserSimple)
+ * @param semanticAnalyser a semantic analyser (if null use SemanticAnalyserSimple)
+ * @param formatter a formatter
+ */
+interface LanguageProcessorConfiguration<AsmType : Any, ContextType : Any> {
+    var targetGrammarName:String?
+    var defaultGoalRuleName: String?
+    var syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
+    var semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
+    var formatter: Formatter?
 }
 
-class ParserOptions {
-    var goalRuleName: String? = null
-    var automatonKind: AutomatonKind = AutomatonKind.LOOKAHEAD_1
+/**
+ * Options to configure the parsing of a sentence
+ */
+interface ParseOptions {
+    var goalRuleName: String?
+    var automatonKind: AutomatonKind
 }
 
-class SyntaxAnalyserOptions<AsmType : Any,ContextType : Any>() {
-    var active = true
-    var context: ContextType? = null
+/**
+ * Options to configure the syntax analysis of an Shared Packed Parse Tree (SPPT)
+ */
+interface SyntaxAnalysisOptions<AsmType : Any, ContextType : Any> {
+    var active: Boolean
+    var context: ContextType?
 }
 
-class SemanticAnalyserOptions<AsmType : Any,ContextType : Any>() {
-    var active = true
-    var locationMap = emptyMap<Any, InputLocation>()
+/**
+ * Options to configure the semantic analysis of an Abstract Syntax Model (ASM)
+ */
+interface SemanticAnalysisOptions<AsmType : Any, ContextType : Any> {
+    var active: Boolean
+    var locationMap: Map<Any, InputLocation>
 }
 
-@DslMarker
-annotation class LanguageProcessorOptionsDslMarker
-
-fun <AsmType : Any,ContextType : Any> aglOptions(init: LanguageProcessorOptionsBuilder<AsmType,ContextType>.() -> Unit): LanguageProcessorOptions<AsmType,ContextType> {
-    val b = LanguageProcessorOptionsBuilder<AsmType,ContextType>()
-    b.init()
-    return b.build()
-}
-
-fun parserOptions(init: ParserOptionsBuilder.() -> Unit):ParserOptions {
-    val b = ParserOptionsBuilder()
-    b.init()
-    return b.build()
-}
-
-@LanguageProcessorOptionsDslMarker
-class LanguageProcessorOptionsBuilder<AsmType : Any,ContextType : Any>() {
-
-    private val _options = LanguageProcessorOptions<AsmType,ContextType>()
-
-    fun parser(init: ParserOptionsBuilder.() -> Unit):ParserOptions {
-        val b = ParserOptionsBuilder()
-        b.init()
-        return b.build()
-    }
-
-    fun syntaxAnalyser(init: SyntaxAnalyserOptionsBuilder<AsmType,ContextType>.() -> Unit):SyntaxAnalyserOptions<AsmType,ContextType> {
-        val b = SyntaxAnalyserOptionsBuilder<AsmType,ContextType>()
-        b.init()
-        return b.build()
-    }
-
-    fun semanticAnalyser(init: SemanticAnalyserOptionsBuilder<AsmType,ContextType>.() -> Unit):SemanticAnalyserOptions<AsmType,ContextType> {
-        val b = SemanticAnalyserOptionsBuilder<AsmType,ContextType>()
-        b.init()
-        return b.build()
-    }
-
-    fun build() : LanguageProcessorOptions<AsmType,ContextType> {
-        return _options
-    }
-}
-
-@LanguageProcessorOptionsDslMarker
-class ParserOptionsBuilder() {
-
-    private val _options = ParserOptions()
-
-    fun goalRule(name:String) {
-        _options.goalRuleName = name
-    }
-
-    fun build() : ParserOptions {
-        return _options
-    }
-}
-
-@LanguageProcessorOptionsDslMarker
-class SyntaxAnalyserOptionsBuilder<AsmType : Any,ContextType : Any>() {
-
-    private val _options = SyntaxAnalyserOptions<AsmType,ContextType>()
-
-    fun active(value:Boolean) {
-        _options.active = value
-    }
-
-    fun context(value:ContextType) {
-        _options.context = value
-    }
-
-    fun build() : SyntaxAnalyserOptions<AsmType,ContextType> {
-        return _options
-    }
-}
-
-@LanguageProcessorOptionsDslMarker
-class SemanticAnalyserOptionsBuilder<AsmType : Any,ContextType : Any>() {
-
-    private val _options = SemanticAnalyserOptions<AsmType,ContextType>()
-
-    fun active(value:Boolean) {
-        _options.active = value
-    }
-
-    fun build() : SemanticAnalyserOptions<AsmType,ContextType> {
-        return _options
-    }
+/**
+ * Options to configure the processing of a sentence
+ */
+interface ProcessOptions<AsmType : Any, ContextType : Any> {
+    val parse: ParseOptions
+    val syntaxAnalysis: SyntaxAnalysisOptions<AsmType, ContextType>
+    val semanticAnalysis: SemanticAnalysisOptions<AsmType, ContextType>
 }

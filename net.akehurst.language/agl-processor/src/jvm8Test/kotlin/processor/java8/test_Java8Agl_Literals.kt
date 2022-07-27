@@ -20,17 +20,13 @@ package net.akehurst.language.agl.processor.java8
 //import com.soywiz.korio.file.std.resourcesVfs
 //import java.io.BufferedReader
 //import java.io.InputStreamReader
-import java.util.ArrayList
 
-import org.junit.Assert
+import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
-
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.processor.parserOptions
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlin.test.assertEquals
@@ -38,14 +34,16 @@ import kotlin.test.assertNotNull
 
 
 @RunWith(Parameterized::class)
-class test_Java8Agl_Literals(val data:Data) {
+class test_Java8Agl_Literals(val data: Data) {
 
     private companion object {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
-        val processor : LanguageProcessor by lazy {
-            Agl.processorFromString(grammarStr, "Literals","Literal").buildFor( parserOptions { goalRule("Literal") })
+
+        val processor : LanguageProcessor<Any,Any> by lazy {
+            Agl.processorFromString(grammarStr, Agl.configuration { targetGrammarName("Literals"); defaultGoalRuleName("Literal") })
         }
+
         var sourceFiles = arrayOf("/java8/sentences/literals-valid.txt")
 
         @JvmStatic
@@ -85,9 +83,9 @@ class test_Java8Agl_Literals(val data:Data) {
 
     @Test
     fun test() {
-        val (sppt,issues) = processor.parse(this.data.text)
+        val (sppt, issues) = processor.parse(this.data.text)
         assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
         assertEquals(this.data.text, resultStr)
         assertEquals(1, sppt.maxNumHeads)

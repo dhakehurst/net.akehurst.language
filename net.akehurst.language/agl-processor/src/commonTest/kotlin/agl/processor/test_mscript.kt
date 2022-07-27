@@ -110,7 +110,7 @@ grammar Mscript {
     leaf DOUBLE_QUOTE_STRING = "\"(?:[^\"\\]|\\.)*\"" ;
 }
     """.trimIndent()
-        val sut = Agl.processorFromString(grammarStr)
+        val sut = Agl.processorFromString<AsmSimple,Any>(grammarStr)
     }
 
     @Test
@@ -245,7 +245,7 @@ grammar Mscript {
     fun process_single_line_comment() {
 
         val text = "% this is a comment"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("script") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("script") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -261,7 +261,7 @@ grammar Mscript {
              a multiline comment
             %}
         """.trimIndent()
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("script") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("script") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -272,7 +272,7 @@ grammar Mscript {
     fun process_rootVariable_x() {
 
         val text = "x"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("rootVariable") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("rootVariable") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -283,7 +283,7 @@ grammar Mscript {
     fun process_expression_x() {
 
         val text = "x"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("expression") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("expression") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -294,7 +294,7 @@ grammar Mscript {
     fun process_BOOLEAN_true() {
 
         val text = "true"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("BOOLEAN") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("BOOLEAN") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -305,7 +305,7 @@ grammar Mscript {
     fun process_expression_true() {
 
         val text = "true"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("expression") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("expression") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -316,7 +316,7 @@ grammar Mscript {
     fun process_REAL_0p1() {
 
         val text = "0.1"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("REAL") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("REAL") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -327,7 +327,7 @@ grammar Mscript {
     fun process_REAL_0p1em5() {
 
         val text = "0.1e-5"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("REAL") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("REAL") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -338,7 +338,7 @@ grammar Mscript {
     fun process_REAL_p1() {
 
         val text = ".1"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("REAL") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("REAL") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -349,7 +349,7 @@ grammar Mscript {
     fun process_REAL_p1e5() {
 
         val text = ".1e5"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("REAL") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("REAL") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -361,7 +361,7 @@ grammar Mscript {
 
         val text = "1"
         val ex = ParseFailedException::class
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("REAL") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("REAL") })
 
         val expIssues = listOf(
             LanguageIssue(
@@ -377,7 +377,7 @@ grammar Mscript {
     @Test
     fun process_INTEGER_1_fails() {
         val text = "1"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("INTEGER") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("INTEGER") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -387,7 +387,7 @@ grammar Mscript {
     @Test
     fun process_SINGLE_QUOTE_STRING_empty() {
         val text = "''"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("SINGLE_QUOTE_STRING") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("SINGLE_QUOTE_STRING") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -397,7 +397,7 @@ grammar Mscript {
     @Test
     fun process_SINGLE_QUOTE_STRING_simple() {
         val text = "'xxx'"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("SINGLE_QUOTE_STRING") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("SINGLE_QUOTE_STRING") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -408,7 +408,7 @@ grammar Mscript {
     fun process_SINGLE_QUOTE_STRING_withLineBreak() {
         val text = """'xx
             x'""".trimIndent()
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("SINGLE_QUOTE_STRING") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("SINGLE_QUOTE_STRING") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -419,7 +419,7 @@ grammar Mscript {
     fun process_matrix_0x0() {
 
         val text = "[]"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("matrix") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("matrix") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -430,7 +430,7 @@ grammar Mscript {
     fun process_matrix_1x1() {
 
         val text = "[1]"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("matrix") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("matrix") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -441,7 +441,7 @@ grammar Mscript {
     fun process_matrix_1x1_2() {
 
         val text = "[[1]]"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("matrix") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("matrix") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -452,7 +452,7 @@ grammar Mscript {
     fun process_matrix_row_x4() {
 
         val text = "1 2 3 4"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("row") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("row") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -463,7 +463,7 @@ grammar Mscript {
     fun process_matrix_1x4() {
 
         val text = "[1 2 3 4]"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("matrix") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("matrix") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -474,7 +474,7 @@ grammar Mscript {
     fun process_matrix_column_composition_1x4() {
 
         val text = "[1, 2, 3, 4]"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("matrix") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("matrix") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -485,7 +485,7 @@ grammar Mscript {
     fun process_matrix_row_composition_4x1() {
 
         val text = "[1; 2; 3; 4]"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("matrix") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("matrix") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -495,7 +495,7 @@ grammar Mscript {
     @Test
     fun process_field_access() {
         val text = "cn.src_cpu"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("matrix") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("matrix") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -506,7 +506,7 @@ grammar Mscript {
     fun process_argumentList_50() {
 
         val text = "0" + ",0".repeat(49)
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("argumentList") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("argumentList") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -516,7 +516,7 @@ grammar Mscript {
     fun process_expression_func() {
 
         val text = "func()"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("expression") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("expression") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -526,7 +526,7 @@ grammar Mscript {
     fun process_expression_func1() {
 
         val text = "func(a)"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("expression") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("expression") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -536,7 +536,7 @@ grammar Mscript {
     fun process_expression_func2() {
 
         val text = "func(a,1)"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("expression") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("expression") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -546,7 +546,7 @@ grammar Mscript {
     fun process_expression_func3() {
 
         val text = "func(a,1,'hello')"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("expression") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("expression") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -556,7 +556,7 @@ grammar Mscript {
     fun process_expression_func10() {
 
         val text = "func(a, 1, b, 2, c, 3, d, 4, e, 5)"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("expression") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("expression") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -566,7 +566,7 @@ grammar Mscript {
     fun process_expression_func20() {
 
         val text = "func(a,1,b,2,c,3,d,4,e,5,f,6,g,7,h,8,i,9,j,10)"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("expression") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("expression") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -576,7 +576,7 @@ grammar Mscript {
     fun process_expression_func50() {
 
         val text = "fprintf(''" + ",0".repeat(49) + ")"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("expression") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("expression") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -586,7 +586,7 @@ grammar Mscript {
     fun process_expression_func_func_1() {
 
         val text = "func( func(a) )"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("expression") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("expression") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -599,7 +599,7 @@ grammar Mscript {
             func( 1, 2, ...
               3, 4)
         """.trimIndent()
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("expression") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("expression") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -609,7 +609,7 @@ grammar Mscript {
     fun process_expression_operators_1() {
 
         val text = "1 + 1"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("expression") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("expression") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -619,7 +619,7 @@ grammar Mscript {
     fun process_expression_operators_10() {
 
         val text = "1" + " + 1".repeat(10)
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("expression") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("expression") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -629,7 +629,7 @@ grammar Mscript {
     fun process_expression_operators_100() {
 
         val text = "1" + " + 1".repeat(100)
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("expression") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("expression") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -639,7 +639,7 @@ grammar Mscript {
     fun process_expression_groups() {
 
         val text = "((1+1)*(2+3)+4)*5"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("expression") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("expression") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -649,7 +649,7 @@ grammar Mscript {
     fun process_script_empty() {
 
         val text = ""
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("script") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("script") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -660,7 +660,7 @@ grammar Mscript {
 
         val text = """
         """
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("script") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("script") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -670,7 +670,7 @@ grammar Mscript {
     @Test
     fun process_func_100_args() {
         val text = "fprintf(''" + ",0".repeat(99) + ");"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("script") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("script") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -681,7 +681,7 @@ grammar Mscript {
     fun process_functionCall_func() {
 
         val text = "func()"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("functionCall") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("functionCall") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -692,7 +692,7 @@ grammar Mscript {
     fun process_statement_func() {
 
         val text = "func()"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("statement") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("statement") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -703,7 +703,7 @@ grammar Mscript {
     fun process_line_func() {
 
         val text = "func();"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("line") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("line") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -714,7 +714,7 @@ grammar Mscript {
     fun process_statementList_func() {
 
         val text = "func();"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("statementList") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("statementList") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -725,7 +725,7 @@ grammar Mscript {
     fun process_script_func() {
 
         val text = "func();"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("script") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("script") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -740,7 +740,7 @@ grammar Mscript {
             func();
             func();
         """.trimIndent()
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("script") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("script") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -751,7 +751,7 @@ grammar Mscript {
     fun parse_script_func_args() {
 
         val text = "func(false,1,'abc',3.14, root);"
-        val (actual, issues) = sut.parse(text, parserOptions { goalRule("script") })
+        val (actual, issues) = sut.parse(text, sut.parserOptions { goalRuleName("script") })
 
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
@@ -762,7 +762,7 @@ grammar Mscript {
     fun process_script_nested_func() {
 
         val text = "disp(get_param(gcbh,'xxx'))"
-        val (actual, issues) = sut.process<AsmSimple, Any>(text, aglOptions { parser { goalRule("script") } })
+        val (actual, issues) = sut.process(text, sut.options { parse { goalRuleName("script") } })
 
         val expected = asmSimple {
             root("script") {

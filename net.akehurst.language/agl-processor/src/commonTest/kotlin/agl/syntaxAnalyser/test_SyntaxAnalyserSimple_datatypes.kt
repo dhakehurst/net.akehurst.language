@@ -55,16 +55,15 @@ class test_SyntaxAnalyserSimple_datatypes {
         """.trimIndent()
 
         val typeModel by lazy {
-            val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+            val (grammars, gramIssues) = grammarProc.process(grammarStr)
             assertNotNull(grammars)
             assertTrue(gramIssues.none { it.kind == LanguageIssueKind.ERROR },gramIssues.joinToString(separator = "\n") { "$it" })
             TypeModelFromGrammar(grammars.last()).derive()
         }
         val syntaxAnalyser = SyntaxAnalyserSimple(typeModel)
-        val processor = Agl.processorFromString(
+        val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
             grammarStr,
-            "unit",
-            syntaxAnalyser = syntaxAnalyser
+            Agl.configuration { syntaxAnalyser(syntaxAnalyser) }
         ).also {
             syntaxAnalyser.configure(
                 configurationContext = ContextFromGrammar(it.grammar),
@@ -88,7 +87,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             datatype A { }
         """.trimIndent()
 
-        val (actual, issues) = processor.process<AsmSimple, Any>(sentence)
+        val (actual, issues) = processor.process(sentence)
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
 
@@ -113,7 +112,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             datatype B { }
         """.trimIndent()
 
-        val (actual, issues) = processor.process<AsmSimple, Any>(sentence)
+        val (actual, issues) = processor.process(sentence)
         assertNotNull(actual)
         assertEquals(emptyList(), issues)
 
@@ -143,10 +142,10 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         """.trimIndent()
 
-        val (actual, issues) = processor.process<AsmSimple, ContextSimple>(
+        val (actual, issues) = processor.process(
             sentence = sentence,
-            aglOptions {
-                syntaxAnalyser {
+            processor.options {
+                syntaxAnalysis {
                     context(ContextSimple())
                 }
             }
@@ -188,10 +187,10 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         """.trimIndent()
 
-        val (actual, issues) = processor.process<AsmSimple, ContextSimple>(
+        val (actual, issues) = processor.process(
             sentence = sentence,
-            aglOptions {
-                syntaxAnalyser {
+            processor.options {
+                syntaxAnalysis {
                     context(ContextSimple())
                 }
             }

@@ -1,7 +1,6 @@
 package thridparty.projectIT
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -331,7 +330,7 @@ class test_octopusSmall {
             }
         """.trimIndent()
 
-        val processor = Agl.processorFromString(grammarStr)
+        val processor = Agl.processorFromStringDefault(grammarStr)
         const val goal = "UmlPart"
     }
 
@@ -417,7 +416,7 @@ class test_octopusSmall {
             
             <endpackage>
         """.trimIndent()
-        val (sppt,issues) =  processor.parse(sentence, parserOptions { goalRule(goal) })
+        val (sppt,issues) =  processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt,issues.joinToString(separator = "\n"){it.toString()})
         assertEquals(emptyList(),issues)
     }
@@ -448,7 +447,7 @@ class test_octopusSmall {
             + Wagon.pred[0..1] <-> + Wagon.succ[0..1];
             <endpackage> 
         """.trimIndent()
-        val (sppt,issues) =  processor.parse(sentence, parserOptions { goalRule(goal) })
+        val (sppt,issues) =  processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
     }
@@ -482,7 +481,7 @@ class test_octopusSmall {
              + Artist.artist [0..*]    <->  + Clip.clips [0..*]   ;
             <endpackage>
         """.trimIndent()
-        val (sppt,issues) =  processor.parse(sentence, parserOptions { goalRule(goal) })
+        val (sppt,issues) =  processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
     }
@@ -522,7 +521,7 @@ class test_octopusSmall {
              + Dvd.dvd [0..*]    <->  + catalog::Clip.clips [1..*]   ;
             <endpackage>
         """.trimIndent()
-        val (sppt,issues) =  processor.parse(sentence, parserOptions { goalRule(goal) })
+        val (sppt,issues) =  processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
     }

@@ -17,7 +17,6 @@ package net.akehurst.language.agl.processor.natural
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.parserOptions
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -27,11 +26,11 @@ class test_NaturalLanguage_Singles {
     companion object {
 
         private val grammarStr = this::class.java.getResource("/natural/English.agl").readText()
-        var processor: LanguageProcessor = tgqlprocessor()
+        var processor: LanguageProcessor<Any,Any> = tgqlprocessor()
 
         var sourceFiles = arrayOf("/natural/english-sentences-valid.txt")
 
-        fun tgqlprocessor(): LanguageProcessor {
+        fun tgqlprocessor(): LanguageProcessor<Any,Any> {
             //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
             return Agl.processorFromString(grammarStr)
         }
@@ -42,7 +41,7 @@ class test_NaturalLanguage_Singles {
         val goal = "subject"
         val sentence = "my name"
 
-        val (sppt, issues) = processor.parse(sentence, parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(), issues)
         val resultStr = sppt.asString

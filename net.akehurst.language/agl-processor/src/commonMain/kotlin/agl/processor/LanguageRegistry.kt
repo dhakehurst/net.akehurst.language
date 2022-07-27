@@ -19,17 +19,21 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.agl.grammar.GrammarRegistryDefault
 import net.akehurst.language.agl.grammar.format.AglFormatGrammar
 import net.akehurst.language.agl.grammar.format.AglFormatSyntaxAnalyser
+import net.akehurst.language.agl.grammar.grammar.*
 import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSyntaxAnalyser
-import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.grammar.scopes.AglScopesGrammar
 import net.akehurst.language.agl.grammar.scopes.AglScopesSyntaxAnalyser
+import net.akehurst.language.agl.grammar.scopes.ScopeModel
 import net.akehurst.language.agl.grammar.style.AglStyleGrammar
 import net.akehurst.language.agl.grammar.style.AglStyleSyntaxAnalyser
 import net.akehurst.language.api.processor.LanguageDefinition
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.style.AglStyleRule
 
 interface AglLanguages {
     val grammarLanguageIdentity: String
@@ -37,15 +41,15 @@ interface AglLanguages {
     val formatLanguageIdentity: String
     val scopesLanguageIdentity:String
 
-    val grammar: LanguageDefinition
-    val style: LanguageDefinition
-    val format: LanguageDefinition
-    val scopes:LanguageDefinition
+    val grammar: LanguageDefinition<List<Grammar>, GrammarContext>
+    val style: LanguageDefinition<List<AglStyleRule>, SentenceContext>
+    val format: LanguageDefinition<*,*>
+    val scopes:LanguageDefinition<ScopeModel, SentenceContext>
 }
 
 class LanguageRegistry {
 
-    private val _registry = mutableMapOf<String, LanguageDefinition>()
+    private val _registry = mutableMapOf<String, LanguageDefinition<*,*>>()
 
     val agl = object : AglLanguages {
         override val grammarLanguageIdentity: String = "net.akehurst.language.agl.AglGrammar"
@@ -155,7 +159,7 @@ class LanguageRegistry {
             )
         )
 
-        override val scopes: LanguageDefinition= this@LanguageRegistry.registerFromDefinition(
+        override val scopes: LanguageDefinition<ScopeModel,SentenceContext> = this@LanguageRegistry.registerFromDefinition(
             LanguageDefinitionFromAsm(
                 identity = scopesLanguageIdentity,
                 grammar = AglScopesGrammar(),
@@ -216,7 +220,7 @@ class LanguageRegistry {
         )
     }
 
-    fun registerFromDefinition(definition: LanguageDefinition): LanguageDefinition {
+    fun <AsmType : Any, ContextType : Any> registerFromDefinition(definition: LanguageDefinition<AsmType, ContextType>): LanguageDefinition<AsmType, ContextType> {
         return if (this._registry.containsKey(definition.identity)) {
             error("LanguageDefinition '${definition.identity}' is already registered, please unregister the old one first")
         } else {
@@ -225,11 +229,11 @@ class LanguageRegistry {
         }
     }
 
-    fun register(
+    fun <AsmType : Any, ContextType : Any> register(
         identity: String, grammar: String?, targetGrammar:String?, defaultGoalRule: String?, buildForDefaultGoal:Boolean,
-        style: String?, format: String?, syntaxAnalyser: SyntaxAnalyser<*,*>?, semanticAnalyser: SemanticAnalyser<*,*>?
-    ): LanguageDefinition = this.registerFromDefinition(
-        LanguageDefinitionDefault(
+        style: String?, format: String?, syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?, semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
+    ): LanguageDefinition<AsmType, ContextType> = this.registerFromDefinition(
+        LanguageDefinitionDefault<AsmType, ContextType>(
             identity, grammar, targetGrammar, defaultGoalRule, buildForDefaultGoal,
             style, format, syntaxAnalyser, semanticAnalyser
         )
@@ -239,14 +243,14 @@ class LanguageRegistry {
         this._registry.remove(identity)
     }
 
-    fun findOrNull(identity: String): LanguageDefinition? {
-        return this._registry[identity]
+    fun <AsmType : Any, ContextType : Any> findOrNull(identity: String): LanguageDefinition<AsmType, ContextType>? {
+        return this._registry[identity] as LanguageDefinition<AsmType, ContextType>?
     }
 
-    fun findOrPlaceholder(identity: String): LanguageDefinition {
-        val existing = this.findOrNull(identity)
+    fun <AsmType : Any, ContextType : Any> findOrPlaceholder(identity: String): LanguageDefinition<AsmType, ContextType> {
+        val existing = this.findOrNull<AsmType, ContextType>(identity)
         return if (null == existing) {
-            val placeholder = LanguageDefinitionDefault(
+            val placeholder = LanguageDefinitionDefault<AsmType, ContextType>(
                 identity, null, null, null, false,
                 null,null,null,null
             )

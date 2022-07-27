@@ -1,7 +1,6 @@
 package thridparty.projectIT
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -9,7 +8,7 @@ import kotlin.test.assertNotNull
 class test_piLanguages {
 
     private companion object {
-        val grammarStr ="""
+        val grammarStr = """
             namespace PiLanguageLanguage
             grammar PiLanguageGrammar {
                             
@@ -288,7 +287,7 @@ class test_piLanguages {
             leaf booleanLiteral      = 'false' | 'true';       
             }
         """.trimIndent()
-        val processor = Agl.processorFromString(grammarStr)
+        val processor = Agl.processorFromStringDefault(grammarStr)
     }
 
     @Test
@@ -301,9 +300,9 @@ class test_piLanguages {
                 units: ExampleUnit();
             }
         """.trimIndent()
-        val (sppt,issues) =  processor.parse(sentence, parserOptions { goalRule("PiStructureDef") })
-        assertNotNull(sppt,issues.joinToString(separator = "\n"){it.toString()})
-        assertEquals(emptyList(),issues)
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName("PiStructureDef") })
+        assertNotNull(sppt, issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(emptyList(), issues)
     }
 
     @Test
@@ -474,8 +473,8 @@ class test_piLanguages {
                 priority = 10;
             }
         """.trimIndent()
-        val (sppt,issues) =  processor.parse(sentence,parserOptions { goalRule("PiStructureDef") })
-        assertNotNull(sppt,issues.joinToString(separator = "\n"){it.toString()})
-        assertEquals(emptyList(),issues)
+        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName("PiStructureDef") })
+        assertNotNull(sppt, issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(emptyList(), issues)
     }
 }

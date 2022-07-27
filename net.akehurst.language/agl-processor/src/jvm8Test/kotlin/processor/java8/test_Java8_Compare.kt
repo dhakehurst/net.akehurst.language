@@ -17,9 +17,9 @@
 package net.akehurst.language.processor.java8
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.parserOptions
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -51,16 +51,23 @@ class test_Java8_Compare(val data: Data) {
 
     companion object {
 
-        var aglSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglSpec.agl", true)
-        var aglOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglOptm.agl", true)
+        var aglSpecProcessor: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor("/java8/Java8AglSpec.agl", true)
+        var aglOptmProcessor: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor("/java8/Java8AglOptm.agl", true)
 
-        var antlrSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrSpec.agl")
-        var antlrOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrOptm.agl")
+        var antlrSpecProcessor: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor("/java8/Java8AntlrSpec.agl")
+        var antlrOptmProcessor: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor("/java8/Java8AntlrOptm.agl")
 
-        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor {
+        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<AsmSimple, ContextSimple> {
             println("Building $path")
             val grammarStr = this::class.java.getResource(path).readText()
-            val proc = Agl.processorFromString(grammarStr)
+            val proc = Agl.processorFromString<AsmSimple, ContextSimple>(
+                grammarDefinitionStr = grammarStr,
+                aglOptions = Agl.registry.agl.grammar.processor?.options {
+                    semanticAnalysis {
+                        active(false) // switch off for performance
+                    }
+                }
+            )
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
             //proc.buildFor(forRule)//TODO: use build
             println("Built $path")
@@ -130,14 +137,14 @@ class test_Java8_Compare(val data: Data) {
         return res
     }
 
-    private fun testParse(proc: LanguageProcessor, toUpper: Boolean = false) {
-            val queryStr = this.data.sentence
-            val grammarRule = if (toUpper) this.data.grammarRule.capitalize() else this.data.grammarRule
-            val (sppt,issues) = proc.parse(queryStr, parserOptions { goalRule(grammarRule) })
-            assertNotNull(sppt)
-            assertEquals(emptyList(),issues)
-            val resultStr = clean(sppt.asString)
-            assertEquals(queryStr, resultStr)
+    private fun testParse(proc: LanguageProcessor<AsmSimple, ContextSimple>, toUpper: Boolean = false) {
+        val queryStr = this.data.sentence
+        val grammarRule = if (toUpper) this.data.grammarRule.capitalize() else this.data.grammarRule
+        val (sppt, issues) = proc.parse(queryStr, proc.parserOptions { goalRuleName(grammarRule) })
+        assertNotNull(sppt)
+        assertEquals(emptyList(), issues)
+        val resultStr = clean(sppt.asString)
+        assertEquals(queryStr, resultStr)
     }
 
     @Test(timeout = 5000)

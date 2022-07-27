@@ -17,7 +17,6 @@ package net.akehurst.language.agl.processor.vistraq
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.parserOptions
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,11 +34,11 @@ class test_QueryParserValid(val data: Data) {
     companion object {
 
         private val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/Query.agl")?.readText() ?: error("File not found")
-        var processor: LanguageProcessor = tgqlprocessor()
+        var processor: LanguageProcessor<Any,Any> = tgqlprocessor()
 
         var sourceFiles = arrayOf("/vistraq/sampleValidQueries.txt")
 
-        fun tgqlprocessor(): LanguageProcessor {
+        fun tgqlprocessor(): LanguageProcessor<Any,Any> {
             return Agl.processorFromString(grammarStr)
         }
 
@@ -83,9 +82,9 @@ class test_QueryParserValid(val data: Data) {
     fun test() {
         val queryStr = this.data.queryStr
         val goal = "query"
-        val (sppt,issues) = processor.parse(queryStr, parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(queryStr, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
         Assert.assertEquals(queryStr, resultStr)
     }

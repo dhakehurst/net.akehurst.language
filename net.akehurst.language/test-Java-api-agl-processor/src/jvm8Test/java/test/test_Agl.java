@@ -4,6 +4,7 @@ import kotlin.Pair;
 import net.akehurst.language.agl.processor.Agl;
 import net.akehurst.language.api.processor.LanguageIssue;
 import net.akehurst.language.api.processor.LanguageProcessor;
+import net.akehurst.language.api.processor.LanguageProcessorConfiguration;
 import net.akehurst.language.api.processor.ParseResult;
 import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import org.junit.Assert;
@@ -31,12 +32,19 @@ public class test_Agl {
     }
 
     @Test
-    public void processorFromString() {
-        LanguageProcessor proc = Agl.INSTANCE.processorFromString(grammarStr, null, null, null, null, null);
+    public void processorFromString_noConfig() {
+        LanguageProcessor<Object,Object> proc = Agl.INSTANCE.processorFromString(grammarStr, null, null);
 
         Assert.assertNotNull(proc);
     }
 
+    @Test
+    public void processorFromString_withConfig() {
+        LanguageProcessorConfiguration<Object,Object> config = Agl.INSTANCE.configurationDefault();
+        Assert.fail("TODO");
+        LanguageProcessor<Object,Object> proc = Agl.INSTANCE.processorFromString(grammarStr, null, null);
 
+        Assert.assertNotNull(proc);
+    }
 
 }

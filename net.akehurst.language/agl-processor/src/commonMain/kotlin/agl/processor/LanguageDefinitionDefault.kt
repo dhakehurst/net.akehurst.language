@@ -25,7 +25,7 @@ import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
-class LanguageDefinitionDefault(
+class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     override val identity: String,
     grammarStrArg: String?,
     targetGrammarArg: String?,
@@ -33,17 +33,23 @@ class LanguageDefinitionDefault(
     buildForDefaultGoal:Boolean,
     style: String?,
     format: String?,
-    syntaxAnalyser: SyntaxAnalyser<*, *>?,
-    semanticAnalyser: SemanticAnalyser<*, *>?
-) : LanguageDefinition {
+    syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?,
+    semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
+) : LanguageDefinition<AsmType, ContextType> {
     //constructor(identity: String, grammarStrArg: String?) : this(identity, grammarStrArg, null, null, null, null, null, null)
 
-    private val _processor_cache: CachedValue<LanguageProcessor?> = cached {
+    private val _processor_cache: CachedValue<LanguageProcessor<AsmType, ContextType>?> = cached {
         val g = this.grammarStr
         if (null == g) {
             null
         } else {
-            val proc = Agl.processorFromString(g, targetGrammar, defaultGoalRule, syntaxAnalyser, semanticAnalyser, null)
+            val config = Agl.configuration<AsmType, ContextType> {
+                targetGrammarName(targetGrammar)
+                defaultGoalRuleName(defaultGoalRule)
+                syntaxAnalyser(syntaxAnalyser)
+                semanticAnalyser(semanticAnalyser)
+            }
+            val proc = Agl.processorFromString(g, config, null)
             if(buildForDefaultGoal) proc.buildFor(null) //null options will use default goal
             proc
         }
@@ -86,19 +92,19 @@ class LanguageDefinitionDefault(
         }
     }
 
-    override var syntaxAnalyser: SyntaxAnalyser<*, *>? by Delegates.observable(syntaxAnalyser) { _, oldValue, newValue ->
+    override var syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>? by Delegates.observable(syntaxAnalyser) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
 
-    override var semanticAnalyser: SemanticAnalyser<*, *>? by Delegates.observable(semanticAnalyser) { _, oldValue, newValue ->
+    override var semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? by Delegates.observable(semanticAnalyser) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
 
-    override val processor: LanguageProcessor? get() = this._processor_cache.value
+    override val processor: LanguageProcessor<AsmType, ContextType>? get() = this._processor_cache.value
 
     override val grammarIsModifiable: Boolean = true
 }

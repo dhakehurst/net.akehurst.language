@@ -63,10 +63,10 @@ class SyntaxAnalyserSimple(
     override fun configure(configurationContext: SentenceContext, configuration: String): List<LanguageIssue> {
         //TODO: pass grammar as context ?
         val proc = Agl.registry.agl.scopes.processor ?: error("Scopes language not found!")
-        val (sm, issues) = proc.process<ScopeModel, SentenceContext>(
+        val (sm, issues) = proc.process(
             sentence = configuration,
-            aglOptions<ScopeModel, SentenceContext> {
-                syntaxAnalyser {
+            proc.options {
+                syntaxAnalysis {
                     context(configurationContext)
                 }
             }

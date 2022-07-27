@@ -42,12 +42,12 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a"
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
         val typeModel = TypeModelFromGrammar(grammars.last()).derive()
-        val proc = Agl.processorFromString(grammarStr, null, null, SyntaxAnalyserSimple(typeModel))
-        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        val proc = Agl.processorFromString<AsmSimple, ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyser(SyntaxAnalyserSimple(typeModel)) }, null )
+        val (asm, issues) = proc.process(sentence)
         assertNotNull(asm)
         assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
@@ -72,12 +72,12 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a"
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
         val typeModel = TypeModelFromGrammar(grammars.last()).derive()
-        val proc = Agl.processorFromString(grammarStr, null, null, SyntaxAnalyserSimple(typeModel))
-        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyser(SyntaxAnalyserSimple(typeModel)) }, null )
+        val (asm, issues) = proc.process(sentence)
         assertNotNull(asm)
         assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
@@ -103,12 +103,12 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a"
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
         val typeModel = TypeModelFromGrammar(grammars.last()).derive()
-        val proc = Agl.processorFromString(grammarStr, null, null, SyntaxAnalyserSimple(typeModel))
-        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyser(SyntaxAnalyserSimple(typeModel)) }, null )
+        val (asm, issues) = proc.process(sentence)
         assertNotNull(asm)
         assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
@@ -136,12 +136,12 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a : A"
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
         val typeModel = TypeModelFromGrammar(grammars.last()).derive()
-        val proc = Agl.processorFromString(grammarStr, null, null, SyntaxAnalyserSimple(typeModel))
-        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyser(SyntaxAnalyserSimple(typeModel)) }, null )
+        val (asm, issues) = proc.process(sentence)
         assertNotNull(asm)
         assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
@@ -173,12 +173,12 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a 8 fred"
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
         val typeModel = TypeModelFromGrammar(grammars.last()).derive()
-        val proc = Agl.processorFromString(grammarStr, null, null, SyntaxAnalyserSimple(typeModel))
-        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyser(SyntaxAnalyserSimple(typeModel)) }, null )
+        val (asm, issues) = proc.process(sentence)
         assertNotNull(asm)
         assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
@@ -205,12 +205,12 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a"
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
         val typeModel = TypeModelFromGrammar(grammars.last()).derive()
-        val proc = Agl.processorFromString(grammarStr, null, null, SyntaxAnalyserSimple(typeModel))
-        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyser(SyntaxAnalyserSimple(typeModel)) }, null )
+        val (asm, issues) = proc.process(sentence)
         assertNotNull(asm)
         assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
@@ -235,12 +235,12 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = ""
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
         val typeModel = TypeModelFromGrammar(grammars.last()).derive()
-        val proc = Agl.processorFromString(grammarStr, null, null, SyntaxAnalyserSimple(typeModel))
-        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyser(SyntaxAnalyserSimple(typeModel)) }, null )
+        val (asm, issues) = proc.process(sentence)
         assertNotNull(asm)
         assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
@@ -265,12 +265,12 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "aaaa"
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
         val typeModel = TypeModelFromGrammar(grammars.last()).derive()
-        val proc = Agl.processorFromString(grammarStr, null, null, SyntaxAnalyserSimple(typeModel))
-        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyser(SyntaxAnalyserSimple(typeModel)) }, null )
+        val (asm, issues) = proc.process(sentence)
         assertNotNull(asm)
         assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
@@ -301,12 +301,12 @@ class test_SyntaxAnalyserSimple {
             }
         """.trimIndent()
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
         val typeModel = TypeModelFromGrammar(grammars.last()).derive()
-        val proc = Agl.processorFromString(grammarStr, null, null, SyntaxAnalyserSimple(typeModel))
-        val (asm1, issues1) = proc.process<AsmSimple, Any>("a 8")
+        val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyser(SyntaxAnalyserSimple(typeModel)) }, null )
+        val (asm1, issues1) = proc.process("a 8")
         assertNotNull(asm1)
         assertEquals(emptyList(), issues1)
         val actual1 = asm1.rootElements[0]
@@ -321,7 +321,7 @@ class test_SyntaxAnalyserSimple {
         }.rootElements[0]
         assertEquals(expected1.asString("  "), actual1.asString("  "))
 
-        val (asm2, issues2) = proc.process<AsmSimple, Any>("a fred")
+        val (asm2, issues2) = proc.process("a fred")
         assertNotNull(asm2)
         assertEquals(emptyList(), issues2)
         val actual2 = asm2.rootElements[0]
@@ -337,7 +337,7 @@ class test_SyntaxAnalyserSimple {
         assertEquals(expected2.asString("  "), actual2.asString("  "))
 
 
-        val (asm3, issues3) = proc.process<AsmSimple, Any>("a fred 8")
+        val (asm3, issues3) = proc.process("a fred 8")
         assertNotNull(asm3)
         assertEquals(emptyList(), issues3)
         val actual3 = asm3.rootElements[0]
@@ -369,12 +369,12 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a 8 fred"
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
         val typeModel = TypeModelFromGrammar(grammars.last()).derive()
-        val proc = Agl.processorFromString(grammarStr, null, null, SyntaxAnalyserSimple(typeModel))
-        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyser(SyntaxAnalyserSimple(typeModel)) }, null )
+        val (asm, issues) = proc.process(sentence)
         assertNotNull(asm)
         assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
@@ -405,12 +405,12 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a fred"
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
         val typeModel = TypeModelFromGrammar(grammars.last()).derive()
-        val proc = Agl.processorFromString(grammarStr, null, null, SyntaxAnalyserSimple(typeModel))
-        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyser(SyntaxAnalyserSimple(typeModel)) }, null )
+        val (asm, issues) = proc.process(sentence)
         assertNotNull(asm)
         assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
@@ -440,12 +440,12 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a"
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
         val typeModel = TypeModelFromGrammar(grammars.last()).derive()
-        val proc = Agl.processorFromString(grammarStr, null, null, SyntaxAnalyserSimple(typeModel))
-        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyser(SyntaxAnalyserSimple(typeModel)) }, null )
+        val (asm, issues) = proc.process(sentence)
         assertNotNull(asm)
         assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
@@ -474,12 +474,12 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a adam betty charles"
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
         val typeModel = TypeModelFromGrammar(grammars.last()).derive()
-        val proc = Agl.processorFromString(grammarStr, null, null, SyntaxAnalyserSimple(typeModel))
-        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyser(SyntaxAnalyserSimple(typeModel)) }, null )
+        val (asm, issues) = proc.process(sentence)
         assertNotNull(asm)
         assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
@@ -510,12 +510,12 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "bk1 adam ant 12345, betty boo 34567, charlie chaplin 98765"
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
         val typeModel = TypeModelFromGrammar(grammars.last()).derive()
-        val proc = Agl.processorFromString(grammarStr, null, null, SyntaxAnalyserSimple(typeModel))
-        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyser(SyntaxAnalyserSimple(typeModel)) }, null )
+        val (asm, issues) = proc.process(sentence)
         assertNotNull(asm)
         assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]
@@ -564,12 +564,12 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "graph [fontsize=ss, labelloc=yy label=bb; splines=true overlap=false]"
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
         val typeModel = TypeModelFromGrammar(grammars.last()).derive()
-        val proc = Agl.processorFromString(grammarStr, null, null, SyntaxAnalyserSimple(typeModel))
-        val (asm, issues) = proc.process<AsmSimple, Any>(sentence)
+        val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyser(SyntaxAnalyserSimple(typeModel)) }, null )
+        val (asm, issues) = proc.process(sentence)
         assertNotNull(asm)
         assertEquals(emptyList(), issues)
         val actual = asm.rootElements[0]

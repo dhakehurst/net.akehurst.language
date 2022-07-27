@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.Test
 
 class test_nestedLists_from_Dot {
@@ -58,14 +57,14 @@ grammar Dot  {
 }
         """.trimIndent()
 
-        val proc = Agl.processorFromString(grammarStr)
+        val proc = Agl.processorFromString<Any,Any>(grammarStr)
     }
 
     @Test
     fun t() {
         val goal = "stmt_list"
         val sentence =  "graph[a=a ]; node [b=b c=c]; edge[];"
-        proc.parse(sentence, parserOptions { goalRule(goal) })
+        proc.parse(sentence, proc.parserOptions { goalRuleName(goal) })
     }
 
 }

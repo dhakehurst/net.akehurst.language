@@ -40,7 +40,7 @@ class test_deriveTypeModelFromGrammar {
             }
         """.trimIndent()
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
 
@@ -63,7 +63,7 @@ class test_deriveTypeModelFromGrammar {
             }
         """.trimIndent()
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
 
@@ -86,7 +86,7 @@ class test_deriveTypeModelFromGrammar {
             }
         """.trimIndent()
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
 
@@ -109,7 +109,7 @@ class test_deriveTypeModelFromGrammar {
             }
         """.trimIndent()
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
 
@@ -132,7 +132,7 @@ class test_deriveTypeModelFromGrammar {
             }
         """.trimIndent()
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
 
@@ -154,7 +154,7 @@ class test_deriveTypeModelFromGrammar {
             }
         """.trimIndent()
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
 
@@ -179,7 +179,7 @@ class test_deriveTypeModelFromGrammar {
             }
         """.trimIndent()
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
 
@@ -210,7 +210,7 @@ class test_deriveTypeModelFromGrammar {
             }
         """.trimIndent()
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
 
@@ -233,7 +233,7 @@ class test_deriveTypeModelFromGrammar {
             }
         """.trimIndent()
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
 
@@ -257,7 +257,7 @@ class test_deriveTypeModelFromGrammar {
             }
         """.trimIndent()
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
 
@@ -285,7 +285,7 @@ class test_deriveTypeModelFromGrammar {
             }
         """.trimIndent()
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
 
@@ -316,7 +316,7 @@ class test_deriveTypeModelFromGrammar {
             }
         """.trimIndent()
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
 
@@ -350,7 +350,7 @@ class test_deriveTypeModelFromGrammar {
             }
         """.trimIndent()
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
 
@@ -381,7 +381,7 @@ class test_deriveTypeModelFromGrammar {
             }
         """.trimIndent()
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
 
@@ -410,7 +410,7 @@ class test_deriveTypeModelFromGrammar {
             }
         """.trimIndent()
 
-        val (grammars, gramIssues) = grammarProc.process<List<Grammar>, Any>(grammarStr)
+        val (grammars, gramIssues) = grammarProc.process(grammarStr)
         assertNotNull(grammars)
         assertTrue(gramIssues.isEmpty())
 

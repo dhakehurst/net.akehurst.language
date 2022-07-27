@@ -1,7 +1,6 @@
 package thridparty.projectIT
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -14,7 +13,7 @@ class test_demo {
 
         """.trimIndent()
 
-        val processor = Agl.processorFromString(grammarStr)
+        val processor = Agl.processorFromStringDefault(grammarStr)
         const val goal = ""
     }
 
@@ -23,7 +22,7 @@ class test_demo {
         val sentence = """
 
         """.trimIndent()
-        val (sppt,issues) =  processor.parse(sentence, parserOptions { goalRule(goal) })
+        val (sppt,issues) =  processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
         assertEquals(emptyList(),issues)
     }

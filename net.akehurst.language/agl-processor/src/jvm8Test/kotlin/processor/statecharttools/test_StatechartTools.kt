@@ -17,15 +17,12 @@ package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.parserOptions
-import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -40,8 +37,8 @@ class test_StatechartTools(val data: Data) {
         //private val grammarStr = ""//runBlockingNoSuspensions { resourcesVfs["/xml/Xml.agl"].readString() }
 
         // must create processor for 'Expressions' so that SText can extend it
-        val exprProcessor = Agl.processorFromString(grammarStr1)
-        var processor: LanguageProcessor = Agl.processorFromString(grammarStr2)
+        val exprProcessor = Agl.processorFromString<Any,Any>(grammarStr1)
+        var processor: LanguageProcessor<Any,Any> = Agl.processorFromString(grammarStr2)
         var sourceFiles = arrayOf("/statechart-tools/samplesValid.txt")
 
         @JvmStatic
@@ -75,9 +72,9 @@ class test_StatechartTools(val data: Data) {
 
     @Test
     fun test() {
-        val (sppt,issues) = processor.parse(this.data.text, parserOptions { goalRule(data.ruleName) })
+        val (sppt, issues) = processor.parse(this.data.text, processor.parserOptions { goalRuleName(data.ruleName) })
         assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
         assertEquals(this.data.text, resultStr)
     }

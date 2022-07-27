@@ -42,9 +42,11 @@ class test_Java8Agl_Classes(val data:Data) {
     private companion object {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
-        val processor : LanguageProcessor by lazy {
-            Agl.processorFromString(grammarStr, "Classes","ClassDeclaration")
+
+        val processor : LanguageProcessor<Any,Any> by lazy {
+            Agl.processorFromString(grammarStr, Agl.configuration { targetGrammarName("Classes"); defaultGoalRuleName("ClassDeclaration") })
         }
+
         var sourceFiles = arrayOf(
                 "/java8/sentences/classes-valid.txt"
         )

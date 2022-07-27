@@ -18,6 +18,7 @@ package net.akehurst.language.processor.dot
 
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.AsmSimple
 import kotlin.test.Test
@@ -28,7 +29,7 @@ class test_Dot_SyntaxAnalyser {
 
     companion object {
         private val grammarStr = this::class.java.getResource("/dot/Dot.agl").readText()
-        var processor: LanguageProcessor = Agl.processorFromString(grammarStr)
+        var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr)
     }
 
 
@@ -41,7 +42,7 @@ class test_Dot_SyntaxAnalyser {
             }
         """.trimIndent()
 
-        val (asm,issues) = processor.process<AsmSimple,Any>(sentence)
+        val (asm,issues) = processor.process(sentence)
         val actual = asm?.rootElements?.firstOrNull()
         assertNotNull(actual)
         assertEquals(emptyList(),issues)
@@ -60,7 +61,7 @@ class test_Dot_SyntaxAnalyser {
             }
         """.trimIndent()
 
-        val (asm,issues) = processor.process<AsmSimple,Any>(sentence)
+        val (asm,issues) = processor.process(sentence)
         val actual = asm?.rootElements?.firstOrNull()
         assertNotNull(actual)
         assertEquals(emptyList(),issues)

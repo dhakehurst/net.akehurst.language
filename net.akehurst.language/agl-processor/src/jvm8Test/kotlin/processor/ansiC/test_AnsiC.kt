@@ -15,10 +15,10 @@
  */
 package net.akehurst.language.agl.processor.dot
 
-
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.parserOptions
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
@@ -28,15 +28,14 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-
 @RunWith(Parameterized::class)
-class test_AnsiC(val data:Data) {
+class test_AnsiC(val data: Data) {
 
     companion object {
 
         private val grammarStr = this::class.java.getResource("/ansiC/ansiC.agl").readText()
-        val processor : LanguageProcessor by lazy {
-            Agl.processorFromString(grammarStr)
+        val processor: LanguageProcessor<AsmSimple, ContextSimple> by lazy {
+            Agl.processorFromStringDefault(grammarStr)
         }
         var sourceFiles = arrayOf("/ansiC/expression-valid.txt")
 
@@ -77,9 +76,9 @@ class test_AnsiC(val data:Data) {
 
     @Test
     fun test() {
-        val (sppt,issues) = processor.parse( this.data.text, parserOptions { goalRule("expression") })
+        val (sppt, issues) = processor.parse(this.data.text, processor.parserOptions { goalRuleName("expression") })
         assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
         assertEquals(this.data.text, resultStr)
     }

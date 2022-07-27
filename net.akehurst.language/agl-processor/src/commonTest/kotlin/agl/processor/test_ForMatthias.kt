@@ -16,8 +16,6 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.processor.aglOptions
-import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.Test
 
 internal class test_ForMatthias {
@@ -40,7 +38,7 @@ internal class test_ForMatthias {
         """.trimIndent()
     }
 
-    private val p = Agl.processorFromString(grammarStr)
+    private val p = Agl.processorFromString<Any,Any>(grammarStr)
 
     @Test
     fun conceptDefinition0() {
@@ -51,7 +49,7 @@ internal class test_ForMatthias {
               }
             }
         """.trimIndent(),
-            parserOptions { goalRule(goal) }
+            p.parserOptions { goalRuleName(goal) }
         )
     }
 
@@ -65,7 +63,7 @@ internal class test_ForMatthias {
               }
             }
         """.trimIndent(),
-            parserOptions { goalRule(goal) }
+            p.parserOptions { goalRuleName(goal) }
         )
     }
 
@@ -80,7 +78,7 @@ internal class test_ForMatthias {
               }
             }
         """.trimIndent(),
-            parserOptions { goalRule(goal) }
+            p.parserOptions { goalRuleName(goal) }
         )
     }
 
@@ -92,7 +90,7 @@ internal class test_ForMatthias {
 
             }
         """.trimIndent(),
-            parserOptions { goalRule(goal) }
+            p.parserOptions { goalRuleName(goal) }
         )
     }
 }

@@ -38,9 +38,11 @@ class test_Java8Agl_Types(val data:Data) {
     private companion object {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
-        val processor : LanguageProcessor by lazy {
-            Agl.processorFromString(grammarStr, "Types","Type")//.buildFor("Type")
+
+        val processor : LanguageProcessor<Any,Any> by lazy {
+            Agl.processorFromString(grammarStr, Agl.configuration { targetGrammarName("Types"); defaultGoalRuleName("Type") })
         }
+
         var sourceFiles = arrayOf(
                 "/java8/sentences/types-valid.txt"
         )

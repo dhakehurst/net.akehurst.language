@@ -17,8 +17,6 @@
 package net.akehurst.language.processor.expectedAt
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.api.processor.aglOptions
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -43,7 +41,7 @@ class test_DataTypes {
             }
         """.trimIndent()
         val goal = "unit"
-        val processor = Agl.processorFromString(grammarStr)
+        val processor = Agl.processorFromString<Any,Any>(grammarStr)
 
         val testData = listOf(
             Data("",0, listOf("class")),
@@ -78,7 +76,7 @@ class test_DataTypes {
             val sentence = data.sentence
             val position = data.position
 
-            val result = processor.expectedAt<Any,Any>(sentence, position, 1, aglOptions { parser { goalRule(goal) } } )
+            val result = processor.expectedAt(sentence, position, 1, processor.options { parse { goalRuleName(goal) } } )
             val actual = result.items.map { it.text }
             val expected = data.expected
             assertEquals(expected, actual, data.toString())

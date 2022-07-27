@@ -33,7 +33,7 @@ class test_SharedPackedParseTree_tokensByLine {
             }
         """.trimIndent()
 
-        val processor = Agl.processorFromString(grammarStr)
+        val processor = Agl.processorFromString<Any,Any>(grammarStr)
     }
 
     @Test

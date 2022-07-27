@@ -26,7 +26,7 @@ class test_SharedPackedParseTree {
 
     @Test
     fun tokensByLine_a() {
-        val proc = Agl.processorFromString("""
+        val proc = Agl.processorFromString<Any,Any>("""
             namespace test
             grammar Test {
                 skip WS = "\s+" ;
@@ -49,7 +49,7 @@ class test_SharedPackedParseTree {
 
     @Test
     fun tokensByLine_eolx1() {
-        val proc = Agl.processorFromString("""
+        val proc = Agl.processorFromString<Any,Any>("""
             namespace test
             grammar Test {
                 skip WS = "\s+" ;
@@ -80,7 +80,7 @@ class test_SharedPackedParseTree {
 
     @Test
     fun tokensByLine_eolx1_indent() {
-        val proc = Agl.processorFromString("""
+        val proc = Agl.processorFromString<Any,Any>("""
             namespace test
             grammar Test {
                 skip WS = "\s+" ;
@@ -112,7 +112,7 @@ class test_SharedPackedParseTree {
 
     @Test
     fun tokensByLine_eolx2() {
-        val proc = Agl.processorFromString("""
+        val proc = Agl.processorFromString<Any,Any>("""
             namespace test
 
             grammar Test {

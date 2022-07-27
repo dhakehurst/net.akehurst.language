@@ -19,36 +19,33 @@ package net.akehurst.language.agl.processor.xml
 //import com.soywiz.korio.file.std.resourcesVfs
 //import java.io.BufferedReader
 //import java.io.InputStreamReader
-import java.util.ArrayList
 
-import org.junit.Assert
+import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
-
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.processor.parserOptions
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 
 @RunWith(Parameterized::class)
-class test_Xml(val data:Data) {
+class test_Xml(val data: Data) {
 
     companion object {
 
         private val grammarStr = this::class.java.getResource("/xml/Xml.agl").readText()
+
         //private val grammarStr = ""//runBlockingNoSuspensions { resourcesVfs["/xml/Xml.agl"].readString() }
-        var processor: LanguageProcessor = tgqlprocessor()
+        var processor: LanguageProcessor<Any,Any> = tgqlprocessor()
 
         var xmlFiles = arrayOf("/xml/valid/empty.xml")
 
-        fun tgqlprocessor() : LanguageProcessor {
+        fun tgqlprocessor(): LanguageProcessor<Any,Any> {
             //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
             return Agl.processorFromString(grammarStr)
-         }
+        }
 
         @JvmStatic
         @Parameters(name = "{0}")
@@ -73,9 +70,9 @@ class test_Xml(val data:Data) {
     @Test
     fun test() {
         val goal = "file"
-        val (sppt,issues) = processor.parse(this.data.text, parserOptions { goalRule(goal) })
+        val (sppt, issues) = processor.parse(this.data.text, processor.parserOptions { goalRuleName(goal) })
         assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(), issues)
         val resultStr = sppt.asString
         assertEquals(this.data.text, resultStr)
     }

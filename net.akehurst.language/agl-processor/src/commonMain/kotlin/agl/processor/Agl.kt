@@ -16,9 +16,14 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
+import net.akehurst.language.agl.grammar.grammar.GrammarContext
+import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
+import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.processor.*
 
@@ -29,66 +34,109 @@ object Agl {
 
     val registry = LanguageRegistry()
 
-    fun register(definition: LanguageDefinition) {
+    fun <AsmType : Any, ContextType : Any> register(definition: LanguageDefinition<AsmType, ContextType>) {
         registry.registerFromDefinition(definition)
     }
 
-    fun processorFromGrammar(
+    fun <AsmType : Any, ContextType : Any> configurationDefault(): LanguageProcessorConfiguration<AsmType, ContextType> =
+        LanguageProcessorConfigurationDefault()
+
+    /**
+     * build a configuration for a language processor
+     * (does not set the configuration, they must be passed as argument)
+     */
+    fun <AsmType : Any, ContextType : Any> configuration(init: LanguageProcessorConfigurationBuilder<AsmType, ContextType>.() -> Unit): LanguageProcessorConfiguration<AsmType, ContextType> {
+        val b = LanguageProcessorConfigurationBuilder<AsmType, ContextType>()
+        b.init()
+        return b.build()
+    }
+
+    fun <AsmType : Any, ContextType : Any> processorFromGrammar(
         grammar: Grammar,
-        goalRuleName: String? = null,
-        syntaxAnalyser: SyntaxAnalyser<*, *>? = null,
-        semanticAnalyser: SemanticAnalyser<*, *>? = null,
-        formatter: Formatter? = null,
-    ): LanguageProcessor {
-        val goal = goalRuleName ?: grammar.rule.first { it.isSkip.not() }.name
-        return LanguageProcessorDefault(grammar, goal, syntaxAnalyser, formatter, semanticAnalyser)
+        configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = null
+    ): LanguageProcessor<AsmType, ContextType> {
+        val config = configuration ?: configurationDefault()
+        val goal = config.defaultGoalRuleName ?: grammar.rule.first { it.isSkip.not() }.name
+        return LanguageProcessorDefault<AsmType, ContextType>(grammar, goal, config.syntaxAnalyser, config.formatter, config.semanticAnalyser)
+    }
+
+    /**
+     * Create a LanguageProcessor from a grammar definition string,
+     * using default configuration of:
+     * - targetGrammar = last grammar defined in grammarDefinitionStr
+     * - defaultGoalRuleName = first non skip goal in targetGrammar
+     * - syntaxAnalyser = SyntaxAnalyserSimple(TypeModelFromGrammar)
+     * - semanticAnalyser = SemanticAnalyserSimple
+     * - formatter = null (TODO)
+     *
+     * @param grammarDefinitionStr a string defining the grammar, may contain multiple grammars
+     * @param aglOptions options to the AGL grammar processor for parsing the grammarDefinitionStr
+     */
+    fun processorFromStringDefault(
+        grammarDefinitionStr: String,
+        aglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = null
+    ): LanguageProcessor<AsmSimple, ContextSimple> {
+        try {
+            val aglProc = Agl.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
+            val aglOpts = aglOptions ?: Agl.registry.agl.grammar.processor?.optionsDefault()
+            val (grammars, issues) = aglProc.process(grammarDefinitionStr, aglOpts)
+            return if (null != grammars) {
+                val grammar = grammars.last()
+                processorFromGrammar(
+                    grammar,
+                    Agl.configuration {
+                        targetGrammarName(grammar.name)
+                        defaultGoalRuleName(grammar.rule.first { it.isSkip.not() }.name)
+                        syntaxAnalyser(SyntaxAnalyserSimple(TypeModelFromGrammar(grammar).derive()))
+                        semanticAnalyser(SemanticAnalyserSimple())
+                        formatter(null) //TODO
+                    }
+                )
+            } else {
+                if (issues.isEmpty()) {
+                    throw LanguageProcessorException("Unable to parse grammarDefinitionStr - unknown reason", null)
+                } else {
+                    val issuesStr = issues.joinToString(separator = "\n") {
+                        "at line: ${it.location?.line} column: ${it.location?.column} expected one of: ${it.data}"
+                    }
+                    throw LanguageProcessorException("Unable to parse grammarDefinitionStr:\n $issuesStr", null)
+                }
+            }
+        } catch (e: LanguageProcessorException) {
+            throw e
+        } catch (e: Throwable) {
+            throw LanguageProcessorException("Unable to create processor for grammarDefinitionStr: ${e.message}", e)
+        }
     }
 
     /**
      * Create a LanguageProcessor from a grammar definition string
      *
-     * grammarDefinitionStr may contain multiple grammars
-     *
-     * when {
-     *   goalRuleName.contains(".") use before '.' to choose the grammar
-     *   else use the last grammar in the grammarDefinitionStr
-     * }
-     * @param grammarDefinitionStr a string defining the grammar
-     * @param targetGrammarName name of one of the grammars in the grammarDefinitionString to generate parser for (if null use last grammar found)
-     * @param goalRuleName name of the default goal rule to use, it must be one of the rules in the target grammar or its super grammars (if null use first non-skip rule found in target grammar)
-     * @param syntaxAnalyser a syntax analyser (if null use SyntaxAnalyserSimple)
-     * @param semanticAnalyser a semantic analyser (if null use SemanticAnalyserSimple)
-     * @param formatter a formatter
+     * @param grammarDefinitionStr a string defining the grammar, may contain multiple grammars
+     * @param configuration options for configuring the created language processor
+     * @param aglOptions options to the AGL grammar processor
      */
-    fun processorFromString(
+    fun <AsmType : Any, ContextType : Any> processorFromString(
         grammarDefinitionStr: String,
-        targetGrammarName:String? = null,
-        goalRuleName: String? = null,
-        syntaxAnalyser: SyntaxAnalyser<*, *>? = null,
-        semanticAnalyser: SemanticAnalyser<*, *>? = null,
-        formatter: Formatter? = null,
-    ): LanguageProcessor {
+        configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = null,
+        aglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = null
+    ): LanguageProcessor<AsmType, ContextType> {
+        val config = configuration ?: configurationDefault()
+        val aglOpts = aglOptions ?: Agl.registry.agl.grammar.processor?.optionsDefault()
         try {
-            val aglProc = this.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
-            val (grammars, issues) = aglProc.process<List<Grammar>, Any>(grammarDefinitionStr, aglOptions {
-                parser {
-                    goalRule(AglGrammarGrammar.goalRuleName)
-                }
-                semanticAnalyser {
-                    active(false) // switch off for performance
-                }
-            })
+            val aglProc = Agl.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
+            val (grammars, issues) = aglProc.process(grammarDefinitionStr, aglOpts)
             if (null != grammars) {
-                val goal = goalRuleName ?: grammars.last().rule.first { it.isSkip.not() }.name
+                val goal = config.defaultGoalRuleName ?: grammars.last().rule.first { it.isSkip.not() }.name
                 //TODO: what to do with issues if there are any?
                 return when {
                     goal.contains(".") -> {
                         val grammarName = goal.substringBefore(".")
                         val grammar = grammars.find { it.name == grammarName } ?: throw LanguageProcessorException("Grammar with name $grammarName not found", null)
                         val goalName = goal.substringAfter(".")
-                        processorFromGrammar(grammar, goalName, syntaxAnalyser, semanticAnalyser, formatter)
+                        processorFromGrammar(grammar, config)
                     }
-                    else -> processorFromGrammar(grammars.last(), goal, syntaxAnalyser, semanticAnalyser, formatter)
+                    else -> processorFromGrammar(grammars.last(), config)
                 }
             } else {
                 if (issues.isEmpty()) {
