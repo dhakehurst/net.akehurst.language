@@ -40,9 +40,9 @@ import net.akehurst.language.api.typeModel.TypeModel
 internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
     override val grammar: Grammar,
     val defaultGoalRuleName: String,
-    val syntaxAnalyser: SyntaxAnalyser<*, *>?,
+    val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?,
     val formatter: Formatter?,
-    val semanticAnalyser: SemanticAnalyser<*, *>?
+    val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
 ) : LanguageProcessor<AsmType, ContextType> {
 
     private val _converterToRuntimeRules: ConverterToRuntimeRules by lazy { ConverterToRuntimeRules(this.grammar) }
@@ -136,7 +136,7 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
         } else {
             val (asm, issues2, locationMap) = this.syntaxAnalysis(sppt, opts)
             if (null == asm || opts.semanticAnalysis.active.not()) {
-                ProcessResult(null, issues1 + issues2)
+                ProcessResult(asm, issues1 + issues2)
             } else {
                 opts.semanticAnalysis.locationMap = locationMap
                 val result = this.semanticAnalysis(asm, opts)

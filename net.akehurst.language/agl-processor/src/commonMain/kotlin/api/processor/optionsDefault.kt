@@ -99,26 +99,26 @@ annotation class ProcessOptionsDslMarker
 @ProcessOptionsDslMarker
 class ProcessOptionsBuilder<AsmType : Any, ContextType : Any> {
 
-    private var _parser = ParseOptionsDefault()
-    private var _syntaxAnalyser = SyntaxAnalysisOptionsDefault<AsmType, ContextType>()
-    private var _semanticAnalyser = SemanticAnalysisOptionsDefault<AsmType, ContextType>()
+    private var _parser:ParseOptions = ParseOptionsDefault()
+    private var _syntaxAnalyser:SyntaxAnalysisOptions<AsmType, ContextType> = SyntaxAnalysisOptionsDefault<AsmType, ContextType>()
+    private var _semanticAnalyser:SemanticAnalysisOptions<AsmType, ContextType> = SemanticAnalysisOptionsDefault<AsmType, ContextType>()
 
-    fun parse(init: ParseOptionsBuilder.() -> Unit): ParseOptions {
+    fun parse(init: ParseOptionsBuilder.() -> Unit) {
         val b = ParseOptionsBuilder()
         b.init()
-        return b.build()
+        _parser = b.build()
     }
 
-    fun syntaxAnalysis(init: SyntaxAnalysisOptionsBuilder<AsmType, ContextType>.() -> Unit): SyntaxAnalysisOptions<AsmType, ContextType> {
+    fun syntaxAnalysis(init: SyntaxAnalysisOptionsBuilder<AsmType, ContextType>.() -> Unit) {
         val b = SyntaxAnalysisOptionsBuilder<AsmType, ContextType>()
         b.init()
-        return b.build()
+        _syntaxAnalyser = b.build()
     }
 
-    fun semanticAnalysis(init: SemanticAnalysisOptionsBuilder<AsmType, ContextType>.() -> Unit): SemanticAnalysisOptions<AsmType, ContextType> {
+    fun semanticAnalysis(init: SemanticAnalysisOptionsBuilder<AsmType, ContextType>.() -> Unit){
         val b = SemanticAnalysisOptionsBuilder<AsmType, ContextType>()
         b.init()
-        return b.build()
+        _semanticAnalyser = b.build()
     }
 
     fun build(): ProcessOptions<AsmType, ContextType> {
