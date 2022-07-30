@@ -21,8 +21,6 @@ import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
 import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.processor.*
@@ -79,7 +77,8 @@ object Agl {
         try {
             val aglProc = Agl.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
             val aglOpts = aglOptions ?: Agl.registry.agl.grammar.processor?.optionsDefault()
-            val (grammars, issues) = aglProc.process(grammarDefinitionStr, aglOpts)
+            val result = aglProc.process(grammarDefinitionStr, aglOpts)
+            val grammars = result.asm
             return if (null != grammars) {
                 val grammar = grammars.last()
                 processorFromGrammar(
@@ -88,15 +87,15 @@ object Agl {
                         targetGrammarName(grammar.name)
                         defaultGoalRuleName(grammar.rule.first { it.isSkip.not() }.name)
                         syntaxAnalyser(SyntaxAnalyserSimple(TypeModelFromGrammar(grammar).derive()))
-                        semanticAnalyser(SemanticAnalyserSimple())
+                        semanticAnalyserResolver(SemanticAnalyserSimple())
                         formatter(null) //TODO
                     }
                 )
             } else {
-                if (issues.isEmpty()) {
+                if (result.issues.isEmpty()) {
                     throw LanguageProcessorException("Unable to parse grammarDefinitionStr - unknown reason", null)
                 } else {
-                    val issuesStr = issues.joinToString(separator = "\n") {
+                    val issuesStr = result.issues.joinToString(separator = "\n") {
                         "at line: ${it.location?.line} column: ${it.location?.column} expected one of: ${it.data}"
                     }
                     throw LanguageProcessorException("Unable to parse grammarDefinitionStr:\n $issuesStr", null)
@@ -125,7 +124,8 @@ object Agl {
         val aglOpts = aglOptions ?: Agl.registry.agl.grammar.processor?.optionsDefault()
         try {
             val aglProc = Agl.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
-            val (grammars, issues) = aglProc.process(grammarDefinitionStr, aglOpts)
+            val result = aglProc.process(grammarDefinitionStr, aglOpts)
+            val grammars = result.asm
             if (null != grammars) {
                 val goal = config.defaultGoalRuleName ?: grammars.last().rule.first { it.isSkip.not() }.name
                 //TODO: what to do with issues if there are any?
@@ -139,10 +139,10 @@ object Agl {
                     else -> processorFromGrammar(grammars.last(), config)
                 }
             } else {
-                if (issues.isEmpty()) {
+                if (result.issues.isEmpty()) {
                     throw LanguageProcessorException("Unable to parse grammarDefinitionStr - unknown reason", null)
                 } else {
-                    val issuesStr = issues.joinToString(separator = "\n") {
+                    val issuesStr = result.issues.joinToString(separator = "\n") {
                         "at line: ${it.location?.line} column: ${it.location?.column} expected one of: ${it.data}"
                     }
                     throw LanguageProcessorException("Unable to parse grammarDefinitionStr:\n $issuesStr", null)

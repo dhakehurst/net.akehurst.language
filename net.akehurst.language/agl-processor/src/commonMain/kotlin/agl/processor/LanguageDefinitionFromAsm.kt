@@ -44,7 +44,7 @@ class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
         val config = Agl.configuration<AsmType, ContextType> {
             defaultGoalRuleName(defaultGoalRule)
             syntaxAnalyser(syntaxAnalyser)
-            semanticAnalyser(semanticAnalyser)
+            semanticAnalyserResolver(semanticAnalyser)
         }
         val proc = Agl.processorFromGrammar(_grammarAsm, config)
         if(buildForDefaultGoal) proc.buildFor(null) //null options will use default goal

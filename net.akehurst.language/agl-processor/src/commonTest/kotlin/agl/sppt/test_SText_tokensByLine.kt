@@ -257,10 +257,10 @@ FQN = ID ('.' ID)*;
 
     @Test
     fun t1() {
-        val (sppt,issues) = processor.parse("after 10 s / raise ABC.intEvent", processor.parserOptions { goalRuleName("StateScope") })
-        assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
-        val actual = sppt.tokensByLine(0)
+        val result = processor.parse("after 10 s / raise ABC.intEvent", processor.parseOptions { goalRuleName("StateScope") })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(),result.issues)
+        val actual = result.sppt!!.tokensByLine(0)
 
         assertEquals("after", actual[0].matchedText)
     }

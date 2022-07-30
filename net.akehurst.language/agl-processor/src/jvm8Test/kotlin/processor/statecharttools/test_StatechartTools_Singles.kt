@@ -28,18 +28,19 @@ class test_StatechartTools_Singles {
         private val grammarStr2 = this::class.java.getResource("/statechart-tools/SText.agl")?.readText() ?: error("File not found")
 
         // must create processor for 'Expressions' so that SText can extend it
-        val exprProcessor = Agl.processorFromString<Any,Any>(grammarStr1)
-        var processor: LanguageProcessor<Any,Any> = Agl.processorFromString(grammarStr2)
+        val exprProcessor = Agl.processorFromString<Any, Any>(grammarStr1)
+        var processor: LanguageProcessor<Any, Any> = Agl.processorFromString(grammarStr2)
     }
 
     @Test
     fun ConditionalExpression_integer() {
         val goal = "Expression"
         val sentence = "integer"
-        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
-        val resultStr = sppt.asString
+        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+
+        val resultStr = result.sppt!!.asString
         assertEquals(sentence, resultStr)
     }
 
@@ -47,10 +48,11 @@ class test_StatechartTools_Singles {
     fun ConditionalExpression_97() {
         val goal = "Expression"
         val sentence = "97"
-        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
-        val resultStr = sppt.asString
+        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+
+        val resultStr = result.sppt!!.asString
         assertEquals(sentence, resultStr)
     }
 
@@ -58,10 +60,11 @@ class test_StatechartTools_Singles {
     fun AssignmentExpression_integer_AS_97() {
         val goal = "Expression"
         val sentence = "integer = 97"
-        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
-        val resultStr = sppt.asString
+        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+
+        val resultStr = result.sppt!!.asString
         assertEquals(sentence, resultStr)
     }
 
@@ -69,10 +72,11 @@ class test_StatechartTools_Singles {
     fun ScopeDeclaration_integer_AS_97() {
         val goal = "ScopeDeclaration"
         val sentence = "var MyVar : integer = 97"
-        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
-        val resultStr = sppt.asString
+        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+
+        val resultStr = result.sppt!!.asString
         assertEquals(sentence, resultStr)
     }
 

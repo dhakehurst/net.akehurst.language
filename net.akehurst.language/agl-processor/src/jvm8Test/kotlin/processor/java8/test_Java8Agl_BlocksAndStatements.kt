@@ -35,12 +35,12 @@ class test_Java8Agl_BlocksAndStatements(val data: Data) {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
 
-        val processor : LanguageProcessor<Any,Any> by lazy {
+        val processor: LanguageProcessor<Any, Any> by lazy {
             Agl.processorFromString(grammarStr, Agl.configuration { targetGrammarName("BlocksAndStatements"); defaultGoalRuleName("Block") })
         }
 
         var sourceFiles = arrayOf(
-                "/java8/sentences/blocks-valid.txt"
+            "/java8/sentences/blocks-valid.txt"
         )
 
         @JvmStatic
@@ -80,12 +80,12 @@ class test_Java8Agl_BlocksAndStatements(val data: Data) {
 
     @Test
     fun test() {
-        val (sppt,issues) = processor.parse(this.data.text)
-        assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
-        val resultStr = sppt.asString
+        val result = processor.parse(this.data.text)
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
+        val resultStr = result.sppt!!.asString
         assertEquals(this.data.text, resultStr)
-        assertEquals(1, sppt.maxNumHeads)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
 }

@@ -92,8 +92,8 @@ internal class test_sList_compositeMulti : test_AutomatonAbstract() {
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("","n","n,n","n,n,n", "n;n","n;n;n","n,n;n,n","n,n,n;n,n,n;n,n,n")
         for(sen in sentences) {
-            val (sppt, issues) = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
-            if (issues.isNotEmpty())  issues.forEach { println(it) }
+            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            if (result.issues.isNotEmpty())  result.issues.forEach { println(it) }
         }
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
         val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)

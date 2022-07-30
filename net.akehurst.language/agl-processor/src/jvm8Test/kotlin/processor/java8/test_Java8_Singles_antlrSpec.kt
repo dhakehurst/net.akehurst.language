@@ -55,7 +55,7 @@ class test_Java8_Singles_antlrSpec {
                 }
             )
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
-            proc.buildFor(proc.parserOptions { goalRuleName(forRule) })
+            proc.buildFor(proc.parseOptions { goalRuleName(forRule) })
             return proc
         }
     }
@@ -65,9 +65,9 @@ class test_Java8_Singles_antlrSpec {
         val sentence = "0"
         val goal = "literal"
 
-        val (sppt, issues) = proc.parse(sentence, proc.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
+        val result = proc.parse(sentence, proc.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
@@ -78,11 +78,11 @@ class test_Java8_Singles_antlrSpec {
         val p = Agl.processorFromString(grammarStr, Agl.configuration { defaultGoalRuleName(goal) })
 
         val sentence = "int"
-        val (sppt, issues) = p.parse(sentence, proc.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
+        val result = p.parse(sentence, proc.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
 
-        assertEqualsWarning(1, sppt.maxNumHeads)
+        assertEqualsWarning(1, result.sppt!!.maxNumHeads)
     }
 
     @Test
@@ -91,27 +91,27 @@ class test_Java8_Singles_antlrSpec {
         val sentence = "import x; @An() interface An {  }"
         val goal = "compilationUnit"
 
-        val (sppt, issues) = proc.parse(sentence, proc.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
+        val result = proc.parse(sentence, proc.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
     fun arrayIndex() {
         val sentence = "a[0]"
         val goal = "expression"
-        val (sppt, issues) = proc.parse(sentence, proc.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
+        val result = proc.parse(sentence, proc.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
     fun t() {
         val sentence = "a[0].b"
         val goal = "expression"
-        val (sppt, issues) = proc.parse(sentence, proc.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
+        val result = proc.parse(sentence, proc.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
@@ -119,9 +119,9 @@ class test_Java8_Singles_antlrSpec {
         val sentence = "0b011"
         val goal = "variableInitializer"
 
-        val (sppt, issues) = proc.parse(sentence, proc.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
+        val result = proc.parse(sentence, proc.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
 
     }
 
@@ -130,8 +130,8 @@ class test_Java8_Singles_antlrSpec {
         val sentence = "0b012"
         val goal = "variableInitializer"
 
-        val (sppt, issues) = proc.parse(sentence, proc.parserOptions { goalRuleName(goal) })
-        assertNull(sppt)
+        val result = proc.parse(sentence, proc.parseOptions { goalRuleName(goal) })
+        assertNull(result.sppt)
         assertEquals(
             listOf(
                 LanguageIssue(
@@ -164,7 +164,7 @@ class test_Java8_Singles_antlrSpec {
                         "'?'"
                     )
                 )
-            ), issues
+            ), result.issues
         )
 
     }
@@ -192,8 +192,8 @@ public class BadBinaryLiterals {
 }
             """.trimIndent()
         val goal = "compilationUnit"
-        val (sppt, issues) = proc.parse(sentence, proc.parserOptions { goalRuleName(goal) })
-        assertNull(sppt)
+        val result = proc.parse(sentence, proc.parseOptions { goalRuleName(goal) })
+        assertNull(result.sppt)
         assertEquals(
             listOf(
                 LanguageIssue(
@@ -201,7 +201,7 @@ public class BadBinaryLiterals {
                     "...t1 = 0b01.^01;  // no...",
                     setOf("'new'", "'<'", "Identifier")
                 )
-            ), issues
+            ), result.issues
         )
 
     }
@@ -210,37 +210,37 @@ public class BadBinaryLiterals {
     fun UnannQualifiedTypeReference1() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "blockStatement"
-        val (sppt, issues) = proc.parse(sentence, proc.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
+        val result = proc.parse(sentence, proc.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
     fun UnannQualifiedTypeReference2() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "blockStatement"
-        val (sppt, issues) = proc.parse(sentence, proc.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
+        val result = proc.parse(sentence, proc.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
     fun UnannQualifiedTypeReference() {
         val sentence = "{ Map.@An Entry<Object,Object> x; }"
         val goal = "block"
-        val (sppt, issues) = proc.parse(sentence, proc.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
+        val result = proc.parse(sentence, proc.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
     fun Enum() {
         val sentence = "enum E { A, B, C }"
         val goal = "classDeclaration"
-        val (sppt, issues) = proc.parse(sentence, proc.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
-        val resultStr = SPPT2InputText().visitTree(sppt, "")
+        val result = proc.parse(sentence, proc.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -248,11 +248,11 @@ public class BadBinaryLiterals {
     fun xx() {
         val sentence = "interface An { An[] value(); }"
         val goal = "compilationUnit"
-        val (sppt, issues) = proc.parse(sentence, proc.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
+        val result = proc.parse(sentence, proc.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
 
-        val resultStr = SPPT2InputText().visitTree(sppt, "")
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
@@ -305,14 +305,14 @@ public class BadBinaryLiterals {
         val goal = "block"
 
         val t = TimeSource.Monotonic.measureTimedValue {
-            proc.parse(sentence, proc.parserOptions { goalRuleName(goal) })
+            proc.parse(sentence, proc.parseOptions { goalRuleName(goal) })
         }
         println(t.duration)
-        val (sppt, issues) = t.value
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
+        val result = t.value
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
 
-        val resultStr = SPPT2InputText().visitTree(sppt, "")
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 

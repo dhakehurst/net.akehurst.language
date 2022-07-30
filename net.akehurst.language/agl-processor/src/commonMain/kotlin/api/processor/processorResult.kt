@@ -19,32 +19,32 @@ package net.akehurst.language.api.processor
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-data class ParseResult(
-    val sppt:SharedPackedParseTree?,
-    val issues:List<LanguageIssue>
-)
+interface ParseResult {
+    val sppt: SharedPackedParseTree?
+    val issues: List<LanguageIssue>
+}
 
-data class SyntaxAnalysisResult<AsmType>(
-    val asm:AsmType?,
-    val issues:List<LanguageIssue>,
-    val locationMap:Map<Any, InputLocation>
-)
+interface SyntaxAnalysisResult<AsmType: Any> {
+    val asm: AsmType?
+    val issues: List<LanguageIssue>
+    val locationMap: Map<Any, InputLocation>
+}
 
-data class SemanticAnalysisResult(
-    val issues:List<LanguageIssue>
-)
+interface SemanticAnalysisResult {
+    val issues: List<LanguageIssue>
+}
 
-data class  ProcessResult<AsmType>(
-    val asm:AsmType?,
-    val issues:List<LanguageIssue>
-)
+interface  ProcessResult<AsmType: Any> {
+    val asm: AsmType?
+    val issues: List<LanguageIssue>
+}
 
-data class FormatResult(
-    val sentence:String?,
-    val issues:List<LanguageIssue>
-)
+interface FormatResult {
+    val sentence: String?
+    val issues: List<LanguageIssue>
+}
 
-data class ExpectedAtResult(
-    val items:List<CompletionItem>,
+interface ExpectedAtResult{
+    val items:List<CompletionItem>
     val issues:List<LanguageIssue>
-)
+}

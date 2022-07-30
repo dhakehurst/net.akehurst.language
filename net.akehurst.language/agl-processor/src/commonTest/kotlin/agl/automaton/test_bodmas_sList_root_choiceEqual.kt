@@ -64,10 +64,10 @@ internal class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_v() {
         val parser = ScanOnDemandParser(rrs)
-        val (sppt, issues) = parser.parseForGoal("S", "v", AutomatonKind.LOOKAHEAD_1)
-        assertNotNull(sppt)
-        assertEquals(0, issues.size)
-        assertEquals(1, sppt.maxNumHeads)
+        val result = parser.parseForGoal("S", "v", AutomatonKind.LOOKAHEAD_1)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
@@ -76,8 +76,8 @@ internal class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
             val s2 = state(RP(R, o0, EOR))     /* R = v . */
             val s3 = state(RP(E, o0, EOR))     /* E = R . */
             val s4 = state(RP(S, o0, EOR))     /* S = E . */
-            val s5 = state(RP(rA,OLI,PLS))     /* A = [E . a ...]2+ */
-            val s6 = state(RP(rM,OLI,PLS))     /* M = [E . m ...]2+ */
+            val s5 = state(RP(rA, OLI, PLS))     /* A = [E . a ...]2+ */
+            val s6 = state(RP(rM, OLI, PLS))     /* M = [E . m ...]2+ */
             val s7 = state(RP(G, o0, EOR))     /* G = . S   */
 
             transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(v); lhg(setOf(EOT, m, a)) }
@@ -85,7 +85,7 @@ internal class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
             transition(HEIGHT) { ctx(G, o0, SOR); src(E); tgt(rA, OLI, PLS); lhg(setOf(a), setOf(EOT, m, a)) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(R); tgt(E); lhg(setOf(EOT), setOf(EOT)); lhg(setOf(m), setOf(m)); lhg(setOf(a), setOf(a)) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(E); tgt(rM, OLI, PLS); lhg(setOf(m), setOf(EOT, m, a)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(v); tgt(R);  lhg(setOf(EOT), setOf(EOT)); lhg(setOf(m), setOf(m)); lhg(setOf(a), setOf(a)) }
+            transition(HEIGHT) { ctx(G, o0, SOR); src(v); tgt(R); lhg(setOf(EOT), setOf(EOT)); lhg(setOf(m), setOf(m)); lhg(setOf(a), setOf(a)) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)) }
 
         }
@@ -96,11 +96,11 @@ internal class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_vmv() {
         val parser = ScanOnDemandParser(rrs)
-        val (sppt, issues) = parser.parseForGoal("S", "vmv", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "vmv", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
-        assertNotNull(sppt)
-        assertEquals(0, issues.size)
-        assertEquals(1, sppt.maxNumHeads)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
@@ -121,10 +121,10 @@ internal class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
         //val sentences = listOf( "vav")
         sentences.forEach {
             println(it)
-            val (sppt, issues) = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
-            assertNotNull(sppt, issues.joinToString("\n") { it.toString() })
-            assertEquals(0, issues.size)
-            assertEquals(1, sppt.maxNumHeads)
+            val result = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
+            assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+            assertEquals(0, result.issues.size)
+            assertEquals(1, result.sppt!!.maxNumHeads)
         }
         println(rrs.usedAutomatonToString("S"))
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
@@ -204,10 +204,10 @@ internal class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
         val sentences = listOf("v", "vav", "vavav", "vmv", "vmvmv", "vmvav", "vavmv")
         sentences.forEach {
             val parser = ScanOnDemandParser(rrs)
-            val (sppt, issues) = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
-            assertNotNull(sppt, issues.joinToString("\n") { it.toString() })
-            assertEquals(0, issues.size)
-            assertEquals(1, sppt.maxNumHeads)
+            val result = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
+            assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+            assertEquals(0, result.issues.size)
+            assertEquals(1, result.sppt!!.maxNumHeads)
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
@@ -275,10 +275,10 @@ internal class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("v", "vav", "vavav", "vmv", "vmvmv", "vmvav", "vavmv")
         for (sen in sentences) {
-            val (sppt, issues) = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
-            if (issues.isNotEmpty()) {
+            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            if (result.issues.isNotEmpty()) {
                 println("Sentence: $sen")
-                issues.forEach { println(it) }
+                result.issues.forEach { println(it) }
             }
         }
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")

@@ -54,13 +54,13 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     /**
      * get the default options for this parser
      */
-    fun parserOptionsDefault() : ParseOptions
+    fun parseOptionsDefault() : ParseOptions
 
     /**
      * build a set of options for this parser
      * (does not set the options, they must be passed as argument)
      */
-    fun parserOptions(init: ParseOptionsBuilder.() -> Unit):ParseOptions
+    fun parseOptions(init: ParseOptionsBuilder.() -> Unit):ParseOptions
 
     /**
      * get the default options for this language processor

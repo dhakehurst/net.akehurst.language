@@ -104,12 +104,20 @@ internal class RuntimeParser(
         }
     }
 
-    /*
+
     fun resetGraphToLastGrown() {
+
+        for(trip in this.lastGrown) {
+            this.graph.pushback(trip)
+        }
+
+        /*
         this.graph._gss = this._lastGss
         for (r in this.graph._gss.roots) {
             this.graph._growingHeadHeap[r] = GrowingNode(this.graph, r)
         }
+        */
+
         // this.graph.replaceHeads(this.lastGrown)
         //val maxLastGrown = this.lastGrown.maxOf { it.nextInputPosition }
         //this.lastGrown.filter { it.nextInputPosition==maxLastGrown }.forEach { gn ->
@@ -124,7 +132,7 @@ internal class RuntimeParser(
         //     }
         // }
     }
-*/
+
     fun rememberForErrorComputation(toProcess: ParseGraph.Companion.ToProcessTriple) {
         //this.grownInThisPass.add(gn)
         //var set = this.grownInThisPassPrevious[gn]

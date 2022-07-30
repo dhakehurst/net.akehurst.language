@@ -45,7 +45,7 @@ public class test_LanguageProcessor {
 
     @Test
     public void parse_defaultOptions() {
-        ParseOptions options = proc.parserOptionsDefault();
+        ParseOptions options = proc.parseOptionsDefault();
         options.setGoalRuleName("H");
         ParseResult result = proc.parse("world !", options);
 
@@ -56,7 +56,7 @@ public class test_LanguageProcessor {
     @Test
     public void parse_buildOptions() {
 
-        ParseResult result = proc.parse("world !", proc.parserOptions( KotlinFromJava.toKotlin(  b-> {
+        ParseResult result = proc.parse("world !", proc.parseOptions( KotlinFromJava.toKotlin(b-> {
             b.goalRuleName("H");
             return Unit.INSTANCE;
         })));

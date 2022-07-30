@@ -23,7 +23,7 @@ import net.akehurst.language.api.parser.InputLocation
 internal class LanguageProcessorConfigurationDefault<AsmType : Any, ContextType : Any>(
     override var targetGrammarName: String? = null,
     override var defaultGoalRuleName: String? = null,
-    override var syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>? = null,
+    override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null,
     override var semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? = null,
     override var formatter: Formatter? = null
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
@@ -57,8 +57,8 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any> {
 
     private var _targetGrammarName: String? = null
     private var _defaultGoalRuleName: String? = null
-    private var _syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>? = null
-    private var _semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? = null
+    private var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null
+    private var _semanticAnalyserResolver: SemanticAnalyser<AsmType, ContextType>? = null
     private var _formatter: Formatter? = null
 
     fun targetGrammarName(value:String?) {
@@ -69,12 +69,12 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any> {
         _defaultGoalRuleName=value
     }
 
-    fun syntaxAnalyser(value: SyntaxAnalyser<AsmType, ContextType>?) {
-        _syntaxAnalyser = value
+    fun syntaxAnalyser(func: SyntaxAnalyserResolver<AsmType, ContextType>?) {
+        _syntaxAnalyserResolver = func
     }
 
-    fun semanticAnalyser(value: SemanticAnalyser<AsmType, ContextType>?) {
-        _semanticAnalyser = value
+    fun semanticAnalyserResolver(value: SemanticAnalyser<AsmType, ContextType>?) {
+        _semanticAnalyserResolver = value
     }
 
     fun formatter(value:Formatter?) {
@@ -85,8 +85,8 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any> {
         return LanguageProcessorConfigurationDefault<AsmType, ContextType>(
             _targetGrammarName,
             _defaultGoalRuleName,
-            _syntaxAnalyser,
-            _semanticAnalyser,
+            _syntaxAnalyserResolver,
+            _semanticAnalyserResolver,
             _formatter
         )
     }
@@ -131,7 +131,7 @@ class ParseOptionsBuilder {
     private var _goalRuleName: String? = null
     private var _automatonKind: AutomatonKind = AutomatonKind.LOOKAHEAD_1
 
-    fun goalRuleName(value: String) {
+    fun goalRuleName(value: String?) {
         _goalRuleName = value
     }
 

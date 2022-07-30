@@ -160,8 +160,8 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("abcdefghi")
         for(sen in sentences) {
-            val (sppt, issues) = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
-            if (issues.isNotEmpty())  issues.forEach { println(it) }
+            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            if (result.issues.isNotEmpty())  result.issues.forEach { println(it) }
         }
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
         val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)

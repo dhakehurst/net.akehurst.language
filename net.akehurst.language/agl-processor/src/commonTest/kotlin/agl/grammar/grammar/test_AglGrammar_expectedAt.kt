@@ -27,78 +27,78 @@ class test_AglGrammar_expectedAt {
     fun empty() {
 
         val sentence = ""
-        val (actual,issues) = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 0, 1)
+        val result = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 0, 1)
 
         val expected = listOf<CompletionItem>(
-                CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("namespace").name, "namespace")
+            CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("namespace").name, "namespace")
         )
 
-        assertEquals(expected, actual)
+        assertEquals(expected, result.items)
     }
 
     @Test
     fun WS() {
 
         val sentence = " "
-        val (actual,issues) = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 0, 1)
+        val result = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 0, 1)
 
         val expected = listOf<CompletionItem>(
-                CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("namespace").name, "namespace")
+            CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("namespace").name, "namespace")
         )
 
-        assertEquals(expected, actual)
+        assertEquals(expected, result.items)
     }
 
     @Test
     fun namespace() {
 
         val sentence = "namespace"
-        val (actual,issues) = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 9, 1)
+        val result = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 9, 1)
 
         val expected = listOf<CompletionItem>(
-                CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("IDENTIFIER").name, "IDENTIFIER")
+            CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("IDENTIFIER").name, "IDENTIFIER")
         )
 
-        assertEquals(expected, actual)
+        assertEquals(expected, result.items)
     }
 
     @Test
     fun namespace_WS() {
 
         val sentence = "namespace "
-        val (actual,issues) = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 10, 1)
+        val result = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 10, 1)
 
         val expected = listOf<CompletionItem>(
-                CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("IDENTIFIER").name, "IDENTIFIER")
+            CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("IDENTIFIER").name, "IDENTIFIER")
         )
 
-        assertEquals(expected, actual)
+        assertEquals(expected, result.items)
     }
 
     @Test
     fun namespace_WS_n() {
 
         val sentence = "namespace n"
-        val (actual,issues) = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 11, 1)
+        val result = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 11, 1)
 
         val expected = listOf<CompletionItem>(
-                CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("qualifiedName").name, "."),
-                CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("grammar").name, "grammar")
+            CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("qualifiedName").name, "."),
+            CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("grammar").name, "grammar")
         )
 
-        assertEquals(expected, actual)
+        assertEquals(expected, result.items)
     }
 
     @Test
     fun namespace_WS_n_grammar() {
 
         val sentence = "namespace n grammar"
-        val (actual,issues) = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, sentence.length, 1)
+        val result = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, sentence.length, 1)
 
         val expected = listOf<CompletionItem>(
-                CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("IDENTIFIER").name, "IDENTIFIER")
+            CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("IDENTIFIER").name, "IDENTIFIER")
         )
 
-        assertEquals(expected, actual)
+        assertEquals(expected, result.items)
     }
 }

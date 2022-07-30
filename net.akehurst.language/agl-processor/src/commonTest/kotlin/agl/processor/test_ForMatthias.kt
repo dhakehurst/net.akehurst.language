@@ -21,7 +21,7 @@ import kotlin.test.Test
 internal class test_ForMatthias {
 
     private companion object {
-        const val goal = ""
+        const val goal = "conceptDefinition"
         val grammarStr = """
             namespace test
             grammar Matthias {
@@ -49,7 +49,7 @@ internal class test_ForMatthias {
               }
             }
         """.trimIndent(),
-            p.parserOptions { goalRuleName(goal) }
+            p.parseOptions { goalRuleName(goal) }
         )
     }
 
@@ -63,7 +63,7 @@ internal class test_ForMatthias {
               }
             }
         """.trimIndent(),
-            p.parserOptions { goalRuleName(goal) }
+            p.parseOptions { goalRuleName(goal) }
         )
     }
 
@@ -78,7 +78,7 @@ internal class test_ForMatthias {
               }
             }
         """.trimIndent(),
-            p.parserOptions { goalRuleName(goal) }
+            p.parseOptions { goalRuleName(goal) }
         )
     }
 
@@ -90,7 +90,7 @@ internal class test_ForMatthias {
 
             }
         """.trimIndent(),
-            p.parserOptions { goalRuleName(goal) }
+            p.parseOptions { goalRuleName("properties") }
         )
     }
 }

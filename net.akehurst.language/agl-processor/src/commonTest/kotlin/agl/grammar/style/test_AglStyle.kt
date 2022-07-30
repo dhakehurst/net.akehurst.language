@@ -20,10 +20,10 @@ class test_AglStyle {
             // single line comment
         """.trimIndent()
 
-        val (p,i) = aglProc.process(text)
+        val result = aglProc.process(text)
 
-        assertNotNull(p)
-        assertEquals(0, p.size)
+        assertNotNull(result.asm)
+        assertEquals(0, result.asm?.size)
     }
 
     @Test
@@ -36,10 +36,10 @@ class test_AglStyle {
             */
         """.trimIndent()
 
-        val (p,i) = aglProc.process(text)
+        val result = aglProc.process(text)
 
-        assertNotNull(p)
-        assertEquals(0, p.size)
+        assertNotNull(result.asm)
+        assertEquals(0, result.asm?.size)
     }
 
     @Test
@@ -49,10 +49,10 @@ class test_AglStyle {
             selector { }
         """.trimIndent()
 
-        val (actual,i) = aglProc.process(text)
+        val result = aglProc.process(text)
 
-        assertNotNull(actual)
-        assertEquals(1, actual.size)
+        assertNotNull(result.asm)
+        assertEquals(1, result.asm?.size)
     }
 
     @Test
@@ -65,12 +65,12 @@ class test_AglStyle {
             }
         """.trimIndent()
 
-        val (actual,i) = aglProc.process(text)
+        val result = aglProc.process(text)
 
-        assertNotNull(actual)
-        assertEquals(1, actual.size)
-        assertEquals("class", actual[0].selector.first())
-        assertEquals(2, actual[0].styles.size)
+        assertNotNull(result.asm)
+        assertEquals(1, result.asm?.size)
+        assertEquals("class", result.asm!![0].selector.first())
+        assertEquals(2, result.asm!![0].styles.size)
     }
 
     @Test
@@ -87,10 +87,10 @@ class test_AglStyle {
             }
         """.trimIndent()
 
-        val (actual,i) = aglProc.process(text)
+        val result = aglProc.process(text)
 
-        assertNotNull(actual)
-        assertEquals(2, actual.size)
+        assertNotNull(result.asm)
+        assertEquals(2, result.asm?.size)
     }
 
     @Test
@@ -102,10 +102,10 @@ class test_AglStyle {
             }
         """.trimIndent()
 
-        val (actual,i) = aglProc.process(text)
+        val result = aglProc.process(text)
 
-        assertNotNull(actual)
-        assertEquals(1, actual.size)
+        assertNotNull(result.asm)
+        assertEquals(1, result.asm?.size)
     }
 
     @Test
@@ -115,9 +115,9 @@ class test_AglStyle {
             selector1,selector2,selector { }
         """.trimIndent()
 
-        val (actual,i) = aglProc.process(text)
+        val result = aglProc.process(text)
 
-        assertNotNull(actual)
-        assertEquals(1, actual.size)
+        assertNotNull(result.asm)
+        assertEquals(1, result.asm?.size)
     }
 }

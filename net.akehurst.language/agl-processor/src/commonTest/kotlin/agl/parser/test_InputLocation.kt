@@ -41,15 +41,17 @@ internal class test_InputLocation_singleLine {
     fun abc() {
         val sp = ScanOnDemandParser(S)
 
-        val (actual,issues) = sp.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        val result = sp.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
 
-        assertNotNull(actual)
-        assertEquals(InputLocation(0, 1, 1, 3), actual.root.location)
-        assertEquals(InputLocation(0, 1, 1, 1), actual.root.asBranch.children[0].location)
-        assertEquals(InputLocation(1, 2, 1, 1), actual.root.asBranch.children[1].location)
-        assertEquals(InputLocation(2, 3, 1, 1), actual.root.asBranch.children[2].location)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(emptyList(),issues)
+        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.root.location)
+        assertEquals(InputLocation(0, 1, 1, 1), result.sppt!!.root.asBranch.children[0].location)
+        assertEquals(InputLocation(1, 2, 1, 1), result.sppt!!.root.asBranch.children[1].location)
+        assertEquals(InputLocation(2, 3, 1, 1), result.sppt!!.root.asBranch.children[2].location)
+
     }
 
 }
@@ -72,32 +74,36 @@ class test_InputLocation_multiLine {
     fun abc() {
         val sp = ScanOnDemandParser(S)
 
-        val (actual,issues) = sp.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        val result = sp.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
 
-        assertNotNull(actual)
-        assertEquals(InputLocation(0, 1, 1, 3), actual.root.location)
-        assertEquals(InputLocation(0, 1, 1, 1), actual.root.asBranch.children[0].location)
-        assertEquals(InputLocation(1, 2, 1, 1), actual.root.asBranch.children[1].location)
-        assertEquals(InputLocation(2, 3, 1, 1), actual.root.asBranch.children[2].location)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(emptyList(),issues)
+        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.root.location)
+        assertEquals(InputLocation(0, 1, 1, 1), result.sppt!!.root.asBranch.children[0].location)
+        assertEquals(InputLocation(1, 2, 1, 1), result.sppt!!.root.asBranch.children[1].location)
+        assertEquals(InputLocation(2, 3, 1, 1), result.sppt!!.root.asBranch.children[2].location)
+
     }
 
     @Test
     fun a_b_c() {
         val sp = ScanOnDemandParser(S)
 
-        val (actual,issues) = sp.parseForGoal("S", "a b c", AutomatonKind.LOOKAHEAD_1)
+        val result = sp.parseForGoal("S", "a b c", AutomatonKind.LOOKAHEAD_1)
 
-        assertNotNull(actual)
-        assertEquals(InputLocation(0, 1, 1, 5), actual.root.location)
-        assertEquals(InputLocation(0, 1, 1, 1), actual.root.asBranch.children[0].location)
-        assertEquals(InputLocation(1, 2, 1, 1), actual.root.asBranch.children[1].location)
-        assertEquals(InputLocation(2, 3, 1, 1), actual.root.asBranch.children[2].location)
-        assertEquals(InputLocation(3, 4, 1, 1), actual.root.asBranch.children[3].location)
-        assertEquals(InputLocation(4, 5, 1, 1), actual.root.asBranch.children[4].location)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(emptyList(),issues)
+        assertEquals(InputLocation(0, 1, 1, 5), result.sppt!!.root.location)
+        assertEquals(InputLocation(0, 1, 1, 1), result.sppt!!.root.asBranch.children[0].location)
+        assertEquals(InputLocation(1, 2, 1, 1), result.sppt!!.root.asBranch.children[1].location)
+        assertEquals(InputLocation(2, 3, 1, 1), result.sppt!!.root.asBranch.children[2].location)
+        assertEquals(InputLocation(3, 4, 1, 1), result.sppt!!.root.asBranch.children[3].location)
+        assertEquals(InputLocation(4, 5, 1, 1), result.sppt!!.root.asBranch.children[4].location)
+
     }
 
 
@@ -105,26 +111,30 @@ class test_InputLocation_multiLine {
     fun aNLbNLc() {
         val sp = ScanOnDemandParser(S)
 
-        val (actual,issues) = sp.parseForGoal("S", """
+        val result = sp.parseForGoal(
+            "S", """
             a
             b
             c
-        """.trimIndent(), AutomatonKind.LOOKAHEAD_1)
+        """.trimIndent(), AutomatonKind.LOOKAHEAD_1
+        )
 
-        assertNotNull(actual)
-        assertEquals(InputLocation(0, 1, 1, 5), actual.root.location)
-        assertEquals("a", actual.root.asBranch.children[0].matchedText)
-        assertEquals(InputLocation(0, 1, 1, 1), actual.root.asBranch.children[0].location)
-        assertEquals("\n", actual.root.asBranch.children[1].matchedText)
-        assertEquals(InputLocation(1, 2, 1, 1), actual.root.asBranch.children[1].location)
-        assertEquals("b", actual.root.asBranch.children[2].matchedText)
-        assertEquals(InputLocation(2, 1, 2, 1), actual.root.asBranch.children[2].location)
-        assertEquals("\n", actual.root.asBranch.children[3].matchedText)
-        assertEquals(InputLocation(3, 2, 2, 1), actual.root.asBranch.children[3].location)
-        assertEquals("c", actual.root.asBranch.children[4].matchedText)
-        assertEquals(InputLocation(4, 1, 3, 1), actual.root.asBranch.children[4].location)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(emptyList(),issues)
+        assertEquals(InputLocation(0, 1, 1, 5), result.sppt!!.root.location)
+        assertEquals("a", result.sppt!!.root.asBranch.children[0].matchedText)
+        assertEquals(InputLocation(0, 1, 1, 1), result.sppt!!.root.asBranch.children[0].location)
+        assertEquals("\n", result.sppt!!.root.asBranch.children[1].matchedText)
+        assertEquals(InputLocation(1, 2, 1, 1), result.sppt!!.root.asBranch.children[1].location)
+        assertEquals("b", result.sppt!!.root.asBranch.children[2].matchedText)
+        assertEquals(InputLocation(2, 1, 2, 1), result.sppt!!.root.asBranch.children[2].location)
+        assertEquals("\n", result.sppt!!.root.asBranch.children[3].matchedText)
+        assertEquals(InputLocation(3, 2, 2, 1), result.sppt!!.root.asBranch.children[3].location)
+        assertEquals("c", result.sppt!!.root.asBranch.children[4].matchedText)
+        assertEquals(InputLocation(4, 1, 3, 1), result.sppt!!.root.asBranch.children[4].location)
+
     }
 }
 
@@ -146,58 +156,66 @@ class test_InputLocation_multiLine2 {
     fun abc() {
         val sp = ScanOnDemandParser(S)
 
-        val (actual,issues) = sp.parseForGoal("S", "aaabbbccc", AutomatonKind.LOOKAHEAD_1)
+        val result = sp.parseForGoal("S", "aaabbbccc", AutomatonKind.LOOKAHEAD_1)
 
-        assertNotNull(actual)
-        assertEquals(InputLocation(0, 1, 1, 9), actual.root.location)
-        assertEquals(InputLocation(0, 1, 1, 3), actual.root.asBranch.children[0].location)
-        assertEquals(InputLocation(3, 4, 1, 3), actual.root.asBranch.children[1].location)
-        assertEquals(InputLocation(6, 7, 1, 3), actual.root.asBranch.children[2].location)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(emptyList(),issues)
+        assertEquals(InputLocation(0, 1, 1, 9), result.sppt!!.root.location)
+        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.root.asBranch.children[0].location)
+        assertEquals(InputLocation(3, 4, 1, 3), result.sppt!!.root.asBranch.children[1].location)
+        assertEquals(InputLocation(6, 7, 1, 3), result.sppt!!.root.asBranch.children[2].location)
+
     }
 
     @Test
     fun a_b_c() {
         val sp = ScanOnDemandParser(S)
 
-        val (actual,issues) = sp.parseForGoal("S", "aaa bbb ccc", AutomatonKind.LOOKAHEAD_1)
+        val result = sp.parseForGoal("S", "aaa bbb ccc", AutomatonKind.LOOKAHEAD_1)
 
-        assertNotNull(actual)
-        assertEquals(InputLocation(0, 1, 1, 11), actual.root.location)
-        assertEquals(InputLocation(0, 1, 1, 3), actual.root.asBranch.children[0].location)
-        assertEquals(InputLocation(3, 4, 1, 1), actual.root.asBranch.children[1].location)
-        assertEquals(InputLocation(4, 5, 1, 3), actual.root.asBranch.children[2].location)
-        assertEquals(InputLocation(7, 8, 1, 1), actual.root.asBranch.children[3].location)
-        assertEquals(InputLocation(8, 9, 1, 3), actual.root.asBranch.children[4].location)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(emptyList(),issues)
+        assertEquals(InputLocation(0, 1, 1, 11), result.sppt!!.root.location)
+        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.root.asBranch.children[0].location)
+        assertEquals(InputLocation(3, 4, 1, 1), result.sppt!!.root.asBranch.children[1].location)
+        assertEquals(InputLocation(4, 5, 1, 3), result.sppt!!.root.asBranch.children[2].location)
+        assertEquals(InputLocation(7, 8, 1, 1), result.sppt!!.root.asBranch.children[3].location)
+        assertEquals(InputLocation(8, 9, 1, 3), result.sppt!!.root.asBranch.children[4].location)
+
     }
 
     @Test
     fun aNLbNLc() {
         val sp = ScanOnDemandParser(S)
 
-        val (actual,issues) = sp.parseForGoal("S", """
+        val result = sp.parseForGoal(
+            "S", """
             aaa
             bbb
             ccc
-        """.trimIndent(), AutomatonKind.LOOKAHEAD_1)
+        """.trimIndent(), AutomatonKind.LOOKAHEAD_1
+        )
 
-        assertNotNull(actual)
-        assertEquals(InputLocation(0, 1, 1, 11), actual.root.location)
-        assertEquals("aaa", actual.root.asBranch.children[0].matchedText)
-        assertEquals(InputLocation(0, 1, 1, 3), actual.root.asBranch.children[0].location)
-        assertEquals("\n", actual.root.asBranch.children[1].matchedText)
-        assertEquals(InputLocation(3, 4, 1, 1), actual.root.asBranch.children[1].location)
-        assertEquals("bbb", actual.root.asBranch.children[2].matchedText)
-        assertEquals(InputLocation(4, 1, 2, 3), actual.root.asBranch.children[2].location)
-        assertEquals("\n", actual.root.asBranch.children[3].matchedText)
-        assertEquals(InputLocation(7, 4, 2, 1), actual.root.asBranch.children[3].location)
-        assertEquals("ccc", actual.root.asBranch.children[4].matchedText)
-        assertEquals(InputLocation(8, 1, 3, 3), actual.root.asBranch.children[4].location)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(emptyList(),issues)
+        assertEquals(InputLocation(0, 1, 1, 11), result.sppt!!.root.location)
+        assertEquals("aaa", result.sppt!!.root.asBranch.children[0].matchedText)
+        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.root.asBranch.children[0].location)
+        assertEquals("\n", result.sppt!!.root.asBranch.children[1].matchedText)
+        assertEquals(InputLocation(3, 4, 1, 1), result.sppt!!.root.asBranch.children[1].location)
+        assertEquals("bbb", result.sppt!!.root.asBranch.children[2].matchedText)
+        assertEquals(InputLocation(4, 1, 2, 3), result.sppt!!.root.asBranch.children[2].location)
+        assertEquals("\n", result.sppt!!.root.asBranch.children[3].matchedText)
+        assertEquals(InputLocation(7, 4, 2, 1), result.sppt!!.root.asBranch.children[3].location)
+        assertEquals("ccc", result.sppt!!.root.asBranch.children[4].matchedText)
+        assertEquals(InputLocation(8, 1, 3, 3), result.sppt!!.root.asBranch.children[4].location)
+
     }
 
     @Test
@@ -209,49 +227,55 @@ class test_InputLocation_multiLine2 {
             bbb
             ccc
         """.trimIndent()
-        val (actual,issues) = sp.parseForGoal("S", sentence, AutomatonKind.LOOKAHEAD_1)
+        val result = sp.parseForGoal("S", sentence, AutomatonKind.LOOKAHEAD_1)
 
-        assertNotNull(actual)
-        assertEquals(InputLocation(0, 1, 1, 12), actual.root.location)
-        assertEquals("\n", actual.root.asBranch.children[0].matchedText)
-        assertEquals(InputLocation(0, 1, 1, 1), actual.root.asBranch.children[0].location)
-        assertEquals("aaa", actual.root.asBranch.children[1].matchedText)
-        assertEquals(InputLocation(1, 1, 2, 3), actual.root.asBranch.children[1].location)
-        assertEquals("\n", actual.root.asBranch.children[2].matchedText)
-        assertEquals(InputLocation(4, 4, 2, 1), actual.root.asBranch.children[2].location)
-        assertEquals("bbb", actual.root.asBranch.children[3].matchedText)
-        assertEquals(InputLocation(5, 1, 3, 3), actual.root.asBranch.children[3].location)
-        assertEquals("\n", actual.root.asBranch.children[4].matchedText)
-        assertEquals(InputLocation(8, 4, 3, 1), actual.root.asBranch.children[4].location)
-        assertEquals("ccc", actual.root.asBranch.children[5].matchedText)
-        assertEquals(InputLocation(9, 1, 4, 3), actual.root.asBranch.children[5].location)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(emptyList(),issues)
+        assertEquals(InputLocation(0, 1, 1, 12), result.sppt!!.root.location)
+        assertEquals("\n", result.sppt!!.root.asBranch.children[0].matchedText)
+        assertEquals(InputLocation(0, 1, 1, 1), result.sppt!!.root.asBranch.children[0].location)
+        assertEquals("aaa", result.sppt!!.root.asBranch.children[1].matchedText)
+        assertEquals(InputLocation(1, 1, 2, 3), result.sppt!!.root.asBranch.children[1].location)
+        assertEquals("\n", result.sppt!!.root.asBranch.children[2].matchedText)
+        assertEquals(InputLocation(4, 4, 2, 1), result.sppt!!.root.asBranch.children[2].location)
+        assertEquals("bbb", result.sppt!!.root.asBranch.children[3].matchedText)
+        assertEquals(InputLocation(5, 1, 3, 3), result.sppt!!.root.asBranch.children[3].location)
+        assertEquals("\n", result.sppt!!.root.asBranch.children[4].matchedText)
+        assertEquals(InputLocation(8, 4, 3, 1), result.sppt!!.root.asBranch.children[4].location)
+        assertEquals("ccc", result.sppt!!.root.asBranch.children[5].matchedText)
+        assertEquals(InputLocation(9, 1, 4, 3), result.sppt!!.root.asBranch.children[5].location)
+
     }
 
     @Test
     fun aNLbSPSPNLc() {
         val sp = ScanOnDemandParser(S)
 
-        val (actual,issues) = sp.parseForGoal("S", """
+        val result = sp.parseForGoal(
+            "S", """
             aaa
               bbb
             ccc
-        """.trimIndent(), AutomatonKind.LOOKAHEAD_1)
+        """.trimIndent(), AutomatonKind.LOOKAHEAD_1
+        )
 
-        assertNotNull(actual)
-        assertEquals(InputLocation(0, 1, 1, 13), actual.root.location)
-        assertEquals("aaa", actual.root.asBranch.children[0].matchedText)
-        assertEquals(InputLocation(0, 1, 1, 3), actual.root.asBranch.children[0].location)
-        assertEquals("\n  ", actual.root.asBranch.children[1].matchedText)
-        assertEquals(InputLocation(3, 4, 1, 3), actual.root.asBranch.children[1].location)
-        assertEquals("bbb", actual.root.asBranch.children[2].matchedText)
-        assertEquals(InputLocation(6, 3, 2, 3), actual.root.asBranch.children[2].location)
-        assertEquals("\n", actual.root.asBranch.children[3].matchedText)
-        assertEquals(InputLocation(9, 6, 2, 1), actual.root.asBranch.children[3].location)
-        assertEquals("ccc", actual.root.asBranch.children[4].matchedText)
-        assertEquals(InputLocation(10, 1, 3, 3), actual.root.asBranch.children[4].location)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(emptyList(),issues)
+        assertEquals(InputLocation(0, 1, 1, 13), result.sppt!!.root.location)
+        assertEquals("aaa", result.sppt!!.root.asBranch.children[0].matchedText)
+        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.root.asBranch.children[0].location)
+        assertEquals("\n  ", result.sppt!!.root.asBranch.children[1].matchedText)
+        assertEquals(InputLocation(3, 4, 1, 3), result.sppt!!.root.asBranch.children[1].location)
+        assertEquals("bbb", result.sppt!!.root.asBranch.children[2].matchedText)
+        assertEquals(InputLocation(6, 3, 2, 3), result.sppt!!.root.asBranch.children[2].location)
+        assertEquals("\n", result.sppt!!.root.asBranch.children[3].matchedText)
+        assertEquals(InputLocation(9, 6, 2, 1), result.sppt!!.root.asBranch.children[3].location)
+        assertEquals("ccc", result.sppt!!.root.asBranch.children[4].matchedText)
+        assertEquals(InputLocation(10, 1, 3, 3), result.sppt!!.root.asBranch.children[4].location)
+
     }
 }

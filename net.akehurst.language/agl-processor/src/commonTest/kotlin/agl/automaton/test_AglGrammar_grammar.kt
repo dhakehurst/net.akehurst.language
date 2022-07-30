@@ -112,17 +112,17 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
 
         )
         for(sen in sentences) {
-            val (sppt, issues) = parser_noBuild.parseForGoal(goal, sen, AutomatonKind.LOOKAHEAD_1)
-            if (issues.isNotEmpty()) {
+            val result = parser_noBuild.parseForGoal(goal, sen, AutomatonKind.LOOKAHEAD_1)
+            if (result.issues.isNotEmpty()) {
                 println("--Error: No Build--")
                 println("Sentence: $sen")
-                issues.forEach { println(it) }
+                result.issues.forEach { println(it) }
             }
-            val (sppt2, issues2) = parser_preBuild.parseForGoal(goal, sen, AutomatonKind.LOOKAHEAD_1)
-            if (issues2.isNotEmpty()) {
+            val result2 = parser_preBuild.parseForGoal(goal, sen, AutomatonKind.LOOKAHEAD_1)
+            if (result2.issues.isNotEmpty()) {
                 println("--Error: Pre Build--")
                 println("Sentence: $sen")
-                issues2.forEach { println(it) }
+                result2.issues.forEach { println(it) }
             }
         }
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor(goal)

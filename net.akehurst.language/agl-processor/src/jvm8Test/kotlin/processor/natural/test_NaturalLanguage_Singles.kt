@@ -41,10 +41,10 @@ class test_NaturalLanguage_Singles {
         val goal = "subject"
         val sentence = "my name"
 
-        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
-        val resultStr = sppt.asString
+        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
+        val resultStr = result.sppt!!.asString
         assertEquals(sentence, resultStr)
     }
 

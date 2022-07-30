@@ -63,7 +63,7 @@ class SyntaxAnalyserSimple(
     override fun configure(configurationContext: SentenceContext, configuration: String): List<LanguageIssue> {
         //TODO: pass grammar as context ?
         val proc = Agl.registry.agl.scopes.processor ?: error("Scopes language not found!")
-        val (sm, issues) = proc.process(
+        val result = proc.process(
             sentence = configuration,
             proc.options {
                 syntaxAnalysis {
@@ -71,11 +71,12 @@ class SyntaxAnalyserSimple(
                 }
             }
         )
-        if (null == sm) {
+        val asm = result.asm
+        if (null == asm) {
         } else {
-            this.scopeModel = sm
+            this.scopeModel = asm
         }
-        return issues
+        return result.issues
     }
 
     override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: ContextSimple?): Pair<AsmSimple, List<LanguageIssue>> {

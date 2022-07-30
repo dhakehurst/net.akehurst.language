@@ -55,10 +55,10 @@ class test_SyntaxAnalyserSimple_datatypes {
         """.trimIndent()
 
         val typeModel by lazy {
-            val (grammars, gramIssues) = grammarProc.process(grammarStr)
-            assertNotNull(grammars)
-            assertTrue(gramIssues.none { it.kind == LanguageIssueKind.ERROR },gramIssues.joinToString(separator = "\n") { "$it" })
-            TypeModelFromGrammar(grammars.last()).derive()
+            val result = grammarProc.process(grammarStr)
+            assertNotNull(result.asm)
+            assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR },result.issues.joinToString(separator = "\n") { "$it" })
+            TypeModelFromGrammar(result.asm!!.last()).derive()
         }
         val syntaxAnalyser = SyntaxAnalyserSimple(typeModel)
         val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
@@ -87,9 +87,9 @@ class test_SyntaxAnalyserSimple_datatypes {
             datatype A { }
         """.trimIndent()
 
-        val (actual, issues) = processor.process(sentence)
-        assertNotNull(actual)
-        assertEquals(emptyList(), issues)
+        val result = processor.process(sentence)
+        assertNotNull(result.asm)
+        assertEquals(emptyList(), result.issues)
 
         val expected = asmSimple {
             root("unit") {
@@ -102,7 +102,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         }
 
-        assertEquals(expected.asString("  ", ""), actual.asString("  ", ""))
+        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
     }
 
     @Test
@@ -112,9 +112,9 @@ class test_SyntaxAnalyserSimple_datatypes {
             datatype B { }
         """.trimIndent()
 
-        val (actual, issues) = processor.process(sentence)
-        assertNotNull(actual)
-        assertEquals(emptyList(), issues)
+        val result = processor.process(sentence)
+        assertNotNull(result.asm)
+        assertEquals(emptyList(), result.issues)
 
         val expected = asmSimple {
             root("unit") {
@@ -131,7 +131,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         }
 
-        assertEquals(expected.asString("  ", ""), actual.asString("  ", ""))
+        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
     }
 
     @Test
@@ -142,7 +142,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         """.trimIndent()
 
-        val (actual, issues) = processor.process(
+        val result = processor.process(
             sentence = sentence,
             processor.options {
                 syntaxAnalysis {
@@ -150,7 +150,7 @@ class test_SyntaxAnalyserSimple_datatypes {
                 }
             }
         )
-        assertNotNull(actual)
+        assertNotNull(result.asm)
 
         val expected = asmSimple {
             root("unit") {
@@ -174,8 +174,8 @@ class test_SyntaxAnalyserSimple_datatypes {
             LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(21, 9, 2, 7), "Cannot find 'String' as reference for 'typeReference.type'")
         )
 
-        assertEquals(expected.asString("  ", ""), actual.asString("  ", ""))
-        assertEquals(expItems, issues)
+        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
+        assertEquals(expItems, result.issues)
     }
 
     @Test
@@ -187,7 +187,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         """.trimIndent()
 
-        val (actual, issues) = processor.process(
+        val result = processor.process(
             sentence = sentence,
             processor.options {
                 syntaxAnalysis {
@@ -195,8 +195,8 @@ class test_SyntaxAnalyserSimple_datatypes {
                 }
             }
         )
-        assertNotNull(actual)
-        assertEquals(emptyList(), issues)
+        assertNotNull(result.asm)
+        assertEquals(emptyList(), result.issues)
 
         val expected = asmSimple(syntaxAnalyser.scopeModel, ContextSimple()) {
             root("unit") {
@@ -220,7 +220,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         }
 
-        assertEquals(expected.asString("  ", ""), actual.asString("  ", ""))
+        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
 
     }
 }

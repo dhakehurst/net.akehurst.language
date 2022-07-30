@@ -33,90 +33,94 @@ class test_SharedPackedParseTree_tokensByLine {
             }
         """.trimIndent()
 
-        val processor = Agl.processorFromString<Any,Any>(grammarStr)
+        val processor = Agl.processorFromString<Any, Any>(grammarStr)
     }
 
     @Test
     fun all_on_one_line() {
-        val (sppt,issues) = processor.parse("aaa bbb ccc")
-        assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
-        val actual = sppt.tokensByLine(0)
+        val result = processor.parse("aaa bbb ccc")
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
+        val actual = result.sppt!!.tokensByLine(0)
 
         assertEquals("aaa", actual[0].matchedText)
-        assertEquals(InputLocation(0,1,1,3), actual[0].location)
+        assertEquals(InputLocation(0, 1, 1, 3), actual[0].location)
         assertEquals(" ", actual[1].matchedText)
-        assertEquals(InputLocation(3,4,1,1), actual[1].location)
+        assertEquals(InputLocation(3, 4, 1, 1), actual[1].location)
         assertEquals("bbb", actual[2].matchedText)
-        assertEquals(InputLocation(4,5,1,3), actual[2].location)
+        assertEquals(InputLocation(4, 5, 1, 3), actual[2].location)
         assertEquals(" ", actual[3].matchedText)
-        assertEquals(InputLocation(7,8,1,1), actual[3].location)
+        assertEquals(InputLocation(7, 8, 1, 1), actual[3].location)
         assertEquals("ccc", actual[4].matchedText)
-        assertEquals(InputLocation(8,9,1,3), actual[4].location)
+        assertEquals(InputLocation(8, 9, 1, 3), actual[4].location)
     }
 
     @Test
     fun separate_lines() {
-        val (sppt,issues) = processor.parse("""
+        val result = processor.parse(
+            """
             aaa
             bbb
             ccc
-        """.trimIndent())
-        assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
-        val actual_1 = sppt.tokensByLine(0)
-        val actual_2 = sppt.tokensByLine(1)
-        val actual_3 = sppt.tokensByLine(2)
+        """.trimIndent()
+        )
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
+        val actual_1 = result.sppt!!.tokensByLine(0)
+        val actual_2 = result.sppt!!.tokensByLine(1)
+        val actual_3 = result.sppt!!.tokensByLine(2)
 
         assertEquals(2, actual_1.size)
         assertEquals("aaa", actual_1[0].matchedText)
-        assertEquals(InputLocation(0,1,1,3), actual_1[0].location)
+        assertEquals(InputLocation(0, 1, 1, 3), actual_1[0].location)
         assertEquals("\n", actual_1[1].matchedText)
-        assertEquals(InputLocation(3,4,1,1), actual_1[1].location)
+        assertEquals(InputLocation(3, 4, 1, 1), actual_1[1].location)
 
         assertEquals(2, actual_2.size)
         assertEquals("bbb", actual_2[0].matchedText)
-        assertEquals(InputLocation(4,1,2,3), actual_2[0].location)
+        assertEquals(InputLocation(4, 1, 2, 3), actual_2[0].location)
         assertEquals("\n", actual_2[1].matchedText)
-        assertEquals(InputLocation(7,4,2,1), actual_2[1].location)
+        assertEquals(InputLocation(7, 4, 2, 1), actual_2[1].location)
 
         assertEquals(1, actual_3.size)
         assertEquals("ccc", actual_3[0].matchedText)
-        assertEquals(InputLocation(8,1,3,3), actual_3[0].location)
+        assertEquals(InputLocation(8, 1, 3, 3), actual_3[0].location)
     }
 
     @Test
     fun separate_lines_with_indent() {
-        val (sppt,issues) = processor.parse("""
+        val result = processor.parse(
+            """
             aaa
               bbb
             ccc
-        """.trimIndent())
-        assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
-        val actual = sppt.tokensByLine(0)
+        """.trimIndent()
+        )
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
+        val actual = result.sppt!!.tokensByLine(0)
 
-        val actual_1 = sppt.tokensByLine(0)
-        val actual_2 = sppt.tokensByLine(1)
-        val actual_3 = sppt.tokensByLine(2)
+        val actual_1 = result.sppt!!.tokensByLine(0)
+        val actual_2 = result.sppt!!.tokensByLine(1)
+        val actual_3 = result.sppt!!.tokensByLine(2)
 
         assertEquals(2, actual_1.size)
         assertEquals("aaa", actual_1[0].matchedText)
-        assertEquals(InputLocation(0,1,1,3), actual_1[0].location)
+        assertEquals(InputLocation(0, 1, 1, 3), actual_1[0].location)
         assertEquals("\n", actual_1[1].matchedText)
-        assertEquals(InputLocation(3,4,1,1), actual_1[1].location)
+        assertEquals(InputLocation(3, 4, 1, 1), actual_1[1].location)
 
         assertEquals(3, actual_2.size)
         assertEquals("  ", actual_2[0].matchedText)
-        assertEquals(InputLocation(4,1,2,2), actual_2[0].location)
+        assertEquals(InputLocation(4, 1, 2, 2), actual_2[0].location)
         assertEquals("bbb", actual_2[1].matchedText)
-        assertEquals(InputLocation(6,3,2,3), actual_2[1].location)
+        assertEquals(InputLocation(6, 3, 2, 3), actual_2[1].location)
         assertEquals("\n", actual_2[2].matchedText)
-        assertEquals(InputLocation(9,6,2,1), actual_2[2].location)
+        assertEquals(InputLocation(9, 6, 2, 1), actual_2[2].location)
 
         assertEquals(1, actual_3.size)
         assertEquals("ccc", actual_3[0].matchedText)
-        assertEquals(InputLocation(10,1,3,3), actual_3[0].location)
+        assertEquals(InputLocation(10, 1, 3, 3), actual_3[0].location)
     }
 }
 

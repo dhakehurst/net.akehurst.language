@@ -26,7 +26,8 @@ class test_SharedPackedParseTree {
 
     @Test
     fun tokensByLine_a() {
-        val proc = Agl.processorFromString<Any,Any>("""
+        val proc = Agl.processorFromString<Any, Any>(
+            """
             namespace test
             grammar Test {
                 skip WS = "\s+" ;
@@ -36,20 +37,22 @@ class test_SharedPackedParseTree {
                 infix = expr '+' expr ;
                 VAR = "[a-z]+" ;
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        val (sut,issues) = proc.parse("a".trimIndent())
+        val result = proc.parse("a".trimIndent())
 
-        assertNotNull(sut)
-        assertEquals(emptyList(),issues)
-        val actual = sut.tokensByLine(0)
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
+        val actual = result.sppt!!.tokensByLine(0)
 
         assertEquals("a", actual[0].matchedText)
     }
 
     @Test
     fun tokensByLine_eolx1() {
-        val proc = Agl.processorFromString<Any,Any>("""
+        val proc = Agl.processorFromString<Any, Any>(
+            """
             namespace test
             grammar Test {
                 skip WS = "\s+" ;
@@ -59,18 +62,21 @@ class test_SharedPackedParseTree {
                 infix = expr '+' expr ;
                 VAR = "[a-z]+" ;
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        val (sut,issues) = proc.parse("""
+        val result = proc.parse(
+            """
             a + b
             + c
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertNotNull(sut)
-        assertEquals(emptyList(),issues)
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
         val actual = listOf(
-                sut.tokensByLine(0),
-                sut.tokensByLine(1)
+            result.sppt!!.tokensByLine(0),
+            result.sppt!!.tokensByLine(1)
         )
 
         assertEquals("a + b\n", actual[0].map { it.matchedText }.joinToString(""))
@@ -80,7 +86,8 @@ class test_SharedPackedParseTree {
 
     @Test
     fun tokensByLine_eolx1_indent() {
-        val proc = Agl.processorFromString<Any,Any>("""
+        val proc = Agl.processorFromString<Any, Any>(
+            """
             namespace test
             grammar Test {
                 skip WS = "\s+" ;
@@ -90,18 +97,21 @@ class test_SharedPackedParseTree {
                 infix = expr '+' expr ;
                 VAR = "[a-z]+" ;
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        val (sut,issues) = proc.parse("""
+        val result = proc.parse(
+            """
             a + b
               + c
-        """.trimIndent())
+        """.trimIndent()
+        )
 
-        assertNotNull(sut)
-        assertEquals(emptyList(),issues)
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
         val actual = listOf(
-                sut.tokensByLine(0),
-                sut.tokensByLine(1)
+            result.sppt!!.tokensByLine(0),
+            result.sppt!!.tokensByLine(1)
         )
 
         assertEquals("a + b\n", actual[0].map { it.matchedText }.joinToString(""))
@@ -112,7 +122,8 @@ class test_SharedPackedParseTree {
 
     @Test
     fun tokensByLine_eolx2() {
-        val proc = Agl.processorFromString<Any,Any>("""
+        val proc = Agl.processorFromString<Any, Any>(
+            """
             namespace test
 
             grammar Test {
@@ -126,7 +137,8 @@ class test_SharedPackedParseTree {
                 leaf ID = "[A-Za-z_][A-Za-z0-9_]*" ;
 
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
 
         val text = """
 class XXX {
@@ -137,14 +149,14 @@ class XXX {
 }
         """
         val text2 = text.trimStart()
-        val (sut,issues) = proc.parse(text2)
+        val result = proc.parse(text2)
 
-        assertNotNull(sut)
-        assertEquals(emptyList(),issues)
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
         val actual = listOf(
-                sut.tokensByLine(0),
-                sut.tokensByLine(1),
-                sut.tokensByLine(2)
+            result.sppt!!.tokensByLine(0),
+            result.sppt!!.tokensByLine(1),
+            result.sppt!!.tokensByLine(2)
         )
 
         assertEquals("class XXX {\n", actual[0].map { it.matchedText }.joinToString(""))
@@ -155,7 +167,6 @@ class XXX {
         assertEquals("    ", actual[2][0].matchedText)
         assertEquals("prop1", actual[2][1].matchedText)
     }
-
 
 
 }

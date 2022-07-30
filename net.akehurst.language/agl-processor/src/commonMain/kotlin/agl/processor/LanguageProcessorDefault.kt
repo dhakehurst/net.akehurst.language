@@ -66,9 +66,9 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
         //TODO: interrupt processor
     }
 
-    override fun parserOptionsDefault(): ParseOptions = ParseOptionsDefault(this.defaultGoalRuleName)
+    override fun parseOptionsDefault(): ParseOptions = ParseOptionsDefault(this.defaultGoalRuleName)
 
-    override fun parserOptions(init: ParseOptionsBuilder.() -> Unit): ParseOptions {
+    override fun parseOptions(init: ParseOptionsBuilder.() -> Unit): ParseOptions {
         val b = ParseOptionsBuilder()
         b.init()
         return b.build()
@@ -86,7 +86,7 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
     }
 
     override fun buildFor(options: ParseOptions?): LanguageProcessor<AsmType, ContextType> {
-        val opts = options ?: parserOptionsDefault()
+        val opts = options ?: parseOptionsDefault()
         if (null == opts.goalRuleName) opts.goalRuleName = this.defaultGoalRuleName
         this.parser.buildFor(opts.goalRuleName!!, opts.automatonKind)
         return this
@@ -97,7 +97,7 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
     }
 
     override fun parse(sentence: String, options: ParseOptions?): ParseResult {//Pair<SharedPackedParseTree?, List<LanguageIssue>> {
-        val opts = options ?: parserOptionsDefault()
+        val opts = options ?: parseOptionsDefault()
         if (null == opts.goalRuleName) opts.goalRuleName = this.defaultGoalRuleName
         return this.parser.parseForGoal(opts.goalRuleName!!, sentence, opts.automatonKind)
     }
@@ -110,7 +110,7 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
         val sa: SyntaxAnalyser<AsmType, ContextType> = (this.syntaxAnalyser ?: SyntaxAnalyserSimple(this.typeModel)) as SyntaxAnalyser<AsmType, ContextType>
         sa.clear()
         val (asm: AsmType, issues) = sa.transform(sppt, { rsn, rn -> this._converterToRuntimeRules.originalRuleItemFor(rsn, rn) }, opts.syntaxAnalysis.context)
-        return SyntaxAnalysisResult(asm, issues, sa.locationMap)
+        return SyntaxAnalysisResultDefault(asm, issues, sa.locationMap)
     }
 
     override fun semanticAnalysis(
@@ -130,33 +130,33 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
         options: ProcessOptions<AsmType, ContextType>?
     ): ProcessResult<AsmType> {
         val opts = defaultOptions(options)
-        val (sppt, issues1) = this.parse(sentence, opts.parse)
-        return if (null == sppt || opts.syntaxAnalysis.active.not()) {
-            ProcessResult(null, issues1)
+        val parseResult = this.parse(sentence, opts.parse)
+        return if (null == parseResult.sppt || opts.syntaxAnalysis.active.not()) {
+            ProcessResultDefault(null, parseResult.issues)
         } else {
-            val (asm, issues2, locationMap) = this.syntaxAnalysis(sppt, opts)
-            if (null == asm || opts.semanticAnalysis.active.not()) {
-                ProcessResult(asm, issues1 + issues2)
+            val synxResult = this.syntaxAnalysis(parseResult.sppt!!, opts)
+            if (null == synxResult.asm || opts.semanticAnalysis.active.not()) {
+                ProcessResultDefault(synxResult.asm, parseResult.issues + synxResult.issues)
             } else {
-                opts.semanticAnalysis.locationMap = locationMap
-                val result = this.semanticAnalysis(asm, opts)
-                ProcessResult(asm, issues1 + issues2 + result.issues)
+                opts.semanticAnalysis.locationMap = synxResult.locationMap
+                val result = this.semanticAnalysis(synxResult.asm!!, opts)
+                ProcessResultDefault(synxResult.asm, parseResult.issues + synxResult.issues + result.issues)
             }
         }
     }
 
     override fun format(sentence: String, options: ProcessOptions<AsmType, ContextType>?): FormatResult {
         val opts = defaultOptions(options)
-        val (sppt, parseIssues) = this.parse(sentence, opts.parse)
-        return if (null == sppt) {
-            FormatResult(null, parseIssues)
+        val parseResult = this.parse(sentence, opts.parse)
+        return if (null == parseResult.sppt) {
+            FormatResultDefault(null, parseResult.issues)
         } else {
-            val (asm, syntIssues) = this.syntaxAnalysis(sppt)
-            if (null == asm) {
-                FormatResult(null, parseIssues + syntIssues)
+            val synxResult = this.syntaxAnalysis(parseResult.sppt!!)
+            if (null == synxResult.asm) {
+                FormatResultDefault(null, parseResult.issues + synxResult.issues)
             } else {
-                val (formattedSentence, frmtIssues) = this.formatAsm(asm)
-                FormatResult(formattedSentence, parseIssues + syntIssues + frmtIssues)
+                val frmtResult = this.formatAsm(synxResult.asm!!)
+                FormatResultDefault(frmtResult.sentence, parseResult.issues + synxResult.issues + frmtResult.issues)
             }
         }
     }
@@ -168,7 +168,7 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
         } else {
             asm.toString()
         }
-        return FormatResult(sentence, emptyList())
+        return FormatResultDefault(sentence, emptyList())
     }
 
     override fun expectedAt(
@@ -184,7 +184,7 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
             .map { this._converterToRuntimeRules.originalRuleItemFor(it.runtimeRuleSetNumber, it.number) }
         val expected = grammarExpected.flatMap { this._completionProvider.provideFor(it, desiredDepth) }
         val items = expected.toSet().toList()
-        return ExpectedAtResult(items, emptyList()) //TODO: issues
+        return ExpectedAtResultDefault(items, emptyList()) //TODO: issues
     }
 
     private fun defaultOptions(options: ProcessOptions<AsmType, ContextType>?): ProcessOptions<AsmType, ContextType> {

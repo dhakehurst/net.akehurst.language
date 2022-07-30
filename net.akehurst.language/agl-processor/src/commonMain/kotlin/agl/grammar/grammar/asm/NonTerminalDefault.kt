@@ -45,5 +45,8 @@ class NonTerminalDefault(
         setOf(this)
     }
 
-    override fun toString(): String = name //TODO embedded
+    override fun toString(): String = when {
+        embedded -> "${owningGrammar.name}.$name"
+        else -> name
+    }
 }

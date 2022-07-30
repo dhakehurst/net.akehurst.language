@@ -200,6 +200,23 @@ internal class ParseGraph(
         }
     }
 
+    fun pushback(trip:ToProcessTriple) {
+        val (cur, prev, rhd) = trip
+        this._growingHeadHeap[cur.index] = cur
+        when {
+            null == prev ->{
+                this._gss.root(cur.index)
+            }
+            null== rhd->{
+                this._gss.push(prev,cur.index)
+            }
+            else ->{
+                this._gss.push(rhd,prev)
+                this._gss.push(prev,cur.index)
+            }
+        }
+    }
+
     fun reset() {
         this.input.reset()
         //       this.completeNodes.clear()

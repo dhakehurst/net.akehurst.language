@@ -64,7 +64,7 @@ grammar Dot  {
     fun t() {
         val goal = "stmt_list"
         val sentence =  "graph[a=a ]; node [b=b c=c]; edge[];"
-        proc.parse(sentence, proc.parserOptions { goalRuleName(goal) })
+        proc.parse(sentence, proc.parseOptions { goalRuleName(goal) })
     }
 
 }

@@ -82,10 +82,10 @@ class test_QueryParserValid(val data: Data) {
     fun test() {
         val queryStr = this.data.queryStr
         val goal = "query"
-        val (sppt, issues) = processor.parse(queryStr, processor.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
-        val resultStr = sppt.asString
+        val result = processor.parse(queryStr, processor.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
+        val resultStr = result.sppt!!.asString
         Assert.assertEquals(queryStr, resultStr)
     }
 

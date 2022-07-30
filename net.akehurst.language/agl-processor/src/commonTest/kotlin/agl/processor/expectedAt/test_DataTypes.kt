@@ -21,7 +21,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class test_DataTypes {
-    private data class Data(val sentence: String, val position: Int, val expected: List<String>)
+    private data class Data(val sentence: String, val position: Int, val expected: List<String>) {
+        override fun toString(): String = "sentence='$sentence'  position=$position    expected=${expected}"
+    }
 
     private companion object {
         val grammarStr = """
@@ -79,7 +81,7 @@ class test_DataTypes {
             val result = processor.expectedAt(sentence, position, 1, processor.options { parse { goalRuleName(goal) } } )
             val actual = result.items.map { it.text }
             val expected = data.expected
-            assertEquals(expected, actual, data.toString())
+            assertEquals(expected.toSet(), actual.toSet(), data.toString())
         }
     }
 }

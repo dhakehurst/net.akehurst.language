@@ -22,8 +22,8 @@ class test_demo {
         val sentence = """
 
         """.trimIndent()
-        val (sppt,issues) =  processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        val result =  processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(),result.issues)
     }
 }

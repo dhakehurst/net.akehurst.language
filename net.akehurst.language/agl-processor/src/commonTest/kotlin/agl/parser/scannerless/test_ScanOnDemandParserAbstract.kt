@@ -53,25 +53,25 @@ internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean=false)
     fun test2(rrs: RuntimeRuleSet, embeddedRuntimeRuleSets:Map<String,RuntimeRuleSet>, goal: String, sentence: String, expectedNumGSSHeads: Int, printAutomaton:Boolean=false, vararg expectedTrees: String): SharedPackedParseTree? {
         val parser = ScanOnDemandParser(rrs)
         if(build)parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
-        val (actual, issues) = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
         if(printAutomaton) println(rrs.usedAutomatonToString(goal))
-        assertNotNull(actual, issues.joinToString(separator = "\n") { it.toString() })
-        assertEquals(emptyList(), issues)
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(emptyList(), result.issues)
         val sppt = SPPTParserDefault(rrs, embeddedRuntimeRuleSets)
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
-        assertEquals(expected.toStringAllWithIndent("  "), actual.toStringAllWithIndent("  "))
-        assertEquals(expected, actual)
+        assertEquals(expected.toStringAllWithIndent("  "), result.sppt!!.toStringAllWithIndent("  "))
+        assertEquals(expected, result.sppt)
         //FIXME: add back this assert
-        assertEqualsWarning(expectedNumGSSHeads, actual.maxNumHeads, "Too many heads on GSS")
-        return actual
+        assertEqualsWarning(expectedNumGSSHeads, result.sppt!!.maxNumHeads, "Too many heads on GSS")
+        return result.sppt
     }
 
-    fun testFail(rrs: RuntimeRuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int): ParseResult {
+    fun testFail(rrs: RuntimeRuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int): Pair<SharedPackedParseTree?,List<LanguageIssue>> {
         val parser = ScanOnDemandParser(rrs)
         if(build)parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
         val p = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
-        return p
+        return Pair(p.sppt,p.issues)
     }
 
     protected fun parseError(location:InputLocation, message:String, expected:Set<String>) =

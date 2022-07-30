@@ -28,32 +28,47 @@ class test_Java8_Grammars {
     @Test(timeout=5000)
     fun aglSpec() {
         val grammarStr = this::class.java.getResource("/java8/Java8AglSpec.agl").readText()
-        val actual = Agl.processorFromString<Any,Any>(grammarStr)
-        assertNotNull(actual)
+        val result = Agl.registry.agl.grammar.processor!!.process(
+            sentence = grammarStr,
+            options = Agl.registry.agl.grammar.processor?.options {
+                semanticAnalysis {
+                    active(false) // switch off for performance
+                }
+            }
+        )
+        assertNotNull(result.asm)
+        result.issues.forEach { println(it) }
     }
 
     @Test(timeout=5000)
     fun aglOptm() {
         val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
-        //val grammarFile = Paths.get("src/jvm8Test/resources/java8/Java8OptmAgl.agl")
-        //val bytes = Files.readAllBytes(grammarFile)
-        //val grammarStr = String(bytes)
-        val actual = Agl.processorFromString<Any,Any>(grammarStr)
-        assertNotNull(actual)
-
-        val (ams,items) = Agl.registry.agl.grammar.processor!!.process(grammarStr)
-        assertNotNull(items)
-        items.forEach {
-            println(it)
-        }
+        val result = Agl.registry.agl.grammar.processor!!.process(
+            sentence = grammarStr,
+            options = Agl.registry.agl.grammar.processor?.options {
+                semanticAnalysis {
+                    active(false) // switch off for performance
+                }
+            }
+        )
+        assertNotNull(result.asm)
+        result.issues.forEach { println(it) }
     }
 
     @Test(timeout=5000)
     fun antrlSpec() {
         //val grammarStr = this::class.java.getResource("/java8/Java8_all.agl").readText()
         val grammarStr = this::class.java.getResource("/java8/Java8AntlrSpec.agl").readText()
-        val actual = Agl.processorFromString<Any,Any>(grammarStr)
-        assertNotNull(actual)
+        val result = Agl.registry.agl.grammar.processor!!.process(
+            sentence = grammarStr,
+            options = Agl.registry.agl.grammar.processor?.options {
+                semanticAnalysis {
+                    active(false) // switch off for performance
+                }
+            }
+        )
+        assertNotNull(result.asm)
+        result.issues.forEach { println(it) }
     }
 
 
@@ -61,11 +76,16 @@ class test_Java8_Grammars {
     @Test(timeout=5000)
     fun antlrOptm() {
         val grammarStr = this::class.java.getResource("/java8/Java8AntlrOptm.agl").readText()
-        //val grammarFile = Paths.get("src/jvm8Test/resources/java8/Java8OptmAntlr.agl")
-        //val bytes = Files.readAllBytes(grammarFile)
-        //val grammarStr = String(bytes)
-        val actual = Agl.processorFromString<Any,Any>(grammarStr)
-        assertNotNull(actual)
+        val result = Agl.registry.agl.grammar.processor!!.process(
+            sentence = grammarStr,
+            options = Agl.registry.agl.grammar.processor?.options {
+                semanticAnalysis {
+                    active(false) // switch off for performance
+                }
+            }
+        )
+        assertNotNull(result.asm)
+        result.issues.forEach { println(it) }
     }
 
 }

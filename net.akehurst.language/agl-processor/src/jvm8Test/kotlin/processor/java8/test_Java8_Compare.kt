@@ -140,10 +140,10 @@ class test_Java8_Compare(val data: Data) {
     private fun testParse(proc: LanguageProcessor<AsmSimple, ContextSimple>, toUpper: Boolean = false) {
         val queryStr = this.data.sentence
         val grammarRule = if (toUpper) this.data.grammarRule.capitalize() else this.data.grammarRule
-        val (sppt, issues) = proc.parse(queryStr, proc.parserOptions { goalRuleName(grammarRule) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(), issues)
-        val resultStr = clean(sppt.asString)
+        val result = proc.parse(queryStr, proc.parseOptions { goalRuleName(grammarRule) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues)
+        val resultStr = clean(result.sppt!!.asString)
         assertEquals(queryStr, resultStr)
     }
 

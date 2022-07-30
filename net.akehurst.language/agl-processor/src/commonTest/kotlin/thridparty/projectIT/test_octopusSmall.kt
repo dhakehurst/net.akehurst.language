@@ -416,9 +416,9 @@ class test_octopusSmall {
             
             <endpackage>
         """.trimIndent()
-        val (sppt,issues) =  processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt,issues.joinToString(separator = "\n"){it.toString()})
-        assertEquals(emptyList(),issues)
+        val result =  processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt,result.issues.joinToString(separator = "\n"){it.toString()})
+        assertEquals(emptyList(),result.issues)
     }
 
     @Test
@@ -447,9 +447,9 @@ class test_octopusSmall {
             + Wagon.pred[0..1] <-> + Wagon.succ[0..1];
             <endpackage> 
         """.trimIndent()
-        val (sppt,issues) =  processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        val result =  processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(),result.issues)
     }
 
     @Test
@@ -481,9 +481,9 @@ class test_octopusSmall {
              + Artist.artist [0..*]    <->  + Clip.clips [0..*]   ;
             <endpackage>
         """.trimIndent()
-        val (sppt,issues) =  processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        val result =  processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(),result.issues)
     }
 
     @Test
@@ -521,8 +521,8 @@ class test_octopusSmall {
              + Dvd.dvd [0..*]    <->  + catalog::Clip.clips [1..*]   ;
             <endpackage>
         """.trimIndent()
-        val (sppt,issues) =  processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
-        assertNotNull(sppt)
-        assertEquals(emptyList(),issues)
+        val result =  processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(),result.issues)
     }
 }

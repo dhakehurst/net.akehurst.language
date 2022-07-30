@@ -57,11 +57,11 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_abc() {
         val parser = ScanOnDemandParser(rrs)
-        val (sppt, issues) = parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
-        assertNotNull(sppt)
-        assertEquals(0, issues.size)
-        assertEquals(1, sppt.maxNumHeads)
+        assertNotNull(result.sppt)
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
@@ -94,11 +94,11 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_abd() {
         val parser = ScanOnDemandParser(rrs)
-        val (sppt, issues) = parser.parseForGoal("S", "abd", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "abd", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
-        assertNotNull(sppt)
-        assertEquals(0, issues.size)
-        assertEquals(1, sppt.maxNumHeads)
+        assertNotNull(result.sppt)
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
@@ -135,10 +135,10 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
         val sentences = setOf("abc", "abd")
         sentences.forEach {
             val parser = ScanOnDemandParser(rrs)
-            val (sppt, issues) = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
-            assertNotNull(sppt, issues.joinToString("\n") { it.toString() } )
-            assertEquals(0, issues.size)
-            assertEquals(1, sppt.maxNumHeads)
+            val result = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
+            assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() } )
+            assertEquals(0, result.issues.size)
+            assertEquals(1, result.sppt!!.maxNumHeads)
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
@@ -181,8 +181,8 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("abc","abd")
         for(sen in sentences) {
-            val (sppt, issues) = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
-            if (issues.isNotEmpty())  issues.forEach { println(it) }
+            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            if (result.issues.isNotEmpty())  result.issues.forEach { println(it) }
         }
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
         val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)

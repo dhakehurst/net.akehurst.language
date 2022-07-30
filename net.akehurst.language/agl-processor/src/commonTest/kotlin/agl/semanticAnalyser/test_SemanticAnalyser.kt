@@ -1,5 +1,6 @@
 package agl.semanticAnalyser
 
+import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
@@ -21,7 +22,7 @@ class test_SemanticAnalyser {
                 "warning" -> listOf(LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.PARSE,null,"error"))
                 else -> throw RuntimeException("Test Error")
             }
-            return SemanticAnalysisResult(issues)
+            return SemanticAnalysisResultDefault(issues)
         }
     }
 

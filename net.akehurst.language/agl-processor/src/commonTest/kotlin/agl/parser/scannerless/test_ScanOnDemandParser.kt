@@ -52,12 +52,11 @@ internal class test_ScanOnDemandParser {
         val r1 = rrb.rule("a").concatenation(r0)
         val sp = ScanOnDemandParser(rrb.ruleSet())
 
-        val (actual,issues) = sp.parseForGoal("a","a", AutomatonKind.LOOKAHEAD_1)
+        val result = sp.parseForGoal("a", "a", AutomatonKind.LOOKAHEAD_1)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertNotNull(actual)
-        assertEquals(emptyList(),issues)
-
-        println( actual.toStringAll )
     }
 
 

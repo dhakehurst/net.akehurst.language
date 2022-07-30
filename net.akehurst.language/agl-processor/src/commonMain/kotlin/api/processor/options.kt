@@ -18,6 +18,7 @@ package net.akehurst.language.api.processor
 
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
 
 /**
@@ -28,10 +29,13 @@ import net.akehurst.language.api.parser.InputLocation
  * @param semanticAnalyser a semantic analyser (if null use SemanticAnalyserSimple)
  * @param formatter a formatter
  */
+
+typealias SyntaxAnalyserResolver<AsmType, ContextType> = (Grammar) -> SyntaxAnalyser<AsmType, ContextType>
+
 interface LanguageProcessorConfiguration<AsmType : Any, ContextType : Any> {
     var targetGrammarName:String?
     var defaultGoalRuleName: String?
-    var syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
+    var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
     var semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
     var formatter: Formatter?
 }

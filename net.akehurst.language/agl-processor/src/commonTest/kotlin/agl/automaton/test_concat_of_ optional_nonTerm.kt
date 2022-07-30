@@ -74,10 +74,10 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
     fun parse_bcd() {
         //TODO: is there a way to reset the rrs if it needs it?
         val parser = ScanOnDemandParser(rrs)
-        val (sppt, issues) = parser.parseForGoal("S", "bcd", AutomatonKind.LOOKAHEAD_1)
-        assertNotNull(sppt,issues.joinToString("\n") { it.toString() } )
-        assertEquals(0, issues.size)
-        assertEquals(1, sppt.maxNumHeads)
+        val result = parser.parseForGoal("S", "bcd", AutomatonKind.LOOKAHEAD_1)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
         println(rrs.usedAutomatonToString("S"))
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
@@ -114,10 +114,10 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
     fun parse_abcd() {
         //TODO: is there a way to reset the rrs if it needs it?
         val parser = ScanOnDemandParser(rrs)
-        val (sppt, issues) = parser.parseForGoal("S", "abcd", AutomatonKind.LOOKAHEAD_1)
-        assertNotNull(sppt,issues.joinToString("\n") { it.toString() } )
-        assertEquals(0, issues.size)
-        assertEquals(1, sppt.maxNumHeads)
+        val result = parser.parseForGoal("S", "abcd", AutomatonKind.LOOKAHEAD_1)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
         println(rrs.usedAutomatonToString("S"))
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
@@ -154,10 +154,10 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
     fun parse_abced() {
         //TODO: is there a way to reset the rrs if it needs it?
         val parser = ScanOnDemandParser(rrs)
-        val (sppt, issues) = parser.parseForGoal("S", "abced", AutomatonKind.LOOKAHEAD_1)
-        assertNotNull(sppt,issues.joinToString("\n") { it.toString() } )
-        assertEquals(0, issues.size)
-        assertEquals(1, sppt.maxNumHeads)
+        val result = parser.parseForGoal("S", "abced", AutomatonKind.LOOKAHEAD_1)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
         println(rrs.usedAutomatonToString("S"))
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
@@ -199,10 +199,10 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
         val sentences = listOf("bcd","abcd","bced","abced","bcefed","abcefed")
         for (sent in sentences) {
             println("Parsing sentence '$sent'")
-            val (sppt, issues) = parser.parseForGoal("S", sent, AutomatonKind.LOOKAHEAD_1)
-            assertNotNull(sppt, issues.joinToString("\n") { it.toString() } )
-            assertEquals(0, issues.size)
-            assertEquals(1, sppt.maxNumHeads)
+            val result = parser.parseForGoal("S", sent, AutomatonKind.LOOKAHEAD_1)
+            assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+            assertEquals(0, result.issues.size)
+            assertEquals(1, result.sppt!!.maxNumHeads)
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {

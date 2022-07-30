@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.agl.semanticAnalyser
 
+import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.processor.LanguageIssue
@@ -27,6 +28,6 @@ class SemanticAnalyserSimple<AsmType : Any, ContextType : Any> : SemanticAnalyse
     }
 
     override fun analyse(asm: AsmType, locationMap: Map<*, InputLocation>?, arg: ContextType?): SemanticAnalysisResult {
-        return SemanticAnalysisResult(emptyList())
+        return SemanticAnalysisResultDefault(emptyList())
     }
 }

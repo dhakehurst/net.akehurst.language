@@ -18,19 +18,23 @@ package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 abstract class test_ProcessorAbstract {
 
     fun <AsmType : Any, ContextType : Any> test(processor:LanguageProcessor<AsmType, ContextType>, goal:String, sentence:String, vararg expectedTrees:String) {
-        val (actual,issues) = processor.parse(sentence, processor.parserOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
 
         val sppt = processor.spptParser
         expectedTrees.forEach { sppt.parse(it, true) }
         val expected = sppt.tree
 
-        assertEquals(expected.toStringAll, actual?.toStringAll)
-        assertEquals(expected, actual)
-        assertEquals(emptyList(),issues)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+
     }
 
 }

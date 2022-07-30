@@ -16,6 +16,8 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
+import net.akehurst.language.agl.automaton.Transition
+import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SemanticAnalyserException
 import net.akehurst.language.api.grammar.*
@@ -26,31 +28,31 @@ import net.akehurst.language.api.processor.*
 internal class AglGrammarSemanticAnalyser(
 ) : SemanticAnalyser<List<Grammar>, GrammarContext> {
 
-    private val items = mutableListOf<LanguageIssue>()
+    private val issues = mutableListOf<LanguageIssue>()
     private var _locationMap: Map<*, InputLocation>? = null
 
     override fun clear() {
-        this.items.clear()
+        this.issues.clear()
         _locationMap = null
     }
 
     override fun analyse(asm: List<Grammar>, locationMap: Map<*, InputLocation>?, context: GrammarContext?): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
-        val issues =  when (asm) {
+        val issues = when (asm) {
             is List<*> -> checkGrammar(asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
             else -> throw SemanticAnalyserException("This SemanticAnalyser is for an ASM of type List<Grammar>", null)
         }
-        return SemanticAnalysisResult(issues)
+        return SemanticAnalysisResultDefault(issues)
     }
 
     private fun checkGrammar(grammarList: List<Grammar>, automatonKind: AutomatonKind): List<LanguageIssue> {
         grammarList.forEach { grammar ->
             this.checkNonTerminalReferencesExist(grammar)
-            if (items.isEmpty()) {
+            if (issues.isEmpty()) {
                 this.checkForAmbiguities(grammar, automatonKind)
             }
         }
-        return this.items
+        return this.issues
     }
 
     private fun checkNonTerminalReferencesExist(grammar: Grammar) {
@@ -68,10 +70,13 @@ internal class AglGrammarSemanticAnalyser(
             }
             is NonTerminal -> {
                 try {
-                    rhs.referencedRule(grammar) //will throw 'GrammarRuleNotFoundException' if rule not found
+                    when {
+                        rhs.embedded -> rhs.referencedRule(rhs.owningGrammar)
+                        else -> rhs.referencedRule(grammar) //will throw 'GrammarRuleNotFoundException' if rule not found
+                    }
                 } catch (e: GrammarRuleNotFoundException) {
                     val item = LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, _locationMap!![rhs], e.message!!)
-                    this.items.add(item)
+                    this.issues.add(item)
                 }
             }
             is Concatenation -> {
@@ -110,23 +115,28 @@ internal class AglGrammarSemanticAnalyser(
                 trans.forEach { tr1 ->
                     trans.forEach { tr2 ->
                         //TODO: should we compare actions here? prob not
-                        if (tr1 !== tr2 && tr1.action == tr2.action) {
-                            val lhi = tr1.lookahead.flatMap{it.guard.content}.toSet().intersect(tr2.lookahead.flatMap{it.guard.content}.toSet())
-                            if (lhi.isNotEmpty() || (tr1.lookahead.map{it.guard.content}.isEmpty() && tr2.lookahead.map{it.guard.content}.isEmpty())) {
-                                val ori1 = conv.originalRuleItemFor(tr1.to.runtimeRules.first().runtimeRuleSetNumber,tr1.to.runtimeRules.first().number) //FIXME
-                                val ori2 = conv.originalRuleItemFor(tr2.to.runtimeRules.first().runtimeRuleSetNumber,tr2.to.runtimeRules.first().number) //FIXME
-                                val or1 = ori1.owningRule
-                                val or2 = ori2.owningRule
-                                val lhStr = lhi.map { it.tag }
-                                val msg = "Ambiguity on $lhStr between ${or1.name} and ${or2.name}"
-                                itemsSet.add(LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, _locationMap!![ori1], msg))
-                                itemsSet.add(LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, _locationMap!![ori2], msg))
+                        if (tr1 !== tr2) {
+                            when {
+                                (tr1.action == Transition.ParseAction.WIDTH && tr2.action == Transition.ParseAction.WIDTH && tr1.to != tr2.to) -> Unit                             // no error
+                                else -> {
+                                    val lhi = tr1.lookahead.flatMap { it.guard.content }.toSet().intersect(tr2.lookahead.flatMap { it.guard.content }.toSet())
+                                    if (lhi.isNotEmpty() || (tr1.lookahead.map { it.guard.content }.isEmpty() && tr2.lookahead.map { it.guard.content }.isEmpty())) {
+                                        val ori1 = conv.originalRuleItemFor(tr1.to.runtimeRules.first().runtimeRuleSetNumber, tr1.to.runtimeRules.first().number) //FIXME
+                                        val ori2 = conv.originalRuleItemFor(tr2.to.runtimeRules.first().runtimeRuleSetNumber, tr2.to.runtimeRules.first().number) //FIXME
+                                        val or1 = ori1.owningRule
+                                        val or2 = ori2.owningRule
+                                        val lhStr = lhi.map { it.tag }
+                                        val msg = "Ambiguity on $lhStr between ${or1.name} and ${or2.name}"
+                                        itemsSet.add(LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, _locationMap!![ori1], msg))
+                                        itemsSet.add(LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, _locationMap!![ori2], msg))
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
         }
-        items.addAll(itemsSet)
+        issues.addAll(itemsSet)
     }
 }

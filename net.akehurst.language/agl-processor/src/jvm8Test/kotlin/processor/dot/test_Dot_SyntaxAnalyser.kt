@@ -42,10 +42,10 @@ class test_Dot_SyntaxAnalyser {
             }
         """.trimIndent()
 
-        val (asm,issues) = processor.process(sentence)
-        val actual = asm?.rootElements?.firstOrNull()
+        val result = processor.process(sentence)
+        val actual = result.asm?.rootElements?.firstOrNull()
         assertNotNull(actual)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(),result.issues)
         assertEquals(null,actual.getPropertyAsString("STRICT"))
         assertEquals("graph",actual.getPropertyAsString("type"))
         assertEquals(null,actual.getPropertyAsString("STRICT"))
@@ -61,10 +61,10 @@ class test_Dot_SyntaxAnalyser {
             }
         """.trimIndent()
 
-        val (asm,issues) = processor.process(sentence)
-        val actual = asm?.rootElements?.firstOrNull()
+        val result = processor.process(sentence)
+        val actual = result.asm?.rootElements?.firstOrNull()
         assertNotNull(actual)
-        assertEquals(emptyList(),issues)
+        assertEquals(emptyList(),result.issues)
     }
 
 }

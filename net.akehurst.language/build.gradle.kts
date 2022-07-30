@@ -22,10 +22,11 @@ plugins {
     id("org.jetbrains.dokka") version ("1.7.10") apply false
     id("com.github.gmazzo.buildconfig") version("3.1.0") apply false
     id("nu.studer.credentials") version ("3.0")
-    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version("1.7.0") apply false
+    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version("1.7.10") apply false
 }
 val kotlin_languageVersion = "1.7"
 val kotlin_apiVersion:String = "1.7"
+val jvmTargetVersion = JavaVersion.VERSION_1_8.toString()
 
 allprojects {
     val version_project: String by project
@@ -71,14 +72,14 @@ subprojects {
                 kotlinOptions {
                     languageVersion = kotlin_languageVersion
                     apiVersion = kotlin_apiVersion
-                    jvmTarget = JavaVersion.VERSION_1_8.toString()
+                    jvmTarget = jvmTargetVersion
                 }
             }
             val test by compilations.getting {
                 kotlinOptions {
                     languageVersion = kotlin_languageVersion
                     apiVersion = kotlin_apiVersion
-                    jvmTarget = JavaVersion.VERSION_1_8.toString()
+                    jvmTarget = jvmTargetVersion
                 }
             }
         }
@@ -93,7 +94,6 @@ subprojects {
             browser {
                 webpackTask {
                     outputFileName = "${project.group}-${project.name}.js"
-
                 }
                 testTask {
                     useMocha {

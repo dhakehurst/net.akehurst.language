@@ -38,14 +38,14 @@ class test_AglScopes {
             // single line comment
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process(text)
+        val result = aglProc.process(text)
 
         val expected = ScopeModel()
 
-        assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
-        assertEquals(expected.references, asm?.references)
-        assertEquals(emptyList(), issues)
+        assertEquals(expected.scopes, result.asm?.scopes)
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
+        assertEquals(expected.references, result.asm?.references)
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
@@ -58,14 +58,14 @@ class test_AglScopes {
             */
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process(text)
+        val result = aglProc.process(text)
 
         val expected = ScopeModel()
 
-        assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
-        assertEquals(expected.references, asm?.references)
-        assertEquals(emptyList(), issues)
+        assertEquals(expected.scopes, result.asm?.scopes)
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
+        assertEquals(expected.references, result.asm?.references)
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
@@ -83,7 +83,7 @@ class test_AglScopes {
             scope rule1 { }
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process(
+        val result = aglProc.process(
             sentence = text,
             aglProc.options {
                 syntaxAnalysis { context(ContextFromGrammar(grammar)) }
@@ -94,10 +94,10 @@ class test_AglScopes {
             scopes["rule1"]=(ScopeDefinition("rule1"))
         }
 
-        assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
-        assertEquals(expected.references, asm?.references)
-        assertEquals(emptyList(), issues)
+        assertEquals(expected.scopes, result.asm?.scopes)
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
+        assertEquals(expected.references, result.asm?.references)
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
@@ -115,7 +115,7 @@ class test_AglScopes {
             scope ruleX { }
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process(
+        val result = aglProc.process(
             sentence = text,
             aglProc.options {
                 syntaxAnalysis { context(ContextFromGrammar(grammar)) }
@@ -126,13 +126,13 @@ class test_AglScopes {
             scopes["ruleX"]=(ScopeDefinition("ruleX"))
         }
 
-        assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
-        assertEquals(expected.references, asm?.references)
+        assertEquals(expected.scopes, result.asm?.scopes)
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
+        assertEquals(expected.references, result.asm?.references)
         assertEquals(
             listOf(
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(6, 7, 1, 6), "Rule 'ruleX' not found for scope")
-            ), issues
+            ), result.issues
         )
     }
 
@@ -155,7 +155,7 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process(
+        val result = aglProc.process(
             sentence = text,
             aglProc.options {
                 syntaxAnalysis { context(ContextFromGrammar(grammar)) }
@@ -168,10 +168,10 @@ class test_AglScopes {
             })
         }
 
-        assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
-        assertEquals(expected.references, asm?.references)
-        assertEquals(emptyList(), issues)
+        assertEquals(expected.scopes, result.asm?.scopes)
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
+        assertEquals(expected.references, result.asm?.references)
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
@@ -193,7 +193,7 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process(
+        val result = aglProc.process(
             sentence = text,
             aglProc.options {
                 syntaxAnalysis { context(ContextFromGrammar(grammar)) }
@@ -206,9 +206,9 @@ class test_AglScopes {
             })
         }
 
-        assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
-        assertEquals(expected.references, asm?.references)
+        assertEquals(expected.scopes, result.asm?.scopes)
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
+        assertEquals(expected.references, result.asm?.references)
         assertEquals(
             listOf(
                 LanguageIssue(
@@ -217,7 +217,8 @@ class test_AglScopes {
                     InputLocation(27, 14, 2, 6),
                     "In scope for 'rule1' Rule 'ruleX' not found as identifiable type"
                 )
-            ), issues
+            ),
+            result.issues
         )
     }
 
@@ -240,7 +241,7 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process(
+        val result = aglProc.process(
             sentence = text,
             aglProc.options {
                 syntaxAnalysis { context(ContextFromGrammar(grammar)) }
@@ -253,9 +254,9 @@ class test_AglScopes {
             })
         }
 
-        assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
-        assertEquals(expected.references, asm?.references)
+        assertEquals(expected.scopes, result.asm?.scopes)
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
+        assertEquals(expected.references, result.asm?.references)
         assertEquals(
             listOf(
                 LanguageIssue(
@@ -264,7 +265,7 @@ class test_AglScopes {
                     InputLocation(36, 23, 2, 6),
                     "In scope for 'rule1' Rule 'ruleX' not found for identifying property of 'rule2'"
                 )
-            ), issues
+            ), result.issues
         )
     }
 
@@ -287,7 +288,7 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process(
+        val result = aglProc.process(
             sentence = text,
             aglProc.options {
                 syntaxAnalysis { context(ContextFromGrammar(grammar)) }
@@ -298,10 +299,10 @@ class test_AglScopes {
             references.add(ReferenceDefinition("rule2", "rule3", listOf("rule1")))
         }
 
-        assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
-        assertEquals(expected.references, asm?.references)
-        assertEquals(emptyList(), issues)
+        assertEquals(expected.scopes, result.asm?.scopes)
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
+        assertEquals(expected.references, result.asm?.references)
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
@@ -323,7 +324,7 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process(
+        val result = aglProc.process(
             sentence = text,
             aglProc.options {
                 syntaxAnalysis { context(ContextFromGrammar(grammar)) }
@@ -334,16 +335,16 @@ class test_AglScopes {
             references.add(ReferenceDefinition("ruleX", "ruleY", listOf("ruleZ", "ruleW")))
         }
 
-        assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
-        assertEquals(expected.references, asm?.references)
+        assertEquals(expected.scopes, result.asm?.scopes)
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
+        assertEquals(expected.references, result.asm?.references)
         assertEquals(
             listOf(
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(20, 8, 2, 6), "Referring type Rule 'ruleX' not found"),
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(35, 23, 2, 6), "For reference in 'ruleX' referring property Rule 'ruleY' not found"),
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(51, 39, 2, 5), "For reference in 'ruleX' referred to type Rule 'ruleZ' not found"),
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(57, 45, 2, 6), "For reference in 'ruleX' referred to type Rule 'ruleW' not found")
-            ), issues
+            ), result.issues
         )
     }
 
@@ -355,16 +356,16 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val (asm, issues) = aglProc.process(text)
+        val result = aglProc.process(text)
 
         val expected = ScopeModel().apply {
             references.add(ReferenceDefinition("type1", "prop", listOf("type2", "type3", "type4")))
         }
 
-        assertEquals(expected.scopes, asm?.scopes)
-        assertEquals(expected.scopes.flatMap { it.value.identifiables }, asm?.scopes?.flatMap { it.value.identifiables })
-        assertEquals(expected.references, asm?.references)
-        assertEquals(emptyList(), issues)
+        assertEquals(expected.scopes, result.asm?.scopes)
+        assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
+        assertEquals(expected.references, result.asm?.references)
+        assertEquals(emptyList(), result.issues)
     }
 
     //TODO more checks + check rules (types/properties) exist in context of grammar

@@ -62,11 +62,11 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
     @Test
     fun automaton_parse__r_a() {
         val parser = ScanOnDemandParser(rrs)
-        val (sppt, issues) = parser.parseForGoal(userGoalRuleName, "r=a;", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal(userGoalRuleName, "r=a;", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString(userGoalRuleName))
-        assertNotNull(sppt)
-        assertEquals(0, issues.size)
-        assertEquals(1, sppt.maxNumHeads)
+        assertNotNull(result.sppt)
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(R_rule, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, userGoalRuleName, 0, false) {
@@ -80,11 +80,11 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
     @Test
     fun automaton_parse__r_bac() {
         val parser = ScanOnDemandParser(rrs)
-        val (sppt, issues) = parser.parseForGoal(userGoalRuleName, "r=(a);", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal(userGoalRuleName, "r=(a);", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString(userGoalRuleName))
-        assertNotNull(sppt)
-        assertEquals(0, issues.size)
-        assertEquals(1, sppt.maxNumHeads)
+        assertNotNull(result.sppt)
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(R_rule, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, userGoalRuleName, 0, false) {
@@ -98,11 +98,11 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
     @Test
     fun automaton_parse__s_l_r_bac() {
         val parser = ScanOnDemandParser(rrs)
-        val (sppt, issues) = parser.parseForGoal(userGoalRuleName, "skip leaf r=(a);", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal(userGoalRuleName, "skip leaf r=(a);", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString(userGoalRuleName))
-        assertNotNull(sppt)
-        assertEquals(0, issues.size)
-        assertEquals(1, sppt.maxNumHeads)
+        assertNotNull(result.sppt)
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(R_rule, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, userGoalRuleName, 0, false) {

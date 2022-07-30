@@ -64,10 +64,10 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_v() {
         val parser = ScanOnDemandParser(rrs)
-        val (sppt, issues) = parser.parseForGoal("S", "v", AutomatonKind.LOOKAHEAD_1)
-        assertNotNull(sppt)
-        assertEquals(0, issues.size)
-        assertEquals(1, sppt.maxNumHeads)
+        val result = parser.parseForGoal("S", "v", AutomatonKind.LOOKAHEAD_1)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
@@ -82,9 +82,9 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
 
             transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(v); lhg(setOf(EOT, m, a)) }
             transition(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(setOf(EOT)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(E); tgt(rA, OLI, PLS); lhg(setOf(a), setOf(EOT,m,a)) }
+            transition(HEIGHT) { ctx(G, o0, SOR); src(E); tgt(rA, OLI, PLS); lhg(setOf(a), setOf(EOT, m, a)) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(R); tgt(E); lhg(m, m); lhg(EOT, EOT); lhg(a, a) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(E); tgt(rM, OLI, PLS); lhg(setOf(m), setOf(EOT,m,a)) }
+            transition(HEIGHT) { ctx(G, o0, SOR); src(E); tgt(rM, OLI, PLS); lhg(setOf(m), setOf(EOT, m, a)) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(v); tgt(R); lhg(m, m); lhg(EOT, EOT); lhg(a, a) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(E); tgt(S); lhg(EOT, EOT); }
 
@@ -96,11 +96,11 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_vavav() {
         val parser = ScanOnDemandParser(rrs)
-        val (sppt, issues) = parser.parseForGoal("S", "vavav", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "vavav", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
-        assertNotNull(sppt)
-        assertEquals(0, issues.size)
-        assertEquals(1, sppt.maxNumHeads)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
@@ -135,11 +135,11 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_vavmvav() {
         val parser = ScanOnDemandParser(rrs)
-        val (sppt, issues) = parser.parseForGoal("S", "vavmvav", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "vavmvav", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
-        assertNotNull(sppt)
-        assertEquals(0, issues.size)
-        assertEquals(1, sppt.maxNumHeads)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
@@ -177,7 +177,7 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val parser = ScanOnDemandParser(rrs)
-        val (sppt, issues) = parser.parseForGoal("S", "v/v", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "v/v", AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
             val s0 = state(RP(G, o0, SOR))      /* G = . S */
@@ -207,29 +207,29 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
             transition(GRAFT) { ctx(rA, OLI, PLI); src(E, o1, EOR); tgt(rA, OLI, EOR); lhg(setOf(EOT, a, m)); gpg(rA, OLI, PLI) }
             transition(GRAFT) { ctx(rA, OLI, PLI); src(E, o2, EOR); tgt(rA, OLI, EOR); lhg(setOf(EOT, a, m)); gpg(rA, OLI, PLI) }
             transition(GRAFT) { ctx(rA, OLI, PLS); src(a); tgt(rA, OLI, PLI); lhg(v); gpg(rA, OLI, PLS) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(E,o0,EOR); tgt(rA, OLI, PLS); lhg(setOf(a), setOf(EOT, a, m)) }
-            transition(GRAFT) { ctx(rA, OLI, PLI); src(E,o0,EOR); tgt(rA, OLI, PLS); lhg(a); gpg(rA, OLI, PLI) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(E,o1,EOR); tgt(rA, OLI, PLS); lhg(setOf(a), setOf(EOT, a, m)) }
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(E, o0, EOR); tgt(rA, OLI, PLS); lhg(setOf(a), setOf(EOT, a, m)) }
+            transition(GRAFT) { ctx(rA, OLI, PLI); src(E, o0, EOR); tgt(rA, OLI, PLS); lhg(a); gpg(rA, OLI, PLI) }
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(E, o1, EOR); tgt(rA, OLI, PLS); lhg(setOf(a), setOf(EOT, a, m)) }
             transition(GRAFT) { ctx(rA, OLI, PLI); src(E, o1, EOR); tgt(rA, OLI, PLS); lhg(a); gpg(rA, OLI, PLI) }
             transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(E, o2, EOR); tgt(rA, OLI, PLS); lhg(setOf(a), setOf(EOT, a, m)) }
             transition(GRAFT) { ctx(rA, OLI, PLI); src(E, o2, EOR); tgt(rA, OLI, PLS); lhg(a); gpg(rA, OLI, PLI) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(R); tgt(E,o0,EOR); lhg(setOf(EOT, a, m), setOf(EOT, a, m)) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(rM, OLI, EOR); tgt(E,o1,EOR); lhg(setOf(EOT, a, m), setOf(EOT, a, m)) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(rA, OLI, EOR); tgt(E,o2,EOR); lhg(setOf(EOT, a, m), setOf(EOT, a, m)) }
-            transition(GRAFT) { ctx(rM, OLI, PLI); src(E,o0,EOR); tgt(rM,OLI,EOR); lhg(setOf(EOT, a, m)); gpg(rM, OLI, PLI) }
-            transition(GRAFT) { ctx(rM, OLI, PLI); src(E,o1,EOR); tgt(rM,OLI,EOR); lhg(setOf(EOT, a, m)); gpg(rM, OLI, PLI) }
-            transition(GRAFT) { ctx(rM, OLI, PLI); src(E,o2,EOR); tgt(rM,OLI,EOR); lhg(setOf(EOT, a, m)); gpg(rM, OLI, PLI) }
-            transition(GRAFT) { ctx(rM, OLI, PLS); src(m); tgt(rM,OLI,PLI); lhg(v); gpg(rM, OLI, PLS) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(E,o0,EOR); tgt(rM, OLI,PLS); lhg(setOf(m), setOf(EOT, a, m)) }
-            transition(GRAFT) { ctx(rM, OLI, PLI); src(E,o0,EOR); tgt(rM, OLI,PLS); lhg(m); gpg(rM,OLI,PLI) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(E,o1,EOR); tgt(rM, OLI,PLS); lhg(setOf(m), setOf(EOT, a, m)) }
-            transition(GRAFT) { ctx(rM, OLI, PLI); src(E,o1,EOR); tgt(rM, OLI,PLS); lhg(m); gpg(rM,OLI,PLI) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(E,o2,EOR); tgt(rM, OLI,PLS); lhg(setOf(m), setOf(EOT, a, m)) }
-            transition(GRAFT) { ctx(rM, OLI, PLI); src(E,o2,EOR); tgt(rM, OLI,PLS); lhg(m); gpg(rM,OLI,PLI) }
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(R); tgt(E, o0, EOR); lhg(setOf(EOT, a, m), setOf(EOT, a, m)) }
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(rM, OLI, EOR); tgt(E, o1, EOR); lhg(setOf(EOT, a, m), setOf(EOT, a, m)) }
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(rA, OLI, EOR); tgt(E, o2, EOR); lhg(setOf(EOT, a, m), setOf(EOT, a, m)) }
+            transition(GRAFT) { ctx(rM, OLI, PLI); src(E, o0, EOR); tgt(rM, OLI, EOR); lhg(setOf(EOT, a, m)); gpg(rM, OLI, PLI) }
+            transition(GRAFT) { ctx(rM, OLI, PLI); src(E, o1, EOR); tgt(rM, OLI, EOR); lhg(setOf(EOT, a, m)); gpg(rM, OLI, PLI) }
+            transition(GRAFT) { ctx(rM, OLI, PLI); src(E, o2, EOR); tgt(rM, OLI, EOR); lhg(setOf(EOT, a, m)); gpg(rM, OLI, PLI) }
+            transition(GRAFT) { ctx(rM, OLI, PLS); src(m); tgt(rM, OLI, PLI); lhg(v); gpg(rM, OLI, PLS) }
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(E, o0, EOR); tgt(rM, OLI, PLS); lhg(setOf(m), setOf(EOT, a, m)) }
+            transition(GRAFT) { ctx(rM, OLI, PLI); src(E, o0, EOR); tgt(rM, OLI, PLS); lhg(m); gpg(rM, OLI, PLI) }
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(E, o1, EOR); tgt(rM, OLI, PLS); lhg(setOf(m), setOf(EOT, a, m)) }
+            transition(GRAFT) { ctx(rM, OLI, PLI); src(E, o1, EOR); tgt(rM, OLI, PLS); lhg(m); gpg(rM, OLI, PLI) }
+            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(E, o2, EOR); tgt(rM, OLI, PLS); lhg(setOf(m), setOf(EOT, a, m)) }
+            transition(GRAFT) { ctx(rM, OLI, PLI); src(E, o2, EOR); tgt(rM, OLI, PLS); lhg(m); gpg(rM, OLI, PLI) }
             transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, OLI, PLI), RP(rM, OLI, PLI)); src(v); tgt(R); lhg(setOf(EOT, a, m), setOf(EOT, a, m)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(E,o0,EOR); tgt(S); lhg(setOf(EOT), setOf(EOT)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(E,o1,EOR); tgt(S); lhg(setOf(EOT), setOf(EOT)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(E,o2,EOR); tgt(S); lhg(setOf(EOT), setOf(EOT)) }
+            transition(HEIGHT) { ctx(G, o0, SOR); src(E, o0, EOR); tgt(S); lhg(setOf(EOT), setOf(EOT)) }
+            transition(HEIGHT) { ctx(G, o0, SOR); src(E, o1, EOR); tgt(S); lhg(setOf(EOT), setOf(EOT)) }
+            transition(HEIGHT) { ctx(G, o0, SOR); src(E, o2, EOR); tgt(S); lhg(setOf(EOT), setOf(EOT)) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -243,8 +243,8 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("v", "vav", "vavav", "vmv", "vmvmv", "vavmv", "vmvav")
         for (sen in sentences) {
-            val (sppt, issues) = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
-            if (issues.isNotEmpty()) issues.forEach { println(it) }
+            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            if (result.issues.isNotEmpty()) result.issues.forEach { println(it) }
         }
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
         val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)

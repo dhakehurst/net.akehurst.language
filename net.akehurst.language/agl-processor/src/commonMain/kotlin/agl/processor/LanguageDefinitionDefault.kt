@@ -20,6 +20,7 @@ import net.akehurst.language.api.processor.LanguageDefinition
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.processor.SyntaxAnalyserResolver
 import net.akehurst.language.util.CachedValue
 import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
@@ -33,7 +34,7 @@ class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     buildForDefaultGoal:Boolean,
     style: String?,
     format: String?,
-    syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?,
+    syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?,
     semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
 ) : LanguageDefinition<AsmType, ContextType> {
     //constructor(identity: String, grammarStrArg: String?) : this(identity, grammarStrArg, null, null, null, null, null, null)
@@ -47,7 +48,7 @@ class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                 targetGrammarName(targetGrammar)
                 defaultGoalRuleName(defaultGoalRule)
                 syntaxAnalyser(syntaxAnalyser)
-                semanticAnalyser(semanticAnalyser)
+                semanticAnalyserResolver(semanticAnalyser)
             }
             val proc = Agl.processorFromString(g, config, null)
             if(buildForDefaultGoal) proc.buildFor(null) //null options will use default goal
@@ -97,6 +98,9 @@ class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
             this._processor_cache.reset()
         }
     }
+    override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
+    get(){}
+            set(value) { this.syntaxAnalyser = value.invoke() }
 
     override var semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? by Delegates.observable(semanticAnalyser) { _, oldValue, newValue ->
         if (oldValue != newValue) {

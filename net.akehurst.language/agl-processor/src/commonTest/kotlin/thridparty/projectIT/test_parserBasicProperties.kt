@@ -205,9 +205,9 @@ class test_parserBasicProperties {
                     before # after ;
                     before #, +, - after;
         """.trimIndent()
-        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName("LimitedTest") })
-        assertNotNull(sppt, issues.joinToString(separator = "\n") { it.toString() })
-        assertEquals(emptyList(), issues)
+        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("LimitedTest") })
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
@@ -234,9 +234,9 @@ class test_parserBasicProperties {
                                         visibility +
                 partsOfParts
         """.trimIndent()
-        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName("PartsTest") })
-        assertNotNull(sppt, issues.joinToString(separator = "\n") { it.toString() })
-        assertEquals(emptyList(), issues)
+        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("PartsTest") })
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
@@ -370,9 +370,9 @@ PartsTest myName
 
             optList
         """.trimIndent()
-        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName("PartsTest") })
-        assertNotNull(sppt, issues.joinToString(separator = "\n") { it.toString() })
-        assertEquals(emptyList(), issues)
+        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("PartsTest") })
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
@@ -413,9 +413,9 @@ PartsTest myName
                                         visibility +
                 partsOfParts
         """.trimIndent()
-        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName("PartsTest") })
-        assertNotNull(sppt, issues.joinToString(separator = "\n") { it.toString() })
-        assertEquals(emptyList(), issues)
+        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("PartsTest") })
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
@@ -480,9 +480,9 @@ PartsTest myName
                 before "iets" ! "wat" !  after
                 before true! false! true! false!	 after
         """.trimIndent()
-        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName("PrimitivesTest") })
-        assertNotNull(sppt, issues.joinToString(separator = "\n") { it.toString() })
-        assertEquals(emptyList(), issues)
+        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("PrimitivesTest") })
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
@@ -540,9 +540,9 @@ PartsTest myName
                                         name2
                                     optRefList // not present
         """.trimIndent()
-        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName("RefsTest") })
-        assertNotNull(sppt, issues.joinToString(separator = "\n") { it.toString() })
-        assertEquals(emptyList(), issues)
+        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("RefsTest") })
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
@@ -654,9 +654,9 @@ PartsTest myName
                                                         nameY
                                                         nameX
         """.trimIndent()
-        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName("RefsTest") })
-        assertNotNull(sppt, issues.joinToString(separator = "\n") { it.toString() })
-        assertEquals(emptyList(), issues)
+        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("RefsTest") })
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
@@ -673,8 +673,8 @@ PartsTest myName
                     PrimWithKeywordProj
                     PrimWithKeywordProj <BOOL>
         """.trimIndent()
-        val (sppt, issues) = processor.parse(sentence, processor.parserOptions { goalRuleName("WithKeywordProj") })
-        assertNotNull(sppt, issues.joinToString(separator = "\n") { it.toString() })
-        assertEquals(emptyList(), issues)
+        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("WithKeywordProj") })
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(emptyList(), result.issues)
     }
 }
