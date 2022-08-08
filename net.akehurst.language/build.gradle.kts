@@ -19,7 +19,7 @@ import com.github.gmazzo.gradle.plugins.BuildConfigExtension
 
 plugins {
     kotlin("multiplatform") version ("1.7.10") apply false
-    id("org.jetbrains.dokka") version ("1.7.10") apply false
+    //id("org.jetbrains.dokka") version ("1.7.0") apply false
     id("com.github.gmazzo.buildconfig") version("3.1.0") apply false
     id("nu.studer.credentials") version ("3.0")
     id("net.akehurst.kotlin.gradle.plugin.exportPublic") version("1.7.10") apply false
@@ -43,12 +43,16 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.multiplatform")
     apply(plugin = "maven-publish")
     apply(plugin = "signing")
-    apply(plugin = "org.jetbrains.dokka")
+    //apply(plugin = "org.jetbrains.dokka")
     apply(plugin = "com.github.gmazzo.buildconfig")
     apply(plugin = "net.akehurst.kotlin.gradle.plugin.exportPublic")
 
     repositories {
-        mavenLocal()
+        mavenLocal {
+            content{
+                includeGroupByRegex("net\\.akehurst.+")
+            }
+        }
         mavenCentral()
     }
 
@@ -81,6 +85,9 @@ subprojects {
                     apiVersion = kotlin_apiVersion
                     jvmTarget = jvmTargetVersion
                 }
+                dependencies {
+                //    implementation(kotlin("test-junit"))
+                }
             }
         }
         js("js", IR) {
@@ -112,12 +119,12 @@ subprojects {
         }
     }
 
-    val dokkaHtml by tasks.getting(org.jetbrains.dokka.gradle.DokkaTask::class)
+    //val dokkaHtml by tasks.getting(org.jetbrains.dokka.gradle.DokkaTask::class)
 
     val javadocJar: TaskProvider<Jar> by tasks.registering(Jar::class) {
-        dependsOn(dokkaHtml)
+ //       dependsOn(dokkaHtml)
         archiveClassifier.set("javadoc")
-        from(dokkaHtml.outputDirectory)
+//        from(dokkaHtml.outputDirectory)
     }
     tasks.named("publish").get().dependsOn("javadocJar")
 
@@ -174,6 +181,7 @@ subprojects {
     }
 
     configure<SigningExtension> {
+        useGpgCmd()
         val publishing = project.properties["publishing"] as PublishingExtension
         sign(publishing.publications)
     }

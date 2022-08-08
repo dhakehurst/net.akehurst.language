@@ -31,12 +31,14 @@ import net.akehurst.language.api.parser.InputLocation
  */
 
 typealias SyntaxAnalyserResolver<AsmType, ContextType> = (Grammar) -> SyntaxAnalyser<AsmType, ContextType>
+typealias SemanticAnalyserResolver<AsmType, ContextType> = (Grammar) -> SemanticAnalyser<AsmType, ContextType>
+
 
 interface LanguageProcessorConfiguration<AsmType : Any, ContextType : Any> {
     var targetGrammarName:String?
     var defaultGoalRuleName: String?
     var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
-    var semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
+    var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
     var formatter: Formatter?
 }
 

@@ -17,14 +17,13 @@
 package net.akehurst.language.api.processor
 
 import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.parser.InputLocation
 
 internal class LanguageProcessorConfigurationDefault<AsmType : Any, ContextType : Any>(
     override var targetGrammarName: String? = null,
     override var defaultGoalRuleName: String? = null,
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null,
-    override var semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? = null,
+    override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null,
     override var formatter: Formatter? = null
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
 
@@ -58,7 +57,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any> {
     private var _targetGrammarName: String? = null
     private var _defaultGoalRuleName: String? = null
     private var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null
-    private var _semanticAnalyserResolver: SemanticAnalyser<AsmType, ContextType>? = null
+    private var _semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null
     private var _formatter: Formatter? = null
 
     fun targetGrammarName(value:String?) {
@@ -69,11 +68,11 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any> {
         _defaultGoalRuleName=value
     }
 
-    fun syntaxAnalyser(func: SyntaxAnalyserResolver<AsmType, ContextType>?) {
+    fun syntaxAnalyserResolver(func: SyntaxAnalyserResolver<AsmType, ContextType>?) {
         _syntaxAnalyserResolver = func
     }
 
-    fun semanticAnalyserResolver(value: SemanticAnalyser<AsmType, ContextType>?) {
+    fun semanticAnalyserResolver(value: SemanticAnalyserResolver<AsmType, ContextType>?) {
         _semanticAnalyserResolver = value
     }
 

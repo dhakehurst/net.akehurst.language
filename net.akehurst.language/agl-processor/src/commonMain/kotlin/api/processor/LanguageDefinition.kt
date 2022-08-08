@@ -28,6 +28,8 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     var format: String?
     var syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
     var semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
+    var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
+    var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
 
     val processor: LanguageProcessor<AsmType, ContextType>?
 

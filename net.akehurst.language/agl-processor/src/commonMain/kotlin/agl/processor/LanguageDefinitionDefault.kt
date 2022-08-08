@@ -20,6 +20,7 @@ import net.akehurst.language.api.processor.LanguageDefinition
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.processor.SemanticAnalyserResolver
 import net.akehurst.language.api.processor.SyntaxAnalyserResolver
 import net.akehurst.language.util.CachedValue
 import net.akehurst.language.util.cached
@@ -31,11 +32,11 @@ class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     grammarStrArg: String?,
     targetGrammarArg: String?,
     defaultGoalRuleArg: String?,
-    buildForDefaultGoal:Boolean,
+    buildForDefaultGoal: Boolean,
     style: String?,
     format: String?,
     syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?,
-    semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
+    semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
 ) : LanguageDefinition<AsmType, ContextType> {
     //constructor(identity: String, grammarStrArg: String?) : this(identity, grammarStrArg, null, null, null, null, null, null)
 
@@ -47,14 +48,16 @@ class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
             val config = Agl.configuration<AsmType, ContextType> {
                 targetGrammarName(targetGrammar)
                 defaultGoalRuleName(defaultGoalRule)
-                syntaxAnalyser(syntaxAnalyser)
-                semanticAnalyserResolver(semanticAnalyser)
+                syntaxAnalyserResolver(syntaxAnalyserResolver)
+                semanticAnalyserResolver(semanticAnalyserResolver)
             }
             val proc = Agl.processorFromString(g, config, null)
-            if(buildForDefaultGoal) proc.buildFor(null) //null options will use default goal
+            if (buildForDefaultGoal) proc.buildFor(null) //null options will use default goal
             proc
         }
     }
+    private var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null
+    private var _semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null
 
     override val grammarObservers = mutableListOf<(String?, String?) -> Unit>()
     override val styleObservers = mutableListOf<(String?, String?) -> Unit>()
@@ -99,14 +102,23 @@ class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         }
     }
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
-    get(){}
-            set(value) { this.syntaxAnalyser = value.invoke() }
+        get() = _syntaxAnalyserResolver
+        set(value) {
+            _syntaxAnalyserResolver = value
+            this.syntaxAnalyser = this._processor_cache.value?.let { proc -> value?.invoke(proc.grammar) }
+        }
 
     override var semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? by Delegates.observable(semanticAnalyser) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
+    override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
+        get() = _semanticAnalyserResolver
+        set(value) {
+            _semanticAnalyserResolver = value
+            this.semanticAnalyser = this._processor_cache.value?.let { proc -> value?.invoke(proc.grammar) }
+        }
 
     override val processor: LanguageProcessor<AsmType, ContextType>? get() = this._processor_cache.value
 

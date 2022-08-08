@@ -16,12 +16,10 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-
 import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
-import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
 import kotlin.test.Test
@@ -63,7 +61,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         val syntaxAnalyser = SyntaxAnalyserSimple(typeModel)
         val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
             grammarStr,
-            Agl.configuration { syntaxAnalyser(syntaxAnalyser) }
+            Agl.configuration { syntaxAnalyserResolver{syntaxAnalyser} }
         ).also {
             syntaxAnalyser.configure(
                 configurationContext = ContextFromGrammar(it.grammar),

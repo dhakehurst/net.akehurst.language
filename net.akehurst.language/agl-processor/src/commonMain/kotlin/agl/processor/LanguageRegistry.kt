@@ -32,7 +32,9 @@ import net.akehurst.language.api.processor.LanguageDefinition
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.processor.SemanticAnalyserResolver
 import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.processor.SyntaxAnalyserResolver
 import net.akehurst.language.api.style.AglStyleRule
 
 interface AglLanguages {
@@ -102,8 +104,8 @@ class LanguageRegistry {
                 """.trimIndent(),
                 format = """
                 """.trimIndent(),
-                syntaxAnalyser = AglGrammarSyntaxAnalyser(GrammarRegistryDefault), //TODO: enable the registry to be changed,
-                semanticAnalyser = AglGrammarSemanticAnalyser()
+                syntaxAnalyserResolver = { AglGrammarSyntaxAnalyser(GrammarRegistryDefault)}, //TODO: enable the registry to be changed,
+                semanticAnalyserResolver = { AglGrammarSemanticAnalyser()}
             )
         )
 
@@ -138,8 +140,8 @@ class LanguageRegistry {
                 """.trimIndent(),
                 format = """
                 """.trimIndent(),
-                syntaxAnalyser = AglStyleSyntaxAnalyser(),
-                semanticAnalyser = null
+                syntaxAnalyserResolver = {AglStyleSyntaxAnalyser()},
+                semanticAnalyserResolver = null
             )
         )
 
@@ -154,8 +156,8 @@ class LanguageRegistry {
                 """.trimIndent(),
                 format = """
                 """.trimIndent(),
-                syntaxAnalyser = AglFormatSyntaxAnalyser(),
-                semanticAnalyser = null
+                syntaxAnalyserResolver = {AglFormatSyntaxAnalyser()},
+                semanticAnalyserResolver = null
             )
         )
 
@@ -202,8 +204,8 @@ class LanguageRegistry {
                 """.trimIndent(),
                 format = """
                 """.trimIndent(),
-                syntaxAnalyser = AglScopesSyntaxAnalyser(),
-                semanticAnalyser = null
+                syntaxAnalyserResolver = {AglScopesSyntaxAnalyser()},
+                semanticAnalyserResolver = null
             ).also {
                 it.syntaxAnalyser?.configure(
                     configurationContext = ContextFromGrammar(this.grammar.processor!!.grammar),
@@ -231,11 +233,11 @@ class LanguageRegistry {
 
     fun <AsmType : Any, ContextType : Any> register(
         identity: String, grammar: String?, targetGrammar:String?, defaultGoalRule: String?, buildForDefaultGoal:Boolean,
-        style: String?, format: String?, syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?, semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
+        style: String?, format: String?, syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?, semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
     ): LanguageDefinition<AsmType, ContextType> = this.registerFromDefinition(
         LanguageDefinitionDefault<AsmType, ContextType>(
             identity, grammar, targetGrammar, defaultGoalRule, buildForDefaultGoal,
-            style, format, syntaxAnalyser, semanticAnalyser
+            style, format, syntaxAnalyserResolver, semanticAnalyserResolver
         )
     )
 

@@ -55,7 +55,13 @@ object Agl {
     ): LanguageProcessor<AsmType, ContextType> {
         val config = configuration ?: configurationDefault()
         val goal = config.defaultGoalRuleName ?: grammar.rule.first { it.isSkip.not() }.name
-        return LanguageProcessorDefault<AsmType, ContextType>(grammar, goal, config.syntaxAnalyser, config.formatter, config.semanticAnalyser)
+        return LanguageProcessorDefault<AsmType, ContextType>(
+            grammar,
+            goal,
+            config.syntaxAnalyserResolver?.invoke(grammar),
+            config.formatter,
+            config.semanticAnalyserResolver?.invoke(grammar)
+        )
     }
 
     /**
@@ -86,8 +92,8 @@ object Agl {
                     Agl.configuration {
                         targetGrammarName(grammar.name)
                         defaultGoalRuleName(grammar.rule.first { it.isSkip.not() }.name)
-                        syntaxAnalyser(SyntaxAnalyserSimple(TypeModelFromGrammar(grammar).derive()))
-                        semanticAnalyserResolver(SemanticAnalyserSimple())
+                        syntaxAnalyserResolver{ g -> SyntaxAnalyserSimple(TypeModelFromGrammar(g).derive())}
+                        semanticAnalyserResolver{ _ -> SemanticAnalyserSimple() }
                         formatter(null) //TODO
                     }
                 )
@@ -133,7 +139,7 @@ object Agl {
                     goal.contains(".") -> {
                         val grammarName = goal.substringBefore(".")
                         val grammar = grammars.find { it.name == grammarName } ?: throw LanguageProcessorException("Grammar with name $grammarName not found", null)
-                        val goalName = goal.substringAfter(".")
+                        //val goalName = goal.substringAfter(".")
                         processorFromGrammar(grammar, config)
                     }
                     else -> processorFromGrammar(grammars.last(), config)

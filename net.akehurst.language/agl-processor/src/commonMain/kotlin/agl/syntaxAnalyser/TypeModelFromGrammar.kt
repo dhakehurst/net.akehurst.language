@@ -19,7 +19,7 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.typeModel.*
 
-internal class TypeModelFromGrammar(
+class TypeModelFromGrammar(
     private val _grammar: Grammar
 ) {
 
@@ -35,7 +35,7 @@ internal class TypeModelFromGrammar(
     private val _typeForRuleItem = mutableMapOf<RuleItem, RuleType>()
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredRuleType, String>, Int>()
 
-    internal fun derive(): TypeModel {
+    fun derive(): TypeModel {
         for (rule in _grammar.allRule) {
             if (rule.isSkip.not() && rule.isLeaf.not()) {
                 typeForRhs(rule)
