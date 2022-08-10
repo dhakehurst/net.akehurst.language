@@ -65,7 +65,7 @@ class LanguageRegistry {
                 grammar = AglGrammarGrammar(),
                 targetGrammar = null,
                 defaultGoalRule = AglGrammarGrammar.goalRuleName,
-                buildForDefaultGoal = true,
+                buildForDefaultGoal = false,
                 style = """
                     'namespace' {
                       foreground: darkgreen;
@@ -115,7 +115,7 @@ class LanguageRegistry {
                 grammar = AglStyleGrammar(),
                 targetGrammar = null,
                 defaultGoalRule = AglStyleGrammar.goalRuleName,
-                buildForDefaultGoal = true,
+                buildForDefaultGoal = false,
                 style = """
                     META_IDENTIFIER {
                       foreground: orange;
@@ -151,7 +151,7 @@ class LanguageRegistry {
                 grammar = AglFormatGrammar(),
                 targetGrammar = null,
                 defaultGoalRule = AglFormatGrammar.goalRuleName,
-                buildForDefaultGoal = true,
+                buildForDefaultGoal = false,
                 style = """
                 """.trimIndent(),
                 format = """
@@ -167,7 +167,7 @@ class LanguageRegistry {
                 grammar = AglScopesGrammar(),
                 targetGrammar = null,
                 defaultGoalRule = AglScopesGrammar.goalRuleName,
-                buildForDefaultGoal = true,
+                buildForDefaultGoal = false,
                 style = """
                     'scope' {
                       foreground: darkgreen;

@@ -45,8 +45,8 @@ class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
     private val _processor_cache: CachedValue<LanguageProcessor<AsmType, ContextType>?> = cached {
         val config = Agl.configuration<AsmType, ContextType> {
             defaultGoalRuleName(defaultGoalRule)
-            syntaxAnalyserResolver(syntaxAnalyserResolver)
-            semanticAnalyserResolver(semanticAnalyserResolver)
+            syntaxAnalyserResolver(this@LanguageDefinitionFromAsm.syntaxAnalyserResolver)
+            semanticAnalyserResolver(this@LanguageDefinitionFromAsm.semanticAnalyserResolver)
         }
         val proc = Agl.processorFromGrammar(_grammarAsm, config)
         if(buildForDefaultGoal) proc.buildFor(null) //null options will use default goal
@@ -102,4 +102,9 @@ class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
     override val processor: LanguageProcessor<AsmType, ContextType>? get() = this._processor_cache.value
 
     override val grammarIsModifiable: Boolean = false
+
+    init{
+        this.syntaxAnalyserResolver = syntaxAnalyserResolver
+        this.semanticAnalyserResolver = semanticAnalyserResolver
+    }
 }

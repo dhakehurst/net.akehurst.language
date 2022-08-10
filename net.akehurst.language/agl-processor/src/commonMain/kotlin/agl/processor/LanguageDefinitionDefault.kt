@@ -48,8 +48,8 @@ class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
             val config = Agl.configuration<AsmType, ContextType> {
                 targetGrammarName(targetGrammar)
                 defaultGoalRuleName(defaultGoalRule)
-                syntaxAnalyserResolver(syntaxAnalyserResolver)
-                semanticAnalyserResolver(semanticAnalyserResolver)
+                syntaxAnalyserResolver(this@LanguageDefinitionDefault.syntaxAnalyserResolver)
+                semanticAnalyserResolver(this@LanguageDefinitionDefault.semanticAnalyserResolver)
             }
             val proc = Agl.processorFromString(g, config, null)
             if (buildForDefaultGoal) proc.buildFor(null) //null options will use default goal
@@ -96,7 +96,7 @@ class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         }
     }
 
-    override var syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>? by Delegates.observable(syntaxAnalyser) { _, oldValue, newValue ->
+    override var syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
@@ -108,7 +108,7 @@ class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
             this.syntaxAnalyser = this._processor_cache.value?.let { proc -> value?.invoke(proc.grammar) }
         }
 
-    override var semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? by Delegates.observable(semanticAnalyser) { _, oldValue, newValue ->
+    override var semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
@@ -123,4 +123,10 @@ class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     override val processor: LanguageProcessor<AsmType, ContextType>? get() = this._processor_cache.value
 
     override val grammarIsModifiable: Boolean = true
+
+
+    init{
+        this.syntaxAnalyserResolver = syntaxAnalyserResolver
+        this.semanticAnalyserResolver = semanticAnalyserResolver
+    }
 }
