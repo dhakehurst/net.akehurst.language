@@ -26,8 +26,8 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     var defaultGoalRule: String?
     var style: String?
     var format: String?
-    var syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
-    var semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
+    val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
+    val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
     var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
     var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
 

@@ -96,28 +96,20 @@ class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         }
     }
 
-    override var syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
-        if (oldValue != newValue) {
-            this._processor_cache.reset()
-        }
-    }
+    override val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>? get() = this._processor_cache.value?.let { proc -> _syntaxAnalyserResolver?.invoke(proc.grammar) }
+
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
         get() = _syntaxAnalyserResolver
         set(value) {
             _syntaxAnalyserResolver = value
-            this.syntaxAnalyser = this._processor_cache.value?.let { proc -> value?.invoke(proc.grammar) }
         }
 
-    override var semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? by Delegates.observable(null) { _, oldValue, newValue ->
-        if (oldValue != newValue) {
-            this._processor_cache.reset()
-        }
-    }
+    override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? get() = this._processor_cache.value?.let { proc -> _semanticAnalyserResolver?.invoke(proc.grammar) }
+
     override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
         get() = _semanticAnalyserResolver
         set(value) {
             _semanticAnalyserResolver = value
-            this.semanticAnalyser = this._processor_cache.value?.let { proc -> value?.invoke(proc.grammar) }
         }
 
     override val processor: LanguageProcessor<AsmType, ContextType>? get() = this._processor_cache.value
