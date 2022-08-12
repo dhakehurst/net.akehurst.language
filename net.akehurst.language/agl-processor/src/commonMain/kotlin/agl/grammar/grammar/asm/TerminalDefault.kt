@@ -24,9 +24,7 @@ class TerminalDefault(override val value: String, override val isPattern: Boolea
             return if (isPattern) Regex(value, RegexOption.MULTILINE) else throw GrammarRuleItemNotFoundException("${this} is not a pattern")
         }
 */
-    override val name: String by lazy {
-        value
-    }
+    override val name: String = if (isPattern) "\"$value\"" else "'$value'"
 /*
     fun matches(value: String): Boolean {
         return if (isPattern) this.pattern().matches(value) else value.equals(this.value);

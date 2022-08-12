@@ -153,7 +153,7 @@ class SyntaxAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
         _active = value
     }
 
-    fun context(value: ContextType) {
+    fun context(value: ContextType?) {
         _context = value
     }
 

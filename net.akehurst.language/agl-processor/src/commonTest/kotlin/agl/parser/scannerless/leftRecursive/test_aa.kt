@@ -44,7 +44,7 @@ internal class test_aa : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a() {
-        fail("does not terminate! for no pre-build, ok if pre-built")
+        TODO()
         val sentence = "a"
 
         val expected = """
@@ -62,7 +62,7 @@ internal class test_aa : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aa() {
-        fail("does not terminate! for no pre-build, ok if pre-built")
+        TODO()
         val sentence = "aa"
 
         val expected = """
@@ -81,4 +81,27 @@ internal class test_aa : test_ScanOnDemandParserAbstract() {
         )
     }
 
+    @Test
+    fun aaa() {
+        TODO()
+        val sentence = "aaa"
+
+        val expected = """
+            S { P { P1 {
+              P { S { 'a' } }
+              S { P { P1 {
+                P { S { 'a' } }
+                S { 'a' }
+              } } }
+            } } }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
 }

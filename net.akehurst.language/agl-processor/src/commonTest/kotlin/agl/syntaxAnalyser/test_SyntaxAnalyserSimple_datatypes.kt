@@ -63,7 +63,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             grammarStr,
             Agl.configuration { syntaxAnalyserResolver{syntaxAnalyser} }
         ).also {
-            syntaxAnalyser.configure(
+            val issues = syntaxAnalyser.configure(
                 configurationContext = ContextFromGrammar(it.grammar),
                 configuration = """
                     identify unit by §nothing
@@ -76,6 +76,7 @@ class test_SyntaxAnalyserSimple_datatypes {
                     }
                 """.trimIndent()
             )
+            assertEquals(0, issues.size, issues.joinToString(separator = "\n") { "$it" })
         }
     }
 

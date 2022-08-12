@@ -19,6 +19,7 @@ package net.akehurst.language.agl.parser
 import net.akehurst.language.agl.automaton.*
 import net.akehurst.language.agl.automaton.LookaheadSetPart
 import net.akehurst.language.agl.automaton.ParserState
+import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.*
@@ -107,7 +108,7 @@ internal class RuntimeParser(
 
     fun resetGraphToLastGrown() {
 
-        for(trip in this.lastGrown) {
+        for (trip in this.lastGrown) {
             this.graph.pushback(trip)
         }
 
@@ -219,21 +220,21 @@ internal class RuntimeParser(
         }
     }
      */
-/*
-    internal fun growHeightOrGraftOnly(toProcess: ParseGraph.Companion.ToProcessTriple) {
-            val transitions = toProcess.growingNode.runtimeState.transitions(toProcess.previous!!.runtimeState)
-            for (transition in transitions) {
-                when (transition.action) {
-                    Transition.ParseAction.HEIGHT -> doHeight(toProcess, transition, true)
-                    Transition.ParseAction.GRAFT -> {
-                        if (transition.runtimeGuard(transition, toProcess.previous, toProcess.previous.runtimeState.state.rulePositions)) {
-                            doGraft(toProcess, transition, true)
+    /*
+        internal fun growHeightOrGraftOnly(toProcess: ParseGraph.Companion.ToProcessTriple) {
+                val transitions = toProcess.growingNode.runtimeState.transitions(toProcess.previous!!.runtimeState)
+                for (transition in transitions) {
+                    when (transition.action) {
+                        Transition.ParseAction.HEIGHT -> doHeight(toProcess, transition, true)
+                        Transition.ParseAction.GRAFT -> {
+                            if (transition.runtimeGuard(transition, toProcess.previous, toProcess.previous.runtimeState.state.rulePositions)) {
+                                doGraft(toProcess, transition, true)
+                            }
                         }
                     }
                 }
-            }
-    }
-*/
+        }
+    */
     var debugCount = 0
     fun debugOutput() {
         fun GrowingNodeIndex.asString() = "(s${runtimeState.state.number.value},${startPosition}-${nextInputPosition}{${numNonSkipChildren}}${
@@ -336,6 +337,7 @@ internal class RuntimeParser(
                 toProcess.growingNode.currentState.isAtEnd -> graph.recordGoal(toProcess.growingNode)
                 else -> this.growGoalNode(toProcess, possibleEndOfText, noLookahead)
             }
+
             RuntimeRuleKind.TERMINAL -> this.growNormal(toProcess, possibleEndOfText, noLookahead)
             RuntimeRuleKind.NON_TERMINAL -> this.growNormal(toProcess, possibleEndOfText, noLookahead)
             RuntimeRuleKind.EMBEDDED -> this.growNormal(toProcess, possibleEndOfText, noLookahead)
@@ -399,6 +401,7 @@ internal class RuntimeParser(
                     val b = doAction(tr, toProcess, possibleEndOfText, noLookahead)
                     grown = grown || b
                 }
+
                 else -> {
                     val trgs = it.value.filter { it.action == Transition.ParseAction.GRAFT }
                         // if multiple GRAFT trans to same rule, prefer left most target
@@ -488,7 +491,7 @@ internal class RuntimeParser(
             val lh = transition.lookahead.map { it.guard }.reduce { acc, e -> acc.union(this.stateSet, e) } //TODO:reduce to 1 in SM
             val runtimeLhs = toProcess.growingNode.runtimeState.runtimeLookaheadSet
 
-            val skipData = if(null==skipParser) {
+            val skipData = if (null == skipParser) {
                 //this is a skipParser, so no skipData
                 null
             } else {
@@ -629,7 +632,12 @@ internal class RuntimeParser(
         val startPosition = toProcess.growingNode.nextInputPosition
         val skipTerms = this.stateSet.runtimeRuleSet.firstSkipTerminals.toSet()
         val embeddedPossibleEOT = endingLookahead.unionContent(embeddedS0.stateSet, skipTerms)
-        val embeddedEOT = toProcess.growingNode.runtimeLookahead.map { this.stateSet.createWithParent(embeddedPossibleEOT, it) }.toSet() //FIXME: use resolve
+        val embeddedEOT = toProcess.growingNode.runtimeLookahead.flatMap { rt ->
+            possibleEndOfText.map { eot ->
+                embeddedPossibleEOT.resolve(eot, rt).lhs(embeddedS0.stateSet)
+            }
+        }.toSet() //FIXME: use resolve
+
         embeddedParser.start(startPosition, embeddedEOT)
         var seasons = 1
         var maxNumHeads = embeddedParser.graph.numberOfHeads
@@ -643,7 +651,11 @@ internal class RuntimeParser(
         return if (match.root != null) {
             val ni = match.nextInputPosition!! // will always have value if root not null
             //TODO: parse skipNodes
-            val skipLh = toProcess.growingNode.runtimeLookahead.map { this.stateSet.createWithParent(endingLookahead, it) }.toSet()
+            val skipLh = toProcess.growingNode.runtimeLookahead.flatMap {rt ->
+                possibleEndOfText.map { eot ->
+                    endingLookahead.resolve(eot, rt).lhs(embeddedS0.stateSet)
+                }
+            }.toSet()
             val skipData = this.tryParseSkipUntilNone(skipLh, ni, noLookahead)//, lh) //TODO: does the result get reused?
             val nextInput = skipData?.nextInputPosition ?: ni
             if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking Transition: $transition" }

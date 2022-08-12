@@ -142,10 +142,10 @@ class SyntaxAnalyserSimple(
         val elType = typeModel.let { typeModel.findType(target.name) }
         return when {
             null == elType -> {
-                TODO()
+                "No Element Type for ${target.name}" //TODO
             }
-            BuiltInType.STRING == elType -> TODO()
-            elType is ListType -> TODO()
+            BuiltInType.STRING == elType -> TODO("Built in String type not yet supported")
+            elType is ListType -> TODO("ListType not yet supported")
             elType is ElementType -> {
                 val actualType = when {
                     elType.subType.isNotEmpty() -> elType.subType.first { it.name == target.nonSkipChildren[0].name }
@@ -229,7 +229,7 @@ class SyntaxAnalyserSimple(
         return when (br.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> error("should never happen!")
             RuntimeRuleKind.NON_TERMINAL -> when (br.runtimeRule.rhs.itemsKind) {
-                RuntimeRuleRhsItemsKind.EMPTY -> TODO()
+                RuntimeRuleRhsItemsKind.EMPTY -> TODO("Empty rules not yet supported")
                 RuntimeRuleRhsItemsKind.CHOICE -> {
                     val value = this.createValue(br.children[0], path, scope)
                     if (null == value) {
@@ -315,13 +315,14 @@ class SyntaxAnalyserSimple(
                             list
                         }
                     }
-                    else -> TODO()
+                    RuntimeRuleListKind.NONE -> error("Internal Error: should not happen")
+                    RuntimeRuleListKind.LEFT_ASSOCIATIVE_LIST -> TODO("Left Associated List not yet supported")
+                    RuntimeRuleListKind.RIGHT_ASSOCIATIVE_LIST -> TODO("Right Associated List not yet supported")
+                    RuntimeRuleListKind.UNORDERED -> TODO("Unordered List not yet supported")
                 }
             }
-            RuntimeRuleKind.GOAL -> {
-                error("Should never happen")
-            }
-            RuntimeRuleKind.EMBEDDED -> TODO()
+            RuntimeRuleKind.GOAL -> error("Internal Error: Should never happen")
+            RuntimeRuleKind.EMBEDDED -> TODO("Embedded rules not yet supported")
         }
     }
 
@@ -333,7 +334,10 @@ class SyntaxAnalyserSimple(
                 RuntimeRuleRhsItemsKind.LIST -> when (runtimeRule.rhs.listKind) {
                     RuntimeRuleListKind.MULTI -> createPropertyName(runtimeRule.rhs.items[RuntimeRuleItem.MULTI__ITEM])
                     RuntimeRuleListKind.SEPARATED_LIST -> runtimeRule.tag
-                    else -> TODO()
+                    RuntimeRuleListKind.NONE -> error("Internal Error: should not happen")
+                    RuntimeRuleListKind.LEFT_ASSOCIATIVE_LIST -> TODO("Left Associated List not yet supported")
+                    RuntimeRuleListKind.RIGHT_ASSOCIATIVE_LIST -> TODO("Right Associated List not yet supported")
+                    RuntimeRuleListKind.UNORDERED -> TODO("Unordered List not yet supported")
                 }
                 else -> runtimeRule.tag
             }

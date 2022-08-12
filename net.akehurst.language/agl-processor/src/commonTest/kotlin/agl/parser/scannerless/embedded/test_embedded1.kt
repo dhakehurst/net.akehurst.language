@@ -29,11 +29,15 @@ import kotlin.test.assertNull
 internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
     private companion object {
+        // one grammar
+        //S = a B a
+        //B = b
         val Sn = runtimeRuleSet {
             concatenation("S") { literal("a"); ref("B"); literal("a"); }
             concatenation("B") { literal("b") }
         }
 
+        // two grammars, B embedded in S
         // B = b ;
         val B = runtimeRuleSet {
             concatenation("B") { literal("b") }
@@ -49,6 +53,19 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
+    fun Sn_empty_fails() {
+        val sentence = ""
+
+        val (sppt, issues) = super.testFail(Sn, goal, sentence, expectedNumGSSHeads = 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), issues
+        )
+    }
+
+    @Test
     fun Sn_a_fails() {
         val sentence = "a"
 
@@ -56,7 +73,7 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^d", setOf("'b'"))
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'b'"))
             ), issues
         )
     }

@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.agl.grammar.style
 
+import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
@@ -50,13 +51,16 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<List<AglStyleRule>, Sente
     override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: SentenceContext?): Pair<List<AglStyleRule>, List<LanguageIssue>> {
         val rules: List<AglStyleRule> = this.rules(sppt.root.asBranch, sppt.root.asBranch.branchNonSkipChildren, "")
 
+        //TODO: should this be semanticAnalysis ?
         if (null != context) {
             rules.forEach { rule ->
                 rule.selector.forEach { sel ->
                     if (KEYWORD_STYLE_ID == sel) {
                         //it is ok
                     } else {
-                        if (context.rootScope.isMissing(sel, "Rule")) {
+                        if (context.rootScope.isMissing(sel, ContextFromGrammar.GRAMMAR_RULE_CONTEXT_TYPE_NAME) &&
+                            context.rootScope.isMissing(sel, ContextFromGrammar.GRAMMAR_TERMINAL_CONTEXT_TYPE_NAME)
+                        ) {
                             val loc = this.locationMap[rule]
                             if (sel.startsWith("'") && sel.endsWith("'")) {
                                 _issues.raise(loc, "Terminal Literal ${sel} not found for style rule")
@@ -126,8 +130,18 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<List<AglStyleRule>, Sente
 
     // selectorSingle = LITERAL | PATTERN | IDENTIFIER ;
     fun selectorSingle(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<String> {
-        val str = target.nonSkipMatchedText.replace("\\\\", "\\").replace("\\\"", "\"")
-        return listOf(str)
+        // Must match what is done in AglGrammarSyntaxAnalyser.terminal,
+        // but keep the enclosing (single or double) quotes
+        val isPattern = target.nonSkipChildren[0].name == "PATTERN"
+        val mt = target.nonSkipMatchedText
+        //val escaped = mt.substring(1, mt.length - 1)
+        val value = if (isPattern) {
+            mt.replace("\\\"", "\"")
+        } else {
+            mt.replace("\\'", "'").replace("\\\\", "\\")
+        }
+        //val str = target.nonSkipMatchedText.replace("\\\\", "\\").replace("\\\"", "\"")
+        return listOf(value)
     }
 
     // styleList = style* ;

@@ -38,7 +38,6 @@ internal class test_leftRecursive : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a() {
-        TODO("stack overflow")
         val goal = "S"
         val sentence = "a"
 
@@ -57,7 +56,7 @@ internal class test_leftRecursive : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aa() {
-        TODO("does not terminate")
+//        TODO("does not terminate")
         val goal = "S"
         val sentence = "aa"
 

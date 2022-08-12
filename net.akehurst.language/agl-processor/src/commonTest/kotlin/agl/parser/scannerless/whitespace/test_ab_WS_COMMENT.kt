@@ -23,8 +23,8 @@ import kotlin.test.Test
 internal class test_ab_WS_COMMENT : test_ScanOnDemandParserAbstract() {
 
     // skip WS = "\s+" ;
-    // skip COMMENT = "//[^\n]*$"
-    // S = 'a' ;
+    // skip COMMENT = "//[^\n]*"
+    // S = 'a' 'b' ;
 
     private companion object {
         val rrs = runtimeRuleSet {

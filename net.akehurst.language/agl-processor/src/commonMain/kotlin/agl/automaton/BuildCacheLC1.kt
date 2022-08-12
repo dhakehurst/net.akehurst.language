@@ -470,7 +470,7 @@ internal class BuildCacheLC1(
             }
         }
 
-        if (Debug.OUTPUT_BUILD) {
+        if (Debug.OUTPUT_SM_BUILD) {
             println("LR1 states: ${l1States.size}")
             println("LR1 transitions: ${l1States.flatMap { it.outTransitions(parentOf) }.size}")
             for (state in l1States) {
@@ -520,7 +520,7 @@ internal class BuildCacheLC1(
             }
         }
 
-        if (Debug.OUTPUT_BUILD) {
+        if (Debug.OUTPUT_SM_BUILD) {
             println("")
             println("LR0 states")
             for (s in l0States.values) {
@@ -608,7 +608,7 @@ internal class BuildCacheLC1(
         }
         val merged = mergeAtEnd + mergeNotAtEnd
 
-        if (Debug.OUTPUT_BUILD) {
+        if (Debug.OUTPUT_SM_BUILD) {
             println("")
             println("merged LR0 states")
             for (s in merged) {
@@ -655,30 +655,40 @@ internal class BuildCacheLC1(
         // if there are multiple fromState.rulePositions then they should have same firstOf or they would not be merged.
         // after a WIDTH, fromState becomes the prevState, therefore
         // the lookahead is the firstOf the parent.next of the 'to' state, in the context of the fromStateRulePositions
-        if (Debug.OUTPUT_BUILD) Debug.debug(Debug.IndentDelta.INC_AFTER) { "START calcWidthInfo($prevState, $fromState) - ${fromState.rulePositions.map { it.item?.tag }}" }
+        if (Debug.OUTPUT_SM_BUILD) Debug.debug(Debug.IndentDelta.INC_AFTER) { "START calcWidthInfo($prevState, $fromState) - ${fromState.rulePositions.map { it.item?.tag }}" }
         this.firstFollowCache.clear()
         //FirstFollow3
         val firstTerminals = prevState.rulePositions.flatMap { prev ->
             fromState.rulePositions.flatMap { from ->
-                this.firstFollowCache.firstTerminalInContext(prev, from)
+                //TODO: can we do better thn parentFollow == RT here ?
+                val parentFollow = when {
+                    fromState.isGoal -> FirstFollowCache3.Companion.FollowDeferredLiteral.EOT
+                    else -> FirstFollowCache3.Companion.FollowDeferredLiteral.RT
+                }
+                this.firstFollowCache.firstTerminalInContext(prev, from, parentFollow)
             }
         }.toSet()
-        val wis = firstTerminals.map { (rr, follow) ->
+        val wis = firstTerminals.map { firstTermInfo ->
             //TODO:remove old stuff
             //val upCls = fromState.state.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
             //val upFilt = upCls.filter { rr == it.rulePosition.item }
             //val lhs_old = upFilt.map { it.lookaheadSet }.reduce { acc, it -> acc.union(it) }
-            val followResolved = follow.resolveTerminals(this.firstFollowCache)
+            val followResolved = firstTermInfo.followNext.resolvedTerminals
             val lhs = LookaheadSetPart.createFromRuntimeRules(followResolved)
             //if (Debug.CHECK) check(lhs_old.fullContent == follow) { "$lhs_old != [${followResolved.joinToString { it.tag }}] Follow($fromState,${rr.tag})" }
-            val rp = rr.asTerminalRulePosition
-            WidthInfo(rp, lhs)
+            val rp = firstTermInfo.embeddedRule.asTerminalRulePosition
+            val action = when {
+                firstTermInfo.embeddedRule.isEmbedded -> Transition.ParseAction.EMBED
+                else -> Transition.ParseAction.WIDTH
+            }
+            WidthInfo(action, rp, lhs)
         }
-        val wisMerged = wis.groupBy { it.to }
+        val wisMerged = wis.groupBy { Pair(it.to, it.action) }
             .map { me ->
-                val rp = me.key
+                val rp = me.key.first
+                val action = me.key.second
                 val lhs = me.value.map { it.lookaheadSet }.reduce { a, e -> a.union(e) }
-                WidthInfo(rp, lhs)
+                WidthInfo(action, rp, lhs)
             }
         //this.firstFollowCache.clear()
 
@@ -701,7 +711,7 @@ internal class BuildCacheLC1(
         }
          */
         //this.firstFollowCache.clear()
-        if (Debug.OUTPUT_BUILD) Debug.debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcWidthInfo($prevState, $fromState)" }
+        if (Debug.OUTPUT_SM_BUILD) Debug.debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcWidthInfo($prevState, $fromState)" }
         return wisMerged.toSet()
     }
 
@@ -721,19 +731,6 @@ internal class BuildCacheLC1(
         //        calc
         //    }
         //}
-    }
-
-    private fun calcWidthInfo1(fromRulePositions: List<RulePosition>, dnCls: Set<ClosureItemLC1>): Set<WidthInfo> {
-        // lookahead comes from down closure
-        val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
-        val grouped = filt.groupBy { it.rulePosition.item!! }.map {
-            val rr = it.key
-            val rp = RulePosition(rr, 0, RulePosition.END_OF_RULE)
-            val lhs = it.value.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e.lookaheadSet) }
-            WidthInfo(rp, lhs)
-        }.toSet()
-        //don't group them, because we need the info on the lookahead for the runtime calc of next lookaheads
-        return grouped
     }
 
     private fun calcAndCacheHeightOrGraftInto(prevPrev: ParserState, prev: ParserState, from: ParserState): Set<HeightGraftInfo> {//, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
@@ -778,9 +775,9 @@ internal class BuildCacheLC1(
                     //val targets = parent.next()
                     parentNextInfo.map { (tgt, follow) ->
                         //val follow = this.firstFollowCache.followInContext(parentContext, tgt, parentFollowAtEnd)
-                        val followResolved = follow.resolveTerminals(this.firstFollowCache)
+                        val followResolved = follow.resolvedTerminals
                         val grd = LookaheadSetPart.createFromRuntimeRules(followResolved)
-                        val parentFollowAtEndResolved = parentFollowAtEnd.resolveTerminals(this.firstFollowCache)
+                        val parentFollowAtEndResolved = parentFollowAtEnd.resolvedTerminals
                         val up = when (action) {
                             Transition.ParseAction.HEIGHT -> LookaheadSetPart.createFromRuntimeRules(parentFollowAtEndResolved)
                             Transition.ParseAction.EMBED, Transition.ParseAction.WIDTH, Transition.ParseAction.GRAFT, Transition.ParseAction.GOAL -> LookaheadSetPart.EMPTY

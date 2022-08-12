@@ -300,6 +300,7 @@ internal class AglGrammarSyntaxAnalyser(
 
     // terminal : LITERAL | PATTERN ;
     fun terminal(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Terminal {
+        // Must match what is done in AglStyleSyntaxAnalyser.selectorSingle
         val isPattern = target.nonSkipChildren[0].name == "PATTERN"
         val mt = target.nonSkipMatchedText
         val escaped = mt.substring(1, mt.length - 1)

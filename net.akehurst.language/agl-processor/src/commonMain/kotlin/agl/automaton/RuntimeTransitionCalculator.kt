@@ -57,8 +57,7 @@ internal class RuntimeTransitionCalculator(
                 val widthInto = this.stateSet.buildCache.widthInto(previousState,sourceState)
                 for (wi in widthInto) {
                     when (wi.to.runtimeRule.kind) {
-                        RuntimeRuleKind.TERMINAL -> __transitions.add(this.createWidthTransition(sourceState,wi))
-                        RuntimeRuleKind.EMBEDDED -> __transitions.add(this.createEmbeddedTransition(sourceState,wi))
+                        RuntimeRuleKind.TERMINAL,RuntimeRuleKind.EMBEDDED -> __transitions.add(this.createWidthOrEmbeddedTransition(sourceState,wi))
                         RuntimeRuleKind.GOAL, RuntimeRuleKind.NON_TERMINAL -> error("Should never happen")
                     }
                 }
@@ -75,7 +74,8 @@ internal class RuntimeTransitionCalculator(
                                 __transitions.add(Transition(sourceState, to, Transition.ParseAction.GOAL, setOf(Lookahead.EMPTY), null) { _, _ -> true })
                             }
                             else -> {
-                                val ts = this.createGoalTransition3(sourceState)
+                                //must pass in hg, because for embedded rules, GOAL does not end with EOT
+                                val ts = this.createGoalTransition3(sourceState, hg)
                                 __transitions.add(ts)//, addLh, parentLh))
                             }
                         }
@@ -97,17 +97,8 @@ internal class RuntimeTransitionCalculator(
             else -> {
                 val widthInto = this.stateSet.buildCache.widthInto(previousState,sourceState)
                 for (wi in widthInto) {
-                    when (wi.to.runtimeRule.kind) {
-                        RuntimeRuleKind.TERMINAL -> {
-                            val ts = this.createWidthTransition(sourceState,wi)
-                            __transitions.add(ts)
-                        }
-                        RuntimeRuleKind.EMBEDDED -> {
-                            val ts = this.createEmbeddedTransition(sourceState,wi)
-                            __transitions.add(ts)
-                        }
-                        else -> error("should never happen")
-                    }
+                    val ts = this.createWidthOrEmbeddedTransition(sourceState,wi)
+                    __transitions.add(ts)
                 }
             }
         }
@@ -254,22 +245,12 @@ internal class RuntimeTransitionCalculator(
             return __transitions.toSet()
         }
     */
-    private fun createWidthTransition(sourceState:ParserState, wi: WidthInfo): Transition {
-        val rp = wi.to
-        val toRp = RulePosition(rp.runtimeRule, rp.option, RulePosition.END_OF_RULE) //TODO: is this not passed in ? //assumes rp is a terminal
-        val lookaheadInfo = Lookahead(wi.lookaheadSet.lhs(this.stateSet), LookaheadSet.EMPTY)
-        val to = this.stateSet.fetchCompatibleOrCreateState(listOf(toRp))
-        // upLookahead and prevGuard are unused
-        return Transition(sourceState, to, Transition.ParseAction.WIDTH, setOf(lookaheadInfo), null,Transition.defaultRuntimeGuard)
-    }
-
-    private fun createEmbeddedTransition(sourceState:ParserState,wi: WidthInfo): Transition {
+    private fun createWidthOrEmbeddedTransition(sourceState:ParserState, wi: WidthInfo): Transition {
         val rp = wi.to
         val lookaheadInfo = Lookahead(wi.lookaheadSet.lhs(this.stateSet), LookaheadSet.EMPTY)
-        val toRp = RulePosition(rp.runtimeRule, rp.option, RulePosition.END_OF_RULE) //TODO: is this not passed in ?
-        val to = this.stateSet.fetchCompatibleOrCreateState(listOf(toRp))
+        val to = this.stateSet.fetchCompatibleOrCreateState(listOf(rp))
         // upLookahead and prevGuard are unused
-        return Transition(sourceState, to, Transition.ParseAction.EMBED, setOf(lookaheadInfo), null,Transition.defaultRuntimeGuard)
+        return Transition(sourceState, to, wi.action, setOf(lookaheadInfo), null,Transition.defaultRuntimeGuard)
     }
 
     private fun createHeightTransition3(sourceState:ParserState,hg: HeightGraftInfo): Transition {
@@ -282,14 +263,17 @@ internal class RuntimeTransitionCalculator(
     private fun createGraftTransition3(sourceState:ParserState,hg: HeightGraftInfo): Transition {
         val runtimeGuard = Transition.graftRuntimeGuard
         val to = this.stateSet.fetchCompatibleOrCreateState(hg.parentNext)
-        val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), it.up.lhs(this.stateSet)) }.toSet()
+        val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), LookaheadSet.EMPTY) }.toSet()
         val trs = Transition(sourceState, to, Transition.ParseAction.GRAFT, lookaheadInfo, hg.parent.toSet(), runtimeGuard)
         return trs
     }
 
-    private fun createGoalTransition3(sourceState:ParserState): Transition {
+    private fun createGoalTransition3(sourceState:ParserState, hg: HeightGraftInfo): Transition {
         val to = this.stateSet.finishState
-        val trs = Transition(sourceState, to, Transition.ParseAction.GOAL, setOf(Lookahead(LookaheadSet.EOT, LookaheadSet.EMPTY)), null,Transition.defaultRuntimeGuard)
+        //// must compute lookaheadInfo, because for embedded grammars, guard for completion of GOAL is not necessarily EOT
+        //val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), LookaheadSet.EMPTY) }.toSet()
+        val lookaheadInfo = hg.lhs.map { Lookahead(LookaheadSet.EOT, LookaheadSet.EMPTY) }.toSet()
+        val trs = Transition(sourceState, to, Transition.ParseAction.GOAL, lookaheadInfo, null,Transition.defaultRuntimeGuard)
         return trs
     }
 

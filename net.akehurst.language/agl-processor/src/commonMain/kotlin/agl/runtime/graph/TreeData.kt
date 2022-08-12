@@ -117,11 +117,15 @@ internal class TreeData(
     private fun removeTreeComplete(node:CompleteNodeIndex) {
         val childrenOfRemoved = this._complete[node]
         this.remove(node)
-        childrenOfRemoved?.entries?.forEach { (optionList, children) ->
-            children.forEach { child ->
-                val n = this._numberOfParents[child] ?: error("Internal Error: can't remove child with no recorded parents")
-                this._numberOfParents[child] = n - 1
-                if (1 == n) removeTreeComplete(child)
+        if (node.isEmbedded) {
+            //nothing to remove, children stored in other TreeData
+        } else {
+            childrenOfRemoved?.entries?.forEach { (optionList, children) ->
+                children.forEach { child ->
+                    val n = this._numberOfParents[child] ?: error("Internal Error: can't remove child with no recorded parents")
+                    this._numberOfParents[child] = n - 1
+                    if (1 == n) removeTreeComplete(child)
+                }
             }
         }
     }

@@ -149,6 +149,7 @@ internal data class StateInfo(
 }
 
 internal data class WidthInfo(
+    val action: Transition.ParseAction,
     val to: RulePosition,
     val lookaheadSet: LookaheadSetPart
 )

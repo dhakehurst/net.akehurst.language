@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.graph.StateInfoUncompressed
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
@@ -26,7 +25,6 @@ import net.akehurst.language.agl.util.debug
 import net.akehurst.language.collections.LazyMutableMapNonNull
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.collections.mutableQueueOf
-import net.akehurst.language.collections.mutableStackOf
 
 internal typealias ComputeRulesFunc = () -> Set<RuntimeRule>
 
@@ -301,7 +299,7 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
      * only add firstOf if not empty
      */
     private fun addFirstTerminalAndFirstOfInContext(prev: StateInfoDeferred, rulePosition: RulePosition, terminal: RuntimeRule) {
-        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.NONE) { "add firstTerm(${prev.rulePosition}[${prev.follow}],$rulePosition) = ${terminal.tag}" }
+        if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.NONE) { "add firstTerm(${prev.rulePosition}[${prev.follow}],$rulePosition) = ${terminal.tag}" }
         if (Debug.CHECK) check(prev.rulePosition.isAtEnd.not())
         this._firstTerminal[prev.rulePosition][rulePosition].add(terminal)
         if (terminal.isEmptyRule) {
@@ -312,43 +310,43 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
     }
 
     private fun addFollowInContext(prev: StateInfoDeferred, rulePosition: RulePosition, terminal: RuntimeRule) {
-        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.NONE) { "add follow(${prev.rulePosition}[${prev.follow}],$rulePosition) = ${terminal.tag}" }
+        if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.NONE) { "add follow(${prev.rulePosition}[${prev.follow}],$rulePosition) = ${terminal.tag}" }
         if (Debug.CHECK) check(prev.rulePosition.isAtEnd.not())
         this._followInContext[prev.rulePosition][rulePosition].add(terminal)
     }
 
     private fun addAllFollowInContext(prev: StateInfoDeferred, rulePosition: RulePosition, terminals: Set<RuntimeRule>) {
-        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.NONE) { "add follow(${prev.rulePosition}[${prev.follow}],$rulePosition) = ${terminals.joinToString { it.tag }}" }
+        if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.NONE) { "add follow(${prev.rulePosition}[${prev.follow}],$rulePosition) = ${terminals.joinToString { it.tag }}" }
         if (Debug.CHECK) check(prev.rulePosition.isAtEnd.not())
         this._followInContext[prev.rulePosition][rulePosition].addAll(terminals)
     }
 
     private fun addFollowInContextAsReferenceToFirstTerminal(tgtPrev: RulePosition, tgtRulePosition: RulePosition, srcPrev: RulePosition, srcRulePosition: RulePosition) {
-        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.NONE) { "add follow($tgtPrev,$tgtRulePosition) = firstTerm($srcPrev,$srcRulePosition)" }
+        if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.NONE) { "add follow($tgtPrev,$tgtRulePosition) = firstTerm($srcPrev,$srcRulePosition)" }
         if (Debug.CHECK) check(tgtPrev.isAtEnd.not() && srcPrev.isAtEnd.not())
         _firstOfInContextAsReferenceToFunc[tgtPrev][tgtRulePosition].add(Triple(ReferenceFunc.FIRST_TERM, srcPrev, srcRulePosition))
     }
 
     private fun addFollowAtEndInContext(prev: RulePosition, runtimeRule: RuntimeRule, terminal: RuntimeRule) {
-        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.NONE) { "add followAtEnd($prev,${runtimeRule.tag}) = ${terminal.tag}" }
+        if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.NONE) { "add followAtEnd($prev,${runtimeRule.tag}) = ${terminal.tag}" }
         if (Debug.CHECK) check(prev.isAtEnd.not())
         this._followAtEndInContext[prev][runtimeRule].add(terminal)
     }
 
     private fun addAllFollowAtEndInContext(prev: StateInfoDeferred, runtimeRule: RuntimeRule, terminals: Set<RuntimeRule>) {
-        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.NONE) { "add followAtEnd(${prev.rulePosition}[${prev.follow}],${runtimeRule.tag}) = ${terminals.joinToString { it.tag }}" }
+        if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.NONE) { "add followAtEnd(${prev.rulePosition}[${prev.follow}],${runtimeRule.tag}) = ${terminals.joinToString { it.tag }}" }
         if (Debug.CHECK) check(prev.rulePosition.isAtEnd.not())
         this._followAtEndInContext[prev.rulePosition][runtimeRule].addAll(terminals)
     }
 
     private fun addFollowAtEndInContextAsCalcFollow(prev: StateInfoDeferred, runtimeRule: RuntimeRule, followAtEnd: FollowDeferred) {
-        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.NONE) { "add followAtEnd(${prev.rulePosition}[${prev.follow}],${runtimeRule.tag}) = $followAtEnd" }
+        if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.NONE) { "add followAtEnd(${prev.rulePosition}[${prev.follow}],${runtimeRule.tag}) = $followAtEnd" }
         if (Debug.CHECK) check(prev.rulePosition.isAtEnd.not())
         _followAtEndInContextAsFunc[prev.rulePosition][runtimeRule].add(followAtEnd)
     }
 
     private fun addFollowInContextAsReferenceToFollow(followPrev: RulePosition, followRuntimeRule: RuntimeRule, refPrev: RulePosition, refRuntimeRule: RuntimeRule) {
-        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.NONE) { "add followAtEnd($followPrev,${followRuntimeRule.tag}) = follow($refPrev,$refRuntimeRule)" }
+        if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.NONE) { "add followAtEnd($followPrev,${followRuntimeRule.tag}) = follow($refPrev,$refRuntimeRule)" }
         if (Debug.CHECK) check(followPrev.isAtEnd.not() && refPrev.isAtEnd.not())
         _followAtEndInContextAsReferenceToFollowAtEnd[followPrev][followRuntimeRule].add(Pair(refPrev, refRuntimeRule))
     }
@@ -358,7 +356,7 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
     }
 
     private fun calcFirstTermClosure(closureStart: ClosureItem, calcFollow: Boolean): Boolean {
-        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.INC_AFTER) { "START calcFirstTermClosure: $closureStart, $calcFollow" }
+        if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.INC_AFTER) { "START calcFirstTermClosure: $closureStart, $calcFollow" }
         // Closures identified by (parent.rulePosition, prev, rulePosition, followAtEnd, parentFollowAtEnd)
         val done = mutableSetOf<ClosureItem>()
         val todoList = mutableQueueOf<ClosureItem>()
@@ -396,7 +394,7 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
                 }
             }
         }
-        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcFirstTermClosure: $closureStart, $calcFollow" }
+        if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcFirstTermClosure: $closureStart, $calcFollow" }
         return needsNext
     }
 
@@ -404,7 +402,7 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
      * iterate up a closure and set firstTerm,firstOf,follow as required
      */
     private fun processClosure(closureItem: ClosureItem, calcFollow: Boolean): Boolean {
-        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.INC_AFTER) { "START processClosure: $closureItem" }
+        if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.INC_AFTER) { "START processClosure: $closureItem" }
         var cls = closureItem
         val terminal = cls.rulePosition.runtimeRule
         if (Debug.CHECK) check(terminal.isTerminal)
@@ -415,7 +413,7 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
             childNeedsNext = this.setFirsts(cls, terminal, childNeedsNext, calcFollow)
             goUp = cls.rulePosition.isAtStart
         }
-        if (Debug.OUTPUT_BUILD) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH processClosure: $closureItem" }
+        if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH processClosure: $closureItem" }
         return childNeedsNext
     }
 

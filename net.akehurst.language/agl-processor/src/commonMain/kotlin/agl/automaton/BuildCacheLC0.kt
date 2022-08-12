@@ -134,7 +134,7 @@ internal class BuildCacheLC0(
         return bottomTerminals.map {
             val rp = RulePosition(it, 0, RulePosition.END_OF_RULE)
             val lhs = LookaheadSetPart.ANY
-            WidthInfo(rp, lhs)
+            WidthInfo(Transition.ParseAction.WIDTH, rp, lhs)
         }.toSet()
     }
 

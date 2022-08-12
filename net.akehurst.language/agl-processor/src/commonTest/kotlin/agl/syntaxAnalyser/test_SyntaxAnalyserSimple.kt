@@ -42,8 +42,8 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a"
 
         val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
         val typeModel = TypeModelFromGrammar(result.asm!!.last()).derive()
         val proc = Agl.processorFromString<AsmSimple, ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyserResolver{SyntaxAnalyserSimple(typeModel)} }, null )
         val result2 = proc.process(sentence)
@@ -72,8 +72,8 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a"
 
         val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
         val typeModel = TypeModelFromGrammar(result.asm!!.last()).derive()
         val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyserResolver{SyntaxAnalyserSimple(typeModel)} }, null )
         val result2 = proc.process(sentence)
@@ -103,8 +103,8 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a"
 
         val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
         val typeModel = TypeModelFromGrammar(result.asm!!.last()).derive()
         val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyserResolver{SyntaxAnalyserSimple(typeModel)} }, null )
         val result2 = proc.process(sentence)
@@ -136,8 +136,8 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a : A"
 
         val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
         val typeModel = TypeModelFromGrammar(result.asm!!.last()).derive()
         val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyserResolver{SyntaxAnalyserSimple(typeModel)} }, null )
         val result2 = proc.process(sentence)
@@ -173,8 +173,8 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a 8 fred"
 
         val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
         val typeModel = TypeModelFromGrammar(result.asm!!.last()).derive()
         val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyserResolver{SyntaxAnalyserSimple(typeModel)} }, null )
         val result2 = proc.process(sentence)
@@ -205,8 +205,8 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a"
 
         val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
         val typeModel = TypeModelFromGrammar(result.asm!!.last()).derive()
         val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyserResolver{SyntaxAnalyserSimple(typeModel)} }, null )
         val result2 = proc.process(sentence)
@@ -235,8 +235,8 @@ class test_SyntaxAnalyserSimple {
         val sentence = ""
 
         val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
         val typeModel = TypeModelFromGrammar(result.asm!!.last()).derive()
         val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyserResolver{SyntaxAnalyserSimple(typeModel)} }, null )
         val result2 = proc.process(sentence)
@@ -265,8 +265,8 @@ class test_SyntaxAnalyserSimple {
         val sentence = "aaaa"
 
         val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
         val typeModel = TypeModelFromGrammar(result.asm!!.last()).derive()
         val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyserResolver{SyntaxAnalyserSimple(typeModel)} }, null )
         val result2 = proc.process(sentence)
@@ -301,8 +301,8 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
 
         val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
         val typeModel = TypeModelFromGrammar(result.asm!!.last()).derive()
         val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyserResolver{SyntaxAnalyserSimple(typeModel)} }, null )
         val result1 = proc.process("a 8")
@@ -369,8 +369,8 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a 8 fred"
 
         val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
         val typeModel = TypeModelFromGrammar(result.asm!!.last()).derive()
         val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyserResolver{SyntaxAnalyserSimple(typeModel)} }, null )
         val result2 = proc.process(sentence)
@@ -405,8 +405,8 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a fred"
 
         val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
         val typeModel = TypeModelFromGrammar(result.asm!!.last()).derive()
         val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyserResolver{SyntaxAnalyserSimple(typeModel)} }, null )
         val result2 = proc.process(sentence)
@@ -440,8 +440,8 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a"
 
         val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
         val typeModel = TypeModelFromGrammar(result.asm!!.last()).derive()
         val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyserResolver{SyntaxAnalyserSimple(typeModel)} }, null )
         val result2 = proc.process(sentence)
@@ -474,8 +474,8 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a adam betty charles"
 
         val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
         val typeModel = TypeModelFromGrammar(result.asm!!.last()).derive()
         val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyserResolver{SyntaxAnalyserSimple(typeModel)} }, null )
         val result2 = proc.process(sentence)
@@ -510,8 +510,8 @@ class test_SyntaxAnalyserSimple {
         val sentence = "bk1 adam ant 12345, betty boo 34567, charlie chaplin 98765"
 
         val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
         val typeModel = TypeModelFromGrammar(result.asm!!.last()).derive()
         val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyserResolver{SyntaxAnalyserSimple(typeModel)} }, null )
         val result2 = proc.process(sentence)
@@ -564,8 +564,8 @@ class test_SyntaxAnalyserSimple {
         val sentence = "graph [fontsize=ss, labelloc=yy label=bb; splines=true overlap=false]"
 
         val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
         val typeModel = TypeModelFromGrammar(result.asm!!.last()).derive()
         val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyserResolver{SyntaxAnalyserSimple(typeModel)} }, null )
         val result2 = proc.process(sentence)

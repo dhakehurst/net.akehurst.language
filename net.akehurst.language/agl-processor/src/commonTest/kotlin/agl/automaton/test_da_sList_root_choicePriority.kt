@@ -244,7 +244,7 @@ internal class test_da_sList_root_choicePriority : test_AutomatonAbstract() {
         val sentences = listOf("v", "vav", "vavav", "vmv", "vmvmv", "vavmv", "vmvav")
         for (sen in sentences) {
             val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
-            if (result.issues.isNotEmpty()) result.issues.forEach { println(it) }
+            if (result.issues.isNotEmpty()) result.issues.forEach { println("$sen: $it") }
         }
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
         val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)

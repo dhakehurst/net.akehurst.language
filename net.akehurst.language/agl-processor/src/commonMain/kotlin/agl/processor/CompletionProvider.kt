@@ -48,7 +48,7 @@ class CompletionProvider(
                 }
                 is Terminal -> when {
                     item.owningRule.isLeaf -> listOf(CompletionItem(item.owningRule.name, item.owningRule.name))  //TODO: generate text/example from regEx
-                    item.isPattern -> listOf(CompletionItem(item.owningRule.name, item.name)) //TODO: generate text/example from regEx
+                    item.isPattern -> listOf(CompletionItem(item.owningRule.name, item.value)) //TODO: generate text/example from regEx
                     else -> listOf(CompletionItem(item.owningRule.name, item.value))
                 }
                 is NonTerminal -> {

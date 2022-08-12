@@ -26,23 +26,28 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
+import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 
 @RunWith(Parameterized::class)
 class test_Xml(val data: Data) {
 
-    companion object {
+    private companion object {
 
-        private val grammarStr = this::class.java.getResource("/xml/Xml.agl").readText()
+        val grammarStr = this::class.java.getResource("/xml/Xml.agl").readText()
+        const val goal = "document"
 
         //private val grammarStr = ""//runBlockingNoSuspensions { resourcesVfs["/xml/Xml.agl"].readString() }
-        var processor: LanguageProcessor<Any,Any> = tgqlprocessor()
+        var processor: LanguageProcessor<Any, Any> = tgqlprocessor()
 
-        var xmlFiles = arrayOf("/xml/valid/empty.xml")
+        val validDir = "/xml/valid"
+        var invalidDir = "/xml/invalid"
 
-        fun tgqlprocessor(): LanguageProcessor<Any,Any> {
+        fun tgqlprocessor(): LanguageProcessor<Any, Any> {
             //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
             return Agl.processorFromString(grammarStr)
         }
@@ -51,30 +56,50 @@ class test_Xml(val data: Data) {
         @Parameters(name = "{0}")
         fun data(): Collection<Array<Any>> {
             val col = ArrayList<Array<Any>>()
-            for (xmlFile in xmlFiles) {
-                val xmlText = this::class.java.getResource(xmlFile).readText()
-                col.add(arrayOf(Data(xmlFile, xmlText)))
+            for (xmlFile in this::class.java.getResourceAsStream(validDir).reader().readLines()) {
+                val xmlText = this::class.java.getResource("$validDir/$xmlFile").readText()
+                col.add(arrayOf(Data(xmlFile, xmlText, true)))
+            }
+            for (xmlFile in this::class.java.getResourceAsStream(invalidDir).reader().readLines()) {
+                val xmlText = this::class.java.getResource("$invalidDir/$xmlFile").readText()
+                col.add(arrayOf(Data(xmlFile, xmlText, false)))
             }
             return col
         }
     }
 
-    class Data(val file: String, val text: String) {
+    class Data(val file: String, val text: String, val valid: Boolean) {
 
         // --- Object ---
-        override fun toString(): String {
-            return this.file
+        override fun toString(): String = "$file"
+    }
+
+    @Test
+    fun parse() {
+        val result = processor.parse(this.data.text, processor.parseOptions { goalRuleName(goal) })
+
+        if (data.valid) {
+            assertNotNull(result.sppt,result.issues.joinToString(separator = "\n") { "$it" })
+            assertEquals(emptyList(), result.issues)
+            val resultStr = result.sppt!!.asString
+            assertEquals(this.data.text, resultStr)
+        } else {
+            assertNull(result.sppt)
+            assertTrue(result.issues.isNotEmpty())
         }
     }
 
     @Test
-    fun test() {
-        val goal = "file"
-        val result = processor.parse(this.data.text, processor.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
-        val resultStr = result.sppt!!.asString
-        assertEquals(this.data.text, resultStr)
+    fun process() {
+        val result = processor.process(this.data.text, processor.options { parse { goalRuleName(goal) } })
+
+        if (data.valid) {
+            assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+            assertEquals(emptyList(), result.issues)
+        } else {
+            assertNull(result.asm)
+            assertTrue(result.issues.isNotEmpty())
+        }
     }
 
 }

@@ -64,20 +64,26 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, SentenceContext> {
                     "In scope for '${scope.scopeFor}' Rule"
                 }
                 scope.identifiables.forEach { identifiable ->
-                    if (context.rootScope.isMissing(identifiable.typeName, "Rule")) {
-                        val loc = this.locationMap[PropertyValue(identifiable, "typeReference")]
-                        issues.raise(loc, "$msgStart '${identifiable.typeName}' not found as identifiable type")
-                    } else {
-                        // only check this if the typeName is valid - else it is always invalid
-                        //TODO: check this in context of typeName Rule
-                        if (context.rootScope.isMissing(identifiable.propertyName, "Rule")) {
-                            val loc = this.locationMap[PropertyValue(identifiable, "propertyName")]
-                            issues.raise(
-                                loc,
-                                "$msgStart '${identifiable.propertyName}' not found for identifying property of '${identifiable.typeName}'"
-                            )
-                        } else {
+                    when {
+                        context.rootScope.isMissing(identifiable.typeName, "Rule") -> {
+                            val loc = this.locationMap[PropertyValue(identifiable, "typeReference")]
+                            issues.raise(loc, "$msgStart '${identifiable.typeName}' not found as identifiable type")
+                        }
+                        ScopeModel.IDENTIFY_BY_NOTHING == identifiable.propertyName -> {
                             //OK
+                        }
+                        else -> {
+                            // only check this if the typeName is valid - else it is always invalid
+                            //TODO: check this in context of typeName Rule
+                            if (context.rootScope.isMissing(identifiable.propertyName, "Rule")) {
+                                val loc = this.locationMap[PropertyValue(identifiable, "propertyName")]
+                                issues.raise(
+                                    loc,
+                                    "$msgStart '${identifiable.propertyName}' not found for identifying property of '${identifiable.typeName}'"
+                                )
+                            } else {
+                                //OK
+                            }
                         }
                     }
                 }

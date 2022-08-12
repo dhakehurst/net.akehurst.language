@@ -65,7 +65,10 @@ import net.akehurst.language.api.sppt.SPPTNode
                             } ?: emptyList()
                             val skipNodes = skipChildren.map { skch ->
                                 when {
-                                    skch.isLeaf -> SPPTLeafFromInput(this.input, skch.firstRule, skch.startPosition, skch.nextInputPosition, -1)
+                                    skch.isLeaf -> {
+                                        val eolPositions = emptyList<Int>() //TODO calc ?
+                                        SPPTLeafFromInput(this.input, skch.firstRule, skch.startPosition, skch.nextInputPosition, -1)
+                                    }
                                     else -> SPPTBranchFromTreeData(
                                         skch.treeData,
                                         this.input,
@@ -77,9 +80,13 @@ import net.akehurst.language.api.sppt.SPPTNode
                                     )
                                 }
                             }
+                            val eolPositions = emptyList<Int>() //TODO calc ?
                             listOf(SPPTLeafFromInput(this.input, rp.runtimeRule, child.startPosition, child.nextInputPosition, -1)) + skipNodes
                         }
-                        else -> listOf(SPPTLeafFromInput(this.input, rp.runtimeRule, child.startPosition, child.nextInputPosition, -1))
+                        else -> {
+                            val eolPositions = emptyList<Int>() //TODO calc ?
+                            listOf(SPPTLeafFromInput(this.input, rp.runtimeRule, child.startPosition, child.nextInputPosition, -1))
+                        }
                     }
                     child.isEmbedded -> listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.runtimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
                     else -> listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.runtimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))

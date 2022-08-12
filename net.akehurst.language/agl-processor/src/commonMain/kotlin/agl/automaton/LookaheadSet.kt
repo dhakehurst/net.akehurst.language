@@ -80,7 +80,8 @@ internal class LookaheadSet(
         val ANY = LookaheadSet(-2, false, false, true, emptySet())
         val EOT = LookaheadSet(-3, false, true, false, emptySet())
         val RT = LookaheadSet(-4, true, false, false, emptySet())
-        val UNCACHED_NUMBER = -5
+        val RT_EOT = LookaheadSet(-5, true, true, false, emptySet())
+        val UNCACHED_NUMBER = -6
 
         fun createFromRuntimeRules(automaton: ParserStateSet, fullContent: Set<RuntimeRule>): LookaheadSet {
             return when {

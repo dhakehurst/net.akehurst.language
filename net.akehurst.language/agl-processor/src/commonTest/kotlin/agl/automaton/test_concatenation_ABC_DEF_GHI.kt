@@ -91,8 +91,8 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
             val s13 = state(RP(EF, 0, 1))  // {11}
             val s14 = state(RP(f, 0, EOR))      // {13}
             val s15 = state(RP(EF, 0, EOR))     // {11}
-            val s16 = state(RP(c_T, 0, EOR))      // {}
-            val s25 = state(RP(G, 0, EOR))      // {}
+            //val s16 = state(RP(c_T, 0, EOR))      // {}
+            //val s25 = state(RP(G, 0, EOR))      // {}
 
             transition(s0, s0, s1, WIDTH, setOf(b), setOf(), null)
             transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(EOT)), setOf(RP(S, 0, SOR)))

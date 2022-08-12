@@ -29,11 +29,6 @@ internal class InputFromString(
     sentence: String
 ) {
 
-    data class Match(
-        val matchedText: String,
-        val eolPositions: List<Int>
-    )
-
     companion object {
         const val contextSize = 10
         val END_OF_TEXT = 3.toChar().toString()
@@ -95,9 +90,7 @@ internal class InputFromString(
     }
 
     //TODO: write a scanner that counts eols as it goes, rather than scanning the text twice
-    fun eolPositions(text: String): List<Int> {
-        return EOL_PATTERN.findAll(text).map { it.range.first }.toList()
-    }
+    fun eolPositions(text: String): List<Int> = EOL_PATTERN.findAll(text).map { it.range.first }.toList()
 
     // seems faster to match literal with regex than substring and startsWith
     private val isLookingAt_cache = hashMapOf<Pair<Int,Int>,Boolean>()
@@ -127,7 +120,7 @@ internal class InputFromString(
         val match = this.isLookingAt(position,terminalRule)
         return if (match) {
             val text = terminalRule.value
-            val eolPositions = this.eolPositions(text)
+            val eolPositions = emptyList<Int>() //this.eolPositions(text)
             RegexMatcher.MatchResult(text, eolPositions)
             //matchedText
         } else {
@@ -227,8 +220,7 @@ internal class InputFromString(
             } else {
                 //val location = this.nextLocation(lastLocation, match.length)//match.matchedText.length)
                 val nextInputPosition = atInputPosition + match.matchedText.length
-                val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, nextInputPosition, 0)//.matchedText, 0)
-                leaf.eolPositions = match.eolPositions
+                val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, nextInputPosition, 0)
                 this.leaves[terminalRuntimeRule, atInputPosition] = leaf
                 //val cindex = CompleteNodeIndex(terminalRuntimeRule.number, inputPosition)//0, index.startPosition)
                 //this.completeNodes[cindex] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice

@@ -45,7 +45,7 @@ internal class test_leftRecursive  : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun empty_fails() {
-        TODO("does not stop")
+        TODO()
         val sentence = ""
 
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
@@ -62,12 +62,12 @@ internal class test_leftRecursive  : test_ScanOnDemandParserAbstract() {
 
         val expected = "S { E { 'a' } }"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 

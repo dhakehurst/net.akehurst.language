@@ -143,7 +143,10 @@ internal class ParserStateSet(
                 includeRT && includeEOT.not() && matchAny.not() -> LookaheadSet.RT
                 includeRT.not() && includeEOT && matchAny.not() -> LookaheadSet.EOT
                 includeRT.not() && includeEOT.not() && matchAny -> LookaheadSet.ANY
-                else -> LookaheadSet.EMPTY
+                includeRT.not() && includeEOT.not() && matchAny.not() -> LookaheadSet.EMPTY
+                includeRT && includeEOT.not() && matchAny.not() -> LookaheadSet.RT
+                includeRT && includeEOT && matchAny.not() -> LookaheadSet.RT_EOT
+                else -> error("Internal Error: situation not handled")
             }
             else -> {
                 val existing = this.lookaheadSets.firstOrNull {
@@ -166,30 +169,10 @@ internal class ParserStateSet(
 
     internal fun createLookaheadSet(part:LookaheadSetPart):LookaheadSet = createLookaheadSet(part.includesRT, part.includesEOT,part.matchANY,part.content)
 
-    private val createWithParent_cache = mutableMapOf<Pair<Int, Int>, LookaheadSet>()
-    fun createWithParent(upLhs: LookaheadSet, runtimeLookahead: LookaheadSet): LookaheadSet {
-        TODO("needs fixing to resolve eot")
-        return if (upLhs.includesRT) {
-            val res = createWithParent_cache[Pair(upLhs.number, runtimeLookahead.number)]
-            if (null == res) {
-                val lhs = when {
-                    LookaheadSet.RT == upLhs -> runtimeLookahead
-                    else -> {
-                        val content = if (upLhs.includesRT) upLhs.content.union(runtimeLookahead.content) else upLhs.content
-                        val eol = upLhs.includesEOT || (upLhs.includesRT && runtimeLookahead.includesEOT)
-                        val ma = upLhs.matchANY || (upLhs.includesRT && runtimeLookahead.matchANY)
-                        this.createLookaheadSet(false, eol, ma, content)
-                    }
-                }
-                this.createWithParent_cache[Pair(upLhs.number, runtimeLookahead.number)] = lhs
-                lhs
-            } else {
-                res
-            }
-        } else {
-            upLhs
-        }
-    }
+    //private val createWithParent_cache = mutableMapOf<Pair<Int, Int>, LookaheadSet>()
+    //fun createWithParent(eotLhs: LookaheadSet, runtimeLookahead: LookaheadSet): LookaheadSet {
+
+    //}
 
     fun build(): ParserStateSet {
         if (this.preBuilt.not()) {

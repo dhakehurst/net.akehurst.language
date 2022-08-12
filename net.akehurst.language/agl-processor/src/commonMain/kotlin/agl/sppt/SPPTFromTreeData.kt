@@ -55,7 +55,10 @@ internal class SPPTFromTreeData(
             } ?: userGoal
 
             return when {
-                uags.isLeaf -> SPPTLeafFromInput(_input, uags.firstRule, uags.startPosition, uags.nextInputPosition, -1)
+                uags.isLeaf -> {
+                    val eolPositions = emptyList<Int>() //TODO calc ?
+                    SPPTLeafFromInput(_input, uags.firstRule, uags.startPosition, uags.nextInputPosition, -1)
+                }
                 else -> SPPTBranchFromTreeData(_treeData, _input, userGoal.highestPriorityRule, userGoalOptionList[0], startPositionBeforeInitialSkip, uags.nextInputPosition, -1)
             }
         }

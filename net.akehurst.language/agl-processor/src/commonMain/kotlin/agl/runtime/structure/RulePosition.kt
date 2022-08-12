@@ -213,7 +213,7 @@ internal class RulePosition(
         val r = when {
             runtimeRule == RuntimeRuleSet.END_OF_TEXT -> RuntimeRuleSet.END_OF_TEXT_TAG
             //runtimeRule.isTerminal -> if (runtimeRule.isPattern) "\"${runtimeRule.name}\"" else "'${runtimeRule.name}'"
-            else -> runtimeRule.tag
+            else -> "${runtimeRule.runtimeRuleSetNumber}.${runtimeRule.tag}"
         }
         val o = when(runtimeRule.kind) {
             RuntimeRuleKind.GOAL -> option

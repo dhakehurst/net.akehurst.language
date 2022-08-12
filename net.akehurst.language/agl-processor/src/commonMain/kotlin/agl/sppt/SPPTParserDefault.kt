@@ -279,7 +279,6 @@ internal class SPPTParserDefault(
         val terminalRule = ruleThatIsEmpty.emptyRuleItem
         //val n = SPPTLeafDefault(terminalRule, location, true, "", 0)
         val n = SPPTLeafFromInput(input, terminalRule, startPosition, nextInputPosition, 0)
-
         var existing: SPPTLeaf? = this.findLeaf(n.identity, n.matchedTextLength)
         if (null == existing) {
             this.cacheNode(n)
@@ -292,8 +291,8 @@ internal class SPPTParserDefault(
         input.append(text)
         val terminalRule = this.runtimeRuleSetInUse.peek().findTerminalRule(pattern)
         //val n = SPPTLeafDefault(terminalRule, location, false, text, 0)
+        val eolPositions = Regex("\n", setOf(RegexOption.MULTILINE)).findAll(text).toList().map { it.range.first }
         val n = SPPTLeafFromInput(input, terminalRule, startPosition, nextInputPosition, 0)
-        n.eolPositions = Regex("\n", setOf(RegexOption.MULTILINE)).findAll(text).toList().map { it.range.first }
         var existing: SPPTLeaf? = this.findLeaf(n.identity, n.matchedTextLength)
         if (null == existing) {
             this.cacheNode(n)

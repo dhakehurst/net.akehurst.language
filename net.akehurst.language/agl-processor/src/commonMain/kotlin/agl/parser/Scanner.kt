@@ -54,6 +54,7 @@ internal class Scanner(
                     //TODO: collate unscanned, rather than make a separate token for each char
                     val text = inputText[nextInputPosition].toString()
                     nextInputPosition += text.length
+                    val eolPositions = emptyList<Int>()//TODO calulat
                     val unscanned = SPPTLeafFromInput(input, undefined, startPosition, nextInputPosition, 0)
                     //unscanned.eolPositions = input.eolPositions(text)
                     result.add(unscanned)

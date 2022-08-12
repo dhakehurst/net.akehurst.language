@@ -96,7 +96,6 @@ import net.akehurst.language.api.sppt.*
     override val lastLeaf: SPPTLeaf get() = this
     override val asLeaf: SPPTLeaf get() = this
     override var tagList: List<String> = mutableListOf<String>() //TODO: initialise late
-    override lateinit var eolPositions: List<Int> // = emptyList()
 
     override val matchedText: String get() = input[startPosition, nextInputPosition]
     override val isEmptyLeaf: Boolean get() = this.runtimeRule.isEmptyRule
@@ -115,6 +114,8 @@ import net.akehurst.language.api.sppt.*
     override fun setTags(tags: List<String>) {
         this.tagList = tags
     }
+
+    override val eolPositions: List<Int> by lazy { input.eolPositions(matchedText) }
 
     // --- SPPTNode ---
     override val nonSkipMatchedText: String get() = if (isSkip) "" else this.matchedText
