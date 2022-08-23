@@ -21,6 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleListKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.collections.mutableQueueOf
 
 /**
  * Identified by :
@@ -103,7 +104,9 @@ internal interface ClosureItemChild : ClosureItem {
 }
 
 internal interface ClosurePath {
-    val bottom:ClosureItem
+    val bottom: ClosureItem
+    val top: ClosureItem
+    val topNeedsNext: Boolean
 }
 
 internal class ClosureGraph(
@@ -278,11 +281,11 @@ internal class ClosureGraph(
             }
         }
 
-        class ClosurePathGraph(
-            override val bottom: ClosureItem
-        ) : ClosurePath {
+        data class PathData(
+            val cls: ClosureItem,
+            val needsNext: Boolean
+        )
 
-        }
     }
 
     private val _parentOf = lazyMutableMapNonNull<ClosureItem, MutableSet<ClosureItem>> { mutableSetOf() }
@@ -290,9 +293,27 @@ internal class ClosureGraph(
 
     val root = ClosureRootGraph(ffc, this, rootContext, rootRulePosition, rootParentNextNotAtEndFollow)
 
-    fun paths(bottoms:Set<ClosureItem>):Set<ClosurePath>  {
-        //find bottoms
-
+    fun traverseUpPaths(bottom: ClosureItem, func: (item: ClosureItem, childNeedsNext: Boolean) -> Boolean) {
+        val done = mutableSetOf<PathData>()
+        val bottomNeedsNext = func.invoke(bottom, false)
+        val openPaths = mutableQueueOf(PathData(bottom, bottomNeedsNext))
+        while (openPaths.isNotEmpty) {
+            val child = openPaths.dequeue()
+            if (done.contains(child)) {
+                //don't do it again
+            } else {
+                done.add(child)
+                when (child.cls) {
+                    is ClosureItemRoot -> Unit //end path
+                    is ClosureItemChild -> {
+                        for (prt in child.cls.parents) {
+                            val needsNext = func.invoke(prt, child.needsNext)
+                            openPaths.enqueue(PathData(prt, needsNext))
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun parentsOf(child: ClosureItem): Set<ClosureItem> = this._parentOf[child]

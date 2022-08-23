@@ -16,11 +16,8 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleListKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
@@ -522,7 +519,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
                         if (null != childCls) {
                             //done.add(childCls)
                             todoList.enqueue(childCls)
-                            println("todo: ${childCls.shortString}")
+                            //println("todo: ${childCls.shortString}")
                         } else {
                             // do not add it
                         }
@@ -530,9 +527,8 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
                 }
             }
         }
-        val closurePaths = graph.paths(reachedTerminal)
-        for (path in closurePaths) {
-            this.processClosurePath(path)
+        for (bottom in reachedTerminal) {
+            this.processClosurePaths(graph, bottom)
         }
         if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcFirstTermClosure: ${graph.root}" }
     }
@@ -573,26 +569,31 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
     /**
      * iterate up a closure and set firstTerm,firstOf,follow as required
      */
-    private fun processClosurePath(path: ClosurePath) {
-        if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.INC_AFTER) { "START processClosurePath: ${path}" }
-        var cls = path.bottom
+    private fun processClosurePaths(graph: ClosureGraph, bottom: ClosureItem) {
+        if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.INC_AFTER) { "START processClosurePath: ${bottom}" }
         val firstTerminalInfo = when {
-            cls.rulePosition.isTerminal -> FirstTerminalInfo(cls.rulePosition.runtimeRule, cls.rulePosition.runtimeRule, cls.parentNextNotAtEndFollow)
-            cls.rulePosition.isEmbedded -> {
-                val item = cls.rulePosition.runtimeRule
+            bottom.rulePosition.isTerminal -> FirstTerminalInfo(bottom.rulePosition.runtimeRule, bottom.rulePosition.runtimeRule, bottom.parentNextNotAtEndFollow)
+            bottom.rulePosition.isEmbedded -> {
+                val item = bottom.rulePosition.runtimeRule
                 val embeddedRuleSet = item.embeddedRuntimeRuleSet ?: error("Internal Error: should never be null")
                 val embeddedRule = item.embeddedStartRule ?: error("Internal Error: should never be null")
                 val embeddedStateSet = embeddedRuleSet.fetchStateSetFor(embeddedRule, this.stateSet.automatonKind)
                 val embeddedFfc = FirstFollowCache3(embeddedStateSet)
-                val s = embeddedFfc.firstTerminalInContext(cls.context, embeddedStateSet.startRulePosition, cls.parentNextNotAtEndFollow)
+                val s = embeddedFfc.firstTerminalInContext(bottom.context, embeddedStateSet.startRulePosition, bottom.parentNextNotAtEndFollow)
                 val tr = s.first().terminalRule //FIXME: could be more than 1
                 val fn = FollowDeferredComposite(s.map { it.followNext }.toSet())
-                FirstTerminalInfo(cls.rulePosition.runtimeRule, tr, fn)
+                FirstTerminalInfo(bottom.rulePosition.runtimeRule, tr, fn)
             }
 
             else -> null
         }
         if (Debug.CHECK) firstTerminalInfo?.let { check(firstTerminalInfo.terminalRule.isTerminal) }
+
+        graph.traverseUpPaths(bottom) { top, childNeedsNext ->
+            this.setFirsts(top, firstTerminalInfo, childNeedsNext)
+        }
+
+        /*
         var childNeedsNext = this.setFirsts(cls, firstTerminalInfo, false)
         var goUp = true //always go up once (from the terminal)
         val done = mutableSetOf(cls)
@@ -608,7 +609,8 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
                 }
             }
         }
-        if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH processClosurePath: $path" }
+         */
+        if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH processClosurePath: $bottom" }
     }
 
     /**
