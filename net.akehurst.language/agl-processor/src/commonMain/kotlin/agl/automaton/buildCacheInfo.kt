@@ -84,7 +84,8 @@ internal data class LookaheadInfoPart(
 ) {
     companion object {
         val EMPTY = LookaheadInfoPart(LookaheadSetPart.EMPTY,LookaheadSetPart.EMPTY)
-        fun merge(initial: Set<LookaheadInfoPart>): Set<LookaheadInfoPart> {
+        fun merge(initial: Set<LookaheadInfoPart>): Set<LookaheadInfoPart> = merge2(initial)
+        fun merge1(initial: Set<LookaheadInfoPart>): Set<LookaheadInfoPart> {
             return when(initial.size) {
                 1 -> initial
                 else -> {
@@ -129,6 +130,15 @@ internal data class LookaheadInfoPart(
                     }
                 }
             }
+        }
+        fun merge2(initial: Set<LookaheadInfoPart>): Set<LookaheadInfoPart> {
+            var r = LookaheadInfoPart(LookaheadSetPart.EMPTY,LookaheadSetPart.EMPTY)
+            initial.forEach { lh ->
+                val g = r.guard.union(lh.guard)
+                val u = r.up.union(lh.up)
+                r = LookaheadInfoPart(g,u)
+            }
+            return setOf(r)
         }
     }
 

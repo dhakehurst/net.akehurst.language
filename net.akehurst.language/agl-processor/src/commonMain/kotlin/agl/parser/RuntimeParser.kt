@@ -348,14 +348,26 @@ internal class RuntimeParser(
         //no previous, so gn must be the Goal node
         val toProcess = ParseGraph.Companion.ToProcessTriple(nextToProcess.growingNode, null, null)
         val transitions = toProcess.growingNode.runtimeState.transitions(stateSet.startState, stateSet.startState)
+        var grown = false
         for (it in transitions) {
-            when (it.action) {
+            val g = when (it.action) {
                 Transition.ParseAction.GOAL -> error("Should never happen")
                 Transition.ParseAction.WIDTH -> doWidth(toProcess, it, possibleEndOfText, noLookahead)
                 Transition.ParseAction.HEIGHT -> error("Should never happen")
                 Transition.ParseAction.GRAFT -> error("Should never happen")
                 Transition.ParseAction.EMBED -> TODO()
             }
+            grown = grown || g
+        }
+        if (grown) {
+            // must have grown
+        } else {
+            val hd = toProcess.remainingHead
+            val dd = nextToProcess.growingNode.index
+            hd?.let { graph.dropHead(hd)}
+            graph.dropData(dd)
+            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped Head: $hd" }
+            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped Data: $dd" }
         }
     }
 
@@ -382,9 +394,11 @@ internal class RuntimeParser(
         }
         for (hd in toDropHead) {
             graph.dropHead(hd)
+            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped Head: $hd" }
         }
         for (dd in toDropData) {
             graph.dropData(dd)
+            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped Data: $dd" }
         }
     }
 
@@ -468,7 +482,7 @@ internal class RuntimeParser(
             }
             val hasLh = lhWithMatch.isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {
             if (noLookahead || hasLh) {
-                if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking Transition: $transition" }
+                if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
                 this.graph.growNextChild(
                     toProcess,
                     newParentState = transition.to,
@@ -518,7 +532,7 @@ internal class RuntimeParser(
                 val startPosition = l.startPosition
                 val nextInputPosition = l.nextInputPosition
                 //this.graph.pushToStackOf(transition.to, runtimeLhs, startPosition, nextInputPosition, curGn, previous, skipData)
-                if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking Transition: $transition" }
+                if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
                 this.graph.pushToStackOf(toProcess, transition.to, setOf(LookaheadSet.EMPTY), startPosition, nextInputPosition, skipData)
             } else {
                 false
@@ -552,7 +566,7 @@ internal class RuntimeParser(
                     up
                 }
             }.toSet()
-            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking Transition: $transition" }
+            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
             this.graph.createWithFirstChild(
                 parentState = transition.to,
                 parentRuntimeLookaheadSet = newRuntimeLhs,
@@ -576,7 +590,7 @@ internal class RuntimeParser(
             }
             val hasLh = lhWithMatch.isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {
             if (noLookahead || hasLh) {
-                if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking Transition: $transition" }
+                if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
                 this.graph.growNextChild(
                     toProcess = toProcess,
                     newParentState = transition.to,

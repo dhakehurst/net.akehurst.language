@@ -6,7 +6,7 @@ object Debug {
     enum class IndentDelta{NONE, INC_BEFORE, INC_AFTER, DEC_BEFORE, DEC_AFTER}
 
     const val CHECK = false
-    const val OUTPUT_SM_BUILD = false
+    const val OUTPUT_SM_BUILD = true
     const val OUTPUT_RUNTIME_BUILD = false
     const val OUTPUT_RUNTIME = false
 

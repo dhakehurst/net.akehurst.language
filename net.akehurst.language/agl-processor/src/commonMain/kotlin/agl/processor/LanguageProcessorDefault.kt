@@ -163,12 +163,12 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
 
     override fun formatAsm(asm: AsmType, options: ProcessOptions<AsmType, ContextType>?): FormatResult {
         val opts = defaultOptions(options)
-        val sentence = if (null != formatter) {
+        val fResult = if (null != formatter) {
             this.formatter.format(asm)
         } else {
-            asm.toString()
+            FormatResultDefault(asm.toString(), emptyList())
         }
-        return FormatResultDefault(sentence, emptyList())
+        return fResult
     }
 
     override fun expectedAt(

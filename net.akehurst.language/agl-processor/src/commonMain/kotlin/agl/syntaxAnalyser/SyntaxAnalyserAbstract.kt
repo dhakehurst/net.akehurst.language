@@ -28,7 +28,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
 
 typealias BranchHandler<T> = (SPPTBranch, List<SPPTBranch>, Any?) -> T
 
-abstract class SyntaxAnalyserAbstract<out AsmType, in ContextType> : SyntaxAnalyser<AsmType, ContextType>, SharedPackedParseTreeVisitor<Any, Any?> {
+abstract class SyntaxAnalyserAbstract<out AsmType:Any, in ContextType:Any> : SyntaxAnalyser<AsmType, ContextType>, SharedPackedParseTreeVisitor<Any, Any?> {
 
     private var grammarLoader: GrammarLoader? = null
     private val branchHandlers: MutableMap<String, BranchHandler<*>> = mutableMapOf()

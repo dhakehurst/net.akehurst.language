@@ -31,7 +31,7 @@ class SyntaxAnalyserException(message: String, cause: Throwable?) : RuntimeExcep
  * e.g. as whitesapce
  *
  */
-interface SyntaxAnalyser<out AsmType, in ContextType> { //TODO: make transform type argument here maybe!
+interface SyntaxAnalyser<out AsmType:Any, in ContextType:Any> { //TODO: make transform type argument here maybe!
 
     /**
      * Map of ASM items to an InputLocation. Should contain content after 'process' is called
