@@ -376,12 +376,12 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
     private val _followInContext = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<FollowDeferred>>> { lazyMutableMapNonNull { hashSetOf() } }
 
     // followPrev -> ( TerminalRule -> Set<Pair<firstOfPrev, firstOfRP>> )
-    private val _followInContextAsReferenceToFirstOf =
-        lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<Pair<RulePosition, RulePosition>>>> { lazyMutableMapNonNull { hashSetOf() } }
+    //private val _followInContextAsReferenceToFirstOf =
+    //    lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<Pair<RulePosition, RulePosition>>>> { lazyMutableMapNonNull { hashSetOf() } }
 
     // followPrev -> ( TerminalRule -> Set<Pair<refPrev, refRuntimeRule>> )
-    private val _followInContextAsReferenceToFollow =
-        lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<Pair<RulePosition, RuntimeRule>>>> { lazyMutableMapNonNull { hashSetOf() } }
+ //   private val _followInContextAsReferenceToFollow =
+ //       lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<Pair<RulePosition, RuntimeRule>>>> { lazyMutableMapNonNull { hashSetOf() } }
 
     // prev/context -> ( TerminalRule -> ParentRulePosition )
     private val _parentInContext = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<ParentOfInContext>>> { lazyMutableMapNonNull { hashSetOf() } }
@@ -392,8 +392,8 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         this._followInContext.clear()
         this._needsNext.clear()
         this._firstOfInContext.clear()
-        this._followInContextAsReferenceToFirstOf.clear()
-        this._followInContextAsReferenceToFollow.clear()
+ //       this._followInContextAsReferenceToFirstOf.clear()
+ //       this._followInContextAsReferenceToFollow.clear()
         this._parentInContext.clear()
     }
 
@@ -502,7 +502,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
 
         if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.INC_AFTER) { "START calcFirstTermClosure: ${graph.root}" }
         // Closures identified by (parent.rulePosition, prev, rulePosition, followAtEnd, parentFollowAtEnd)
-        //val done = mutableSetOf<ClosureItem>()
+        val done = mutableSetOf<ClosureItem>()
         val reachedTerminal = mutableSetOf<ClosureItem>()
         val todoList = mutableQueueOf<ClosureItem>()
         todoList.enqueue(graph.root)
@@ -516,13 +516,13 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
                     val childRulePositions = item.rulePositionsAt[0]
                     for (childRp in childRulePositions) {
                         val childCls = cls.addChild(childRp)
-                        if (null != childCls) {
-                            //done.add(childCls)
+                        if (done.contains(childCls)) {
+                            // don't follow down the closure
+                        } else {
                             todoList.enqueue(childCls)
                             //println("todo: ${childCls.shortString}")
-                        } else {
-                            // do not add it
                         }
+                        done.add(childCls)
                     }
                 }
             }
@@ -589,27 +589,10 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         }
         if (Debug.CHECK) firstTerminalInfo?.let { check(firstTerminalInfo.terminalRule.isTerminal) }
 
-        graph.traverseUpPaths(bottom) { top, childNeedsNext ->
-            this.setFirsts(top, firstTerminalInfo, childNeedsNext)
+        graph.traverseUpPaths(bottom) { cls, childNeedsNext ->
+            this.setFirsts(cls, firstTerminalInfo, childNeedsNext)
         }
 
-        /*
-        var childNeedsNext = this.setFirsts(cls, firstTerminalInfo, false)
-        var goUp = true //always go up once (from the terminal)
-        val done = mutableSetOf(cls)
-        while (goUp && cls !is ClosureItemRoot) {
-            if (done.contains(cls)) {
-                //don't do it again
-            } else {
-                for (parent in cls.parents) {
-                    cls = parent
-                    done.add(cls)
-                    childNeedsNext = this.setFirsts(cls, firstTerminalInfo, childNeedsNext)
-                    goUp = cls.rulePosition.isAtStart
-                }
-            }
-        }
-         */
         if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH processClosurePath: $bottom" }
     }
 

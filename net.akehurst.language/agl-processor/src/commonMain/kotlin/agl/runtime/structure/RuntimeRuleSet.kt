@@ -310,23 +310,23 @@ internal class RuntimeRuleSet(
 
     // ---
 
-    fun findRuntimeRule(ruleName: String): RuntimeRule {
-        val number = this.nonTerminalRuleNumber[ruleName]
-            ?: this.terminalRuleNumber[ruleName]
-            ?: this.embeddedRuleNumber[ruleName]
-            ?: throw ParserException("RuntimeRule '${ruleName}' not found")
+    fun findRuntimeRule(tag: String): RuntimeRule {
+        val number = this.nonTerminalRuleNumber[tag]
+            ?: this.terminalRuleNumber[tag]
+            ?: this.embeddedRuleNumber[tag]
+            ?: throw ParserException("RuntimeRule '${tag}' not found")
         return this.runtimeRules[number]
     }
 
-    fun findTerminalRule(pattern: String): RuntimeRule {
-        val number = this.terminalRuleNumber[pattern]
-            ?: throw ParserException("Terminal RuntimeRule ${pattern} not found")
+    fun findTerminalRule(tag: String): RuntimeRule {
+        val number = this.terminalRuleNumber[tag]
+            ?: throw ParserException("Terminal RuntimeRule ${tag} not found")
         return this.runtimeRules[number]
     }
 
     // used when calculating lookahead ?
     private fun calcExpectedItemRulePositionTransitive(rp: RulePosition): Set<RulePosition> {
-        var s = setOf(rp)//rp.runtimeRule.calcExpectedRulePositions(rp.position)
+        val s = setOf(rp)//rp.runtimeRule.calcExpectedRulePositions(rp.position)
 
         return s.transitiveClosure { rp ->
             if (RulePosition.END_OF_RULE == rp.position) {

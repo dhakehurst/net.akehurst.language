@@ -44,7 +44,7 @@ internal class test_aa : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a() {
-        TODO()
+//        TODO()
         val sentence = "a"
 
         val expected = """

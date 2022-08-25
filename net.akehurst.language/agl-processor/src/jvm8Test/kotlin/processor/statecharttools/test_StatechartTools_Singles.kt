@@ -28,8 +28,14 @@ class test_StatechartTools_Singles {
         private val grammarStr2 = this::class.java.getResource("/statechart-tools/SText.agl")?.readText() ?: error("File not found")
 
         // must create processor for 'Expressions' so that SText can extend it
-        val exprProcessor = Agl.processorFromString<Any, Any>(grammarStr1)
-        var processor: LanguageProcessor<Any, Any> = Agl.processorFromString(grammarStr2)
+        val exprProcessor = Agl.processorFromString<Any, Any>(
+            grammarDefinitionStr = grammarStr1,
+            aglOptions = Agl.registry.agl.grammar.processor!!.options { semanticAnalysis { active(false) } }
+        )
+        var processor: LanguageProcessor<Any, Any> = Agl.processorFromString(
+            grammarDefinitionStr = grammarStr2,
+            aglOptions = Agl.registry.agl.grammar.processor!!.options { semanticAnalysis { active(false) } }
+        )
     }
 
     @Test
@@ -59,6 +65,18 @@ class test_StatechartTools_Singles {
     @Test
     fun AssignmentExpression_integer_AS_97() {
         val goal = "Expression"
+        val sentence = "integer = 97"
+        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+
+        val resultStr = result.sppt!!.asString
+        assertEquals(sentence, resultStr)
+    }
+
+    @Test
+    fun ReactionEffect_integer_AS_97() {
+        val goal = "ReactionEffect"
         val sentence = "integer = 97"
         val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })

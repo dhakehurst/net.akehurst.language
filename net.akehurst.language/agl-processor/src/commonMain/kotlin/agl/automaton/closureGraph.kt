@@ -70,7 +70,7 @@ internal interface ClosureItem {
     /**
      * create child and link to parents
      */
-    fun addChild(childRulePosition: RulePosition): ClosureItem?
+    fun addChild(childRulePosition: RulePosition): ClosureItem
 
     fun toStringRec(done: MutableSet<ClosureItem>): String
     fun shortStringRec(done: MutableSet<ClosureItem>): List<String>
@@ -167,14 +167,15 @@ internal class ClosureGraph(
             }
 
             override val shortString: List<String> get() = this.shortStringRec(mutableSetOf())
+            val longString get() = toStringRec(mutableSetOf())
 
             override fun createChild(childRulePosition: RulePosition): ClosureItem =
                 ClosureChildGraph(this.ffc, this.graph, this, childRulePosition)
 
-            override fun addChild(childRulePosition: RulePosition): ClosureItem? {
+            override fun addChild(childRulePosition: RulePosition): ClosureItem {
                 val child = ClosureChildGraph(this.ffc, this.graph, this, childRulePosition)
-                val added = this.graph.addParentOf(child, this)
-                return if (added) child else null
+                this.graph.addParentOf(child, this)
+                return child
             }
 
             override fun hashCode(): Int = this._id.contentDeepHashCode()
@@ -183,7 +184,7 @@ internal class ClosureGraph(
                 else -> this._id.contentDeepEquals(other._id)
             }
 
-            override fun toString(): String = toStringRec(mutableSetOf())
+            override fun toString(): String = "$rulePosition($parentNextNotAtEndFollow)[$nextNotAtEndFollow]"
 
             override fun shortStringRec(done: MutableSet<ClosureItem>): List<String> {
                 val rp = this.rulePosition
@@ -265,7 +266,7 @@ internal class ClosureGraph(
                 this.graph.addParentOf(this, extraParent)
             }
 
-            override val _id = arrayOf(context, rulePosition, nextNotAtEndFollow, parentNextNotAtEndFollow)
+            override val _id = arrayOf(context, rulePosition, nextNotAtEndFollow, parentContext, parentRulePosition, parentFollowAtEnd, parentNextNotAtEndFollow)
 
             override fun toStringRec(done: MutableSet<ClosureItem>): String {
                 return if (done.contains(this)) {
@@ -289,26 +290,27 @@ internal class ClosureGraph(
     }
 
     private val _parentOf = lazyMutableMapNonNull<ClosureItem, MutableSet<ClosureItem>> { mutableSetOf() }
-    private val _ancestors = lazyMutableMapNonNull<ClosureItem, MutableSet<ClosureItem>> { mutableSetOf() }
+   // private val _ancestors = lazyMutableMapNonNull<ClosureItem, MutableSet<ClosureItem>> { mutableSetOf() }
 
     val root = ClosureRootGraph(ffc, this, rootContext, rootRulePosition, rootParentNextNotAtEndFollow)
 
     fun traverseUpPaths(bottom: ClosureItem, func: (item: ClosureItem, childNeedsNext: Boolean) -> Boolean) {
-        val done = mutableSetOf<PathData>()
+        val done = mutableSetOf<Pair<PathData,PathData>>()
         val bottomNeedsNext = func.invoke(bottom, false)
         val openPaths = mutableQueueOf(PathData(bottom, bottomNeedsNext))
         while (openPaths.isNotEmpty) {
             val child = openPaths.dequeue()
-            if (done.contains(child)) {
-                //don't do it again
-            } else {
-                done.add(child)
-                when (child.cls) {
-                    is ClosureItemRoot -> Unit //end path
-                    is ClosureItemChild -> {
-                        for (prt in child.cls.parents) {
-                            val needsNext = func.invoke(prt, child.needsNext)
-                            openPaths.enqueue(PathData(prt, needsNext))
+            when (child.cls) {
+                is ClosureItemRoot -> Unit //end path
+                is ClosureItemChild -> {
+                    for (prt in child.cls.parents) {
+                        val needsNext = func.invoke(prt, child.needsNext)
+                        val pd = Pair(child,PathData(prt, needsNext))
+                        if (done.contains(pd)) {
+                            //don't do it again
+                        } else {
+                            done.add(pd)
+                            openPaths.enqueue(pd.second)
                         }
                     }
                 }
@@ -319,14 +321,14 @@ internal class ClosureGraph(
     fun parentsOf(child: ClosureItem): Set<ClosureItem> = this._parentOf[child]
 
     fun addParentOf(child: ClosureItem, parent: ClosureItem): Boolean {
-        return if (this._ancestors[parent].contains(child)) {
+        //return if (this._ancestors[parent].contains(child)) {
             // do not create loops
-            false
-        } else {
-            this._parentOf[child].add(parent)
-            this._ancestors[child].add(parent)
-            this._ancestors[child].addAll(this._ancestors[parent])
-            true
-        }
+        //    false
+        //} else {
+           return  this._parentOf[child].add(parent)
+            //this._ancestors[child].add(parent)
+            //this._ancestors[child].addAll(this._ancestors[parent])
+           // true
+       // }
     }
 }
