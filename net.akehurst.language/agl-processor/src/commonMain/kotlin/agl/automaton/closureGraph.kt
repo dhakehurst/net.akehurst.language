@@ -290,7 +290,10 @@ internal class ClosureGraph(
                 if (Debug.CHECK) check(initialParent.rulePosition.isAtEnd.not()) { "Internal Error: ClosureItem parent should never by at end" }
                 initialParent.rulePosition.next().flatMap { pn ->
                     when (pn.isAtEnd) {
-                        true -> initialParent.nextContext
+                        true -> when {
+                            initialParent.nextContextFollow.containsEmptyRules -> initialParent.nextContext + initialParent.parentNextContext
+                            else -> initialParent.nextContext
+                        }
                         else -> setOf(pn)
                     }
                 }.toSet()
