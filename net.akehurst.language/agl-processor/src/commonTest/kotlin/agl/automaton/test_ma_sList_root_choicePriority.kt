@@ -136,9 +136,9 @@ internal class test_ma_sList_root_choicePriority : test_AutomatonAbstract() {
     fun automaton_parse_vmvav() {
         val parser = ScanOnDemandParser(rrs)
         val result = parser.parseForGoal("S", "vmvav", AutomatonKind.LOOKAHEAD_1)
-        println(result.sppt!!.toStringAllWithIndent("  "))
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        println(result.sppt!!.toStringAllWithIndent("  "))
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 

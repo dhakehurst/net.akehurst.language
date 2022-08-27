@@ -122,7 +122,7 @@ internal class AutomatonBuilder(
             else -> upLookaheadContent.map { LookaheadSet.createFromRuntimeRules(result, it) }.toSet()
         }
         val lh = up.map { Lookahead(guard, it) }.toSet()
-        val trans = Transition(from, to, action, lh, prevGuard) { _, _ -> true }
+        val trans = Transition(from, to, action, lh) { _, _ -> true }
         return from.outTransitions.addTransition(previousStates, trans)
     }
 
@@ -141,7 +141,6 @@ internal class TransitionBuilder(
     private lateinit var _src: ParserState
     private lateinit var _tgt: ParserState
     private val _lhg = mutableSetOf<Lookahead>()
-    private var _rtg: Set<RulePosition>? = null
 
     fun ctx(states: Set<ParserState>) {
         _context = states
@@ -200,7 +199,7 @@ internal class TransitionBuilder(
      * graft prev guard
      */
     fun gpg(runtimeGuard: Set<RulePosition>?) {
-        _rtg = runtimeGuard
+
     }
 
     /**
@@ -212,7 +211,7 @@ internal class TransitionBuilder(
     }
 
     fun build(): Transition {
-        val trans = Transition(_src, _tgt, action, _lhg, _rtg) { _, _ -> true }
+        val trans = Transition(_src, _tgt, action, _lhg) { _, _ -> true }
         _src.outTransitions.addTransition(_context, trans)
         return trans
     }

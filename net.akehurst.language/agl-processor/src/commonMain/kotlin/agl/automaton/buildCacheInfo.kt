@@ -166,12 +166,11 @@ internal data class WidthInfo(
 
 internal data class HeightGraftInfo(
     val action: Transition.ParseAction,
-    val parent: List<RulePosition>, //needed for prevGuard on Transition
     val parentNext: List<RulePosition>, // to state
     val lhs:Set<LookaheadInfoPart>
 ) {
     override fun toString(): String {
         val lhsStr = lhs.joinToString(separator = "|") { "[${it.guard.fullContent.joinToString {  it.tag }}](${it.up.fullContent.joinToString {  it.tag }})" }
-        return "HeightGraftInfo(action=$action, parent=$parent, parentNext=$parentNext, lhs=$lhsStr)"
+        return "HeightGraftInfo(action=$action, parentNext=$parentNext, lhs=$lhsStr)"
     }
 }

@@ -28,7 +28,7 @@ internal class test_expessions_hidden_right : test_ScanOnDemandParserAbstract() 
     // S = E
     // E = I | P      Expression
     // I = E 'o' E ;  AssignmentExpression
-    // P = C | N      PrimaryExpression
+    // P = C | n      PrimaryExpression
     // C = R A?       FeatureCall
     // a = 'a'        ArgumentList
     // R = v A?       ElementReferenceExpression
@@ -93,8 +93,8 @@ internal class test_expessions_hidden_right : test_ScanOnDemandParserAbstract() 
                 Ao { §empty }
               } } }
               'o'
-              E { P { N { n:'n' } } }
-            }
+              E { P { n:'n' } }
+            } } }
         """.trimIndent()
 
 

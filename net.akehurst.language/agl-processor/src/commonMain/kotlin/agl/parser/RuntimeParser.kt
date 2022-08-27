@@ -348,6 +348,7 @@ internal class RuntimeParser(
         //no previous, so gn must be the Goal node
         val toProcess = ParseGraph.Companion.ToProcessTriple(nextToProcess.growingNode, null, null)
         val transitions = toProcess.growingNode.runtimeState.transitions(stateSet.startState, stateSet.startState)
+        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
         var grown = false
         for (it in transitions) {
             val g = when (it.action) {
@@ -406,6 +407,7 @@ internal class RuntimeParser(
         var grown = false
         val prevPrev = toProcess.remainingHead?.runtimeState?.state ?: stateSet.startState
         val transitions = toProcess.growingNode.runtimeState.transitions(prevPrev, toProcess.previous!!.runtimeState.state)
+        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
         //TODO: do we need to do something here? due to filtered out trans from the list
         val grouped = transitions.groupBy { it.to.runtimeRulesSet }
         for (it in grouped) {

@@ -250,13 +250,13 @@ internal class RulePosition(
                 RuntimeRuleRhsItemsKind.LIST -> when(runtimeRule.rhs.listKind) {
                     RuntimeRuleListKind.NONE -> position
                     RuntimeRuleListKind.MULTI -> when(position) {
-                        START_OF_RULE -> "SR"
+                        START_OF_RULE -> "BR"
                         POSITION_MULIT_ITEM -> "MI"
                         END_OF_RULE -> "ER"
                         else -> position
                     }
                     RuntimeRuleListKind.SEPARATED_LIST -> when(position) {
-                        START_OF_RULE -> "SR"
+                        START_OF_RULE -> "BR"
                         POSITION_SLIST_SEPARATOR -> "LS"
                         POSITION_SLIST_ITEM -> "LI"
                         END_OF_RULE -> "ER"

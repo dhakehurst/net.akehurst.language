@@ -63,7 +63,6 @@ internal class test_Transition : test_AutomatonUtilsAbstract() {
             to = s2,
             action = Transition.ParseAction.HEIGHT,
             lookahead = setOf(Lookahead(LHS(EOT, d).lhs(stateSet), LHS(EOT, d).lhs(stateSet)), Lookahead(LHS(a).lhs(stateSet), LHS(a).lhs(stateSet))),
-            graftPrevGuard = null,
             runtimeGuard = Transition.defaultRuntimeGuard
         )
         val tr2 = Transition(
@@ -75,18 +74,17 @@ internal class test_Transition : test_AutomatonUtilsAbstract() {
                 Lookahead(LHS(d).lhs(stateSet), LHS(d).lhs(stateSet)),
                 Lookahead(LHS(a).lhs(stateSet), LHS(a).lhs(stateSet))
             ),
-            graftPrevGuard = null,
             runtimeGuard = Transition.defaultRuntimeGuard
         )
 
         val group = mutableSetOf(tr1, tr2).groupBy {
-            val l = listOf(tr1.from, tr1.action, tr1.to, tr1.graftPrevGuard, tr1.runtimeGuard)
+            val l = listOf(tr1.from, tr1.action, tr1.to, tr1.runtimeGuard)
             println("$l")
             l
         }
 
-        val list1 = listOf(tr1.from, tr1.action, tr1.to, tr1.graftPrevGuard, tr1.runtimeGuard)
-        val list2 = listOf(tr2.from, tr2.action, tr2.to, tr2.graftPrevGuard, tr2.runtimeGuard)
+        val list1 = listOf(tr1.from, tr1.action, tr1.to, tr1.runtimeGuard)
+        val list2 = listOf(tr2.from, tr2.action, tr2.to, tr2.runtimeGuard)
 
         assertEquals(list1, list2)
         assertEquals(1, group.size)

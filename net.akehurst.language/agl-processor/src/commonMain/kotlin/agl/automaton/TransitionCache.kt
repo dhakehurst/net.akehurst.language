@@ -87,18 +87,17 @@ internal class TransitionCacheLC1 : TransitionCache {
 
     companion object {
         private fun merge(automaton:ParserStateSet, set:Set<Transition>):Transition {
-            val grouped = set.groupBy { listOf(it.from, it.action, it.to, it.graftPrevGuard) }
+            val grouped = set.groupBy { listOf(it.from, it.action, it.to) }
             val merged = grouped.map { me ->
                 val from = me.key[0] as ParserState
                 val action = me.key[1] as Transition.ParseAction
                 val to = me.key[2] as ParserState
-                val gpg = me.key[3] as Set<RulePosition>?
                 val rtg = when(action) {
                     Transition.ParseAction.GRAFT -> Transition.graftRuntimeGuard
                     else -> Transition.defaultRuntimeGuard
                 }
                 val lhs = Lookahead.merge(automaton, me.value.flatMap { it.lookahead }.toSet())
-                Transition(from,to,action,lhs,gpg,rtg)
+                Transition(from,to,action,lhs,rtg)
             }
             return if(merged.size ==1 ) {
                  merged.first()
@@ -170,7 +169,7 @@ internal class TransitionCacheLC1 : TransitionCache {
         prevGuard: Set<RulePosition>?,
         runtimeGuard: Transition.(current: GrowingNodeIndex, previous: ParserState?) -> Boolean
     ) {
-        val trans = Transition(from, to, action, lookahead, prevGuard, runtimeGuard)
+        val trans = Transition(from, to, action, lookahead, runtimeGuard)
         this.addTransition(previousStates, trans)
     }
 

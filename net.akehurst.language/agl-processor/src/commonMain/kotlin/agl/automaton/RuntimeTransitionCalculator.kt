@@ -25,83 +25,77 @@ internal class RuntimeTransitionCalculator(
     val stateSet: ParserStateSet
 ) {
 
-    private val __filteredTransitions = mutableSetOf<Transition>() // to save time allocating when calcFilteredTransitions is called
     internal fun calcFilteredTransitions(prevPrev: ParserState, previousState: ParserState, sourceState: ParserState): Set<Transition> {
-        __filteredTransitions.clear()
-        val transitions = this.calcTransitions(prevPrev, previousState,sourceState)//, gn.lookaheadStack.peek())
-        for (tr in transitions) {
-            val filter = when (tr.action) {
-                Transition.ParseAction.GOAL -> true
-                Transition.ParseAction.WIDTH -> true
-                Transition.ParseAction.EMBED -> true
-                Transition.ParseAction.HEIGHT -> true
-                Transition.ParseAction.GRAFT -> {
-                    tr.graftPrevGuard?.let {
-                        previousState.rulePositions.containsAll(it)
-                    } ?: true
-                }
-            }
-            if (filter) __filteredTransitions.add(tr)
-        }
-        return __filteredTransitions
+        val transitions = this.calcTransitions(prevPrev, previousState, sourceState)//, gn.lookaheadStack.peek())
+        return transitions
     }
 
     private val __transitions = mutableSetOf<Transition>() // to save time allocating when calcTransitions is called
+
     // must use previousState.rulePosition as starting point for finding
     // lookahead for height/graft, and previousLookahead to use if end up at End of rule
     // due to position or empty rules.
-    internal fun calcTransitions(prevPrev: ParserState, previousState: ParserState, sourceState: ParserState): Set<Transition> {//TODO: add previous in order to filter parent relations
+    internal fun calcTransitions(
+        prevPrev: ParserState,
+        previousState: ParserState,
+        sourceState: ParserState
+    ): Set<Transition> {//TODO: add previous in order to filter parent relations
         __transitions.clear()
         when {
             sourceState.isGoal -> {
-                val widthInto = this.stateSet.buildCache.widthInto(previousState,sourceState)
+                val widthInto = this.stateSet.buildCache.widthInto(previousState, sourceState)
                 for (wi in widthInto) {
                     when (wi.to.runtimeRule.kind) {
-                        RuntimeRuleKind.TERMINAL,RuntimeRuleKind.EMBEDDED -> __transitions.add(this.createWidthOrEmbeddedTransition(sourceState,wi))
+                        RuntimeRuleKind.TERMINAL, RuntimeRuleKind.EMBEDDED -> __transitions.add(this.createWidthOrEmbeddedTransition(sourceState, wi))
                         RuntimeRuleKind.GOAL, RuntimeRuleKind.NON_TERMINAL -> error("Should never happen")
                     }
                 }
             }
+
             sourceState.isAtEnd -> {
-                val heightOrGraftInto = this.stateSet.buildCache.heightOrGraftInto(prevPrev, previousState,sourceState)
+                val heightOrGraftInto = this.stateSet.buildCache.heightOrGraftInto(prevPrev, previousState, sourceState)
                 for (hg in heightOrGraftInto) {
-                    val kind = hg.parent.first().runtimeRule.kind
-                    if (kind == RuntimeRuleKind.GOAL) {
-                        when {
-                            (sourceState.isGoal && this.stateSet.isSkip) -> {
-                                // must be end of skip. TODO: can do something better than this!
-                                val to = sourceState
-                                __transitions.add(Transition(sourceState, to, Transition.ParseAction.GOAL, setOf(Lookahead.EMPTY), null) { _, _ -> true })
-                            }
-                            else -> {
-                                //must pass in hg, because for embedded rules, GOAL does not end with EOT
-                                val ts = this.createGoalTransition3(sourceState, hg)
-                                __transitions.add(ts)//, addLh, parentLh))
-                            }
-                        }
-                    } else {
-                        val isAtStart = hg.parent.first().isAtStart //FIXME: what about things not the first?
-                        when (isAtStart) {
-                            true -> {
-                                val ts = this.createHeightTransition3(sourceState,hg)
-                                __transitions.add(ts)
-                            }
-                            false -> {
-                                val ts = this.createGraftTransition3(sourceState,hg)
-                                __transitions.add(ts)
+                    when (hg.action) {
+                        Transition.ParseAction.GOAL -> {
+                            when {
+                                (sourceState.isGoal && this.stateSet.isSkip) -> {
+                                    // must be end of skip. TODO: can do something better than this!
+                                    val to = sourceState
+                                    __transitions.add(Transition(sourceState, to, Transition.ParseAction.GOAL, setOf(Lookahead.EMPTY)) { _, _ -> true })
+                                }
+
+                                else -> {
+                                    //must pass in hg, because for embedded rules, GOAL does not end with EOT
+                                    val ts = this.createGoalTransition3(sourceState, hg)
+                                    __transitions.add(ts)//, addLh, parentLh))
+                                }
                             }
                         }
+
+                        Transition.ParseAction.HEIGHT -> {
+                            val ts = this.createHeightTransition3(sourceState, hg)
+                            __transitions.add(ts)
+                        }
+
+                        Transition.ParseAction.GRAFT -> {
+                            val ts = this.createGraftTransition3(sourceState, hg)
+                            __transitions.add(ts)
+                        }
+
+                        else -> error("")
                     }
                 }
             }
+
             else -> {
-                val widthInto = this.stateSet.buildCache.widthInto(previousState,sourceState)
+                val widthInto = this.stateSet.buildCache.widthInto(previousState, sourceState)
                 for (wi in widthInto) {
-                    val ts = this.createWidthOrEmbeddedTransition(sourceState,wi)
+                    val ts = this.createWidthOrEmbeddedTransition(sourceState, wi)
                     __transitions.add(ts)
                 }
             }
         }
+
         return __transitions.toSet()
     }
 
@@ -245,35 +239,35 @@ internal class RuntimeTransitionCalculator(
             return __transitions.toSet()
         }
     */
-    private fun createWidthOrEmbeddedTransition(sourceState:ParserState, wi: WidthInfo): Transition {
+    private fun createWidthOrEmbeddedTransition(sourceState: ParserState, wi: WidthInfo): Transition {
         val rp = wi.to
         val lookaheadInfo = Lookahead(wi.lookaheadSet.lhs(this.stateSet), LookaheadSet.EMPTY)
         val to = this.stateSet.fetchCompatibleOrCreateState(listOf(rp))
         // upLookahead and prevGuard are unused
-        return Transition(sourceState, to, wi.action, setOf(lookaheadInfo), null,Transition.defaultRuntimeGuard)
+        return Transition(sourceState, to, wi.action, setOf(lookaheadInfo),  Transition.defaultRuntimeGuard)
     }
 
-    private fun createHeightTransition3(sourceState:ParserState,hg: HeightGraftInfo): Transition {
+    private fun createHeightTransition3(sourceState: ParserState, hg: HeightGraftInfo): Transition {
         val to = this.stateSet.fetchCompatibleOrCreateState(hg.parentNext)
         val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), it.up.lhs(this.stateSet)) }.toSet()
-        val trs = Transition(sourceState, to, Transition.ParseAction.HEIGHT, lookaheadInfo, null,Transition.defaultRuntimeGuard)
+        val trs = Transition(sourceState, to, Transition.ParseAction.HEIGHT, lookaheadInfo,  Transition.defaultRuntimeGuard)
         return trs
     }
 
-    private fun createGraftTransition3(sourceState:ParserState,hg: HeightGraftInfo): Transition {
+    private fun createGraftTransition3(sourceState: ParserState, hg: HeightGraftInfo): Transition {
         val runtimeGuard = Transition.graftRuntimeGuard
         val to = this.stateSet.fetchCompatibleOrCreateState(hg.parentNext)
         val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), LookaheadSet.EMPTY) }.toSet()
-        val trs = Transition(sourceState, to, Transition.ParseAction.GRAFT, lookaheadInfo, hg.parent.toSet(), runtimeGuard)
+        val trs = Transition(sourceState, to, Transition.ParseAction.GRAFT, lookaheadInfo, runtimeGuard)
         return trs
     }
 
-    private fun createGoalTransition3(sourceState:ParserState, hg: HeightGraftInfo): Transition {
+    private fun createGoalTransition3(sourceState: ParserState, hg: HeightGraftInfo): Transition {
         val to = this.stateSet.finishState
         //// must compute lookaheadInfo, because for embedded grammars, guard for completion of GOAL is not necessarily EOT
         //val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), LookaheadSet.EMPTY) }.toSet()
         val lookaheadInfo = hg.lhs.map { Lookahead(LookaheadSet.EOT, LookaheadSet.EMPTY) }.toSet()
-        val trs = Transition(sourceState, to, Transition.ParseAction.GOAL, lookaheadInfo, null,Transition.defaultRuntimeGuard)
+        val trs = Transition(sourceState, to, Transition.ParseAction.GOAL, lookaheadInfo, Transition.defaultRuntimeGuard)
         return trs
     }
 

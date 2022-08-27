@@ -67,7 +67,6 @@ internal object AutomatonTest {
             for (exp_trans in exp_state.outTransitions.allBuiltTransitions) {
                 val act_trans = act_state.outTransitions.allBuiltTransitions.first { it.matches(exp_trans) }
                 assertMatches(exp_trans, act_trans, "context", exp_trans.context, act_trans.context) { t, o -> t.matches(o) }
-                assertMatches(exp_trans, act_trans, "prevGuard",exp_trans.graftPrevGuard?: emptySet(), act_trans.graftPrevGuard?: emptySet()) { t, o -> t.matches(o) }
             }
         }
     }
@@ -164,8 +163,6 @@ internal object AutomatonTest {
         kotlin.test.assertEquals(expected.action, actual.action, "Action does not match for ${expPrev} -> $expected")
         assertEquals(expected, expected.lookahead, actual.lookahead)//, "Lookahead content does not match for ${expPrev} -> $expected")
         //TODO kotlin.test.assertEquals(expected.upLookahead.includesUP, actual.upLookahead.includesUP, "Up lookahead content does not match for ${expPrev} -> $expected")
-        kotlin.test.assertEquals(expected.graftPrevGuard?.toSet(), actual.graftPrevGuard?.toSet(), "Previous guard does not match for ${expPrev} -> $expected")
-
     }
 
     fun assertEquals(expTrans: Transition, expected: Set<Lookahead>, actual: Set<Lookahead>) {
