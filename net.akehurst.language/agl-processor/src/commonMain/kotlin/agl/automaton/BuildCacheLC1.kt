@@ -660,7 +660,7 @@ internal class BuildCacheLC1(
                     fromState.isGoal -> FirstFollowCache3.Companion.FollowDeferredLiteral.EOT
                     else -> FirstFollowCache3.Companion.FollowDeferredLiteral.RT
                 }
-                this.firstFollowCache.firstTerminalInContext(prev, from, emptySet(),  parentFollow)
+                this.firstFollowCache.firstTerminalInContext(prev, from, parentFollow) //emptySet(),  parentFollow)
             }
         }.toSet()
         val wis = firstTerminals.map { firstTermInfo ->

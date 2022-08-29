@@ -23,6 +23,26 @@ import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.collections.mutableQueueOf
 
+internal data class ChildParentInfo(
+    val child: RulePosition,
+    val parent: RulePosition?,
+    val childContext: RulePosition,
+//    val childNextContext: Set<RulePosition>,
+    /**
+     * when {
+     *  next.isAtEnd -> nextContextFollow
+     *  else -> next.follow
+     * }
+     */
+    val childNextNotAtEndFollow: FirstFollowCache3.Companion.FollowDeferred,
+    /**
+     * parent.nextNotAtEndFollow
+     */
+    val childNextContextFollow: FirstFollowCache3.Companion.FollowDeferred,
+
+    val parentNext: Set<ParentNext>
+)
+
 /**
  * Identified by :
  *  - context, used for prev guard for transition
@@ -38,32 +58,9 @@ import net.akehurst.language.collections.mutableQueueOf
 internal interface ClosureItem {
     val ffc: FirstFollowCache3
     val graph: ClosureGraph
-    val context: RulePosition
     val rulePosition: RulePosition
 
-    val nextContext: Set<RulePosition>
-
-    /**
-     * when {
-     *  next.isAtEnd -> nextContextFollow
-     *  else -> next.follow
-     * }
-     */
-    val nextNotAtEndFollow: FirstFollowCache3.Companion.FollowDeferred
-
-    val parents: Set<ClosureItem>
-
-    /**
-     * parent.nextNotAtEndFollow
-     */
-    val nextContextFollow: FirstFollowCache3.Companion.FollowDeferred
-
-//            val followAtEnd:FollowDeferred
-
-    /**
-     * context, rulePosition, nextNotAtEndFollow, parentFollowAtEnd, parentNextNotAtEndFollow
-     */
-    val _id: Array<*>
+    val childParentInfo: Set<ChildParentInfo>
 
     val shortString: List<String>
 
@@ -92,7 +89,7 @@ internal data class ParentNext(
     /**
      * parent.rulePosition.isAtStart
      */
-    val firstPosition:Boolean,
+    val firstPosition: Boolean,
     /**
      * parent.next
      */
@@ -107,7 +104,7 @@ internal data class ParentNext(
      * else -> EMPTY
      */
     val parentNextContextFollow: FirstFollowCache3.Companion.FollowDeferred
-    ) {
+) {
     //override fun hashCode(): Int = rulePosition.hashCode()
     //override fun equals(other: Any?): Boolean =when(other) {
     //    !is ParentNext -> false
@@ -116,47 +113,44 @@ internal data class ParentNext(
 }
 
 internal interface ClosureItemChild : ClosureItem {
-    /**
-     * all parents will/must have same rulePosition
-     */
-    //val parentRulePosition: RulePosition
-
-    /**
-     * all parents will/must have same context RulePosition
-     */
-    //val parentContext: RulePosition
-    //val parentNextContext: Set<RulePosition>
-
-    /**
-     * parent.parentNextFollow
-     */
-    //val parentNextContextFollow: FirstFollowCache3.Companion.FollowDeferred
-
-    val parentNext: Set<ParentNext>
-
-    //val parentOfInfo: FirstFollowCache3.Companion.ParentOfInContext
-
+    val parents: Set<ClosureItem>
     fun addParent(extraParent: ClosureItem)
-}
-
-internal interface ClosurePath {
-    val bottom: ClosureItem
-    val top: ClosureItem
-    val topNeedsNext: Boolean
 }
 
 internal class ClosureGraph(
     ffc: FirstFollowCache3,
     rootContext: RulePosition,
     rootRulePosition: RulePosition,
-    rootNextContext: Set<RulePosition>,
+//    rootNextContext: Set<RulePosition>,
     rootNextContextFollow: FirstFollowCache3.Companion.FollowDeferred
 ) {
 
     companion object {
-        abstract class ClosureItemAbstract(
+        fun nextNotAtEndFollow(
+            ffc: FirstFollowCache3,
+            rulePosition: RulePosition,
+            context: RulePosition,
+//            nextContext: Set<RulePosition>,
+            nextContextFollow: FirstFollowCache3.Companion.FollowDeferred
+        ): FirstFollowCache3.Companion.FollowDeferred = when {
+            rulePosition.isTerminal -> nextContextFollow
+            else -> {
+                if (Debug.CHECK) check(rulePosition.isAtEnd.not()) { "Internal Error: rulePosition of ClosureItem should never be at end" }
+                val nexts = rulePosition.next()
+                val allNextFollow = nexts.map { next ->
+                    when {
+                        next.isAtEnd -> nextContextFollow
+                        else -> FirstFollowCache3.Companion.FollowDeferredCalculation(ffc, context, next, nextContextFollow) //nextContext, nextContextFollow)
+                    }
+                }
+                FirstFollowCache3.Companion.FollowDeferredComposite.constructOrDelegate(allNextFollow.toSet())
+            }
+        }
+
+        abstract class ClosureItemAbstractGraph(
             override val ffc: FirstFollowCache3,
             override val graph: ClosureGraph,
+            override val rulePosition: RulePosition,
         ) : ClosureItem {
 
             /**
@@ -171,15 +165,13 @@ internal class ClosureGraph(
              */
             override fun needsNext(childNeedsNext: Boolean): Boolean = when {
                 rulePosition.isEmptyRule -> true
-                childNeedsNext -> when {
-                    rulePosition.isAtEnd -> true
-                    else -> {
-                        val nexts = rulePosition.next()
-                        nexts.any { nxt ->
-                            when {
-                                nxt.isAtEnd -> true
-                                else -> ffc.needsNext(context, nxt)
-                            }
+                childNeedsNext -> {
+                    if (Debug.CHECK) check(rulePosition.isAtEnd.not()) { "Internal Error: rulePosition of ClosureItem should never be at end" }
+                    val nexts = rulePosition.next()
+                    nexts.any { nxt ->
+                        when {
+                            nxt.isAtEnd -> true
+                            else -> ffc.needsNext(nxt)
                         }
                     }
                 }
@@ -187,38 +179,22 @@ internal class ClosureGraph(
                 else -> false
             }
 
-            override val nextNotAtEndFollow: FirstFollowCache3.Companion.FollowDeferred by lazy {
-                when {
-                    rulePosition.isTerminal -> nextContextFollow
-                    else -> {
-                        if (Debug.CHECK) check(rulePosition.isAtEnd.not()) { "Internal Error: rulePosition of ClosureItem should never be at end" }
-                        val nexts = rulePosition.next()
-                        val allNextFollow = nexts.map { next ->
-                            when {
-                                next.isAtEnd -> nextContextFollow
-                                else -> FirstFollowCache3.Companion.FollowDeferredCalculation(ffc, context, next, nextContext, nextContextFollow)
-                            }
-                        }
-                        FirstFollowCache3.Companion.FollowDeferredComposite.constructOrDelegate(allNextFollow.toSet())
-                    }
-                }
-            }
-
             override val shortString: List<String> get() = this.shortStringRec(mutableSetOf())
             val longString get() = toStringRec(mutableSetOf())
 
             override fun createChild(childRulePosition: RulePosition): ClosureItemChild =
-                ClosureChildGraph(this.ffc, this.graph, this, childRulePosition)
+                ClosureItemChildGraph(this.ffc, this.graph, childRulePosition)
 
             override fun addChild(child: ClosureItemChild): Boolean = this.graph.addParentOf(child, this)
 
-            override fun hashCode(): Int = this._id.contentDeepHashCode()
+
+            override fun hashCode(): Int = this.rulePosition.hashCode()
             override fun equals(other: Any?): Boolean = when (other) {
                 !is ClosureItem -> false
-                else -> this._id.contentDeepEquals(other._id)
+                else -> this.rulePosition == other.rulePosition
             }
 
-            abstract override fun toString(): String
+            override fun toString(): String = "$rulePosition"
 
             override fun shortStringRec(done: Set<ClosureItem>): List<String> {
                 val rp = this.rulePosition
@@ -240,82 +216,55 @@ internal class ClosureGraph(
                 } else {
                     val newDone = done + this
                     when (this) {
-                        is ClosureRootGraph -> listOf(str)
-                        else -> parents.flatMap { p ->
+                        is ClosureItemRootGraph -> listOf(str)
+                        is ClosureItemChildGraph -> parents.flatMap { p ->
                             //if (done.contains(p)) {
                             //    listOf("...${str}")
                             //} else {
                             p.shortStringRec(newDone).map { "$it-$str" }
                             //}
                         }
+
+                        else -> error("Internal Error: subtype of ClosureItemAbstractGraph not handled - ${this::class.simpleName}")
                     }
                 }
             }
         }
 
-        class ClosureRootGraph(
+        class ClosureItemRootGraph(
             ffc: FirstFollowCache3,
             graph: ClosureGraph,
-            override val context: RulePosition,
-            override val rulePosition: RulePosition,
-            override val nextContext: Set<RulePosition>,
-            override val nextContextFollow: FirstFollowCache3.Companion.FollowDeferred,
-        ) : ClosureItemAbstract(ffc, graph), ClosureItemRoot {
-            override val parents: Set<ClosureItem> = emptySet() // get() = error("ClosureItemRoot has no parent")
+            context: RulePosition,
+            rulePosition: RulePosition,
+//            nextContext: Set<RulePosition>,
+            nextContextFollow: FirstFollowCache3.Companion.FollowDeferred,
+        ) : ClosureItemAbstractGraph(ffc, graph, rulePosition), ClosureItemRoot {
 
-            override val _id = arrayOf(rulePosition, nextContextFollow)
-            override fun toStringRec(done: MutableSet<ClosureItem>): String = "$rulePosition[$nextContextFollow]-|-$context"
+            override val childParentInfo: Set<ChildParentInfo> = setOf(
+                ChildParentInfo(
+                    child = this.rulePosition,
+                    parent = null,
+                    childContext = context,
+//                    childNextContext = nextContext,
+                    childNextNotAtEndFollow = nextNotAtEndFollow(ffc, rulePosition, context, nextContextFollow), //nextContext, nextContextFollow),
+                    childNextContextFollow = nextContextFollow,
+                    parentNext = emptySet(), //root has no parents
+                )
+            )
 
-            override fun toString(): String = "$rulePosition($nextContextFollow)[$nextNotAtEndFollow]"
+            override fun toStringRec(done: MutableSet<ClosureItem>): String = "$rulePosition"
+
         }
 
-        class ClosureChildGraph(
+        class ClosureItemChildGraph(
             ffc: FirstFollowCache3,
             graph: ClosureGraph,
-            initialParent: ClosureItem,
-            override val rulePosition: RulePosition
-        ) : ClosureItemAbstract(ffc, graph), ClosureItemChild {
+            rulePosition: RulePosition
+        ) : ClosureItemAbstractGraph(ffc, graph, rulePosition), ClosureItemChild {
 
-            override val parents: Set<ClosureItem> get() = this.graph.parentsOf(this)
-            //override val parentRulePosition: RulePosition = initialParent.rulePosition
-            //override val parentContext: RulePosition = initialParent.context
-            // override val parentNextContext: Set<RulePosition> = initialParent.nextContext
+            override val parents: Set<ClosureItem> = this.graph.parentsOf(this)
 
-            override val context: RulePosition = when {
-                initialParent.rulePosition.isAtStart -> initialParent.context
-                else -> initialParent.rulePosition
-            }
-
-            override val nextContext: Set<RulePosition> = let {
-                if (Debug.CHECK) check(initialParent.rulePosition.isAtEnd.not()) { "Internal Error: ClosureItem parent should never by at end" }
-                initialParent.rulePosition.next().flatMap { pn ->
-                    when (pn.isAtEnd) {
-                        true -> when {
-                            initialParent.nextContextFollow.containsEmptyRules -> initialParent.nextContext + initialParent.parentNextContext
-                            else -> initialParent.nextContext
-                        }
-                        else -> setOf(pn)
-                    }
-                }.toSet()
-            }
-
-            //override val parentNextContextFollow: FirstFollowCache3.Companion.FollowDeferred = initialParent.nextContextFollow
-            override val nextContextFollow: FirstFollowCache3.Companion.FollowDeferred = initialParent.nextNotAtEndFollow
-            override val parentNext: Set<ParentNext>
-                get() = parents.flatMap { prnt ->
-                    val atStart = prnt.rulePosition.isAtStart
-                    val prntNextContextFollow = when(atStart) {
-                        true -> prnt.nextContextFollow
-                        false -> FirstFollowCache3.Companion.FollowDeferredLiteral.EMPTY
-                    }
-                    prnt.rulePosition.next().map { prntNext ->
-                        val prntNextFollow = when (prntNext.isAtEnd) {
-                            true -> prnt.nextContextFollow
-                            else -> FirstFollowCache3.Companion.FollowDeferredCalculation(this.ffc, prnt.context, prntNext, prnt.nextContext, prnt.nextContextFollow)
-                        }
-                        ParentNext(atStart, prntNext, prntNextFollow, prntNextContextFollow)
-                    }
-                }.toSet()
+            override val childParentInfo: Set<ChildParentInfo> by lazy { graph.childParentInfo(this.rulePosition) }
 
             /*
             override val parentOfInfo: FirstFollowCache3.Companion.ParentOfInContext = let {
@@ -336,23 +285,19 @@ internal class ClosureGraph(
                 this.graph.addParentOf(this, extraParent)
             }
 
-            //override val _id = arrayOf(context, rulePosition, nextNotAtEndFollow, parentContext, parentRulePosition, parentNextContextFollow, nextContextFollow)
-            override val _id = arrayOf(rulePosition, nextContext)//, parentNext)
-
             override fun toStringRec(done: MutableSet<ClosureItem>): String {
                 return if (done.contains(this)) {
-                    "$rulePosition[$nextContextFollow]..."
+                    "$rulePosition..."
                 } else {
                     done.add(this)
                     parents.joinToString("\n") {
                         val s = it.toStringRec(done)
-                        "$rulePosition[$nextContextFollow]-->$s"
+                        "$rulePosition-->$s"
                     }
                 }
 
             }
 
-            override fun toString(): String = "$rulePosition[$nextContext]"
         }
 
         data class PathData(
@@ -363,9 +308,9 @@ internal class ClosureGraph(
     }
 
     private val _parentOf = lazyMutableMapNonNull<ClosureItem, MutableSet<ClosureItem>> { mutableSetOf() }
-    // private val _ancestors = lazyMutableMapNonNull<ClosureItem, MutableSet<ClosureItem>> { mutableSetOf() }
+    private val _childParentInfo = lazyMutableMapNonNull<RulePosition, MutableSet<ChildParentInfo>> { mutableSetOf() }
 
-    val root = ClosureRootGraph(ffc, this, rootContext, rootRulePosition, rootNextContext, rootNextContextFollow)
+    val root = ClosureItemRootGraph(ffc, this, rootContext, rootRulePosition, rootNextContextFollow) //rootNextContext, rootNextContextFollow)
 
     fun traverseUpPaths(bottom: ClosureItem, func: (item: ClosureItem, childNeedsNext: Boolean) -> Boolean) {
         val done = mutableSetOf<Pair<PathData, PathData>>()
@@ -393,7 +338,70 @@ internal class ClosureGraph(
 
     fun parentsOf(child: ClosureItem): Set<ClosureItem> = this._parentOf[child]
 
-    fun addParentOf(child: ClosureItem, extraParent: ClosureItem): Boolean {
-        return this._parentOf[child].add(extraParent)
+    fun addParentOf(child: ClosureItemChild, extraParent: ClosureItem): Boolean {
+        val added = this._parentOf[child].add(extraParent)
+        if (added) {
+            for (parentGrandParentInfo in extraParent.childParentInfo) {
+                val info = createChildParentInfo(child, extraParent, parentGrandParentInfo)
+                this._childParentInfo[child.rulePosition].add(info)
+            }
+        }
+        return added
     }
+
+    private fun createChildParentInfo(child: ClosureItem, parent: ClosureItem, parentGrandParentInfo: ChildParentInfo): ChildParentInfo {
+        val context: RulePosition = when {
+            parent.rulePosition.isAtStart -> parentGrandParentInfo.childContext
+            else -> parent.rulePosition
+        }
+        /*
+        val nextContext: Set<RulePosition> = let {
+            parent.rulePosition.next().flatMap { pn ->
+                when (pn.isAtEnd) {
+                    true -> when {
+                        parentGrandParentInfo.childNextContextFollow.containsEmptyRules -> parentGrandParentInfo.childNextContext + extraParent.parentNextContext
+                        else -> parentGrandParentInfo.childNextContext
+                    }
+
+                    else -> setOf(pn)
+                }
+            }.toSet()
+        }
+         */
+        val nextContextFollow = parentGrandParentInfo.childNextNotAtEndFollow
+
+        val nextNotAtEndFollow = nextNotAtEndFollow(child.ffc, child.rulePosition, context, nextContextFollow)
+
+        val prnt = parent.rulePosition
+        val atStart = prnt.isAtStart
+        val prntNextContextFollow = when (atStart) {
+            true -> parentGrandParentInfo.childNextContextFollow
+            false -> FirstFollowCache3.Companion.FollowDeferredLiteral.EMPTY
+        }
+        val parentNext = prnt.next().map { prntNext ->
+            val prntNextFollow = when (prntNext.isAtEnd) {
+                true -> parentGrandParentInfo.childNextContextFollow
+                else -> FirstFollowCache3.Companion.FollowDeferredCalculation(
+                    child.ffc,
+                    parentGrandParentInfo.childContext,
+                    prntNext,
+                    //                    parentGrandParentInfo.childNextContext,
+                    parentGrandParentInfo.childNextContextFollow
+                )
+            }
+            ParentNext(atStart, prntNext, prntNextFollow, prntNextContextFollow)
+        }.toSet()
+
+        return ChildParentInfo(
+            child = child.rulePosition,
+            parent = parent.rulePosition,
+            childContext = context,
+//            childNextContext = nextContext,
+            childNextNotAtEndFollow = nextNotAtEndFollow,
+            childNextContextFollow = nextContextFollow,
+            parentNext = parentNext
+        )
+    }
+
+    fun childParentInfo(child: RulePosition): Set<ChildParentInfo> = this._childParentInfo[child]
 }
