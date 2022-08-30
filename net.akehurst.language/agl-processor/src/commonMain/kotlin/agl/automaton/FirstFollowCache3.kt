@@ -63,7 +63,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         ) : FollowDeferred {
 
             companion object {
-                fun constructOrDelegate(parts: Set<FollowDeferred>) = when(parts.size) {
+                fun constructOrDelegate(parts: Set<FollowDeferred>) = when (parts.size) {
                     1 -> parts.first()
                     else -> FollowDeferredComposite(parts)
                 }
@@ -144,7 +144,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
 
             override fun process() {
                 if (null == this._resolvedFollow) {
-                    this._resolvedFollow = ffc.firstOfInContext(context, rulePosition,nextContextFollow)// nextContext, nextContextFollow)
+                    this._resolvedFollow = ffc.firstOfInContext(context, rulePosition, nextContextFollow)// nextContext, nextContextFollow)
                     this._resolvedContainsEmpty = ffc.needsNext(rulePosition)
                 }
             }
@@ -194,8 +194,8 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
     //    lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<Pair<RulePosition, RulePosition>>>> { lazyMutableMapNonNull { hashSetOf() } }
 
     // followPrev -> ( TerminalRule -> Set<Pair<refPrev, refRuntimeRule>> )
- //   private val _followInContextAsReferenceToFollow =
- //       lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<Pair<RulePosition, RuntimeRule>>>> { lazyMutableMapNonNull { hashSetOf() } }
+    //   private val _followInContextAsReferenceToFollow =
+    //       lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<Pair<RulePosition, RuntimeRule>>>> { lazyMutableMapNonNull { hashSetOf() } }
 
     // prev/context -> ( TerminalRule -> ParentRulePosition )
     private val _parentInContext = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<ParentNext>>> { lazyMutableMapNonNull { hashSetOf() } }
@@ -206,8 +206,8 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         this._followInContext.clear()
         this._needsNext.clear()
         this._firstOfInContext.clear()
- //       this._followInContextAsReferenceToFirstOf.clear()
- //       this._followInContextAsReferenceToFollow.clear()
+        //       this._followInContextAsReferenceToFirstOf.clear()
+        //       this._followInContextAsReferenceToFollow.clear()
         this._parentInContext.clear()
     }
 
@@ -223,7 +223,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
 
     // target states for HEIGHT or GRAFT transition, rulePosition should be atEnd
     // entry point from calcHeightGraft
-    fun parentInContext(contextContext: RulePosition, context: RulePosition, nextContext:Set<RulePosition>, completedRule: RuntimeRule): Set<ParentNext> {
+    fun parentInContext(contextContext: RulePosition, context: RulePosition, nextContext: Set<RulePosition>, completedRule: RuntimeRule): Set<ParentNext> {
         processClosureFor(contextContext, context, FollowDeferredLiteral.RT) //nextContext, FollowDeferredLiteral.RT)
 
         val ctx = if (context.isAtStart) contextContext else context
@@ -232,7 +232,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
 
     //private fun firstOfInContext(context: RulePosition, rulePosition: RulePosition, nextContext:Set<RulePosition>, nextContextFollow: FollowDeferred): FollowDeferred {
     private fun firstOfInContext(context: RulePosition, rulePosition: RulePosition, nextContextFollow: FollowDeferred): FollowDeferred {
-        if(Debug.CHECK) check(context.isAtEnd.not()) { "firstOf($context,$rulePosition)" }
+        if (Debug.CHECK) check(context.isAtEnd.not()) { "firstOf($context,$rulePosition)" }
         processClosureFor(context, rulePosition, nextContextFollow) //nextContext, nextContextFollow)
         if (this._firstOfInContext[context].containsKey(rulePosition)) {
             return FollowDeferredComposite.constructOrDelegate(this._firstOfInContext[context][rulePosition])
@@ -243,6 +243,29 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
 
     internal fun needsNext(rulePosition: RulePosition) =
         this._needsNext[rulePosition]!!// ?: error("Internal Error: needsNext not computed for ($context,$rulePosition)")
+
+    /**
+     * when {
+     *   rulePosition.isEmpty -> true
+     *   childNeedsNext -> rulePosition.next().any { if it.isAtEnd then true else it.needsNext }
+     *   else -> false
+     * }
+     */
+    private fun needsNext(rulePosition:RulePosition, childNeedsNext: Boolean): Boolean = when {
+        rulePosition.isEmptyRule -> true
+        childNeedsNext -> {
+            if (Debug.CHECK) check(rulePosition.isAtEnd.not()) { "Internal Error: rulePosition of ClosureItem should never be at end" }
+            val nexts = rulePosition.next()
+            nexts.any { nxt ->
+                when {
+                    nxt.isAtEnd -> true
+                    else -> this.needsNext(nxt)
+                }
+            }
+        }
+
+        else -> false
+    }
 
     /**
      * Calculate the first position closures for the given (context,rulePosition)
@@ -334,11 +357,13 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
                     cls.addChild(child)
                     reachedTerminal.add(child)
                 }
-                item.isEmbedded ->  {
+
+                item.isEmbedded -> {
                     val child = cls.createChild(item.asTerminalRulePosition)
                     cls.addChild(child)
                     reachedTerminal.add(child)
                 }
+
                 else -> {
                     val childRulePositions = item.rulePositionsAt[0]
                     for (childRp in childRulePositions) {
@@ -356,6 +381,8 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
                 }
             }
         }
+        graph.resolveAllChildParentInfo()
+
         for (bottom in reachedTerminal) {
             this.processClosurePaths(graph, bottom)
             //println(bottom.shortString)
@@ -401,28 +428,34 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
      */
     private fun processClosurePaths(graph: ClosureGraph, bottom: ClosureItem) {
         if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.INC_AFTER) { "START processClosurePath: ${bottom}" }
-        for(bottomParentInfo in bottom.childParentInfo) {
-            val firstTerminalInfo = when {
-                bottom.rulePosition.isTerminal -> FirstTerminalInfo(bottom.rulePosition.runtimeRule, bottom.rulePosition.runtimeRule, bottomParentInfo.childNextContextFollow)
-                bottom.rulePosition.isEmbedded -> {
-                    val item = bottom.rulePosition.runtimeRule
-                    val embeddedRuleSet = item.embeddedRuntimeRuleSet ?: error("Internal Error: should never be null")
-                    val embeddedRule = item.embeddedStartRule ?: error("Internal Error: should never be null")
-                    val embeddedStateSet = embeddedRuleSet.fetchStateSetFor(embeddedRule, this.stateSet.automatonKind)
-                    val embeddedFfc = FirstFollowCache3(embeddedStateSet)
-                    val s = embeddedFfc.firstTerminalInContext(bottomParentInfo.childContext, embeddedStateSet.startRulePosition, bottomParentInfo.childNextContextFollow) //bottomParentInfo.childNextContext, bottomParentInfo.childNextContextFollow)
-                    val tr = s.first().terminalRule //FIXME: could be more than 1
-                    val fn = FollowDeferredComposite.constructOrDelegate(s.map { it.nextContextFollow }.toSet())
-                    FirstTerminalInfo(bottom.rulePosition.runtimeRule, tr, fn)
+        for (bottomParentRel in bottom.childParentRels) {
+            for(bottomParentInfo in bottomParentRel.info) {
+                val firstTerminalInfo = when {
+                    bottom.rulePosition.isTerminal -> FirstTerminalInfo(bottom.rulePosition.runtimeRule, bottom.rulePosition.runtimeRule, bottomParentInfo.childNextContextFollow)
+                    bottom.rulePosition.isEmbedded -> {
+                        val item = bottom.rulePosition.runtimeRule
+                        val embeddedRuleSet = item.embeddedRuntimeRuleSet ?: error("Internal Error: should never be null")
+                        val embeddedRule = item.embeddedStartRule ?: error("Internal Error: should never be null")
+                        val embeddedStateSet = embeddedRuleSet.fetchStateSetFor(embeddedRule, this.stateSet.automatonKind)
+                        val embeddedFfc = FirstFollowCache3(embeddedStateSet)
+                        val s = embeddedFfc.firstTerminalInContext(
+                            bottomParentInfo.childContext,
+                            embeddedStateSet.startRulePosition,
+                            bottomParentInfo.childNextContextFollow
+                        ) //bottomParentInfo.childNextContext, bottomParentInfo.childNextContextFollow)
+                        val tr = s.first().terminalRule //FIXME: could be more than 1
+                        val fn = FollowDeferredComposite.constructOrDelegate(s.map { it.nextContextFollow }.toSet())
+                        FirstTerminalInfo(bottom.rulePosition.runtimeRule, tr, fn)
+                    }
+
+                    else -> null
                 }
+                if (Debug.CHECK) firstTerminalInfo?.let { check(firstTerminalInfo.terminalRule.isTerminal) }
 
-                else -> null
-            }
-            if (Debug.CHECK) firstTerminalInfo?.let { check(firstTerminalInfo.terminalRule.isTerminal) }
-
-            //TODO: no need to start with terminal, start with next one up
-            graph.traverseUpPaths(bottom) { cls, childNeedsNext ->
-                this.setFirsts(cls, firstTerminalInfo, childNeedsNext)
+                //TODO: no need to start with terminal, start with next one up
+                graph.traverseUpPaths(bottom) { isClosureRoot, rp, cpInfo, childNeedsNext ->
+                    this.setFirsts(isClosureRoot, firstTerminalInfo, rp, cpInfo, childNeedsNext)
+                }
             }
         }
         if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH processClosurePath: $bottom" }
@@ -434,7 +467,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
      *    next.isAtEnd && child.needsNext
      * }
      */
-    private fun setFirsts(cls: ClosureItem, firstTerminalInfo: FirstTerminalInfo?, childNeedsNext: Boolean): Boolean {
+    private fun setFirsts(isClosureRoot: Boolean, firstTerminalInfo: FirstTerminalInfo?, rp:RulePosition, cpInfo: ChildParentInfo, childNeedsNext: Boolean): Boolean {
         // End/Bottom of closure is always a terminal
         // Root/Start/Top of closure might be notAtEnd
         // every closure-item in between will always be atStart
@@ -454,75 +487,68 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         // other than the start state, firstTerm & firstOf are never called on RPs at the start
         // also never called on a Terminal
 
-        var needsNext = false
-        for (cpInfo in cls.childParentInfo) {
+        val prev = cpInfo.childContext
+        val rr = rp.runtimeRule
 
-            val prev = cpInfo.childContext
-            val rp = cls.rulePosition
-            val rr = cls.rulePosition.runtimeRule
-
-            // set parentOf
-            when (cls) {
-                is ClosureItemRoot -> Unit
-                is ClosureItemChild -> {
-                    this.addParentInContext(prev, rr, cpInfo.parentNext)
-                }
-
-                else -> error("Internal Error: subtype of ClosureItem not handled")
+        // set parentOf
+        when {
+            isClosureRoot -> Unit
+            else -> {
+                this.addParentInContext(prev, rr, cpInfo.parentNext)
             }
-            // set follow for each runtime-rule - HEIGHT/GRAFT needs it
-            //this.addFollowInContext(prev, rr, cpInfo.childNextContextFollow)
+       }
+        // set follow for each runtime-rule - HEIGHT/GRAFT needs it
+        //this.addFollowInContext(prev, rr, cpInfo.childNextContextFollow)
 
-            when {
-                cls.rulePosition.isTerminal -> Unit
-                cls.rulePosition.isEmbedded -> {
-                    firstTerminalInfo?.let { this.addFirstTerminalAndFollowInContext(prev, rp, firstTerminalInfo) }
-                    if (childNeedsNext) {
-                        this.addFollowInContext(prev, rp, cpInfo.childNextNotAtEndFollow)
-                        cpInfo.childNextNotAtEndFollow.containsEmptyRules
-                    } else {
-                        // do nothing
-                    }
-                }
-
-                cls is ClosureItemRoot -> {
-                    // for targetState
-                    firstTerminalInfo?.let { this.addFirstTerminalAndFollowInContext(prev, rp, firstTerminalInfo) }
-                    if (childNeedsNext) {
-                        this.addFollowInContext(prev, rp, cpInfo.childNextNotAtEndFollow)
-                        cpInfo.childNextNotAtEndFollow.containsEmptyRules
-                    } else {
-                        // do nothing
-                    }
-                }
-
-                cls.rulePosition.isAtStart -> {
-                    if (childNeedsNext) {
-                        // ensures stuff is cached for the follow
-                        cpInfo.childNextNotAtEndFollow.process()
-                    } else {
-                        //do nothing
-                    }
-                }
-
-                else -> {
-                    error("should not happen")
-                }
-            }
-            needsNext = cls.needsNext(childNeedsNext)
-            when {
-                rr.isTerminal -> Unit
-                rp.isAtStart -> Unit
-                else -> {
-                    this.setNeedsNext(cls.rulePosition, needsNext)
-                    when (needsNext) {
-                        true -> this.addFollowInContext(prev, rp, cpInfo.childNextNotAtEndFollow)
-                        false -> Unit
-                    }
+        when {
+            rp.isTerminal -> Unit
+            rp.isEmbedded -> {
+                firstTerminalInfo?.let { this.addFirstTerminalAndFollowInContext(prev, rp, firstTerminalInfo) }
+                if (childNeedsNext) {
+                    this.addFollowInContext(prev, rp, cpInfo.childNextNotAtEndFollow)
+                    cpInfo.childNextNotAtEndFollow.containsEmptyRules
+                } else {
+                    // do nothing
                 }
             }
 
+            isClosureRoot -> {
+                // for targetState
+                firstTerminalInfo?.let { this.addFirstTerminalAndFollowInContext(prev, rp, firstTerminalInfo) }
+                if (childNeedsNext) {
+                    this.addFollowInContext(prev, rp, cpInfo.childNextNotAtEndFollow)
+                    cpInfo.childNextNotAtEndFollow.containsEmptyRules
+                } else {
+                    // do nothing
+                }
+            }
+
+            rp.isAtStart -> {
+                if (childNeedsNext) {
+                    // ensures stuff is cached for the follow
+                    cpInfo.childNextNotAtEndFollow.process()
+                } else {
+                    //do nothing
+                }
+            }
+
+            else -> {
+                error("should not happen")
+            }
         }
+        val needsNext = this.needsNext(rp, childNeedsNext)
+        when {
+            rr.isTerminal -> Unit
+            rp.isAtStart -> Unit
+            else -> {
+                this.setNeedsNext(rp, needsNext)
+                when (needsNext) {
+                    true -> this.addFollowInContext(prev, rp, cpInfo.childNextNotAtEndFollow)
+                    false -> Unit
+                }
+            }
+        }
+
         return needsNext
     }
 
