@@ -116,11 +116,6 @@ internal class RuntimeRuleSet(
             .toTypedArray()
     }
 
-    val firstSkipRuleTerminalPositions: Set<RuntimeRule> by lazy {
-        this.runtimeRules.filter { it.isSkip }.flatMap { this.calcFirstTerminals(it) }.toSet()
-//        this.calcFirstTerminalSkipRulePositions()
-    }
-
     // used when calculating lookahead
     val expectedTerminalRulePositions = lazyMap<RulePosition, Array<RulePosition>> {
         calcExpectedTerminalRulePositions(it).toTypedArray()

@@ -55,7 +55,7 @@ class test_Java8_Singles_antlrSpec {
                 }
             )
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
-            proc.buildFor(proc.parseOptions { goalRuleName(forRule) })
+            //proc.buildFor(proc.parseOptions { goalRuleName(forRule) })
             return proc
         }
     }

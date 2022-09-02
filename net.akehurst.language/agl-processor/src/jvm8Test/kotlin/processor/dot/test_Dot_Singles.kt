@@ -67,7 +67,7 @@ class test_Dot_Singles {
         < <xml >xxxx</xml> >
         """.trimIndent()
         val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt)
+        assertNotNull(result.sppt,result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
         println(result.sppt!!.toStringAll)
         /*

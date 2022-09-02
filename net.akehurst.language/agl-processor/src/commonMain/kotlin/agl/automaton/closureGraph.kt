@@ -149,16 +149,16 @@ internal class ClosureGraph(
                 val allNextFollow = nexts.map { next ->
                     when {
                         next.isAtEnd -> nextContextFollow
-                        else -> FirstOf(ffc.stateSet).expectedAt(next,nextContextFollow)
+                        else -> FirstOf(ffc.stateSet).expectedAt(next, nextContextFollow)
                     }
                 }
-                allNextFollow.reduce{acc,it->acc.union(it)}
+                allNextFollow.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
             }
         }
 
-        fun parentNext(graph:ClosureGraph, parents:Set<ClosureItem>) : Set<ParentNext> {
+        fun parentNext(graph: ClosureGraph, parents: Set<ClosureItem>): Set<ParentNext> {
             val result = mutableSetOf<ParentNext>()
-            for(parent in parents) {
+            for (parent in parents) {
                 val gpInfo = when (parent) {
                     is ClosureItemRoot -> graph.rootUpInfo
                     is ClosureItemChild -> parent.upInfo
@@ -205,7 +205,7 @@ internal class ClosureGraph(
             override lateinit var downInfo: Set<RulePositionDownInfo>
 
             override val parentNext: Set<ParentNext> by lazy {
-                parentNext(this.graph,this.graph.parentsOf(this))
+                parentNext(this.graph, this.graph.parentsOf(this))
             }
 
             override fun resolveDown() {
@@ -219,36 +219,35 @@ internal class ClosureGraph(
                     if (children.isEmpty()) {
                         //assume this is a terminal
                         val needsNext = this.rulePosition.isEmptyRule
-                        val firstTerminalInfo = when {
-                            this.rulePosition.isTerminal -> FirstFollowCache3.Companion.FirstTerminalInfo(
+                        val firstTerminalInfos = when {
+                            this.rulePosition.isTerminal -> listOf(FirstFollowCache3.Companion.FirstTerminalInfo(
                                 this.rulePosition.runtimeRule,
                                 this.rulePosition.runtimeRule,
                                 this.upInfo.nextContextFollow
-                            )
+                            ))
 
                             this.rulePosition.isEmbedded -> {
-                                TODO()
-                                /*
                                 val item = this.rulePosition.runtimeRule
                                 val embeddedRuleSet = item.embeddedRuntimeRuleSet ?: error("Internal Error: should never be null")
                                 val embeddedRule = item.embeddedStartRule ?: error("Internal Error: should never be null")
-                                val embeddedStateSet = embeddedRuleSet.fetchStateSetFor(embeddedRule, this.stateSet.automatonKind)
+                                val embeddedStateSet = embeddedRuleSet.fetchStateSetFor(embeddedRule, this.ffc.stateSet.automatonKind)
                                 val embeddedFfc = FirstFollowCache3(embeddedStateSet)
                                 val s = embeddedFfc.firstTerminalInContext(
-                                    bottomParentInfo.context,
                                     embeddedStateSet.startRulePosition,
-                                    bottomParentInfo.nextContextFollow
+                                    embeddedStateSet.startRulePosition,
+                                    LookaheadSetPart.EOT
                                 ) //bottomParentInfo.childNextContext, bottomParentInfo.childNextContextFollow)
-                                val tr = s.first().terminalRule //FIXME: could be more than 1
-                                val fn = FirstFollowCache3.Companion.FollowDeferredComposite.constructOrDelegate(s.map { it.nextContextFollow }.toSet())
-                                FirstFollowCache3.Companion.FirstTerminalInfo(this.rulePosition.runtimeRule, tr, fn)
-                                */
+                                s.map { fti ->
+                                    FirstFollowCache3.Companion.FirstTerminalInfo(this.rulePosition.runtimeRule, fti.terminalRule, fti.nextContextFollow)
+                                }
                             }
 
                             else -> error("Internal Error:")
                         }
-                        val i = RulePositionDownInfo(needsNext, firstTerminalInfo)
-                        (this.downInfo as MutableSet).add(i)
+                        for(fti in firstTerminalInfos) {
+                            val i = RulePositionDownInfo(needsNext, fti)
+                            (this.downInfo as MutableSet).add(i)
+                        }
                     } else {
                         for (child in children) {
                             child.resolveDown()
@@ -334,6 +333,7 @@ internal class ClosureGraph(
                 this.upInfo.nextNotAtEndFollow != other.upInfo.nextNotAtEndFollow -> false
                 else -> true
             }
+
             override fun toString(): String = "$rulePosition[${upInfo.nextNotAtEndFollow}]{${upInfo.nextContextFollow}}"
 
         }
@@ -533,7 +533,6 @@ parent.rulePosition.next().flatMap { pn ->
     val nonRootClosures: Set<ClosureItem> get() = _parentsOf.keys
 
     fun resolveAllChildParentInfo() {
-        println("root ${root.rulePosition} + ${this.nonRootClosures.size} closures")
         this.root.resolveDown()
         for (cls in this.nonRootClosures) {
             cls.resolveDown()

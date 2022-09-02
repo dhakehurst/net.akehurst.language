@@ -234,7 +234,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
     private fun firstOfInContext(context: RulePosition, rulePosition: RulePosition, nextContextFollow: LookaheadSetPart): LookaheadSetPart {
         if (Debug.CHECK) check(context.isAtEnd.not()) { "firstOf($context,$rulePosition)" }
         if (this._firstOfInContext[context].containsKey(rulePosition)) {
-            return this._firstOfInContext[context][rulePosition].reduce{ acc, it -> acc.union(it) }
+            return this._firstOfInContext[context][rulePosition].fold(LookaheadSetPart.EMPTY){ acc, it -> acc.union(it) }
         } else {
             val fo = FirstOf(stateSet).expectedAt(rulePosition,nextContextFollow)
             this._firstOfInContext[context][rulePosition].add(fo)

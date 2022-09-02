@@ -238,35 +238,7 @@ internal class RuntimeRule(
             calcItemsAt(index).toTypedArray()
         }
     }
-/*
-    fun canGrowWidth(nextItemIndex: Int): Boolean {
-        // nextItemIndex and numNonskip children are not always the same, especially for multi.
-        //TODO: other kinds!
-        when (this.rhs.itemsKind) {
-            RuntimeRuleRhsItemsKind.EMPTY -> return false
-            RuntimeRuleRhsItemsKind.CHOICE -> return nextItemIndex == 0
-            RuntimeRuleRhsItemsKind.CONCATENATION -> {
-                if (nextItemIndex != MULTIPLICITY_N && nextItemIndex < this.rhs.items.size) {
-                    return true
-                } else {
-                    return false // !reachedEnd;
-                }
-            }
-            RuntimeRuleRhsItemsKind.LIST -> when (this.rhs.listKind) {
-                RuntimeRuleListKind.MULTI -> {
-                    val max = this.rhs.multiMax
-                    return MULTIPLICITY_N != nextItemIndex && (MULTIPLICITY_N == max || nextItemIndex < max)
-                }
-                RuntimeRuleListKind.SEPARATED_LIST -> {
-                    val max = this.rhs.multiMax
-                    val x = nextItemIndex / 2
-                    return MULTIPLICITY_N != nextItemIndex && (MULTIPLICITY_N == max || x < max)
-                }
-                else -> TODO()
-            }
-        }
-    }
-*/
+
     fun findTerminalAt(n: Int): Set<RuntimeRule> {
         return when (kind) {
             RuntimeRuleKind.GOAL -> TODO()
@@ -275,6 +247,9 @@ internal class RuntimeRule(
             RuntimeRuleKind.NON_TERMINAL -> {
                 val firstItems = this.rhs.findItemAt(n).filter { it.kind == RuntimeRuleKind.TERMINAL }.toMutableSet()
                 when (this.rhs.itemsKind) {
+                    RuntimeRuleRhsItemsKind.EMPTY -> Unit // already in firstItems
+                    RuntimeRuleRhsItemsKind.CONCATENATION -> Unit // already in firstItems
+                    RuntimeRuleRhsItemsKind.CHOICE -> Unit // already in firstItems
                     RuntimeRuleRhsItemsKind.LIST -> when(this.rhs.listKind) {
                         RuntimeRuleListKind.MULTI -> {
                             if (0 == n && 0 == this.rhs.multiMin) {
@@ -288,7 +263,6 @@ internal class RuntimeRule(
                         }
                         else ->  TODO()//TODO: L/R-Assoc and unorderd
                     }
-                    else -> TODO()
                 }
                 return firstItems
             }
