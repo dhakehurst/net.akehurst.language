@@ -646,6 +646,7 @@ internal class RuntimeParser(
         val embeddedSkipStateSet = embeddedRuntimeRuleSet.skipParserStateSet
         val embeddedParser = RuntimeParser(embeddedS0.stateSet, embeddedSkipStateSet, embeddedStartRule, this.input)
         val startPosition = toProcess.growingNode.nextInputPosition
+        // Embedded text could end with this.skipTerms or lh from transition
         val skipTerms = this.stateSet.runtimeRuleSet.firstSkipTerminals.toSet()
         val embeddedPossibleEOT = endingLookahead.unionContent(embeddedS0.stateSet, skipTerms)
         val embeddedEOT = toProcess.growingNode.runtimeLookahead.flatMap { rt ->

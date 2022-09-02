@@ -265,7 +265,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
     }
 
     private fun doForNonRoot(cls:ClosureItem) {
-        this.addParentInContext(cls.upInfo.context, cls.rulePosition.runtimeRule, cls.upInfo.parentNext)
+        this.addParentInContext(cls.upInfo.context, cls.rulePosition.runtimeRule, cls.parentNext)
     }
 
     private fun doForEmbedded(rulePosition: RulePosition, upInfo: RulePositionUpInfo, downInfo: FirstTerminalInfo) {

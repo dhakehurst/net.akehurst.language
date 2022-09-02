@@ -664,13 +664,12 @@ internal class BuildCacheLC1(
             }
         }.toSet()
         val wis = firstTerminals.map { firstTermInfo ->
-            val lhs = firstTermInfo.nextContextFollow
-            //if (Debug.CHECK) check(lhs_old.fullContent == follow) { "$lhs_old != [${followResolved.joinToString { it.tag }}] Follow($fromState,${rr.tag})" }
-            val rp = firstTermInfo.embeddedRule.asTerminalRulePosition
             val action = when {
-                firstTermInfo.embeddedRule.isEmbedded -> Transition.ParseAction.EMBED
+                firstTermInfo.terminalRule.isEmbedded -> Transition.ParseAction.EMBED
                 else -> Transition.ParseAction.WIDTH
             }
+            val rp = firstTermInfo.terminalRule.asTerminalRulePosition
+            val lhs = firstTermInfo.nextContextFollow
             WidthInfo(action, rp, lhs)
         }
         val wisMerged = wis.groupBy { Pair(it.to, it.action) }
