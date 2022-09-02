@@ -657,19 +657,14 @@ internal class BuildCacheLC1(
             fromState.rulePositions.flatMap { from ->
                 //TODO: can we do better thn parentFollow == RT here ?
                 val parentFollow = when {
-                    fromState.isGoal -> FirstFollowCache3.Companion.FollowDeferredLiteral.EOT
-                    else -> FirstFollowCache3.Companion.FollowDeferredLiteral.RT
+                    fromState.isGoal -> LookaheadSetPart.EOT
+                    else -> LookaheadSetPart.RT
                 }
                 this.firstFollowCache.firstTerminalInContext(prev, from, parentFollow) //emptySet(),  parentFollow)
             }
         }.toSet()
         val wis = firstTerminals.map { firstTermInfo ->
-            //TODO:remove old stuff
-            //val upCls = fromState.state.rulePositions.flatMap { this.dnClosureLC1(it) }.toSet()
-            //val upFilt = upCls.filter { rr == it.rulePosition.item }
-            //val lhs_old = upFilt.map { it.lookaheadSet }.reduce { acc, it -> acc.union(it) }
-            val followResolved = firstTermInfo.nextContextFollow.resolvedTerminals
-            val lhs = LookaheadSetPart.createFromRuntimeRules(followResolved)
+            val lhs = firstTermInfo.nextContextFollow
             //if (Debug.CHECK) check(lhs_old.fullContent == follow) { "$lhs_old != [${followResolved.joinToString { it.tag }}] Follow($fromState,${rr.tag})" }
             val rp = firstTermInfo.embeddedRule.asTerminalRulePosition
             val action = when {
@@ -749,13 +744,9 @@ internal class BuildCacheLC1(
                     val tgt = parentNext.rulePosition
                     val follow = parentNext.follow
                     //val follow = this.firstFollowCache.followInContext(parentContext, tgt, parentFollowAtEnd)
-                    val followResolved = follow.resolvedTerminals
-                    val grd = LookaheadSetPart.createFromRuntimeRules(followResolved)
+                    val grd = follow
                     val up = when (action) {
-                        Transition.ParseAction.HEIGHT -> {
-                            val parentNextContextFollowResolved = parentNext.parentNextContextFollow.resolvedTerminals
-                            LookaheadSetPart.createFromRuntimeRules(parentNextContextFollowResolved)
-                        }
+                        Transition.ParseAction.HEIGHT -> parentNext.parentNextContextFollow
                         Transition.ParseAction.EMBED, Transition.ParseAction.WIDTH, Transition.ParseAction.GRAFT, Transition.ParseAction.GOAL -> LookaheadSetPart.EMPTY
                     }
                     HeightGraftInfo(action, listOf(tgt), setOf(LookaheadInfoPart(grd, up)))
