@@ -139,7 +139,18 @@ internal class test_multi_3_5_WS : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun WSaWSaWSaWSaWSaWSa_fails() {
+    fun WSaaaWSaWSaWSa_fails() {
+        val sentence = " aaa a a a"
+
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(9,10,1,1)," aaa a a ^a",setOf("<EOT>"))
+        ),issues)
+    }
+
+    @Test
+    fun WSaWSaWSaWSaWSaWSaWS_fails() {
         val sentence = " a a a a a a "
 
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)

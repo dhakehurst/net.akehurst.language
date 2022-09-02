@@ -223,12 +223,12 @@ internal class ScanOnDemandParser(
                     //FIXME: error option may not be correct, need to find the original
                     val prevPrev = remainingHead
                         ?: graph.treeData.createGrowingNodeIndex(rp.stateSet.startState, setOf(LookaheadSet.EMPTY), 0, 0, 0, 0)
-                    val trs = lg.runtimeState.transitions(prevPrev.runtimeState.state, prev!!.runtimeState.state)
-                        .filter { it.runtimeGuard(it, prev, prev.runtimeState.state) }
-                    if (trs.isNotEmpty()) {
+                    val beforeRuntimeCheck = lg.runtimeState.transitions(prevPrev.runtimeState.state, prev!!.runtimeState.state)
+                    if (beforeRuntimeCheck.isNotEmpty()) {
                         val rtLh = lg.runtimeState.runtimeLookaheadSet
-                        val pairs: Set<Pair<Int, Set<RuntimeRule>>> = trs.mapNotNull { tr ->
-                            errorPairs(input, lg.index, tr, possibleEndOfText, rtLh)
+                        val pairs: Set<Pair<Int, Set<RuntimeRule>>> = beforeRuntimeCheck.mapNotNull { tr ->
+                            val runtimeGuardPassed = tr.runtimeGuard(tr, prev, prev.runtimeState.state)
+                            errorPairs(input, lg.index, tr, possibleEndOfText, rtLh, runtimeGuardPassed)
                         }.toSet()
                         pairs
                     } else {
@@ -239,9 +239,11 @@ internal class ScanOnDemandParser(
                         ntp.flatMap { tpt ->
                             val prevPrev2 = tpt.previous?.runtimeState ?: RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY))
                             val trs2 = lg2.runtimeState.transitions(prevPrev2.state, prev2.runtimeState.state)
-                                .filter { it.runtimeGuard(it, prev2, prev2.state) }
                             val rtLh = lg2.runtimeState.runtimeLookaheadSet
-                            trs2.mapNotNull { tr2 -> errorPairs(input, lg.index, tr2, possibleEndOfText, rtLh) }
+                            trs2.mapNotNull { tr2 ->
+                                val runtimeGuardPassed = tr2.runtimeGuard(tr2, prev, prev.runtimeState.state)
+                                errorPairs(input, lg.index, tr2, possibleEndOfText, rtLh,runtimeGuardPassed)
+                            }
                         }
 
                     }
@@ -262,7 +264,8 @@ internal class ScanOnDemandParser(
         lg: GrowingNodeIndex,
         tr: Transition,
         possibleEndOfText: Set<LookaheadSet>,
-        runtimeLookahead: Set<LookaheadSet>
+        runtimeLookahead: Set<LookaheadSet>,
+        runtimeGuardPassed:Boolean
     ): Pair<Int, Set<RuntimeRule>>? {
         return when (tr.action) {
             Transition.ParseAction.GOAL -> null
@@ -291,10 +294,19 @@ internal class ScanOnDemandParser(
                     }
                 }
             }
-            else -> {
-                val expected = tr.lookahead.flatMap { lh -> possibleEndOfText.flatMap { eot -> runtimeLookahead.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }.toSet()
-                val pos = lg.nextInputPosition
-                Pair(pos, expected)
+            else -> when {
+                runtimeGuardPassed ->{
+                    val expected =
+                        tr.lookahead.flatMap { lh -> possibleEndOfText.flatMap { eot -> runtimeLookahead.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }.toSet()
+                    val pos = lg.nextInputPosition
+                    Pair(pos, expected)
+                }
+                else -> {
+                    val expected =
+                        tr.lookahead.flatMap { lh -> possibleEndOfText.flatMap { eot -> runtimeLookahead.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }.toSet()
+                    val pos = lg.startPosition
+                    Pair(pos, expected)
+                }
             }
         }
     }
