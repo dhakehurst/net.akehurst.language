@@ -335,17 +335,22 @@ internal class ScanOnDemandParser(
         rp.grow3(possibleEndOfText, true)
         matches.addAll(graph.peekNextToProcess())
         val trans_lh_pairs = matches.flatMap { (gn, previous, remainingHead) ->
-            val prevPrev = remainingHead?.runtimeState ?: RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY))
-            val prev = previous?.runtimeState ?: RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY))
-            val trans = gn.runtimeState.transitions(prevPrev.state, prev.state).toSet()
-            val rtLh = gn.runtimeState.runtimeLookaheadSet
-            trans.flatMap { tr ->
-                val pairs = possibleEndOfText.flatMap { eot ->
-                    rtLh.map { rt ->
-                        Pair(tr, tr.lookahead.flatMap { it.guard.resolve(eot, rt).content })
+            when {
+                gn.currentState.isAtEnd && gn.currentState.isGoal -> emptySet()
+                else -> {
+                    val prevPrev = remainingHead?.runtimeState ?: RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY))
+                    val prev = previous?.runtimeState ?: RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY))
+                    val trans = gn.runtimeState.transitions(prevPrev.state, prev.state).toSet()
+                    val rtLh = gn.runtimeState.runtimeLookaheadSet
+                    trans.flatMap { tr ->
+                        val pairs = possibleEndOfText.flatMap { eot ->
+                            rtLh.map { rt ->
+                                Pair(tr, tr.lookahead.flatMap { it.guard.resolve(eot, rt).content })
+                            }
+                        }.toSet()
+                        pairs
                     }
-                }.toSet()
-                pairs
+                }
             }
         }.toSet()
 
