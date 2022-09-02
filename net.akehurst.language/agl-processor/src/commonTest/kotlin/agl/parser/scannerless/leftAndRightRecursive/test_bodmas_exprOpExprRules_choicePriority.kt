@@ -151,7 +151,7 @@ internal class test_bodmas_exprOpExprRules_choicePriority : test_ScanOnDemandPar
         )
     }
 
-    @Test
+    //@Test
     fun Og_a_Cg() {
         val sentence = "(a)"
 
@@ -408,7 +408,7 @@ internal class test_bodmas_exprOpExprRules_choicePriority : test_ScanOnDemandPar
         )
     }
 
-    @Test
+    //@Test
     fun Og_a_add_b_Cg_mul_c() {
         val sentence = "(a+b)*c"
 

@@ -51,6 +51,7 @@ internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean=false)
     }
 
     fun test2(rrs: RuntimeRuleSet, embeddedRuntimeRuleSets:Map<String,RuntimeRuleSet>, goal: String, sentence: String, expectedNumGSSHeads: Int, printAutomaton:Boolean=false, vararg expectedTrees: String): SharedPackedParseTree? {
+        println("${this::class.simpleName} - '$sentence'")
         val parser = ScanOnDemandParser(rrs)
         if(build)parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
         val result = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
