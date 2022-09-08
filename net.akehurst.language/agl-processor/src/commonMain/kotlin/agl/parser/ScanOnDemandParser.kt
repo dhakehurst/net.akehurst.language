@@ -179,9 +179,11 @@ internal class ScanOnDemandParser(
         input: InputFromString,
         possibleEndOfText: Set<LookaheadSet>
     ): Pair<InputLocation, Set<RuntimeRule>> {
-        //rp.resetGraphToLastGrown()
-        //val poss =  graph.peekAllHeads()//rp.tryGrowHeightOrGraft()//graph.peekAllHeads()
-        val r = rp.lastGrown.map { (lg, prev, remainingHead) ->
+        rp.resetGraphToLastGrown()
+        val lgs = rp.tryGrowHeightOrGraft(possibleEndOfText, false)
+        val triples = lgs.flatMap { it.triples }
+        //val r = rp.lastGrown.map { (lg, prev, remainingHead) ->
+        val r = triples.map { (lg, prev, remainingHead) ->
             when {
                 lg.runtimeState.state.isGoal -> {
                     val trs = lg.runtimeState.transitions(rp.stateSet.startState, rp.stateSet.startState)

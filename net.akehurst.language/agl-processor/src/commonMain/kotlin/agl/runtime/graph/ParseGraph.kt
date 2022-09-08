@@ -362,11 +362,6 @@ internal class ParseGraph(
 
     /**
      * oldParent should be null if first child
-     * return when {
-     *    1 -> keep new, drop Existing
-     *    0 -> keep both
-     *    -1 -> keep existing, drop new
-     * }
      */
     private fun mergeDecision(
         existingNode: CompleteNodeIndex,
@@ -668,7 +663,7 @@ internal class ParseGraph(
                         true
                     }
                     MergeOptions.UNDECIDABLE -> {
-                        //addNewPreferredTreeData(existingComplete, oldParent, newParent, child)
+                        //addNewPreferredTreeData(oldParent, newParent, child)
                         createNewHeadAndKeepExisting(newParent, previous)
                         true
                     }
@@ -732,7 +727,13 @@ internal class ParseGraph(
     }
 
     fun dropData(node:GrowingNodeIndex) {
-        this.treeData.removeTree(node)
+        // if still have a growing head with same complete then don't drop data
+        val b = this._gss.roots.any { it.runtimeState.isAtEnd &&  it.complete==node.complete }
+        if (b) {
+            //still growing
+        } else {
+            this.treeData.removeTree(node)
+        }
     }
 
     /**

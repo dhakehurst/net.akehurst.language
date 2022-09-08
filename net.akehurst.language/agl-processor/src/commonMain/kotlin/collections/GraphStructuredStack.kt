@@ -26,7 +26,7 @@ class GraphStructuredStack<E>(previous:MutableMap<E,MutableSet<E>>, count:Mutabl
     private val _previous = previous
     private val _count = count
 
-    val roots:List<E> = this._count.entries.filter { it.value==0 }.map { it.key }
+    val roots:List<E> get() = this._count.entries.filter { it.value==0 }.map { it.key }
 
     fun clear() {
         this._previous.clear()

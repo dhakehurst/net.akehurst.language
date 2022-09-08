@@ -83,7 +83,7 @@ internal class test_AhoSetiUlman_4_54 : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun dcd() {
-        fail("java.lang.OutOfMemoryError: Java heap space: failed reallocation of scalar replaced objects")
+        fail("when converting to String get java.lang.OutOfMemoryError: Java heap space: failed reallocation of scalar replaced objects")
         val sentence = "dcd"
 
         val expected = """

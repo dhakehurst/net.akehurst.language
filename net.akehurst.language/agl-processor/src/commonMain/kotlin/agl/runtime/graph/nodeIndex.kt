@@ -18,7 +18,11 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.ParserState
+import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.sppt.SPPTBranchFromTreeData
+import net.akehurst.language.agl.sppt.SPPTLeafFromInput
+import net.akehurst.language.agl.sppt.ToStringVisitor
 
 
 /*
@@ -71,6 +75,21 @@ internal  class GrowingNodeIndex(
     val complete = CompleteNodeIndex(treeData, runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)
 
     val state:ParserState get() = this.runtimeState.state
+
+    //useful during debug
+    fun toStringTree(input:InputFromString): String {
+        val runtimeRules = runtimeState.state.runtimeRulesSet
+        val nodes = when {
+            runtimeState.state.isLeaf -> runtimeRules.map { rr ->
+                SPPTLeafFromInput(input, rr, this.startPosition, this.nextInputPosition, 0)
+            }
+            else -> runtimeRules.map { rr ->
+                SPPTBranchFromTreeData(treeData, input, rr, 0, this.startPosition, this.nextInputPosition, 0)
+            }
+        }
+        val v = ToStringVisitor("\n", "  ")
+        return nodes.joinToString(separator = "\n") { n -> v.visitNode(n, "  ").joinToString(separator = "\n") }
+    }
 
     override fun hashCode(): Int =_hashCode
 
@@ -150,6 +169,7 @@ internal class CompleteNodeIndex(
         return "CNI{(${this.treeData.forStateSetNumber}),$startPosition-$nextInputPosition,R=${runtimeRulesSet.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }}}"
     }
 }
+
 internal data class PreferredChildIndex(
     val runtimeRulesSet: Set<RuntimeRule>,
     val startPosition: Int,

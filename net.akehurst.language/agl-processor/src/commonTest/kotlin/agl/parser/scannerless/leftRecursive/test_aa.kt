@@ -25,7 +25,7 @@ import kotlin.test.fail
 internal class test_aa : test_ScanOnDemandParserAbstract() {
 
     // S  = P | 'a' ;
-    // P  = S | P1 ;  // S*
+    // P  = P1 | S ;  // S*
     // P1 = P S ;    // S*; try right recursive also
     private companion object {
         val rrs = runtimeRuleSet {
@@ -34,8 +34,8 @@ internal class test_aa : test_ScanOnDemandParserAbstract() {
                 literal("a")
             }
             choice("P",RuntimeRuleChoiceKind.LONGEST_PRIORITY){
-                ref("S")
                 ref("P1")
+                ref("S")
             }
             concatenation("P1") { ref("P"); ref("S") }
         }
@@ -44,7 +44,6 @@ internal class test_aa : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a() {
-//        TODO()
         val sentence = "a"
 
         val expected = """
@@ -62,7 +61,6 @@ internal class test_aa : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aa() {
-        TODO()
         val sentence = "aa"
 
         val expected = """
@@ -83,7 +81,6 @@ internal class test_aa : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun aaa() {
-        TODO()
         val sentence = "aaa"
 
         val expected = """
