@@ -62,13 +62,14 @@ internal class test_RulePosition_next {
     // S = 'a' | 'b' | 'c';
     @Test
     fun choiceEquals__S_0_0() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_b = rb.literal("b")
-        val r_c = rb.literal("c")
-        val r_S = rb.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_a, r_b, r_c)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
+        val rrs = runtimeRuleSet {
+            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                literal("b")
+                literal("c")
+            }
+        }
+        val r_S = rrs.findRuntimeRule("S")
 
         val actual: Set<RulePosition> = RP(r_S, 0, SOR).next()
         val expected: Set<RulePosition> = setOf(RP(r_S, 0, EOR))
@@ -79,13 +80,14 @@ internal class test_RulePosition_next {
     // S = 'a' | 'b' | 'c';
     @Test
     fun choiceEquals__S_1_0() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_b = rb.literal("b")
-        val r_c = rb.literal("c")
-        val r_S = rb.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_a, r_b, r_c)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
+        val rrs = runtimeRuleSet {
+            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                literal("b")
+                literal("c")
+            }
+        }
+        val r_S = rrs.findRuntimeRule("S")
 
         val actual: Set<RulePosition> = RP(r_S, 1, SOR).next()
         val expected: Set<RulePosition> = setOf(RP(r_S, 1, EOR))
@@ -96,13 +98,14 @@ internal class test_RulePosition_next {
     // S = 'a' | 'b' | 'c';
     @Test
     fun choiceEquals__S_2_0() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_b = rb.literal("b")
-        val r_c = rb.literal("c")
-        val r_S = rb.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_a, r_b, r_c)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
+        val rrs = runtimeRuleSet {
+            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                literal("b")
+                literal("c")
+            }
+        }
+        val r_S = rrs.findRuntimeRule("S")
 
         val actual: Set<RulePosition> = RP(r_S, 2, SOR).next()
         val expected: Set<RulePosition> = setOf(RP(r_S, 2, EOR))
@@ -119,11 +122,11 @@ internal class test_RulePosition_next {
     // -- S = 'a'? ;
     @Test
     fun multi01__S_Empty_start() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_S = rb.rule("S").multi(0, 1, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
+        val rrs = runtimeRuleSet {
+            multi("S",0,1,"'a'")
+            literal("'a'","a")
+        }
+        val r_S = rrs.findRuntimeRule("S")
 
         val actual: Set<RulePosition> = RP(r_S, OME, SOR).next()
         val expected: Set<RulePosition> = setOf(RP(r_S, OME, EOR))
@@ -133,11 +136,11 @@ internal class test_RulePosition_next {
 
     @Test
     fun multi01__S_Empty_end() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_S = rb.rule("S").multi(0, 1, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
+        val rrs = runtimeRuleSet {
+            multi("S",0,1,"'a'")
+            literal("'a'","a")
+        }
+        val r_S = rrs.findRuntimeRule("S")
 
         val actual: Set<RulePosition> = RP(r_S, OME, EOR).next()
         val expected: Set<RulePosition> = setOf()
@@ -147,11 +150,11 @@ internal class test_RulePosition_next {
 
     @Test
     fun multi01__S_Item_start() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_S = rb.rule("S").multi(0, 1, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
+        val rrs = runtimeRuleSet {
+            multi("S",0,1,"'a'")
+            literal("'a'","a")
+        }
+        val r_S = rrs.findRuntimeRule("S")
 
         val actual: Set<RulePosition> = RP(r_S, OMI, SOR).next()
         val expected: Set<RulePosition> = setOf(RP(r_S, OMI, EOR))
@@ -161,11 +164,11 @@ internal class test_RulePosition_next {
 
     @Test
     fun multi01__S_Item_mid() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_S = rb.rule("S").multi(0, 1, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
+        val rrs = runtimeRuleSet {
+            multi("S",0,1,"'a'")
+            literal("'a'","a")
+        }
+        val r_S = rrs.findRuntimeRule("S")
 
         val actual: Set<RulePosition> = RP(r_S, OMI, PMI).next()
         val expected: Set<RulePosition> = setOf(
@@ -178,11 +181,11 @@ internal class test_RulePosition_next {
 
     @Test
     fun multi01__S_Item_end() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_S = rb.rule("S").multi(0, 1, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
+        val rrs = runtimeRuleSet {
+            multi("S",0,1,"'a'")
+            literal("'a'","a")
+        }
+        val r_S = rrs.findRuntimeRule("S")
 
         val actual: Set<RulePosition> = RP(r_S, PMI, EOR).next()
         val expected: Set<RulePosition> = setOf()
@@ -195,12 +198,12 @@ internal class test_RulePosition_next {
     // -- S = ['a' / ',']* ;
     @Test
     fun sList0n__S_Empty_start() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
+        val rrs = runtimeRuleSet {
+            sList("S",0,-1,"'a'","','")
+            literal("'a'","a")
+            literal("','",",")
+        }
+        val r_S = rrs.findRuntimeRule("S")
 
         val actual: Set<RulePosition> = RP(r_S, OLE, SOR).next()
         val expected: Set<RulePosition> = setOf(RP(r_S, OLE, EOR))
@@ -210,12 +213,12 @@ internal class test_RulePosition_next {
 
     @Test
     fun sList0n__S_Empty_end() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
+        val rrs = runtimeRuleSet {
+            sList("S",0,-1,"'a'","','")
+            literal("'a'","a")
+            literal("','",",")
+        }
+        val r_S = rrs.findRuntimeRule("S")
 
         val actual: Set<RulePosition> = RP(r_S, OLE, EOR).next()
         val expected: Set<RulePosition> = setOf()
@@ -225,12 +228,12 @@ internal class test_RulePosition_next {
 
     @Test
     fun sList0n__S_Item_start() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
+        val rrs = runtimeRuleSet {
+            sList("S",0,-1,"'a'","','")
+            literal("'a'","a")
+            literal("','",",")
+        }
+        val r_S = rrs.findRuntimeRule("S")
 
         val actual: Set<RulePosition> = RP(r_S, OLI, SOR).next()
         val expected: Set<RulePosition> = setOf(
@@ -243,12 +246,12 @@ internal class test_RulePosition_next {
 
     @Test
     fun sList0n__S_Sep_sep() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
+        val rrs = runtimeRuleSet {
+            sList("S",0,-1,"'a'","','")
+            literal("'a'","a")
+            literal("','",",")
+        }
+        val r_S = rrs.findRuntimeRule("S")
 
         val actual: Set<RulePosition> = RP(r_S, OLS, PLS).next()
         val expected: Set<RulePosition> = setOf(RP(r_S, OLI, PLI))
@@ -258,12 +261,12 @@ internal class test_RulePosition_next {
 
     @Test
     fun sList0n__S_Item_end() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
+        val rrs = runtimeRuleSet {
+            sList("S",0,-1,"'a'","','")
+            literal("'a'","a")
+            literal("','",",")
+        }
+        val r_S = rrs.findRuntimeRule("S")
 
         val actual: Set<RulePosition> = RP(r_S, OLI, EOR).next()
         val expected: Set<RulePosition> = setOf()
@@ -273,12 +276,12 @@ internal class test_RulePosition_next {
 
     @Test
     fun sList0n__S_Sep_end() {
-        val rb = RuntimeRuleSetBuilder()
-        val r_a = rb.literal("a")
-        val r_c = rb.literal(",")
-        val r_S = rb.rule("S").separatedList(0, -1, r_c, r_a)
-        val sut = rb.ruleSet()
-        val gr = RuntimeRuleSet.createGoalRule(r_S)
+        val rrs = runtimeRuleSet {
+            sList("S",0,-1,"'a'","','")
+            literal("'a'","a")
+            literal("','",",")
+        }
+        val r_S = rrs.findRuntimeRule("S")
 
         val actual: Set<RulePosition> = RP(r_S, OLS, EOR).next()
         val expected: Set<RulePosition> = setOf()
@@ -287,14 +290,15 @@ internal class test_RulePosition_next {
     }
 
     // -- S = ['a' / ',']+ ;
-    val sList1n = runtimeRuleSet {
-        sList("S", 1, -1, "'a'", "c")
-        literal("c", ",")
-        literal("'a'", "a")
-    }
+
 
     @Test
     fun sList1n__S_Empty_start() {
+        val sList1n = runtimeRuleSet {
+            sList("S", 1, -1, "'a'", "c")
+            literal("c", ",")
+            literal("'a'", "a")
+        }
         val S = sList1n.findRuntimeRule("S")
         val SM = sList1n.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val G = SM.startState
@@ -307,6 +311,11 @@ internal class test_RulePosition_next {
 
     @Test
     fun sList1n__S_Empty_end() {
+        val sList1n = runtimeRuleSet {
+            sList("S", 1, -1, "'a'", "c")
+            literal("c", ",")
+            literal("'a'", "a")
+        }
         val S = sList1n.findRuntimeRule("S")
         val SM = sList1n.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val G = SM.startState
@@ -319,6 +328,11 @@ internal class test_RulePosition_next {
 
     @Test
     fun sList1n__S_Item_start() {
+        val sList1n = runtimeRuleSet {
+            sList("S", 1, -1, "'a'", "c")
+            literal("c", ",")
+            literal("'a'", "a")
+        }
         val S = sList1n.findRuntimeRule("S")
         val SM = sList1n.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val G = SM.startState
@@ -335,6 +349,11 @@ internal class test_RulePosition_next {
 
     @Test
     fun sList1n__S_Sep_sep() {
+        val sList1n = runtimeRuleSet {
+            sList("S", 1, -1, "'a'", "c")
+            literal("c", ",")
+            literal("'a'", "a")
+        }
         val S = sList1n.findRuntimeRule("S")
         val SM = sList1n.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 

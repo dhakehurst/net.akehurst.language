@@ -309,13 +309,17 @@ class test_AglGrammar_item {
     }
 
     @Test
-    fun multiplicity__2_n() {
+    fun multiplicity__unBraced_unBounded() {
         val result = parse("multiplicity", "2+")
         val expected = this.sppt(
             """
-            multiplicity|3 { oneOrMore {
+            multiplicity|3 { range {
+              rangeUnBraced {
                 POSITIVE_INTEGER : '2'
-                '+'
+                rangeMax {
+                  rangeMaxUnbounded {'+'}
+                }
+              }
             } }
         """.trimIndent()
         )
@@ -325,14 +329,61 @@ class test_AglGrammar_item {
     }
 
     @Test
-    fun multiplicity__2_5() {
+    fun multiplicity__braced_unBounded() {
+        val result = parse("multiplicity", "{2+}")
+        val expected = this.sppt(
+            """
+            multiplicity|3 { range {
+              rangeBraced {
+                '{'
+                POSITIVE_INTEGER : '2'
+                rangeMax {
+                  rangeMaxUnbounded {'+'}
+                }
+                '}'
+              }
+            } }
+        """.trimIndent()
+        )
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+    }
+
+    @Test
+    fun multiplicity__unBraced_bounded() {
         val result = parse("multiplicity", "2..5")
         val expected = this.sppt(
             """
-            multiplicity|4 { range {
-              POSITIVE_INTEGER  : '2' 
-              '..'
-              POSITIVE_INTEGER  : '5' 
+            multiplicity|3 { range {
+              rangeUnBraced {
+                POSITIVE_INTEGER : '2'
+                rangeMax {
+                  rangeMaxBounded {'..' POSITIVE_INTEGER  : '5' }
+                }
+              }
+            } }
+        """.trimIndent()
+        )
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+    }
+
+    @Test
+    fun multiplicity__braced_bounded() {
+        val result = parse("multiplicity", "{2..5}")
+        val expected = this.sppt(
+            """
+            multiplicity|3 { range {
+              rangeBraced {
+                '{'
+                POSITIVE_INTEGER : '2'
+                rangeMax {
+                  rangeMaxBounded {'..' POSITIVE_INTEGER  : '5' }
+                }
+                '}'
+              }
             } }
         """.trimIndent()
         )

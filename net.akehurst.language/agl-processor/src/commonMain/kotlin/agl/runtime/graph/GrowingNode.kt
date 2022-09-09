@@ -51,7 +51,7 @@ internal class GrowingNode(
     fun addNext(value: GrowingNode) {
         this.next.add(value)
     }
-
+/*
     private fun toStringNode(withPrevious: Boolean): String {
         var r = "$currentState,$startPosition,$nextInputPosition,"
         r += if (this.currentState.isAtEnd) "C" else this.currentState.rulePositions.first().position
@@ -90,7 +90,7 @@ internal class GrowingNode(
         }
         return s
     }
-
+*/
     //useful during debug
     fun toStringTree(): String {
         val nodes = when {
@@ -123,7 +123,8 @@ internal class GrowingNode(
     }
 
     override fun toString(): String {
-        return this.toStringNode(true)
+        return this.index.toString()
+        //return this.toStringNode(true)
     }
 
 }

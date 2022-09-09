@@ -17,9 +17,7 @@
 package net.akehurst.language.parser.expectedTerminalsAt
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -29,10 +27,13 @@ import kotlin.test.assertNotNull
 internal class test_expectedTerminalsAt {
 
     fun concat_a() : RuntimeRuleSet {
-        val rrb = RuntimeRuleSetBuilder()
-        val r0 = rrb.literal("a")
-        val r1 = rrb.rule("S").concatenation(r0)
-        return rrb.ruleSet()
+        return runtimeRuleSet {
+            concatenation("S"){ literal("a") }
+        }
+        //val rrb = RuntimeRuleSetBuilder()
+        //val r0 = rrb.literal("a")
+        //val r1 = rrb.rule("S").concatenation(r0)
+        //return rrb.ruleSet()
     }
 
     @Test
@@ -73,11 +74,14 @@ internal class test_expectedTerminalsAt {
     }
 
     fun concat_ab() : RuntimeRuleSet {
-        val rrb = RuntimeRuleSetBuilder()
-        val a = rrb.literal("a")
-        val b = rrb.literal("b")
-        val r1 = rrb.rule("S").concatenation(a,b)
-        return rrb.ruleSet()
+        return runtimeRuleSet {
+            concatenation("S"){ literal("a"); literal("b") }
+        }
+        //val rrb = RuntimeRuleSetBuilder()
+        //val a = rrb.literal("a")
+        //val b = rrb.literal("b")
+        //val r1 = rrb.rule("S").concatenation(a,b)
+        //return rrb.ruleSet()
     }
 
     @Test
@@ -143,11 +147,17 @@ internal class test_expectedTerminalsAt {
     }
 
     fun choiceEqual_ab() : RuntimeRuleSet {
-        val rrb = RuntimeRuleSetBuilder()
-        val a = rrb.literal("a")
-        val b = rrb.literal("b")
-        val r1 = rrb.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,a,b)
-        return rrb.ruleSet()
+        return runtimeRuleSet {
+            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                literal("b")
+            }
+        }
+        //val rrb = RuntimeRuleSetBuilder()
+        //val a = rrb.literal("a")
+        //val b = rrb.literal("b")
+        //val r1 = rrb.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,a,b)
+        //return rrb.ruleSet()
     }
 
     @Test

@@ -76,6 +76,9 @@ internal  class GrowingNodeIndex(
 
     val state:ParserState get() = this.runtimeState.state
 
+    val isLeaf: Boolean get() = this.runtimeState.state.isLeaf
+    val isEmptyMatch: Boolean get() = this.runtimeState.state.isAtEnd && this.startPosition == this.nextInputPosition
+
     //useful during debug
     fun toStringTree(input:InputFromString): String {
         val runtimeRules = runtimeState.state.runtimeRulesSet

@@ -17,11 +17,11 @@
 package net.akehurst.language.agl.runtime.graph
 
 internal data class PreviousInfo(
-    val node: GrowingNode
+    val node: GrowingNodeIndex
 ) {
-    override fun hashCode(): Int = arrayOf(node.currentState, node.runtimeLookahead).contentHashCode()
+    override fun hashCode(): Int = arrayOf(node.state, node.runtimeState.runtimeLookaheadSet).contentHashCode()
     override fun equals(other: Any?): Boolean = when(other) {
-        is PreviousInfo -> this.node.currentState == other.node.currentState && this.node.runtimeLookahead == other.node.runtimeLookahead
+        is PreviousInfo -> this.node.state == other.node.state && this.node.runtimeState.runtimeLookaheadSet == other.node.runtimeState.runtimeLookaheadSet
         else -> false
     }
 }

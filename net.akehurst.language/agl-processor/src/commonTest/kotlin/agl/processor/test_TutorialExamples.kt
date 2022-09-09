@@ -49,7 +49,7 @@ class test_TutorialExamples {
 
         val actual = result.sppt!!.toStringAll.trim()
 
-        val expected = "typeReference|1 { userDefinedType { NAME : 'int' } }"
+        val expected = "typeReference { userDefinedType { NAME : 'int' } }"
 
         assertEquals(expected, actual)
     }
@@ -102,7 +102,7 @@ class test_TutorialExamples {
         val actual = result.sppt!!.toStringAll.trim()
 
         val expected = """
-                typeReference|1 { builtInType|1 { 'boolean' } }
+                typeReference { builtInType|1 { 'boolean' } }
         """.trimIndent()
 
         assertEquals(expected, actual)
@@ -129,7 +129,7 @@ class test_TutorialExamples {
         val actual = result.sppt!!.toStringAll.trim()
 
         val expected = """
-                typeReference|1 { builtInType { 'int' } }
+                typeReference { builtInType { 'int' } }
         """.trimIndent()
 
         assertEquals(expected, actual)

@@ -24,7 +24,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class test_Converter {
+internal class test_Converter {
 
     private fun checkRule(
         number: Int,

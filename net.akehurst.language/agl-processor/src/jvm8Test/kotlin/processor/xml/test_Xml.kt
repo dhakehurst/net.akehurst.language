@@ -41,16 +41,10 @@ class test_Xml(val data: Data) {
         val grammarStr = this::class.java.getResource("/xml/Xml.agl").readText()
         const val goal = "document"
 
-        //private val grammarStr = ""//runBlockingNoSuspensions { resourcesVfs["/xml/Xml.agl"].readString() }
-        var processor: LanguageProcessor<Any, Any> = tgqlprocessor()
+        var processor: LanguageProcessor<Any, Any> = Agl.processorFromString(grammarStr)
 
         val validDir = "/xml/valid"
         var invalidDir = "/xml/invalid"
-
-        fun tgqlprocessor(): LanguageProcessor<Any, Any> {
-            //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
-            return Agl.processorFromString(grammarStr)
-        }
 
         @JvmStatic
         @Parameters(name = "{0}")
@@ -71,7 +65,7 @@ class test_Xml(val data: Data) {
     class Data(val file: String, val text: String, val valid: Boolean) {
 
         // --- Object ---
-        override fun toString(): String = "$file"
+        override fun toString(): String = file
     }
 
     @Test

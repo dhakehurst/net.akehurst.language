@@ -18,13 +18,9 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.GrowingChildren
-import net.akehurst.language.agl.runtime.graph.GrowingNode
+
 import net.akehurst.language.agl.runtime.structure.RuleOptionId
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
-import net.akehurst.language.agl.sppt.SPPTNodeFromInputAbstract
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 
 //TODO: currently this has to be public, because otherwise kotlin does not

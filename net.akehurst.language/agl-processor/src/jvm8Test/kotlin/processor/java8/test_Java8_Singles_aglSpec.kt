@@ -72,7 +72,15 @@ class test_Java8_Singles_aglSpec {
 
         val grammarStr = this::class.java.getResource(grammarFile).readText()
         val goal = "Type"
-        val p = Agl.processorFromString<Any, Any>(grammarStr, Agl.configuration { defaultGoalRuleName(goal) })
+        val p = Agl.processorFromString<AsmSimple, ContextSimple>(
+            grammarDefinitionStr = grammarStr,
+            aglOptions = Agl.registry.agl.grammar.processor?.options {
+                semanticAnalysis {
+                    active(false) // switch off for performance
+                }
+            },
+            configuration = Agl.configuration { defaultGoalRuleName(goal) }
+        )
 
         val sentence = "int"
         val result = p.parse(sentence, proc.parseOptions { goalRuleName(goal) })

@@ -41,7 +41,7 @@ grammar Mdl {
 
     parameter = IDENTIFIER value ;
 
-    value = stringList | literal | matrix | identifier ;
+    value = stringList | matrix | identifier | literal ;
     identifier = IDENTIFIER ;
     matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
     row = [literal / ',']+ | literal+ ;

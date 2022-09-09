@@ -28,8 +28,9 @@ internal class test_ScanOnDemandParser {
 
     @Test
     fun construct() {
-        val rrb = RuntimeRuleSetBuilder()
-        val sp = ScanOnDemandParser(rrb.ruleSet())
+        val rrs = runtimeRuleSet {
+        }
+        val sp = ScanOnDemandParser(rrs)
 
         assertNotNull(sp)
     }
@@ -47,10 +48,10 @@ internal class test_ScanOnDemandParser {
 
     @Test
     fun parse() {
-        val rrb = RuntimeRuleSetBuilder()
-        val r0 = rrb.literal("a")
-        val r1 = rrb.rule("a").concatenation(r0)
-        val sp = ScanOnDemandParser(rrb.ruleSet())
+        val rrs = runtimeRuleSet {
+            concatenation("S") { literal("a") }
+        }
+        val sp = ScanOnDemandParser(rrs)
 
         val result = sp.parseForGoal("a", "a", AutomatonKind.LOOKAHEAD_1)
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })

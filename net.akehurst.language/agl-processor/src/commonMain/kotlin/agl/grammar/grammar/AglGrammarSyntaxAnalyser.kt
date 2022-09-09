@@ -56,6 +56,12 @@ internal class AglGrammarSyntaxAnalyser(
         this.register("simpleItem", this::simpleItem as BranchHandler<SimpleItem>)
         this.register("listOfItems", this::listOfItems as BranchHandler<ListOfItems>)
         this.register("multiplicity", this::multiplicity as BranchHandler<Pair<Int, Int>>)
+        this.register("range", this::range as BranchHandler<Pair<Int, Int>>)
+        this.register("rangeUnBraced", this::rangeUnBraced as BranchHandler<Pair<Int, Int>>)
+        this.register("rangeBraced", this::rangeBraced as BranchHandler<Pair<Int, Int>>)
+        this.register("rangeMax", this::rangeMax as BranchHandler<Int>)
+        this.register("rangeMaxBounded", this::rangeMaxBounded as BranchHandler<Int>)
+        this.register("rangeMaxUnbounded", this::rangeMaxUnbounded as BranchHandler<Int>)
         this.register("simpleList", this::simpleList as BranchHandler<SimpleList>)
         this.register("group", this::group as BranchHandler<Group>)
         this.register("groupedContent", this::groupedContent as BranchHandler<Group>)
@@ -212,47 +218,50 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // concatenationItem = simpleItem | listOfItems ;
-    fun concatenationItem(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): ConcatenationItem {
-        return this.transformBranch<ConcatenationItem>(children[0], arg)
-    }
+    fun concatenationItem(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): ConcatenationItem = this.transformBranch<ConcatenationItem>(children[0], arg)
 
     // simpleItem : terminal | nonTerminal | group ;
-    fun simpleItem(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): SimpleItem {
-        return this.transformBranch<SimpleItem>(children[0], arg)
-    }
+    fun simpleItem(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): SimpleItem = this.transformBranch<SimpleItem>(children[0], arg)
 
     // listOfItems = simpleList | separatedList ;
-    fun listOfItems(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): ListOfItems {
-        return this.transformBranch<ListOfItems>(children[0], arg)
-    }
+    fun listOfItems(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): ListOfItems = this.transformBranch<ListOfItems>(children[0], arg)
 
-    // multiplicity = '*' | '+' | '?' | oneOrMore | range ;
-    // oneOrMore = POSITIVE_INTEGER '+' ;
-    // range = POSITIVE_INTEGER '..' POSITIVE_INTEGER ;
+    // multiplicity = '*' | '+' | '?' | range ;
     fun multiplicity(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Pair<Int, Int> {
         val symbol = target.nonSkipMatchedText
         return when (symbol) {
             "*" -> Pair(0, -1)
             "+" -> Pair(1, -1)
             "?" -> Pair(0, 1)
-            else -> {
-                val multArgs = children[0].nonSkipChildren
-                when (multArgs.size) {
-                    2 -> {
-                        val min = multArgs[0].nonSkipMatchedText.toInt()
-                        Pair(min, -1)
-                    }
-                    3 -> {
-                        val min = multArgs[0].nonSkipMatchedText.toInt()
-                        val max = multArgs[2].nonSkipMatchedText.toInt()
-                        Pair(min, max)
-                    }
-                    else -> throw SyntaxAnalyserException("cannot transform ${target}", null)
-                }
-            }
-
+            else -> this.transformBranch<Pair<Int, Int>>(children[0], arg)
         }
     }
+
+    //range = rangeBraced | rangeUnBraced ;
+    fun range(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Pair<Int, Int> = this.transformBranch<Pair<Int, Int>>(children[0], arg)
+
+    //rangeUnBraced = POSITIVE_INTEGER rangeMax ;
+    fun rangeUnBraced(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Pair<Int, Int> {
+        val min = target.nonSkipChildren[0].nonSkipMatchedText.toInt()
+        val max = this.transformBranch<Int>(children[0], arg)
+        return Pair(min, max)
+    }
+
+    //rangeBraced = '{' POSITIVE_INTEGER rangeMax '}' ;
+    fun rangeBraced(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Pair<Int, Int> {
+        val min = target.nonSkipChildren[1].nonSkipMatchedText.toInt()
+        val max = this.transformBranch<Int>(children[0], arg)
+        return Pair(min, max)
+    }
+
+    //rangeMax = rangeMaxUnbounded | rangeMaxBounded ;
+    fun rangeMax(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Int = this.transformBranch<Int>(children[0], arg)
+
+    //rangeMaxUnbounded = '+' ;
+    fun rangeMaxUnbounded(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Int = -1
+
+    //rangeMaxBounded = '..' POSITIVE_INTEGER ;
+    fun rangeMaxBounded(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Int = children[0].nonSkipMatchedText.toInt()
 
     // simpleList = simpleItem multiplicity ;
     fun simpleList(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): SimpleList {

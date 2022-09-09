@@ -104,7 +104,7 @@ class test_StatechartTools_Singles {
         val sentence = ""
         val actual = processor.expectedAt(sentence, 0, 1, processor.options { parse { goalRuleName(goal) } }).items.map { it.text }
 
-        val expected = listOf<String>("ID", "after", "every", "entry", "exit", "always", "oncycle", "[", "default", "else", "/", "#")
-        assertEquals(expected, actual)
+        val expected = setOf("ID", "after", "every", "entry", "exit", "always", "oncycle", "[", "default", "else", "/", "#")
+        assertEquals(expected, actual.toSet())
     }
 }

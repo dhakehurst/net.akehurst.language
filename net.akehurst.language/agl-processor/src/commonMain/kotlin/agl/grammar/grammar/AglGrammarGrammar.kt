@@ -45,9 +45,13 @@ import net.akehurst.language.api.grammar.Rule
         concatenationItem = simpleItem | listOfItems ;
         simpleItem = terminal | nonTerminal | group ;
         listOfItems = simpleList | separatedList ;
-        multiplicity = '*' | '+' | '?' | oneOrMore | range ;
-        oneOrMore = POSITIVE_INTEGER '+' ;
-        range = POSITIVE_INTEGER '..' POSITIVE_INTEGER ;
+        multiplicity = '*' | '+' | '?' | range ;
+        range = rangeBraced | rangeUnBraced ;
+        rangeUnBraced = POSITIVE_INTEGER rangeMax ;
+        rangeBraced = '{' POSITIVE_INTEGER rangeMax '}' ;
+        rangeMax = rangeMaxUnbounded | rangeMaxBounded ;
+        rangeMaxUnbounded = '+' ;
+        rangeMaxBounded = '..' POSITIVE_INTEGER ;
         simpleList = simpleItem multiplicity ;
         separatedList = '[' simpleItem '/' terminal ']' multiplicity ;
         group = '(' choice ')' ;
@@ -99,11 +103,20 @@ internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
                 b.terminalLiteral("*"),
                 b.terminalLiteral("+"),
                 b.terminalLiteral("?"),
-                b.nonTerminal("oneOrMore"),
                 b.nonTerminal("range")
             )
-            b.rule("oneOrMore").concatenation(b.nonTerminal("POSITIVE_INTEGER"), b.terminalLiteral("+"))
-            b.rule("range").concatenation(b.nonTerminal("POSITIVE_INTEGER"), b.terminalLiteral(".."), b.nonTerminal("POSITIVE_INTEGER"))
+            b.rule("range").choiceLongestFromConcatenationItem(
+                b.nonTerminal("rangeUnBraced"),
+                b.nonTerminal("rangeBraced"),
+            )
+            b.rule("rangeUnBraced").concatenation(b.nonTerminal("POSITIVE_INTEGER"), b.nonTerminal("rangeMax"))
+            b.rule("rangeBraced").concatenation(b.terminalLiteral("{"),b.nonTerminal("POSITIVE_INTEGER"), b.nonTerminal("rangeMax"),b.terminalLiteral("}"))
+            b.rule("rangeMax").choiceLongestFromConcatenationItem(
+                b.nonTerminal("rangeMaxUnbounded"),
+                b.nonTerminal("rangeMaxBounded"),
+            )
+            b.rule("rangeMaxUnbounded").concatenation(b.terminalLiteral("+"))
+            b.rule("rangeMaxBounded").concatenation(b.terminalLiteral(".."), b.nonTerminal("POSITIVE_INTEGER"))
             b.rule("simpleList").concatenation(b.nonTerminal("simpleItem"), b.nonTerminal("multiplicity"))
             b.rule("separatedList").concatenation(
                 b.terminalLiteral("["), b.nonTerminal("simpleItem"), b.terminalLiteral("/"),
