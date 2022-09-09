@@ -43,12 +43,15 @@ internal class ParseGraph(
             val previous:List<ToProcessPrevious>
         ) {
             //no need for overhead of a Set, previous is a Set so should be no duplicates
-            val triples:List<ToProcessTriple> get() = previous.flatMap { prv ->
-                if(prv.remainingHeads.isEmpty()) {
-                    listOf(ToProcessTriple(growingNode,prv.previous,null))
-                } else {
-                    prv.remainingHeads.map {hd ->
-                        ToProcessTriple(growingNode, prv.previous, hd)
+            val triples:List<ToProcessTriple> get() = when {
+                previous.isEmpty() -> listOf(ToProcessTriple(growingNode,null,null))
+                else -> previous.flatMap { prv ->
+                    if (prv.remainingHeads.isEmpty()) {
+                        listOf(ToProcessTriple(growingNode, prv.previous, null))
+                    } else {
+                        prv.remainingHeads.map { hd ->
+                            ToProcessTriple(growingNode, prv.previous, hd)
+                        }
                     }
                 }
             }
@@ -200,6 +203,22 @@ internal class ParseGraph(
         }
     }
 
+    fun peekTripleFor(gn: GrowingNode): List<ToProcessTriple> {
+        val previous = this._gss.peek(gn.index)
+        return if (previous.isEmpty()) {
+            listOf(ToProcessTriple(gn,null,null))
+        } else {
+            previous.flatMap { prev ->
+                val heads = this._gss.peek(prev)
+                if (heads.isEmpty()) {
+                    listOf(ToProcessTriple(gn,prev,null))
+                } else {
+                    heads.map { hd -> ToProcessTriple(gn, prev, hd) }
+                }
+            }
+        }
+    }
+
     fun pushback(trip:ToProcessTriple) {
         val (cur, prev, rhd) = trip
         this._growingHeadHeap[cur.index] = cur
@@ -233,16 +252,16 @@ internal class ParseGraph(
     }
 
     /**
-     * return true if a new head was created
+     * return next if a new head was created else oldHead
      */
-    internal fun addGrowingHead(oldHead: GrowingNodeIndex, next: GrowingNode): Boolean {
+    internal fun addGrowingHead(oldHead: GrowingNodeIndex, next: GrowingNode): GrowingNode? {
         //this._nodes[next.index] = next
         val new = this._gss.push(oldHead, next.index)
         return if (new) {
             this._growingHeadHeap[next.index] = next
-            true
+            next
         } else {
-            false
+            null
         }
     }
 
@@ -350,10 +369,11 @@ internal class ParseGraph(
         newHead: GrowingNodeIndex,
         oldHead: GrowingNode,
         previous: GrowingNodeIndex?
-    ) {
-        if (this._gss.contains(newHead)) {
+    ):GrowingNode? {
+       return if (this._gss.contains(newHead)) {
             // preserve the relationship to previous, but no need for a new head
             if (null != previous) this._gss.push(oldHead.index, newHead)
+           null
         } else {
             val nn = this.createGrowingNode(newHead)
             this.addGrowingHead(oldHead.index, nn)
@@ -437,17 +457,18 @@ internal class ParseGraph(
 
     fun previousOf(gn: GrowingNodeIndex): Set<GrowingNodeIndex> = this._gss.peek(gn)
 
-    fun start(goalState: ParserState, startPosition: Int, runtimeLookahead: Set<LookaheadSet>, initialSkipData: TreeData?) {
+    fun start(goalState: ParserState, startPosition: Int, runtimeLookahead: Set<LookaheadSet>, initialSkipData: TreeData?): GrowingNode {
         val nextInputPositionAfterSkip = initialSkipData?.nextInputPosition ?: startPosition
         val st = this.treeData.createGrowingNodeIndex(goalState, runtimeLookahead, nextInputPositionAfterSkip, nextInputPositionAfterSkip, nextInputPositionAfterSkip, 0)
         val goalGN = this.createGrowingNode(st)
         this._gss.root(st)
         this._growingHeadHeap[st] = goalGN
         this.treeData.start(st, initialSkipData)
+        return goalGN
     }
 
     /**
-     * return true if grown
+     * return New Head if grown
      */
     fun pushToStackOf(
         toProcess: ToProcessTriple,
@@ -456,7 +477,7 @@ internal class ParseGraph(
         startPosition: Int,
         nextInputPosition: Int,
         skipData: TreeData?
-    ): Boolean {
+    ): GrowingNode? {
         val oldHead = toProcess.growingNode
         val previous = toProcess.previous
         previous?.let {
@@ -468,8 +489,7 @@ internal class ParseGraph(
         if (null != skipData) {
             this.treeData.setSkipDataAfter(newHead.complete, skipData)
         }
-        this.findOrCreateGrowingLeafOrEmbeddedNode(newHead, oldHead, previous)
-        return true
+        return this.findOrCreateGrowingLeafOrEmbeddedNode(newHead, oldHead, previous)
     }
 
     /**
@@ -484,14 +504,13 @@ internal class ParseGraph(
         nextInputPosition: Int,
         embeddedTreeData: TreeData,
         skipData: TreeData?
-    ): Boolean {
+    ): GrowingNode? {
         val oldHead = toProcess.growingNode
         val previous = toProcess.previous
         previous?.let {
             toProcess.remainingHead?.let { this._gss.push(toProcess.remainingHead, previous) }
             this._gss.push(previous, oldHead.index)
         }
-        //TODO: something different for embedded ?
         val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: nextInputPosition
         val newHead = this.treeData.createGrowingNodeIndex(newState, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0)
         if (null != skipData) {
@@ -501,9 +520,7 @@ internal class ParseGraph(
         val children = embeddedTreeData.childrenFor(embGoal.firstRule, embeddedTreeData.startPosition!!, embeddedTreeData.nextInputPosition!!)
         val child = children.first().second[0]
         this.treeData.setEmbeddedChild(newHead, child)
-        this.findOrCreateGrowingLeafOrEmbeddedNode(newHead, oldHead, previous)
-        //TODO: do we need to check for longest ?
-        return true
+        return this.findOrCreateGrowingLeafOrEmbeddedNode(newHead, oldHead, previous)
     }
 
     /**

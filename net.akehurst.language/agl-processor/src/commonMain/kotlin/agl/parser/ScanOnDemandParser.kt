@@ -63,9 +63,11 @@ internal class ScanOnDemandParser(
         var maxNumHeads = rp.graph.numberOfHeads
         var totalWork = maxNumHeads
 
+        var lg = setOf<ParseGraph.Companion.ToProcessTriple>()
         while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
             if (Debug.OUTPUT_RUNTIME) println("$seasons ===================================")
-            val steps = rp.grow3(possibleEndOfText, false)
+            val (steps,lg2) = rp.grow3(possibleEndOfText, false)
+            lg=lg2
             seasons += steps
             maxNumHeads = max(maxNumHeads, rp.graph.numberOfHeads)
             totalWork += rp.graph.numberOfHeads
@@ -84,7 +86,7 @@ internal class ScanOnDemandParser(
             val sppt = SPPTFromTreeData(match, input, seasons, maxNumHeads)
             ParseResultDefault(sppt, emptyList())
         } else {
-            val nextExpected = this.findNextExpectedAfterError2(rp, rp.graph, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
+            val nextExpected = this.findNextExpectedAfterError2(rp, lg, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
             val issue = throwError(input, rp, nextExpected, seasons, maxNumHeads)
             val sppt = null//rp.longestLastGrown?.let{ SharedPackedParseTreeDefault(it, seasons, maxNumHeads) }
             ParseResultDefault(sppt, listOf(issue))
@@ -174,12 +176,13 @@ internal class ScanOnDemandParser(
         }
     */
     private fun findNextExpectedAfterError2(
-        rp: RuntimeParser,
-        graph: ParseGraph,
+        rp:RuntimeParser,
+        lastGrown: Set<ParseGraph.Companion.ToProcessTriple>,
         input: InputFromString,
         possibleEndOfText: Set<LookaheadSet>
     ): Pair<InputLocation, Set<RuntimeRule>> {
-        rp.resetGraphToLastGrown()
+        val graph = rp.graph
+        rp.resetGraphToLastGrown(lastGrown)
         val lgs = rp.tryGrowHeightOrGraft(possibleEndOfText, false)
         val triples = lgs.flatMap { it.triples }
         //val r = rp.lastGrown.map { (lg, prev, remainingHead) ->
@@ -315,8 +318,7 @@ internal class ScanOnDemandParser(
 
     private fun findNextExpected(
         rp: RuntimeParser,
-        graph: ParseGraph,
-        input: InputFromString,
+        lastGrown:Set<ParseGraph.Companion.ToProcessTriple>,
         gns: List<ParseGraph.Companion.ToProcessTriple>,
         possibleEndOfText: Set<LookaheadSet>
     ): Set<RuntimeRule> {
@@ -344,8 +346,8 @@ internal class ScanOnDemandParser(
         //    .flatMap { it.nextExpectedItems }
         //    .toSet()
         //return nextExpected
-
-        rp.resetGraphToLastGrown()
+        val graph = rp.graph
+        rp.resetGraphToLastGrown(lastGrown)
         rp.grow3(possibleEndOfText, true)
         matches.addAll(graph.peekNextToProcess())
         val trans_lh_pairs = matches.flatMap { (gn, previous, remainingHead) ->
@@ -395,9 +397,11 @@ internal class ScanOnDemandParser(
         rp.start(0, possibleEndOfText)
         var seasons = 1
 
+        var lg = rp.lastGrown
         val matches = mutableListOf<ParseGraph.Companion.ToProcessTriple>()
         do {
-            rp.grow3(possibleEndOfText, false)
+            val(steps,lg2) = rp.grow3(possibleEndOfText, false)
+            lg=lg2
             for (trip in rp.lastGrown) {
                 if (input.isEnd(trip.growingNode.nextInputPosition)) {
                     if (trip.growingNode.currentState.isGoal.not()) {
@@ -409,7 +413,7 @@ internal class ScanOnDemandParser(
             }
             seasons++
         } while (rp.canGrow && rp.graph.goals.isEmpty())
-        val nextExpected = this.findNextExpected(rp, rp.graph, input, matches, possibleEndOfText)
+        val nextExpected = this.findNextExpected(rp, lg, matches, possibleEndOfText)
         return nextExpected
     }
 

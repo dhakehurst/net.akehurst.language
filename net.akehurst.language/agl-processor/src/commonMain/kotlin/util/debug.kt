@@ -8,7 +8,7 @@ object Debug {
     const val CHECK = false
     const val OUTPUT_SM_BUILD = false
     const val OUTPUT_RUNTIME_BUILD = false
-    const val OUTPUT_RUNTIME = false
+    const val OUTPUT_RUNTIME = true
 
     val indentDeltaStr = "  "
     var currentIndent = ""
