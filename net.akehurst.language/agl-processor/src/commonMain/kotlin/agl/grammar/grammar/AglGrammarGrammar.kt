@@ -62,6 +62,7 @@ import net.akehurst.language.api.grammar.Rule
         LITERAL = "'([^'\\]|\\'|\\\\)*'" ;
         PATTERN = "\"(\\\"|[^\"])*\"" ;
         POSITIVE_INTEGER = "[0-9]+" ;
+        POSITIVE_INTEGER_GT_ZERO = "[1-9][0-9]*" ;
     }
  */
 internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar") {
@@ -116,7 +117,7 @@ internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
                 b.nonTerminal("rangeMaxBounded"),
             )
             b.rule("rangeMaxUnbounded").concatenation(b.terminalLiteral("+"))
-            b.rule("rangeMaxBounded").concatenation(b.terminalLiteral(".."), b.nonTerminal("POSITIVE_INTEGER"))
+            b.rule("rangeMaxBounded").concatenation(b.terminalLiteral(".."), b.nonTerminal("POSITIVE_INTEGER_GT_ZERO"))
             b.rule("simpleList").concatenation(b.nonTerminal("simpleItem"), b.nonTerminal("multiplicity"))
             b.rule("separatedList").concatenation(
                 b.terminalLiteral("["), b.nonTerminal("simpleItem"), b.terminalLiteral("/"),
@@ -131,6 +132,7 @@ internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
             b.leaf("PATTERN").concatenation(b.terminalPattern("\"([^\"\\\\]|\\\\.)*\""))
             b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"))
             b.leaf("POSITIVE_INTEGER").concatenation(b.terminalPattern("[0-9]+"))
+            b.leaf("POSITIVE_INTEGER_GT_ZERO").concatenation(b.terminalPattern("[1-9][0-9]*"))
             return b.grammar.rule
         }
     }

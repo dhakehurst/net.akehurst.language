@@ -102,7 +102,7 @@ class test_TutorialExamples {
         val actual = result.sppt!!.toStringAll.trim()
 
         val expected = """
-                typeReference { builtInType|1 { 'boolean' } }
+                typeReference { builtInType { 'boolean' } }
         """.trimIndent()
 
         assertEquals(expected, actual)
