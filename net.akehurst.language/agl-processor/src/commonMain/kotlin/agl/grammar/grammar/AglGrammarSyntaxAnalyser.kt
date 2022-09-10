@@ -261,7 +261,7 @@ internal class AglGrammarSyntaxAnalyser(
     fun rangeMaxUnbounded(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Int = -1
 
     //rangeMaxBounded = '..' POSITIVE_INTEGER ;
-    fun rangeMaxBounded(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Int = children[0].nonSkipMatchedText.toInt()
+    fun rangeMaxBounded(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Int = target.nonSkipChildren[1].nonSkipMatchedText.toInt()
 
     // simpleList = simpleItem multiplicity ;
     fun simpleList(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): SimpleList {

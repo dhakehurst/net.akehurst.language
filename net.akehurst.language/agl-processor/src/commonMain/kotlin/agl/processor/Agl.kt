@@ -133,7 +133,8 @@ object Agl {
             val result = aglProc.process(grammarDefinitionStr, aglOpts)
             val grammars = result.asm
             if (null != grammars) {
-                val goal = config.defaultGoalRuleName ?: grammars.last().rule.first { it.isSkip.not() }.name
+                val tgtGrammar = config.targetGrammarName?.let { tg-> grammars.find { it.name == tg } } ?: grammars.last()
+                val goal = config.defaultGoalRuleName ?: tgtGrammar.rule.first { it.isSkip.not() }.name
                 //TODO: what to do with issues if there are any?
                 return when {
                     goal.contains(".") -> {
@@ -142,7 +143,9 @@ object Agl {
                         //val goalName = goal.substringAfter(".")
                         processorFromGrammar(grammar, config)
                     }
-                    else -> processorFromGrammar(grammars.last(), config)
+                    else -> {
+                        processorFromGrammar(tgtGrammar, config)
+                    }
                 }
             } else {
                 if (result.issues.isEmpty()) {

@@ -1529,7 +1529,7 @@ class test_AglGrammar {
              S1 { ABC { 'a' B { 'd' } 'c' } }
         """
         )
-        assertEquals(expected2.toStringAll, result1.sppt?.toStringAll)
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
         assertEquals(expected2, result2.sppt)
         assertEquals(emptyList(),result2.issues)
     }
