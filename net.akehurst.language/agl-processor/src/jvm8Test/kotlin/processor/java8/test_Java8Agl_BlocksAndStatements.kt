@@ -17,6 +17,8 @@
 package net.akehurst.language.agl.processor.java8
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.asm.AsmElementSimple
+import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -35,7 +37,7 @@ class test_Java8Agl_BlocksAndStatements(val data: Data) {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
 
-        val processor: LanguageProcessor<Any, Any> by lazy {
+        val processor: LanguageProcessor<AsmSimple, Any> by lazy {
             Agl.processorFromString(grammarStr, Agl.configuration { targetGrammarName("BlocksAndStatements"); defaultGoalRuleName("Block") })
         }
 
@@ -79,7 +81,7 @@ class test_Java8Agl_BlocksAndStatements(val data: Data) {
     }
 
     @Test
-    fun test() {
+    fun parse() {
         val result = processor.parse(this.data.text)
         assertNotNull(result.sppt)
         assertEquals(emptyList(), result.issues)
@@ -88,4 +90,13 @@ class test_Java8Agl_BlocksAndStatements(val data: Data) {
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
+    @Test
+    fun process() {
+        val result = processor.process(this.data.text)
+        assertNotNull(result.asm)
+        assertEquals(emptyList(), result.issues)
+        val resultStr = result.asm!!.asString(" ", "")
+        assertEquals(this.data.text, resultStr)
+        assertEquals(1, result.asm?.rootElements?.size)
+    }
 }

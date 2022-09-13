@@ -37,6 +37,8 @@ object TypeModelTest {
             null == expected || null == actual -> fail("should never be null")
             expected is BuiltInType && actual is BuiltInType -> assertTrue(expected === actual)
             expected is ElementType && actual is ElementType -> assertEquals(expected, actual)
+            expected is TupleType && actual is TupleType -> assertEquals(expected, actual)
+            else -> fail("Types do not match $expected != $actual")
         }
     }
 
@@ -63,6 +65,16 @@ object TypeModelTest {
         }
     }
 
+    private fun assertEquals(expected: TupleType, actual: TupleType) {
+        assertEquals(expected.property.size, actual.property.size, "Wrong number of properties for '${expected.name}'")
+        for (k in expected.property.keys) {
+            val expEl = expected.property[k]
+            val actEl = actual.property[k]
+            assertNotNull(actEl, "expected PropertyDeclaration '$k' not found in actual TupleType '${expected.name}'. [${actual.property.values.joinToString { it.name }}]")
+            assertEquals(expEl, actEl)
+        }
+    }
+
     private fun assertEquals(expected: PropertyDeclaration?, actual: PropertyDeclaration?) {
         when {
             null == expected || null == actual -> fail("should never be null")
@@ -70,7 +82,10 @@ object TypeModelTest {
                 assertEquals(expected.name, actual.name)
                 assertEquals(expected.isNullable, actual.isNullable, "Different nullable for ${expected}")
                 assertEquals(expected.childIndex, actual.childIndex, "Different childIndex for ${expected}")
-                assertEquals(expected.type.name, actual.type.name,"Different types for ${expected}")
+                when(expected.type) {
+                    is ElementType -> assertEquals(expected.type.name, actual.type.name, "Different types for ${expected}")
+                    else -> TypeModelTest.assertEquals(expected.type, actual.type)
+                }
             }
         }
     }

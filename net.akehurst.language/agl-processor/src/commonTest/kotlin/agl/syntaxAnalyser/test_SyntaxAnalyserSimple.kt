@@ -612,4 +612,109 @@ class test_SyntaxAnalyserSimple {
         }.rootElements[0]
         assertEquals(expected.asString("  "), actual.asString("  "))
     }
+
+    @Test
+    fun group_concat_leaf_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b c d) e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        val typeModel = TypeModelFromGrammar(result.asm!!.last()).derive()
+        val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyserResolver{SyntaxAnalyserSimple(typeModel)} }, null )
+        val result1 = proc.process("abcde")
+        assertNotNull(result1.asm)
+        assertEquals(emptyList(), result1.issues)
+        val actual1 = result1.asm!!.rootElements[0]
+
+        val expected1 = asmSimple() {
+            root("S") {
+                propertyString("a","a")
+                propertyElement("\$group"){
+                    propertyString("b","b")
+                    propertyString("c","c")
+                    propertyString("d","d")
+                }
+                propertyString("e","e")
+            }
+        }.rootElements[0]
+        assertEquals(expected1.asString("  "), actual1.asString("  "))
+    }
+
+    @Test
+    fun nesting() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                S = type ;
+                type = NAME typeArgs? ;
+                typeArgs = '<' typeArgList '>' ;
+                typeArgList = [NAME , ',']+ ;
+                leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        val typeModel = TypeModelFromGrammar(result.asm!!.last()).derive()
+        val proc = Agl.processorFromString<AsmSimple,ContextSimple>(grammarStr, Agl.configuration { syntaxAnalyserResolver{SyntaxAnalyserSimple(typeModel)} }, null )
+        val result1 = proc.process("A")
+        assertNotNull(result1.asm)
+        assertEquals(emptyList(), result1.issues)
+        val actual1 = result1.asm!!.rootElements[0]
+
+        val expected1 = asmSimple() {
+            root("S") {
+                propertyString("ID", "a")
+                propertyElement("item", "A") {
+                    propertyString("NUMBER", "8")
+                }
+            }
+        }.rootElements[0]
+        assertEquals(expected1.asString("  "), actual1.asString("  "))
+
+        val result2 = proc.process("a fred")
+        assertNotNull(result2.asm)
+        assertEquals(emptyList(), result2.issues)
+        val actual2 = result2.asm!!.rootElements[0]
+
+        val expected2 = asmSimple() {
+            root("S") {
+                propertyString("ID", "a")
+                propertyElement("item", "B") {
+                    propertyString("NAME", "fred")
+                }
+            }
+        }.rootElements[0]
+        assertEquals(expected2.asString("  "), actual2.asString("  "))
+
+
+        val result3 = proc.process("a fred 8")
+        assertNotNull(result3.asm)
+        assertEquals(emptyList(), result3.issues)
+        val actual3 = result3.asm!!.rootElements[0]
+
+        val expected3 = asmSimple() {
+            root("S") {
+                propertyString("ID", "a")
+                propertyElement("item", "C") {
+                    propertyString("NAME", "fred")
+                    propertyString("NUMBER", "8")
+                }
+            }
+        }.rootElements[0]
+        assertEquals(expected3.asString("  "), actual3.asString("  "))
+    }
 }

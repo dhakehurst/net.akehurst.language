@@ -1218,6 +1218,61 @@ class test_AglGrammar {
     }
 
     @Test
+    fun nonTerminal_slist_range_unbraced_bounded_maxZero() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = [ a  / ',' ]2..0 ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processorFromString<Any,Any>(grammarStr)
+        assertNotNull(p)
+
+
+        val result0 = p.parse("")
+        assertEquals(null, result0.sppt)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(0,1,1,1),"^",setOf("'a'"))
+        ), result0.issues)
+
+        val result1 = p.parse("a")
+        assertEquals(null, result1.sppt)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(1,2,1,1),"a^",setOf("','"))
+        ), result1.issues)
+
+        val result2 = p.parse("a,a");
+        val expected2 = p.spptParser.parse(
+            """
+             S { a{'a'} ',' a{'a'}}
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertEquals(emptyList(), result2.issues)
+
+        val result5 = p.parse("a,a,a,a,a");
+        val expected5 = p.spptParser.parse(
+            """
+             S { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} }
+        """
+        )
+        assertEquals(expected5.toStringAll, result5.sppt?.toStringAll)
+        assertEquals(expected5, result5.sppt)
+        assertEquals(emptyList(), result5.issues)
+
+        val result6 = p.parse("a,a,a,a,a,a")
+        assertEquals(null, result6.sppt)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(9,10,1,1),"a,a,a,a,a^,a,",listOf("<EOT>"))
+        ), result6.issues)
+    }
+
+
+    @Test
     fun nonTerminal_slist_range_braced_unbounded() {
 
         val grammarStr = """

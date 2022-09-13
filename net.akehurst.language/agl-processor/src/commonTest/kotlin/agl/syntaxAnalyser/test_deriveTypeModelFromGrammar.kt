@@ -507,7 +507,9 @@ class test_deriveTypeModelFromGrammar {
         val expected = typeModel {
             elementType("S") {
                 propertyStringType("a",false,0)
-                propertyStringType("b",false,1)
+                propertyTupleType("\$group",false,1) {
+                    propertyStringType("b",false,0)
+                }
                 propertyStringType("e",false,2)
             }
         }
@@ -541,6 +543,71 @@ class test_deriveTypeModelFromGrammar {
                     propertyUnnamedType(BuiltInType.STRING,false,0)
                 }
                 propertyStringType("e",false,2)
+            }
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun group_choice_concat_leaf_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b c | d) e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+
+        val actual = TypeModelFromGrammar(result.asm!!.last()).derive()
+        val expected = typeModel {
+            elementType("S") {
+                propertyStringType("a",false,0)
+                propertyTupleType("\$group",false,1) {
+                    propertyUnnamedType(BuiltInType.ANY,false,0)
+                }
+                propertyStringType("e",false,2)
+            }
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun group_choice_concat_leaf_literal_2() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b c | d e) f ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+                leaf f = 'f' ;
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+
+        val actual = TypeModelFromGrammar(result.asm!!.last()).derive()
+        val expected = typeModel {
+            elementType("S") {
+                propertyStringType("a",false,0)
+                propertyTupleType("\$group",false,1) {
+                    propertyUnnamedType(BuiltInType.ANY,false,0)
+                }
+                propertyStringType("f",false,2)
             }
         }
 
