@@ -56,7 +56,7 @@ interface Grammar {
 
 	val allNodeType: Set<NodeType>
 
-	fun findAllRule(ruleName: String): Rule
+	fun findAllRule(ruleName: String): Rule?
 
 	fun findAllTerminal(terminalPattern: String): Terminal
 }

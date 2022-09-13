@@ -21,26 +21,11 @@ import net.akehurst.language.agl.collections.OrderedSet
 import net.akehurst.language.agl.collections.mutableOrderedSetOf
 import net.akehurst.language.agl.util.Debug
 
-class TypeModel {
+interface TypeModel {
 
-    val types = mutableMapOf<String, ElementType>()
+    val types: Map<String, ElementType>
 
-    init {
-        //types[BuiltInType.ANY.name] = BuiltInType.ANY
-        //types[BuiltInType.STRING.name] = BuiltInType.STRING
-    }
-
-    fun findType(name: String): RuleType? = types[name]
-    fun findOrCreateType(name: String): ElementType {
-        val existing = types[name]
-        return if (null == existing) {
-            val t = ElementType(name)
-            types[name] = t
-            t
-        } else {
-            existing
-        }
-    }
+    fun findType(name: String): RuleType?
 }
 
 interface RuleType {
@@ -75,7 +60,10 @@ data class ListType(val elementType:RuleType) : RuleType {
 }
 
 class TupleType() : StructuredRuleType {
-    override val name: String = "Tuple"
+    companion object {
+        const val INSTANCE_NAME = "Tuple"
+    }
+    override val name: String = INSTANCE_NAME
     override val property = mutableMapOf<String, PropertyDeclaration>()
     private val _propertyIndex = mutableListOf<PropertyDeclaration>()
 

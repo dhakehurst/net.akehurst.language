@@ -94,12 +94,14 @@ class SyntaxAnalyserSimple(
                 this.setPropertyOrReference(el, pName, value)
                 el
             }
+
             is List<*> -> {
                 val el = _asm!!.createElement(path, sppt.root.name)
                 val pName = "value" //TODO: maybe a better option
                 this.setPropertyOrReference(el, pName, value)
                 el
             }
+
             is AsmElementSimple -> value
             else -> error("Internal Error: unhandled class ${value::class.simpleName}")
         }
@@ -125,7 +127,7 @@ class SyntaxAnalyserSimple(
         }
     }
 
-    private fun createValue(target: SPPTNode, path: AsmElementPath, elType:RuleType, scope: ScopeSimple<AsmElementPath>?): Any? {
+    private fun createValue(target: SPPTNode, path: AsmElementPath, elType: RuleType, scope: ScopeSimple<AsmElementPath>?): Any? {
         val v = when (target) {
             is SPPTLeaf -> createValueFromLeaf(target)
             is SPPTBranch -> createValueFromBranch(target, path, elType, scope)
@@ -147,14 +149,18 @@ class SyntaxAnalyserSimple(
         return value
     }
 
-    private fun createValueFromBranch(target: SPPTBranch, path: AsmElementPath, elType:RuleType, scope: ScopeSimple<AsmElementPath>?): Any? {
-        return when {
-            null == elType -> {
-                "No Element Type for ${target.name}" //TODO
+    private fun createValueFromBranch(target: SPPTBranch, path: AsmElementPath, elType: RuleType, scope: ScopeSimple<AsmElementPath>?): Any? {
+        return when (elType) {
+            is BuiltInType -> when (elType) {
+                BuiltInType.STRING -> TODO("Built in String type not yet supported")
+                BuiltInType.ANY ->{
+                    createValue(target,path,elType,scope)
+                }
+                else -> error("Internal Error: type $elType not handled")
             }
-            BuiltInType.STRING == elType -> TODO("Built in String type not yet supported")
-            elType is ListType -> TODO("ListType not yet supported")
-            elType is ElementType -> {
+
+            is ListType -> TODO("ListType not yet supported")
+            is ElementType -> {
                 val actualType = when {
                     elType.subType.isNotEmpty() -> elType.subType.first { it.name == target.nonSkipChildren[0].name }
                     else -> elType
@@ -177,11 +183,13 @@ class SyntaxAnalyserSimple(
                                     ch.isEmptyMatch -> null
                                     else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, propType, childsScope)
                                 }
+
                                 BuiltInType.ANY -> this.createValue(ch, childPath, propType, childsScope)
                                 else -> error("Internal error: BuiltInType '' not handled")
                             }
                             propValue
                         }
+
                         is ListType -> {
                             val ch = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
                             val propValue = when {
@@ -196,6 +204,7 @@ class SyntaxAnalyserSimple(
                                         }
                                     }
                                 }
+
                                 else -> when {
                                     ch.isEmptyLeaf -> emptyList<Any>()
                                     else -> ch.asBranch.nonSkipChildren.mapIndexedNotNull { ci, b ->
@@ -210,6 +219,7 @@ class SyntaxAnalyserSimple(
                             }
                             propValue
                         }
+
                         is ElementType -> {
                             val ch = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
                             val propValue = when {
@@ -217,11 +227,19 @@ class SyntaxAnalyserSimple(
                                     ch.isEmptyLeaf -> null
                                     else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, propType, childsScope)
                                 }
-                                propType.subType.isNotEmpty() && ch.asBranch.nonSkipChildren.size == 1 -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, propType, childsScope)
+
+                                propType.subType.isNotEmpty() && ch.asBranch.nonSkipChildren.size == 1 -> this.createValue(
+                                    ch.asBranch.nonSkipChildren[0],
+                                    childPath,
+                                    propType,
+                                    childsScope
+                                )
+
                                 else -> this.createValue(ch, childPath, propType, childsScope)
                             }
                             propValue
                         }
+
                         is TupleType -> {
                             val ch = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
                             val propValue = when {
@@ -234,13 +252,105 @@ class SyntaxAnalyserSimple(
                             }
                             propValue
                         }
+
                         else -> error("Internal Error: type $propType not handled")
                     }
                     setPropertyOrReference(el, propDecl.name, propertyValue)
                 }
                 el
             }
-            else -> error("should not happen")
+            is TupleType -> {
+                val el = _asm!!.createElement(path, elType.name)
+                val childsScope = createScope(scope, el)
+                for (propDecl in elType.property.values) {
+                    val propType = propDecl.type
+                    val childPath = path + propDecl.name
+                    val propertyValue = when (propType) {
+                        is BuiltInType -> {
+                            val ch = target.asBranch.nonSkipChildren[propDecl.childIndex]
+                            val propValue = when (propType) {
+                                BuiltInType.STRING -> when {
+                                    ch.isLeaf -> this.createValue(ch, childPath, propType, childsScope)
+                                    ch.isEmptyMatch -> null
+                                    else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, propType, childsScope)
+                                }
+
+                                BuiltInType.ANY -> this.createValue(ch, childPath, propType, childsScope)
+                                else -> error("Internal error: BuiltInType '' not handled")
+                            }
+                            propValue
+                        }
+
+                        is ListType -> {
+                            val ch = target.asBranch.nonSkipChildren[propDecl.childIndex]
+                            val propValue = when {
+                                target.isList -> when {
+                                    target.isEmptyLeaf -> emptyList<Any>()
+                                    else -> target.asBranch.nonSkipChildren.mapIndexedNotNull { ci, b ->
+                                        val childPath2 = childPath + ci.toString()
+                                        if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
+                                            null
+                                        } else {
+                                            this.createValue(b, childPath2, propType, childsScope)
+                                        }
+                                    }
+                                }
+
+                                else -> when {
+                                    ch.isEmptyLeaf -> emptyList<Any>()
+                                    else -> ch.asBranch.nonSkipChildren.mapIndexedNotNull { ci, b ->
+                                        val childPath2 = childPath + ci.toString()
+                                        if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
+                                            null
+                                        } else {
+                                            this.createValue(b, childPath2, propType, childsScope)
+                                        }
+                                    }
+                                }
+                            }
+                            propValue
+                        }
+
+                        is ElementType -> {
+                            val ch = target.asBranch.nonSkipChildren[propDecl.childIndex]
+                            val propValue = when {
+                                propDecl.isNullable && ch.isOptional -> when {
+                                    ch.isEmptyLeaf -> null
+                                    else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, propType, childsScope)
+                                }
+
+                                propType.subType.isNotEmpty() && ch.asBranch.nonSkipChildren.size == 1 -> this.createValue(
+                                    ch.asBranch.nonSkipChildren[0],
+                                    childPath,
+                                    propType,
+                                    childsScope
+                                )
+
+                                else -> this.createValue(ch, childPath, propType, childsScope)
+                            }
+                            propValue
+                        }
+
+                        is TupleType -> {
+                            val ch = target.asBranch.nonSkipChildren[propDecl.childIndex]
+                            val propValue = when {
+                                propDecl.isNullable && ch.isOptional -> when {
+                                    ch.isEmptyLeaf -> null
+                                    else -> this.createValue(ch, childPath, propType, childsScope)
+                                }
+                                //propType.subType.isNotEmpty() && ch.asBranch.nonSkipChildren.size == 1 -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, childsScope)
+                                else -> this.createValue(ch, childPath, propType, childsScope)
+                            }
+                            propValue
+                        }
+
+                        else -> error("Internal Error: type $propType not handled")
+                    }
+                    setPropertyOrReference(el, propDecl.name, propertyValue)
+                }
+                el
+            }
+            else -> error("Internal Error: type $elType not handled")
         }
     }
 
@@ -266,15 +376,18 @@ class SyntaxAnalyserSimple(
                             this.setPropertyOrReference(el, pName, value)
                             el
                         }
+
                         is List<*> -> {
                             val el = _asm!!.createElement(path, br.name)
                             val pName = TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_VALUE //TODO: maybe a better option
                             this.setPropertyOrReference(el, pName, value)
                             el
                         }
+
                         else -> value
                     }
                 }
+
                 RuntimeRuleRhsItemsKind.CONCATENATION -> {
                     val count = mutableMapOf<String, Int>()
                     val el = _asm!!.createElement(path, br.name)
@@ -312,6 +425,7 @@ class SyntaxAnalyserSimple(
                         el
                     }
                 }
+
                 RuntimeRuleRhsItemsKind.LIST -> when (br.runtimeRule.rhs.listKind) {
                     RuntimeRuleListKind.MULTI -> {
                         val list = br.nonSkipChildren.mapIndexedNotNull { i, b ->
@@ -325,6 +439,7 @@ class SyntaxAnalyserSimple(
                         }
                         value
                     }
+
                     RuntimeRuleListKind.SEPARATED_LIST -> {
                         val list = br.nonSkipChildren.mapIndexedNotNull { i, b ->
                             val childPath = path + i.toString()
@@ -337,12 +452,14 @@ class SyntaxAnalyserSimple(
                             list
                         }
                     }
+
                     RuntimeRuleListKind.NONE -> error("Internal Error: should not happen")
                     RuntimeRuleListKind.LEFT_ASSOCIATIVE_LIST -> TODO("Left Associated List not yet supported")
                     RuntimeRuleListKind.RIGHT_ASSOCIATIVE_LIST -> TODO("Right Associated List not yet supported")
                     RuntimeRuleListKind.UNORDERED -> TODO("Unordered List not yet supported")
                 }
             }
+
             RuntimeRuleKind.GOAL -> error("Internal Error: Should never happen")
             RuntimeRuleKind.EMBEDDED -> TODO("Embedded rules not yet supported")
         }
@@ -361,8 +478,10 @@ class SyntaxAnalyserSimple(
                     RuntimeRuleListKind.RIGHT_ASSOCIATIVE_LIST -> TODO("Right Associated List not yet supported")
                     RuntimeRuleListKind.UNORDERED -> TODO("Unordered List not yet supported")
                 }
+
                 else -> runtimeRule.tag
             }
+
             RuntimeRuleKind.EMBEDDED -> runtimeRule.tag
             RuntimeRuleKind.GOAL -> runtimeRule.tag
         }

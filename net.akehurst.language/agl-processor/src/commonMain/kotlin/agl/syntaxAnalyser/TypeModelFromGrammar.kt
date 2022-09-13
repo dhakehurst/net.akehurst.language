@@ -21,7 +21,7 @@ import net.akehurst.language.api.typeModel.*
 
 class TypeModelFromGrammar(
     private val _grammar: Grammar
-) {
+) :TypeModel {
 
     companion object {
         const val UNNAMED_ANY_PROPERTY_NAME = "\$value"
@@ -30,36 +30,54 @@ class TypeModelFromGrammar(
         const val UNNAMED_GROUP_PROPERTY_NAME = "\$group"
     }
 
-    private val _ruleToType = mutableMapOf<Rule, RuleType>()
-    private val _typeModel = TypeModel()
+    // Rule.name -> ElementType
+    private val _ruleToType = mutableMapOf<String, ElementType>()
     private val _typeForRuleItem = mutableMapOf<RuleItem, RuleType>()
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredRuleType, String>, Int>()
 
-    fun derive(): TypeModel {
-        for (rule in _grammar.allRule) {
-            if (rule.isSkip.not() && rule.isLeaf.not()) {
-                typeForRhs(rule)
-            }
+    override val types: Map<String, ElementType> by lazy {
+        _grammar.allRule.associateBy({it.name}) {
+            typeForRhs(it) as ElementType
         }
-        return _typeModel
     }
 
-    private fun typeForRhs(rule: Rule): RuleType {
-        val type = _ruleToType[rule]
+    override fun findType(name: String): ElementType? {
+        return when(val type = _ruleToType[name]) {
+            null -> {
+                when (val rule = this._grammar.findAllRule(name)) {
+                    null -> null
+                    else -> typeForRhs(rule) as ElementType
+                }
+            }
+            else -> type
+        }
+    }
+
+    //fun derive(): TypeModel {
+    //    for (rule in _grammar.allRule) {
+    //        if (rule.isSkip.not() && rule.isLeaf.not()) {
+    //            typeForRhs(rule)
+    //        }
+    //    }
+    //    return _typeModel
+    //}
+
+    private fun typeForRhs(rule: Rule): ElementType {
+        val type = _ruleToType[rule.name]
         return if (null != type) {
             type // return the type if it exists, also stops infinite recursion
         } else {
             val rhs = rule.rhs
             val ruleType = when (rhs) {
                 // rhs's are only ever these things (currently)
-                is EmptyRule -> findOrCreateElementType(rule.name)
+                is EmptyRule -> findType(rule.name)!!
                 is Choice -> typeForChoiceRule(rule)
                 is Concatenation -> {
                     typeForConcatenation(rule, rhs.items)
                 }
                 else -> error("Internal error, unhandled subtype of rule.rhs")
             }
-            _ruleToType[rule] = ruleType
+            _ruleToType[rule.name] = ruleType
             ruleType
         }
     }
@@ -83,7 +101,7 @@ class TypeModelFromGrammar(
                 is NonTerminal -> when {
                     ruleItem.embedded -> {
                         val embTmfg = TypeModelFromGrammar(ruleItem.owningGrammar)
-                        val embTm = embTmfg.derive()
+                        val embTm = embTmfg
                         embTm.findType(ruleItem.name) ?: error("Should never happen")
                     }
                     ruleItem.referencedRule(this._grammar).isLeaf -> BuiltInType.STRING
@@ -105,20 +123,21 @@ class TypeModelFromGrammar(
                         concatType
                     }
                 }
-                is Group -> when {
-                    1 == ruleItem.choice.alternative.size -> {
-                        val concat = ruleItem.choice.alternative[0]
-                        val concatType = TupleType()
+                is Group -> {//when {
+                    //1 == ruleItem.choice.alternative.size -> {
+                    //    val concat = ruleItem.choice.alternative[0]
+                    //    val concatType = TupleType()
                         //this._typeForRuleItem[ruleItem] = concatType
-                        concat.items.forEachIndexed { idx, it ->
-                            createPropertyDeclaration(concatType, it, idx)
-                        }
-                        concatType
-                    }
-                    else -> {
+                    //    concat.items.forEachIndexed { idx, it ->
+                    //        createPropertyDeclaration(concatType, it, idx)
+                    //    }
+                    //    concatType
+                    //}
+                    //else -> {
                         val choiceType = TupleType()
                         populateTypeForChoice(ruleItem.choice, choiceType)
-                    }
+                        choiceType
+                    //}
                 }
                 else -> error("Internal error, unhandled subtype of RuleItem")
             }
@@ -128,18 +147,19 @@ class TypeModelFromGrammar(
     }
 
     private fun typeForConcatenation(rule: Rule, items: List<ConcatenationItem>): ElementType {
-        val concatType = findOrCreateElementType(rule.name)
-        this._ruleToType[rule] = concatType
+        val concatType = findType(rule.name)!!
+        //this._ruleToType[rule.name] = concatType
         items.forEachIndexed { idx, it ->
             createPropertyDeclaration(concatType, it, idx)
         }
         return concatType
     }
 
-    private fun typeForChoiceRule(choiceRule: Rule): RuleType { //name: String, alternative: List<Concatenation>): RuleType {
-        val choiceType = findOrCreateElementType(choiceRule.name)
-        _ruleToType[choiceRule] = choiceType
-        return populateTypeForChoice(choiceRule.rhs as Choice,choiceType)
+    private fun typeForChoiceRule(choiceRule: Rule): ElementType { //name: String, alternative: List<Concatenation>): RuleType {
+        val choiceType = findType(choiceRule.name)!!
+        //_ruleToType[choiceRule.name] = choiceType
+         populateTypeForChoice(choiceRule.rhs as Choice,choiceType)
+        return choiceType
         /*
         val subtypes = (choiceRule.rhs as Choice).alternative.map { typeForRuleItem(it) }
         return when {
@@ -175,11 +195,11 @@ class TypeModelFromGrammar(
          */
     }
 
-    private fun populateTypeForChoice(choice: Choice, choiceType: StructuredRuleType): RuleType {
+    private fun populateTypeForChoice(choice: Choice, choiceType: StructuredRuleType) {
         // if all choice gives ElementType then this type is a super type of all choices
         // else choices maps to properties
         val subtypes = choice.alternative.map { typeForRuleItem(it) }
-        return when {
+         when {
             subtypes.all { it is ElementType } -> {
                 //val choiceType = findOrCreateElementType(name)
                 //_ruleToType[choiceRule] = choiceType
@@ -192,34 +212,29 @@ class TypeModelFromGrammar(
                     is TupleType -> Unit
                     else -> error("Internal error: Subtype of StructuredRuleType not handled")
                 }
-                choiceType
+
             }
             //subtypes.all { it === BuiltInType.STRING } -> BuiltInType.STRING
             subtypes.all { it === BuiltInType.STRING } -> {
                 //val choiceType = findOrCreateElementType(name)
                 //_ruleToType[choiceRule] = choiceType
                 createUniquePropertyDeclaration(choiceType, UNNAMED_STRING_PROPERTY_NAME, BuiltInType.STRING, false, 0)
-                choiceType
+
             }
             //subtypes.all { it is ListType } -> ListType(BuiltInType.ANY)
             subtypes.all { it is ListType } -> { //=== BuiltInType.LIST } -> {
                 //val choiceType = findOrCreateElementType(name)
                 //_ruleToType[choiceRule] = choiceType
                 createUniquePropertyDeclaration(choiceType, UNNAMED_LIST_PROPERTY_VALUE, ListType(BuiltInType.ANY), false, 0)
-                choiceType
+
             }
             else -> {
                 //val choiceType = findOrCreateElementType(name)
                 //_ruleToType[choiceRule] = choiceType
                 createUniquePropertyDeclaration(choiceType, UNNAMED_ANY_PROPERTY_NAME, BuiltInType.ANY, false, 0)
-                choiceType
+
             }
         }
-    }
-
-    private fun findOrCreateElementType(name: String): ElementType {
-        val rt = _typeModel.findOrCreateType(name) as ElementType
-        return rt
     }
 
     private fun newUnnamed(owningRule: Rule): String {

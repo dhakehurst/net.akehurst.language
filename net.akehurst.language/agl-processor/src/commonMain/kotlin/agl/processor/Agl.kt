@@ -92,7 +92,7 @@ object Agl {
                     Agl.configuration {
                         targetGrammarName(grammar.name)
                         defaultGoalRuleName(grammar.rule.first { it.isSkip.not() }.name)
-                        syntaxAnalyserResolver{ g -> SyntaxAnalyserSimple(TypeModelFromGrammar(g).derive())}
+                        syntaxAnalyserResolver{ g -> SyntaxAnalyserSimple(TypeModelFromGrammar(g))}
                         semanticAnalyserResolver{ _ -> SemanticAnalyserSimple() }
                         formatter(null) //TODO
                     }

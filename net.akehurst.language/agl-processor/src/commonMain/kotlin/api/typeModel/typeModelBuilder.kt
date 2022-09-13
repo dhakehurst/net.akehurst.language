@@ -31,7 +31,21 @@ fun typeModel(init: TypeModelBuilder.() -> Unit): TypeModel {
 @TypeModelDslMarker
 class TypeModelBuilder {
 
-    private val _model = TypeModel()
+    private val _types = mutableMapOf<String, ElementType>()
+    private fun findOrCreateType(name: String): ElementType {
+        val existing = _types[name]
+        return if (null == existing) {
+            val t = ElementType(name)
+            _types[name] = t
+            t
+        } else {
+            existing
+        }
+    }
+    private val _model = object : TypeModel {
+        override val types = _types
+        override fun findType(name: String): RuleType? = findOrCreateType(name)
+    }
 
     fun elementType(name: String, init: ElementTypeBuilder.() -> Unit = {}): ElementType {
         val b = ElementTypeBuilder(_model, name)
@@ -61,7 +75,7 @@ abstract class StructuredTypeBuilder(
     }
 
     fun propertyUnnamedListTypeOf(listElementTypeName: String, isNullable: Boolean, childIndex: Int) {
-        val t = _model.findOrCreateType(listElementTypeName)
+        val t = _model.findType(listElementTypeName)!!
         PropertyDeclaration(_structuredType, TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, ListType(t), isNullable, childIndex)
     }
 
@@ -70,7 +84,7 @@ abstract class StructuredTypeBuilder(
     }
 
     fun propertyListTypeOf(propertyName: String, listElementTypeName: String, isNullable: Boolean, childIndex: Int) {
-        val t = _model.findOrCreateType(listElementTypeName)
+        val t = _model.findType(listElementTypeName)!!
         PropertyDeclaration(_structuredType, propertyName, ListType(t), isNullable, childIndex)
     }
 
@@ -93,7 +107,7 @@ abstract class StructuredTypeBuilder(
     }
 
     fun propertyElementType(propertyName: String, elementTypeName: String, isNullable: Boolean, childIndex: Int) {
-        val t = _model.findOrCreateType(elementTypeName)
+        val t = _model.findType(elementTypeName)!!
         PropertyDeclaration(_structuredType, propertyName, t, isNullable, childIndex)
     }
 }
@@ -116,7 +130,7 @@ class ElementTypeBuilder(
     private val _elementName: String
 ) : StructuredTypeBuilder(_model) {
 
-    private val _elementType = _model.findOrCreateType(_elementName) as ElementType
+    private val _elementType = _model.findType(_elementName) as ElementType
     override val _structuredType: StructuredRuleType get() = _elementType
 
     //fun superType(superTypeName: String) {
@@ -126,7 +140,7 @@ class ElementTypeBuilder(
 
     fun subTypes(vararg elementTypeName: String) {
         elementTypeName.forEach {
-            val st = _model.findOrCreateType(it)
+            val st = _model.findType(it)as ElementType
             st.addSuperType(_elementType)
         }
     }

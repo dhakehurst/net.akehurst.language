@@ -21,6 +21,7 @@ import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.agl.syntaxAnalyser.createReferenceLocalToScope
 import net.akehurst.language.agl.syntaxAnalyser.resolveReferencesElement
+import net.akehurst.language.api.typeModel.TupleType
 
 @DslMarker
 annotation class AsmSimpleBuilderMarker
@@ -89,6 +90,7 @@ class AsmElementSimpleBuilder(
     fun propertyUnnamedString(value: String?) = this._property(TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, value)
     fun propertyString(name: String, value: String?) = this._property(name, value)
     fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElement(TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, typeName, init)
+    fun propertyTuple(name:String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple =propertyElement(name, TupleType.INSTANCE_NAME, init)
     fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElement(name, name, init)
     fun propertyElement(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
         val newPath = _element.asmPath + name

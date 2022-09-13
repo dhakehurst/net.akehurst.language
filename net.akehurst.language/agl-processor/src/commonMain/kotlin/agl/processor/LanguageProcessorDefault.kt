@@ -58,7 +58,7 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
     }
 
     override val typeModel: TypeModel by lazy {
-        TypeModelFromGrammar(this.grammar).derive()
+        TypeModelFromGrammar(this.grammar)
     }
 
     override fun interrupt(message: String) {

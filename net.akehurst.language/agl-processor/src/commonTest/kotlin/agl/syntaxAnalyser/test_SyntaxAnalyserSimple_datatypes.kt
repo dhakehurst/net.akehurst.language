@@ -56,7 +56,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
             assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR },result.issues.joinToString(separator = "\n") { "$it" })
-            TypeModelFromGrammar(result.asm!!.last()).derive()
+            TypeModelFromGrammar(result.asm!!.last())
         }
         val syntaxAnalyser = SyntaxAnalyserSimple(typeModel)
         val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
