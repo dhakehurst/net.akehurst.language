@@ -36,7 +36,9 @@ class TypeModelFromGrammar(
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredRuleType, String>, Int>()
 
     override val types: Map<String, ElementType> by lazy {
-        _grammar.allRule.associateBy({it.name}) {
+        _grammar.allRule
+            .filter { it.isLeaf.not() && it.isSkip.not() }
+            .associateBy({it.name}) {
             typeForRhs(it) as ElementType
         }
     }
@@ -52,7 +54,16 @@ class TypeModelFromGrammar(
             else -> type
         }
     }
-
+    private fun findOrCreateElementType(name: String): ElementType {
+        val existing = _ruleToType[name]
+        return if (null==existing) {
+            val type = ElementType(name)
+            _ruleToType[name] = type //halt recursion
+            type
+        } else {
+            existing
+        }
+    }
     //fun derive(): TypeModel {
     //    for (rule in _grammar.allRule) {
     //        if (rule.isSkip.not() && rule.isLeaf.not()) {
@@ -70,7 +81,7 @@ class TypeModelFromGrammar(
             val rhs = rule.rhs
             val ruleType = when (rhs) {
                 // rhs's are only ever these things (currently)
-                is EmptyRule -> findType(rule.name)!!
+                is EmptyRule -> findOrCreateElementType(rule.name)
                 is Choice -> typeForChoiceRule(rule)
                 is Concatenation -> {
                     typeForConcatenation(rule, rhs.items)
@@ -147,8 +158,8 @@ class TypeModelFromGrammar(
     }
 
     private fun typeForConcatenation(rule: Rule, items: List<ConcatenationItem>): ElementType {
-        val concatType = findType(rule.name)!!
-        //this._ruleToType[rule.name] = concatType
+        val concatType = findOrCreateElementType(rule.name)!!
+        //this._ruleToType[rule.name] = concatType //halt recursion
         items.forEachIndexed { idx, it ->
             createPropertyDeclaration(concatType, it, idx)
         }
@@ -156,8 +167,8 @@ class TypeModelFromGrammar(
     }
 
     private fun typeForChoiceRule(choiceRule: Rule): ElementType { //name: String, alternative: List<Concatenation>): RuleType {
-        val choiceType = findType(choiceRule.name)!!
-        //_ruleToType[choiceRule.name] = choiceType
+        val choiceType = findOrCreateElementType(choiceRule.name)!!
+        //_ruleToType[choiceRule.name] = choiceType //halt recursion
          populateTypeForChoice(choiceRule.rhs as Choice,choiceType)
         return choiceType
         /*
@@ -218,6 +229,7 @@ class TypeModelFromGrammar(
             subtypes.all { it === BuiltInType.STRING } -> {
                 //val choiceType = findOrCreateElementType(name)
                 //_ruleToType[choiceRule] = choiceType
+                //val pName = propertyNameFor(et, choice)
                 createUniquePropertyDeclaration(choiceType, UNNAMED_STRING_PROPERTY_NAME, BuiltInType.STRING, false, 0)
 
             }
@@ -291,7 +303,7 @@ class TypeModelFromGrammar(
                         val concat = ruleItem.choice.alternative[0]
                         when {
                             // one concatenation item
-                            1 == concat.items.size -> createPropertyDeclaration(et, concat.items[0], childIndex)
+                           // 1 == concat.items.size -> createPropertyDeclaration(et, concat.items[0], childIndex)
                             // multiple concatenation items
                             else -> {
                                 val concatType = TupleType()

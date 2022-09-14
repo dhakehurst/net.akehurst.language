@@ -16,6 +16,7 @@
 
 package net.akehurst.language.api.typeModel
 
+import kotlin.math.exp
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -37,6 +38,7 @@ object TypeModelTest {
             null == expected || null == actual -> fail("should never be null")
             expected is BuiltInType && actual is BuiltInType -> assertTrue(expected === actual)
             expected is ElementType && actual is ElementType -> assertEquals(expected, actual)
+            expected is ListType && actual is ListType -> assertEquals(expected, actual)
             expected is TupleType && actual is TupleType -> assertEquals(expected, actual)
             else -> fail("Types do not match $expected != $actual")
         }
@@ -63,6 +65,10 @@ object TypeModelTest {
             assertNotNull(actEl, "expected PropertyDeclaration '$k' not found in actual ElementType '${expected.name}'. [${actual.property.values.joinToString { it.name }}]")
             assertEquals(expEl, actEl)
         }
+    }
+
+    private fun assertEquals(expected: ListType, actual: ListType) {
+        assertEquals(expected.elementType,actual.elementType,"List element types do not match")
     }
 
     private fun assertEquals(expected: TupleType, actual: TupleType) {

@@ -159,14 +159,13 @@ class SyntaxAnalyserSimple(
                 else -> error("Internal Error: type $elType not handled")
             }
 
-            is ListType -> TODO("ListType not yet supported")
             is ElementType -> {
                 val actualType = when {
-                    elType.subType.isNotEmpty() -> elType.subType.first { it.name == target.nonSkipChildren[0].name }
+                    elType.subType.isNotEmpty() -> elType.subType.first { it.name == target.name }//.nonSkipChildren[0].name }
                     else -> elType
                 }
                 val actualTarget = when {
-                    elType.subType.isNotEmpty() -> target.nonSkipChildren[0]
+                    //elType.subType.isNotEmpty() -> target.nonSkipChildren[0]
                     else -> target
                 }
                 val el = _asm!!.createElement(path, actualType.name)
@@ -200,7 +199,7 @@ class SyntaxAnalyserSimple(
                                         if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
                                             null
                                         } else {
-                                            this.createValue(b, childPath2, propType, childsScope)
+                                            this.createValue(b, childPath2, propType.elementType, childsScope)
                                         }
                                     }
                                 }
@@ -212,7 +211,7 @@ class SyntaxAnalyserSimple(
                                         if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
                                             null
                                         } else {
-                                            this.createValue(b, childPath2, propType, childsScope)
+                                            this.createValue(b, childPath2, propType.elementType, childsScope)
                                         }
                                     }
                                 }
@@ -256,6 +255,14 @@ class SyntaxAnalyserSimple(
                         else -> error("Internal Error: type $propType not handled")
                     }
                     setPropertyOrReference(el, propDecl.name, propertyValue)
+                }
+                el
+            }
+            is ListType -> {
+                val el = mutableListOf<Any>()
+                val childsScope = scope
+                for(ch in target.children) {
+TODO()
                 }
                 el
             }

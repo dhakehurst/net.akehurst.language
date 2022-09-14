@@ -22,6 +22,9 @@ import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.typeModel.BuiltInType
+import net.akehurst.language.api.typeModel.TypeModelTest
+import net.akehurst.language.api.typeModel.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -55,13 +58,13 @@ class test_SyntaxAnalyserSimple_datatypes {
         val typeModel by lazy {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
-            assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR },result.issues.joinToString(separator = "\n") { "$it" })
+            assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.joinToString(separator = "\n") { "$it" })
             TypeModelFromGrammar(result.asm!!.last())
         }
         val syntaxAnalyser = SyntaxAnalyserSimple(typeModel)
         val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
             grammarStr,
-            Agl.configuration { syntaxAnalyserResolver{syntaxAnalyser} }
+            Agl.configuration { syntaxAnalyserResolver { syntaxAnalyser } }
         ).also {
             val issues = syntaxAnalyser.configure(
                 configurationContext = ContextFromGrammar(it.grammar),
@@ -78,6 +81,39 @@ class test_SyntaxAnalyserSimple_datatypes {
             )
             assertEquals(0, issues.size, issues.joinToString(separator = "\n") { "$it" })
         }
+    }
+
+    @Test
+    fun typeModel() {
+        val actual = processor.typeModel
+        val expected = typeModel {
+            elementType("unit") {
+                propertyListTypeOf("declaration", "declaration", false, 0)
+            }
+            elementType("declaration") {
+                subTypes("datatype", "primitive")
+            }
+            elementType("primitive") {
+                propertyStringType("ID",false,1)
+            }
+            elementType("datatype") {
+                propertyStringType("ID",false,1)
+                propertyListTypeOf("property","property",false,3)
+            }
+            elementType("property") {
+                propertyStringType("ID",false,0)
+                propertyElementType("typeReference","typeReference",false,2)
+            }
+            elementType("typeReference") {
+                propertyStringType("type",false,0)
+                propertyElementType("typeArguments","typeArguments",true,1)
+            }
+            elementType("typeArguments") {
+                propertyListType("typeReference",BuiltInType.ANY,false,1)
+            }
+        }
+
+        TypeModelTest.assertEquals(expected,actual)
     }
 
     @Test
