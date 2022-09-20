@@ -89,6 +89,7 @@ class AsmElementSimpleBuilder(
 
     fun propertyUnnamedString(value: String?) = this._property(TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, value)
     fun propertyString(name: String, value: String?) = this._property(name, value)
+    fun propertyNull(name: String) = this._property(name, null)
     fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElement(TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, typeName, init)
     fun propertyTuple(name:String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple =propertyElement(name, TupleType.INSTANCE_NAME, init)
     fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElement(name, name, init)

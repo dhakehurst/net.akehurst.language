@@ -71,32 +71,32 @@ abstract class StructuredTypeBuilder(
     }
 
     fun propertyStringType(propertyName: String, isNullable: Boolean, childIndex: Int) {
-        PropertyDeclaration(_structuredType, propertyName, BuiltInType.STRING, isNullable, childIndex)
+        PropertyDeclaration(_structuredType, propertyName, PrimitiveType.STRING, isNullable, childIndex)
     }
 
     fun propertyUnnamedListTypeOf(listElementTypeName: String, isNullable: Boolean, childIndex: Int) {
         val t = _model.findType(listElementTypeName)!!
-        PropertyDeclaration(_structuredType, TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, ListType(t), isNullable, childIndex)
+        PropertyDeclaration(_structuredType, TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, ListSimpleType(t), isNullable, childIndex)
     }
 
     fun propertyUnnamedListType(listElementType: RuleType, isNullable: Boolean, childIndex: Int) {
-        PropertyDeclaration(_structuredType, TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, ListType(listElementType), isNullable, childIndex)
+        PropertyDeclaration(_structuredType, TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, ListSimpleType(listElementType), isNullable, childIndex)
     }
 
     fun propertyListTypeOf(propertyName: String, listElementTypeName: String, isNullable: Boolean, childIndex: Int) {
         val t = _model.findType(listElementTypeName)!!
-        PropertyDeclaration(_structuredType, propertyName, ListType(t), isNullable, childIndex)
+        PropertyDeclaration(_structuredType, propertyName, ListSimpleType(t), isNullable, childIndex)
     }
 
     fun propertyListType(propertyName: String, listElementType: RuleType, isNullable: Boolean, childIndex: Int) {
-        PropertyDeclaration(_structuredType, propertyName, ListType(listElementType), isNullable, childIndex)
+        PropertyDeclaration(_structuredType, propertyName, ListSimpleType(listElementType), isNullable, childIndex)
     }
 
     fun propertyListOfTupleType(propertyName: String, isNullable: Boolean, childIndex: Int, init: TupleTypeBuilder.() -> Unit = {}) {
         val b = TupleTypeBuilder(_model)
         b.init()
         val tt = b.build()
-        PropertyDeclaration(_structuredType, propertyName, ListType(tt), isNullable, childIndex)
+        PropertyDeclaration(_structuredType, propertyName, ListSimpleType(tt), isNullable, childIndex)
     }
 
     fun propertyTupleType(propertyName: String, isNullable: Boolean, childIndex: Int, init: TupleTypeBuilder.() -> Unit = {}) {

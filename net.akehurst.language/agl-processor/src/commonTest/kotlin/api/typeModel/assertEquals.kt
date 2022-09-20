@@ -16,7 +16,6 @@
 
 package net.akehurst.language.api.typeModel
 
-import kotlin.math.exp
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -36,9 +35,9 @@ object TypeModelTest {
     private fun assertEquals(expected: RuleType?, actual: RuleType?) {
         when {
             null == expected || null == actual -> fail("should never be null")
-            expected is BuiltInType && actual is BuiltInType -> assertTrue(expected === actual)
+            expected is PrimitiveType && actual is PrimitiveType -> assertTrue(expected === actual)
             expected is ElementType && actual is ElementType -> assertEquals(expected, actual)
-            expected is ListType && actual is ListType -> assertEquals(expected, actual)
+            expected is ListSimpleType && actual is ListSimpleType -> assertEquals(expected, actual)
             expected is TupleType && actual is TupleType -> assertEquals(expected, actual)
             else -> fail("Types do not match $expected != $actual")
         }
@@ -67,7 +66,7 @@ object TypeModelTest {
         }
     }
 
-    private fun assertEquals(expected: ListType, actual: ListType) {
+    private fun assertEquals(expected: ListSimpleType, actual: ListSimpleType) {
         assertEquals(expected.elementType,actual.elementType,"List element types do not match")
     }
 

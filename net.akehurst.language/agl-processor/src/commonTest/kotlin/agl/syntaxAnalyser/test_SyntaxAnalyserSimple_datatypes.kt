@@ -22,7 +22,7 @@ import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.typeModel.BuiltInType
+import net.akehurst.language.api.typeModel.PrimitiveType
 import net.akehurst.language.api.typeModel.TypeModelTest
 import net.akehurst.language.api.typeModel.typeModel
 import kotlin.test.Test
@@ -109,7 +109,7 @@ class test_SyntaxAnalyserSimple_datatypes {
                 propertyElementType("typeArguments","typeArguments",true,1)
             }
             elementType("typeArguments") {
-                propertyListType("typeReference",BuiltInType.ANY,false,1)
+                propertyListType("typeReference",PrimitiveType.ANY,false,1)
             }
         }
 

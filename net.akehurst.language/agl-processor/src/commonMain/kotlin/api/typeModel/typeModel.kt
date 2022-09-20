@@ -38,25 +38,28 @@ interface StructuredRuleType : RuleType {
     fun appendProperty(name: String, propertyDeclaration: PropertyDeclaration)
 }
 
-class BuiltInType private constructor(override val name: String) : RuleType {
+class PrimitiveType private constructor(override val name: String) : RuleType {
     companion object {
-        val NOTHING = BuiltInType("\$Nothing")
-        val STRING = BuiltInType("\$String")
-        //val LIST = BuiltInType("\$List")
-        val ANY = BuiltInType("\$Any")
+        val NOTHING = PrimitiveType("\$Nothing")
+        val STRING = PrimitiveType("\$String")
+        val ANY = PrimitiveType("\$Any")
     }
 
     override fun hashCode(): Int = name.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {
-        is BuiltInType -> other.name == this.name
+        is PrimitiveType -> other.name == this.name
         else -> false
     }
 
     override fun toString(): String = name
 }
 
-data class ListType(val elementType:RuleType) : RuleType {
+data class ListSimpleType(val elementType:RuleType) : RuleType {
     override val name: String = "List<$elementType>"
+}
+
+data class ListSeparatedType(val itemType:RuleType, val separatorType:RuleType) : RuleType {
+    override val name: String = "SList<$itemType, $separatorType>"
 }
 
 class TupleType() : StructuredRuleType {

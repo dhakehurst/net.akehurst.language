@@ -16,6 +16,8 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.collections.emptyListSeparated
+import net.akehurst.language.agl.collections.mutableListSeparated
 import net.akehurst.language.agl.grammar.scopes.ScopeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.*
@@ -151,10 +153,10 @@ class SyntaxAnalyserSimple(
 
     private fun createValueFromBranch(target: SPPTBranch, path: AsmElementPath, elType: RuleType, scope: ScopeSimple<AsmElementPath>?): Any? {
         return when (elType) {
-            is BuiltInType -> when (elType) {
-                BuiltInType.STRING -> TODO("Built in String type not yet supported")
-                BuiltInType.ANY ->{
-                    createValue(target,path,elType,scope)
+            is PrimitiveType -> when (elType) {
+                PrimitiveType.STRING -> TODO("Built in String type not yet supported")
+                PrimitiveType.ANY ->{
+                    TODO()//createValue(target,path,elType,scope)
                 }
                 else -> error("Internal Error: type $elType not handled")
             }
@@ -174,22 +176,22 @@ class SyntaxAnalyserSimple(
                     val propType = propDecl.type
                     val childPath = path + propDecl.name
                     val propertyValue = when (propType) {
-                        is BuiltInType -> {
+                        is PrimitiveType -> {
                             val ch = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
                             val propValue = when (propType) {
-                                BuiltInType.STRING -> when {
+                                PrimitiveType.STRING -> when {
                                     ch.isLeaf -> this.createValue(ch, childPath, propType, childsScope)
                                     ch.isEmptyMatch -> null
                                     else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, propType, childsScope)
                                 }
 
-                                BuiltInType.ANY -> this.createValue(ch, childPath, propType, childsScope)
-                                else -> error("Internal error: BuiltInType '' not handled")
+                                PrimitiveType.ANY -> this.createValue(ch, childPath, propType, childsScope)
+                                else -> error("Internal error: PrimitiveType '' not handled")
                             }
                             propValue
                         }
 
-                        is ListType -> {
+                        is ListSimpleType -> {
                             val ch = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
                             val propValue = when {
                                 actualTarget.isList -> when {
@@ -217,6 +219,55 @@ class SyntaxAnalyserSimple(
                                 }
                             }
                             propValue
+                        }
+
+                        is ListSeparatedType -> {
+                            val ch = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
+                            val propValue = when {
+                                actualTarget.isList -> when {
+                                    actualTarget.isEmptyLeaf -> emptyListSeparated<Any,Any>()
+                                    else -> {
+                                        val elements = actualTarget.asBranch.nonSkipChildren
+                                        val sList = mutableListSeparated<Any,Any>()
+                                        for(ci in 0 until elements.size) {
+                                            val cel = elements[ci]
+                                            val type = if(ci /2 == 0) propType.itemType else propType.separatorType
+                                            val childPath2 = childPath + ci.toString()
+                                            if (cel.isLeaf && cel.asLeaf.isExplicitlyNamed.not()) {
+                                                //do not add iteml
+                                            } else {
+                                                val chEl = this.createValue(cel, childPath2, type, childsScope)
+                                                sList.add(chEl)
+                                            }
+
+                                        }
+                                        sList
+                                    }
+                                }
+
+                                else -> when {
+                                    ch.isEmptyLeaf -> emptyList<Any>()
+                                    else -> {
+                                        val elements = ch.asBranch.nonSkipChildren
+                                        val sList = mutableListSeparated<Any,Any>()
+                                        for(ci in 0 until elements.size) {
+                                            val cel = elements[ci]
+                                            val type = if(ci %2 == 0) propType.itemType else propType.separatorType
+                                            val childPath2 = childPath + ci.toString()
+                                            if (cel.isLeaf && cel.asLeaf.isExplicitlyNamed.not()) {
+                                                //do not add item
+                                            } else {
+                                                val chEl = this.createValue(cel, childPath2, type, childsScope)
+                                                sList.add(chEl)
+                                            }
+
+                                        }
+                                        sList
+                                    }
+                                }
+                            }
+                            propValue
+
                         }
 
                         is ElementType -> {
@@ -258,13 +309,16 @@ class SyntaxAnalyserSimple(
                 }
                 el
             }
-            is ListType -> {
+            is ListSimpleType -> {
                 val el = mutableListOf<Any>()
                 val childsScope = scope
                 for(ch in target.children) {
 TODO()
                 }
                 el
+            }
+            is ListSeparatedType -> {
+                TODO()
             }
             is TupleType -> {
                 val el = _asm!!.createElement(path, elType.name)
@@ -273,22 +327,22 @@ TODO()
                     val propType = propDecl.type
                     val childPath = path + propDecl.name
                     val propertyValue = when (propType) {
-                        is BuiltInType -> {
+                        is PrimitiveType -> {
                             val ch = target.asBranch.nonSkipChildren[propDecl.childIndex]
                             val propValue = when (propType) {
-                                BuiltInType.STRING -> when {
+                                PrimitiveType.STRING -> when {
                                     ch.isLeaf -> this.createValue(ch, childPath, propType, childsScope)
                                     ch.isEmptyMatch -> null
                                     else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, propType, childsScope)
                                 }
 
-                                BuiltInType.ANY -> this.createValue(ch, childPath, propType, childsScope)
-                                else -> error("Internal error: BuiltInType '' not handled")
+                                PrimitiveType.ANY -> this.createValue(ch, childPath, propType, childsScope)
+                                else -> error("Internal error: PrimitiveType '' not handled")
                             }
                             propValue
                         }
 
-                        is ListType -> {
+                        is ListSimpleType -> {
                             val ch = target.asBranch.nonSkipChildren[propDecl.childIndex]
                             val propValue = when {
                                 target.isList -> when {
