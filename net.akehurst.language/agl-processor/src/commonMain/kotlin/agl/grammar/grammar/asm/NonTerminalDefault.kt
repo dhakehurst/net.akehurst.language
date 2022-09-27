@@ -25,7 +25,7 @@ class NonTerminalDefault(
 ) : RuleItemAbstract(), NonTerminal {
 
     override fun referencedRule(targetGrammar: Grammar): Rule  {
-       return targetGrammar.findAllRule(this.name) ?: error("Grammar Rule '$name' not found in grammar '${targetGrammar.name}'")
+       return targetGrammar.findNonTerminalRule(this.name) ?: error("Grammar Rule '$name' not found in grammar '${targetGrammar.name}'")
     }
 
     override fun setOwningRule(rule: Rule, indices: List<Int>) {

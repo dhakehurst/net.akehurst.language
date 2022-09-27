@@ -45,18 +45,22 @@ interface Grammar {
 	/**
 	 * the List of rules defined by this grammar and those that this grammar extends
 	 * the order of the rules is the order they are defined in with the top of the grammar extension
-	 * hierachy coming first (in extension order where more than one grammar is extended)
+	 * hierarchy coming first (in extension order where more than one grammar is extended)
 	 */
 	val allRule : List<Rule>
-	
+
+	/**
+	 * the Set of all non-terminal rules in this grammar and those that this grammar extends
+	 */
+	val allNonTerminalRule: Set<Rule>
+
+
 	/**
 	 * the Set of all terminals in this grammar and those that this grammar extends
      */
 	val allTerminal: Set<Terminal>
 
-	val allNodeType: Set<NodeType>
+	fun findNonTerminalRule(ruleName: String): Rule?
 
-	fun findAllRule(ruleName: String): Rule?
-
-	fun findAllTerminal(terminalPattern: String): Terminal
+	fun findTerminalRule(terminalPattern: String): Terminal
 }

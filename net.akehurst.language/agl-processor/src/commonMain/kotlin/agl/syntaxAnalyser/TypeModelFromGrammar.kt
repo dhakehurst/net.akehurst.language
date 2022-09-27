@@ -16,11 +16,12 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.agl.grammar.grammar.PseudoRuleNames
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.typeModel.*
 
 class TypeModelFromGrammar(
-    private val _grammar: Grammar
+    val grammar: Grammar
 ) : TypeModel {
 
     companion object {
@@ -34,9 +35,10 @@ class TypeModelFromGrammar(
     private val _ruleToType = mutableMapOf<String, ElementType>()
     private val _typeForRuleItem = mutableMapOf<RuleItem, RuleType>()
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredRuleType, String>, Int>()
+    private val _pseudoRuleNameGenerator = PseudoRuleNames(grammar)
 
     override val types: Map<String, ElementType> by lazy {
-        _grammar.allRule
+        grammar.allRule
             .filter { it.isLeaf.not() && it.isSkip.not() }
             .associateBy({ it.name }) {
                 typeForRhs(it) as ElementType
@@ -46,8 +48,12 @@ class TypeModelFromGrammar(
     override fun findType(name: String): RuleType? {
         return when (val type = _ruleToType[name]) {
             null -> {
-                when (val rule = this._grammar.findAllRule(name)) {
-                    null -> null
+                when (val rule = this.grammar.findNonTerminalRule(name)) {
+                    null -> {
+                        //Maybe a pseudoRule
+                        val pseudoRuleItem = _pseudoRuleNameGenerator.itemForPseudoRuleName(name)
+                        typeForRuleItem(pseudoRuleItem)
+                    }
                     else -> typeForRhs(rule)
                 }
             }
@@ -127,14 +133,14 @@ class TypeModelFromGrammar(
                         embTm.findType(ruleItem.name) ?: error("Should never happen")
                     }
 
-                    ruleItem.referencedRule(this._grammar).isLeaf -> PrimitiveType.STRING
-                    ruleItem.referencedRule(this._grammar).rhs is EmptyRule -> PrimitiveType.NOTHING
-                    ruleItem.referencedRule(this._grammar).rhs is Choice -> {
-                        val r = ruleItem.referencedRule(this._grammar)
+                    ruleItem.referencedRule(this.grammar).isLeaf -> PrimitiveType.STRING
+                    ruleItem.referencedRule(this.grammar).rhs is EmptyRule -> PrimitiveType.NOTHING
+                    ruleItem.referencedRule(this.grammar).rhs is Choice -> {
+                        val r = ruleItem.referencedRule(this.grammar)
                         typeForChoiceRule(r) //r.name, (r.rhs as Choice).alternative)
                     }
 
-                    else -> typeForRhs(ruleItem.referencedRule(this._grammar))
+                    else -> typeForRhs(ruleItem.referencedRule(this.grammar))
                 }
 
                 is Concatenation -> when {
@@ -152,14 +158,14 @@ class TypeModelFromGrammar(
                 is Group -> {//when {
                     when {
                         // one choice in the group
-                        1 == ruleItem.choice.alternative.size -> {
-                            val concat = ruleItem.choice.alternative[0]
-                            val concatType = TupleType()
-                            concat.items.forEachIndexed { idx, it ->
-                                createPropertyDeclaration(concatType, it, idx)
-                            }
-                            concatType
-                        }
+                        //1 == ruleItem.choice.alternative.size -> {
+                        //    val concat = ruleItem.choice.alternative[0]
+                       //     val concatType = TupleType()
+                        //    concat.items.forEachIndexed { idx, it ->
+                       //         createPropertyDeclaration(concatType, it, idx)
+                        //    }
+                        //    concatType
+                       // }
                         // multiple choices in group
                         else -> {
                             //val choiceType = TupleType()
@@ -273,7 +279,7 @@ class TypeModelFromGrammar(
                 val refRule = if (ruleItem.embedded) {
                     ruleItem.referencedRule(ruleItem.owningGrammar)
                 } else {
-                    ruleItem.referencedRule(this._grammar)
+                    ruleItem.referencedRule(this.grammar)
                 }
                 val rhs = refRule.rhs
                 when (rhs) {

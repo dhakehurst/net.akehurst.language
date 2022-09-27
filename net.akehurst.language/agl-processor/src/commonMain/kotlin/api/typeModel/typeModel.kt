@@ -70,6 +70,8 @@ class TupleType() : StructuredRuleType {
     override val property = mutableMapOf<String, PropertyDeclaration>()
     private val _propertyIndex = mutableListOf<PropertyDeclaration>()
 
+    private val nameTypePair get() = property.map { Pair(it.key, it.value.type) }
+
     override fun getPropertyByIndex(i:Int):PropertyDeclaration = _propertyIndex[i]
     override fun appendProperty(name: String, propertyDeclaration: PropertyDeclaration)  {
         if (Debug.CHECK) check(propertyDeclaration.owner==this)
@@ -79,9 +81,10 @@ class TupleType() : StructuredRuleType {
     }
 
     override fun hashCode(): Int = 0
-    override fun equals(other: Any?): Boolean = when(other) {
-        !is TupleType -> false
-        else ->this._propertyIndex==other._propertyIndex
+    override fun equals(other: Any?): Boolean = when {
+        other !is TupleType -> false
+        this.nameTypePair != other.nameTypePair -> false
+        else ->true
     }
 
     override fun toString(): String = "Tuple<${this._propertyIndex.joinToString { it.type.name }}>"

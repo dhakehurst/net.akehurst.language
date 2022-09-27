@@ -155,9 +155,28 @@ class SyntaxAnalyserSimple(
         return when (elType) {
             is PrimitiveType -> when (elType) {
                 PrimitiveType.STRING -> TODO("Built in String type not yet supported")
-                PrimitiveType.ANY ->{
-                    TODO()//createValue(target,path,elType,scope)
+                PrimitiveType.ANY -> {
+                    val actualType = typeModel.findType(target.name)
+                    when {
+                        null == actualType -> error("Internal Error: cannot find actual type for ${target.name}")
+                        actualType != PrimitiveType.ANY -> createValue(target, path, actualType, scope)
+                        actualType == PrimitiveType.ANY -> when {
+                            1 == target.children.size -> {
+                                //must be a choice in a group
+                                val ch = target.children[0]
+                                val childType = typeModel.findType(ch.name) ?: error("Internal Error: cannot find type for ${ch.name}")
+                                val chPath = path
+                                val childsScope = scope
+                                createValue(ch, chPath, childType, childsScope)
+                            }
+
+                            else -> error("Internal Error: cannot find actual type for ${target.name}")
+                        }
+
+                        else -> error("Internal Error: cannot find actual type for ${target.name}")
+                    }
                 }
+
                 else -> error("Internal Error: type $elType not handled")
             }
 
@@ -225,13 +244,13 @@ class SyntaxAnalyserSimple(
                             val ch = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
                             val propValue = when {
                                 actualTarget.isList -> when {
-                                    actualTarget.isEmptyLeaf -> emptyListSeparated<Any,Any>()
+                                    actualTarget.isEmptyLeaf -> emptyListSeparated<Any, Any>()
                                     else -> {
                                         val elements = actualTarget.asBranch.nonSkipChildren
-                                        val sList = mutableListSeparated<Any,Any>()
-                                        for(ci in 0 until elements.size) {
+                                        val sList = mutableListSeparated<Any, Any>()
+                                        for (ci in 0 until elements.size) {
                                             val cel = elements[ci]
-                                            val type = if(ci /2 == 0) propType.itemType else propType.separatorType
+                                            val type = if (ci / 2 == 0) propType.itemType else propType.separatorType
                                             val childPath2 = childPath + ci.toString()
                                             if (cel.isLeaf && cel.asLeaf.isExplicitlyNamed.not()) {
                                                 //do not add iteml
@@ -249,10 +268,10 @@ class SyntaxAnalyserSimple(
                                     ch.isEmptyLeaf -> emptyList<Any>()
                                     else -> {
                                         val elements = ch.asBranch.nonSkipChildren
-                                        val sList = mutableListSeparated<Any,Any>()
-                                        for(ci in 0 until elements.size) {
+                                        val sList = mutableListSeparated<Any, Any>()
+                                        for (ci in 0 until elements.size) {
                                             val cel = elements[ci]
-                                            val type = if(ci %2 == 0) propType.itemType else propType.separatorType
+                                            val type = if (ci % 2 == 0) propType.itemType else propType.separatorType
                                             val childPath2 = childPath + ci.toString()
                                             if (cel.isLeaf && cel.asLeaf.isExplicitlyNamed.not()) {
                                                 //do not add item
@@ -309,17 +328,20 @@ class SyntaxAnalyserSimple(
                 }
                 el
             }
+
             is ListSimpleType -> {
                 val el = mutableListOf<Any>()
                 val childsScope = scope
-                for(ch in target.children) {
-TODO()
+                for (ch in target.children) {
+                    TODO()
                 }
                 el
             }
+
             is ListSeparatedType -> {
                 TODO()
             }
+
             is TupleType -> {
                 val el = _asm!!.createElement(path, elType.name)
                 val childsScope = createScope(scope, el)
@@ -411,6 +433,7 @@ TODO()
                 }
                 el
             }
+
             else -> error("Internal Error: type $elType not handled")
         }
     }

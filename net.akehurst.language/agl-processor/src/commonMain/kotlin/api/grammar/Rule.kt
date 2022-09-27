@@ -24,4 +24,6 @@ interface Rule {
     val isLeaf: Boolean
     var rhs: RuleItem
     val nodeType: NodeType
+
+    val compressedLeaf: Terminal
 }

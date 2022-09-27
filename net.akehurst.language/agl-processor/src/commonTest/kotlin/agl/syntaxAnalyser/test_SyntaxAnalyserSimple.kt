@@ -755,9 +755,9 @@ class test_SyntaxAnalyserSimple {
         val result2 = proc.process("ade")
         assertNotNull(result2.asm)
         assertEquals(emptyList(), result2.issues)
-        val actual2 = result1.asm!!.rootElements[0]
+        val actual2 = result2.asm!!.rootElements[0]
 
-        val expected2 = asmSimple() {
+        val expected2 = asmSimple {
             root("S") {
                 propertyString("a", "a")
                 propertyTuple("\$group") {
