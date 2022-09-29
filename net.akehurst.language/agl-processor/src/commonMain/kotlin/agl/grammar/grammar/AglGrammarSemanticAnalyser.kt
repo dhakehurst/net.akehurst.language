@@ -38,10 +38,7 @@ internal class AglGrammarSemanticAnalyser(
 
     override fun analyse(asm: List<Grammar>, locationMap: Map<*, InputLocation>?, context: GrammarContext?): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
-        val issues = when (asm) {
-            is List<*> -> checkGrammar(asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
-            else -> throw SemanticAnalyserException("This SemanticAnalyser is for an ASM of type List<Grammar>", null)
-        }
+        val issues =  checkGrammar(asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
         return SemanticAnalysisResultDefault(issues)
     }
 
@@ -113,11 +110,15 @@ internal class AglGrammarSemanticAnalyser(
             val trans = state.outTransitions.allBuiltTransitions
             if (trans.size > 1) {
                 trans.forEach { tr1 ->
-                    trans.forEach { tr2 ->
+                    val subset = trans.filter {tr2 ->
+                        tr1.to == tr2.to &&
+                        tr1.context.intersect(tr2.context).isNotEmpty()
+                    }
+                    subset.forEach { tr2 ->
                         //TODO: should we compare actions here? prob not
                         if (tr1 !== tr2) {
                             when {
-                                (tr1.action == Transition.ParseAction.WIDTH && tr2.action == Transition.ParseAction.WIDTH && tr1.to != tr2.to) -> Unit                             // no error
+                                //(tr1.action == Transition.ParseAction.WIDTH && tr2.action == Transition.ParseAction.WIDTH && tr1.to != tr2.to) -> Unit // no error
                                 else -> {
                                     val lhi = tr1.lookahead.flatMap { it.guard.content }.toSet().intersect(tr2.lookahead.flatMap { it.guard.content }.toSet())
                                     if (lhi.isNotEmpty() || (tr1.lookahead.map { it.guard.content }.isEmpty() && tr2.lookahead.map { it.guard.content }.isEmpty())) {
@@ -135,6 +136,8 @@ internal class AglGrammarSemanticAnalyser(
                         }
                     }
                 }
+            } else {
+                //nothing to check
             }
         }
         issues.addAll(itemsSet)

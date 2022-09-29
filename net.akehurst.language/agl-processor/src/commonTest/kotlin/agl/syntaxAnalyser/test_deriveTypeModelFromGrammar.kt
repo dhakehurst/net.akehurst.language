@@ -21,6 +21,7 @@ import net.akehurst.language.api.typeModel.PrimitiveType
 import net.akehurst.language.api.typeModel.TypeModelTest
 import net.akehurst.language.api.typeModel.typeModel
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -263,10 +264,10 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel {
             elementType("S") {
-                propertyListType("as",PrimitiveType.ANY,false,0)
+                propertyListSeparatedType("as",PrimitiveType.STRING, PrimitiveType.STRING,false,0)
             }
             elementType("as") {
-                propertyUnnamedListType(PrimitiveType.ANY,false,0)
+                propertyUnnamedListSeparatedType(PrimitiveType.STRING, PrimitiveType.STRING,false,0)
             }
         }
 
@@ -291,10 +292,10 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel {
             elementType("S") {
-                propertyListType("as", PrimitiveType.ANY,false,0) // of String
+                propertyListSeparatedTypeOf("as", "a", PrimitiveType.STRING,false,0) // of String
             }
             elementType("as") {
-                propertyListType("a",PrimitiveType.ANY,false,0)
+                propertyListSeparatedTypeOf("a","a", PrimitiveType.STRING,false,0)
             }
             elementType("a") {
             }
@@ -322,10 +323,10 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel {
             elementType("S") {
-                propertyListType("ass", PrimitiveType.ANY,false,0) // of String
+                propertyListSeparatedTypeOf("ass", "as",PrimitiveType.STRING,false,0) // of String
             }
             elementType("ass") {
-                propertyListType("as",PrimitiveType.ANY, false,0)
+                propertyListSeparatedTypeOf("as","as", PrimitiveType.STRING, false,0)
             }
             elementType("as") {
                 propertyListTypeOf("a","a",false,0)

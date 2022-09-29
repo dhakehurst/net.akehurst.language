@@ -23,7 +23,7 @@ import net.akehurst.language.agl.util.Debug
 
 interface TypeModel {
 
-    val types: Map<String, ElementType>
+    val types: Map<String, RuleType>
 
     fun findType(name: String): RuleType?
 }

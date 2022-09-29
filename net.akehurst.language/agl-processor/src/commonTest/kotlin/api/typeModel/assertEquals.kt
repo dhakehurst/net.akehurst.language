@@ -18,7 +18,7 @@ package net.akehurst.language.api.typeModel
 
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.assertSame
 import kotlin.test.fail
 
 object TypeModelTest {
@@ -28,22 +28,23 @@ object TypeModelTest {
         for (k in expected.types.keys) {
             val expEl = expected.types[k]
             val actEl = actual.types[k]
-            assertEquals(expEl, actEl)
+            tmAssertEquals(expEl, actEl, "TypeModel")
         }
     }
 
-    private fun assertEquals(expected: RuleType?, actual: RuleType?) {
+    private fun tmAssertEquals(expected: RuleType?, actual: RuleType?, source:String) {
         when {
             null == expected || null == actual -> fail("should never be null")
-            expected is PrimitiveType && actual is PrimitiveType -> assertTrue(expected === actual)
-            expected is ElementType && actual is ElementType -> assertEquals(expected, actual)
-            expected is ListSimpleType && actual is ListSimpleType -> assertEquals(expected, actual)
-            expected is TupleType && actual is TupleType -> assertEquals(expected, actual)
-            else -> fail("Types do not match $expected != $actual")
+            expected is PrimitiveType && actual is PrimitiveType -> assertSame(expected, actual)
+            expected is ElementType && actual is ElementType -> tmAssertEquals(expected, actual)
+            expected is ListSimpleType && actual is ListSimpleType -> tmAssertEquals(expected, actual)
+            expected is ListSeparatedType && actual is ListSeparatedType -> tmAssertEquals(expected, actual)
+            expected is TupleType && actual is TupleType -> tmAssertEquals(expected, actual)
+            else -> fail("Types do not match $expected != $actual for $source")
         }
     }
 
-    private fun assertEquals(expected: ElementType, actual: ElementType) {
+    private fun tmAssertEquals(expected: ElementType, actual: ElementType) {
         assertEquals(expected.name, actual.name)
         assertEquals(expected.superType.size, actual.superType.size, "Wrong number of superTypes for '${expected.name}'")
         for (i in 0 until expected.superType.size) {
@@ -62,25 +63,30 @@ object TypeModelTest {
             val expEl = expected.property[k]
             val actEl = actual.property[k]
             assertNotNull(actEl, "expected PropertyDeclaration '$k' not found in actual ElementType '${expected.name}'. [${actual.property.values.joinToString { it.name }}]")
-            assertEquals(expEl, actEl)
+            tmAssertEquals(expEl, actEl)
         }
     }
 
-    private fun assertEquals(expected: ListSimpleType, actual: ListSimpleType) {
-        assertEquals(expected.elementType,actual.elementType,"List element types do not match")
+    private fun tmAssertEquals(expected: ListSimpleType, actual: ListSimpleType) {
+        tmAssertEquals(expected.elementType,actual.elementType,"List element types do not match")
     }
 
-    private fun assertEquals(expected: TupleType, actual: TupleType) {
+    private fun tmAssertEquals(expected: ListSeparatedType, actual: ListSeparatedType) {
+        tmAssertEquals(expected.itemType,actual.itemType,"List item types do not match")
+        tmAssertEquals(expected.separatorType,actual.separatorType,"List separator types do not match")
+    }
+
+    private fun tmAssertEquals(expected: TupleType, actual: TupleType) {
         assertEquals(expected.property.size, actual.property.size, "Wrong number of properties for '${expected.name}'")
         for (k in expected.property.keys) {
             val expEl = expected.property[k]
             val actEl = actual.property[k]
             assertNotNull(actEl, "expected PropertyDeclaration '$k' not found in actual TupleType '${expected.name}'. [${actual.property.values.joinToString { it.name }}]")
-            assertEquals(expEl, actEl)
+            tmAssertEquals(expEl, actEl)
         }
     }
 
-    private fun assertEquals(expected: PropertyDeclaration?, actual: PropertyDeclaration?) {
+    private fun tmAssertEquals(expected: PropertyDeclaration?, actual: PropertyDeclaration?) {
         when {
             null == expected || null == actual -> fail("should never be null")
             else -> {
@@ -89,7 +95,7 @@ object TypeModelTest {
                 assertEquals(expected.childIndex, actual.childIndex, "Different childIndex for ${expected}")
                 when(expected.type) {
                     is ElementType -> assertEquals(expected.type.name, actual.type.name, "Different types for ${expected}")
-                    else -> TypeModelTest.assertEquals(expected.type, actual.type)
+                    else -> tmAssertEquals(expected.type, actual.type, "${expected.owner.name}.${expected.name}")
                 }
             }
         }

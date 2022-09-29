@@ -37,11 +37,11 @@ class TypeModelFromGrammar(
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredRuleType, String>, Int>()
     private val _pseudoRuleNameGenerator = PseudoRuleNames(grammar)
 
-    override val types: Map<String, ElementType> by lazy {
+    override val types: Map<String, RuleType> by lazy {
         grammar.allRule
             .filter { it.isLeaf.not() && it.isSkip.not() }
             .associateBy({ it.name }) {
-                typeForRhs(it) as ElementType
+                typeForRhs(it) as RuleType
             }
     }
 
@@ -54,6 +54,7 @@ class TypeModelFromGrammar(
                         val pseudoRuleItem = _pseudoRuleNameGenerator.itemForPseudoRuleName(name)
                         typeForRuleItem(pseudoRuleItem)
                     }
+
                     else -> typeForRhs(rule)
                 }
             }
@@ -62,7 +63,7 @@ class TypeModelFromGrammar(
         }
     }
 
-    private fun findOrCreateElementType(name: String): RuleType {
+    private fun findOrCreateElementType(name: String): ElementType {
         val existing = _ruleToType[name]
         return if (null == existing) {
             val type = ElementType(name)
@@ -91,10 +92,7 @@ class TypeModelFromGrammar(
                 // rhs's are only ever these things (currently)
                 is EmptyRule -> findOrCreateElementType(rule.name)
                 is Choice -> typeForChoiceRule(rule)
-                is Concatenation -> {
-                    typeForConcatenation(rule, rhs.items)
-                }
-
+                is Concatenation -> typeForConcatenation(rule, rhs.items)
                 else -> error("Internal error, unhandled subtype of rule.rhs")
             }
             if (ruleType is ElementType) {
@@ -151,7 +149,10 @@ class TypeModelFromGrammar(
                         ruleItem.items.forEachIndexed { idx, it ->
                             createPropertyDeclaration(concatType, it, idx)
                         }
-                        concatType
+                        when {
+                            concatType.property.isEmpty() -> PrimitiveType.NOTHING
+                            else -> concatType
+                        }
                     }
                 }
 
@@ -160,12 +161,12 @@ class TypeModelFromGrammar(
                         // one choice in the group
                         //1 == ruleItem.choice.alternative.size -> {
                         //    val concat = ruleItem.choice.alternative[0]
-                       //     val concatType = TupleType()
+                        //     val concatType = TupleType()
                         //    concat.items.forEachIndexed { idx, it ->
-                       //         createPropertyDeclaration(concatType, it, idx)
+                        //         createPropertyDeclaration(concatType, it, idx)
                         //    }
                         //    concatType
-                       // }
+                        // }
                         // multiple choices in group
                         else -> {
                             //val choiceType = TupleType()
@@ -193,8 +194,20 @@ class TypeModelFromGrammar(
 
     private fun typeForChoiceRule(choiceRule: Rule): RuleType { //name: String, alternative: List<Concatenation>): RuleType {
         //val choiceType = findOrCreateElementType(choiceRule.name)
-        return populateTypeForChoice(choiceRule.rhs as Choice, choiceRule.name) as RuleType
-        //return choiceType
+        val t = populateTypeForChoice(choiceRule.rhs as Choice, choiceRule.name) as RuleType
+        return when (t) {
+            is PrimitiveType -> when (t) {
+                PrimitiveType.ANY -> TODO()
+                PrimitiveType.NOTHING -> TODO()
+                PrimitiveType.STRING -> findOrCreateElementType(choiceRule.name).also {
+                    createUniquePropertyDeclaration(it, UNNAMED_STRING_PROPERTY_NAME, t, false, 0)
+                }
+
+                else -> error("Internal error, unhandled PrimitiveType $t")
+            }
+
+            else -> t
+        }
         /*
         val subtypes = (choiceRule.rhs as Choice).alternative.map { typeForRuleItem(it) }
         return when {
@@ -235,6 +248,7 @@ class TypeModelFromGrammar(
         // else choices maps to properties
         val subtypes = choice.alternative.map { typeForRuleItem(it) }
         return when {
+            subtypes.all { it === PrimitiveType.NOTHING } ->PrimitiveType.NOTHING
             subtypes.all { it is ElementType } -> {
                 val choiceType = findOrCreateElementType(choiceRuleName) as ElementType
                 subtypes.forEach {
@@ -271,10 +285,10 @@ class TypeModelFromGrammar(
         return "Tuple"
     }
 
-    private fun createPropertyDeclaration(et: StructuredRuleType, ruleItem: ConcatenationItem, childIndex: Int): PropertyDeclaration? {
-        return when (ruleItem) {
-            is EmptyRule -> null
-            is Terminal -> null //createUniquePropertyDeclaration(et, UNNAMED_STRING_VALUE, propType)
+    private fun createPropertyDeclaration(et: StructuredRuleType, ruleItem: ConcatenationItem, childIndex: Int) {
+         when (ruleItem) {
+            is EmptyRule -> Unit
+            is Terminal -> Unit //createUniquePropertyDeclaration(et, UNNAMED_STRING_VALUE, propType)
             is NonTerminal -> {
                 val refRule = if (ruleItem.embedded) {
                     ruleItem.referencedRule(ruleItem.owningGrammar)
@@ -324,6 +338,7 @@ class TypeModelFromGrammar(
             is Group -> {
                 when {
                     // one choice in the group
+                    /*
                     1 == ruleItem.choice.alternative.size -> {
                         val concat = ruleItem.choice.alternative[0]
                         when {
@@ -342,11 +357,16 @@ class TypeModelFromGrammar(
                             }
                         }
                     }
+                     */
                     // multiple choices in group
                     else -> {
                         val choiceType = populateTypeForChoice(ruleItem.choice, UNNAMED_GROUP_PROPERTY_NAME)
-                        val pName = propertyNameFor(et, ruleItem)
-                        createUniquePropertyDeclaration(et, pName, choiceType, false, childIndex)
+                        if (PrimitiveType.NOTHING==choiceType) {
+                            Unit
+                        } else {
+                            val pName = propertyNameFor(et, ruleItem)
+                            createUniquePropertyDeclaration(et, pName, choiceType, false, childIndex)
+                        }
                     }
                 }
 
