@@ -87,10 +87,10 @@ class AsmElementSimpleBuilder(
         _element.setProperty(name, value, false)
     }
 
-    fun propertyUnnamedString(value: String?) = this._property(TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, value)
+    fun propertyUnnamedString(value: String?) = this._property(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, value)
     fun propertyString(name: String, value: String?) = this._property(name, value)
     fun propertyNull(name: String) = this._property(name, null)
-    fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElement(TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME, typeName, init)
+    fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElement(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, typeName, init)
     fun propertyTuple(name:String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple =propertyElement(name, TupleType.INSTANCE_NAME, init)
     fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElement(name, name, init)
     fun propertyElement(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
@@ -102,7 +102,7 @@ class AsmElementSimpleBuilder(
         return el
     }
 
-    fun propertyUnnamedListOfString(list: List<String>) = this._property(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_VALUE, list)
+    fun propertyUnnamedListOfString(list: List<String>) = this._property(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME, list)
     fun propertyListOfString(name: String, list: List<String>) = this._property(name, list)
     fun propertyListOfElement(name: String, init: ListAsmElementSimpleBuilder.() -> Unit): List<Any> {
         val newPath = _element.asmPath + name

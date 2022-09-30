@@ -128,7 +128,7 @@ grammar Mscript {
             elementType("line") {
                 // line = [statement / ';']* ';'? ;
                 propertyListType("statement", PrimitiveType.ANY, false, 0)
-                propertyUnnamedType(PrimitiveType.STRING, true, 1)
+                propertyUnnamedPrimitiveType(PrimitiveType.STRING, true, 1)
             }
             elementType("statement") {
                 // statement
@@ -141,18 +141,18 @@ grammar Mscript {
             }
             elementType("conditional") {
                 // conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
-                propertyElementType("expression", "expression", false, 1)
+                propertyElementTypeOf("expression", "expression", false, 1)
                 propertyListType("statementList", PrimitiveType.ANY, false, 3)
                 propertyListType("statementList2", PrimitiveType.ANY, false, 5)
             }
             elementType("assignment") {
                 // assignment = rootVariable '=' expression ;
-                propertyElementType("rootVariable", "rootVariable", false, 0)
-                propertyElementType("expression", "expression", false, 2)
+                propertyElementTypeOf("rootVariable", "rootVariable", false, 0)
+                propertyElementTypeOf("expression", "expression", false, 2)
             }
             elementType("expressionStatement") {
                 // expressionStatement = expression ;
-                propertyElementType("expression", "expression", false, 0)
+                propertyElementTypeOf("expression", "expression", false, 0)
             }
             elementType("expression") {
                 // expression
@@ -169,7 +169,7 @@ grammar Mscript {
             elementType("groupExpression") {
                 // groupExpression = '(' expression ')' ;
                 //superType("expression")
-                propertyElementType("expression", "expression", false, 1)
+                propertyElementTypeOf("expression", "expression", false, 1)
             }
             elementType("functionCall") {
                 // functionCall = NAME '(' argumentList ')' ;
@@ -183,16 +183,16 @@ grammar Mscript {
             }
             elementType("argument") {
                 // argument = expression | COLON ;
-                propertyUnnamedType(PrimitiveType.ANY, false, 0)
+                propertyUnnamedPrimitiveType(PrimitiveType.ANY, false, 0)
             }
             elementType("prefixExpression") {
                 // prefixExpression = prefixOperator expression ;
-                propertyElementType("prefixOperator", "prefixOperator", false, 0)
-                propertyElementType("expression", "expression", false, 1)
+                propertyElementTypeOf("prefixOperator", "prefixOperator", false, 0)
+                propertyElementTypeOf("expression", "expression", false, 1)
             }
             elementType("prefixOperator") {
                 // prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
-                propertyUnnamedType(PrimitiveType.STRING, false, 0)
+                propertyUnnamedPrimitiveType(PrimitiveType.STRING, false, 0)
             }
             elementType("infixExpression") {
                 // infixExpression =  [ expression / infixOperator ]2+ ;
@@ -205,7 +205,7 @@ grammar Mscript {
                 //        | '&' | '|' | '&&' | '||' | '~'                         // logical
                 //        | ':'                                                   // vector creation
                 //        ;
-                propertyUnnamedType(PrimitiveType.STRING, false, 0)
+                propertyUnnamedPrimitiveType(PrimitiveType.STRING, false, 0)
             }
             elementType("matrix") {
                 // matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
@@ -213,10 +213,10 @@ grammar Mscript {
             }
             elementType("row") {
                 // row = expression (','? expression)* ;
-                propertyElementType("expression", "expression", false, 0)
+                propertyElementTypeOf("expression", "expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
-                    propertyUnnamedType(PrimitiveType.STRING, true, 0)
-                    propertyElementType("expression", "expression", false, 1)
+                    propertyUnnamedPrimitiveType(PrimitiveType.STRING, true, 0)
+                    propertyElementTypeOf("expression", "expression", false, 1)
                 }
             }
             elementType("literal") {
@@ -226,7 +226,7 @@ grammar Mscript {
                 //      | SINGLE_QUOTE_STRING
                 //      | DOUBLE_QUOTE_STRING
                 //      ;
-                propertyUnnamedType(PrimitiveType.ANY, false, 0)
+                propertyUnnamedPrimitiveType(PrimitiveType.ANY, false, 0)
             }
             elementType("rootVariable") {
                 // rootVariable = NAME ;
@@ -234,7 +234,7 @@ grammar Mscript {
             }
             elementType("number") {
                 // number = INTEGER | REAL ;
-                propertyUnnamedType(PrimitiveType.STRING, false, 0)
+                propertyUnnamedPrimitiveType(PrimitiveType.STRING, false, 0)
             }
         }
 

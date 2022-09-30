@@ -450,20 +450,20 @@ class SyntaxAnalyserSimple(
                     val value = this.createValue(br.children[0], path, scope)
                     if (null == value) {
                         val el = _asm!!.createElement(path, br.name)
-                        val pName = TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME //TODO: maybe a better option
+                        val pName = TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME //TODO: maybe a better option
                         this.setPropertyOrReference(el, pName, value)
                         el
                     } else when (value) {
                         is String -> {
                             val el = _asm!!.createElement(path, br.name)
-                            val pName = TypeModelFromGrammar.UNNAMED_STRING_PROPERTY_NAME //TODO: maybe a better option
+                            val pName = TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME //TODO: maybe a better option
                             this.setPropertyOrReference(el, pName, value)
                             el
                         }
 
                         is List<*> -> {
                             val el = _asm!!.createElement(path, br.name)
-                            val pName = TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_VALUE //TODO: maybe a better option
+                            val pName = TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME //TODO: maybe a better option
                             this.setPropertyOrReference(el, pName, value)
                             el
                         }

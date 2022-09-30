@@ -102,11 +102,11 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
             elementType("property") {
                 propertyStringType("ID",false,0)
-                propertyElementType("typeReference","typeReference",false,2)
+                propertyElementTypeOf("typeReference","typeReference",false,2)
             }
             elementType("typeReference") {
                 propertyStringType("type",false,0)
-                propertyElementType("typeArguments","typeArguments",true,1)
+                propertyElementTypeOf("typeArguments","typeArguments",true,1)
             }
             elementType("typeArguments") {
                 propertyListType("typeReference",PrimitiveType.ANY,false,1)

@@ -40,7 +40,7 @@ object TypeModelTest {
             expected is ListSimpleType && actual is ListSimpleType -> tmAssertEquals(expected, actual)
             expected is ListSeparatedType && actual is ListSeparatedType -> tmAssertEquals(expected, actual)
             expected is TupleType && actual is TupleType -> tmAssertEquals(expected, actual)
-            else -> fail("Types do not match $expected != $actual for $source")
+            else -> fail("Types do not match expected '$expected' actual '$actual' for $source")
         }
     }
 

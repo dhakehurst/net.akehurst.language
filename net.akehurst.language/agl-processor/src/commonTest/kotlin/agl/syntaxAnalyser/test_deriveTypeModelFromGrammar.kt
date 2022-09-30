@@ -161,7 +161,7 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel {
             elementType("S") {
-                propertyUnnamedType(PrimitiveType.STRING,false,0)
+                propertyUnnamedPrimitiveType(PrimitiveType.STRING,false,0)
             }
         }
 
@@ -190,11 +190,11 @@ class test_deriveTypeModelFromGrammar {
             }
             elementType("L") {
                 //superType("S")
-                propertyUnnamedType(PrimitiveType.STRING, false,0)
+                propertyUnnamedPrimitiveType(PrimitiveType.STRING, false,0)
             }
             elementType("M") {
                 //superType("S")
-                propertyUnnamedType(PrimitiveType.STRING,false,0)
+                propertyUnnamedPrimitiveType(PrimitiveType.STRING,false,0)
             }
         }
 
@@ -217,7 +217,7 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel {
             elementType("S") {
-                propertyUnnamedType(PrimitiveType.STRING,true, 0) // of String
+                propertyUnnamedPrimitiveType(PrimitiveType.STRING,true, 0) // of String
             }
         }
 
@@ -292,10 +292,10 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel {
             elementType("S") {
-                propertyListSeparatedTypeOf("as", "a", PrimitiveType.STRING,false,0) // of String
+                propertyListSeparatedTypeOfByPrimitive("as", "a", PrimitiveType.STRING,false,0) // of String
             }
             elementType("as") {
-                propertyListSeparatedTypeOf("a","a", PrimitiveType.STRING,false,0)
+                propertyListSeparatedTypeOfByPrimitive("a","a", PrimitiveType.STRING,false,0)
             }
             elementType("a") {
             }
@@ -323,10 +323,10 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel {
             elementType("S") {
-                propertyListSeparatedTypeOf("ass", "as",PrimitiveType.STRING,false,0) // of String
+                propertyListSeparatedTypeOfByPrimitive("ass", "as",PrimitiveType.STRING,false,0) // of String
             }
             elementType("ass") {
-                propertyListSeparatedTypeOf("as","as", PrimitiveType.STRING, false,0)
+                propertyListSeparatedTypeOfByPrimitive("as","as", PrimitiveType.STRING, false,0)
             }
             elementType("as") {
                 propertyListTypeOf("a","a",false,0)
@@ -507,9 +507,7 @@ class test_deriveTypeModelFromGrammar {
         val expected = typeModel {
             elementType("S") {
                 propertyStringType("a",false,0)
-                propertyTupleType("\$group",false,1) {
-                    propertyStringType("b",false,0)
-                }
+                propertyStringType("\$group",false,1)
                 propertyStringType("e",false,2)
             }
         }
@@ -539,9 +537,7 @@ class test_deriveTypeModelFromGrammar {
         val expected = typeModel {
             elementType("S") {
                 propertyStringType("a",false,0)
-                propertyTupleType("\$group",false,1) {
-                    propertyUnnamedType(PrimitiveType.STRING,false,0)
-                }
+                propertyStringType("\$group",false,1)
                 propertyStringType("e",false,2)
             }
         }
@@ -571,9 +567,7 @@ class test_deriveTypeModelFromGrammar {
         val expected = typeModel {
             elementType("S") {
                 propertyStringType("a",false,0)
-                propertyTupleType("\$group",false,1) {
-                    propertyUnnamedType(PrimitiveType.ANY,false,0)
-                }
+                property("\$group",PrimitiveType.ANY,false,1)
                 propertyStringType("e",false,2)
             }
         }
@@ -604,9 +598,7 @@ class test_deriveTypeModelFromGrammar {
         val expected = typeModel {
             elementType("S") {
                 propertyStringType("a",false,0)
-                propertyTupleType("\$group",false,1) {
-                    propertyUnnamedType(PrimitiveType.ANY,false,0)
-                }
+                property("\$group",PrimitiveType.ANY,false,1)
                 propertyStringType("f",false,2)
             }
         }
