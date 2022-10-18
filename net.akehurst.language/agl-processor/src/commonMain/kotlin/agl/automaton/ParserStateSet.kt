@@ -209,8 +209,7 @@ internal class ParserStateSet(
                     Transition.ParseAction.GRAFT -> ti.parent.toSet()
                 }
                 val lhs = ti.lookahead.map { Lookahead(it.guard.lhs(this), it.up.lhs(this)) }.toSet()
-                val runtimeGuard = Transition.runtimeGuardFor(action)
-                state.outTransitions.createTransition(previousStates.toSet(), state, action, to, lhs, prevGuard, runtimeGuard)
+                state.outTransitions.createTransition(previousStates.toSet(), state, action, to, lhs, prevGuard)
             }
         }
     }

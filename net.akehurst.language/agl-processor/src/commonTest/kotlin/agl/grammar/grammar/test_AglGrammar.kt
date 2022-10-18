@@ -21,11 +21,9 @@ import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorException
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
+import kotlin.test.*
 
 class test_AglGrammar {
 
@@ -452,6 +450,57 @@ class test_AglGrammar {
         assertEquals(expected3, result3.sppt)
         assertEquals(emptyList(), result3.issues)
     }
+
+    @Test
+    fun literal_multi_range_fixed() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = 'a'4 ;
+            }
+        """.trimIndent()
+
+        val p = Agl.processorFromString<Any,Any>(grammarStr)
+        assertNotNull(p)
+
+        val result0 = p.parse("")
+        assertEquals(null, result0.sppt)
+        val expIssues0 = listOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'")))
+        assertEquals(expIssues0, result0.issues)
+
+        val result1 = p.parse("a")
+        assertEquals(null, result1.sppt)
+        val expIssues1 = listOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'")))
+        assertEquals(expIssues1, result1.issues)
+
+        val result2 = p.parse("aa");
+        assertEquals(null, result2.sppt)
+        val expIssues2 = listOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(2, 3, 1, 1), "aa^", setOf("'a'")))
+        assertEquals(expIssues2, result2.issues)
+
+        val result3 = p.parse("aaa");
+        assertEquals(null, result3.sppt)
+        val expIssues3 = listOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(3, 4, 1, 1), "aaa^", setOf("'a'")))
+        assertEquals(expIssues3, result3.issues)
+
+        val result4 = p.parse("aaaa");
+        val expected4 = p.spptParser.parse(
+            """
+             a { 'a' 'a' 'a' 'a' }
+        """
+        )
+        assertNotNull(result4.sppt,result4.issues.joinToString(separator = "\n") { "$it" })
+        assertEquals(expected4.toStringAll, result4.sppt?.toStringAll)
+        assertEquals(expected4, result4.sppt)
+        assertEquals(emptyList(), result4.issues)
+
+        val result5 = p.parse("aaaaa");
+        assertEquals(null, result5.sppt)
+        val expIssues5 = listOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(4, 5, 1, 1), "aaaa^a", setOf("<EOT>")))
+        assertEquals(expIssues5, result5.issues)
+    }
+
 
     @Test
     fun literal_multi_range_unbraced_unbounded() {
@@ -1228,47 +1277,11 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString<Any,Any>(grammarStr)
-        assertNotNull(p)
+        assertFailsWith<LanguageProcessorException> {
+            val p = Agl.processorFromString<Any,Any>(grammarStr)
+        }
 
 
-        val result0 = p.parse("")
-        assertEquals(null, result0.sppt)
-        assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(0,1,1,1),"^",setOf("'a'"))
-        ), result0.issues)
-
-        val result1 = p.parse("a")
-        assertEquals(null, result1.sppt)
-        assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(1,2,1,1),"a^",setOf("','"))
-        ), result1.issues)
-
-        val result2 = p.parse("a,a");
-        val expected2 = p.spptParser.parse(
-            """
-             S { a{'a'} ',' a{'a'}}
-        """
-        )
-        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
-        assertEquals(expected2, result2.sppt)
-        assertEquals(emptyList(), result2.issues)
-
-        val result5 = p.parse("a,a,a,a,a");
-        val expected5 = p.spptParser.parse(
-            """
-             S { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} }
-        """
-        )
-        assertEquals(expected5.toStringAll, result5.sppt?.toStringAll)
-        assertEquals(expected5, result5.sppt)
-        assertEquals(emptyList(), result5.issues)
-
-        val result6 = p.parse("a,a,a,a,a,a")
-        assertEquals(null, result6.sppt)
-        assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(9,10,1,1),"a,a,a,a,a^,a,",listOf("<EOT>"))
-        ), result6.issues)
     }
 
 
@@ -1429,7 +1442,7 @@ class test_AglGrammar {
             """
             S {
                 'a'
-                §S§group1|1 { §S§group1§multi1 {
+                §S§group1|1 { §S§multi1 {
                     c : 'c'
                     c : 'c'
                     c : 'c'
@@ -1511,7 +1524,7 @@ class test_AglGrammar {
             """
             S {
                 a { 'a' }
-                §S§multi1 { §S§multi1§choice1 {
+                §S§multi1 { §S§choice1 {
                     'b'
                     c { 'c' }
                 } }

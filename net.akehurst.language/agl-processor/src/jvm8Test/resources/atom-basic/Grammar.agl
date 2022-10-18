@@ -1,0 +1,53 @@
+// http://www.acornatom.nl/sites/fpga/www.howell1964.freeserve.co.uk/acorn/atom/bbc_conversion/atombbc_03.htm
+
+namespace net.akehurst.language.atom.basic
+
+grammar AtomBasic {
+
+    skip leaf WHITESPACE = "\s+" ;
+
+    file = line+ ;
+    line = line-number statement ;
+    line-number = INTEGER ;
+
+    statement
+     = callMachineCode
+     | print
+     | procedure-start
+     ;
+
+    callMachineCode = 'CALL' ;
+
+    print = 'PRINT' print-arg+ ;
+    print-arg = constant | variable | print-special ;
+    print-special = '\'' | ';' | '.' | '~' | '’' ;
+
+    procedure-start = 'PROC' name parameters ;
+    parameters = '(' parameterList ')' ;
+    parameterList = [name / ',']* ;
+
+    binary-operator
+     = 'AND'
+     | ''
+     ;
+
+    built-in-function-name
+     = 'ABS'
+     | 'ACS'
+     | ''
+     | ''
+     | ''
+     | ''
+     | ''
+     | ''
+     ;
+
+    name = ID ;
+    variable = ID ;
+    constant = INTEGER | STRING ;
+
+    leaf ID = "[a-zA-Z][a-zA-Z0-9]*" ;
+    leaf INTEGER = "[0-9]+" ;
+    leaf STRING = "\"([^\"\\]|\\.)*\"" ;
+
+}

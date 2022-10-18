@@ -47,8 +47,8 @@ import net.akehurst.language.api.grammar.Rule
         listOfItems = simpleList | separatedList ;
         multiplicity = '*' | '+' | '?' | range ;
         range = rangeBraced | rangeUnBraced ;
-        rangeUnBraced = POSITIVE_INTEGER rangeMax ;
-        rangeBraced = '{' POSITIVE_INTEGER rangeMax '}' ;
+        rangeUnBraced = POSITIVE_INTEGER rangeMax? ;
+        rangeBraced = '{' POSITIVE_INTEGER rangeMax? '}' ;
         rangeMax = rangeMaxUnbounded | rangeMaxBounded ;
         rangeMaxUnbounded = '+' ;
         rangeMaxBounded = '..' POSITIVE_INTEGER ;
@@ -110,8 +110,9 @@ internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
                 b.nonTerminal("rangeUnBraced"),
                 b.nonTerminal("rangeBraced"),
             )
-            b.rule("rangeUnBraced").concatenation(b.nonTerminal("POSITIVE_INTEGER"), b.nonTerminal("rangeMax"))
-            b.rule("rangeBraced").concatenation(b.terminalLiteral("{"),b.nonTerminal("POSITIVE_INTEGER"), b.nonTerminal("rangeMax"),b.terminalLiteral("}"))
+            b.rule("rangeUnBraced").concatenation(b.nonTerminal("POSITIVE_INTEGER"), b.nonTerminal("rangeMaxOpt"))
+            b.rule("rangeBraced").concatenation(b.terminalLiteral("{"),b.nonTerminal("POSITIVE_INTEGER"), b.nonTerminal("rangeMaxOpt"),b.terminalLiteral("}"))
+            b.rule("rangeMaxOpt").multi(0,1,b.nonTerminal("rangeMax"))
             b.rule("rangeMax").choiceLongestFromConcatenationItem(
                 b.nonTerminal("rangeMaxUnbounded"),
                 b.nonTerminal("rangeMaxBounded"),

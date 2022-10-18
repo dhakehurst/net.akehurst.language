@@ -59,6 +59,7 @@ internal class AglGrammarSyntaxAnalyser(
         this.register("range", this::range as BranchHandler<Pair<Int, Int>>)
         this.register("rangeUnBraced", this::rangeUnBraced as BranchHandler<Pair<Int, Int>>)
         this.register("rangeBraced", this::rangeBraced as BranchHandler<Pair<Int, Int>>)
+        this.register("rangeMaxOpt", this::rangeMax as BranchHandler<Int>)
         this.register("rangeMax", this::rangeMax as BranchHandler<Int>)
         this.register("rangeMaxBounded", this::rangeMaxBounded as BranchHandler<Int>)
         this.register("rangeMaxUnbounded", this::rangeMaxUnbounded as BranchHandler<Int>)
@@ -240,19 +241,30 @@ internal class AglGrammarSyntaxAnalyser(
     //range = rangeBraced | rangeUnBraced ;
     fun range(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Pair<Int, Int> = this.transformBranch<Pair<Int, Int>>(children[0], arg)
 
-    //rangeUnBraced = POSITIVE_INTEGER rangeMax ;
+    //rangeUnBraced = POSITIVE_INTEGER rangeMaxOpt ;
     fun rangeUnBraced(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Pair<Int, Int> {
         val min = target.nonSkipChildren[0].nonSkipMatchedText.toInt()
-        val max = this.transformBranch<Int>(children[0], arg)
+        val max = if (children[0].isEmptyMatch) {
+            min
+        } else {
+            this.transformBranch<Int>(children[0], arg)
+        }
         return Pair(min, max)
     }
 
-    //rangeBraced = '{' POSITIVE_INTEGER rangeMax '}' ;
+    //rangeBraced = '{' POSITIVE_INTEGER rangeMaxOpt '}' ;
     fun rangeBraced(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Pair<Int, Int> {
         val min = target.nonSkipChildren[1].nonSkipMatchedText.toInt()
-        val max = this.transformBranch<Int>(children[0], arg)
+        val max = if (children[0].isEmptyMatch) {
+            min
+        } else {
+            this.transformBranch<Int>(children[0], arg)
+        }
         return Pair(min, max)
     }
+
+    // rangeMaxOpt = rangeMax? ;
+    fun rangeMaxOpt(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Int = this.transformBranch<Int>(children[0], arg)
 
     //rangeMax = rangeMaxUnbounded | rangeMaxBounded ;
     fun rangeMax(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Int = this.transformBranch<Int>(children[0], arg)

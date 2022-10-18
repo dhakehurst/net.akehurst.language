@@ -30,8 +30,7 @@ internal interface TransitionCache {
         action: Transition.ParseAction,
         to: ParserState,
         lookahead: Set<Lookahead>,
-        prevGuard: Set<RulePosition>?,
-        runtimeGuard: Transition.(current: GrowingNodeIndex, previous: ParserState?) -> Boolean
+        prevGuard: Set<RulePosition>?
     )
     fun addTransition(previousStates: Set<ParserState>, tr: Transition): Transition
 
@@ -55,8 +54,7 @@ internal class TransitionCacheLC0 : TransitionCache {
         action: Transition.ParseAction,
         to: ParserState,
         lookahead: Set<Lookahead>,
-        prevGuard: Set<RulePosition>?,
-        runtimeGuard: Transition.(current: GrowingNodeIndex, previous: ParserState?) -> Boolean
+        prevGuard: Set<RulePosition>?
     ) {
         TODO("not implemented")
     }
@@ -92,12 +90,8 @@ internal class TransitionCacheLC1 : TransitionCache {
                 val from = me.key[0] as ParserState
                 val action = me.key[1] as Transition.ParseAction
                 val to = me.key[2] as ParserState
-                val rtg = when(action) {
-                    Transition.ParseAction.GRAFT -> Transition.graftRuntimeGuard
-                    else -> Transition.defaultRuntimeGuard
-                }
                 val lhs = Lookahead.merge(automaton, me.value.flatMap { it.lookahead }.toSet())
-                Transition(from,to,action,lhs,rtg)
+                Transition(from,to,action,lhs)
             }
             return if(merged.size ==1 ) {
                  merged.first()
@@ -166,10 +160,9 @@ internal class TransitionCacheLC1 : TransitionCache {
         action: Transition.ParseAction,
         to: ParserState,
         lookahead: Set<Lookahead>,
-        prevGuard: Set<RulePosition>?,
-        runtimeGuard: Transition.(current: GrowingNodeIndex, previous: ParserState?) -> Boolean
+        prevGuard: Set<RulePosition>?
     ) {
-        val trans = Transition(from, to, action, lookahead, runtimeGuard)
+        val trans = Transition(from, to, action, lookahead)
         this.addTransition(previousStates, trans)
     }
 

@@ -31,11 +31,11 @@ internal class PseudoRuleNames(val grammar: Grammar) {
     }
 
     fun nameForRuleItem(item: RuleItem): String {
-        return _nameForRuleItem[item] ?: error("Internal Error: name for RuleItem not found")
+        return _nameForRuleItem[item] ?: error("Internal Error: name for RuleItem '$item' not found")
     }
 
     fun itemForPseudoRuleName(name: String): RuleItem {
-        return _itemForPseudoRuleName[name] ?: error("Internal Error: name for RuleItem not found")
+        return _itemForPseudoRuleName[name] ?: error("Internal Error: RuleItem with name '$name' not found")
     }
 
     private fun pseudoRulesFor(item: RuleItem): Set<Pair<RuleItem, String>> {
@@ -43,7 +43,7 @@ internal class PseudoRuleNames(val grammar: Grammar) {
             is Choice ->item.alternative.flatMap { pseudoRulesFor(it) }.toSet()
 
             is Concatenation -> when (item.items.size) {
-                1 -> emptySet()
+                1 -> item.items.flatMap { pseudoRulesFor(it) }.toSet()
                 else -> item.items.flatMap { pseudoRulesFor(it) }.toSet() + Pair(item, createChoiceRuleName(item.owningRule.name))
             }
 
@@ -55,8 +55,8 @@ internal class PseudoRuleNames(val grammar: Grammar) {
                 }
 
                 is ListOfItems -> when (item) {
-                    is SimpleList -> emptySet()
-                    is SeparatedList -> emptySet()
+                    is SimpleList -> pseudoRulesFor(item.item) + Pair(item, createSimpleListRuleName(item.owningRule.name))
+                    is SeparatedList -> pseudoRulesFor(item.item) + pseudoRulesFor(item.separator) + Pair(item, createSimpleListRuleName(item.owningRule.name))
                     else -> error("Internal Error: subtype of ${ListOfItems::class.simpleName} ${item::class.simpleName} not handled")
                 }
 

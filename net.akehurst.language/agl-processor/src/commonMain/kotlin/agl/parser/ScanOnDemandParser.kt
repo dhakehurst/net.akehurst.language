@@ -174,7 +174,7 @@ internal class ScanOnDemandParser(
         }
     */
     private fun findNextExpectedAfterError2(
-        rp:RuntimeParser,
+        rp: RuntimeParser,
         input: InputFromString,
         possibleEndOfText: Set<LookaheadSet>
     ): Pair<InputLocation, Set<RuntimeRule>> {
@@ -204,8 +204,15 @@ internal class ScanOnDemandParser(
                                             Pair(lg.nextInputPosition, expected.toSet())
                                         }
                                     }
+
                                     else -> {
-                                        val rtLh = lg.runtimeState.runtimeLookaheadSet
+                                        val rtLh = when (tr.action) {
+                                            Transition.ParseAction.WIDTH -> lg.runtimeState.runtimeLookaheadSet
+                                            Transition.ParseAction.EMBED -> TODO()
+                                            Transition.ParseAction.HEIGHT -> prev!!.runtimeState.runtimeLookaheadSet
+                                            Transition.ParseAction.GRAFT -> prev!!.runtimeState.runtimeLookaheadSet
+                                            Transition.ParseAction.GOAL ->prev!!.runtimeState.runtimeLookaheadSet
+                                        }
                                         val expected = tr.lookahead
                                             .flatMap { lh -> possibleEndOfText.flatMap { eot -> rtLh.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }
                                             .filter { it.isEmptyRule.not() }
@@ -217,20 +224,28 @@ internal class ScanOnDemandParser(
                                     }
                                 }
                             }
+
                             else -> TODO("")
                         }
                     }.toSet()
                     errors
                 }
+
                 else -> {
                     //FIXME: error option may not be correct, need to find the original
                     val prevPrev = remainingHead
                         ?: graph.treeData.createGrowingNodeIndex(rp.stateSet.startState, setOf(LookaheadSet.EMPTY), 0, 0, 0, 0)
                     val beforeRuntimeCheck = lg.runtimeState.transitions(prevPrev.runtimeState.state, prev!!.runtimeState.state)
                     if (beforeRuntimeCheck.isNotEmpty()) {
-                        val rtLh = lg.runtimeState.runtimeLookaheadSet
                         val pairs: Set<Pair<Int, Set<RuntimeRule>>> = beforeRuntimeCheck.mapNotNull { tr ->
-                            val runtimeGuardPassed = tr.runtimeGuard(tr, prev, prev.runtimeState.state)
+                            val rtLh = when (tr.action) {
+                                Transition.ParseAction.WIDTH -> lg.runtimeState.runtimeLookaheadSet
+                                Transition.ParseAction.EMBED -> TODO()
+                                Transition.ParseAction.HEIGHT -> prev!!.runtimeState.runtimeLookaheadSet
+                                Transition.ParseAction.GRAFT -> prev!!.runtimeState.runtimeLookaheadSet
+                                Transition.ParseAction.GOAL ->prev!!.runtimeState.runtimeLookaheadSet
+                            }
+                            val runtimeGuardPassed = tr.runtimeGuard.invoke( prev.numNonSkipChildren)
                             errorPairs(input, lg, tr, possibleEndOfText, rtLh, runtimeGuardPassed)
                         }.toSet()
                         pairs
@@ -242,13 +257,18 @@ internal class ScanOnDemandParser(
                         ntp.flatMap { tpt ->
                             val prevPrev2 = tpt.previous?.runtimeState ?: RuntimeState(rp.stateSet.startState, setOf(LookaheadSet.EMPTY))
                             val trs2 = lg2.runtimeState.transitions(prevPrev2.state, prev2.runtimeState.state)
-                            val rtLh = lg2.runtimeState.runtimeLookaheadSet
                             trs2.mapNotNull { tr2 ->
-                                val runtimeGuardPassed = tr2.runtimeGuard(tr2, prev, prev.runtimeState.state)
-                                errorPairs(input, lg, tr2, possibleEndOfText, rtLh,runtimeGuardPassed)
+                                val rtLh = when (tr2.action) {
+                                    Transition.ParseAction.WIDTH -> lg2.runtimeState.runtimeLookaheadSet
+                                    Transition.ParseAction.EMBED -> TODO()
+                                    Transition.ParseAction.HEIGHT -> prev2!!.runtimeState.runtimeLookaheadSet
+                                    Transition.ParseAction.GRAFT -> prev2!!.runtimeState.runtimeLookaheadSet
+                                    Transition.ParseAction.GOAL ->prev2!!.runtimeState.runtimeLookaheadSet
+                                }
+                                val runtimeGuardPassed = tr2.runtimeGuard.invoke( prev2.numNonSkipChildren)
+                                errorPairs(input, lg, tr2, possibleEndOfText, rtLh, runtimeGuardPassed)
                             }
                         }
-
                     }
                 }
             }
@@ -268,7 +288,7 @@ internal class ScanOnDemandParser(
         tr: Transition,
         possibleEndOfText: Set<LookaheadSet>,
         runtimeLookahead: Set<LookaheadSet>,
-        runtimeGuardPassed:Boolean
+        runtimeGuardPassed: Boolean
     ): Pair<Int, Set<RuntimeRule>>? {
         return when (tr.action) {
             Transition.ParseAction.GOAL -> null
@@ -285,6 +305,7 @@ internal class ScanOnDemandParser(
                             Pair(lg.nextInputPosition, expected.toSet())
                         }
                     }
+
                     else -> {
                         val expected = tr.lookahead
                             .flatMap { lh -> possibleEndOfText.flatMap { eot -> runtimeLookahead.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }
@@ -297,13 +318,15 @@ internal class ScanOnDemandParser(
                     }
                 }
             }
+
             else -> when {
-                runtimeGuardPassed ->{
+                runtimeGuardPassed -> {
                     val expected =
                         tr.lookahead.flatMap { lh -> possibleEndOfText.flatMap { eot -> runtimeLookahead.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }.toSet()
                     val pos = lg.nextInputPosition
                     Pair(pos, expected)
                 }
+
                 else -> {
                     val expected =
                         tr.lookahead.flatMap { lh -> possibleEndOfText.flatMap { eot -> runtimeLookahead.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }.toSet()

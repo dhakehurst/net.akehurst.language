@@ -61,7 +61,7 @@ internal class RuntimeTransitionCalculator(
                                 (sourceState.isGoal && this.stateSet.isSkip) -> {
                                     // must be end of skip. TODO: can do something better than this!
                                     val to = sourceState
-                                    __transitions.add(Transition(sourceState, to, Transition.ParseAction.GOAL, setOf(Lookahead.EMPTY)) { _, _ -> true })
+                                    __transitions.add(Transition(sourceState, to, Transition.ParseAction.GOAL, setOf(Lookahead.EMPTY)))
                                 }
 
                                 else -> {
@@ -244,21 +244,20 @@ internal class RuntimeTransitionCalculator(
         val lookaheadInfo = Lookahead(wi.lookaheadSet.lhs(this.stateSet), LookaheadSet.EMPTY)
         val to = this.stateSet.fetchCompatibleOrCreateState(listOf(rp))
         // upLookahead and prevGuard are unused
-        return Transition(sourceState, to, wi.action, setOf(lookaheadInfo),  Transition.defaultRuntimeGuard)
+        return Transition(sourceState, to, wi.action, setOf(lookaheadInfo))
     }
 
     private fun createHeightTransition3(sourceState: ParserState, hg: HeightGraftInfo): Transition {
         val to = this.stateSet.fetchCompatibleOrCreateState(hg.parentNext)
         val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), it.up.lhs(this.stateSet)) }.toSet()
-        val trs = Transition(sourceState, to, Transition.ParseAction.HEIGHT, lookaheadInfo,  Transition.defaultRuntimeGuard)
+        val trs = Transition(sourceState, to, Transition.ParseAction.HEIGHT, lookaheadInfo)
         return trs
     }
 
     private fun createGraftTransition3(sourceState: ParserState, hg: HeightGraftInfo): Transition {
-        val runtimeGuard = Transition.graftRuntimeGuard
         val to = this.stateSet.fetchCompatibleOrCreateState(hg.parentNext)
         val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), LookaheadSet.EMPTY) }.toSet()
-        val trs = Transition(sourceState, to, Transition.ParseAction.GRAFT, lookaheadInfo, runtimeGuard)
+        val trs = Transition(sourceState, to, Transition.ParseAction.GRAFT, lookaheadInfo)
         return trs
     }
 
@@ -267,7 +266,7 @@ internal class RuntimeTransitionCalculator(
         //// must compute lookaheadInfo, because for embedded grammars, guard for completion of GOAL is not necessarily EOT
         //val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), LookaheadSet.EMPTY) }.toSet()
         val lookaheadInfo = hg.lhs.map { Lookahead(LookaheadSet.EOT, LookaheadSet.EMPTY) }.toSet()
-        val trs = Transition(sourceState, to, Transition.ParseAction.GOAL, lookaheadInfo, Transition.defaultRuntimeGuard)
+        val trs = Transition(sourceState, to, Transition.ParseAction.GOAL, lookaheadInfo)
         return trs
     }
 

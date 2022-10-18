@@ -457,10 +457,10 @@ internal class RuntimeParser(
         }
     }
 
-    // Use previous runtimeLookahead
+
     private fun doGoal(toProcess: ParseGraph.Companion.ToProcessTriple, transition: Transition, possibleEndOfText: Set<LookaheadSet>, noLookahead: Boolean): Boolean {
-        return if (transition.runtimeGuard(transition, toProcess.previous!!, toProcess.previous.runtimeState.state)) {
-            val runtimeLhs = toProcess.growingNode.runtimeState.runtimeLookaheadSet
+        return if (transition.runtimeGuard.invoke(toProcess.previous!!.numNonSkipChildren)) {
+            val runtimeLhs = toProcess.growingNode.runtimeState.runtimeLookaheadSet //FIXME: Use previous runtimeLookahead ?
             val lhWithMatch = transition.lookahead.filter { lh -> //TODO: should always be only one I think!!
                 possibleEndOfText.any { eot ->
                     runtimeLhs.any { rt ->
@@ -574,7 +574,7 @@ internal class RuntimeParser(
 
     // Use previous runtimeLookahead
     private fun doGraft(toProcess: ParseGraph.Companion.ToProcessTriple, transition: Transition, possibleEndOfText: Set<LookaheadSet>, noLookahead: Boolean): Boolean {
-        return if (transition.runtimeGuard(transition, toProcess.previous!!, toProcess.previous.runtimeState.state)) {
+        return if (transition.runtimeGuard.invoke(toProcess.previous!!.numNonSkipChildren)) {
             val runtimeLhs = toProcess.previous.runtimeState.runtimeLookaheadSet
             val lhWithMatch = transition.lookahead.filter { lh -> //TODO: should always be only one I think!!
                 possibleEndOfText.any { eot ->

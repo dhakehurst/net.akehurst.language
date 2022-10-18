@@ -62,8 +62,7 @@ internal class test_Transition : test_AutomatonUtilsAbstract() {
             from = s1,
             to = s2,
             action = Transition.ParseAction.HEIGHT,
-            lookahead = setOf(Lookahead(LHS(EOT, d).lhs(stateSet), LHS(EOT, d).lhs(stateSet)), Lookahead(LHS(a).lhs(stateSet), LHS(a).lhs(stateSet))),
-            runtimeGuard = Transition.defaultRuntimeGuard
+            lookahead = setOf(Lookahead(LHS(EOT, d).lhs(stateSet), LHS(EOT, d).lhs(stateSet)), Lookahead(LHS(a).lhs(stateSet), LHS(a).lhs(stateSet)))
         )
         val tr2 = Transition(
             from = s1,
@@ -73,8 +72,7 @@ internal class test_Transition : test_AutomatonUtilsAbstract() {
                 Lookahead(LHS(EOT).lhs(stateSet), LHS(EOT).lhs(stateSet)),
                 Lookahead(LHS(d).lhs(stateSet), LHS(d).lhs(stateSet)),
                 Lookahead(LHS(a).lhs(stateSet), LHS(a).lhs(stateSet))
-            ),
-            runtimeGuard = Transition.defaultRuntimeGuard
+            )
         )
 
         val group = mutableSetOf(tr1, tr2).groupBy {
