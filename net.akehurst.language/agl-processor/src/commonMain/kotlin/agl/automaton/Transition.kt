@@ -49,7 +49,7 @@ internal class Transition(
             val min = trans.to.firstRule.rhs.multiMin
             val max = trans.to.firstRule.rhs.multiMax
 
-            override fun invoke(numNonSkipChildren: Int): Boolean = -1 == max || numNonSkipChildren + 1 <= max
+            override fun invoke(numNonSkipChildren: Int): Boolean = -1 == max || numNonSkipChildren + 1 < max
 
             override fun toString(): String = "ToItemMulti{n <= $max}"
         }
@@ -67,7 +67,7 @@ internal class Transition(
             val min = trans.to.firstRule.rhs.multiMin
             val max = trans.to.firstRule.rhs.multiMax
 
-            override fun invoke(numNonSkipChildren: Int): Boolean = -1 == max || (numNonSkipChildren / 2) + 1 <= max
+            override fun invoke(numNonSkipChildren: Int): Boolean = -1 == max || (numNonSkipChildren / 2) + 1 < max
 
             override fun toString(): String = "ToItemSList{n <= $max}"
         }
@@ -76,7 +76,7 @@ internal class Transition(
             val min = trans.to.firstRule.rhs.multiMin
             val max = trans.to.firstRule.rhs.multiMax
 
-            override fun invoke(numNonSkipChildren: Int): Boolean = -1 == max || (numNonSkipChildren / 2) + 1 <= max
+            override fun invoke(numNonSkipChildren: Int): Boolean = -1 == max || (numNonSkipChildren / 2) + 1 < max
 
             override fun toString(): String = "ToSeparatorSList{n <= $max}"
         }

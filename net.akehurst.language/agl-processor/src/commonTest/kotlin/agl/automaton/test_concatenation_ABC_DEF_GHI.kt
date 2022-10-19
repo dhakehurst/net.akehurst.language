@@ -16,16 +16,10 @@
 
 package net.akehurst.language.agl.automaton
 
-import agl.automaton.AutomatonTest
-import agl.automaton.automaton
-import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
     // S = ABC DEF GHI

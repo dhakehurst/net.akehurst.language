@@ -23,12 +23,12 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_multi_3_5_literal : test_ScanOnDemandParserAbstract() {
+internal class test_multi_4_literal : test_ScanOnDemandParserAbstract() {
 
-    // S = 'a'3..5
+    // S = 'a'4
     private companion object {
         val rrs = runtimeRuleSet {
-            multi("S",3,5,"'a'")
+            multi("S",4,4,"'a'")
             literal("'a'","a")
         }
         val goal = "S"
@@ -41,7 +41,7 @@ internal class test_multi_3_5_literal : test_ScanOnDemandParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+            parseError(InputLocation(0,1,1,1),"^", setOf("'a'"))
         ),issues)
     }
 
@@ -52,7 +52,7 @@ internal class test_multi_3_5_literal : test_ScanOnDemandParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"a^",setOf("'a'"))
+            parseError(InputLocation(1,2,1,1),"a^", setOf("'a'"))
         ),issues)
     }
 
@@ -63,47 +63,41 @@ internal class test_multi_3_5_literal : test_ScanOnDemandParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(2,3,1,1),"aa^",setOf("'a'"))
+            parseError(InputLocation(2,3,1,1),"aa^", setOf("'a'"))
         ),issues)
     }
 
     @Test
-    fun aaa() {
+    fun aaa_fails() {
         val sentence = "aaa"
 
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(3,4,1,1),"aaa^", setOf("'a'"))
+        ),issues)
+    }
+
+
+    @Test
+    fun aaaa() {
+        val sentence = "aaaa"
+
         val expected = """
-            S { 'a' 'a' 'a' }
+            S { 'a' 'a' 'a' 'a' }
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
-    fun a4() {
-        val sentence = "a".repeat(4)
+    fun aaaaa_fails() {
+        val sentence = "aaaaa"
 
-        val expected = "S { "+"'a' ".repeat(4)+" }"
-
-        super.test(rrs, goal, sentence, 1, expected)
-    }
-
-    @Test
-    fun a5() {
-        val sentence = "a".repeat(5)
-
-        val expected = "S { "+"'a' ".repeat(5)+" }"
-
-        super.test(rrs, goal, sentence, 1, expected)
-    }
-
-    @Test
-    fun a6_fails() {
-        val sentence = "a".repeat(6)
-
-        val (sppt,issues)=super.testFail(rrs, Companion.goal, sentence,1)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(5,6,1,1),"aaaaa^a",setOf("<EOT>"))
+            parseError(InputLocation(4,5,1,1),"aaaa^a", setOf("<EOT>"))
         ),issues)
     }
 }

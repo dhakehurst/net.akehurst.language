@@ -16,8 +16,6 @@
 
 package net.akehurst.language.agl.automaton
 
-import agl.automaton.AutomatonTest
-import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
@@ -52,21 +50,21 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
-            val s0 = state(RP(G, o0, SOR))
-            val s1 = state(RP(a, o0, EOR))
-            val s2 = state(RP(S, o0, p1))
-            val s3 = state(RP(b, o0, EOR))
-            val s4 = state(RP(S, o0, p2))
-            val s5 = state(RP(c, o0, EOR))
-            val s6 = state(RP(S, o0, EOR))
-            val s7 = state(RP(G, o0, EOR))
+            state(RP(G, o0, SOR))
+            state(RP(a, o0, EOR))
+            state(RP(S, o0, p1))
+            state(RP(b, o0, EOR))
+            state(RP(S, o0, p2))
+            state(RP(c, o0, EOR))
+            state(RP(S, o0, EOR))
+            state(RP(G, o0, EOR))
 
             transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(a); lhg(b) }
             transition(WIDTH) { ctx(G, o0, SOR); src(S, o0, p1); tgt(b); lhg(c) }
-            transition(WIDTH) { ctx(G, o0, SOR); src(S, o0, p2); tgt(c); lhg(EOT) }
+            transition(WIDTH) { ctx(G, o0, SOR); src(S, o0, p2); tgt(c); lhg(RT) }
             transition(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(EOT) }
-            transition(GRAFT) { ctx(S, o0, p2); src(c); tgt(S); lhg(EOT); gpg(S,o0,p2) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(S,o0,p1); lhg(setOf(b), setOf(EOT)) }
+            transition(GRAFT) { ctx(S, o0, p2); src(c); tgt(S); lhg(RT); gpg(S,o0,p2) }
+            transition(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(S,o0,p1); lhg(setOf(b), setOf(RT,EOT)) }
             transition(GRAFT) { ctx(S, o0, p1); src(b); tgt(S,o0,p2); lhg(c); gpg(S,o0,p1) }
         }
         AutomatonTest.assertEquals(expected, actual)
@@ -130,6 +128,8 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
         println("--No Build--")
         println(rrs_noBuild.usedAutomatonToString("S"))
 
-        AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild)
+        AutomatonTest.assertMatches(automaton_preBuild, automaton_noBuild, AutomatonTest.MatchConfiguration(
+            in_actual_substitue_lookahead_RT_with = setOf(EOT)
+        ))
     }
 }

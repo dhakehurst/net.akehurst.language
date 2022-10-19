@@ -32,7 +32,7 @@ class TypeModelFromGrammar(
     }
 
     // Rule.name -> ElementType
-    private val _ruleToType = mutableMapOf<String, ElementType>()
+    private val _ruleToType = mutableMapOf<String, RuleType>()
     private val _typeForRuleItem = mutableMapOf<RuleItem, RuleType>()
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredRuleType, String>, Int>()
     private val _pseudoRuleNameGenerator = PseudoRuleNames(grammar)
@@ -63,6 +63,17 @@ class TypeModelFromGrammar(
         }
     }
 
+    private fun stringTypeForRuleName(name: String): PrimitiveType {
+        val existing = _ruleToType[name]
+        return if (null == existing) {
+            val type = PrimitiveType.STRING
+            _ruleToType[name] = type //halt recursion
+            type
+        } else {
+            existing as PrimitiveType
+        }
+    }
+
     private fun findOrCreateElementType(name: String): ElementType {
         val existing = _ruleToType[name]
         return if (null == existing) {
@@ -70,9 +81,24 @@ class TypeModelFromGrammar(
             _ruleToType[name] = type //halt recursion
             type
         } else {
-            existing
+            existing as ElementType
         }
     }
+
+    private fun createElementType(name: String): ElementType {
+        val existing = _ruleToType[name]
+        return if (null == existing) {
+            val type = ElementType(name)
+            _ruleToType[name] = type //halt recursion
+            type
+        } else {
+            error("Internal Error: created duplicate ElementType for '$name'")
+        }
+    }
+
+    private fun findElementType(name: String): ElementType? = _ruleToType[name] as ElementType?
+
+
     //fun derive(): TypeModel {
     //    for (rule in _grammar.allRule) {
     //        if (rule.isSkip.not() && rule.isLeaf.not()) {
@@ -197,11 +223,21 @@ class TypeModelFromGrammar(
         val t = populateTypeForChoice(choiceRule.rhs as Choice, choiceRule.name) as RuleType
         return when (t) {
             is PrimitiveType -> when (t) {
-                PrimitiveType.ANY -> TODO()
-                PrimitiveType.NOTHING -> TODO()
-                PrimitiveType.STRING -> findOrCreateElementType(choiceRule.name).also {
-                    createUniquePropertyDeclaration(it, UNNAMED_PRIMITIVE_PROPERTY_NAME, t, false, 0)
+                PrimitiveType.ANY -> {
+                    val existing = findElementType(choiceRule.name)
+                        if(null==existing) {
+                            val nt = createElementType(choiceRule.name)
+                            createUniquePropertyDeclaration(nt, UNNAMED_PRIMITIVE_PROPERTY_NAME, t, false, 0)
+                            nt
+                        } else {
+                            existing
+                        }
                 }
+                PrimitiveType.NOTHING -> TODO()
+                PrimitiveType.STRING -> stringTypeForRuleName(choiceRule.name)
+                //PrimitiveType.STRING -> findOrCreateElementType(choiceRule.name).also {
+                //    createUniquePropertyDeclaration(it, UNNAMED_PRIMITIVE_PROPERTY_NAME, t, false, 0)
+                //}
 
                 else -> error("Internal error, unhandled PrimitiveType $t")
             }

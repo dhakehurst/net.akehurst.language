@@ -24,7 +24,7 @@ import kotlin.test.fail
 object TypeModelTest {
 
     fun assertEquals(expected: TypeModel, actual: TypeModel) {
-        assertEquals(expected.types.size, actual.types.size)
+        assertEquals(expected.types.size, actual.types.size,"number of types in model is different")
         for (k in expected.types.keys) {
             val expEl = expected.types[k]
             val actEl = actual.types[k]

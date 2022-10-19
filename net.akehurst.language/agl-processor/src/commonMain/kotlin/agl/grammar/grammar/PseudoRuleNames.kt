@@ -56,7 +56,7 @@ internal class PseudoRuleNames(val grammar: Grammar) {
 
                 is ListOfItems -> when (item) {
                     is SimpleList -> pseudoRulesFor(item.item) + Pair(item, createSimpleListRuleName(item.owningRule.name))
-                    is SeparatedList -> pseudoRulesFor(item.item) + pseudoRulesFor(item.separator) + Pair(item, createSimpleListRuleName(item.owningRule.name))
+                    is SeparatedList -> pseudoRulesFor(item.item) + pseudoRulesFor(item.separator) + Pair(item, createSeparatedListRuleName(item.owningRule.name))
                     else -> error("Internal Error: subtype of ${ListOfItems::class.simpleName} ${item::class.simpleName} not handled")
                 }
 

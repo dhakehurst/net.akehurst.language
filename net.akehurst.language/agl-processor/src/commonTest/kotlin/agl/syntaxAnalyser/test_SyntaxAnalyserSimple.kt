@@ -148,9 +148,7 @@ class test_SyntaxAnalyserSimple {
         val expected = asmSimple() {
             root("S") {
                 propertyString("ID", "a")
-                propertyElement("type") {
-                    propertyUnnamedString("A")
-                }
+                propertyString("type", "A")
             }
         }.rootElements[0]
 
@@ -214,7 +212,7 @@ class test_SyntaxAnalyserSimple {
         assertEquals(emptyList(), result2.issues)
         val actual = result2.asm!!.rootElements[0]
 
-        val expected = asmSimple() {
+        val expected = asmSimple {
             root("S") {
                 propertyUnnamedString("a")
             }
@@ -704,12 +702,10 @@ class test_SyntaxAnalyserSimple {
         assertEquals(emptyList(), result1.issues)
         val actual1 = result1.asm!!.rootElements[0]
 
-        val expected1 = asmSimple() {
+        val expected1 = asmSimple {
             root("S") {
                 propertyString("a", "a")
-                propertyTuple("\$group") {
-                    propertyUnnamedString("b")
-                }
+                propertyString("\$group","b")
                 propertyString("e", "e")
             }
         }.rootElements[0]
@@ -760,9 +756,7 @@ class test_SyntaxAnalyserSimple {
         val expected2 = asmSimple {
             root("S") {
                 propertyString("a", "a")
-                propertyTuple("\$group") {
-                    propertyUnnamedString("d")
-                }
+                propertyString("\$group","d")
                 propertyString("e", "e")
             }
         }.rootElements[0]

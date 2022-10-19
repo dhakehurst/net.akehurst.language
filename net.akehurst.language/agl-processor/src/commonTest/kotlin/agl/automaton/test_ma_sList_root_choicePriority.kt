@@ -16,8 +16,6 @@
 
 package net.akehurst.language.agl.automaton
 
-import agl.automaton.AutomatonTest
-import agl.automaton.automaton
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
@@ -71,14 +69,14 @@ internal class test_ma_sList_root_choicePriority : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
-            val s0 = state(RP(G, o0, SOR))     /* G = . S */
-            val s1 = state(RP(v, o0, EOR))     /* v .     */
-            val s2 = state(RP(R, o0, EOR))     /* R = v .     */
-            val s3 = state(RP(E, o0, EOR))     /* E = R . */
-            val s4 = state(RP(S, o0, EOR))     /* S = E . */
-            val s5 = state(RP(rA, OLI, PLS))   /* A = [ E . 'a'... ]2+ */
-            val s6 = state(RP(rM, OLI, PLS))   /* M = [ E . 'm'... ]2+ */
-            val s7 = state(RP(G, o0, EOR))     /* G = . S   */
+            state(RP(G, o0, SOR))     /* G = . S */
+            state(RP(v, o0, EOR))     /* v .     */
+            state(RP(R, o0, EOR))     /* R = v . */
+            state(RP(E, o0, EOR))     /* E = R . */
+            state(RP(S, o0, EOR))     /* S = E . */
+            state(RP(rA, OLI, PLS))   /* A = [ E . 'a'... ]2+ */
+            state(RP(rM, OLI, PLS))   /* M = [ E . 'm'... ]2+ */
+            state(RP(G, o0, EOR))     /* G = . S   */
 
             transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(v); lhg(setOf(EOT, m, a)) }
             transition(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(setOf(EOT)) }
@@ -87,7 +85,6 @@ internal class test_ma_sList_root_choicePriority : test_AutomatonAbstract() {
             transition(HEIGHT) { ctx(G, o0, SOR); src(E); tgt(rM, OLI, PLS); lhg(setOf(m), setOf(EOT, m, a)) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(v); tgt(R); lhg(m, m); lhg(EOT, EOT); lhg(a, a) }
             transition(HEIGHT) { ctx(G, o0, SOR); src(E); tgt(S); lhg(EOT, EOT); }
-
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -283,11 +280,11 @@ internal class test_ma_sList_root_choicePriority : test_AutomatonAbstract() {
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("v", "vav", "vavav", "vmv", "vmvmv", "vavmv", "vmvav")
         for (sen in sentences) {
-//            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
-//            if (result.issues.isNotEmpty()) result.issues.forEach { println("$sen: $it") }
+            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            if (result.issues.isNotEmpty()) result.issues.forEach { println("$sen: $it") }
         }
         val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)
-        //val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
+        val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
 
         println("--No Build Run--")
         val result_noBuild = ScanOnDemandParser(rrs_noBuild).parseForGoal("S", "vmvav", AutomatonKind.LOOKAHEAD_1)
@@ -302,6 +299,6 @@ internal class test_ma_sList_root_choicePriority : test_AutomatonAbstract() {
         println(rrs_preBuild.usedAutomatonToString("S"))
 
 
-        //AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild)
+        AutomatonTest.assertEquals(automaton_preBuild,automaton_noBuild)
     }
 }

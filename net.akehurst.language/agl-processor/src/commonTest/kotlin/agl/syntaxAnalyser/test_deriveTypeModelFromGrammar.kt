@@ -160,9 +160,7 @@ class test_deriveTypeModelFromGrammar {
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel {
-            elementType("S") {
-                propertyUnnamedPrimitiveType(PrimitiveType.STRING,false,0)
-            }
+            stringTypeFor("S")
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -185,17 +183,9 @@ class test_deriveTypeModelFromGrammar {
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel {
-            elementType("S") {
-                subTypes("L", "M")
-            }
-            elementType("L") {
-                //superType("S")
-                propertyUnnamedPrimitiveType(PrimitiveType.STRING, false,0)
-            }
-            elementType("M") {
-                //superType("S")
-                propertyUnnamedPrimitiveType(PrimitiveType.STRING,false,0)
-            }
+            stringTypeFor("S")
+            stringTypeFor("L")
+            stringTypeFor("M")
         }
 
         TypeModelTest.assertEquals(expected, actual)

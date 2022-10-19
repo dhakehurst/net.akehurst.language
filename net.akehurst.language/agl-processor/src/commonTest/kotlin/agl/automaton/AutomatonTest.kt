@@ -1,13 +1,38 @@
-package agl.automaton
+/**
+ * Copyright (C) 2020 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import net.akehurst.language.agl.automaton.*
-import net.akehurst.language.agl.runtime.structure.RulePosition
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
+package net.akehurst.language.agl.automaton
+
+import net.akehurst.language.agl.runtime.structure.*
 import kotlin.test.fail
 
 internal object AutomatonTest {
+
+    data class MatchConfiguration(
+        val in_actual_substitue_lookahead_RT_with:Set<RuntimeRule>?=null,
+        val no_lookahead_compare : Boolean = false
+    )
+
+    private fun <E> Set<E>.replace(anyOf:Set<E>, withReplacement:Set<E>) = this.flatMap {
+        if (anyOf.contains(it)) {
+            withReplacement
+        } else {
+            setOf(it)
+        }
+    }.toSet()
 
     private fun <E> Set<E>.matches(other: Set<E>, matches: (t: E, o: E) -> Boolean): Boolean {
         val thisList = this.toList()
@@ -56,28 +81,31 @@ internal object AutomatonTest {
     }
 
     fun assertEquals(expected: ParserStateSet, actual: ParserStateSet) {
+        assertMatches(expected,actual, MatchConfiguration())
+    }
+
+    fun assertMatches(expected: ParserStateSet, actual: ParserStateSet, config:MatchConfiguration) {
         val expected_states = expected.allBuiltStates.toSet()
         val actual_states = actual.allBuiltStates.toSet()
 
         assertMatches(expected, actual, "allBuiltStates", expected_states, actual_states) { t, o -> t.matches(o) }
-        assertMatches(expected, actual, "allBuiltTransitions", expected.allBuiltTransitions.toSet(), actual.allBuiltTransitions.toSet()) { t, o -> t.matches(o) }
+        assertMatches(expected, actual, "allBuiltTransitions", expected.allBuiltTransitions.toSet(), actual.allBuiltTransitions.toSet()) { t, o -> t.matches(o,config) }
 
         for (exp_state in expected_states) {
             val act_state = actual_states.first { it.matches(exp_state) }
             for (exp_trans in exp_state.outTransitions.allBuiltTransitions) {
-                val act_trans = act_state.outTransitions.allBuiltTransitions.first { it.matches(exp_trans) }
+                val act_trans = act_state.outTransitions.allBuiltTransitions.first { exp_trans.matches(it,config) }
                 assertMatches(exp_trans, act_trans, "context", exp_trans.context, act_trans.context) { t, o -> t.matches(o) }
             }
         }
     }
 
-
     private fun ParserState.matches(other: ParserState): Boolean = this.rulePositions.toSet().matches(other.rulePositions.toSet()) { t, o -> t.matches(o) }
-    private fun Transition.matches(other: Transition): Boolean = when {
+    private fun Transition.matches(other: Transition, config: MatchConfiguration): Boolean = when {
         this.from.matches(other.from).not() -> false
         this.to.matches(other.to).not() -> false
         this.action != other.action -> false
-        this.lookahead.matches(other.lookahead) { t, o -> t.matches(o) }.not() -> false
+        (!config.no_lookahead_compare && this.lookahead.matches(other.lookahead) { t, o -> t.matches(o,config) }.not()) -> false
         else -> true
     }
 
@@ -108,17 +136,17 @@ internal object AutomatonTest {
         else -> this.items.all { t -> other.items.any { o -> t.name == o.name && t.value == o.value } }
     }
 
-    private fun Lookahead.matches(other: Lookahead): Boolean = when {
-        this.guard.matches(other.guard).not() -> false
-        this.up.matches(other.up).not() -> false
+    private fun Lookahead.matches(other: Lookahead,config: MatchConfiguration): Boolean = when {
+        this.guard.matches(other.guard,config).not() -> false
+        this.up.matches(other.up,config).not() -> false
         else -> true
     }
 
-    private fun LookaheadSet.matches(other: LookaheadSet): Boolean = when {
-        this.includesEOT != other.includesEOT -> false
-        this.includesRT != other.includesRT -> false
-        this.matchANY != other.matchANY -> false
-        else -> this.content.matches(other.content) { t, o -> t.matches(o) }
+    private fun LookaheadSet.matches(other: LookaheadSet,config: MatchConfiguration): Boolean {
+        val substituted =config.in_actual_substitue_lookahead_RT_with?.let {
+            other.fullContent.replace(setOf(RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD), config.in_actual_substitue_lookahead_RT_with)
+        } ?: other.fullContent
+        return this.fullContent.matches(substituted) { t, o -> t.matches(o) }
     }
 
     fun assertEquals(expected: ParserState, actual: ParserState) {

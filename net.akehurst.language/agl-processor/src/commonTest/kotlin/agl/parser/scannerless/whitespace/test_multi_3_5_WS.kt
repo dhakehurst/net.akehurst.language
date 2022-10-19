@@ -156,7 +156,7 @@ internal class test_multi_3_5_WS : test_ScanOnDemandParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(11,12,1,1)," a a a a a ^a ",setOf("<EOT>"))
+            parseError(InputLocation(11,12,1,1),"...a a a a a ^a ",setOf("<EOT>"))
         ),issues)
     }
 }

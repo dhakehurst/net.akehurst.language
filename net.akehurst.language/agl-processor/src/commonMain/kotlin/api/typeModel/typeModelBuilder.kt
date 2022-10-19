@@ -31,7 +31,7 @@ fun typeModel(init: TypeModelBuilder.() -> Unit): TypeModel {
 @TypeModelDslMarker
 class TypeModelBuilder {
 
-    private val _types = mutableMapOf<String, ElementType>()
+    private val _types = mutableMapOf<String, RuleType>()
     private fun findOrCreateType(name: String): ElementType {
         val existing = _types[name]
         return if (null == existing) {
@@ -39,13 +39,17 @@ class TypeModelBuilder {
             _types[name] = t
             t
         } else {
-            existing
+            existing as ElementType
         }
     }
 
     private val _model = object : TypeModel {
         override val types = _types
         override fun findType(name: String): RuleType? = findOrCreateType(name)
+    }
+
+    fun stringTypeFor(name: String) {
+        _types[name] = PrimitiveType.STRING
     }
 
     fun elementType(name: String, init: ElementTypeBuilder.() -> Unit = {}): ElementType {
@@ -97,6 +101,11 @@ abstract class StructuredTypeBuilder(
     fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
         val itemType = _model.findType(itemTypeName)!!
         val separatorType = _model.findType(separatorTypeName)!!
+        return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
+    }
+
+    fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorType: PrimitiveType, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
+        val itemType = _model.findType(itemTypeName)!!
         return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
     }
 

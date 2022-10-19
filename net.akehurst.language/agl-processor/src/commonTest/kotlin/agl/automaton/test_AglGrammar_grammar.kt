@@ -16,8 +16,6 @@
 
 package net.akehurst.language.agl.automaton
 
-import agl.automaton.AutomatonTest
-import agl.automaton.automaton
 import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser

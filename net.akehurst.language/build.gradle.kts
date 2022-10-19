@@ -19,7 +19,7 @@ import com.github.gmazzo.gradle.plugins.BuildConfigExtension
 
 plugins {
     kotlin("multiplatform") version ("1.7.20") apply false
-    //id("org.jetbrains.dokka") version ("1.7.0") apply false
+    id("org.jetbrains.dokka") version ("1.7.20") apply false
     id("com.github.gmazzo.buildconfig") version("3.1.0") apply false
     id("nu.studer.credentials") version ("3.0")
     id("net.akehurst.kotlin.gradle.plugin.exportPublic") version("1.7.20") apply false

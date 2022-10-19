@@ -208,7 +208,7 @@ internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"aaaaa^a",setOf("<EOT>"))
+            parseError(InputLocation(5,6,1,1),"aaaaa^a",setOf("<EOT>"))
         ),issues)
     }
 }

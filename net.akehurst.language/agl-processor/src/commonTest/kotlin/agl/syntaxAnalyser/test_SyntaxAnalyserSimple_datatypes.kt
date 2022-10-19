@@ -109,7 +109,7 @@ class test_SyntaxAnalyserSimple_datatypes {
                 propertyElementTypeOf("typeArguments","typeArguments",true,1)
             }
             elementType("typeArguments") {
-                propertyListType("typeReference",PrimitiveType.ANY,false,1)
+                propertyListSeparatedTypeOf("typeReference","typeReference",PrimitiveType.STRING,false,1)
             }
         }
 

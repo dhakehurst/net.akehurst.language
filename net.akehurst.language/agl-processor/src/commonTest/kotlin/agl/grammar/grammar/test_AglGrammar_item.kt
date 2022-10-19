@@ -316,9 +316,7 @@ class test_AglGrammar_item {
             multiplicity|3 { range {
               rangeUnBraced {
                 POSITIVE_INTEGER : '2'
-                rangeMax {
-                  rangeMaxUnbounded {'+'}
-                }
+                rangeMaxOpt { rangeMax { rangeMaxUnbounded { '+' } } }
               }
             } }
         """.trimIndent()
@@ -337,9 +335,7 @@ class test_AglGrammar_item {
               rangeBraced {
                 '{'
                 POSITIVE_INTEGER : '2'
-                rangeMax {
-                  rangeMaxUnbounded {'+'}
-                }
+                rangeMaxOpt { rangeMax { rangeMaxUnbounded { '+' } } }
                 '}'
               }
             } }
@@ -358,9 +354,9 @@ class test_AglGrammar_item {
             multiplicity|3 { range {
               rangeUnBraced {
                 POSITIVE_INTEGER : '2'
-                rangeMax {
-                  rangeMaxBounded {'..' POSITIVE_INTEGER  : '5' }
-                }
+                rangeMaxOpt { rangeMax {
+                  rangeMaxBounded {'..' POSITIVE_INTEGER_GT_ZERO  : '5' }
+                } }
               }
             } }
         """.trimIndent()
@@ -379,9 +375,9 @@ class test_AglGrammar_item {
               rangeBraced {
                 '{'
                 POSITIVE_INTEGER : '2'
-                rangeMax {
-                  rangeMaxBounded {'..' POSITIVE_INTEGER  : '5' }
-                }
+                rangeMaxOpt { rangeMax {
+                  rangeMaxBounded {'..' POSITIVE_INTEGER_GT_ZERO  : '5' }
+                } }
                 '}'
               }
             } }

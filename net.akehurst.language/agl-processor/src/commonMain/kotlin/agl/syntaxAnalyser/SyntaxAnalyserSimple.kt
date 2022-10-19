@@ -86,20 +86,20 @@ class SyntaxAnalyserSimple(
         val value = this.createValue(sppt.root, path, context?.rootScope)
         val rootEl = if (null == value) {
             val el = _asm!!.createElement(path, sppt.root.name)
-            val pName = "value" //TODO: maybe a better option
+            val pName = TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
             this.setPropertyOrReference(el, pName, value)
             el
         } else when (value) {
             is String -> {
                 val el = _asm!!.createElement(path, sppt.root.name)
-                val pName = "value" //TODO: maybe a better option
+                val pName = TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
                 this.setPropertyOrReference(el, pName, value)
                 el
             }
 
             is List<*> -> {
                 val el = _asm!!.createElement(path, sppt.root.name)
-                val pName = "value" //TODO: maybe a better option
+                val pName = TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME
                 this.setPropertyOrReference(el, pName, value)
                 el
             }
@@ -154,7 +154,10 @@ class SyntaxAnalyserSimple(
     private fun createValueFromBranch(target: SPPTBranch, path: AsmElementPath, elType: RuleType, scope: ScopeSimple<AsmElementPath>?): Any? {
         return when (elType) {
             is PrimitiveType -> when (elType) {
-                PrimitiveType.STRING -> TODO("Built in String type not yet supported")
+                PrimitiveType.STRING -> {
+                    val ch = target.children[0]
+                    createValue(ch,path,elType,scope)
+                }
                 PrimitiveType.ANY -> {
                     val actualType = typeModel.findType(target.name)
                     when {
@@ -181,13 +184,13 @@ class SyntaxAnalyserSimple(
             }
 
             is ElementType -> {
-                val actualType = when {
-                    elType.subType.isNotEmpty() -> elType.subType.first { it.name == target.name }//.nonSkipChildren[0].name }
-                    else -> elType
-                }
                 val actualTarget = when {
-                    //elType.subType.isNotEmpty() -> target.nonSkipChildren[0]
+                    elType.subType.isNotEmpty() -> target.nonSkipChildren[0]
                     else -> target
+                }
+                val actualType = when {
+                    elType.subType.isNotEmpty() -> elType.subType.first { it.name == actualTarget.name }//.nonSkipChildren[0].name }
+                    else -> elType
                 }
                 val el = _asm!!.createElement(path, actualType.name)
                 val childsScope = createScope(scope, el)
@@ -298,7 +301,7 @@ class SyntaxAnalyserSimple(
                                 }
 
                                 propType.subType.isNotEmpty() && ch.asBranch.nonSkipChildren.size == 1 -> this.createValue(
-                                    ch.asBranch.nonSkipChildren[0],
+                                    ch,
                                     childPath,
                                     propType,
                                     childsScope

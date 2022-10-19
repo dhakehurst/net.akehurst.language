@@ -501,7 +501,6 @@ class test_AglGrammar {
         assertEquals(expIssues5, result5.issues)
     }
 
-
     @Test
     fun literal_multi_range_unbraced_unbounded() {
 
@@ -932,7 +931,7 @@ class test_AglGrammar {
         val result6 = p.parse("aaaaaa")
         assertEquals(null,result6.sppt)
         assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(6,7,1,1),"aaaaaa^", setOf("<EOT>"))
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(5,6,1,1),"aaaaa^a", setOf("<EOT>"))
         ),result6.issues)
 
     }
@@ -1033,7 +1032,7 @@ class test_AglGrammar {
         val result6 = p.parse("aaaaaa")
         assertEquals(null,result6.sppt)
         assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(6,7,1,1),"aaaaaa^", setOf("<EOT>"))
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE,InputLocation(5,6,1,1),"aaaaa^a", setOf("<EOT>"))
         ),result6.issues)
 
     }
@@ -1262,7 +1261,7 @@ class test_AglGrammar {
         val result6 = p.parse("a,a,a,a,a,a")
         assertEquals(null, result6.sppt)
         assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(9,10,1,1),"a,a,a,a,a^,a,",listOf("<EOT>"))
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(9,10,1,1),"a,a,a,a,a^,a",setOf("<EOT>"))
         ), result6.issues)
     }
 
@@ -1382,7 +1381,7 @@ class test_AglGrammar {
         val result6 = p.parse("a,a,a,a,a,a")
         assertEquals(null, result6.sppt)
         assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(9,10,1,1),"a,a,a,a,a^,a,",listOf("<EOT>"))
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(9,10,1,1),"a,a,a,a,a^,a",setOf("<EOT>"))
         ), result6.issues)
     }
 
@@ -1613,7 +1612,7 @@ class test_AglGrammar {
             grammar Outer {
                 S = A gB A ;
                 leaf A = 'A' ;
-                gB = test.Inner.B ;
+                gB = Inner.B ;
             }
         """.trimIndent()
 
