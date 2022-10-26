@@ -46,11 +46,11 @@ class test_ProjectIT(val data: Data) {
             object{}.javaClass.getResourceAsStream(resource)
                 ?: resource::class.java.getResourceAsStream(resource)
 
-        private val grammarStr = this::class.java.getResource("/atom-basic/Grammar.agl")?.readText() ?: error("File not found")
+        private val grammarStr = this::class.java.getResource("/projectIT/PiEditGrammar.agl")?.readText() ?: error("File not found")
 
         var processor: LanguageProcessor<Any,Any> = Agl.processorFromString(grammarStr)
-        const val validSourceFilesFolderName = "/atom-basic/valid"
-        const val inValidSourceFilesFolderName = "/atom-basic/invalid"
+        const val validSourceFilesFolderName = "/projectIT/valid"
+        const val inValidSourceFilesFolderName = "/projectIT/invalid"
 
         @JvmStatic
         @Parameters(name = "{0}")
@@ -79,14 +79,15 @@ class test_ProjectIT(val data: Data) {
     @Test
     fun test() {
         if(data.valid) {
-            val result = processor.parse(this.data.text, processor.parseOptions { goalRuleName("file") })
+            val result = processor.parse(this.data.text, processor.parseOptions { goalRuleName("projectionGroup") })
             assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
             assertEquals(emptyList(), result.issues)
             val resultStr = result.sppt!!.asString
             assertEquals(this.data.text, resultStr)
+            println(result.sppt!!.toStringAll)
         } else {
             assertFailsWith<LanguageProcessorException> {
-                processor.parse(this.data.text, processor.parseOptions { goalRuleName("file") })
+                processor.parse(this.data.text, processor.parseOptions { goalRuleName("projectionGroup") })
             }
         }
     }

@@ -123,7 +123,9 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
             val item = cls.rulePosition.item ?: error("Internal Error: should never be null")
             when {
                 item.isTerminal -> cls.createAndAddChild(item.asTerminalRulePosition)
-                item.isEmbedded -> cls.createAndAddChild(item.asTerminalRulePosition)
+                item.isEmbedded -> {
+                    cls.createAndAddChild(item.asTerminalRulePosition)
+                }
                 else -> {
                     val childRulePositions = item.rulePositionsAt[0]
                     for (childRp in childRulePositions) {

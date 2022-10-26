@@ -22,6 +22,7 @@ interface Rule {
     val isOverride: Boolean
     val isSkip: Boolean
     val isLeaf: Boolean
+    val isOneEmebedded:Boolean
     var rhs: RuleItem
     val nodeType: NodeType
 

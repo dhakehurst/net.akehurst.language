@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.grammar.grammar.asm
 
+import net.akehurst.language.agl.grammar.GrammarRegistryDefault
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.collections.lazyMutableMapNonNull
 
@@ -52,11 +53,16 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
         return TerminalDefault(value, true)
     }
 
+    fun embed(embeddedGrammarName:String, embeddedGoalName:String) : Embedded {
+        val embeddedGrammar = GrammarRegistryDefault.find(this.namespace.qualifiedName, embeddedGrammarName)
+        return EmbeddedDefault(embeddedGoalName, embeddedGrammar)
+    }
+
     fun nonTerminal(name: String): NonTerminal {
         if (name.contains(".")) {
-            TODO()
+            TODO("Not supported")
         } else {
-            return NonTerminalDefault(name, this.grammar, false)
+            return NonTerminalDefault(name)
         }
     }
 

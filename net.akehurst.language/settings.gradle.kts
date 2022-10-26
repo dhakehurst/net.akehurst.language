@@ -17,14 +17,14 @@
 
 pluginManagement {
     repositories {
-        mavenLocal()
+        mavenLocal {
+            content{
+                includeGroupByRegex("net\\.akehurst.+")
+            }
+        }
         gradlePluginPortal()
-        //maven {
-        //    url = uri("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev/")
-        //}
     }
 }
-
 
 rootProject.name = file(".").name
 

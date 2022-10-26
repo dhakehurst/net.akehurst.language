@@ -21,7 +21,7 @@ import net.akehurst.language.api.parser.ParserException
 @Deprecated("Use runtimeRuleSet { ... }")
 internal class RuntimeRuleSetBuilder() {
 
-    val runtimeRuleSet = RuntimeRuleSet()
+    val runtimeRuleSet = RuntimeRuleSet(RuntimeRuleSet.nextRuntimeRuleSetNumber++)
     private var nextGroupNumber: Int = 0
     private var nextChoiceNumber: Int = 0
     private var nextMultiNumber: Int = 0

@@ -30,7 +30,7 @@ internal fun runtimeRuleSet(init: RuntimeRuleSetBuilder2.() -> Unit): RuntimeRul
 @RuntimeRuleSetDslMarker
 internal class RuntimeRuleSetBuilder2() {
 
-    var runtimeRuleSet = RuntimeRuleSet()
+    var runtimeRuleSet = RuntimeRuleSet(RuntimeRuleSet.nextRuntimeRuleSetNumber)
 
     val ruleBuilders: MutableList<RuntimeRuleBuilder> = mutableListOf()
 

@@ -45,6 +45,10 @@ abstract class ChoiceAbstract(
 		this.alternative.flatMap { it.allNonTerminal }.toSet()
 	}
 
+	override val allEmbedded: Set<Embedded> by lazy {
+		this.alternative.flatMap { it.allEmbedded }.toSet()
+	}
+
 	override fun toString(): String = this.alternative.joinToString(separator = " | ")
 
 }

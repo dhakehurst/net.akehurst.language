@@ -19,9 +19,7 @@ package net.akehurst.language.agl.grammar.grammar.asm
 import net.akehurst.language.api.grammar.*
 
 class NonTerminalDefault(
-        override val name: String,
-        override val owningGrammar: Grammar,
-        override val embedded: Boolean
+        override val name: String
 ) : RuleItemAbstract(), NonTerminal {
 
     override fun referencedRule(targetGrammar: Grammar): Rule  {
@@ -37,16 +35,11 @@ class NonTerminalDefault(
         throw GrammarRuleItemNotFoundException("subitem ${index} not found")
     }
 
-    override val allTerminal: Set<Terminal> by lazy {
-        emptySet<Terminal>()
-    }
+    override val allTerminal: Set<Terminal> get() = emptySet()
 
-    override val allNonTerminal: Set<NonTerminal> by lazy {
-        setOf(this)
-    }
+    override val allNonTerminal: Set<NonTerminal> get() = setOf(this)
 
-    override fun toString(): String = when {
-        embedded -> "${owningGrammar.name}.$name"
-        else -> name
-    }
+    override val allEmbedded: Set<Embedded> get() = emptySet()
+
+    override fun toString(): String = name
 }

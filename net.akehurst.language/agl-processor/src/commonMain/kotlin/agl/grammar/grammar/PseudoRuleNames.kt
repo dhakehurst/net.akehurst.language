@@ -12,6 +12,7 @@ import net.akehurst.language.api.grammar.*
  */
 internal class PseudoRuleNames(val grammar: Grammar) {
 
+    private val _nextEmbeddedNumber = mutableMapOf<String, Int>()
     private val _nextGroupNumber = mutableMapOf<String, Int>()
     private val _nextChoiceNumber = mutableMapOf<String, Int>()
     private val _nextSimpleListNumber = mutableMapOf<String, Int>()
@@ -22,10 +23,16 @@ internal class PseudoRuleNames(val grammar: Grammar) {
 
     init {
         grammar.allNonTerminalRule.forEach {
-            val pseudoRuleNames = pseudoRulesFor(it.rhs)
-            pseudoRuleNames.forEach {
-                _nameForRuleItem[it.first] = it.second
-                _itemForPseudoRuleName[it.second] = it.first
+            when {
+                it.isLeaf -> Unit
+                it.isOneEmebedded -> Unit
+                else -> {
+                    val pseudoRuleNames = pseudoRulesFor(it.rhs)
+                    pseudoRuleNames.forEach {
+                        _nameForRuleItem[it.first] = it.second
+                        _itemForPseudoRuleName[it.second] = it.first
+                    }
+                }
             }
         }
     }
@@ -40,7 +47,7 @@ internal class PseudoRuleNames(val grammar: Grammar) {
 
     private fun pseudoRulesFor(item: RuleItem): Set<Pair<RuleItem, String>> {
         return when (item) {
-            is Choice ->item.alternative.flatMap { pseudoRulesFor(it) }.toSet()
+            is Choice -> item.alternative.flatMap { pseudoRulesFor(it) }.toSet()
 
             is Concatenation -> when (item.items.size) {
                 1 -> item.items.flatMap { pseudoRulesFor(it) }.toSet()
@@ -50,7 +57,14 @@ internal class PseudoRuleNames(val grammar: Grammar) {
             is ConcatenationItem -> when (item) {
                 is SimpleItem -> when (item) {
                     is Group -> pseudoRulesFor(item.choice) + Pair(item, createGroupRuleName(item.owningRule.name))
-                    is TangibleItem -> emptySet()
+                    is TangibleItem -> when (item) {
+                        is Embedded -> setOf(Pair(item, createEmbeddedRuleName(item.embeddedGrammar.name, item.embeddedGoalName)))
+                        is Terminal -> emptySet()
+                        is NonTerminal -> emptySet()
+                        is EmptyRule -> emptySet()
+                        else -> error("Internal Error: subtype of ${TangibleItem::class.simpleName} ${item::class.simpleName} not handled")
+                    }
+
                     else -> error("Internal Error: subtype of ${SimpleItem::class.simpleName} ${item::class.simpleName} not handled")
                 }
 
@@ -65,6 +79,14 @@ internal class PseudoRuleNames(val grammar: Grammar) {
 
             else -> error("Internal Error: subtype of ${RuleItem::class.simpleName} ${item::class.simpleName} not handled")
         }
+    }
+
+    private fun createEmbeddedRuleName(grammarName: String, goalName: String): String {
+        val baseName = "$grammarName§$goalName"
+        var n = _nextEmbeddedNumber[baseName] ?: 0
+        n++
+        _nextEmbeddedNumber[baseName] = n
+        return "§${baseName.removePrefix("§")}§embedded$n" //TODO: include original rule name fo easier debug
     }
 
     private fun createGroupRuleName(parentRuleName: String): String {

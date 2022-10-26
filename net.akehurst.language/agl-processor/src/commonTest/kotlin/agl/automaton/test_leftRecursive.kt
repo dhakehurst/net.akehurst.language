@@ -47,29 +47,6 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
     private val a = rrs.findRuntimeRule("'a'")
 
     @Test
-    fun follow() {
-        val ffc = FirstFollowCache(SM)
-        listOf(
-            listOf(RP(G, 0, SOR), RP(G, 0, SOR), RP(G, 0, SOR), a, LHS(EOT, a)),     //  (G = . S) <-- (S = . a)  <==  a
-            //  (G = . S)    <==  S
-            listOf(RP(G, 0, SOR), RP(G, 0, SOR), RP(G, 0, SOR), S, LHS(EOT, a)),     //  (G = . S) <-- (S = . S1) <-- (S1 = . S a)  <==  S
-            listOf(RP(G, 0, SOR), RP(G, 0, SOR), RP(G, 0, SOR), S1, LHS(EOT, a)),     //  (G = . S) <-- (S = . S1)   <==  S1
-            listOf(RP(G, 0, SOR), RP(G, 0, SOR), RP(S1, 0, 1), a, LHS(EOT)),    // (S1 = S . a)  <==  a
-            listOf(RP(G, 0, SOR), RP(G, 0, SOR), RP(G, 0, SOR), G, LHS(EOT)),        // (G = . S)  <==  G
-        ).testAll { list ->
-            val procPrev = list[0] as RulePosition
-            val procRp = list[1] as RulePosition
-            val followPrev = list[2] as RulePosition
-            val followRr = list[3] as RuntimeRule
-            val expected = list[4] as LookaheadSetPart
-            println("($procPrev, $procRp, $followPrev, ${followRr.tag})")
-            ffc.processClosureFor(procPrev, procRp, listOf(), true)
-            val actual = LHS(ffc.followAtEndInContext(followPrev, followRr).toSet())
-            assertEquals(expected, actual, "failed ($procPrev, $procRp, $followPrev, ${followRr.tag})")
-        }
-    }
-
-    @Test
     fun parse_a() {
         val parser = ScanOnDemandParser(rrs)
         val result = parser.parseForGoal("S", "a", AutomatonKind.LOOKAHEAD_1)
@@ -82,10 +59,8 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
             state(RP(G, o0, SOR))     /* {}     G = . S    */
             state(RP(G, o0, EOR))     /* {}     G = S .    */
             state(RP(S, o0, EOR))     /* {0}    S = a .    */
-            state(RP(S, o1, EOR))     /* {0}    S = S1 .   */
             state(RP(a, o0, EOR))     /* {0,5}  a .        */
             state(RP(S1, o0, p1))     /* {0}    S1 = S . a */
-            state(RP(S1, o0, EOR))    /* {0}    S1 = S a . */
 
             transition(WIDTH) { ctx(G,o0,SOR); src(G,o0,SOR); tgt(a); lhg(setOf(EOT,a))  }
             transition(GOAL) { ctx(G,o0,SOR); src(S); tgt(G); lhg(setOf(EOT))  }

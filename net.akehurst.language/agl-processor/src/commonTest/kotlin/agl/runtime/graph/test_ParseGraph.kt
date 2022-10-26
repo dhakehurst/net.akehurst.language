@@ -29,7 +29,7 @@ class test_ParseGraph {
 
     @Test
     fun construct() {
-        val rrs = RuntimeRuleSet()
+        val rrs = RuntimeRuleSet(RuntimeRuleSet.nextRuntimeRuleSetNumber++)
         val goalRule = RuntimeRule(rrs.number, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
         val text = ""
         val input = InputFromString(rrs.terminalRules.size,text)
@@ -41,7 +41,7 @@ class test_ParseGraph {
 
     @Test
     fun canGrow_empty() {
-        val rrs = RuntimeRuleSet()
+        val rrs = RuntimeRuleSet(RuntimeRuleSet.nextRuntimeRuleSetNumber++)
         val goalRule = RuntimeRule(rrs.number, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
         val text = ""
         val input = InputFromString(rrs.terminalRules.size,text)
@@ -54,7 +54,7 @@ class test_ParseGraph {
 
     @Test
     fun start() {
-        val rrs = RuntimeRuleSet()
+        val rrs = RuntimeRuleSet(RuntimeRuleSet.nextRuntimeRuleSetNumber++)
 
         val userGoalRule = RuntimeRule(rrs.number, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
         val text = "a"

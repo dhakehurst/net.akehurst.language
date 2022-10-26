@@ -54,11 +54,14 @@ interface Grammar {
 	 */
 	val allNonTerminalRule: Set<Rule>
 
-
 	/**
 	 * the Set of all terminals in this grammar and those that this grammar extends
      */
 	val allTerminal: Set<Terminal>
+
+	val allEmbeddedRules: Set<Embedded>
+
+	val allEmbeddedGrammars: Set<Grammar>
 
 	fun findNonTerminalRule(ruleName: String): Rule?
 

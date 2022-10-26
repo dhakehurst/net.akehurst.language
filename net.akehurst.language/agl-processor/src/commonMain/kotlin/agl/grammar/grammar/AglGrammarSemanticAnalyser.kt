@@ -65,12 +65,17 @@ internal class AglGrammarSemanticAnalyser(
             }
             is Terminal -> {
             }
+            is Embedded -> {
+                try {
+                    rhs.referencedRule(rhs.embeddedGrammar) //will throw 'GrammarRuleNotFoundException' if rule not found
+                } catch (e: GrammarRuleNotFoundException) {
+                    val item = LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, _locationMap!![rhs], e.message!!)
+                    this.issues.add(item)
+                }
+            }
             is NonTerminal -> {
                 try {
-                    when {
-                        rhs.embedded -> rhs.referencedRule(rhs.owningGrammar)
-                        else -> rhs.referencedRule(grammar) //will throw 'GrammarRuleNotFoundException' if rule not found
-                    }
+                  rhs.referencedRule(grammar) //will throw 'GrammarRuleNotFoundException' if rule not found
                 } catch (e: GrammarRuleNotFoundException) {
                     val item = LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, _locationMap!![rhs], e.message!!)
                     this.issues.add(item)

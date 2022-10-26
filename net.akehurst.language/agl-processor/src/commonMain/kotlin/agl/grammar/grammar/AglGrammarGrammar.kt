@@ -22,48 +22,49 @@ import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.api.grammar.Rule
 
 /**
-    grammar Agl {
-        skip WHITESPACE = "\s+" ;
-        skip MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
-        skip SINGLE_LINE_COMMENT = "//.*?$" ;
+grammar Agl {
+skip WHITESPACE = "\s+" ;
+skip MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
+skip SINGLE_LINE_COMMENT = "//.*?$" ;
 
-        grammarDefinition = namespace definitions ;
-        namespace = 'namespace' qualifiedName ;
-        definitions = grammar+ ;
-        grammar = 'grammar' IDENTIFIER extends? '{' rules '}' ;
-        extends = 'extends' [qualifiedName / ',']+ ;
-        rules = rule+ ;
-        rule = ruleTypeLabels IDENTIFIER '=' rhs ';' ;
-        rhs = empty | concatenation | choice ;
-        ruleTypeLabels = 'override'? 'skip'? 'leaf'? ;
-        empty = ;
-        choice = ambiguousChoice | priorityChoice | simpleChoice ;
-        ambiguousChoice = [ concatenation / '||' ]2+ ;
-        priorityChoice = [ concatenation / '<' ]2+ ;
-        simpleChoice = [ concatenation / '|' ]2+ ;
-        concatenation = concatenationItem+ ;
-        concatenationItem = simpleItem | listOfItems ;
-        simpleItem = terminal | nonTerminal | group ;
-        listOfItems = simpleList | separatedList ;
-        multiplicity = '*' | '+' | '?' | range ;
-        range = rangeBraced | rangeUnBraced ;
-        rangeUnBraced = POSITIVE_INTEGER rangeMax? ;
-        rangeBraced = '{' POSITIVE_INTEGER rangeMax? '}' ;
-        rangeMax = rangeMaxUnbounded | rangeMaxBounded ;
-        rangeMaxUnbounded = '+' ;
-        rangeMaxBounded = '..' POSITIVE_INTEGER ;
-        simpleList = simpleItem multiplicity ;
-        separatedList = '[' simpleItem '/' terminal ']' multiplicity ;
-        group = '(' choice ')' ;
-        nonTerminal = qualifiedName ;
-        terminal = LITERAL | PATTERN ;
-        qualifiedName = [IDENTIFIER / '.']+ ;
-        IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*";
-        LITERAL = "'([^'\\]|\\'|\\\\)*'" ;
-        PATTERN = "\"(\\\"|[^\"])*\"" ;
-        POSITIVE_INTEGER = "[0-9]+" ;
-        POSITIVE_INTEGER_GT_ZERO = "[1-9][0-9]*" ;
-    }
+grammarDefinition = namespace definitions ;
+namespace = 'namespace' qualifiedName ;
+definitions = grammar+ ;
+grammar = 'grammar' IDENTIFIER extends? '{' rules '}' ;
+extends = 'extends' [qualifiedName / ',']+ ;
+rules = rule+ ;
+rule = ruleTypeLabels IDENTIFIER '=' rhs ';' ;
+rhs = empty | concatenation | choice ;
+ruleTypeLabels = 'override'? 'skip'? 'leaf'? ;
+empty = ;
+choice = ambiguousChoice | priorityChoice | simpleChoice ;
+ambiguousChoice = [ concatenation / '||' ]2+ ;
+priorityChoice = [ concatenation / '<' ]2+ ;
+simpleChoice = [ concatenation / '|' ]2+ ;
+concatenation = concatenationItem+ ;
+concatenationItem = simpleItem | listOfItems ;
+simpleItem = terminal | nonTerminal | embedded| group ;
+listOfItems = simpleList | separatedList ;
+multiplicity = '*' | '+' | '?' | range ;
+range = rangeBraced | rangeUnBraced ;
+rangeUnBraced = POSITIVE_INTEGER rangeMax? ;
+rangeBraced = '{' POSITIVE_INTEGER rangeMax? '}' ;
+rangeMax = rangeMaxUnbounded | rangeMaxBounded ;
+rangeMaxUnbounded = '+' ;
+rangeMaxBounded = '..' POSITIVE_INTEGER ;
+simpleList = simpleItem multiplicity ;
+separatedList = '[' simpleItem '/' terminal ']' multiplicity ;
+group = '(' choice ')' ;
+nonTerminal = IDENTIFIER ;
+embedded = qualifiedName '::' nonTerminal ;
+terminal = LITERAL | PATTERN ;
+qualifiedName = [IDENTIFIER / '.']+ ;
+IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*";
+LITERAL = "'([^'\\]|\\'|\\\\)*'" ;
+PATTERN = "\"(\\\"|[^\"])*\"" ;
+POSITIVE_INTEGER = "[0-9]+" ;
+POSITIVE_INTEGER_GT_ZERO = "[1-9][0-9]*" ;
+}
  */
 internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar") {
     companion object {
@@ -98,7 +99,7 @@ internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
             b.rule("simpleChoice").separatedList(2, -1, b.terminalLiteral("|"), b.nonTerminal("concatenation"))
             b.rule("concatenation").multi(1, -1, b.nonTerminal("concatenationItem"))
             b.rule("concatenationItem").choiceLongestFromConcatenationItem(b.nonTerminal("simpleItem"), b.nonTerminal("listOfItems"))
-            b.rule("simpleItem").choiceLongestFromConcatenationItem(b.nonTerminal("terminal"), b.nonTerminal("nonTerminal"), b.nonTerminal("group"))
+            b.rule("simpleItem").choiceLongestFromConcatenationItem(b.nonTerminal("terminal"), b.nonTerminal("nonTerminal"), b.nonTerminal("embedded"), b.nonTerminal("group"))
             b.rule("listOfItems").choiceLongestFromConcatenationItem(b.nonTerminal("simpleList"), b.nonTerminal("separatedList"))  // TODO: Associative lists
             b.rule("multiplicity").choiceLongestFromConcatenationItem(
                 b.terminalLiteral("*"),
@@ -111,8 +112,8 @@ internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
                 b.nonTerminal("rangeBraced"),
             )
             b.rule("rangeUnBraced").concatenation(b.nonTerminal("POSITIVE_INTEGER"), b.nonTerminal("rangeMaxOpt"))
-            b.rule("rangeBraced").concatenation(b.terminalLiteral("{"),b.nonTerminal("POSITIVE_INTEGER"), b.nonTerminal("rangeMaxOpt"),b.terminalLiteral("}"))
-            b.rule("rangeMaxOpt").multi(0,1,b.nonTerminal("rangeMax"))
+            b.rule("rangeBraced").concatenation(b.terminalLiteral("{"), b.nonTerminal("POSITIVE_INTEGER"), b.nonTerminal("rangeMaxOpt"), b.terminalLiteral("}"))
+            b.rule("rangeMaxOpt").multi(0, 1, b.nonTerminal("rangeMax"))
             b.rule("rangeMax").choiceLongestFromConcatenationItem(
                 b.nonTerminal("rangeMaxUnbounded"),
                 b.nonTerminal("rangeMaxBounded"),
@@ -125,8 +126,9 @@ internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
                 b.nonTerminal("simpleItem"), b.terminalLiteral("]"), b.nonTerminal("multiplicity")
             )
             b.rule("group").concatenation(b.terminalLiteral("("), b.nonTerminal("groupedContent"), b.terminalLiteral(")"))
-            b.rule("groupedContent").choiceLongestFromConcatenationItem(b.nonTerminal("concatenation"),b.nonTerminal("choice"))
-            b.rule("nonTerminal").concatenation(b.nonTerminal("qualifiedName"))
+            b.rule("groupedContent").choiceLongestFromConcatenationItem(b.nonTerminal("concatenation"), b.nonTerminal("choice"))
+            b.rule("nonTerminal").concatenation(b.nonTerminal("IDENTIFIER"))
+            b.rule("embedded").concatenation(b.nonTerminal("qualifiedName"),b.terminalLiteral("::"),b.nonTerminal("nonTerminal"))
             b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"))
             b.rule("terminal").choiceLongestFromConcatenationItem(b.nonTerminal("LITERAL"), b.nonTerminal("PATTERN"))
             b.leaf("LITERAL").concatenation(b.terminalPattern("'([^'\\\\]|\\\\.)*'"))
@@ -137,9 +139,11 @@ internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
             return b.grammar.rule
         }
     }
+
     init {
         super.rule.addAll(createRules())
     }
+
     //TODO: gen this from the ASM
     override fun toString(): String = """
         namespace net.akehurst.language.agl
@@ -164,7 +168,7 @@ internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
             simpleChoice = [ concatenation / '|' ]2+ ;
             concatenation = concatenationItem+ ;
             concatenationItem = simpleItem | listOfItems ;
-            simpleItem = terminal | nonTerminal | group ;
+            simpleItem = terminal | nonTerminal | embedded | group ;
             listOfItems = simpleList | separatedList ;
             multiplicity = '*' | '+' | '?' | oneOrMore | range ;
             oneOrMore = POSITIVE_INTEGER '+' ;
@@ -173,6 +177,7 @@ internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
             separatedList = '[' simpleItem '/' terminal ']' multiplicity ;
             group = '(' choice ')' ;
             nonTerminal = qualifiedName ;
+            embedded = qualifiedName '::' nonTerminal ;
             terminal = LITERAL | PATTERN ;
             qualifiedName = [IDENTIFIER / '.']+ ;
             IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*";

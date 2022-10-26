@@ -695,6 +695,42 @@ class test_AglGrammar_item {
     }
 
     @Test
+    fun embeded() {
+        val gstr = "X::y"
+        val result = parse("embedded", gstr)
+        val expected = this.sppt(
+            """
+             embedded {
+              qualifiedName { IDENTIFIER : 'X' }
+              '::'
+              nonTerminal { IDENTIFIER : 'y' }
+             }
+            """.trimIndent()
+        )
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+    }
+
+    @Test
+    fun rhs_embeded() {
+        val gstr = "X::y"
+        val result = parse("rhs", gstr)
+        val expected = this.sppt(
+            """
+             rhs { concatenation { concatenationItem { simpleItem { embedded {
+              qualifiedName { IDENTIFIER : 'X' }
+              '::'
+              nonTerminal { IDENTIFIER : 'y' }
+             } } } } }
+            """.trimIndent()
+        )
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
+        assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+    }
+
+    @Test
     fun rhs__group_nonTerminals_a_b() {
         val gstr = "(b c)"
         val result = parse("rhs", gstr)

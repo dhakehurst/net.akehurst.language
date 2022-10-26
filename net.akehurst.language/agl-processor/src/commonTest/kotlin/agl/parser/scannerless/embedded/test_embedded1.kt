@@ -44,7 +44,7 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         }
 
         // S = a gB a ;
-        // gB = grammar B.B ;
+        // gB = B::B ;
         val S = runtimeRuleSet {
             concatenation("S") { literal("a"); ref("gB"); literal("a"); }
             embedded("gB", B, B.findRuntimeRule("B"))

@@ -18,17 +18,16 @@ package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
 
-class EmptyRuleDefault : RuleItemAbstract(), EmptyRule {
+class EmbeddedDefault(
+    override val embeddedGoalName: String,
+    override val embeddedGrammar: Grammar
+) : RuleItemAbstract(), Embedded {
 
-    override val name : String by lazy {
-        "<empty>"
+    override val name: String get() = this.embeddedGoalName
+
+    override fun referencedRule(targetGrammar: Grammar): Rule {
+        return targetGrammar.findNonTerminalRule(this.name) ?: error("Grammar Rule '$name' not found in grammar '${targetGrammar.name}'")
     }
-
-    override val allTerminal: Set<Terminal> get() = emptySet()
-
-    override val allNonTerminal: Set<NonTerminal>  get() = emptySet()
-
-    override val allEmbedded: Set<Embedded> get() = emptySet()
 
     override fun setOwningRule(rule: Rule, indices: List<Int>) {
         this._owningRule = rule
@@ -39,5 +38,11 @@ class EmptyRuleDefault : RuleItemAbstract(), EmptyRule {
         throw GrammarRuleItemNotFoundException("subitem ${index} not found")
     }
 
-    override fun toString(): String = "/* empty */"
+    override val allTerminal: Set<Terminal>  get() = emptySet()
+
+    override val allNonTerminal: Set<NonTerminal>  get() = emptySet()
+
+    override val allEmbedded: Set<Embedded> get() = setOf(this)
+
+    override fun toString(): String = "${embeddedGrammar.name}.$embeddedGoalName"
 }

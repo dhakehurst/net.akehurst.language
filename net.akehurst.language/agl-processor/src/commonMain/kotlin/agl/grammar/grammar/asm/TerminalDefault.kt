@@ -39,13 +39,11 @@ class TerminalDefault(override val value: String, override val isPattern: Boolea
         throw GrammarRuleItemNotFoundException("subitem ${index} not found")
     }
 
-    override val allTerminal: Set<Terminal> by lazy {
-        setOf(this)
-    }
+    override val allTerminal: Set<Terminal> get() = emptySet()
 
-    override val allNonTerminal: Set<NonTerminal> by lazy {
-        emptySet<NonTerminal>()
-    }
+    override val allNonTerminal: Set<NonTerminal>get() = emptySet()
+
+    override val allEmbedded: Set<Embedded> get() = emptySet()
 
     override fun toString(): String = if (isPattern) "\"$value\"" else "'$value'"
 }

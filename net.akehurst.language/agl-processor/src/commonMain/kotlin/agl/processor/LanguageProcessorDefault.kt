@@ -54,7 +54,12 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
     private val _completionProvider: CompletionProvider by lazy { CompletionProvider(this.grammar) }
 
     override val spptParser: SPPTParser by lazy {
-        SPPTParserDefault((parser as ScanOnDemandParser).runtimeRuleSet)
+        val embeddedRuntimeRuleSets = grammar.allEmbeddedGrammars.map {
+            val cvt = ConverterToRuntimeRules(it)
+            val rrs = cvt.runtimeRuleSet
+            Pair(it.name, rrs)
+        }.associate { it }
+        SPPTParserDefault((parser as ScanOnDemandParser).runtimeRuleSet, embeddedRuntimeRuleSets)
     }
 
     override val typeModel: TypeModel by lazy {

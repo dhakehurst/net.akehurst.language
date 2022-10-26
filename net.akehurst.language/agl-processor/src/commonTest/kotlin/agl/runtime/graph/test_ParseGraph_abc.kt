@@ -34,7 +34,7 @@ class test_ParseGraph_abc {
 
     @Test
     fun start() {
-        val rrs = RuntimeRuleSet()
+        val rrs = RuntimeRuleSet(RuntimeRuleSet.nextRuntimeRuleSetNumber++)
         val r_a = RuntimeRule(rrs.number,0, "a", "a", RuntimeRuleKind.TERMINAL, false, false)
         val r_b = RuntimeRule(rrs.number,1, "b","b", RuntimeRuleKind.TERMINAL, false, false)
         val r_c = RuntimeRule(rrs.number,2, "c", "c", RuntimeRuleKind.TERMINAL, false, false)
@@ -66,7 +66,7 @@ class test_ParseGraph_abc {
 
     @Test
     fun s1() {
-        val rrs = RuntimeRuleSet()
+        val rrs = RuntimeRuleSet(RuntimeRuleSet.nextRuntimeRuleSetNumber++)
         val userGoalRule = RuntimeRule(rrs.number,0,"a", "a", RuntimeRuleKind.TERMINAL, false, false)
         val text = "a"
         val input = InputFromString(rrs.terminalRules.size,text)

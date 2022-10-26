@@ -1283,7 +1283,6 @@ class test_AglGrammar {
 
     }
 
-
     @Test
     fun nonTerminal_slist_range_braced_unbounded() {
 
@@ -1610,19 +1609,33 @@ class test_AglGrammar {
                 B = 'b' ;
             }
             grammar Outer {
-                S = A gB A ;
-                leaf A = 'A' ;
-                gB = Inner.B ;
+                S = a gB c ;
+                leaf a = 'a' ;
+                leaf c = 'c' ;
+                gB = Inner::B ;
             }
         """.trimIndent()
 
         val p = Agl.processorFromString<Any,Any>(grammarStr)
         assertNotNull(p)
-        //TODO: more checks
+
+        val result1 = p.parse("abc", p.parseOptions { goalRuleName("S") })
+        val expected1 = p.spptParser.parse(
+            """
+             S { 
+               a:'a'
+               gB { Inner::B { 'b' } }
+               c:'c'
+             }
+        """
+        )
+        assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
+        assertEquals(expected1, result1.sppt)
+        assertEquals(emptyList(),result1.issues)
     }
 
     @Test
-    fun embedded_unqualified_explicitGoal() {
+    fun embedded_qualified_explicitGoal() {
 
         val grammarStr = """
             namespace test
@@ -1631,18 +1644,29 @@ class test_AglGrammar {
                 C = 'c' ;
             }
             grammar Outer {
-                S = A gB A ;
+                S = A gB D ;
                 leaf A = 'a' ;
-                gB = Inner.C;
+                leaf D = 'd' ;
+                gB = Inner::C;
             }
         """.trimIndent()
 
         val p = Agl.processorFromString<AsmSimple, Any>(grammarStr)
         assertNotNull(p)
-        //TODO: more checks
 
-        val result = p.process("aca")
-        //TODO
+        val result1 = p.parse("acd", p.parseOptions { goalRuleName("S") })
+        val expected1 = p.spptParser.parse(
+            """
+             S { 
+               A:'a'
+               gB { Inner::C { 'c' } } 
+               D:'d'
+             }
+        """
+        )
+        assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
+        assertEquals(expected1, result1.sppt)
+        assertEquals(emptyList(),result1.issues)
     }
 
 }

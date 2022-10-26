@@ -33,13 +33,11 @@ class GroupDefault(override val choice: Choice) : SimpleItemAbstract(), Group {
 		return if (0==index) this.choice else throw GrammarRuleItemNotFoundException("subitem ${index} not found")
 	}
 	
-	override val allTerminal: Set<Terminal> by lazy {
-		this.choice.allTerminal
-	}
+	override val allTerminal: Set<Terminal> get() = this.choice.allTerminal
 
-	override val allNonTerminal: Set<NonTerminal> by lazy {
-		this.choice.allNonTerminal
-	}
+	override val allNonTerminal: Set<NonTerminal> get() = this.choice.allNonTerminal
+
+	override val allEmbedded: Set<Embedded> get() = this.choice.allEmbedded
 
 	override fun toString(): String = "( $choice )"
 }

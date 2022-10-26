@@ -32,6 +32,8 @@ internal class SPPTParserDefault(
     private val WS = regexMatcher("\\s+")
     private val EMPTY = regexMatcher("§empty")
     private val QNAME = regexMatcher("[a-zA-Z_§][.a-zA-Z_0-9§]*")
+    private val ID = regexMatcher("[a-zA-Z_§][a-zA-Z_0-9§]*")
+    private val EMBED = regexMatcher("::")
     private val OPTION = regexMatcher("[|][0-9]+")
     private val LITERAL = regexMatcher("'([^'\\\\]|\\\\.)*'")
     private val PATTERN = regexMatcher("\"([^\"\\\\]|\\\\.)*\"")
@@ -56,8 +58,12 @@ internal class SPPTParserDefault(
         val qualifier get() = this.full.substringBefore(".", "")
     }
 
+    private data class RuleReference(val qname:QName?, val name: String) {
+        val isQualified get() = null!=this.qname
+    }
+
     private data class NodeStart(
-        val qname: QName,
+        val ref: RuleReference,
         val option: Int,
         val sentenceStartPosition: Int,
         val sentenceNextInputPosition: Int
@@ -146,18 +152,20 @@ internal class SPPTParserDefault(
                     //val location = InputLocation(sentenceLocation.position, sentenceLocation.column, sentenceLocation.line, 0)
                     sentenceStartPosition = sentenceNextInputPosition
                     //sentenceNextInputPosition = sentenceNextInputPosition + 0
-                    val emptyNode = this.emptyLeaf(ruleStartThatIsEmpty.qname.name, input, sentenceStartPosition, sentenceNextInputPosition)
+                    val emptyNode = this.emptyLeaf(ruleStartThatIsEmpty.ref.name, input, sentenceStartPosition, sentenceNextInputPosition)
                     childrenStack.peek().add(emptyNode)
                 }
-                scanner.hasNext(QNAME) -> {
-                    val scanned = scanner.next(QNAME)
-                    val qname = QName(scanned)
-                    if (qname.isQualified) {
-                        val gname = qname.qualifier
+                scanner.hasNext(ID) -> {
+                    val scanned = scanner.next(ID)
+                    val ntRef = if (scanner.hasNext(EMBED)) {
+                        scanner.next(EMBED)
+                        val n = scanner.next(ID)
+                        val gname = scanned
                         val embrrs = this.embeddedRuntimeRuleSets[gname] ?: error("No embedded RuntimeRuleSet with name '${gname}' passed to SPPTParser")
                         this.runtimeRuleSetInUse.push(embrrs)
+                        RuleReference(QName(scanned), n)
                     } else {
-                        // do nothing
+                        RuleReference(null,scanned)
                     }
                     val option = if (scanner.hasNext(OPTION)) {
                         val optionStr = scanner.next(OPTION)
@@ -166,7 +174,7 @@ internal class SPPTParserDefault(
                     } else {
                         0
                     }
-                    nodeNamesStack.push(NodeStart(qname, option, sentenceStartPosition, sentenceNextInputPosition))
+                    nodeNamesStack.push(NodeStart(ntRef, option, sentenceStartPosition, sentenceNextInputPosition))
                 }
                 scanner.hasNext(CHILDREN_START) -> {
                     scanner.next(CHILDREN_START)
@@ -235,7 +243,7 @@ internal class SPPTParserDefault(
                     while (scanner.hasNext(WS)) {
                         scanner.next(WS)
                     }
-                    val qname = nodeNamesStack.pop().qname
+                    val qname = nodeNamesStack.pop().ref
                     val newText = scanner.next(LITERAL)
                     val newText2 = newText.substring(1, newText.length - 1) // remove ' from begin and end
                     val newText3 = newText2.replace("\\'", "'") // substitute excape chars
@@ -252,13 +260,13 @@ internal class SPPTParserDefault(
                     val lastNodeStart = nodeNamesStack.pop()
 
                     val children = childrenStack.pop()
-                    val qname = lastNodeStart.qname
-                    val node = if (qname.isQualified) {
-                        val embNode = this.embedded(input, qname.name, lastNodeStart.option, children)
+                    val ntRef = lastNodeStart.ref
+                    val node = if (ntRef.isQualified) {
+                        val embNode = this.embedded(input, ntRef.name, lastNodeStart.option, children)
                         this.runtimeRuleSetInUse.pop()
                         embNode
                     } else {
-                        this.branch(input, qname.name, lastNodeStart.option, children)
+                        this.branch(input, ntRef.name, lastNodeStart.option, children)
                     }
                     childrenStack.peek().add(node)
                 }

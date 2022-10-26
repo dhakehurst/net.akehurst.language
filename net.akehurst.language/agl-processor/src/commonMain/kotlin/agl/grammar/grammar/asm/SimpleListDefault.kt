@@ -34,14 +34,12 @@ class SimpleListDefault(
 	override fun subItem(index: Int): RuleItem {
 		return if (0==index) this.item else throw GrammarRuleItemNotFoundException("subitem ${index} not found")
 	}
-	
-	override val allTerminal: Set<Terminal> by lazy {
-		this.item.allTerminal
-	}
 
-	override val allNonTerminal: Set<NonTerminal> by lazy {
-		this.item.allNonTerminal
-	}
+	override val allTerminal: Set<Terminal> get() = this.item.allTerminal
+
+	override val allNonTerminal: Set<NonTerminal> get() = this.item.allNonTerminal
+
+	override val allEmbedded: Set<Embedded> get() = this.item.allEmbedded
 
 	override fun toString(): String {
 		val mult = when{

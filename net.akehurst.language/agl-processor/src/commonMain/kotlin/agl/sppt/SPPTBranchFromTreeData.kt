@@ -88,8 +88,10 @@ import net.akehurst.language.api.sppt.SPPTNode
                             listOf(SPPTLeafFromInput(this.input, rp.runtimeRule, child.startPosition, child.nextInputPosition, -1))
                         }
                     }
-                    child.isEmbedded -> listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.runtimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
-                    else -> listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.runtimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
+                    child.isEmbedded -> {
+                        listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.runtimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
+                    }
+                        else -> listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.runtimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
                     /*
                     else -> {
                         val possChildren = this.runtimeRule.rulePositionsAt[chIndx].filter { it.option == this.option }

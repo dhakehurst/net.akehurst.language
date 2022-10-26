@@ -18,6 +18,7 @@ package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.parser.InputFromString
+import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.collections.lazyMap
@@ -25,11 +26,13 @@ import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.collections.transitiveClosure
 
 internal class RuntimeRuleSet(
-    // rules: List<RuntimeRule>
+    val number: Int
 ) {
 
     companion object {
         var nextRuntimeRuleSetNumber = 0
+
+        val numberForGrammar = lazyMutableMapNonNull<Grammar,Int> { nextRuntimeRuleSetNumber++ }
 
         val GOAL_RULE_NUMBER = -1
         val EOT_RULE_NUMBER = -2
@@ -62,8 +65,6 @@ internal class RuntimeRuleSet(
         }
 
     }
-
-    val number: Int = nextRuntimeRuleSetNumber++
 
     private val nonTerminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
     private val terminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
@@ -417,8 +418,9 @@ internal class RuntimeRuleSet(
         return this.usedAutomatonToString("S")
     }
 
-    fun clone(): RuntimeRuleSet {
-        val clone = RuntimeRuleSet()
+    // only used in test
+    internal fun clone(): RuntimeRuleSet {
+        val clone = RuntimeRuleSet(nextRuntimeRuleSetNumber++)
         val clonedRules = this.runtimeRules.map { rr ->
             val clonedEmbeddedRuntimeRuleSet = rr.embeddedRuntimeRuleSet?.clone()
             val clonedEmbeddedStartRule = rr.embeddedStartRule?.let { clonedEmbeddedRuntimeRuleSet?.runtimeRules?.get(it.number) }

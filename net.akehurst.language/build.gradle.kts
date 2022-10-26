@@ -43,7 +43,7 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.multiplatform")
     apply(plugin = "maven-publish")
     apply(plugin = "signing")
-    //apply(plugin = "org.jetbrains.dokka")
+    apply(plugin = "org.jetbrains.dokka")
     apply(plugin = "com.github.gmazzo.buildconfig")
     apply(plugin = "net.akehurst.kotlin.gradle.plugin.exportPublic")
 

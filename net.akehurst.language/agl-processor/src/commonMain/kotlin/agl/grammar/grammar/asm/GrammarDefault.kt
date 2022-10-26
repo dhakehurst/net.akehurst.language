@@ -54,15 +54,23 @@ abstract class GrammarAbstract(
 
     override val allTerminal: Set<Terminal> by lazy {
         this.allRule.toSet().flatMap {
-            when(it.isLeaf) {
+            when (it.isLeaf) {
                 true -> setOf(it.compressedLeaf)
                 false -> it.rhs.allTerminal
             }
         }.toSet()
     }
 
-    override val allNonTerminalRule: Set<Rule>by lazy {
+    override val allNonTerminalRule: Set<Rule> by lazy {
         this.allRule.filter { it.isLeaf.not() }.toSet()
+    }
+
+    override val allEmbeddedRules: Set<Embedded>by lazy {
+        this.allRule.flatMap { it.rhs.allEmbedded }.toSet()
+    }
+
+    override val allEmbeddedGrammars: Set<Grammar>by lazy {
+        this.allEmbeddedRules.map { it.embeddedGrammar }.toSet()
     }
 
     override fun findNonTerminalRule(ruleName: String): Rule? {

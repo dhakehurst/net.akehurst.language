@@ -21,6 +21,7 @@ interface RuleItem {
 	fun setOwningRule(rule: Rule, indices: List<Int>) //TODO: make internal not on interface
     val allTerminal: Set<Terminal>
     val allNonTerminal: Set<NonTerminal>
+    val allEmbedded: Set<Embedded>
     fun subItem(index: Int): RuleItem
 }
 
@@ -63,7 +64,19 @@ interface Terminal : TangibleItem {
     val value: String
 }
 interface NonTerminal : TangibleItem {
-    val embedded:Boolean
-    val owningGrammar: Grammar
+    fun referencedRule(targetGrammar: Grammar): Rule
+}
+interface Embedded : TangibleItem {
+    /**
+     *  Name of the nonTerminal to start from in the embedded Grammar
+     *  (== this.name)
+     **/
+    val embeddedGoalName: String
+
+    /**
+     * The Grammar to embed
+     */
+    val embeddedGrammar: Grammar
+
     fun referencedRule(targetGrammar: Grammar): Rule
 }
