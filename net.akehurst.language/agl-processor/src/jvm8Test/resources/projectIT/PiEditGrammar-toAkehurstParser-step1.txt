@@ -1,0 +1,126 @@
+Editor_Definition = projectionGroup
+
+projectionGroup = WHITESPACE_SKIPPED "editor" WHITESPACE_SKIPPED var WHITESPACE_SKIPPED ("precedence" WHITESPACE_SKIPPED numberliteral WHITESPACE_SKIPPED )?
+        classifierProjection* WHITESPACE_SKIPPED
+
+leaf PROP_START     		 = "${"
+leaf PROP_END       		 = "}"
+leaf PROJECTION_BEGIN        = "["
+leaf PROJECTION_END          = "]"
+leaf PROJECTION_SEPARATOR    = "|"
+
+/* everything between PROJECTION_BEGIN and PROJECTION_END is whitespace sensitive */
+
+classifierProjection =
+            classifierReference curly_begin
+                projection
+            curly_end
+
+projection = WHITESPACE_SKIPPED PROJECTION_BEGIN lineWithOptional* PROJECTION_END WHITESPACE_SKIPPED
+
+/* The following grammar rules must not skip whitespace */
+lineWithOptional = (WHITESPACE_RELEVANT | textItem | optionalProjection | property_projection | superProjection | newline )+
+
+lineWithOutOptional = (WHITESPACE_RELEVANT | textItem | property_projection | superProjection | newline )+
+
+leaf WHITESPACE_RELEVANT = [ \t]+
+
+textItem = anythingBut+
+
+property_projection = singleProperty 
+    | listProperty
+    | booleanProperty
+
+singleProperty = PROP_START WHITESPACE_SKIPPED
+                         "self."? var (colon_separator var )? WHITESPACE_SKIPPED
+                      PROP_END
+
+listProperty = PROP_START WHITESPACE_SKIPPED
+                         "self."? var (colon_separator var )? WHITESPACE_SKIPPED listInfo? WHITESPACE_SKIPPED
+                      PROP_END
+
+booleanProperty = PROP_START WHITESPACE_SKIPPED
+                         "self."? var (colon_separator var )? WHITESPACE_SKIPPED keywordDecl? WHITESPACE_SKIPPED
+                      PROP_END
+
+optionalProjection = PROJECTION_BEGIN "?" lineWithOutOptional* PROJECTION_END
+
+superProjection = PROJECTION_BEGIN "=>" WHITESPACE_RELEVANT classifierReference (colon_separator var )? WHITESPACE_RELEVANT PROJECTION_END
+
+
+/* The following rules may skip whitespace */
+
+keywordDecl = PROJECTION_BEGIN textBut (PROJECTION_SEPARATOR textBut )? PROJECTION_END
+
+listInfo =  listDirection? (listInfoType "[" textBut "]" )? WHITESPACE_SKIPPED
+
+listDirection = ("horizontal" | "vertical") WHITESPACE_SKIPPED
+
+listInfoType = ("separator" | "terminator" | "initiator") WHITESPACE_SKIPPED
+
+// This rule parses text until one of the special starter chars or string is encountered.
+textBut  = anythingBut+
+
+// The 'anythingBut' rule parses text until one of the special starter chars or string is encountered.
+// Note that these chars can still be escaped, through the 'char' rule in the basic grammar
+// The following are excluded:
+// PROP_START     = "${"
+// PROJECTION_BEGIN        = "["
+// PROJECTION_END          = "]"
+// PROJECTION_SEPARATOR    = "|"
+anythingBut = !("${" | newline | "[" | "|" | "]") char
+
+newline     = "\r"? "\n"
+
+// These are the parsing rules for the expressions over the language structure,
+// as defined in meta/src/languagedef/metalanguage/PiLangExpressions.ts
+// They are not meant to be used separately, they should be used in the parser for 
+// projectIt parts that use the language expressions.
+// Because they are common they are developed and tested separately, together with the
+// creator functions in LanguageExpressionCreators.ts.
+
+// the following rules should be part of a parser that wants to use PiLangExpressions.ts
+
+classifierReference = var
+
+langExpression = functionExpression
+               | instanceExpression
+               | expression                
+               | simpleExpression    
+
+instanceExpression = var ':' var
+
+expression = var dotExpression
+            | var
+
+dotExpression = '.' var dotExpression?  
+
+functionExpression = var round_begin (
+      langExpression
+      (comma_separator langExpression )*
+    )?
+    round_end dotExpression?
+    
+simpleExpression = numberliteral
+
+// the following is basic stuff
+
+leaf curly_begin    		=  "{" 
+leaf curly_end      		=  "}" 
+leaf round_begin    		=  "(" 
+leaf round_end      		=  ")" 
+leaf comma_separator 		=  "," 
+leaf semicolon_separator 	=  ";" 
+leaf colon_separator  		=  ":" 
+leaf equals_separator  		=  "=" 
+leaf plus_separator 		=  "+" 
+WHITESPACE_SKIPPED  		= (([ \t\n\r]) | (SingleLineComment) | (MultiLineComment) )*
+
+var 						= varLetter identifierChar*
+
+string              		= (char)*
+varLetter           		= [a-zA-Z]
+identifierChar      		= [a-zA-Z0-9_$] // any char but not /.,!?@~%^&*-=+(){}"':;<>?[]\/
+anyChar             		= [*a-zA-Z0-9' /\-[\]\|+<>=#$_.,!?@~%^&*-=+(){}:;<>?]
+number              		= [0-9]
+numberliteral       		= number+

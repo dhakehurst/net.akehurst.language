@@ -93,9 +93,9 @@ internal class InputFromString(
     fun eolPositions(text: String): List<Int> = EOL_PATTERN.findAll(text).map { it.range.first }.toList()
 
     // seems faster to match literal with regex than substring and startsWith
-    private val isLookingAt_cache = hashMapOf<Pair<Int,Int>,Boolean>()
+    private val isLookingAt_cache = hashMapOf<Pair<Int,RuntimeRule>,Boolean>()
     fun isLookingAt(position: Int, terminalRule: RuntimeRule):Boolean {
-        val r = isLookingAt_cache[Pair(position,terminalRule.number)]
+        val r = isLookingAt_cache[Pair(position,terminalRule)]
         return if (null!=r) {
              r
         } else {
@@ -108,7 +108,7 @@ internal class InputFromString(
                 else -> this.text.regionMatches(position, terminalRule.value, 0, terminalRule.value.length)
                 //else ->pattern.match(this.text, position)
             }
-            isLookingAt_cache[Pair(position,terminalRule.number)] = matched
+            isLookingAt_cache[Pair(position,terminalRule)] = matched
             matched
 
         }

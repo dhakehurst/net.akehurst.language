@@ -1,0 +1,97 @@
+editor default
+
+AssociationClassCallExp {
+    [${self.referredAssociationClass}]
+}
+
+AssociationEndCallExp {
+    [${self.referredAssociationEnd}]
+}
+
+AttributeCallExp {
+    [${self.referredAttribute}]
+}
+
+BooleanLiteralExp {
+    [${self.value}]
+}
+
+CollectionItem {
+    [${self.item}]
+}
+
+CollectionLiteralExp {
+    [Collection { ${self.parts horizontal separator[, ]} }]
+}
+
+CollectionRange {
+    [${self.first} .. ${self.last}]
+}
+
+EnumLiteralExp {
+    [${self.referredEnumLiteral}]
+}
+
+IfExp {
+    [if ${self.condition} then ${self.ifExpression} [?else ${self.elseExpression}] endif]
+}
+
+IntegerLiteralExp {
+    [${self.value}]
+}
+
+LetExp {
+    [
+    let ${self.variables horizontal separator[, ]}
+        in ${self.inExpression}
+    ]
+}
+
+NavigationCallExp {
+    [${self.navigationSource}]
+}
+
+OclMessageExp {
+    [<${self.target}>^^${self.calledOperation}( ${self.args horizontal separator[, ]} )]
+}
+
+OclStateLiteralExp {
+    [${self.referredState}]
+}
+
+OclTypeLiteralExp {
+    [${self.referredClassifier}]
+}
+
+OclUndefinedLiteralExp {
+    [${self.value}]
+}
+
+OperationCallExp {
+    [${self.referredOperation} ( ${self.args horizontal separator[, ]} )]
+}
+
+RealLiteralExp {
+    [${self.value}]
+}
+
+StringLiteralExp {
+    [${self.value}]
+}
+
+TupleLiteralExp {
+// TODO add extra check on .edit file: horizontal should be within brackets of a list
+    [Tuple { ${self.tupleParts horizontal separator[, ] } }]
+}
+
+VariableDeclaration {
+    [${self.name} : ${self.type} [?= ${self.initExpression}]]
+//    isIteratorVar: boolean;
+}
+
+VariableExp {
+    [${self.referredVariable}]
+}
+OclExpression {
+        [${self.appliedProperty}]
+}

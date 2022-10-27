@@ -53,6 +53,7 @@ internal class RuntimeParser(
     val canGrow: Boolean get() = this.graph.canGrow
 
     val lastDropped = mutableSetOf<ParseGraph.Companion.NextToProcess>()
+    val embeddedLastDropped = mutableMapOf<Transition, Set<ParseGraph.Companion.NextToProcess>>()
 
     private var interruptedMessage: String? = null
 
@@ -330,7 +331,7 @@ internal class RuntimeParser(
                 Transition.ParseAction.WIDTH -> doWidth(toProcess, it, possibleEndOfText, noLookahead)
                 Transition.ParseAction.HEIGHT -> error("Should never happen")
                 Transition.ParseAction.GRAFT -> error("Should never happen")
-                Transition.ParseAction.EMBED -> TODO()
+                Transition.ParseAction.EMBED -> doEmbedded(toProcess, it, possibleEndOfText, noLookahead)
             }
             grown = grown || g
         }
@@ -631,25 +632,30 @@ internal class RuntimeParser(
         }
     }
 
-    // Use current/growing runtimeLookahead
-    private fun doEmbedded(toProcess: ParseGraph.Companion.ToProcessTriple, transition: Transition, possibleEndOfText: Set<LookaheadSet>, noLookahead: Boolean): Boolean {
+    internal fun createEmbeddedRuntimeParser(possibleEndOfText: Set<LookaheadSet>, runtimeLookaheadSet:Set<LookaheadSet>, transition: Transition) : Pair<RuntimeParser,Set<LookaheadSet>> {
         val embeddedRule = transition.to.runtimeRules.first() // should only ever be one
-        val endingLookahead = transition.lookahead.first().guard //should ony ever be one
         val embeddedRuntimeRuleSet = embeddedRule.embeddedRuntimeRuleSet ?: error("Should never be null")
         val embeddedStartRule = embeddedRule.embeddedStartRule ?: error("Should never be null")
         val embeddedS0 = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedStartRule, this.stateSet.automatonKind).startState
         val embeddedSkipStateSet = embeddedRuntimeRuleSet.skipParserStateSet
         val embeddedParser = RuntimeParser(embeddedS0.stateSet, embeddedSkipStateSet, embeddedStartRule, this.input)
-        val startPosition = toProcess.growingNode.nextInputPosition
-        // Embedded text could end with this.skipTerms or lh from transition
         val skipTerms = this.stateSet.runtimeRuleSet.firstSkipTerminals.toSet()
+        val endingLookahead = transition.lookahead.first().guard //should ony ever be one
         val embeddedPossibleEOT = endingLookahead.unionContent(embeddedS0.stateSet, skipTerms)
-        val embeddedEOT = toProcess.growingNode.runtimeState.runtimeLookaheadSet.flatMap { rt ->
+        // Embedded text could end with this.skipTerms or lh from transition
+        val embeddedEOT = runtimeLookaheadSet.flatMap { rt ->
             possibleEndOfText.map { eot ->
                 embeddedPossibleEOT.resolve(eot, rt).lhs(embeddedS0.stateSet)
             }
-        }.toSet() //FIXME: use resolve
+        }.toSet()
+        return Pair(embeddedParser, embeddedEOT)
+    }
 
+    // Use current/growing runtimeLookahead
+    private fun doEmbedded(toProcess: ParseGraph.Companion.ToProcessTriple, transition: Transition, possibleEndOfText: Set<LookaheadSet>, noLookahead: Boolean): Boolean {
+        val (embeddedParser, embeddedEOT) = createEmbeddedRuntimeParser(possibleEndOfText, toProcess.growingNode.runtimeState.runtimeLookaheadSet, transition)
+        val endingLookahead = transition.lookahead.first().guard //should ony ever be one
+        val startPosition = toProcess.growingNode.nextInputPosition
         embeddedParser.start(startPosition, embeddedEOT)
         var seasons = 1
         var maxNumHeads = embeddedParser.graph.numberOfHeads
@@ -661,6 +667,7 @@ internal class RuntimeParser(
         //val match = embeddedParser.longestMatch(seasons, maxNumHeads, true) as SPPTBranch?
         val match = embeddedParser.graph.treeData
         return if (match.root != null) {
+            val embeddedS0 = embeddedParser.stateSet.startState
             val ni = match.nextInputPosition!! // will always have value if root not null
             //TODO: parse skipNodes
             val skipLh = toProcess.growingNode.runtimeState.runtimeLookaheadSet.flatMap { rt ->
@@ -681,6 +688,7 @@ internal class RuntimeParser(
             }
         } else {
             //  could not parse embedded
+            this.embeddedLastDropped[transition] = embeddedParser.lastDropped
             false
         }
     }
