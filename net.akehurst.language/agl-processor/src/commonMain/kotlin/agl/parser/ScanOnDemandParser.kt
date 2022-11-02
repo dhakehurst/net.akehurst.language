@@ -16,14 +16,12 @@
 
 package net.akehurst.language.agl.parser
 
-import net.akehurst.language.agl.automaton.Lookahead
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.processor.ParseResultDefault
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.RuntimeState
-import net.akehurst.language.agl.runtime.graph.TreeData
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -31,7 +29,6 @@ import net.akehurst.language.agl.sppt.SPPTFromTreeData
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.math.max
 
 internal class ScanOnDemandParser(
@@ -50,11 +47,8 @@ internal class ScanOnDemandParser(
     }
 
     override fun parseForGoal(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): ParseResult { //Pair<SharedPackedParseTree?, List<LanguageIssue>> {
-        val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, inputText)
-        val s0 = runtimeRuleSet.fetchStateSetFor(goalRule, automatonKind).startState
-        val skipStateSet = runtimeRuleSet.skipParserStateSet
-        val rp = RuntimeParser(s0.stateSet, skipStateSet, goalRule, input)
+        val rp = createRuntimeParser(goalRuleName,input,automatonKind)
         this.runtimeParser = rp
 
         val possibleEndOfText = setOf(LookaheadSet.EOT)
@@ -63,32 +57,37 @@ internal class ScanOnDemandParser(
         var maxNumHeads = rp.graph.numberOfHeads
         var totalWork = maxNumHeads
 
+        val lastToTryWidth = mutableListOf<ParseGraph.Companion.ToProcessTriple>()
         while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
             if (Debug.OUTPUT_RUNTIME) println("$seasons ===================================")
             val steps = rp.grow3(possibleEndOfText, false)
             seasons += steps
             maxNumHeads = max(maxNumHeads, rp.graph.numberOfHeads)
             totalWork += rp.graph.numberOfHeads
+            if (rp.lastToTryWidthTrans.isNotEmpty()) { //FIXME: slows down...maybe use expectedAt on err to calc suggestions
+                lastToTryWidth.clear()
+                lastToTryWidth.addAll(rp.lastToTryWidthTrans)
+            }
         }
 
-        //TODO: when parsing an ambiguous grammar,
-        // how to know we have found all goals? - keep going until cangrow is false
-        // but - how to stop .. some grammars don't stop if we don't do test for a goal!
-        // e.g. leftRecursive.test_aa
-        // e.g. test_a1bOa2.ambiguous_a
-
-        //val match = rp.longestMatch(seasons, maxNumHeads, false)
         val match = rp.graph.treeData
         return if (match.root != null) {
             //val sppt = SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
             val sppt = SPPTFromTreeData(match, input, seasons, maxNumHeads)
             ParseResultDefault(sppt, emptyList())
         } else {
-            val nextExpected = this.findNextExpectedAfterError2(rp, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
+            val nextExpected = this.findNextExpectedAfterError2(rp, lastToTryWidth, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
             val issue = throwError(input, rp, nextExpected, seasons, maxNumHeads)
             val sppt = null//rp.longestLastGrown?.let{ SharedPackedParseTreeDefault(it, seasons, maxNumHeads) }
             ParseResultDefault(sppt, listOf(issue))
         }
+    }
+
+    private fun createRuntimeParser(goalRuleName: String, input: InputFromString, automatonKind: AutomatonKind):RuntimeParser {
+        val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
+        val s0 = runtimeRuleSet.fetchStateSetFor(goalRule, automatonKind).startState
+        val skipStateSet = runtimeRuleSet.skipParserStateSet
+        return RuntimeParser(s0.stateSet, skipStateSet, goalRule, input)
     }
 
     private fun throwError(
@@ -175,10 +174,11 @@ internal class ScanOnDemandParser(
     */
     private fun findNextExpectedAfterError2(
         rp: RuntimeParser,
+        lastToTryWidth: MutableList<ParseGraph.Companion.ToProcessTriple>,
         input: InputFromString,
         possibleEndOfText: Set<LookaheadSet>
     ): Pair<InputLocation, Set<RuntimeRule>> {
-        val trips = rp.lastDropped.flatMap { it.triples }.toSet()
+        val trips = lastToTryWidth//rp.lastToTryWidthTrans//lastToGrow //rp.lastDropped.flatMap { it.triples }
         rp.resetGraphToLastGrown(trips)//lastGrown)
         val lgs = rp.tryGrowHeightOrGraft(possibleEndOfText, false)
         val triples = lgs.flatMap { it.triples }.toSet()
@@ -204,7 +204,7 @@ internal class ScanOnDemandParser(
                             Transition.ParseAction.WIDTH,
                             Transition.ParseAction.EMBED -> {
                                 //TODO: find failure in embedded parser!
-                                val embLastDropped = rp.embeddedLastDropped[tr]?.flatMap { it.triples }?.toSet()
+                                val embLastDropped = rp.embeddedLastDropped[tr]?.flatMap { it.triples } //TODO: change this to lastGrown
                                 if (null==embLastDropped) {
                                     // try grab 'to' token, if nothing then that is error else lookahead is error
                                     val l = input.findOrTryCreateLeaf(tr.to.firstRule, lg.nextInputPosition)
@@ -261,9 +261,9 @@ internal class ScanOnDemandParser(
                             val rtLh = when (tr.action) {
                                 Transition.ParseAction.WIDTH -> lg.runtimeState.runtimeLookaheadSet
                                 Transition.ParseAction.EMBED -> lg.runtimeState.runtimeLookaheadSet
-                                Transition.ParseAction.HEIGHT -> prev!!.runtimeState.runtimeLookaheadSet
-                                Transition.ParseAction.GRAFT -> prev!!.runtimeState.runtimeLookaheadSet
-                                Transition.ParseAction.GOAL ->prev!!.runtimeState.runtimeLookaheadSet
+                                Transition.ParseAction.HEIGHT -> prev.runtimeState.runtimeLookaheadSet
+                                Transition.ParseAction.GRAFT -> prev.runtimeState.runtimeLookaheadSet
+                                Transition.ParseAction.GOAL -> prev.runtimeState.runtimeLookaheadSet
                             }
                             val runtimeGuardPassed = tr.runtimeGuard.invoke( prev.numNonSkipChildren)
                             errorPairs(input, lg, tr, possibleEndOfText, rtLh, runtimeGuardPassed)
@@ -271,7 +271,7 @@ internal class ScanOnDemandParser(
                         pairs
                     } else {
                         //no transitions so have to assume we parsed something we didn't want.
-                        val ntp = graph.peekNextToProcess()
+                        val ntp = graph.peekAllNextToProcess()
                         val lg2 = prev
                         val prev2 = prevPrev
                         ntp.flatMap { tpt ->
@@ -280,10 +280,10 @@ internal class ScanOnDemandParser(
                             trs2.mapNotNull { tr2 ->
                                 val rtLh = when (tr2.action) {
                                     Transition.ParseAction.WIDTH -> lg2.runtimeState.runtimeLookaheadSet
-                                    Transition.ParseAction.EMBED -> TODO()
-                                    Transition.ParseAction.HEIGHT -> prev2!!.runtimeState.runtimeLookaheadSet
-                                    Transition.ParseAction.GRAFT -> prev2!!.runtimeState.runtimeLookaheadSet
-                                    Transition.ParseAction.GOAL ->prev2!!.runtimeState.runtimeLookaheadSet
+                                    Transition.ParseAction.EMBED -> lg2.runtimeState.runtimeLookaheadSet
+                                    Transition.ParseAction.HEIGHT -> prev2.runtimeState.runtimeLookaheadSet
+                                    Transition.ParseAction.GRAFT -> prev2.runtimeState.runtimeLookaheadSet
+                                    Transition.ParseAction.GOAL ->prev2.runtimeState.runtimeLookaheadSet
                                 }
                                 val runtimeGuardPassed = tr2.runtimeGuard.invoke( prev2.numNonSkipChildren)
                                 errorPairs(input, lg, tr2, possibleEndOfText, rtLh, runtimeGuardPassed)
@@ -381,10 +381,10 @@ internal class ScanOnDemandParser(
         //    .toSet()
         //return nextExpected
         val graph = rp.graph
-        val lastGrown = rp.lastDropped.flatMap { it.triples }.toSet()
+        val lastGrown = rp.lastDropped.flatMap { it.triples }
         rp.resetGraphToLastGrown(lastGrown)
         rp.grow3(possibleEndOfText, true)
-        matches.addAll(graph.peekNextToProcess())
+        matches.addAll(graph.peekAllNextToProcess())
         val trans_lh_pairs = matches.flatMap { (gn, previous, remainingHead) ->
             when {
                 gn.state.isAtEnd && gn.state.isGoal -> emptySet()
@@ -420,34 +420,42 @@ internal class ScanOnDemandParser(
     }
 
     override fun expectedAt(goalRuleName: String, inputText: String, position: Int, automatonKind: AutomatonKind): Set<RuntimeRule> {
-        val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val usedText = inputText.substring(0, position)
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, usedText)
-        val ss = runtimeRuleSet.fetchStateSetFor(goalRule, automatonKind)
-        val skipStateSet = runtimeRuleSet.skipParserStateSet
-        val rp = RuntimeParser(ss, skipStateSet, goalRule, input)
+        val rp = createRuntimeParser(goalRuleName,input,automatonKind)
         this.runtimeParser = rp
 
         val possibleEndOfText = setOf(LookaheadSet.EOT)
         rp.start(0, possibleEndOfText)
         var seasons = 1
 
-        val matches = mutableListOf<ParseGraph.Companion.ToProcessTriple>()
-        do {
-            val steps = rp.grow3(possibleEndOfText, false)
-            //for (trip in lg) {
-            //    if (input.isEnd(trip.growingNode.nextInputPosition)) {
-            //        if (trip.growingNode.state.isGoal.not()) {
-            //            //don't include it TODO: why does this happen?
-            //        } else {
-            //            matches.add(trip)
-            //        }
-            //    }
-            //}
+        val lastToTryWidth = mutableListOf<ParseGraph.Companion.ToProcessTriple>()
+        while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
+            rp.grow3(possibleEndOfText, false)
+            if (rp.lastToTryWidthTrans.isNotEmpty()) {
+                lastToTryWidth.clear()
+                lastToTryWidth.addAll(rp.lastToTryWidthTrans)
+            }
             seasons++
-        } while (rp.canGrow && rp.graph.goals.isEmpty())
-        val nextExpected = this.findNextExpected(rp, matches, possibleEndOfText)
-        return nextExpected
+        }
+        /*
+        return rp.nextExpected.flatMap {
+            when(it) {
+                is RuntimeRule -> listOf(it)
+                is Set<*> -> it as Set<RuntimeRule>
+                is List<*> -> it as List<RuntimeRule>
+                is LookaheadSet -> it.fullContent
+                else -> error("Internl Error: Not handled - $it")
+            }
+        }.toSet()
+         */
+        //val nextExpected = this.findNextExpected(rp, matches, possibleEndOfText)
+       return if (lastToTryWidth.isEmpty()) {
+            emptySet()
+        } else {
+           val nextExpected = this.findNextExpectedAfterError2(rp, lastToTryWidth, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
+            nextExpected.second
+        }
     }
 
     override fun expectedTerminalsAt(goalRuleName: String, inputText: String, position: Int, automatonKind: AutomatonKind): Set<RuntimeRule> {

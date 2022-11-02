@@ -116,6 +116,11 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         // then process closure needs to work from bottom up doing all branches.
 
         if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.INC_AFTER) { "START calcFirstTermClosure: ${graph.root}" }
+
+        if (graph.root.rulePosition.isGoal && graph.root.rulePosition.isAtEnd) {
+            return
+        } //TODO: else
+
         val todoList = mutableQueueOf<ClosureItem>()
         todoList.enqueue(graph.root)
         while (todoList.isNotEmpty) {

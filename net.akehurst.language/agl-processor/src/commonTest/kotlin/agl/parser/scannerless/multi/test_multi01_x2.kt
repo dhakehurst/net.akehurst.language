@@ -69,7 +69,7 @@ internal class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
+                expectedNumGSSHeads = 1,
                 expectedTrees = arrayOf(expected)
         )
     }
@@ -91,7 +91,7 @@ internal class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 2,
+                expectedNumGSSHeads = 1,
                 expectedTrees = arrayOf(expected)
         )
     }

@@ -129,7 +129,7 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2,
+            expectedNumGSSHeads = 1,
             expectedTrees = arrayOf(expected)
         )
     }
@@ -164,7 +164,7 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2,
+            expectedNumGSSHeads = 1,
             expectedTrees = arrayOf(expected)
         )
     }
@@ -205,7 +205,7 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2,
+            expectedNumGSSHeads = 1,
             expectedTrees = arrayOf(expected)
         )
     }

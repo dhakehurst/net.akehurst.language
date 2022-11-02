@@ -146,23 +146,23 @@ internal class ParseGraph(
 
     var treeData = TreeData(stateSetNumber)
 
-    val canGrow: Boolean get() = !this._growingHeadHeap.isEmpty()
-
     val goals: Set<GrowingNodeIndex> get() = this._goals
 
     var goalMatchedAll = true
+
+    val canGrow: Boolean get() = !this._growingHeadHeap.isEmpty()
 
     val numberOfHeads get() = this._growingHeadHeap.size
 
     val hasNextHead: Boolean get() = this._growingHeadHeap.isNotEmpty()
 
-    val nextHeadStartPosition: Int
+    val nextHeadNextInputPosition: Int
         get() {
             val root = this._growingHeadHeap.peekRoot
             return when {
                 null == root -> Int.MAX_VALUE
-                root.state.isGoal -> -1
-                else -> root.startPosition
+                //root.state.isGoal -> -1
+                else -> root.nextInputPosition//startPosition
             }
         }
 
@@ -185,7 +185,7 @@ internal class ParseGraph(
         }
     }
 
-    fun peekNextToProcess(): List<ToProcessTriple> = this._growingHeadHeap.entries.flatMap {
+    fun peekAllNextToProcess(): List<ToProcessTriple> = this._growingHeadHeap.entries.flatMap {
         val gn = it.value
         val previous = this._gss.peek(gn)
         if (previous.isEmpty()) {

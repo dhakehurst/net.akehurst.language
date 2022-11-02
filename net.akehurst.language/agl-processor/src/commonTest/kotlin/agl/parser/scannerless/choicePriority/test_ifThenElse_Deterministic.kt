@@ -93,12 +93,12 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
         //TODO: if we can implement better combination of states, then this should need only 1 head
         // currently the "if var then" bit ends up on diff states
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedNumGSSHeads = 2,
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -122,12 +122,12 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedNumGSSHeads = 2,
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -162,12 +162,12 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedNumGSSHeads = 2,
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -202,12 +202,12 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 

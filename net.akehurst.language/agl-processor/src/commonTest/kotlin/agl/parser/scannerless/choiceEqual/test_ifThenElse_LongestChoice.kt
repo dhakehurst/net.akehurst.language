@@ -82,7 +82,7 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2,
                 expectedTrees = arrayOf(expected)
         )
     }
@@ -108,7 +108,7 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2,
                 expectedTrees = arrayOf(expected)
         )
     }
@@ -143,7 +143,7 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2,
                 expectedTrees = arrayOf(expected)
         )
     }
@@ -200,7 +200,7 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2,
                 expectedTrees = arrayOf(expected1)
         )
     }

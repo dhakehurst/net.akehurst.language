@@ -30,10 +30,10 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
     private companion object {
         // one grammar
-        //S = a B a
+        //S = a B c
         //B = b
         val Sn = runtimeRuleSet {
-            concatenation("S") { literal("a"); ref("B"); literal("a"); }
+            concatenation("S") { literal("a"); ref("B"); literal("c"); }
             concatenation("B") { literal("b") }
         }
 
@@ -43,10 +43,10 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
             concatenation("B") { literal("b") }
         }
 
-        // S = a gB a ;
+        // S = a gB c ;
         // gB = B::B ;
         val S = runtimeRuleSet {
-            concatenation("S") { literal("a"); ref("gB"); literal("a"); }
+            concatenation("S") { literal("a"); ref("gB"); literal("c"); }
             embedded("gB", B, B.findRuntimeRule("B"))
         }
         val goal = "S"
@@ -79,14 +79,14 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun Sn_aba() {
-        val sentence = "aba"
+    fun Sn_abc() {
+        val sentence = "abc"
 
         val expected = """
             S {
               'a'
               B { 'b' }
-              'a'
+              'c'
             }
         """.trimIndent()
 
@@ -146,22 +146,22 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'a'"))
+                parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'c'"))
             ), issues
         )
     }
 
     @Test
-    fun aba() {
+    fun abc() {
         val goal = "S"
-        val sentence = "aba"
+        val sentence = "abc"
 
         //TODO("how should we express embedded rules in the following string ?")
         val expected = """
             S {
               'a'
-              gB { B.B { 'b' } }
-              'a'
+              gB { B::B { 'b' } }
+              'c'
             }
         """.trimIndent()
 

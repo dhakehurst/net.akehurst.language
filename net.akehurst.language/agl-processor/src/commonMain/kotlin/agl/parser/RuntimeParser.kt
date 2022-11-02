@@ -34,7 +34,6 @@ import net.akehurst.language.agl.util.debug
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParserInterruptedException
 import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.util.addIfNotNull
 import kotlin.math.max
 
 internal class RuntimeParser(
@@ -52,13 +51,13 @@ internal class RuntimeParser(
     //var lastGrown: Set<ParseGraph.Companion.ToProcessTriple> = mutableSetOf()
     val canGrow: Boolean get() = this.graph.canGrow
 
+    var lastToGrow = listOf<ParseGraph.Companion.ToProcessTriple>()
     val lastDropped = mutableSetOf<ParseGraph.Companion.NextToProcess>()
     val embeddedLastDropped = mutableMapOf<Transition, Set<ParseGraph.Companion.NextToProcess>>()
+    val lastToTryWidthTrans = mutableListOf<ParseGraph.Companion.ToProcessTriple>()
 
     private var interruptedMessage: String? = null
 
-    //private val readyForShift = mutableListOf<GrowingNode>()
-    //private val readyForShiftPrevious = mutableMapOf<GrowingNode, MutableSet<GrowingNodeIndex>>()
     private val _skip_cache = mutableMapOf<Pair<Int, Set<LookaheadSet>>, TreeData?>()
 
     // must use a different instance of Input, so it can be reset, reset clears cached leaves. //TODO: check this
@@ -102,8 +101,7 @@ internal class RuntimeParser(
         }
     }
 
-
-    fun resetGraphToLastGrown(lastGrown:Set<ParseGraph.Companion.ToProcessTriple>) {
+    fun resetGraphToLastGrown(lastGrown:List<ParseGraph.Companion.ToProcessTriple>) {
 
         for (trip in lastGrown) {
             this.graph.pushback(trip)
@@ -142,71 +140,6 @@ internal class RuntimeParser(
         //    set.add(previous)
         //}
     }
-
-    //fun resetLastGrown() {
-    //    (this.lastGrown as MutableSet).clear()
-    //}
-    //fun addToLastGrown(head:GrowingNodeIndex) {
-    //    val triples = this.graph.peekTripleFor(head)
-    //    (this.lastGrown as MutableSet).addAll(triples)
-    //}
-
-    /*
-        // used for finding error info
-        fun tryGrowWidthOnce() {
-            this.grow3(true)
-        }
-
-        fun tryGrowWidthOnce1() {
-            //this.startPass()
-            val currentStartPosition = this.graph.nextHeadStartPosition
-            while (this.graph.hasNextHead && this.graph.nextHeadStartPosition <= currentStartPosition) {
-                val (gn, previous) = this.graph.nextHead()
-                checkInterrupt()
-                this.growWidthOnly(gn, previous)
-            }
-            //this.endPass()
-        }
-    */
-    // used for finding error info
-
-
-    // used for finding error info
-    /*
-    internal fun growWidthOnly(toProcess: ParseGraph.Companion.ToProcessTriple) {
-        when (toProcess.growingNode.runtimeRules.first().kind) { //FIXME
-            RuntimeRuleKind.GOAL -> {
-                val transitions = toProcess.growingNode.runtimeState.transitions(RuntimeState(stateSet.startState, setOf(LookaheadSet.EMPTY)))
-                    .filter { tr -> tr.to.runtimeRulesSet.any { it.isEmptyRule }.not() }
-                if (transitions.isEmpty()) {
-                    this.rememberForErrorComputation(toProcess) // remember for finding error info, think this never happens
-                } else {
-                    for (it in transitions) {
-                        when (it.action) {
-                            Transition.ParseAction.WIDTH -> doWidth(toProcess, it, true)
-                            else -> this.rememberForErrorComputation(toProcess) // remember for finding error info, think this never happens
-                        }
-                    }
-                }
-            }
-            else -> {
-                    val transitions = toProcess.growingNode.runtimeState.transitions(toProcess.previous!!.runtimeState)
-                        .filter { it.to.runtimeRulesSet.any { it.isEmptyRule }.not() }
-                    if (transitions.isEmpty()) {
-                        this.rememberForErrorComputation(toProcess) // remember for finding error info, think this never happens
-                    } else {
-                        for (it in transitions) {
-                            when (it.action) {
-                                Transition.ParseAction.WIDTH -> doWidth(toProcess, it, true)
-                                else -> this.rememberForErrorComputation(toProcess) // remember for finding error info
-                            }
-                        }
-                    }
-            }
-        }
-    }
-     */
-
 
     var debugCount = 0
     fun debugOutput() {
@@ -249,13 +182,15 @@ internal class RuntimeParser(
     }
 
     fun grow3(possibleEndOfText: Set<LookaheadSet>, noLookahead: Boolean): Int {
+        this.lastToTryWidthTrans.clear()
         this.lastDropped.clear()
-//        val lg = this.lastGrown.toMutableSet()
-//        this.resetLastGrown()
+        this.lastToGrow = this.graph.peekAllNextToProcess()
+
         var steps = 0
         val doneEmpties = mutableSetOf<ParserState>()
-        val currentStartPosition = this.graph.nextHeadStartPosition
-        while (this.graph.hasNextHead && this.graph.nextHeadStartPosition <= currentStartPosition) {
+
+        val currentNextInputPosition = this.graph.nextHeadNextInputPosition
+        while (this.graph.hasNextHead && this.graph.nextHeadNextInputPosition <= currentNextInputPosition) {
             checkInterrupt()
             val graph = this.graph //TODO: remove..for debug only
             if (Debug.OUTPUT_RUNTIME) {
@@ -275,7 +210,6 @@ internal class RuntimeParser(
             }
         }
         return steps
-        //return Pair(steps,lg+this.lastGrown)
     }
 
     private fun useGoal(lt: SPPTNode): SPPTNode {
@@ -458,7 +392,6 @@ internal class RuntimeParser(
         }
     }
 
-
     private fun doGoal(toProcess: ParseGraph.Companion.ToProcessTriple, transition: Transition, possibleEndOfText: Set<LookaheadSet>, noLookahead: Boolean): Boolean {
         return if (transition.runtimeGuard.invoke(toProcess.previous!!.numNonSkipChildren)) {
             val runtimeLhs = toProcess.growingNode.runtimeState.runtimeLookaheadSet //FIXME: Use previous runtimeLookahead ?
@@ -508,13 +441,13 @@ internal class RuntimeParser(
             }
             val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: l.nextInputPosition
 
-            // val lhWithMatch = possibleEndOfText.filter {
-            //     this.graph.isLookingAt(lh, it, nextInputPositionAfterSkip)
-            // }
             val hasLh = possibleEndOfText.any { eot ->
                 runtimeLhs.any { rt ->
                     this.graph.isLookingAt(lh, eot, rt, nextInputPositionAfterSkip)
                 }
+            }
+            if (transition.to.firstRule.isEmptyRule.not()) {
+                this.lastToTryWidthTrans.add(toProcess)
             }
             if (noLookahead || hasLh) {
                 //val runtimeLhs = lhWithMatch
@@ -523,8 +456,8 @@ internal class RuntimeParser(
                 //this.graph.pushToStackOf(transition.to, runtimeLhs, startPosition, nextInputPosition, curGn, previous, skipData)
                 if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
                 val newHead = this.graph.pushToStackOf(toProcess, transition.to, setOf(LookaheadSet.EMPTY), startPosition, nextInputPosition, skipData)
-                //TODO: return boolean rather than new head from pushToStackOf!
-                return if(newHead==null) {
+                //this.nextExpected.addAll(lh.fullContent)
+                if(newHead==null) {
                     false
                 } else {
                     //this.addToLastGrown(newHead)
@@ -534,6 +467,7 @@ internal class RuntimeParser(
                 false
             }
         } else {
+            this.lastToTryWidthTrans.add(toProcess)
             false
         }
     }
@@ -695,8 +629,8 @@ internal class RuntimeParser(
 
     fun tryGrowHeightOrGraft(possibleEndOfText: Set<LookaheadSet>, noLookahead: Boolean): Set<ParseGraph.Companion.NextToProcess> {
         val lg = mutableSetOf<ParseGraph.Companion.NextToProcess>()
-        val currentStartPosition = this.graph.nextHeadStartPosition
-        while (this.graph.hasNextHead && this.graph.nextHeadStartPosition <= currentStartPosition) {
+        val currentStartPosition = this.graph.nextHeadNextInputPosition
+        while (this.graph.hasNextHead && this.graph.nextHeadNextInputPosition <= currentStartPosition) {
             //while ((this.canGrow && this.graph.goals.isEmpty())) {
             val nextToProcess = this.graph.nextToProcess()
             checkInterrupt()

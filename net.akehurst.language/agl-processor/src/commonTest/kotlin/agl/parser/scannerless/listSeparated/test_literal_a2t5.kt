@@ -141,7 +141,7 @@ internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"ababababa^ba",setOf("<EOT>"))
+            parseError(InputLocation(9,10,1,1),"ababababa^ba",setOf("<EOT>"))
         ),issues)
     }
 }

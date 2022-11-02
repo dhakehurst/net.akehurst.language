@@ -81,7 +81,7 @@ internal class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
             rrs = deterministic,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
+            expectedNumGSSHeads = 1,
             expectedTrees = arrayOf(expected)
         )
 
@@ -145,7 +145,7 @@ internal class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
             rrs = ambiguous,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
+            expectedNumGSSHeads = 1,
             expectedTrees = arrayOf(expected1, expected2)
         )
 
