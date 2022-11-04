@@ -528,7 +528,8 @@ internal class ParseGraph(
     fun createWithFirstChild(
         parentState: ParserState,
         parentRuntimeLookaheadSet: Set<LookaheadSet>,
-        toProcess:ToProcessTriple
+        toProcess:ToProcessTriple,
+        buildSPPT:Boolean //TODO:
     ): Boolean {
         val childNode = toProcess.growingNode
         val previous = toProcess.previous!!
@@ -641,7 +642,8 @@ internal class ParseGraph(
     fun growNextChild(
         toProcess:ToProcessTriple,
         newParentState: ParserState,
-        newParentRuntimeLookaheadSet: Set<LookaheadSet>
+        newParentRuntimeLookaheadSet: Set<LookaheadSet>,
+        buildSPPT:Boolean
     ): Boolean {
         val nextChildNode = toProcess.growingNode
         val oldParentNode = toProcess.previous!!
@@ -691,7 +693,7 @@ internal class ParseGraph(
                     val newPriority = child.state.priorityList[0]
                     when {
                         newPriority > existingPriority -> {
-                            addNewPreferredTreeData(null, newParent, child)
+                            if (buildSPPT) addNewPreferredTreeData(null, newParent, child)
                             createNewHeadAndDropExisting(existingChild, newParent, previous)
                             true
                         }
@@ -705,7 +707,7 @@ internal class ParseGraph(
                         }
                     }
                 } else {
-                    addNewPreferredTreeData(oldParent, newParent, child)
+                    if (buildSPPT) addNewPreferredTreeData(oldParent, newParent, child)
                     createNewHeadAndKeepExisting(newParent, previous)
                     true
                 }
@@ -717,7 +719,7 @@ internal class ParseGraph(
                 val newPriority = child.state.priorityList[0]
                 when {
                     newPriority > existingPriority -> {
-                        addNewPreferredTreeData(null, newParent, child)
+                        if (buildSPPT) addNewPreferredTreeData(null, newParent, child)
                         createNewHeadAndDropExisting(existingChild, newParent, previous)
                         true
                     }
@@ -731,7 +733,7 @@ internal class ParseGraph(
                     }
                 }
             } else {
-                addNewPreferredTreeData(oldParent, newParent, child)
+                if (buildSPPT) addNewPreferredTreeData(oldParent, newParent, child)
                 createNewHeadAndKeepExisting(newParent, previous)
                 true
             }

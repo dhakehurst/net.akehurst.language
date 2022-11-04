@@ -102,7 +102,7 @@ class test_StatechartTools_Singles {
     fun expectedAt_TransitionSpecification_0() {
         val goal = "TransitionSpecification"
         val sentence = ""
-        val actual = processor.expectedAt(sentence, 0, 1, processor.options { parse { goalRuleName(goal) } }).items.map { it.text }
+        val actual = processor.expectedTerminalsAt(sentence, 0, 1, processor.options { parse { goalRuleName(goal) } }).items.map { it.text }
 
         val expected = setOf("ID", "after", "every", "entry", "exit", "always", "oncycle", "[", "default", "else", "/", "#")
         assertEquals(expected, actual.toSet())

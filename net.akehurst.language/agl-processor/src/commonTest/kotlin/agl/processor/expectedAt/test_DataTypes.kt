@@ -46,28 +46,28 @@ class test_DataTypes {
         val processor = Agl.processorFromString<Any,Any>(grammarStr)
 
         val testData = listOf(
-            Data("",0, listOf("class")),
-            Data(" ",0, listOf("class")),
-            Data(" ",1, listOf("class")),
-            Data("class",0, listOf("class")),
+            Data("",0, listOf("'class'","<EOT>")),
+            Data(" ",0, listOf("'class'","<EOT>")),
+            Data(" ",1, listOf("'class'","<EOT>")),
+            Data("class",0, listOf("'class'","<EOT>")),
             Data("class",5, listOf("ID")),
             Data("class ",5, listOf("ID")),
             Data("class ",6, listOf("ID")),
             Data("class A",5, listOf("ID")),
             Data("class A",6, listOf("ID")),
-            Data("class A",7, listOf("{")),
-            Data("class A ",7, listOf("{")),
-            Data("class A ",8, listOf("{")),
-            Data("class A {",9, listOf("ID","}")),
-            Data("class A { ",10, listOf("ID","}")),
-            Data("class A { p",11, listOf(":")),
-            Data("class A { p ",12, listOf(":")),
+            Data("class A",7, listOf("'{'")),
+            Data("class A ",7, listOf("'{'")),
+            Data("class A ",8, listOf("'{'")),
+            Data("class A {",9, listOf("ID","'}'")),
+            Data("class A { ",10, listOf("ID","'}'")),
+            Data("class A { p",11, listOf("':'")),
+            Data("class A { p ",12, listOf("':'")),
             Data("class A { p: ",13, listOf("ID")),
-            Data("class A { p: X",14, listOf("<", "ID", "}")),
+            Data("class A { p: X",14, listOf("'<'", "ID", "'}'")),
             Data("class A { p: X<",15, listOf("ID")),
-            Data("class A { p: X<Y",16, listOf("<", ",",">")),
+            Data("class A { p: X<Y",16, listOf("'<'", "','","'>'")),
             Data("class A { p: X<Y>",17, listOf("ID", "}")),
-            Data("class A { p: X<Y> }",19, listOf("class")),
+            Data("class A { p: X<Y> }",19, listOf("'class'","<EOT>")),
         )
     }
 
@@ -78,8 +78,8 @@ class test_DataTypes {
             val sentence = data.sentence
             val position = data.position
 
-            val result = processor.expectedAt(sentence, position, 1, processor.options { parse { goalRuleName(goal) } } )
-            val actual = result.items.map { it.text }
+            val result = processor.expectedTerminalsAt(sentence, position, 1, processor.options { parse { goalRuleName(goal) } } )
+            val actual = result.items.map { it.ruleName }
             val expected = data.expected
             assertEquals(expected.toSet(), actual.toSet(), data.toString())
         }

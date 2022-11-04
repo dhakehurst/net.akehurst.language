@@ -176,6 +176,23 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
         return fResult
     }
 
+    override fun expectedTerminalsAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
+        val opts = defaultOptions(options)
+        val parserExpected: Set<RuntimeRule> = this.parser.expectedAt(opts.parse.goalRuleName!!, sentence, position, opts.parse.automatonKind)
+        //val grammarExpected: List<RuleItem> = parserExpected
+        //    .filter { it !== RuntimeRuleSet.END_OF_TEXT }
+        //    .map { this._converterToRuntimeRules.originalRuleItemFor(it.runtimeRuleSetNumber, it.number) }
+        //val expected = grammarExpected.flatMap { this._completionProvider.provideFor(it, desiredDepth) }
+        val items = parserExpected.map {
+            when {
+                it==RuntimeRuleSet.END_OF_TEXT -> CompletionItem(it.tag, it.tag)
+                else -> CompletionItem(it.tag, it.value)
+            }
+        }
+        return ExpectedAtResultDefault(items, emptyList())
+    }
+
+    /*
     override fun expectedAt(
         sentence: String,
         position: Int,
@@ -191,6 +208,7 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
         val items = expected.toSet().toList()
         return ExpectedAtResultDefault(items, emptyList()) //TODO: issues
     }
+     */
 
     private fun defaultOptions(options: ProcessOptions<AsmType, ContextType>?): ProcessOptions<AsmType, ContextType> {
         val opts = options ?: optionsDefault()

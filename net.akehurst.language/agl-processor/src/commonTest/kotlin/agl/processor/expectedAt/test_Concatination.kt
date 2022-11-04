@@ -37,7 +37,7 @@ class test_Concatination {
         val sentence = ""
         val position = 0
 
-        val actual = processor.expectedAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
                 "a"
         )
@@ -49,7 +49,7 @@ class test_Concatination {
         val sentence = "a"
         val position = 0
 
-        val actual = processor.expectedAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
                 "a"
         )
@@ -61,7 +61,7 @@ class test_Concatination {
         val sentence = "a"
         val position = 1
 
-        val actual = processor.expectedAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
                 "b"
         )
@@ -73,7 +73,7 @@ class test_Concatination {
         val sentence = "ab"
         val position = 1
 
-        val actual = processor.expectedAt(sentence, position, 1).items.map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
                 "b"
         )

@@ -121,17 +121,17 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     fun formatAsm(asm: AsmType, options: ProcessOptions<AsmType, ContextType>? = null): FormatResult
 
     /**
-     * returns list of names of expected rules
+     * returns list of terminals expected at the given position
      *
      * @param sentence text to parse
-     * @param position position in the text (from reader) at which to provide completions
+     * @param position position in the text (from reader) at which to provide expectations
      * @param desiredDepth depth of nested rules to search when constructing possible completions
      * @param goalRuleName name of a rule in the grammar that is the goal rule
      * @return list of possible completion items
      * @throws ParseFailedException
      * @throws ParseTreeException
      */
-    fun expectedAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>? = null): ExpectedAtResult
+    fun expectedTerminalsAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>? = null): ExpectedAtResult
 
     //List<CompletionItem> expectedAt(Reader reader, String goalRuleName, int position, int desiredDepth)
 
