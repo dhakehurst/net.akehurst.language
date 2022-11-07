@@ -192,10 +192,14 @@ internal class ScanOnDemandParser(
         val errorLocations = r.map { (pos, expected) ->
             Pair(input.locationFor(pos, 0), expected) //FIXME: length maybe not correct
         }
-        val maxLastLocation = errorLocations.maxByOrNull { it.first.endPosition } ?: error("Internal error")
-        val fr = errorLocations.filter { it.first.position == maxLastLocation.first.position }
-        val res = fr.flatMap { it.second }.toSet()
-        return Pair(maxLastLocation.first, res)
+        return if(errorLocations.isEmpty()) {
+            Pair(InputLocation(0,1,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
+        } else {
+            val maxLastLocation = errorLocations.maxBy { it.first.endPosition }
+            val fr = errorLocations.filter { it.first.position == maxLastLocation.first.position }
+            val res = fr.flatMap { it.second }.toSet()
+            Pair(maxLastLocation.first, res)
+        }
     }
 
     private fun possErrors(triples:Set<ParseGraph.Companion.ToProcessTriple>, rp:RuntimeParser, input:InputFromString, possibleEndOfText: Set<LookaheadSet>): Set<Pair<Int, Set<RuntimeRule>>> {
