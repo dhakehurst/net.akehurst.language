@@ -204,7 +204,10 @@ internal class ScanOnDemandParser(
             when {
                 lg.runtimeState.state.isGoal -> {
                     if (lg.runtimeState.isAtEnd) {
-                        setOf(Pair(lg.nextInputPosition, setOf(RuntimeRuleSet.END_OF_TEXT)))
+                        val runtimeLookahead = setOf(LookaheadSet.EOT)
+                        val skipData = rp.parseSkipIfAny(lg.nextInputPosition,runtimeLookahead, LookaheadSet.ANY, possibleEndOfText, RuntimeParser.normalArgs)
+                        val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: lg.nextInputPosition
+                        setOf(Pair(nextInputPositionAfterSkip, setOf(RuntimeRuleSet.END_OF_TEXT)))
                     } else {
                         val trs = lg.runtimeState.transitions(rp.stateSet.startState, rp.stateSet.startState)
                         if (trs.isEmpty()) {
@@ -280,7 +283,7 @@ internal class ScanOnDemandParser(
                                 Transition.ParseAction.GOAL -> prev.runtimeState.runtimeLookaheadSet
                             }
                             val runtimeGuardPassed = tr.runtimeGuard.invoke( prev.numNonSkipChildren)
-                            errorPairs(input, lg, tr, possibleEndOfText, rtLh, runtimeGuardPassed)
+                            errorPairs(rp, input, lg, tr, possibleEndOfText, rtLh, runtimeGuardPassed)
                         }.toSet()
                         pairs
                     } else {
@@ -300,7 +303,7 @@ internal class ScanOnDemandParser(
                                     Transition.ParseAction.GOAL ->prev2.runtimeState.runtimeLookaheadSet
                                 }
                                 val runtimeGuardPassed = tr2.runtimeGuard.invoke( prev2.numNonSkipChildren)
-                                errorPairs(input, lg, tr2, possibleEndOfText, rtLh, runtimeGuardPassed)
+                                errorPairs(rp, input, lg, tr2, possibleEndOfText, rtLh, runtimeGuardPassed)
                             }
                         }
                     }
@@ -311,22 +314,23 @@ internal class ScanOnDemandParser(
     }
 
     private fun errorPairs(
+        rp:RuntimeParser,
         input: InputFromString,
         lg: GrowingNodeIndex,
-        tr: Transition,
+        transition: Transition,
         possibleEndOfText: Set<LookaheadSet>,
         runtimeLookahead: Set<LookaheadSet>,
         runtimeGuardPassed: Boolean
     ): Pair<Int, Set<RuntimeRule>>? {
-        return when (tr.action) {
+        return when (transition.action) {
             Transition.ParseAction.GOAL -> null
             Transition.ParseAction.WIDTH,
             Transition.ParseAction.EMBED -> {
                 // try grab 'to' token, if nothing then that is error else lookahead is error
-                val l = input.findOrTryCreateLeaf(tr.to.firstRule, lg.nextInputPosition)
+                val l = input.findOrTryCreateLeaf(transition.to.firstRule, lg.nextInputPosition)
                 when (l) {
                     null -> {
-                        val expected = tr.to.runtimeRules.filter { it.isEmptyRule.not() }
+                        val expected = transition.to.runtimeRules.filter { it.isEmptyRule.not() }
                         if (expected.isEmpty()) {
                             null
                         } else {
@@ -335,13 +339,17 @@ internal class ScanOnDemandParser(
                     }
 
                     else -> {
-                        val expected = tr.lookahead
+                        val trlh = transition.lookahead.map { it.guard }.reduce { acc, e -> acc.union(rp.stateSet, e) } //TODO:reduce to 1 in SM
+                        val skipData = rp.parseSkipIfAny(l.nextInputPosition,runtimeLookahead, trlh, possibleEndOfText, RuntimeParser.normalArgs)
+                        val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: l.nextInputPosition
+
+                        val expected = transition.lookahead
                             .flatMap { lh -> possibleEndOfText.flatMap { eot -> runtimeLookahead.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }
                             .filter { it.isEmptyRule.not() }
                         if (expected.isEmpty()) {
                             null
                         } else {
-                            Pair(l.nextInputPosition, expected.toSet())
+                            Pair(nextInputPositionAfterSkip, expected.toSet())
                         }
                     }
                 }
@@ -350,14 +358,14 @@ internal class ScanOnDemandParser(
             else -> when {
                 runtimeGuardPassed -> {
                     val expected =
-                        tr.lookahead.flatMap { lh -> possibleEndOfText.flatMap { eot -> runtimeLookahead.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }.toSet()
+                        transition.lookahead.flatMap { lh -> possibleEndOfText.flatMap { eot -> runtimeLookahead.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }.toSet()
                     val pos = lg.nextInputPosition
                     Pair(pos, expected)
                 }
 
                 else -> {
                     val expected =
-                        tr.lookahead.flatMap { lh -> possibleEndOfText.flatMap { eot -> runtimeLookahead.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }.toSet()
+                        transition.lookahead.flatMap { lh -> possibleEndOfText.flatMap { eot -> runtimeLookahead.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }.toSet()
                     val pos = lg.startPosition
                     Pair(pos, expected)
                 }

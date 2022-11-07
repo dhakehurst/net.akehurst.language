@@ -137,7 +137,7 @@ internal class LookaheadSet(
                 }
                 resolvedContent = if (this.includesEOT) resolvedContent.union(eotLookahead.content) else resolvedContent
                 val eot = this.includesEOT || (this.includesRT && runtimeLookahead.includesEOT)
-                val ma = this.matchANY || (this.includesRT && eotLookahead.matchANY)
+                val ma = this.matchANY || (this.includesEOT && eotLookahead.matchANY) || (this.includesRT && runtimeLookahead.matchANY)
                 LookaheadSetPart(false, eot, ma, resolvedContent)
             }
         }

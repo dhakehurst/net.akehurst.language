@@ -80,6 +80,7 @@ internal abstract class test_AutomatonUtilsAbstract {
         val GRAFT = Transition.ParseAction.GRAFT
         val GOAL = Transition.ParseAction.GOAL
 
+        fun RP(rr: RuntimeRule): RulePosition = RP(rr, o0, EOR)
         fun RP(rr: RuntimeRule, opt: Int, pos: Int): RulePosition = RulePosition(rr, opt, pos)
         fun LHS(content: Set<RuntimeRule>) = LookaheadSetPart(content.contains(RT), content.contains(EOT), false, content.minus(RT).minus(EOT))
         fun LHS(vararg rrs: RuntimeRule) = LHS(rrs.toSet())

@@ -18,6 +18,7 @@ package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.api.processor.CompletionItemKind
 
 class CompletionProvider(
         val targetGrammar:Grammar
@@ -47,9 +48,9 @@ class CompletionProvider(
                     items
                 }
                 is Terminal -> when {
-                    item.owningRule.isLeaf -> listOf(CompletionItem(item.owningRule.name, item.owningRule.name))  //TODO: generate text/example from regEx
-                    item.isPattern -> listOf(CompletionItem(item.owningRule.name, item.value)) //TODO: generate text/example from regEx
-                    else -> listOf(CompletionItem(item.owningRule.name, item.value))
+                    item.owningRule.isLeaf -> listOf(CompletionItem(CompletionItemKind.LITERAL,item.owningRule.name, item.owningRule.name))  //TODO: generate text/example from regEx
+                    item.isPattern -> listOf(CompletionItem(CompletionItemKind.PATTERN,item.owningRule.name, item.value)) //TODO: generate text/example from regEx
+                    else -> listOf(CompletionItem(CompletionItemKind.LITERAL,item.owningRule.name, item.value))
                 }
                 is NonTerminal -> {
                     //TODO: handle overridden vs embedded rules!

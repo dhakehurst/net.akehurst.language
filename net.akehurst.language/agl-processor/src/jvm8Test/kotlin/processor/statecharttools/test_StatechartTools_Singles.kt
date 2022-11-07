@@ -16,6 +16,7 @@
 package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -102,9 +103,16 @@ class test_StatechartTools_Singles {
     fun expectedAt_TransitionSpecification_0() {
         val goal = "TransitionSpecification"
         val sentence = ""
-        val actual = processor.expectedTerminalsAt(sentence, 0, 1, processor.options { parse { goalRuleName(goal) } }).items.map { it.text }
+        val actual = processor.expectedTerminalsAt(sentence, 0, 1, processor.options { parse { goalRuleName(goal) } })
+            .items.map {
+                when (it.kind) {
+                    CompletionItemKind.LITERAL -> it.text
+                    CompletionItemKind.PATTERN -> it.ruleName
+                    CompletionItemKind.SEGMENT -> error("Not expected")
+                }
+            }.toSet().sorted()
 
-        val expected = setOf("ID", "after", "every", "entry", "exit", "always", "oncycle", "[", "default", "else", "/", "#")
-        assertEquals(expected, actual.toSet())
+        val expected = setOf("ID", "after", "every", "entry", "exit", "always", "oncycle", "[", "default", "else", "/", "#").sorted()
+        assertEquals(expected, actual)
     }
 }

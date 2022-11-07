@@ -121,7 +121,7 @@ class test_SPPTParser {
         val actual = sut.addTree(treeString)
 
         assertNotNull(actual)
-        assertEquals(" 'a'", actual.toStringAll)
+        assertEquals("'a'", actual.toStringAll)
     }
 
     @Test
@@ -137,7 +137,7 @@ class test_SPPTParser {
         val actual = sut.addTree(treeString)
 
         assertNotNull(actual)
-        assertEquals(" '\\\\'", actual.toStringAll)
+        assertEquals("'\\\\'", actual.toStringAll)
     }
 
     @Test
@@ -169,7 +169,7 @@ class test_SPPTParser {
         val actual = sut.addTree(treeString)
 
         assertNotNull(actual)
-        assertEquals(" a { §empty.a }", actual.toStringAll)
+        assertEquals("a { §empty.a }", actual.toStringAll)
     }
 
     @Test
@@ -185,7 +185,7 @@ class test_SPPTParser {
         val actual = sut.addTree(treeString)
 
         assertNotNull(actual)
-        assertEquals(" a { 'a' }", actual.toStringAll)
+        assertEquals("a { 'a' }", actual.toStringAll)
     }
 
 

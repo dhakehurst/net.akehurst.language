@@ -60,7 +60,7 @@ class test_AglGrammar_item {
             nonTerminal {
                 SINGLE_LINE_COMMENT : '// a single line comment'
                 WHITESPACE : '⏎'
-                qualifiedName { IDENTIFIER : 'a' } 
+                IDENTIFIER : 'a' 
             }
         """
         )
@@ -81,7 +81,7 @@ class test_AglGrammar_item {
             nonTerminal {
                 SINGLE_LINE_COMMENT : '//'
                 WHITESPACE : '⏎'
-                qualifiedName { IDENTIFIER : 'a' } 
+                IDENTIFIER : 'a' 
             }
         """
         )
@@ -105,7 +105,7 @@ class test_AglGrammar_item {
             nonTerminal {
                 MULTI_LINE_COMMENT : '/* a single line comment⏎sfgh⏎*/'
                 WHITESPACE : '⏎'
-                qualifiedName { IDENTIFIER : 'a' }
+                IDENTIFIER : 'a'
             }
         """
         )
@@ -261,7 +261,7 @@ class test_AglGrammar_item {
         val result = parse("simpleItem", "a")
         val expected = this.sppt(
             """
-            simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } }
+            simpleItem|1 { nonTerminal { IDENTIFIER : 'a' } }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -410,7 +410,7 @@ class test_AglGrammar_item {
         val expected = this.sppt(
             """
             simpleList {
-                simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } }
+                simpleItem|1 { nonTerminal { IDENTIFIER : 'a' } }
                 multiplicity { '*' }
             }
         """.trimIndent()
@@ -458,7 +458,7 @@ class test_AglGrammar_item {
         val result = parse("concatenationItem", "a")
         val expected = this.sppt(
             """
-            concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } } }
+            concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'a' } } }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -503,7 +503,7 @@ class test_AglGrammar_item {
         val result = parse("concatenation", "a")
         val expected = this.sppt(
             """
-             concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } } } }
+             concatenation { concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'a' } } } }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -517,13 +517,13 @@ class test_AglGrammar_item {
         val expected = this.sppt(
             """
             concatenation {
-                concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
+                concatenationItem { simpleItem|1 { nonTerminal { 
                     IDENTIFIER : 'a' WHITESPACE  : ' ' 
-                } } } }
-                concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
+                } } }
+                concatenationItem { simpleItem|1 { nonTerminal { 
                     IDENTIFIER : 'b' WHITESPACE  : ' ' 
-                } } } }
-                concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } }
+                } } }
+                concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'c' } } }
             }
         """.trimIndent()
         )
@@ -538,15 +538,15 @@ class test_AglGrammar_item {
         val expected = this.sppt(
             """
             priorityChoice {
-                concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
+                concatenation { concatenationItem { simpleItem|1 { nonTerminal { 
                     IDENTIFIER : 'a' WHITESPACE  : ' ' 
-                } } } } }
+                } } } }
                 '<' WHITESPACE  : ' ' 
-                concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
+                concatenation { concatenationItem { simpleItem|1 { nonTerminal { 
                     IDENTIFIER : 'b' WHITESPACE  : ' ' 
-                } } } } }
+                } } } }
                 '<' WHITESPACE  : ' ' 
-                concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } } }
+                concatenation { concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'c' } } } }
             }
         """.trimIndent()
         )
@@ -561,15 +561,15 @@ class test_AglGrammar_item {
         val expected = this.sppt(
             """
              simpleChoice {
-                concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
+                concatenation { concatenationItem { simpleItem|1 { nonTerminal { 
                 IDENTIFIER : 'a' WHITESPACE : ' '
-                } } } } }
+                } } } }
                 '|' WHITESPACE : ' '
-                concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
+                concatenation { concatenationItem { simpleItem|1 { nonTerminal { 
                 IDENTIFIER : 'b' WHITESPACE : ' '
-                } } } } }
+                } } } }
                 '|' WHITESPACE : ' '
-                concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } } }
+                concatenation { concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'c' } } } }
             }
         """.trimIndent()
         )
@@ -584,13 +584,13 @@ class test_AglGrammar_item {
         val expected = this.sppt(
             """
             choice|2 { simpleChoice {
-                concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
+                concatenation { concatenationItem { simpleItem|1 { nonTerminal {
                     IDENTIFIER : 'a'
                     WHITESPACE : ' '
-                } } } } }
+                } } } }
                 '|'
                 WHITESPACE : ' '
-                concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' } } } } }
+                concatenation { concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'b' } } } }
             } }
         """.trimIndent()
         )
@@ -605,15 +605,15 @@ class test_AglGrammar_item {
         val expected = this.sppt(
             """
             choice|1 { priorityChoice {
-                concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
+                concatenation { concatenationItem { simpleItem|1 { nonTerminal { 
                     IDENTIFIER : 'a' WHITESPACE  : ' ' 
-                } } } } }
+                } } } }
                 '<' WHITESPACE  : ' ' 
-                concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
+                concatenation { concatenationItem { simpleItem|1 { nonTerminal { 
                     IDENTIFIER : 'b' WHITESPACE  : ' ' 
-                } } } } }
+                } } } }
                 '<' WHITESPACE  : ' ' 
-                concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } } }
+                concatenation { concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'c' } } } }
             } }
         """.trimIndent()
         )
@@ -640,7 +640,7 @@ class test_AglGrammar_item {
                 '='
                 rhs|1 { concatenation { concatenationItem { simpleItem|2 { group {
                 '('
-                    groupedContent { concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' } } } } } }
+                    groupedContent { concatenation { concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'b' } } } } }
                 ')'
                 } } } } }
                 ';'
@@ -661,8 +661,8 @@ class test_AglGrammar_item {
             group {
               '('
               groupedContent { concatenation {
-                concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } }
-                concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } }
+                concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'b' WHITESPACE : ' ' } } }
+                concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'c' } } }
               } }
               ')'
             }
@@ -682,8 +682,8 @@ class test_AglGrammar_item {
             concatenation { concatenationItem { simpleItem { group {
               '('
               groupedContent { concatenation {
-                concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } }
-                concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } }
+                concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'b' WHITESPACE : ' ' } } }
+                concatenationItem { simpleItem|1 { nonTerminal {  IDENTIFIER : 'c' } } }
               } }
               ')'
             } } } }
@@ -739,8 +739,8 @@ class test_AglGrammar_item {
             rhs { concatenation { concatenationItem { simpleItem { group {
               '('
               groupedContent { concatenation {
-                concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } }
-                concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } }
+                concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'b' WHITESPACE : ' ' } } }
+                concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'c' } } }
               } }
               ')'
             } } } } }
@@ -765,19 +765,19 @@ class test_AglGrammar_item {
                 IDENTIFIER : 'r' WHITESPACE : ' '
                 '=' WHITESPACE : ' '
                 rhs|2 { choice|1 { priorityChoice {
-                    concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
+                    concatenation { concatenationItem { simpleItem|1 { nonTerminal {
                         IDENTIFIER : 'a' WHITESPACE : ' '
-                    } } } } }
+                    } } } }
                     '<'
                     WHITESPACE : ' '
-                    concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
+                    concatenation { concatenationItem { simpleItem|1 { nonTerminal {
                         IDENTIFIER : 'b' WHITESPACE : ' '
-                    } } } } }
+                    } } } }
                     '<'
                     WHITESPACE : ' '
-                    concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
+                    concatenation { concatenationItem { simpleItem|1 { nonTerminal {
                         IDENTIFIER : 'c' WHITESPACE : ' '
-                    } } } } }
+                    } } } }
                 } } }
                 ';'
             }
@@ -826,10 +826,10 @@ class test_AglGrammar_item {
                 }
                 IDENTIFIER : 'r' WHITESPACE : ' '
                 '=' WHITESPACE : ' '
-                rhs|1 { concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
+                rhs|1 { concatenation { concatenationItem { simpleItem|1 { nonTerminal { 
                     IDENTIFIER : 'a'
                     WHITESPACE : ' '
-                } } } } } }
+                } } } } }
                 ';'
             }
         """.trimIndent()
@@ -855,10 +855,10 @@ class test_AglGrammar_item {
                 }
                 IDENTIFIER : 'r' WHITESPACE : ' '
                 '=' WHITESPACE : ' '
-                rhs|1 { concatenation {  concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { 
+                rhs|1 { concatenation {  concatenationItem { simpleItem|1 { nonTerminal {  
                     IDENTIFIER : 'a'
                     WHITESPACE : ' '
-                } } } } } }
+                } } } } }
                 ';'
             }
         """.trimIndent()
@@ -884,17 +884,17 @@ class test_AglGrammar_item {
                 }
                 IDENTIFIER : 'r' WHITESPACE : ' '
                 '=' WHITESPACE : ' '
-                rhs|1 {  concatenation { concatenationItem { simpleItem|1 { nonTerminal { qualifiedName {
+                rhs|1 {  concatenation { concatenationItem { simpleItem|1 { nonTerminal { 
                     IDENTIFIER : 'a'
                     WHITESPACE : ' '
-                } } } } } }
+                } } } } }
                 ';'
             }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
-        assertEquals(2, result.sppt!!.maxNumHeads)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
     @Test
@@ -914,7 +914,7 @@ class test_AglGrammar_item {
                 IDENTIFIER : 'list' WHITESPACE : ' '
                 '=' WHITESPACE : ' '
                 rhs|1 { concatenation { concatenationItem|1 { listOfItems { simpleList {
-                  simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } }
+                  simpleItem|1 { nonTerminal { IDENTIFIER : 'a' } }
                   multiplicity { '*' WHITESPACE : ' ' }
                 } } } } }
                 ';'
@@ -944,9 +944,9 @@ class test_AglGrammar_item {
                 '='
                 rhs|1 { concatenation { concatenationItem|1 { listOfItems|1 { separatedList {
                   '['
-                  simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } }
+                  simpleItem|1 { nonTerminal { IDENTIFIER : 'a' } }
                   '/'
-                  simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } }
+                  simpleItem|1 { nonTerminal { IDENTIFIER : 'c' } }
                   ']'
                   multiplicity { '*'}
                 } } } } }
@@ -978,8 +978,8 @@ class test_AglGrammar_item {
                 rhs|1 { concatenation { concatenationItem { simpleItem|2 { group {
                 '('
                     groupedContent { concatenation {
-                        concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } }
-                        concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } } }
+                        concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'b' WHITESPACE : ' ' } } }
+                        concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'c' } } }
                     } }
                 ')'
                 } } } } }
@@ -1005,13 +1005,13 @@ class test_AglGrammar_item {
                 IDENTIFIER : 's'
                 '='
                 rhs|1 { concatenation {
-                    concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' } } } }
+                    concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'a' } } }
                     concatenationItem { simpleItem|2 { group {
                         '('
                         groupedContent { concatenation {
-                        concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } }
+                        concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'b' WHITESPACE : ' ' } } }
                         concatenationItem|1 { listOfItems { simpleList { 
-                            simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } }
+                            simpleItem|1 { nonTerminal { IDENTIFIER : 'c' } }
                             multiplicity|2 { '?' }
                         } } }
                         } }
@@ -1043,12 +1043,12 @@ class test_AglGrammar_item {
                     '('
                     groupedContent|1 { choice|2 { simpleChoice {
                         concatenation {
-                            concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'a' WHITESPACE : ' ' } } } }
-                            concatenationItem { simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'b' WHITESPACE : ' ' } } } }
+                            concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'a' WHITESPACE : ' ' } } }
+                            concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'b' WHITESPACE : ' ' } } }
                         }
                         '|' WHITESPACE : ' '
                         concatenation { concatenationItem|1 { listOfItems { simpleList {
-                            simpleItem|1 { nonTerminal { qualifiedName { IDENTIFIER : 'c' } } }
+                            simpleItem|1 { nonTerminal { IDENTIFIER : 'c' } }
                             multiplicity|2 { '?' }
                         } } } }
                     } } }
@@ -1084,9 +1084,9 @@ class test_AglGrammar_item {
                 }
                 IDENTIFIER : 's' WHITESPACE : ' '
                 '=' WHITESPACE : ' '
-                rhs { concatenation { concatenationItem { simpleItem { nonTerminal { qualifiedName {
+                rhs { concatenation { concatenationItem { simpleItem { nonTerminal { 
                   IDENTIFIER : 'a' WHITESPACE : ' '
-                } } } } } }
+                } } } } }
                 ';' WHITESPACE : ' '
               } }
               '}'
@@ -1119,9 +1119,9 @@ class test_AglGrammar_item {
                 }
                 IDENTIFIER : 's' WHITESPACE : ' '
                 '=' WHITESPACE : ' '
-                rhs { concatenation { concatenationItem { simpleItem { nonTerminal { qualifiedName {
+                rhs { concatenation { concatenationItem { simpleItem { nonTerminal { 
                   IDENTIFIER : 'a' WHITESPACE : ' '
-                } } } } } }
+                } } } } }
                 ';' WHITESPACE : ' '
               } }
               '}'

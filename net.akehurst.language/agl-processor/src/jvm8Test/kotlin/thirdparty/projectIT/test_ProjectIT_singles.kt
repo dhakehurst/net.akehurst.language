@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.agl.processor.statecharttools
+package net.akehurst.language.agl.processor.thirdparty.projectIT
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.dot.test_Dot_Singles

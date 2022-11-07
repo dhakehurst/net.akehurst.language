@@ -19,7 +19,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 class ParserException(message: String) : RuntimeException(message)
 
-class ParserInterruptedException(message: String) : RuntimeException(message)
+class ParserTerminatedException(message: String) : RuntimeException(message)
 
 class ParseFailedException(
     message: String,

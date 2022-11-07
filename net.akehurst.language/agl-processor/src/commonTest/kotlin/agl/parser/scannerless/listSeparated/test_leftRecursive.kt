@@ -19,9 +19,11 @@ package net.akehurst.language.parser.scanondemand.listSeparated
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.parser.ParserTerminatedException
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
 internal class test_leftRecursive  : test_ScanOnDemandParserAbstract() {
@@ -60,13 +62,15 @@ internal class test_leftRecursive  : test_ScanOnDemandParserAbstract() {
 
         val expected = "S { E { 'a' } }"
 
-        super.test(
+        assertFailsWith<ParserTerminatedException> {
+            super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
                 expectedTrees = arrayOf(expected)
-        )
+            )
+        }
     }
 
     @Test
@@ -81,13 +85,15 @@ internal class test_leftRecursive  : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        assertFailsWith<ParserTerminatedException> {
+            super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
-        )
+                expectedTrees = arrayOf(expected)
+            )
+        }
     }
 
     @Test
@@ -102,12 +108,14 @@ internal class test_leftRecursive  : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        assertFailsWith<ParserTerminatedException> {
+            super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
-        )
+                expectedTrees = arrayOf(expected)
+            )
+        }
     }
 }

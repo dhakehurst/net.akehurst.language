@@ -32,7 +32,7 @@ import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.parser.ParserInterruptedException
+import net.akehurst.language.api.parser.ParserTerminatedException
 import net.akehurst.language.api.sppt.SPPTNode
 import kotlin.math.max
 
@@ -101,12 +101,12 @@ internal class RuntimeParser(
         this.interruptedMessage = message
     }
 
-    fun checkInterrupt() {
+    fun checkForTerminationRequest() {
         val m = this.interruptedMessage
         if (null == m) {
             //do nothing
         } else {
-            throw ParserInterruptedException(m)
+            throw ParserTerminatedException(m)
         }
     }
 
@@ -200,7 +200,7 @@ internal class RuntimeParser(
 
         val currentNextInputPosition = this.graph.nextHeadNextInputPosition
         while (this.graph.hasNextHead && this.graph.nextHeadNextInputPosition <= currentNextInputPosition) {
-            checkInterrupt()
+            checkForTerminationRequest()
             val graph = this.graph //TODO: remove..for debug only
             if (Debug.OUTPUT_RUNTIME) {
                 println("$steps --------------------------------------")
@@ -227,7 +227,7 @@ internal class RuntimeParser(
         while (this.graph.hasNextHead && this.graph.nextHeadNextInputPosition <= currentStartPosition) {
             //while ((this.canGrow && this.graph.goals.isEmpty())) {
             val nextToProcess = this.graph.nextToProcess()
-            checkInterrupt()
+            checkForTerminationRequest()
             val grown = this.growNormal(nextToProcess, possibleEndOfText, growArgs)
             if (grown.not()) {
                 lg.add(nextToProcess)
@@ -242,7 +242,7 @@ internal class RuntimeParser(
         while (this.graph.hasNextHead && this.graph.nextHeadNextInputPosition <= currentStartPosition) {
             //while ((this.canGrow && this.graph.goals.isEmpty())) {
             val nextToProcess = this.graph.nextToProcess()
-            checkInterrupt()
+            checkForTerminationRequest()
             val grown = this.growNormal(nextToProcess, possibleEndOfText, growArgs)
             if (grown.not()) {
                 lg.add(nextToProcess)
@@ -481,18 +481,7 @@ internal class RuntimeParser(
                     val lh = transition.lookahead.map { it.guard }.reduce { acc, e -> acc.union(this.stateSet, e) } //TODO:reduce to 1 in SM
                     val runtimeLhs = toProcess.growingNode.runtimeState.runtimeLookaheadSet
 
-                    val skipData = if (null == skipParser) {
-                        //this is a skipParser, so no skipData
-                        null
-                    } else {
-                        val skipLh = if (lh.includesEOT || lh.includesRT) {
-                            //possibleEndOfText.map { eot -> this.stateSet.createWithParent(lh, eot) }.toSet()
-                            runtimeLhs.flatMap { rt -> possibleEndOfText.map { eot -> this.stateSet.createLookaheadSet(lh.resolve(eot, rt)) } }.toSet()
-                        } else {
-                            setOf(lh)
-                        }
-                        this.tryParseSkipUntilNone(skipLh, l.nextInputPosition, growArgs)
-                    }
+                    val skipData = parseSkipIfAny(l.nextInputPosition,runtimeLhs, lh, possibleEndOfText, growArgs)
                     val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: l.nextInputPosition
 
                     val hasLh = possibleEndOfText.any { eot ->
@@ -546,17 +535,33 @@ internal class RuntimeParser(
                 }
                 val hasLh = lhWithMatch.isNotEmpty()
                 return if (growArgs.noLookahead || hasLh) { //TODO: don't resolve EOT
-                    val newRuntimeLhs = lhWithMatch.map { t ->
-                        val eot = t.first
-                        val rt = t.second
-                        val up = t.third
-                        if (up.includesRT) {
-                            //this.stateSet.createWithParent(up, rt)
-                            this.stateSet.createLookaheadSet(up.resolve(eot, rt))
-                        } else {
-                            up
-                        }
-                    }.toSet()
+                    val newRuntimeLhs = if (growArgs.noLookahead) {
+                        transition.lookahead.flatMap { lh ->
+                            val up = lh.up
+                            possibleEndOfText.flatMap { eot ->
+                                runtimeLhs.map { rt ->
+                                    if (up.includesRT || up.includesEOT) {
+                                        //this.stateSet.createWithParent(up, rt)
+                                        this.stateSet.createLookaheadSet(up.resolve(eot, rt))
+                                    } else {
+                                        up
+                                    }
+                                }
+                            }
+                        }.toSet()
+                    } else {
+                        lhWithMatch.map { t ->
+                            val eot = t.first
+                            val rt = t.second
+                            val up = t.third
+                            if (up.includesRT || up.includesEOT) {
+                                //this.stateSet.createWithParent(up, rt)
+                                this.stateSet.createLookaheadSet(up.resolve(eot, rt))
+                            } else {
+                                up
+                            }
+                        }.toSet()
+                    }
                     if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
                     this.graph.createWithFirstChild(
                         parentState = transition.to,
@@ -603,6 +608,22 @@ internal class RuntimeParser(
                     false
                 }
             }
+        }
+    }
+
+    fun parseSkipIfAny(atPosition:Int, runtimeLhs:Set<LookaheadSet>, lh:LookaheadSet, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): TreeData? {
+
+        return if (null == skipParser) {
+            //this is a skipParser, so no skipData
+            null
+        } else {
+            val skipLh = if (lh.includesEOT || lh.includesRT) {
+                //possibleEndOfText.map { eot -> this.stateSet.createWithParent(lh, eot) }.toSet()
+                runtimeLhs.flatMap { rt -> possibleEndOfText.map { eot -> this.stateSet.createLookaheadSet(lh.resolve(eot, rt)) } }.toSet()
+            } else {
+                setOf(lh)
+            }
+            this.tryParseSkipUntilNone(skipLh, atPosition, growArgs)
         }
     }
 

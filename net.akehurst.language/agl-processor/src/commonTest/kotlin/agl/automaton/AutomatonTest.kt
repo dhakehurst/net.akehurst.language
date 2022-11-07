@@ -84,7 +84,7 @@ internal object AutomatonTest {
         assertMatches(expected,actual, MatchConfiguration())
     }
 
-    fun assertMatches(expected: ParserStateSet, actual: ParserStateSet, config:MatchConfiguration) {
+    fun assertMatches(expected: ParserStateSet, actual: ParserStateSet, config:MatchConfiguration=MatchConfiguration()) {
         val expected_states = expected.allBuiltStates.toSet()
         val actual_states = actual.allBuiltStates.toSet()
 

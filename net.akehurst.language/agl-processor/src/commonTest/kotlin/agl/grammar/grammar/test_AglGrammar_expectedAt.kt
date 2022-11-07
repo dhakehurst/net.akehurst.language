@@ -18,6 +18,7 @@ package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.api.processor.CompletionItemKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -30,7 +31,7 @@ class test_AglGrammar_expectedAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, 0, 1)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findNonTerminalRule("namespace")!!.name, "namespace")
+            CompletionItem(CompletionItemKind.LITERAL,"'namespace'", "namespace")
         )
 
         assertEquals(expected, result.items)
@@ -43,7 +44,7 @@ class test_AglGrammar_expectedAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, 0, 1)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findNonTerminalRule("namespace")!!.name, "namespace")
+            CompletionItem(CompletionItemKind.LITERAL,"'namespace'", "namespace")
         )
 
         assertEquals(expected, result.items)
@@ -56,7 +57,7 @@ class test_AglGrammar_expectedAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, 9, 1)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findNonTerminalRule("IDENTIFIER")!!.name, "IDENTIFIER")
+            CompletionItem(CompletionItemKind.PATTERN,"IDENTIFIER", "IDENTIFIER")
         )
 
         assertEquals(expected, result.items)
@@ -69,7 +70,7 @@ class test_AglGrammar_expectedAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, 10, 1)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findNonTerminalRule("IDENTIFIER")!!.name, "IDENTIFIER")
+            CompletionItem(CompletionItemKind.PATTERN,"IDENTIFIER", "IDENTIFIER")
         )
 
         assertEquals(expected, result.items)
@@ -82,8 +83,8 @@ class test_AglGrammar_expectedAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, 11, 1)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findNonTerminalRule("qualifiedName")!!.name, "."),
-            CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findNonTerminalRule("grammar")!!.name, "grammar")
+            CompletionItem(CompletionItemKind.LITERAL,"qualifiedName", "."),
+            CompletionItem(CompletionItemKind.LITERAL,"'grammar'", "grammar")
         )
 
         assertEquals(expected, result.items)
@@ -96,7 +97,7 @@ class test_AglGrammar_expectedAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, sentence.length, 1)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findNonTerminalRule("IDENTIFIER")!!.name, "IDENTIFIER")
+            CompletionItem(CompletionItemKind.PATTERN,"IDENTIFIER", "IDENTIFIER")
         )
 
         assertEquals(expected, result.items)

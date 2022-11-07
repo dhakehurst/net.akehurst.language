@@ -140,9 +140,9 @@ internal class ParserStateSet(
     internal fun createLookaheadSet(includeRT: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet {
         return when {
             content.isEmpty() -> when {
+                matchAny -> LookaheadSet.ANY
                 includeRT && includeEOT.not() && matchAny.not() -> LookaheadSet.RT
                 includeRT.not() && includeEOT && matchAny.not() -> LookaheadSet.EOT
-                includeRT.not() && includeEOT.not() && matchAny -> LookaheadSet.ANY
                 includeRT.not() && includeEOT.not() && matchAny.not() -> LookaheadSet.EMPTY
                 includeRT && includeEOT.not() && matchAny.not() -> LookaheadSet.RT
                 includeRT && includeEOT && matchAny.not() -> LookaheadSet.RT_EOT

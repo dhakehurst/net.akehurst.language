@@ -16,7 +16,14 @@
 
 package net.akehurst.language.api.processor
 
+enum class CompletionItemKind {
+	LITERAL,
+	PATTERN,
+	SEGMENT
+}
+
 data class CompletionItem(
+	val kind: CompletionItemKind,
 	val ruleName:String,
 	val text: String
 ){

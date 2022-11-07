@@ -18,8 +18,10 @@ package net.akehurst.language.parser.scanondemand.multi
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.parser.ParserTerminatedException
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 
 internal class test_leftRecursive : test_ScanOnDemandParserAbstract() {
 
@@ -63,13 +65,15 @@ internal class test_leftRecursive : test_ScanOnDemandParserAbstract() {
             S|1 { 'a' }
         """.trimIndent()
 
-        super.test(
-            rrs = rrs,
-            goal = goal,
-            sentence = sentence,
-            expectedNumGSSHeads = 1,
-            expectedTrees = arrayOf(expected)
-        )
+        assertFailsWith<ParserTerminatedException> {
+            super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = arrayOf(expected)
+            )
+        }
     }
 
     @Test
@@ -81,12 +85,14 @@ internal class test_leftRecursive : test_ScanOnDemandParserAbstract() {
             S|1 { 'a' }
         """.trimIndent()
 
-        super.test(
-            rrs = rrs,
-            goal = goal,
-            sentence = sentence,
-            expectedNumGSSHeads = 1,
-            expectedTrees = arrayOf(expected)
-        )
+        assertFailsWith<ParserTerminatedException> {
+            super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = arrayOf(expected)
+            )
+        }
     }
 }
