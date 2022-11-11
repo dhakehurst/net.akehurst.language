@@ -79,7 +79,7 @@ class test_ProjectIT(val data: Data) {
     @Test
     fun test() {
         if(data.valid) {
-            val result = processor.parse(this.data.text, processor.parseOptions { goalRuleName("projectionGroup") })
+            val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName("projectionGroup") })
             assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
             assertEquals(emptyList(), result.issues)
             val resultStr = result.sppt!!.asString
@@ -87,7 +87,7 @@ class test_ProjectIT(val data: Data) {
             println(result.sppt!!.toStringAll)
         } else {
             assertFailsWith<LanguageProcessorException> {
-                processor.parse(this.data.text, processor.parseOptions { goalRuleName("projectionGroup") })
+                processor.parse(this.data.text, Agl.parseOptions { goalRuleName("projectionGroup") })
             }
         }
     }

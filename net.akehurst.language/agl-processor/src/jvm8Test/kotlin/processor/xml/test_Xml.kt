@@ -70,7 +70,7 @@ class test_Xml(val data: Data) {
 
     @Test
     fun parse() {
-        val result = processor.parse(this.data.text, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName(goal) })
 
         if (data.valid) {
             assertNotNull(result.sppt,result.issues.joinToString(separator = "\n") { "$it" })
@@ -85,7 +85,7 @@ class test_Xml(val data: Data) {
 
     @Test
     fun process() {
-        val result = processor.process(this.data.text, processor.options { parse { goalRuleName(goal) } })
+        val result = processor.process(this.data.text, Agl.options { parse { goalRuleName(goal) } })
 
         if (data.valid) {
             assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })

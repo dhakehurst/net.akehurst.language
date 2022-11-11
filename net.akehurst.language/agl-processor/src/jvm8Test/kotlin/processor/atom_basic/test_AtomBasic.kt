@@ -79,14 +79,14 @@ class test_AtomBasic(val data: Data) {
     @Test
     fun test() {
         if(data.valid) {
-            val result = processor.parse(this.data.text, processor.parseOptions { goalRuleName("file") })
+            val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName("file") })
             assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
             assertEquals(emptyList(), result.issues)
             val resultStr = result.sppt!!.asString
             assertEquals(this.data.text, resultStr)
         } else {
             assertFailsWith<LanguageProcessorException> {
-                processor.parse(this.data.text, processor.parseOptions { goalRuleName("file") })
+                processor.parse(this.data.text, Agl.parseOptions { goalRuleName("file") })
             }
         }
     }

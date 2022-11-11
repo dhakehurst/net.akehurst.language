@@ -85,7 +85,7 @@ class test_AglScopes {
 
         val result = aglProc.process(
             sentence = text,
-            aglProc.options {
+            Agl.options {
                 syntaxAnalysis { context(ContextFromGrammar(grammar)) }
             }
         )
@@ -117,7 +117,7 @@ class test_AglScopes {
 
         val result = aglProc.process(
             sentence = text,
-            aglProc.options {
+            Agl.options {
                 syntaxAnalysis { context(ContextFromGrammar(grammar)) }
             }
         )
@@ -157,7 +157,7 @@ class test_AglScopes {
 
         val result = aglProc.process(
             sentence = text,
-            aglProc.options {
+            Agl.options {
                 syntaxAnalysis { context(ContextFromGrammar(grammar)) }
             }
         )
@@ -195,7 +195,7 @@ class test_AglScopes {
 
         val result = aglProc.process(
             sentence = text,
-            aglProc.options {
+            Agl.options {
                 syntaxAnalysis { context(ContextFromGrammar(grammar)) }
             }
         )
@@ -243,7 +243,7 @@ class test_AglScopes {
 
         val result = aglProc.process(
             sentence = text,
-            aglProc.options {
+            Agl.options {
                 syntaxAnalysis { context(ContextFromGrammar(grammar)) }
             }
         )
@@ -290,7 +290,7 @@ class test_AglScopes {
 
         val result = aglProc.process(
             sentence = text,
-            aglProc.options {
+            Agl.options {
                 syntaxAnalysis { context(ContextFromGrammar(grammar)) }
             }
         )
@@ -326,7 +326,7 @@ class test_AglScopes {
 
         val result = aglProc.process(
             sentence = text,
-            aglProc.options {
+            Agl.options {
                 syntaxAnalysis { context(ContextFromGrammar(grammar)) }
             }
         )

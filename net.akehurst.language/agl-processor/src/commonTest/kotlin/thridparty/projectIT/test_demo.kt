@@ -22,7 +22,7 @@ class test_demo {
         val sentence = """
 
         """.trimIndent()
-        val result =  processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result =  processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
         assertEquals(emptyList(),result.issues)
     }

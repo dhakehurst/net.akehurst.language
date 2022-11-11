@@ -89,7 +89,7 @@ class test_NaturalLanguage(val data: Data) {
                 throw RuntimeException("Found unknown words '${l.matchedText}', at ${l.location}")
             }
         }
-        val result = processor.parse(this.data.sentence, processor.parseOptions { goalRuleName(data.goal) })
+        val result = processor.parse(this.data.sentence, Agl.parseOptions { goalRuleName(data.goal) })
         assertNotNull(result.sppt)
         assertEquals(emptyList(), result.issues)
 

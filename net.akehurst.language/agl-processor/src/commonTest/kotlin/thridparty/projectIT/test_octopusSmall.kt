@@ -416,7 +416,7 @@ class test_octopusSmall {
             
             <endpackage>
         """.trimIndent()
-        val result =  processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result =  processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt,result.issues.joinToString(separator = "\n"){it.toString()})
         assertEquals(emptyList(),result.issues)
     }
@@ -447,7 +447,7 @@ class test_octopusSmall {
             + Wagon.pred[0..1] <-> + Wagon.succ[0..1];
             <endpackage> 
         """.trimIndent()
-        val result =  processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result =  processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
         assertEquals(emptyList(),result.issues)
     }
@@ -481,7 +481,7 @@ class test_octopusSmall {
              + Artist.artist [0..*]    <->  + Clip.clips [0..*]   ;
             <endpackage>
         """.trimIndent()
-        val result =  processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result =  processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
         assertEquals(emptyList(),result.issues)
     }
@@ -521,7 +521,7 @@ class test_octopusSmall {
              + Dvd.dvd [0..*]    <->  + catalog::Clip.clips [1..*]   ;
             <endpackage>
         """.trimIndent()
-        val result =  processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result =  processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
         assertEquals(emptyList(),result.issues)
     }

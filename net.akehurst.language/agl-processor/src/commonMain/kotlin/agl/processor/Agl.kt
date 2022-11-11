@@ -40,6 +40,26 @@ object Agl {
         LanguageProcessorConfigurationDefault()
 
     /**
+     * build a set of options for a parser
+     * (does not set the options, they must be passed as argument)
+     */
+    fun parseOptions(init: ParseOptionsBuilder.() -> Unit): ParseOptions {
+        val b = ParseOptionsBuilder()
+        b.init()
+        return b.build()
+    }
+
+    /**
+     * build a set of options for a language processor
+     * (does not set the options, they must be passed as argument)
+     */
+    fun <AsmType : Any, ContextType : Any> options(init: ProcessOptionsBuilder<AsmType, ContextType>.() -> Unit): ProcessOptions<AsmType, ContextType> {
+        val b = ProcessOptionsBuilder<AsmType, ContextType>()
+        b.init()
+        return b.build()
+    }
+
+    /**
      * build a configuration for a language processor
      * (does not set the configuration, they must be passed as argument)
      */

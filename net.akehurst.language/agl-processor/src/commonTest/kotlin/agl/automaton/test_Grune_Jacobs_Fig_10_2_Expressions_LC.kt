@@ -55,10 +55,18 @@ internal class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstrac
     private val S = rrs.findRuntimeRule("S")
     private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
     private val G = SM.startState.runtimeRules.first()
+    private val E = rrs.findRuntimeRule("E")
+    private val T = rrs.findRuntimeRule("T")
+    private val F = rrs.findRuntimeRule("F")
+    private val F2 = rrs.findRuntimeRule("F2")
+    private val E1 = rrs.findRuntimeRule("E1")
+    private val T1 = rrs.findRuntimeRule("T1")
 
     private val a = rrs.findRuntimeRule("'a'")
     private val m = rrs.findRuntimeRule("'m'")
     private val v = rrs.findRuntimeRule("'v'")
+    private val o = rrs.findRuntimeRule("'('")
+    private val c = rrs.findRuntimeRule("')'")
 
     @Test
     fun buildFor() {
@@ -75,17 +83,69 @@ internal class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstrac
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
-            state(RP(G, o0, SOR))      /* G = . S   */
-            state(RP(G, o0, EOR))      /* G = S .   */
-            //    S = E
-            //    E = E1 | T
-            //    E1 = E a T
-            //    T = T1 | F
-            //    T1 = T m F
-            //    F = v | F2
-            //    F2 = ( E )
+            state(RP(G, o0, SOR))    // G = . S
+            state(RP(G, o0, EOR))    // G = S .
+            state(RP(S, o0, EOR))    // S = E .
+            state(RP(E, o0, EOR))    // E = E1 .
+            state(RP(E, o1, EOR))    // E = T .
+            state(RP(T, o0, EOR))    // T = T1 .
+            state(RP(T, o0, EOR))    // T = F .
+            state(RP(F, o0, EOR))    // F = v .
+            state(RP(F, o0, EOR))    // F = F2 .
+            state(RP(F2, o0, EOR))   // F2 = ( E ) .
+            state(RP(o, o0, EOR))    // ( .
+            state(RP(E1, o0, EOR))   // E1 = E a T .
+            state(RP(c, o0, EOR))    // ) .
+            state(RP(v, o0, EOR))    // v .
+            state(RP(T1, o0, EOR))   // T1 = T m F .
+            state(RP(m, o0, EOR))    // m .
+            state(RP(a, o0, EOR))    // a .
+            state(RP(F2, o1, EOR))    // F2 = ( . E )
+            state(RP(F2, o2, EOR))    // F2 = ( E . )
+            state(RP(E1, o1, EOR))    // E1 = E . a T
+            state(RP(E1, o2, EOR))    // E1 = E a . T
+            state(RP(T1, o1, EOR))    // T1 = T . m F
+            state(RP(T1, o2, EOR))    // T1 = T m . F
 
+            transition(WIDTH) { src(G, o0, SOR); tgt(o); lhg(setOf(v,o)); ctx(RP(G, o0, SOR)) }
+            transition(WIDTH) { src(E1,o0,p2); tgt(o); lhg(setOf(v,o)); ctx(RP(G, o0, SOR));  }
+            transition(WIDTH) { src(F2,o0,p1); tgt(o); lhg(setOf(v,o)); ctx(RP(G, o0, SOR));  }
+            /*
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(GOAL) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
+            transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
 
+             */
         }
 
         AutomatonTest.assertEquals(expected, actual)

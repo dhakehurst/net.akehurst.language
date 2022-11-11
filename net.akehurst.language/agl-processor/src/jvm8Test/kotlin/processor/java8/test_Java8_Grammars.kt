@@ -30,7 +30,7 @@ class test_Java8_Grammars {
         val grammarStr = this::class.java.getResource("/java8/Java8AglSpec.agl").readText()
         val result = Agl.registry.agl.grammar.processor!!.process(
             sentence = grammarStr,
-            options = Agl.registry.agl.grammar.processor?.options {
+            options = Agl.options {
                 semanticAnalysis {
                     active(false) // switch off for performance
                 }
@@ -45,7 +45,7 @@ class test_Java8_Grammars {
         val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
         val result = Agl.registry.agl.grammar.processor!!.process(
             sentence = grammarStr,
-            options = Agl.registry.agl.grammar.processor?.options {
+            options = Agl.options {
                 semanticAnalysis {
                     active(false) // switch off for performance
                 }
@@ -61,7 +61,7 @@ class test_Java8_Grammars {
         val grammarStr = this::class.java.getResource("/java8/Java8AntlrSpec.agl").readText()
         val result = Agl.registry.agl.grammar.processor!!.process(
             sentence = grammarStr,
-            options = Agl.registry.agl.grammar.processor?.options {
+            options = Agl.options {
                 semanticAnalysis {
                     active(false) // switch off for performance
                 }
@@ -78,7 +78,7 @@ class test_Java8_Grammars {
         val grammarStr = this::class.java.getResource("/java8/Java8AntlrOptm.agl").readText()
         val result = Agl.registry.agl.grammar.processor!!.process(
             sentence = grammarStr,
-            options = Agl.registry.agl.grammar.processor?.options {
+            options = Agl.options {
                 semanticAnalysis {
                     active(false) // switch off for performance
                 }

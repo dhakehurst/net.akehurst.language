@@ -81,7 +81,7 @@ class test_DataTypes {
             val sentence = data.sentence
             val position = data.position
 
-            val result = processor.expectedTerminalsAt(sentence, position, 1, processor.options { parse { goalRuleName(goal) } } )
+            val result = processor.expectedTerminalsAt(sentence, position, 1, Agl.options { parse { goalRuleName(goal) } } )
             val actual = result.items.map { it.ruleName }
             val expected = data.expected
             assertEquals(expected.toSet(), actual.toSet(), data.toString())

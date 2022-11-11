@@ -50,7 +50,7 @@ class test_ProjectIT_singles {
         val sentence = """
             "hell"
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
     }
@@ -61,7 +61,7 @@ class test_ProjectIT_singles {
         val sentence = """
             12345
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
     }
@@ -72,7 +72,7 @@ class test_ProjectIT_singles {
         val sentence = """
             variable
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
     }
@@ -83,7 +83,7 @@ class test_ProjectIT_singles {
         val sentence = """
             var1 : var2
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
     }
@@ -94,7 +94,7 @@ class test_ProjectIT_singles {
         val sentence = """
             func1(a,d,v)
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
     }
@@ -105,7 +105,7 @@ class test_ProjectIT_singles {
         val sentence = """
             a.b.c.d
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
     }
@@ -116,7 +116,7 @@ class test_ProjectIT_singles {
         val sentence = """
             list a.b.c horizontal separator [,]
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
     }
@@ -127,7 +127,7 @@ class test_ProjectIT_singles {
         val sentence = """
             table a.b.c rows
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
     }
@@ -138,7 +138,7 @@ class test_ProjectIT_singles {
         val sentence = """
           Insurance Product
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
     }
@@ -151,7 +151,7 @@ class test_ProjectIT_singles {
         ]
         """.trimIndent()
 
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
 
         assertEquals(
             listOf(
@@ -168,7 +168,7 @@ class test_ProjectIT_singles {
           Insurance Product
         ]
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertEquals(
             listOf(
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(20, 1, 2, 1), "^]", setOf("<EOT>"))
@@ -185,7 +185,7 @@ class test_ProjectIT_singles {
           Insurance Product
         ]
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
     }
@@ -198,7 +198,7 @@ class test_ProjectIT_singles {
           Insurance Product ${"$"}{name} USES
         ]
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
     }
@@ -211,7 +211,7 @@ class test_ProjectIT_singles {
           Insurance Product ${"$"}{name} USES
         ]
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
     }
@@ -224,7 +224,7 @@ class test_ProjectIT_singles {
           ${"$"}{list a.b.c }
         ]
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
     }
@@ -237,7 +237,7 @@ class test_ProjectIT_singles {
           Insurance Product ${"$"}{name} ( public name: ${"$"}{productName} ) USES ${"$"}{list basedOn horizontal separator[, ]}
         ]
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
     }

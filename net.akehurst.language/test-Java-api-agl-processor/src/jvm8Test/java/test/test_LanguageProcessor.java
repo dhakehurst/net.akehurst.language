@@ -46,7 +46,7 @@ public class test_LanguageProcessor {
     @Test
     public void parse_defaultOptions() {
         ParseOptions options = proc.parseOptionsDefault();
-        options.setGoalRuleName("H");
+        options.setGoalRuleName("W");
         ParseResult result = proc.parse("world !", options);
 
         Assert.assertNotNull(result.getSppt());
@@ -56,8 +56,8 @@ public class test_LanguageProcessor {
     @Test
     public void parse_buildOptions() {
 
-        ParseResult result = proc.parse("world !", proc.parseOptions( KotlinFromJava.toKotlin(b-> {
-            b.goalRuleName("H");
+        ParseResult result = proc.parse("world !", Agl.INSTANCE.parseOptions( KotlinFromJava.toKotlin(b-> {
+            b.goalRuleName("W");
             return Unit.INSTANCE;
         })));
 
@@ -96,7 +96,7 @@ public class test_LanguageProcessor {
     @Test
     public void process_defaultOptions() {
         ProcessOptions<AsmSimple, ContextSimple> options = proc.optionsDefault();
-        options.getParse().setGoalRuleName("H");
+        options.getParse().setGoalRuleName("W");
         ProcessResult<AsmSimple> result = proc.process("world !", options);
         Assert.assertNotNull(result.getAsm());
         Assert.assertNotNull(result.getIssues());

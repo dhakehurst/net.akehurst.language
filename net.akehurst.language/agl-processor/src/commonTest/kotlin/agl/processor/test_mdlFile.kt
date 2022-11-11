@@ -70,7 +70,7 @@ grammar Mdl {
 
     @Test
     fun literal_BOOLEAN() {
-        val result = processor.parse("on",  processor.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("on",  Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -85,7 +85,7 @@ grammar Mdl {
 
     @Test
     fun literal_INTEGER() {
-        val result = processor.parse("1",  processor.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("1",  Agl.parseOptions { goalRuleName("literal") })
         val expected = processor.spptParser.parse(
             """
             literal|1 { INTEGER : '1' }
@@ -99,7 +99,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_1() {
-        val result = processor.parse("3.14",  processor.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("3.14",  Agl.parseOptions { goalRuleName("literal") })
         val expected = processor.spptParser.parse(
             """
             literal|2 { REAL : '3.14' }
@@ -113,7 +113,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_2() {
-        val result = processor.parse(".14",  processor.parseOptions { goalRuleName("literal") })
+        val result = processor.parse(".14",  Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -128,7 +128,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_3() {
-        val result = processor.parse("3.14e-05",  processor.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("3.14e-05",  Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -143,7 +143,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_4() {
-        val result = processor.parse("3.0e5",  processor.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("3.0e5",  Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -158,7 +158,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_5() {
-        val result = processor.parse(".3e5",  processor.parseOptions { goalRuleName("literal") })
+        val result = processor.parse(".3e5",  Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -173,7 +173,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_6() {
-        val result = processor.parse("1e-05",  processor.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("1e-05",  Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -188,7 +188,7 @@ grammar Mdl {
 
     @Test
     fun stringList_1() {
-        val result = processor.parse("\"hello\"",  processor.parseOptions { goalRuleName("stringList") })
+        val result = processor.parse("\"hello\"",  Agl.parseOptions { goalRuleName("stringList") })
 
         val expected = processor.spptParser.parse(
             """
@@ -203,7 +203,7 @@ grammar Mdl {
 
     @Test
     fun stringList_2() {
-        val result = processor.parse("\"hello\" \"world\"",  processor.parseOptions { goalRuleName("stringList") })
+        val result = processor.parse("\"hello\" \"world\"",  Agl.parseOptions { goalRuleName("stringList") })
 
         val expected = processor.spptParser.parse(
             """
@@ -221,7 +221,7 @@ grammar Mdl {
 
     @Test
     fun stringList_3() {
-        val result = processor.parse("\"aa\" \"bb\" \"cc\"",  processor.parseOptions { goalRuleName("stringList") })
+        val result = processor.parse("\"aa\" \"bb\" \"cc\"",  Agl.parseOptions { goalRuleName("stringList") })
 
         val expected = processor.spptParser.parse(
             """
@@ -240,7 +240,7 @@ grammar Mdl {
 
     @Test
     fun value_stringList_1() {
-        val result = processor.parse("\"hello\"",  processor.parseOptions { goalRuleName("value") })
+        val result = processor.parse("\"hello\"",  Agl.parseOptions { goalRuleName("value") })
 
         val expected = processor.spptParser.parse(
             """
@@ -255,7 +255,7 @@ grammar Mdl {
 
     @Test
     fun value_stringList_2() {
-        val result = processor.parse("\"hello\" \"world\"", processor.parseOptions { goalRuleName("value") })
+        val result = processor.parse("\"hello\" \"world\"", Agl.parseOptions { goalRuleName("value") })
 
         val expected = processor.spptParser.parse(
             """
@@ -273,7 +273,7 @@ grammar Mdl {
 
     @Test
     fun value_stringList_3() {
-        val result = processor.parse("\"aa\" \"bb\" \"cc\"", processor.parseOptions { goalRuleName("value") })
+        val result = processor.parse("\"aa\" \"bb\" \"cc\"", Agl.parseOptions { goalRuleName("value") })
 
         val expected = processor.spptParser.parse(
             """
@@ -292,7 +292,7 @@ grammar Mdl {
 
     @Test
     fun array() {
-        val result = processor.parse("[ on, 1, 3.14, \"hello\" ]", processor.parseOptions { goalRuleName("matrix") })
+        val result = processor.parse("[ on, 1, 3.14, \"hello\" ]", Agl.parseOptions { goalRuleName("matrix") })
 
         val expected = processor.spptParser.parse(
             """
@@ -319,7 +319,7 @@ grammar Mdl {
 
     @Test
     fun array1() {
-        val result = processor.parse("[ 1.0,2.0,3.0 ]", processor.parseOptions { goalRuleName("matrix") })
+        val result = processor.parse("[ 1.0,2.0,3.0 ]", Agl.parseOptions { goalRuleName("matrix") })
 
         val expected = processor.spptParser.parse(
             """
@@ -344,7 +344,7 @@ grammar Mdl {
 
     @Test
     fun array2() {
-        val result = processor.parse("[ 1.0, 2.0 ]", processor.parseOptions { goalRuleName("matrix") })
+        val result = processor.parse("[ 1.0, 2.0 ]", Agl.parseOptions { goalRuleName("matrix") })
 
         val expected = processor.spptParser.parse(
             """
@@ -367,7 +367,7 @@ grammar Mdl {
 
     @Test
     fun row1() {
-        val result = processor.parse("1.1,2.2", processor.parseOptions { goalRuleName("row") })
+        val result = processor.parse("1.1,2.2", Agl.parseOptions { goalRuleName("row") })
 
         val expected = processor.spptParser.parse(
             """
@@ -386,7 +386,7 @@ grammar Mdl {
 
     @Test
     fun matrix() {
-        val result = processor.parse("[ 0,1; 2,3 ]", processor.parseOptions { goalRuleName("matrix") })
+        val result = processor.parse("[ 0,1; 2,3 ]", Agl.parseOptions { goalRuleName("matrix") })
 
         val expected = processor.spptParser.parse(
             """
@@ -426,7 +426,7 @@ grammar Mdl {
 			}
         """.trimIndent()
 
-        val result = processor.parse(text, processor.parseOptions { goalRuleName("section") })
+        val result = processor.parse(text, Agl.parseOptions { goalRuleName("section") })
 
         val expected = processor.spptParser.parse(
             """
@@ -465,7 +465,7 @@ grammar Mdl {
 		}
         """.trimIndent()
 
-        val result = processor.parse(text, processor.parseOptions { goalRuleName("section") })
+        val result = processor.parse(text, Agl.parseOptions { goalRuleName("section") })
 
         val expected = processor.spptParser.parse(
             """
@@ -507,7 +507,7 @@ grammar Mdl {
                 OnParam        on
             }
         """.trimIndent(),
-            processor.parseOptions { goalRuleName("section") }
+            Agl.parseOptions { goalRuleName("section") }
         )
 
         val expected = processor.spptParser.parse(
@@ -553,7 +553,7 @@ grammar Mdl {
                   Location		      [705.0, 195.0, 1025.0, 639.0]
 		    }
         """.trimIndent(),
-            processor.parseOptions { goalRuleName("section") }
+            Agl.parseOptions { goalRuleName("section") }
         )
 
         assertNotNull(result.sppt)

@@ -62,7 +62,7 @@ class test_Java8_Compare(val data: Data) {
             val grammarStr = this::class.java.getResource(path).readText()
             val proc = Agl.processorFromString<AsmSimple, ContextSimple>(
                 grammarDefinitionStr = grammarStr,
-                aglOptions = Agl.registry.agl.grammar.processor?.options {
+                aglOptions = Agl.options {
                     semanticAnalysis {
                         active(false) // switch off for performance
                     }
@@ -140,7 +140,7 @@ class test_Java8_Compare(val data: Data) {
     private fun testParse(proc: LanguageProcessor<AsmSimple, ContextSimple>, toUpper: Boolean = false) {
         val queryStr = this.data.sentence
         val grammarRule = if (toUpper) this.data.grammarRule.capitalize() else this.data.grammarRule
-        val result = proc.parse(queryStr, proc.parseOptions { goalRuleName(grammarRule) })
+        val result = proc.parse(queryStr, Agl.parseOptions { goalRuleName(grammarRule) })
         assertNotNull(result.sppt)
         assertEquals(emptyList(), result.issues)
         val resultStr = clean(result.sppt!!.asString)

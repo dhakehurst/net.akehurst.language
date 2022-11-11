@@ -49,7 +49,7 @@ class test_Xml_Singles {
             <?xml version="1.0" encoding="UTF-8" ?>
             <root ></root>
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
             assertNull(result.sppt)
             assertTrue(result.issues.isNotEmpty())
     }

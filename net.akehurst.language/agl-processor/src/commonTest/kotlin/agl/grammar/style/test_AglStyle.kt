@@ -37,7 +37,7 @@ class test_AglStyle {
         """.trimIndent())?.asm?.first()!!
     }
 
-    private fun process(sentence:String) =aglProc.process(sentence, aglProc.options { syntaxAnalysis { context(ContextFromGrammar(testGrammar)) } })
+    private fun process(sentence:String) =aglProc.process(sentence, Agl.options { syntaxAnalysis { context(ContextFromGrammar(testGrammar)) } })
 
 
     @Test

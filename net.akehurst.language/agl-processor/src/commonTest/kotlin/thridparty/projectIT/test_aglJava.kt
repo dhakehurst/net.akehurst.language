@@ -491,7 +491,7 @@ grammar Packages extends Interfaces {
         val sentence = """
         {}
         """.trimIndent()
-        val result =  processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result =  processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
         assertEquals(emptyList(),result.issues)
     }
@@ -503,7 +503,7 @@ grammar Packages extends Interfaces {
         val sentence = """
         {}
         """.trimIndent()
-        val result = processor.process(sentence,processor.options { parse { goalRuleName(goal) } })
+        val result = processor.process(sentence,Agl.options { parse { goalRuleName(goal) } })
         assertNotNull(result.asm)
         assertEquals(emptyList(), result.issues)
     }

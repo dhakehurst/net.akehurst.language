@@ -1577,7 +1577,7 @@ class test_AglGrammar {
         val p = Agl.processorFromString<Any,Any>(grammarStr,Agl.configuration { targetGrammarName("Original"); defaultGoalRuleName("S1") })
         assertNotNull(p)
 
-        val result1 = p.parse("abc", p.parseOptions { goalRuleName("S1") })
+        val result1 = p.parse("abc", Agl.parseOptions { goalRuleName("S1") })
         val expected1 = p.spptParser.parse(
             """
              S1 { ABC { 'a' B { 'b' } 'c' } }
@@ -1589,7 +1589,7 @@ class test_AglGrammar {
 
         val p2 = Agl.processorFromString<Any,Any>(grammarStr,Agl.configuration { targetGrammarName("Extended"); defaultGoalRuleName("S1") })
         assertNotNull(p2)
-        val result2 = p2.parse("adc", p.parseOptions { goalRuleName("S1") })
+        val result2 = p2.parse("adc", Agl.parseOptions { goalRuleName("S1") })
         val expected2 = p2.spptParser.parse(
             """
              S1 { ABC { 'a' B { 'd' } 'c' } }
@@ -1619,7 +1619,7 @@ class test_AglGrammar {
         val p = Agl.processorFromString<Any,Any>(grammarStr)
         assertNotNull(p)
 
-        val result1 = p.parse("abc", p.parseOptions { goalRuleName("S") })
+        val result1 = p.parse("abc", Agl.parseOptions { goalRuleName("S") })
         val expected1 = p.spptParser.parse(
             """
              S { 
@@ -1654,7 +1654,7 @@ class test_AglGrammar {
         val p = Agl.processorFromString<AsmSimple, Any>(grammarStr)
         assertNotNull(p)
 
-        val result1 = p.parse("acd", p.parseOptions { goalRuleName("S") })
+        val result1 = p.parse("acd", Agl.parseOptions { goalRuleName("S") })
         val expected1 = p.spptParser.parse(
             """
              S { 

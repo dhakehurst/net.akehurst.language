@@ -179,7 +179,7 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val result = processor.process(
             sentence = sentence,
-            processor.options {
+            Agl.options {
                 syntaxAnalysis {
                     context(ContextSimple())
                 }
@@ -224,7 +224,7 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val result = processor.process(
             sentence = sentence,
-            processor.options {
+            Agl.options {
                 syntaxAnalysis {
                     context(ContextSimple())
                 }

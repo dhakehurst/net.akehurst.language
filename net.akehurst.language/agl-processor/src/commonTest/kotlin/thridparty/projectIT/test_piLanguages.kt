@@ -300,7 +300,7 @@ class test_piLanguages {
                 units: ExampleUnit();
             }
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("PiStructureDef") })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("PiStructureDef") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(emptyList(), result.issues)
     }
@@ -473,7 +473,7 @@ class test_piLanguages {
                 priority = 10;
             }
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("PiStructureDef") })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("PiStructureDef") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(emptyList(), result.issues)
     }

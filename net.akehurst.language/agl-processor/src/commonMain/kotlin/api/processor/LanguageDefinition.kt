@@ -16,8 +16,10 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.grammar.Grammar
 
 interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val identity: String
@@ -30,6 +32,8 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
     var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
     var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
+    /** the options to configure building the processor for the registered language */
+    var aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?
 
     val processor: LanguageProcessor<AsmType, ContextType>?
 

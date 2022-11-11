@@ -64,7 +64,7 @@ class SyntaxAnalyserSimple(
         val proc = Agl.registry.agl.scopes.processor ?: error("Scopes language not found!")
         val result = proc.process(
             sentence = configuration,
-            proc.options {
+            Agl.options {
                 syntaxAnalysis {
                     context(configurationContext)
                 }

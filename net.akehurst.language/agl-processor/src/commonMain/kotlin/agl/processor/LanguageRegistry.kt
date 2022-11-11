@@ -28,30 +28,27 @@ import net.akehurst.language.agl.grammar.scopes.AglScopesSyntaxAnalyser
 import net.akehurst.language.agl.grammar.scopes.ScopeModel
 import net.akehurst.language.agl.grammar.style.AglStyleGrammar
 import net.akehurst.language.agl.grammar.style.AglStyleSyntaxAnalyser
-import net.akehurst.language.api.processor.LanguageDefinition
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.processor.SemanticAnalyserResolver
-import net.akehurst.language.api.processor.SentenceContext
-import net.akehurst.language.api.processor.SyntaxAnalyserResolver
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.style.AglStyleRule
 
 interface AglLanguages {
     val grammarLanguageIdentity: String
     val styleLanguageIdentity: String
     val formatLanguageIdentity: String
-    val scopesLanguageIdentity:String
+    val scopesLanguageIdentity: String
 
     val grammar: LanguageDefinition<List<Grammar>, GrammarContext>
     val style: LanguageDefinition<List<AglStyleRule>, SentenceContext>
-    val format: LanguageDefinition<*,*>
-    val scopes:LanguageDefinition<ScopeModel, SentenceContext>
+    val format: LanguageDefinition<*, *>
+    val scopes: LanguageDefinition<ScopeModel, SentenceContext>
 }
 
 class LanguageRegistry {
 
-    private val _registry = mutableMapOf<String, LanguageDefinition<*,*>>()
+    private val _registry = mutableMapOf<String, LanguageDefinition<*, *>>()
 
     val agl = object : AglLanguages {
         override val grammarLanguageIdentity: String = "net.akehurst.language.agl.AglGrammar"
@@ -104,8 +101,16 @@ class LanguageRegistry {
                 """.trimIndent(),
                 format = """
                 """.trimIndent(),
-                syntaxAnalyserResolver = { AglGrammarSyntaxAnalyser(GrammarRegistryDefault)}, //TODO: enable the registry to be changed,
-                semanticAnalyserResolver = { AglGrammarSemanticAnalyser()}
+                syntaxAnalyserResolver = { AglGrammarSyntaxAnalyser(GrammarRegistryDefault) }, //TODO: enable the registry to be changed,
+                semanticAnalyserResolver = { AglGrammarSemanticAnalyser() },
+                aglOptionsArg = Agl.options {
+                    parse {
+                        goalRuleName(AglScopesGrammar.goalRuleName)
+                    }
+                    semanticAnalysis {
+                        active(false)
+                    }
+                }
             )
         )
 
@@ -140,8 +145,16 @@ class LanguageRegistry {
                 """.trimIndent(),
                 format = """
                 """.trimIndent(),
-                syntaxAnalyserResolver = {AglStyleSyntaxAnalyser()},
-                semanticAnalyserResolver = null
+                syntaxAnalyserResolver = { AglStyleSyntaxAnalyser() },
+                semanticAnalyserResolver = null,
+                aglOptionsArg = Agl.options {
+                    parse {
+                        goalRuleName(AglScopesGrammar.goalRuleName)
+                    }
+                    semanticAnalysis {
+                        active(false)
+                    }
+                }
             )
         )
 
@@ -156,12 +169,20 @@ class LanguageRegistry {
                 """.trimIndent(),
                 format = """
                 """.trimIndent(),
-                syntaxAnalyserResolver = {AglFormatSyntaxAnalyser()},
-                semanticAnalyserResolver = null
+                syntaxAnalyserResolver = { AglFormatSyntaxAnalyser() },
+                semanticAnalyserResolver = null,
+                aglOptionsArg = Agl.options {
+                    parse {
+                        goalRuleName(AglScopesGrammar.goalRuleName)
+                    }
+                    semanticAnalysis {
+                        active(false)
+                    }
+                }
             )
         )
 
-        override val scopes: LanguageDefinition<ScopeModel,SentenceContext> = this@LanguageRegistry.registerFromDefinition(
+        override val scopes: LanguageDefinition<ScopeModel, SentenceContext> = this@LanguageRegistry.registerFromDefinition(
             LanguageDefinitionFromAsm(
                 identity = scopesLanguageIdentity,
                 grammar = AglScopesGrammar(),
@@ -204,8 +225,16 @@ class LanguageRegistry {
                 """.trimIndent(),
                 format = """
                 """.trimIndent(),
-                syntaxAnalyserResolver = {AglScopesSyntaxAnalyser()},
-                semanticAnalyserResolver = null
+                syntaxAnalyserResolver = { AglScopesSyntaxAnalyser() },
+                semanticAnalyserResolver = null,
+                aglOptionsArg = Agl.options {
+                    parse {
+                        goalRuleName(AglScopesGrammar.goalRuleName)
+                    }
+                    semanticAnalysis {
+                        active(false)
+                    }
+                }
             ).also {
                 it.syntaxAnalyser?.configure(
                     configurationContext = ContextFromGrammar(this.grammar.processor!!.grammar),
@@ -232,12 +261,23 @@ class LanguageRegistry {
     }
 
     fun <AsmType : Any, ContextType : Any> register(
-        identity: String, grammar: String?, targetGrammar:String?, defaultGoalRule: String?, buildForDefaultGoal:Boolean,
-        style: String?, format: String?, syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?, semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
+        identity: String,
+        grammar: String?,
+        targetGrammar: String?,
+        defaultGoalRule: String?,
+        buildForDefaultGoal: Boolean,
+        style: String?,
+        format: String?,
+        syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?,
+        semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?,
+        aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
     ): LanguageDefinition<AsmType, ContextType> = this.registerFromDefinition(
         LanguageDefinitionDefault<AsmType, ContextType>(
             identity, grammar, targetGrammar, defaultGoalRule, buildForDefaultGoal,
-            style, format, syntaxAnalyserResolver, semanticAnalyserResolver
+            style, format,
+            syntaxAnalyserResolverArg = syntaxAnalyserResolver,
+            semanticAnalyserResolverArg = semanticAnalyserResolver,
+            aglOptionsArg = aglOptions
         )
     )
 
@@ -254,7 +294,11 @@ class LanguageRegistry {
         return if (null == existing) {
             val placeholder = LanguageDefinitionDefault<AsmType, ContextType>(
                 identity, null, null, null, false,
-                null,null,null,null
+                style = null,
+                format = null,
+                syntaxAnalyserResolverArg = null,
+                semanticAnalyserResolverArg = null,
+                aglOptionsArg = null
             )
             registerFromDefinition(placeholder)
         } else {

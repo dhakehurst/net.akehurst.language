@@ -390,7 +390,7 @@ internal class RuntimeRuleSet(
 
         if (withStates) {
             states.forEach {
-                val str = "$it {${it.outTransitions.allPrevious.map { it?.number?.value }}}"
+                val str = "$it {${it.outTransitions.allPrevious.map { it.number.value }}}"
                 b.append(str).append("\n")
             }
         }
@@ -398,15 +398,16 @@ internal class RuntimeRuleSet(
         transitions.sortedBy {it.from.rulePositions.toString()}.sortedBy{it.to.rulePositions.toString() }
             .forEach { tr ->
                 val prev = tr.from.outTransitions.previousFor(tr)
-                    .map { it?.number?.value } //transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }
+                    .map { it.number.value } //transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }
+                    .sorted()
                 val frStr = "${tr.from.number.value}:${tr.from.rulePositions}"
                 val toStr = "${tr.to.number.value}:${tr.to.rulePositions}"
                 val trStr = "$frStr --> $toStr"
                 val lh = tr.lookahead.joinToString(separator = "|") { "[${it.guard.fullContent.joinToString { it.tag }}](${it.up.fullContent.joinToString { it.tag }})" }
-                b.append("{${prev.joinToString()}} ")
                 b.append(trStr)
                 b.append(" ${tr.action} ")
                 b.append(lh)
+                b.append(" {${prev.joinToString()}} ")
                 b.append("\n")
             }
 

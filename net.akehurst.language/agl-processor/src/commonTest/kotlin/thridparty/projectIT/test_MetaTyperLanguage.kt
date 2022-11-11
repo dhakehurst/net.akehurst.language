@@ -215,7 +215,7 @@ UnitOfMeasurement {
 //    }
 //}
         """.trimIndent()
-        val result =  processor.parse(sentence, processor.parseOptions { goalRuleName(goal) })
+        val result =  processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt,result.issues.joinToString(separator = "\n"){it.toString()})
         assertEquals(emptyList(),result.issues)
     }

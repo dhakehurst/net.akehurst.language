@@ -73,22 +73,10 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
 
     override fun parseOptionsDefault(): ParseOptions = ParseOptionsDefault(this.defaultGoalRuleName)
 
-    override fun parseOptions(init: ParseOptionsBuilder.() -> Unit): ParseOptions {
-        val b = ParseOptionsBuilder()
-        b.init()
-        return b.build()
-    }
-
     override fun optionsDefault(): ProcessOptions<AsmType, ContextType> =
         ProcessOptionsDefault<AsmType, ContextType>().also {
             it.parse.goalRuleName = this.defaultGoalRuleName
         }
-
-    override fun options(init: ProcessOptionsBuilder<AsmType, ContextType>.() -> Unit): ProcessOptions<AsmType, ContextType> {
-        val b = ProcessOptionsBuilder<AsmType, ContextType>()
-        b.init()
-        return b.build()
-    }
 
     override fun buildFor(options: ParseOptions?): LanguageProcessor<AsmType, ContextType> {
         val opts = options ?: parseOptionsDefault()

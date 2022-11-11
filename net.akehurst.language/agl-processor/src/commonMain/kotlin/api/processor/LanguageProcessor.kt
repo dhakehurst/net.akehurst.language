@@ -57,21 +57,9 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     fun parseOptionsDefault() : ParseOptions
 
     /**
-     * build a set of options for this parser
-     * (does not set the options, they must be passed as argument)
-     */
-    fun parseOptions(init: ParseOptionsBuilder.() -> Unit):ParseOptions
-
-    /**
      * get the default options for this language processor
      */
     fun optionsDefault() : ProcessOptions<AsmType, ContextType>
-
-    /**
-     * build a set of options for this language processor
-     * (does not set the options, they must be passed as argument)
-     */
-    fun options(init: ProcessOptionsBuilder<AsmType, ContextType>.() -> Unit):ProcessOptions<AsmType, ContextType>
 
     /**
      * build the parser before use. Optional, but will speed up the first use of the parser.

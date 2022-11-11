@@ -62,7 +62,7 @@ class test_Dot(val data: Data) {
 
     @Test
     fun test() {
-        val result = processor.parse(this.data.text, processor.parseOptions { goalRuleName("graph") })
+        val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName("graph") })
         assertNotNull(result.sppt)
         assertEquals(emptyList(), result.issues)
         val resultStr = result.sppt!!.asString

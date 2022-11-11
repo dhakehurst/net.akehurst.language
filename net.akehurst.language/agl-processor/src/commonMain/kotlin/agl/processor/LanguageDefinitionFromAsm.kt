@@ -16,13 +16,11 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.processor.LanguageDefinition
-import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
-import net.akehurst.language.api.processor.SemanticAnalyserResolver
-import net.akehurst.language.api.processor.SyntaxAnalyserResolver
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.util.CachedValue
 import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
@@ -37,7 +35,9 @@ class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
     style: String?,
     format: String?,
     syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?,
-    semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
+    semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?,
+    /** the options to configure building the processor for the registered language */
+    aglOptionsArg: ProcessOptions<List<Grammar>, GrammarContext>?
 ) : LanguageDefinition<AsmType, ContextType> {
     //constructor(identity: String, grammar: Grammar) : this(identity, grammar, null, null, null, null, null, null)
 
@@ -90,6 +90,8 @@ class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
         set(value) {
             _semanticAnalyserResolver = value
         }
+
+    override var aglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = aglOptionsArg
 
     override val processor: LanguageProcessor<AsmType, ContextType>? get() = this._processor_cache.value
 

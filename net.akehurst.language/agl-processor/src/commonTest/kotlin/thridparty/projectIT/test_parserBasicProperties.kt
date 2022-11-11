@@ -205,7 +205,7 @@ class test_parserBasicProperties {
                     before # after ;
                     before #, +, - after;
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("LimitedTest") })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("LimitedTest") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(emptyList(), result.issues)
     }
@@ -234,7 +234,7 @@ class test_parserBasicProperties {
                                         visibility +
                 partsOfParts
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("PartsTest") })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("PartsTest") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(emptyList(), result.issues)
     }
@@ -370,7 +370,7 @@ PartsTest myName
 
             optList
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("PartsTest") })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("PartsTest") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(emptyList(), result.issues)
     }
@@ -413,7 +413,7 @@ PartsTest myName
                                         visibility +
                 partsOfParts
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("PartsTest") })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("PartsTest") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(emptyList(), result.issues)
     }
@@ -480,7 +480,7 @@ PartsTest myName
                 before "iets" ! "wat" !  after
                 before true! false! true! false!	 after
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("PrimitivesTest") })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("PrimitivesTest") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(emptyList(), result.issues)
     }
@@ -540,7 +540,7 @@ PartsTest myName
                                         name2
                                     optRefList // not present
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("RefsTest") })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("RefsTest") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(emptyList(), result.issues)
     }
@@ -654,7 +654,7 @@ PartsTest myName
                                                         nameY
                                                         nameX
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("RefsTest") })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("RefsTest") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(emptyList(), result.issues)
     }
@@ -673,7 +673,7 @@ PartsTest myName
                     PrimWithKeywordProj
                     PrimWithKeywordProj <BOOL>
         """.trimIndent()
-        val result = processor.parse(sentence, processor.parseOptions { goalRuleName("WithKeywordProj") })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("WithKeywordProj") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(emptyList(), result.issues)
     }
