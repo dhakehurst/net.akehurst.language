@@ -33,7 +33,7 @@ internal class test_rightRecursive_a : test_ScanOnDemandParserAbstract() {
                 ref("S1")
             }
             concatenation("S1") { literal("a"); ref("S") }
-            skip("WS") { pattern("\\s+")}
+            concatenation("WS", true) { pattern("\\s+") }
         }
     }
 

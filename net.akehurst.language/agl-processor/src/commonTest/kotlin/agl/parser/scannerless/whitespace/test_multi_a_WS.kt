@@ -27,7 +27,7 @@ internal class test_multi_a_WS : test_ScanOnDemandParserAbstract() {
     // a = 'a' ;
     private companion object {
         val rrs = runtimeRuleSet {
-            skip("WS") { pattern("\\s+") }
+            concatenation("WS", true) { pattern("\\s+") }
             multi("S",0,-1,"a")
             concatenation("a") { literal("a") }
         }

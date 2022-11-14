@@ -130,7 +130,7 @@ import net.akehurst.language.api.sppt.*
         var r = ""
         r += this.startPosition.toString() + ","
         r += this.nextInputPosition
-        r += ":" + tag + "(" + this.runtimeRule.number + ")"
+        r += ":" + tag + "(" + this.runtimeRule.ruleNumber + ")"
         return r
     }
 

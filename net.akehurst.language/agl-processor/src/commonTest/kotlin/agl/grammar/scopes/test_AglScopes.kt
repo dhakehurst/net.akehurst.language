@@ -131,7 +131,7 @@ class test_AglScopes {
         assertEquals(expected.references, result.asm?.references)
         assertEquals(
             listOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(6, 7, 1, 6), "Rule 'ruleX' not found for scope")
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(6, 7, 1, 6), "GrammarRule 'ruleX' not found for scope")
             ), result.issues
         )
     }
@@ -215,7 +215,7 @@ class test_AglScopes {
                     LanguageIssueKind.ERROR,
                     LanguageProcessorPhase.SYNTAX_ANALYSIS,
                     InputLocation(27, 14, 2, 6),
-                    "In scope for 'rule1' Rule 'ruleX' not found as identifiable type"
+                    "In scope for 'rule1' GrammarRule 'ruleX' not found as identifiable type"
                 )
             ),
             result.issues
@@ -263,7 +263,7 @@ class test_AglScopes {
                     LanguageIssueKind.ERROR,
                     LanguageProcessorPhase.SYNTAX_ANALYSIS,
                     InputLocation(36, 23, 2, 6),
-                    "In scope for 'rule1' Rule 'ruleX' not found for identifying property of 'rule2'"
+                    "In scope for 'rule1' GrammarRule 'ruleX' not found for identifying property of 'rule2'"
                 )
             ), result.issues
         )
@@ -340,10 +340,10 @@ class test_AglScopes {
         assertEquals(expected.references, result.asm?.references)
         assertEquals(
             listOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(20, 8, 2, 6), "Referring type Rule 'ruleX' not found"),
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(35, 23, 2, 6), "For reference in 'ruleX' referring property Rule 'ruleY' not found"),
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(51, 39, 2, 5), "For reference in 'ruleX' referred to type Rule 'ruleZ' not found"),
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(57, 45, 2, 6), "For reference in 'ruleX' referred to type Rule 'ruleW' not found")
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(20, 8, 2, 6), "Referring type GrammarRule 'ruleX' not found"),
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(35, 23, 2, 6), "For reference in 'ruleX' referring property GrammarRule 'ruleY' not found"),
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(51, 39, 2, 5), "For reference in 'ruleX' referred to type GrammarRule 'ruleZ' not found"),
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(57, 45, 2, 6), "For reference in 'ruleX' referred to type GrammarRule 'ruleW' not found")
             ), result.issues
         )
     }

@@ -37,8 +37,8 @@ internal class RuntimeRuleItemBuilder(
         return this
     }
 
-    fun ruleItem() : RuntimeRuleItem{
-        return RuntimeRuleItem(this.kind, this.choiceKind, this.listKind, this.min, this.max, this.items)
+    fun ruleItem() : RuntimeRuleRhs{
+        return RuntimeRuleRhs(this.kind, this.choiceKind, this.listKind, this.min, this.max, this.items)
     }
 
     fun build() : RuntimeRule {

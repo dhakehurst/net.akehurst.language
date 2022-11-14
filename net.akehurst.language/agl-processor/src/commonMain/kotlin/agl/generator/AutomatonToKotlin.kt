@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2022 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,11 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.grammar
 
-interface Rule {
-    val grammar: Grammar
-    val name: String
-    val isOverride: Boolean
-    val isSkip: Boolean
-    val isLeaf: Boolean
-    val isOneEmebedded:Boolean
-    var rhs: RuleItem
-    val nodeType: NodeType
+package net.akehurst.language.agl.agl.generator
 
-    val compressedLeaf: Terminal
+class AutomatonToKotlin {
+
+
 }
+

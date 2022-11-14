@@ -25,11 +25,11 @@ class EmbeddedDefault(
 
     override val name: String get() = this.embeddedGoalName
 
-    override fun referencedRule(targetGrammar: Grammar): Rule {
-        return targetGrammar.findNonTerminalRule(this.name) ?: error("Grammar Rule '$name' not found in grammar '${targetGrammar.name}'")
+    override fun referencedRule(targetGrammar: Grammar): GrammarRule {
+        return targetGrammar.findNonTerminalRule(this.name) ?: error("Grammar GrammarRule '$name' not found in grammar '${targetGrammar.name}'")
     }
 
-    override fun setOwningRule(rule: Rule, indices: List<Int>) {
+    override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
         this.index = indices
     }

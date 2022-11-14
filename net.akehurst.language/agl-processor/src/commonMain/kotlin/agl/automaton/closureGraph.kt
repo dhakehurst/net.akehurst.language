@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.agl.automaton.FirstOf
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleListKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
@@ -25,7 +25,7 @@ import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.collections.lazyMutableMapNonNull
 
 internal data class RulePositionUpInfo(
-    val context: RulePosition,
+    val context: RuleOptionPosition,
 
     /**
      * when {
@@ -65,7 +65,7 @@ internal interface ClosureItem {
 
     val ffc: FirstFollowCache3
     val graph: ClosureGraph
-    val rulePosition: RulePosition
+    val rulePosition: RuleOptionPosition
 
     val children: Set<ClosureItem>
 
@@ -82,7 +82,7 @@ internal interface ClosureItem {
      * create child and link to parents
      * return child if it was new
      */
-    fun createAndAddChild(childRulePosition: RulePosition): ClosureItemChild?
+    fun createAndAddChild(childRulePosition: RuleOptionPosition): ClosureItemChild?
 
     //fun resolveUp()
     fun resolveDown()
@@ -104,7 +104,7 @@ internal data class ParentNext(
     /**
      * parent.next
      */
-    val rulePosition: RulePosition,
+    val rulePosition: RuleOptionPosition,
     /**
      * parent.next.isAtEnd -> nextContextFollow
      * else -> parent.next.follow
@@ -125,8 +125,8 @@ internal data class ParentNext(
 
 internal class ClosureGraph(
     ffc: FirstFollowCache3,
-    rootContext: RulePosition,
-    rootRulePosition: RulePosition,
+    rootContext: RuleOptionPosition,
+    rootRulePosition: RuleOptionPosition,
     rootNextContextFollow: LookaheadSetPart
 ) {
 
@@ -134,7 +134,7 @@ internal class ClosureGraph(
 
         fun nextNotAtEndFollow(
             ffc: FirstFollowCache3,
-            rulePosition: RulePosition,
+            rulePosition: RuleOptionPosition,
             nextContextFollow: LookaheadSetPart
         ): LookaheadSetPart = when {
             rulePosition.isTerminal -> nextContextFollow
@@ -180,7 +180,7 @@ internal class ClosureGraph(
         abstract class ClosureItemAbstractGraph(
             final override val ffc: FirstFollowCache3,
             final override val graph: ClosureGraph,
-            final override val rulePosition: RulePosition,
+            final override val rulePosition: RuleOptionPosition,
             final override val upInfo: RulePositionUpInfo
         ) : ClosureItem {
 
@@ -191,7 +191,7 @@ internal class ClosureGraph(
 
             override val shortString: List<String> get() = this.shortStringRec(mutableSetOf())
 
-            override fun createAndAddChild(childRulePosition: RulePosition): ClosureItemChild? {
+            override fun createAndAddChild(childRulePosition: RuleOptionPosition): ClosureItemChild? {
                 val child = ClosureItemChildGraph(this.ffc, this.graph, childRulePosition, this)
                 val added = this.graph.addParentOf(child, this)
                 return if (added) child else null
@@ -236,8 +236,8 @@ internal class ClosureGraph(
                 val str = when {
                     rr.isNonTerminal && rr.rhs.listKind == RuntimeRuleListKind.SEPARATED_LIST -> when {
                         rp.isAtStart -> rr.tag + 'b'
-                        rp.position == RulePosition.POSITION_SLIST_SEPARATOR -> rr.tag + 's'
-                        rp.position == RulePosition.POSITION_SLIST_ITEM -> rr.tag + 'i'
+                        rp.position == RuleOptionPosition.POSITION_SLIST_SEPARATOR -> rr.tag + 's'
+                        rp.position == RuleOptionPosition.POSITION_SLIST_ITEM -> rr.tag + 'i'
                         rp.isAtEnd -> rr.tag + 'e'
                         else -> TODO()
                     }
@@ -282,7 +282,7 @@ internal class ClosureGraph(
         class ClosureItemRootGraph(
             ffc: FirstFollowCache3,
             graph: ClosureGraph,
-            rulePosition: RulePosition
+            rulePosition: RuleOptionPosition
         ) : ClosureItemAbstractGraph(ffc, graph, rulePosition, graph.rootUpInfo), ClosureItemRoot {
 
             override val isRoot: Boolean = true
@@ -294,14 +294,14 @@ internal class ClosureGraph(
         class ClosureItemChildGraph(
             ffc: FirstFollowCache3,
             graph: ClosureGraph,
-            rulePosition: RulePosition,
+            rulePosition: RuleOptionPosition,
             val parent: ClosureItem
         ) : ClosureItemAbstractGraph(
             ffc, graph, rulePosition, resolveUpInfo(ffc, rulePosition, parent)
         ), ClosureItemChild {
 
             companion object {
-                fun resolveUpInfo(ffc: FirstFollowCache3, rulePosition: RulePosition, parent: ClosureItem): RulePositionUpInfo {
+                fun resolveUpInfo(ffc: FirstFollowCache3, rulePosition: RuleOptionPosition, parent: ClosureItem): RulePositionUpInfo {
                     val gpInfo = parent.upInfo
                     val atStart = parent.rulePosition.isAtStart
                     val childContext = when {

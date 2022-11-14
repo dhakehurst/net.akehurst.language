@@ -36,7 +36,7 @@ internal class test_multiple_the_same : test_ScanOnDemandParserAbstract() {
      */
     private companion object {
         val rrs = runtimeRuleSet {
-            skip("WS") { literal("\\s+") }
+            concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { ref("X"); ref("Ls") }
             multi("Ls", 0, -1, "L")
             concatenation("L") { ref("A"); ref("A"); ref("B"); }

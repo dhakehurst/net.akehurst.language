@@ -16,6 +16,8 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.agl.api.runtime.RulePosition
+
 internal typealias RuleOptionId = RuleOption //TODO: Make this an Int
 
 internal data class RuleOption(
@@ -27,27 +29,13 @@ internal data class RuleOption(
     override fun toString(): String = "RuleOption{${runtimeRule.tag},$option}"
 }
 
-internal class RulePosition(
+val RulePosition.isGoal get() = this.rule.isGoal
+
+internal class RuleOptionPosition(
     val runtimeRule: RuntimeRule,
     val option: Int,
     val position: Int
 ) {
-
-    companion object {
-        const val START_OF_RULE = 0
-        const val END_OF_RULE = -1
-
-        const val OPTION_MULTI_ITEM = 0
-        const val OPTION_MULTI_EMPTY = 1
-
-        const val OPTION_SLIST_ITEM_OR_SEPERATOR = 0
-        const val OPTION_SLIST_EMPTY = 1
-
-        //for use in multi and separated list
-        const val POSITION_MULIT_ITEM = 1 //TODO: make -ve
-        const val POSITION_SLIST_SEPARATOR = 1 //TODO: make -ve
-        const val POSITION_SLIST_ITEM = 2 //TODO: make -ve
-    }
 
     val identity: RuleOptionId = RuleOption(runtimeRule, option) //TODO: Make this an Int
 
@@ -85,26 +73,26 @@ internal class RulePosition(
                 }
         }
 
-    fun atEnd() = RulePosition(this.runtimeRule, this.option, END_OF_RULE)
+    fun atEnd() = RuleOptionPosition(this.runtimeRule, this.option, END_OF_RULE)
 
-    fun next(): Set<RulePosition> = this.items.flatMap { this.next(it) }.toSet()
+    fun next(): Set<RuleOptionPosition> = this.items.flatMap { this.next(it) }.toSet()
 
     /**
      * itemRule is the rule we use to increment rp
      */
     //FIXME: I think the parameter 'itemRule' here is not needed
-    private fun next(itemRule: RuntimeRule): Set<RulePosition> { //TODO: cache this
-        return if (RulePosition.END_OF_RULE == this.position) {
+    private fun next(itemRule: RuntimeRule): Set<RuleOptionPosition> { //TODO: cache this
+        return if (RuleOptionPosition.END_OF_RULE == this.position) {
             emptySet()
         } else {
             when (this.runtimeRule.kind) {
                 RuntimeRuleKind.TERMINAL -> TODO() // possibly these never happen!
                 RuntimeRuleKind.EMBEDDED -> TODO()
                 RuntimeRuleKind.GOAL -> when {
-                    itemRule.isSkip -> setOf(RulePosition(this.runtimeRule, 0, END_OF_RULE)) //TODO: might be wrong
+                    itemRule.isSkip -> setOf(RuleOptionPosition(this.runtimeRule, 0, END_OF_RULE)) //TODO: might be wrong
                     else -> when (this.position) {
-                        //0 -> setOf(RulePosition(this.runtimeRule, 0, 1))
-                        0 -> setOf(RulePosition(this.runtimeRule, 0, END_OF_RULE))
+                        //0 -> setOf(RuleOptionPosition(this.runtimeRule, 0, 1))
+                        0 -> setOf(RuleOptionPosition(this.runtimeRule, 0, END_OF_RULE))
                         else -> error("Should never happen")
                     }
                 }
@@ -117,9 +105,9 @@ internal class RulePosition(
                     RuntimeRuleRhsItemsKind.CONCATENATION -> { //TODO: check itemRule?
                         val np = this.position + 1
                         if (np < this.runtimeRule.rhs.items.size) {
-                            setOf(RulePosition(this.runtimeRule, 0, np))
+                            setOf(RuleOptionPosition(this.runtimeRule, 0, np))
                         } else {
-                            setOf(RulePosition(this.runtimeRule, 0, END_OF_RULE))
+                            setOf(RuleOptionPosition(this.runtimeRule, 0, END_OF_RULE))
                         }
                     }
                     RuntimeRuleRhsItemsKind.LIST -> when (this.runtimeRule.rhs.listKind) {
@@ -127,26 +115,26 @@ internal class RulePosition(
                         RuntimeRuleListKind.MULTI -> when (this.option) {
                             OPTION_MULTI_EMPTY -> when {
                                 START_OF_RULE == this.position && this.runtimeRule.rhs.multiMin == 0 && itemRule == this.runtimeRule.rhs.MULTI__emptyRule -> setOf(
-                                    RulePosition(this.runtimeRule, OPTION_MULTI_EMPTY, END_OF_RULE)
+                                    RuleOptionPosition(this.runtimeRule, OPTION_MULTI_EMPTY, END_OF_RULE)
                                 )
                                 else -> emptySet() //throw ParseException("This should never happen!")
                             }
                             OPTION_MULTI_ITEM -> when (this.position) {
                                 START_OF_RULE -> when {
                                     1 == this.runtimeRule.rhs.multiMax -> setOf(
-                                        RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, END_OF_RULE)
+                                        RuleOptionPosition(this.runtimeRule, OPTION_MULTI_ITEM, END_OF_RULE)
                                     )
                                     2 <= this.runtimeRule.rhs.multiMin -> setOf(
-                                        RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, POSITION_MULIT_ITEM)
+                                        RuleOptionPosition(this.runtimeRule, OPTION_MULTI_ITEM, POSITION_MULIT_ITEM)
                                     )
                                     else -> setOf(
-                                        RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, POSITION_MULIT_ITEM),
-                                        RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, END_OF_RULE)
+                                        RuleOptionPosition(this.runtimeRule, OPTION_MULTI_ITEM, POSITION_MULIT_ITEM),
+                                        RuleOptionPosition(this.runtimeRule, OPTION_MULTI_ITEM, END_OF_RULE)
                                     )
                                 }
                                 POSITION_MULIT_ITEM -> setOf(
-                                    RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, POSITION_MULIT_ITEM),
-                                    RulePosition(this.runtimeRule, OPTION_MULTI_ITEM, END_OF_RULE)
+                                    RuleOptionPosition(this.runtimeRule, OPTION_MULTI_ITEM, POSITION_MULIT_ITEM),
+                                    RuleOptionPosition(this.runtimeRule, OPTION_MULTI_ITEM, END_OF_RULE)
                                 )
                                 END_OF_RULE -> emptySet()
                                 else -> emptySet()
@@ -156,31 +144,31 @@ internal class RulePosition(
                         RuntimeRuleListKind.SEPARATED_LIST -> when (this.option) {
                             OPTION_SLIST_EMPTY -> when {
                                 START_OF_RULE == this.position && this.runtimeRule.rhs.multiMin == 0 && itemRule == this.runtimeRule.rhs.SLIST__emptyRule -> setOf(
-                                    RulePosition(this.runtimeRule, this.option, END_OF_RULE)
+                                    RuleOptionPosition(this.runtimeRule, this.option, END_OF_RULE)
                                 )
                                 else -> emptySet() //throw ParseException("This should never happen!")
                             }
                             OPTION_SLIST_ITEM_OR_SEPERATOR -> when (this.position) {
                                 START_OF_RULE -> when {
                                     1 == this.runtimeRule.rhs.multiMax -> setOf(
-                                        RulePosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, END_OF_RULE)
+                                        RuleOptionPosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, END_OF_RULE)
                                     )
                                     2 <= this.runtimeRule.rhs.multiMin -> setOf(
-                                        RulePosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, POSITION_SLIST_SEPARATOR)
+                                        RuleOptionPosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, POSITION_SLIST_SEPARATOR)
                                     )
                                     //min == 0 && (max==-1 or max > 1)
                                     else -> setOf(
-                                        RulePosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, POSITION_SLIST_SEPARATOR),
-                                        RulePosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, END_OF_RULE)
+                                        RuleOptionPosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, POSITION_SLIST_SEPARATOR),
+                                        RuleOptionPosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, END_OF_RULE)
                                     )
                                 }
                                 POSITION_SLIST_ITEM -> setOf(
-                                    RulePosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, POSITION_SLIST_SEPARATOR),
-                                    RulePosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, END_OF_RULE)
+                                    RuleOptionPosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, POSITION_SLIST_SEPARATOR),
+                                    RuleOptionPosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, END_OF_RULE)
                                 )
                                 POSITION_SLIST_SEPARATOR -> when {
                                     (this.runtimeRule.rhs.multiMax > 1 || -1 == this.runtimeRule.rhs.multiMax) && itemRule == this.runtimeRule.rhs.SLIST__separator -> setOf(
-                                        RulePosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, POSITION_SLIST_ITEM)
+                                        RuleOptionPosition(this.runtimeRule, OPTION_SLIST_ITEM_OR_SEPERATOR, POSITION_SLIST_ITEM)
                                     )
                                     else -> error("This should never happen!")
                                 }
@@ -202,10 +190,10 @@ internal class RulePosition(
     override fun hashCode(): Int = _hashCode
 
     override fun equals(other: Any?): Boolean = when (other) {
-        is RulePosition -> this.option == other.option &&
+        is RuleOptionPosition -> this.option == other.option &&
                 this.position == other.position &&
                 this.runtimeRule.runtimeRuleSetNumber == other.runtimeRule.runtimeRuleSetNumber &&
-                this.runtimeRule.number == other.runtimeRule.number
+                this.runtimeRule.ruleNumber == other.runtimeRule.ruleNumber
         else -> false
     }
 

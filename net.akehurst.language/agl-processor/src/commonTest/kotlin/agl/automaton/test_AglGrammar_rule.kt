@@ -19,7 +19,7 @@ package net.akehurst.language.agl.automaton
 import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhs
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -37,16 +37,16 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
     private val R_rule = rrs.findRuntimeRule(userGoalRuleName)
 
     private val R_isOverride = rrs.findRuntimeRule("isOverride")
-    private val T_override = R_isOverride.rhs.items[RuntimeRuleItem.MULTI__ITEM]
-    private val T_overrideEmpty = R_isOverride.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
+    private val T_override = R_isOverride.rhs.items[RuntimeRuleRhs.MULTI__ITEM]
+    private val T_overrideEmpty = R_isOverride.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
 
     private val R_isSkip = rrs.findRuntimeRule("isSkip")
-    private val T_skip = R_isSkip.rhs.items[RuntimeRuleItem.MULTI__ITEM]
-    private val T_skipEmpty = R_isSkip.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
+    private val T_skip = R_isSkip.rhs.items[RuntimeRuleRhs.MULTI__ITEM]
+    private val T_skipEmpty = R_isSkip.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
 
     private val R_isLeaf = rrs.findRuntimeRule("isLeaf")
-    private val T_leaf = R_isLeaf.rhs.items[RuntimeRuleItem.MULTI__ITEM]
-    private val T_leafEmpty = R_isLeaf.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
+    private val T_leaf = R_isLeaf.rhs.items[RuntimeRuleRhs.MULTI__ITEM]
+    private val T_leafEmpty = R_isLeaf.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
 
     private val T_IDENTIFIER = rrs.findRuntimeRule("IDENTIFIER")
     private val T_equals = rrs.findRuntimeRule("'='")

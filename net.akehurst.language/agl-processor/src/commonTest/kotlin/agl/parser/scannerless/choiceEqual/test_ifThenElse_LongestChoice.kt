@@ -34,7 +34,7 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
     // WS = "\s+" ;
     private companion object {
         val rrs = runtimeRuleSet {
-            skip("WS") { pattern("\\s+") }
+            concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { ref("expr") }
             choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("var")

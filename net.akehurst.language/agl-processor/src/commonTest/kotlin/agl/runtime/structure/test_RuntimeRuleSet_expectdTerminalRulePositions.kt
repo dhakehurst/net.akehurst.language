@@ -30,8 +30,8 @@ class test_RuntimeRuleSet_expectdTerminalRulePositions {
         val sut = rb.ruleSet()
 
         val goal = RuntimeRuleSet.createGoalRule(S)
-        val actual = sut.expectedTerminalRulePositions[RulePosition(goal, 0, 0)] ?: arrayOf()
-        val expected = arrayOf(RulePosition(S, 0, 0))
+        val actual = sut.expectedTerminalRulePositions[RuleOptionPosition(goal, 0, 0)] ?: arrayOf()
+        val expected = arrayOf(RuleOptionPosition(S, 0, 0))
 
         assertEquals(expected.toList(), actual.toList())
     }
@@ -48,8 +48,8 @@ class test_RuntimeRuleSet_expectdTerminalRulePositions {
         val sut = rb.ruleSet()
 
         val goal = RuntimeRuleSet.createGoalRule(r_S)
-        val actual = sut.expectedTerminalRulePositions[RulePosition(goal, 0, 0)] ?: arrayOf()
-        val expected = arrayOf(RulePosition(r_S, 0, 0))
+        val actual = sut.expectedTerminalRulePositions[RuleOptionPosition(goal, 0, 0)] ?: arrayOf()
+        val expected = arrayOf(RuleOptionPosition(r_S, 0, 0))
 
         assertEquals(expected.toList(), actual.toList())
     }
@@ -66,8 +66,8 @@ class test_RuntimeRuleSet_expectdTerminalRulePositions {
         val sut = rb.ruleSet()
 
         val goal = RuntimeRuleSet.createGoalRule(r_S)
-        val actual = sut.expectedTerminalRulePositions[RulePosition(goal, 0, 0)] ?: arrayOf()
-        val expected = arrayOf(RulePosition(r_S, 0, 0), RulePosition(r_S1, 0, 0))
+        val actual = sut.expectedTerminalRulePositions[RuleOptionPosition(goal, 0, 0)] ?: arrayOf()
+        val expected = arrayOf(RuleOptionPosition(r_S, 0, 0), RuleOptionPosition(r_S1, 0, 0))
 
         assertEquals(expected.toList(), actual.toList())
     }

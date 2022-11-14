@@ -59,9 +59,7 @@ internal class test_InputLocation_singleLine {
 class test_InputLocation_multiLine {
     private companion object {
         val S = runtimeRuleSet {
-            skip("WS") {
-                pattern("\\s+")
-            }
+            concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") {
                 literal("a")
                 literal("b")
@@ -141,9 +139,7 @@ class test_InputLocation_multiLine {
 class test_InputLocation_multiLine2 {
     private companion object {
         val S = runtimeRuleSet {
-            skip("WS") {
-                pattern("\\s+")
-            }
+            concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") {
                 literal("aaa")
                 literal("bbb")

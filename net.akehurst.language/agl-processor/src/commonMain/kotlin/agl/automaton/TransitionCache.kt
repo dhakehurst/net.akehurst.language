@@ -16,8 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
 import net.akehurst.language.agl.util.Debug
 
 internal interface TransitionCache {
@@ -30,7 +29,7 @@ internal interface TransitionCache {
         action: Transition.ParseAction,
         to: ParserState,
         lookahead: Set<Lookahead>,
-        prevGuard: Set<RulePosition>?
+        prevGuard: Set<RuleOptionPosition>?
     )
     fun addTransition(previousStates: Set<ParserState>, tr: Transition): Transition
 
@@ -54,7 +53,7 @@ internal class TransitionCacheLC0 : TransitionCache {
         action: Transition.ParseAction,
         to: ParserState,
         lookahead: Set<Lookahead>,
-        prevGuard: Set<RulePosition>?
+        prevGuard: Set<RuleOptionPosition>?
     ) {
         TODO("not implemented")
     }
@@ -160,7 +159,7 @@ internal class TransitionCacheLC1 : TransitionCache {
         action: Transition.ParseAction,
         to: ParserState,
         lookahead: Set<Lookahead>,
-        prevGuard: Set<RulePosition>?
+        prevGuard: Set<RuleOptionPosition>?
     ) {
         val trans = Transition(from, to, action, lookahead)
         this.addTransition(previousStates, trans)

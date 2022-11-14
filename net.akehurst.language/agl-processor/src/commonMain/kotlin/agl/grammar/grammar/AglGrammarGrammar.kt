@@ -19,7 +19,7 @@ package net.akehurst.language.agl.grammar.grammar
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarAbstract
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
 import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
-import net.akehurst.language.api.grammar.Rule
+import net.akehurst.language.api.grammar.GrammarRule
 
 /**
 grammar Agl {
@@ -69,7 +69,7 @@ POSITIVE_INTEGER_GT_ZERO = "[1-9][0-9]*" ;
 internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar") {
     companion object {
         const val goalRuleName = "grammarDefinition"
-        private fun createRules(): List<Rule> {
+        private fun createRules(): List<GrammarRule> {
             val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar")
             b.skip("WHITESPACE", true).concatenation(b.terminalPattern("\\s+"))
             b.skip("MULTI_LINE_COMMENT", true).concatenation(b.terminalPattern("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"))

@@ -20,7 +20,7 @@ import net.akehurst.language.api.grammar.*
 
 class ConcatenationDefault(override val items: List<ConcatenationItem>) : RuleItemAbstract(), Concatenation {
 
-   override fun setOwningRule(rule: Rule, indices: List<Int>) {
+   override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
 		this._owningRule = rule
 		this.index = indices
 		var i: Int = 0

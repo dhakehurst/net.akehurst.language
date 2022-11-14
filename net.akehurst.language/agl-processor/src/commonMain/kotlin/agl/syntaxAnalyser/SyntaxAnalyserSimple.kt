@@ -558,7 +558,7 @@ class SyntaxAnalyserSimple(
             RuntimeRuleKind.TERMINAL -> runtimeRule.tag
             RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.itemsKind) {
                 RuntimeRuleRhsItemsKind.LIST -> when (runtimeRule.rhs.listKind) {
-                    RuntimeRuleListKind.MULTI -> createPropertyName(runtimeRule.rhs.items[RuntimeRuleItem.MULTI__ITEM])
+                    RuntimeRuleListKind.MULTI -> createPropertyName(runtimeRule.rhs.items[RuntimeRuleRhs.MULTI__ITEM])
                     RuntimeRuleListKind.SEPARATED_LIST -> runtimeRule.tag
                     RuntimeRuleListKind.NONE -> error("Internal Error: should not happen")
                     RuntimeRuleListKind.LEFT_ASSOCIATIVE_LIST -> TODO("Left Associated List not yet supported")

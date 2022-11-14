@@ -55,17 +55,17 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, SentenceContext> {
                     //do nothing
                     "In root scope"
                 } else {
-                    if (context.rootScope.isMissing(scope.scopeFor, "Rule")) {
+                    if (context.rootScope.isMissing(scope.scopeFor, "GrammarRule")) {
                         val loc = this.locationMap[PropertyValue(scope, "typeReference")]
-                        issues.raise(loc, "Rule '${scope.scopeFor}' not found for scope")
+                        issues.raise(loc, "GrammarRule '${scope.scopeFor}' not found for scope")
                     } else {
                         //OK
                     }
-                    "In scope for '${scope.scopeFor}' Rule"
+                    "In scope for '${scope.scopeFor}' GrammarRule"
                 }
                 scope.identifiables.forEach { identifiable ->
                     when {
-                        context.rootScope.isMissing(identifiable.typeName, "Rule") -> {
+                        context.rootScope.isMissing(identifiable.typeName, "GrammarRule") -> {
                             val loc = this.locationMap[PropertyValue(identifiable, "typeReference")]
                             issues.raise(loc, "$msgStart '${identifiable.typeName}' not found as identifiable type")
                         }
@@ -74,8 +74,8 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, SentenceContext> {
                         }
                         else -> {
                             // only check this if the typeName is valid - else it is always invalid
-                            //TODO: check this in context of typeName Rule
-                            if (context.rootScope.isMissing(identifiable.propertyName, "Rule")) {
+                            //TODO: check this in context of typeName GrammarRule
+                            if (context.rootScope.isMissing(identifiable.propertyName, "GrammarRule")) {
                                 val loc = this.locationMap[PropertyValue(identifiable, "propertyName")]
                                 issues.raise(
                                     loc,
@@ -90,18 +90,18 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, SentenceContext> {
             }
 
             asm.references.forEach { ref ->
-                if (context.rootScope.isMissing(ref.inTypeName, "Rule")) {
+                if (context.rootScope.isMissing(ref.inTypeName, "GrammarRule")) {
                     val loc = this.locationMap[PropertyValue(ref, "in")]
-                    issues.raise(loc, "Referring type Rule '${ref.inTypeName}' not found")
+                    issues.raise(loc, "Referring type GrammarRule '${ref.inTypeName}' not found")
                 }
-                if (context.rootScope.isMissing(ref.referringPropertyName, "Rule")) {
+                if (context.rootScope.isMissing(ref.referringPropertyName, "GrammarRule")) {
                     val loc = this.locationMap[PropertyValue(ref, "propertyReference")]
-                    issues.raise(loc, "For reference in '${ref.inTypeName}' referring property Rule '${ref.referringPropertyName}' not found")
+                    issues.raise(loc, "For reference in '${ref.inTypeName}' referring property GrammarRule '${ref.referringPropertyName}' not found")
                 }
                 ref.refersToTypeName.forEachIndexed { i, n ->
-                    if (context.rootScope.isMissing(n, "Rule")) {
+                    if (context.rootScope.isMissing(n, "GrammarRule")) {
                         val loc = this.locationMap[PropertyValue(ref, "typeReferences[$i]")]
-                        issues.raise(loc, "For reference in '${ref.inTypeName}' referred to type Rule '$n' not found")
+                        issues.raise(loc, "For reference in '${ref.inTypeName}' referred to type GrammarRule '$n' not found")
                     }
                 }
             }

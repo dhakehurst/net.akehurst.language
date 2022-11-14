@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.api.automaton.Automaton
 import net.akehurst.language.agl.runtime.structure.*
 import kotlin.test.fail
 
@@ -80,8 +81,8 @@ internal object AutomatonTest {
         }
     }
 
-    fun assertEquals(expected: ParserStateSet, actual: ParserStateSet) {
-        assertMatches(expected,actual, MatchConfiguration())
+    fun assertEquals(expected: Automaton, actual: Automaton) {
+        assertMatches(expected as ParserStateSet,actual as ParserStateSet, MatchConfiguration())
     }
 
     fun assertMatches(expected: ParserStateSet, actual: ParserStateSet, config:MatchConfiguration=MatchConfiguration()) {
@@ -109,7 +110,7 @@ internal object AutomatonTest {
         else -> true
     }
 
-    private fun RulePosition.matches(other: RulePosition): Boolean = when {
+    private fun RuleOptionPosition.matches(other: RuleOptionPosition): Boolean = when {
         this.option != other.option -> false
         this.position != other.position -> false
         else -> this.runtimeRule.matches(other.runtimeRule)
@@ -127,7 +128,7 @@ internal object AutomatonTest {
         else -> true
     }
 
-    private fun RuntimeRuleItem.matches(other: RuntimeRuleItem): Boolean = when {
+    private fun RuntimeRuleRhs.matches(other: RuntimeRuleRhs): Boolean = when {
         this.itemsKind != other.itemsKind -> false
         this.choiceKind != other.choiceKind -> false
         this.listKind != other.listKind -> false

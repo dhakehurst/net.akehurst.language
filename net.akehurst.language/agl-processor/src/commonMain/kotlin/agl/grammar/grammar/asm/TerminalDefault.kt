@@ -30,7 +30,7 @@ class TerminalDefault(override val value: String, override val isPattern: Boolea
         return if (isPattern) this.pattern().matches(value) else value.equals(this.value);
     }
 */
-    override fun setOwningRule(rule: Rule, indices: List<Int>) {
+    override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
         this.index = indices
     }

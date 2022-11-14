@@ -20,9 +20,9 @@ import net.akehurst.language.api.grammar.*
 
 abstract class RuleItemAbstract : RuleItem {
 
-	protected var _owningRule : Rule? = null
+	protected var _owningRule : GrammarRule? = null
 
-	override val owningRule: Rule get() {
+	override val owningRule: GrammarRule get() {
 		return this._owningRule ?: throw GrammarRuleNotFoundException("Internal Error: owningRule must be set")
 	}
 	

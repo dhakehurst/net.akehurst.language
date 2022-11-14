@@ -24,7 +24,7 @@ class SimpleListDefault(
 	override val item: SimpleItem
 ) : RuleItemAbstract(), SimpleList {
 
-    override fun setOwningRule(rule: Rule, indices: List<Int>) {
+    override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
 		this._owningRule = rule
 		this.index = indices
 		val nextIndex: List<Int> = indices + 0

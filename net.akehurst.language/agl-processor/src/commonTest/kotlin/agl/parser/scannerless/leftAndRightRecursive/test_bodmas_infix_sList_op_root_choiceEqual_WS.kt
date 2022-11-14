@@ -37,7 +37,7 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
     // WS = "\s+" ;
     private companion object {
         val rrs = runtimeRuleSet {
-            skip("WS") { pattern("\\s+") }
+            concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { ref("expr") }
             choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("root")

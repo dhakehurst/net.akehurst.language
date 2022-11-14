@@ -30,7 +30,7 @@ class test_a {
     // S = 'a' ;
     private companion object {
         val rrs = runtimeRuleSet {
-            skip("WS") { pattern("\\s+") }
+            concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { literal("a") }
         }
         val goal = "S"

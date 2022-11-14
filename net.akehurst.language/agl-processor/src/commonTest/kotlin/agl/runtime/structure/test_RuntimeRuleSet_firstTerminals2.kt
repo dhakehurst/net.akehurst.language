@@ -28,7 +28,7 @@ class test_RuntimeRuleSet_firstTerminals2 {
         val r_a = rb.literal("a")
         val S = rb.rule("S").concatenation(r_a)
         val sut = rb.ruleSet()
-        val actual = sut.firstTerminals2[RulePosition(S,0,0)]
+        val actual = sut.firstTerminals2[RuleOptionPosition(S,0,0)]
         val expected = listOf(r_a)
 
         assertEquals(expected, actual)
@@ -40,7 +40,7 @@ class test_RuntimeRuleSet_firstTerminals2 {
         val r_a = rb.literal("a")
         val S = rb.rule("S").concatenation(r_a)
         val sut = rb.ruleSet()
-        val actual = sut.firstTerminals2[RulePosition(S,0,-1)]
+        val actual = sut.firstTerminals2[RuleOptionPosition(S,0,-1)]
         val expected = emptyList<RuntimeRule>()
 
         assertEquals(expected, actual)
@@ -58,9 +58,9 @@ class test_RuntimeRuleSet_firstTerminals2 {
         val r_S = rb.rule("S").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST,Aa, Bb)
 
         val sut = rb.ruleSet()
-        val actual1 = sut.firstTerminals2[RulePosition(r_S,0,0)]
+        val actual1 = sut.firstTerminals2[RuleOptionPosition(r_S,0,0)]
         assertEquals(listOf(A), actual1)
-        val actual2 = sut.firstTerminals2[RulePosition(r_S,1,0)]
+        val actual2 = sut.firstTerminals2[RuleOptionPosition(r_S,1,0)]
         assertEquals(listOf(B), actual2)
     }
 
@@ -75,7 +75,7 @@ class test_RuntimeRuleSet_firstTerminals2 {
         b.rule(r_S).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY,r_P, r_a)
         val sut = b.ruleSet()
 
-        val actual = sut.firstTerminals2[RulePosition(r_S,0,0)]
+        val actual = sut.firstTerminals2[RuleOptionPosition(r_S,0,0)]
         val expected = listOf(r_P.emptyRuleItem, r_a)
 
         assertEquals(expected, actual)

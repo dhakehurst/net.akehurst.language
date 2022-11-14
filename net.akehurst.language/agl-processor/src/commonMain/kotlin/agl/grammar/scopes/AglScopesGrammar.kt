@@ -18,7 +18,7 @@ package net.akehurst.language.agl.grammar.scopes
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarAbstract
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
 import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
-import net.akehurst.language.api.grammar.Rule
+import net.akehurst.language.api.grammar.GrammarRule
 
 /**
 
@@ -26,7 +26,7 @@ import net.akehurst.language.api.grammar.Rule
 internal class AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglScopes") {
     companion object {
         const val goalRuleName = "declarations"
-        private fun createRules(): List<Rule> {
+        private fun createRules(): List<GrammarRule> {
             val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglStyle");
             b.skip("WHITESPACE").concatenation(b.terminalPattern("\\s+"));
             b.skip("MULTI_LINE_COMMENT").concatenation(b.terminalPattern("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"));

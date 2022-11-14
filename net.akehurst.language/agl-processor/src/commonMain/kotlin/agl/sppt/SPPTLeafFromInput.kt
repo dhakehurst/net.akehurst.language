@@ -133,7 +133,7 @@ import net.akehurst.language.api.sppt.*
             else -> this.name //shouldn't happen!
         }
 
-        return "${this.startPosition},${this.nextInputPosition},C:${name}(${this.runtimeRule.number})"
+        return "${this.startPosition},${this.nextInputPosition},C:${name}(${this.runtimeRule.ruleNumber})"
     }
 
     override fun hashCode(): Int {

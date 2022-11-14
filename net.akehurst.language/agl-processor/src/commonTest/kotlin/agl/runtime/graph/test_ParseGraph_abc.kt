@@ -39,13 +39,13 @@ class test_ParseGraph_abc {
         val r_b = RuntimeRule(rrs.number,1, "b","b", RuntimeRuleKind.TERMINAL, false, false)
         val r_c = RuntimeRule(rrs.number,2, "c", "c", RuntimeRuleKind.TERMINAL, false, false)
         val r_A = RuntimeRule(rrs.number,3,"A","A", RuntimeRuleKind.NON_TERMINAL, false, false)
-        r_A.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,RuntimeRuleListKind.NONE,-1, 0, arrayOf(r_a))
+        r_A.rhsOpt = RuntimeRuleRhs(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,RuntimeRuleListKind.NONE,-1, 0, arrayOf(r_a))
         val r_B = RuntimeRule(rrs.number,3,"B", "B", RuntimeRuleKind.NON_TERMINAL, false, false)
-        r_B.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,RuntimeRuleListKind.NONE,-1, 0, arrayOf(r_b))
+        r_B.rhsOpt = RuntimeRuleRhs(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,RuntimeRuleListKind.NONE,-1, 0, arrayOf(r_b))
         val r_C = RuntimeRule(rrs.number,3,"C", "C", RuntimeRuleKind.NON_TERMINAL, false, false)
-        r_C.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,RuntimeRuleListKind.NONE,-1, 0, arrayOf(r_c))
+        r_C.rhsOpt = RuntimeRuleRhs(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,RuntimeRuleListKind.NONE,-1, 0, arrayOf(r_c))
         val r_S = RuntimeRule(rrs.number,0,"S", "", RuntimeRuleKind.NON_TERMINAL, false, false)
-        r_S.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,RuntimeRuleListKind.NONE,-1, 0, arrayOf(r_A, r_B, r_C))
+        r_S.rhsOpt = RuntimeRuleRhs(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE,RuntimeRuleListKind.NONE,-1, 0, arrayOf(r_A, r_B, r_C))
 
         val text = "a"
         val input = InputFromString(rrs.terminalRules.size,text)
@@ -73,7 +73,7 @@ class test_ParseGraph_abc {
         val sut = ParseGraph(input, 0,10,10)
 
         val gr = RuntimeRuleSet.createGoalRule(userGoalRule)
-        val startState = RulePositionWithLookahead(RulePosition(gr,0,0), emptySet())
+        val startState = RulePositionWithLookahead(RuleOptionPosition(gr,0,0), emptySet())
         //sut.start(startState, rrs)
 TODO()
         val actual = sut.canGrow

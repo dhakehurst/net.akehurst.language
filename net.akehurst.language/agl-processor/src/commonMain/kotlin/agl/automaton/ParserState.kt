@@ -16,7 +16,8 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.graph.RuntimeState
+import net.akehurst.language.agl.api.automaton.State
+import net.akehurst.language.agl.api.runtime.RulePosition
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.processor.AutomatonKind
@@ -25,7 +26,7 @@ internal class ParserState(
     val number: StateNumber,
     val rulePositions: List<RulePosition>, //must be a list so that we can index against Growing children
     val stateSet: ParserStateSet
-) {
+) : State {
 
     companion object {
         fun LookaheadSetPart.lhs(stateSet: ParserStateSet): LookaheadSet {

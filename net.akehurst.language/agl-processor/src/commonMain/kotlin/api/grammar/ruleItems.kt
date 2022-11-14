@@ -17,8 +17,8 @@
 package net.akehurst.language.api.grammar
 
 interface RuleItem {
-    val owningRule: Rule
-	fun setOwningRule(rule: Rule, indices: List<Int>) //TODO: make internal not on interface
+    val owningRule: GrammarRule
+	fun setOwningRule(rule: GrammarRule, indices: List<Int>) //TODO: make internal not on interface
     val allTerminal: Set<Terminal>
     val allNonTerminal: Set<NonTerminal>
     val allEmbedded: Set<Embedded>
@@ -64,7 +64,7 @@ interface Terminal : TangibleItem {
     val value: String
 }
 interface NonTerminal : TangibleItem {
-    fun referencedRule(targetGrammar: Grammar): Rule
+    fun referencedRule(targetGrammar: Grammar): GrammarRule
 }
 interface Embedded : TangibleItem {
     /**
@@ -78,5 +78,5 @@ interface Embedded : TangibleItem {
      */
     val embeddedGrammar: Grammar
 
-    fun referencedRule(targetGrammar: Grammar): Rule
+    fun referencedRule(targetGrammar: Grammar): GrammarRule
 }

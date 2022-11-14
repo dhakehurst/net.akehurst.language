@@ -17,8 +17,6 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
-import net.akehurst.language.agl.runtime.graph.RuntimeState
-import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 
 internal class RuntimeTransitionCalculator(

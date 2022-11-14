@@ -18,13 +18,13 @@ package net.akehurst.language.agl.grammar.format
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarAbstract
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
 import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
-import net.akehurst.language.api.grammar.Rule
+import net.akehurst.language.api.grammar.GrammarRule
 
 
 internal class AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglFormat") {
     companion object {
         const val goalRuleName = "rules"
-        private fun createRules(): List<Rule> {
+        private fun createRules(): List<GrammarRule> {
             val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglFormat");
             b.skip("WHITESPACE").concatenation(b.terminalPattern("\\s+"));
             b.skip("MULTI_LINE_COMMENT").concatenation(b.terminalPattern("/\\*[^*]*\\*+(?:[^*/][^*]*\\*+)*/"));

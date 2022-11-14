@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.agl.regex.asRegexLiteral
 import net.akehurst.language.api.parser.ParserException
 
 
@@ -32,14 +33,7 @@ import net.akehurst.language.api.parser.ParserException
  *   RIGHT_ASSOCIATIVE_LIST  -> items[0] == the item to repeat, items[1] == separator
  * }
  */
-internal class RuntimeRuleItem(
-    val itemsKind: RuntimeRuleRhsItemsKind,
-    val choiceKind : RuntimeRuleChoiceKind,
-    val listKind : RuntimeRuleListKind,
-    val multiMin : Int,
-    val multiMax : Int,
-    val items : Array<out RuntimeRule>
-) {
+internal sealed class RuntimeRuleRhs {
 
     companion object {
         val EMPTY__RULE_THAT_IS_EMPTY = 0
@@ -51,28 +45,14 @@ internal class RuntimeRuleItem(
 
     }
 
-    init {
-        if (this.items.isEmpty()) {
-            throw ParserException("RHS of a non terminal rule must contain some items")
-        }
-    }
-
-    val EMPTY__ruleThatIsEmpty: RuntimeRule get() { return this.items[EMPTY__RULE_THAT_IS_EMPTY] }
-    val MULTI__repeatedItem: RuntimeRule get() { return this.items[MULTI__ITEM] }
-    val MULTI__emptyRule: RuntimeRule get() { return this.items[MULTI__EMPTY_RULE] }
-
-    val SLIST__repeatedItem: RuntimeRule get() { return this.items[SLIST__ITEM] }
-    val SLIST__separator: RuntimeRule get() { return this.items[SLIST__SEPARATOR] }
-    val SLIST__emptyRule: RuntimeRule get() { return this.items[SLIST__EMPTY_RULE] }
-
-    //val listSeparator: RuntimeRule get() { return this.items[1] } //should we check type here or is that runtime overhead?
+    abstract val runtimeRuleSet: RuntimeRuleSet
 
     fun findItemAt(n: Int): Array<out RuntimeRule> {
         return when (this.itemsKind) {
             RuntimeRuleRhsItemsKind.EMPTY -> emptyArray<RuntimeRule>()
             RuntimeRuleRhsItemsKind.CHOICE -> this.items //TODO: should maybe test n == 0
             RuntimeRuleRhsItemsKind.CONCATENATION -> if (this.items.size > n) arrayOf(this.items[n]) else emptyArray<RuntimeRule>()
-            RuntimeRuleRhsItemsKind.LIST -> when(listKind) {
+            RuntimeRuleRhsItemsKind.LIST -> when (listKind) {
                 RuntimeRuleListKind.NONE -> error("")
                 RuntimeRuleListKind.MULTI -> {
                     if ((this.multiMax == -1 || n <= this.multiMax - 1) && n >= this.multiMin - 1) {
@@ -81,6 +61,7 @@ internal class RuntimeRuleItem(
                         emptyArray<RuntimeRule>()
                     }
                 }
+
                 RuntimeRuleListKind.SEPARATED_LIST -> {
                     when (n % 2) {
                         0 -> if ((this.multiMax == -1 || n <= this.multiMax - 1) && n >= this.multiMin - 1) {
@@ -88,34 +69,104 @@ internal class RuntimeRuleItem(
                         } else {
                             emptyArray<RuntimeRule>()
                         }
+
                         1 -> arrayOf(this.SLIST__separator)
                         else -> emptyArray<RuntimeRule>() // should never happen!
                     }
                 }
+
                 RuntimeRuleListKind.LEFT_ASSOCIATIVE_LIST -> TODO()
                 RuntimeRuleListKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
                 RuntimeRuleListKind.UNORDERED -> TODO()
             }
         }
     }
+}
 
-    override fun toString(): String {
-        val kindStr = when (this.itemsKind) {
-            RuntimeRuleRhsItemsKind.EMPTY -> "EMPTY"
-            RuntimeRuleRhsItemsKind.CONCATENATION -> "CONCAT"
-            RuntimeRuleRhsItemsKind.CHOICE -> when(this.choiceKind) {
-                RuntimeRuleChoiceKind.NONE -> "ERROR"
-                RuntimeRuleChoiceKind.AMBIGUOUS -> "CH_AMB"
-                RuntimeRuleChoiceKind.LONGEST_PRIORITY -> "CH_LNG"
-                RuntimeRuleChoiceKind.PRIORITY_LONGEST -> "CH_PRI"
-            }
-            RuntimeRuleRhsItemsKind.LIST -> when(listKind) {
-                RuntimeRuleListKind.MULTI -> "MULTI"
-                RuntimeRuleListKind.SEPARATED_LIST -> "SLIST"
-                else -> TODO("Unsupported at present")
-            }
-        }
-        val itemsStr = items.map { "[${it.number}]" }.joinToString(" ")
-        return "(${kindStr}) ${itemsStr}"
+internal class RuntimeRuleRhsCommonTerminal(
+) : RuntimeRuleRhs() {
+    override val runtimeRuleSet: RuntimeRuleSet get() = error("Internal Error: RuntimeRuleRhsCommonTerminal has no RuntimeRuleSet")
+    override fun toString(): String = "<Common>"
+}
+
+internal class RuntimeRuleRhsPattern(
+    override val runtimeRuleSet: RuntimeRuleSet,
+    val pattern: String
+) : RuntimeRuleRhs() {
+    internal val regex by lazy { Regex(this.pattern) }
+    override fun toString(): String = "\"$pattern\""
+}
+
+internal class RuntimeRuleRhsLiteral(
+    override val runtimeRuleSet: RuntimeRuleSet,
+    val value: String
+) : RuntimeRuleRhs() {
+    override fun toString(): String = "'$value'"
+}
+
+internal class RuntimeRuleRhsEmpty(
+    override val runtimeRuleSet: RuntimeRuleSet,
+    val ruleNumberThatIsEmpty: Int
+) : RuntimeRuleRhs() {
+    val ruleThatIsEmpty: RuntimeRule by lazy { runtimeRuleSet.runtimeRules[ruleNumberThatIsEmpty] }
+    override fun toString(): String = "EMPTY(${ruleThatIsEmpty.tag})"
+}
+
+internal class RuntimeRuleRhsGoal(
+    override val runtimeRuleSet: RuntimeRuleSet,
+    ruleNumber: Int
+) : RuntimeRuleRhs() {
+    val item: RuntimeRule by lazy { runtimeRuleSet.runtimeRules[ruleNumber] }
+    override fun toString(): String = "GOAL (${item.tag}[${item.ruleNumber}]"
+}
+
+internal class RuntimeRuleRhsConcatenation(
+    override val runtimeRuleSet: RuntimeRuleSet,
+    ruleReferences: List<Int>
+) : RuntimeRuleRhs() {
+    val items: List<RuntimeRule> by lazy { ruleReferences.map { runtimeRuleSet.runtimeRules[it] } }
+    override fun toString(): String = "CONCAT(${items.map { "${it.tag}[${it.ruleNumber}]" }.joinToString(" ")})"
+}
+
+internal class RuntimeRuleRhsListSimple(
+    override val runtimeRuleSet: RuntimeRuleSet,
+    val min: Int,
+    val max: Int,
+    val repeatedItemNumber: Int
+) : RuntimeRuleRhs() {
+
+    companion object {
+        const val MULTIPLICITY_N = -1
     }
+
+    val repeatedItem by lazy { runtimeRuleSet.runtimeRules[repeatedItemNumber] }
+
+    override fun toString(): String = "List ${repeatedItem.tag} {$min, $max}"
+}
+
+internal class RuntimeRuleRhsListSeparated(
+    override val runtimeRuleSet: RuntimeRuleSet,
+    val min: Int,
+    val max: Int,
+    val repeatedItemNumber: Int,
+    val separatorNumber: Int
+) : RuntimeRuleRhs() {
+
+    companion object {
+        const val MULTIPLICITY_N = -1
+    }
+
+    val repeatedItem by lazy { runtimeRuleSet.runtimeRules[repeatedItemNumber] }
+
+    val separator by lazy { runtimeRuleSet.runtimeRules[separatorNumber] }
+
+    override fun toString(): String = "SList ${repeatedItem.tag} {$min, $max}"
+}
+
+internal class RuntimeRuleRhsEmbedded(
+    override val runtimeRuleSet: RuntimeRuleSet,
+    val embeddedRuntimeRuleSet: RuntimeRuleSet,
+    val embeddedStartRule: RuntimeRule
+) : RuntimeRuleRhs() {
+
 }

@@ -20,7 +20,6 @@ import net.akehurst.language.agl.grammar.grammar.asm.*
 import net.akehurst.language.agl.grammar.GrammarRegistryDefault
 import net.akehurst.language.agl.syntaxAnalyser.BranchHandler
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserAbstract
-import net.akehurst.language.api.analyser.SyntaxAnalyserException
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.SentenceContext
@@ -41,12 +40,12 @@ internal class AglGrammarSyntaxAnalyser(
         this.register("definitions", this::definitions as BranchHandler<List<Grammar>>)
         this.register("grammar", this::grammar as BranchHandler<Grammar>)
         this.register("extends", this::extends as BranchHandler<List<Grammar>>)
-        this.register("rules", this::rules as BranchHandler<List<Rule>>)
-        this.register("rule", this::rule as BranchHandler<Rule>)
+        this.register("rules", this::rules as BranchHandler<List<GrammarRule>>)
+        this.register("rule", this::rule as BranchHandler<GrammarRule>)
         this.register("ruleTypeLabels", this::ruleTypeLabels as BranchHandler<List<String>>)
-        // this.register("ruleType", this::ruleType as BranchHandler<Rule>)
-        this.register("rhs", this::rhs as BranchHandler<Rule>)
-        this.register("empty", this::empty as BranchHandler<Rule>)
+        // this.register("ruleType", this::ruleType as BranchHandler<GrammarRule>)
+        this.register("rhs", this::rhs as BranchHandler<GrammarRule>)
+        this.register("empty", this::empty as BranchHandler<GrammarRule>)
         this.register("choice", this::choice as BranchHandler<RuleItem>)
         this.register("simpleChoice", this::simpleChoice as BranchHandler<RuleItem>)
         this.register("priorityChoice", this::priorityChoice as BranchHandler<RuleItem>)
@@ -118,7 +117,7 @@ internal class AglGrammarSyntaxAnalyser(
 
         this.grammarRegistry.register(result)
 
-        this.transformBranch<List<Rule>>(children[1], result) //creating a Rule adds it to the grammar
+        this.transformBranch<List<GrammarRule>>(children[1], result) //creating a GrammarRule adds it to the grammar
 
         return result
     }
@@ -138,14 +137,14 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // rules : rule+ ;
-    private fun rules(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<Rule> {
+    private fun rules(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<GrammarRule> {
         return children.mapIndexed { index, it ->
-            this.transformBranch<Rule>(it, arg)
+            this.transformBranch<GrammarRule>(it, arg)
         }
     }
 
     // rule : ruleTypeLabels IDENTIFIER ':' rhs ';' ;
-    private fun rule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Rule {
+    private fun rule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): GrammarRule {
         val grammar = arg as GrammarDefault
         val type = this.transformBranch<List<String>>(children[0], arg)
         val isOverride = type.contains("override")

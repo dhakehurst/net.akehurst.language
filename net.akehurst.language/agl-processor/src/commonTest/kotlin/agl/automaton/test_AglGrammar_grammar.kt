@@ -20,7 +20,7 @@ import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhs
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -38,16 +38,16 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
     private   val R_rule = rrs.findRuntimeRule("rule")
 
     private    val R_isOverride = rrs.findRuntimeRule("isOverride")
-    private   val R_override = R_isOverride.rhs.items[RuntimeRuleItem.MULTI__ITEM]
-    private   val R_overrideEmpty = R_isOverride.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
+    private   val R_override = R_isOverride.rhs.items[RuntimeRuleRhs.MULTI__ITEM]
+    private   val R_overrideEmpty = R_isOverride.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
 
     private    val R_isSkip = rrs.findRuntimeRule("isSkip")
-    private    val R_skip = R_isSkip.rhs.items[RuntimeRuleItem.MULTI__ITEM]
-    private    val R_skipEmpty = R_isSkip.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
+    private    val R_skip = R_isSkip.rhs.items[RuntimeRuleRhs.MULTI__ITEM]
+    private    val R_skipEmpty = R_isSkip.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
 
     private    val R_isLeaf = rrs.findRuntimeRule("isLeaf")
-    private    val R_leaf = R_isLeaf.rhs.items[RuntimeRuleItem.MULTI__ITEM]
-    private   val R_leafEmpty = R_isLeaf.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
+    private    val R_leaf = R_isLeaf.rhs.items[RuntimeRuleRhs.MULTI__ITEM]
+    private   val R_leafEmpty = R_isLeaf.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
 
     private    val T_IDENTIFIER = rrs.findRuntimeRule("IDENTIFIER")
     private    val T_namespace = rrs.findRuntimeRule("'namespace'")
@@ -70,7 +70,7 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
         // isLeaf 'leaf'?
 
 
-        val actual = rrs.firstTerminals[R_rule.number]
+        val actual = rrs.firstTerminals[R_rule.ruleNumber]
 
         val expected = setOf<RuntimeRule>(R_override, R_overrideEmpty)
 

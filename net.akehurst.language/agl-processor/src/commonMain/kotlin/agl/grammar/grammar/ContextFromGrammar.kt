@@ -28,7 +28,7 @@ class ContextFromGrammar(
 ) : SentenceContext {
 
     companion object {
-        const val GRAMMAR_RULE_CONTEXT_TYPE_NAME = "Rule"
+        const val GRAMMAR_RULE_CONTEXT_TYPE_NAME = "GrammarRule"
         const val GRAMMAR_TERMINAL_CONTEXT_TYPE_NAME = "Terminal"
     }
 

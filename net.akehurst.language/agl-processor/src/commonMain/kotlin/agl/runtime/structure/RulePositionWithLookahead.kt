@@ -23,7 +23,7 @@ internal value class StateNumber(val value:Int)
 
 //TODO: how is this different to ParentRelation ?
 internal data class RulePositionWithLookahead(
-    val rulePosition: RulePosition,
+    val rulePosition: RuleOptionPosition,
     val lookahead: Set<RuntimeRule>
 ) {
 

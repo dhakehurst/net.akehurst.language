@@ -18,7 +18,11 @@ package net.akehurst.language.collections
 
 internal fun <K,V> lazyMutableMapNonNull(accessor: (K) -> V) = LazyMutableMapNonNull(accessor)
 
-internal class LazyMutableMapNonNull<K,V>(val accessor: (K) -> V) : MutableMap<K,V> {
+interface MapNotNull<K,V> : Map<K,V> {
+    override fun get(key: K): V
+}
+
+internal class LazyMutableMapNonNull<K,V>(val accessor: (K) -> V) : MapNotNull<K,V>, MutableMap<K,V> {
 
     val map = mutableMapOf<K,V>()
 

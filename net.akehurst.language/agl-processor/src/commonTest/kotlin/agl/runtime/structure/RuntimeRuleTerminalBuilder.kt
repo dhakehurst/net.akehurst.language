@@ -58,7 +58,7 @@ internal class RuntimeRuleTerminalBuilder(val rrsb: RuntimeRuleSetBuilder) {
         val name = "§empty."+ruleThatIsEmpty.tag
         val rr = RuntimeRule(this.rrsb.runtimeRuleSet.number,this.rrsb.rules.size, name, name, kind, isPattern, isSkip)
         this.rrsb.rules.add(rr)
-        rr.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.EMPTY,RuntimeRuleChoiceKind.NONE,RuntimeRuleListKind.NONE,0,0, arrayOf(ruleThatIsEmpty))
+        rr.rhsOpt = RuntimeRuleRhs(RuntimeRuleRhsItemsKind.EMPTY,RuntimeRuleChoiceKind.NONE,RuntimeRuleListKind.NONE,0,0, arrayOf(ruleThatIsEmpty))
         return rr
     }
     fun embedded(tag:String, name:String, embeddedRuntimeRuleSet:RuntimeRuleSet,embeddedStartRule:RuntimeRule): RuntimeRule {

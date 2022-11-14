@@ -28,12 +28,9 @@ internal class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
 
     private companion object {
         val rrs = runtimeRuleSet {
-            skip("WS") { pattern("\\s+") }
-            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                literal("a")
-                ref("S1")
-            }
-            concatenation("S1") { ref("S"); literal("a") }
+            concatenation("WS", true) { pattern("\\s+") }
+            concatenation("S") { literal("a") }
+            concatenation("S") { ref("S"); literal("a") }
         }
         val goal = "S"
     }

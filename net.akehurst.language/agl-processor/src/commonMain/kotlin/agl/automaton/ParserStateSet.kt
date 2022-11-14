@@ -16,8 +16,10 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.api.automaton.Automaton
+import net.akehurst.language.agl.api.runtime.RuleKind
+import net.akehurst.language.agl.api.runtime.RulePosition
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
-import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.processor.AutomatonKind
@@ -29,7 +31,7 @@ internal class ParserStateSet(
     val userGoalRule: RuntimeRule,
     val isSkip: Boolean,
     val automatonKind: AutomatonKind
-) {
+) : Automaton {
 
     private var nextLookaheadSetId = 0
     private val lookaheadSets = mutableListOf<LookaheadSet>()
@@ -48,10 +50,10 @@ internal class ParserStateSet(
         calcUsedRules(this.startState.runtimeRules.first())
     }
     val usedTerminalRules: Set<RuntimeRule> by lazy {
-        this.usedRules.filter { it.kind === RuntimeRuleKind.TERMINAL }.toSet()
+        this.usedRules.filter { it.kind === RuleKind.TERMINAL }.toSet()
     }
     val usedNonTerminalRules: Set<RuntimeRule> by lazy {
-        this.usedRules.filter { it.kind !== RuntimeRuleKind.TERMINAL }.toSet()
+        this.usedRules.filter { it.kind !== RuleKind.TERMINAL }.toSet()
     }
 
     /*
@@ -65,12 +67,13 @@ internal class ParserStateSet(
     val allBuiltTransitions: Set<Transition> get() = this.allBuiltStates.flatMap { it.outTransitions.allBuiltTransitions }.toSet()
 
     val goalRule by lazy { RuntimeRuleSet.createGoalRule(userGoalRule) }
-    val startRulePosition by lazy { RulePosition(goalRule, 0, 0) }
-    val finishRulePosition by lazy { RulePosition(goalRule, 0, RulePosition.END_OF_RULE) }
-    val startState: ParserState by lazy { this.createState(listOf(startRulePosition)) }
+    val startRulePosition by lazy { RulePosition(goalRule, RulePosition.START_OF_RULE) }
+    val finishRulePosition by lazy { RulePosition(goalRule, RulePosition.END_OF_RULE) }
+    override val startState: ParserState by lazy { this.createState(listOf(startRulePosition)) }
     val finishState: ParserState by lazy { this.createState(listOf(finishRulePosition)) }
 
-    internal val firstTerminals = lazyMutableMapNonNull<RulePosition, List<RuntimeRule>> { rp ->
+    /*
+    internal val firstTerminals = lazyMutableMapNonNull<RuleOptionPosition, List<RuntimeRule>> { rp ->
         when (rp.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> listOf(rp.runtimeRule)
             RuntimeRuleKind.EMBEDDED -> {
@@ -110,7 +113,7 @@ internal class ParserStateSet(
             }
         }
     }
-
+*/
     //internal fun createLookaheadSet(content: Set<RuntimeRule>): LookaheadSet = this.runtimeRuleSet.createLookaheadSet(content) //TODO: Maybe cache here rather than in rrs
     //fun createWithParent(upLhs: LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet = this.runtimeRuleSet.createWithParent(upLhs, parentLookahead)
 
@@ -121,20 +124,20 @@ internal class ParserStateSet(
         return state
     }
 
-    internal fun fetchState(rulePositions: List<RulePosition>): ParserState? =
+    internal fun fetchState(rulePositions: List<RuleOptionPosition>): ParserState? =
         this.allBuiltStates.firstOrNull { it.rulePositions.toSet() == rulePositions.toSet() }
 
-    internal fun fetchOrCreateState(rulePositions: List<RulePosition>): ParserState =
+    internal fun fetchOrCreateState(rulePositions: List<RuleOptionPosition>): ParserState =
         fetchState(rulePositions) ?: this.createState(rulePositions)
 
-    internal fun fetchCompatibleState(rulePositions: List<RulePosition>): ParserState? {
+    internal fun fetchCompatibleState(rulePositions: List<RuleOptionPosition>): ParserState? {
         val existing = this.allBuiltStates.firstOrNull {
             it.rulePositions.containsAll(rulePositions)
         }
         return existing
     }
 
-    internal fun fetchCompatibleOrCreateState(rulePositions: List<RulePosition>): ParserState =
+    internal fun fetchCompatibleOrCreateState(rulePositions: List<RuleOptionPosition>): ParserState =
         fetchCompatibleState(rulePositions) ?: this.createState(rulePositions)
 
     internal fun createLookaheadSet(includeRT: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet {
@@ -220,18 +223,18 @@ internal class ParserStateSet(
         done: BooleanArray = BooleanArray(this.runtimeRuleSet.runtimeRules.size)
     ): Set<RuntimeRule> {
         return when {
-            0 > rule.number -> {
+            0 > rule.ruleNumber -> {
                 used.add(rule)
                 for (sr in rule.rhs.items) {
                     calcUsedRules(sr, used, done)
                 }
                 used
             }
-            done[rule.number] -> used
+            done[rule.ruleNumber] -> used
             else -> when {
                 rule.kind === RuntimeRuleKind.NON_TERMINAL -> {
                     used.add(rule)
-                    done[rule.number] = true
+                    done[rule.ruleNumber] = true
                     for (sr in rule.rhs.items) {
                         calcUsedRules(sr, used, done)
                     }
@@ -239,7 +242,7 @@ internal class ParserStateSet(
                 }
                 else -> {
                     used.add(rule)
-                    done[rule.number] = true
+                    done[rule.ruleNumber] = true
                     used
                 }
             }
@@ -248,11 +251,11 @@ internal class ParserStateSet(
 
 
     /*
-        fun expectedAfter(rulePosition: RulePosition, doneDn: MutableMap<RulePosition, Set<RuntimeRule>> = mutableMapOf(), doneUp: MutableMap<RulePosition, Set<RuntimeRule>> = mutableMapOf()): Set<RuntimeRule> {
+        fun expectedAfter(rulePosition: RuleOptionPosition, doneDn: MutableMap<RuleOptionPosition, Set<RuntimeRule>> = mutableMapOf(), doneUp: MutableMap<RuleOptionPosition, Set<RuntimeRule>> = mutableMapOf()): Set<RuntimeRule> {
             return when {
                 doneDn.containsKey(rulePosition) -> doneDn[rulePosition]!!
                 rulePosition.runtimeRule == this.startState.runtimeRule -> when {
-                    rulePosition.isAtStart -> this.expectedAfter(RulePosition(rulePosition.item!!, 0, 0), doneDn, doneUp)
+                    rulePosition.isAtStart -> this.expectedAfter(RuleOptionPosition(rulePosition.item!!, 0, 0), doneDn, doneUp)
                     rulePosition.isAtEnd -> LookaheadSet.UP.content
                     else -> error("should never happen")
                 }

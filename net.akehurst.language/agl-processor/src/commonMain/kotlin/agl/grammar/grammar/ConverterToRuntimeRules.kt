@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.agl.grammar.grammar.PseudoRuleNames
-import net.akehurst.language.agl.grammar.grammar.asm.RuleItemAbstract
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.grammar.*
@@ -89,11 +88,11 @@ internal class ConverterToRuntimeRules(
         val ruleThatIsEmpty = this.findNamedRule(tag) ?: error("Should always exist")
         val en = "§empty.$tag"
         val emptyRuntimeRule = this.terminalRule(en, en, RuntimeRuleKind.TERMINAL, false, false)
-        emptyRuntimeRule.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.EMPTY, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, arrayOf(ruleThatIsEmpty))
+        emptyRuntimeRule.rhsOpt = RuntimeRuleRhs(RuntimeRuleRhsItemsKind.EMPTY, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, arrayOf(ruleThatIsEmpty))
         return emptyRuntimeRule
     }
 
-    //private fun embedded(embeddedGrammar: Grammar, embeddedStartRule: Rule): Pair<RuntimeRuleSet, RuntimeRule> {
+    //private fun embedded(embeddedGrammar: Grammar, embeddedStartRule: GrammarRule): Pair<RuntimeRuleSet, RuntimeRule> {
     //     val embeddedConverter = embeddedConverters[embeddedGrammar]
     //     val embeddedStartRuntimeRule = embeddedConverter.runtimeRuleSet.findRuntimeRule(embeddedStartRule.name)
     //     return Pair(embeddedConverter.runtimeRuleSet, embeddedStartRuntimeRule)
@@ -105,14 +104,14 @@ internal class ConverterToRuntimeRules(
 
     private fun findEmbedded(grammar: Grammar, goalRuleName: String): RuntimeRule? = this.embeddedRules[Pair(grammar, goalRuleName)]
 
-    private fun buildCompressedRule(target: Rule, isSkip: Boolean): RuntimeRule {
+    private fun buildCompressedRule(target: GrammarRule, isSkip: Boolean): RuntimeRule {
         val ci = target.compressedLeaf
         val rule = if (ci.isPattern) {
             this.terminalRule(target.name, ci.value, RuntimeRuleKind.TERMINAL, true, isSkip)
         } else {
             this.terminalRule(target.name, ci.value, RuntimeRuleKind.TERMINAL, false, isSkip)
         }
-        this.originalRuleItem[Pair(rule.runtimeRuleSetNumber, rule.number)] = target.rhs
+        this.originalRuleItem[Pair(rule.runtimeRuleSetNumber, rule.ruleNumber)] = target.rhs
         return rule
     }
 
@@ -126,7 +125,7 @@ internal class ConverterToRuntimeRules(
         }.toSet()
     }
 
-    private fun visitRule(target: Rule, arg: String): RuntimeRule {
+    private fun visitRule(target: GrammarRule, arg: String): RuntimeRule {
         val rule = this.findNamedRule(target.name)
         return if (null == rule) {
             when {
@@ -139,12 +138,12 @@ internal class ConverterToRuntimeRules(
                          (target.rhs as Concatenation).items[0] as Embedded
                     }
                     val embeddedRule = this.embeddedRule(embeddedRuleName, false, e.embeddedGrammar, e.embeddedGoalName)
-                    this.originalRuleItem[Pair(embeddedRule.runtimeRuleSetNumber, embeddedRule.number)] = e
+                    this.originalRuleItem[Pair(embeddedRule.runtimeRuleSetNumber, embeddedRule.ruleNumber)] = e
                     embeddedRule
                 }
                 else -> {
                     val nrule = this.nextRule(target.name, RuntimeRuleKind.NON_TERMINAL, false, target.isSkip)
-                    this.originalRuleItem[Pair(nrule.runtimeRuleSetNumber, nrule.number)] = target.rhs
+                    this.originalRuleItem[Pair(nrule.runtimeRuleSetNumber, nrule.ruleNumber)] = target.rhs
                     val rhs = createRhs(target.rhs, target.name)
                     nrule.rhsOpt = rhs
                     nrule
@@ -155,22 +154,22 @@ internal class ConverterToRuntimeRules(
         }
     }
 
-    private fun createRhs(target: RuleItem, arg: String): RuntimeRuleItem = when (target) {
+    private fun createRhs(target: RuleItem, arg: String): RuntimeRuleRhs = when (target) {
         is EmptyRule -> {
             val item = this.visitEmptyRule(target, arg)
-            RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, arrayOf(item))
+            RuntimeRuleRhs(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, arrayOf(item))
         }
 
         is Terminal -> {
             val item = this.visitTerminal(target, arg)
-            RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, arrayOf(item))
+            RuntimeRuleRhs(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, arrayOf(item))
         }
 
         //is Embedded -> this.createRhsForEmbedded(target, arg)
 
         is NonTerminal -> {
             val item = this.visitNonTerminal(target, arg)
-            RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, arrayOf(item))
+            RuntimeRuleRhs(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, arrayOf(item))
         }
 
         is Group -> when (target.choice.alternative.size) {
@@ -187,7 +186,7 @@ internal class ConverterToRuntimeRules(
             1 -> this.createRhs(target.items[0], arg)
             else -> {
                 val items = target.items.map { this.visitConcatenationItem(it, arg) }
-                RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, items.toTypedArray())
+                RuntimeRuleRhs(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, items.toTypedArray())
             }
         }
 
@@ -220,7 +219,7 @@ internal class ConverterToRuntimeRules(
 
     private fun visitEmptyRule(target: EmptyRule, arg: String): RuntimeRule {
         val emptyRule = this.createEmptyRuntimeRuleFor(arg)
-        this.originalRuleItem[Pair(emptyRule.runtimeRuleSetNumber, emptyRule.number)] = target
+        this.originalRuleItem[Pair(emptyRule.runtimeRuleSetNumber, emptyRule.ruleNumber)] = target
         return emptyRule
     }
 
@@ -228,7 +227,7 @@ internal class ConverterToRuntimeRules(
         val existing = this.findTerminal(target.value)
         return if (null == existing) {
             val terminalRule = this.terminalRule(null, target.value, RuntimeRuleKind.TERMINAL, target.isPattern, false)
-            this.originalRuleItem[Pair(terminalRule.runtimeRuleSetNumber, terminalRule.number)] = target
+            this.originalRuleItem[Pair(terminalRule.runtimeRuleSetNumber, terminalRule.ruleNumber)] = target
             terminalRule
         } else {
             existing
@@ -240,7 +239,7 @@ internal class ConverterToRuntimeRules(
         return if (null == existing) {
             val embeddedRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)
             val embeddedRule = this.embeddedRule(embeddedRuleName, false, target.embeddedGrammar, target.embeddedGoalName)
-            this.originalRuleItem[Pair(embeddedRule.runtimeRuleSetNumber, embeddedRule.number)] = target
+            this.originalRuleItem[Pair(embeddedRule.runtimeRuleSetNumber, embeddedRule.ruleNumber)] = target
             embeddedRule
         } else {
             existing
@@ -256,7 +255,7 @@ internal class ConverterToRuntimeRules(
     private fun createPseudoRuleForChoice(target: Choice, psudeoRuleName: String): RuntimeRule {
         val nrule = this.nextRule(psudeoRuleName, RuntimeRuleKind.NON_TERMINAL, false, false)
         nrule.rhsOpt = this.createRhsForChoice(target, psudeoRuleName)
-        this.originalRuleItem[Pair(nrule.runtimeRuleSetNumber, nrule.number)] = target
+        this.originalRuleItem[Pair(nrule.runtimeRuleSetNumber, nrule.ruleNumber)] = target
         return nrule
     }
 
@@ -267,8 +266,8 @@ internal class ConverterToRuntimeRules(
                 val alternativeRuleName = this._pseudoRuleNameGenerator.nameForRuleItem(target)//this.createChoiceRuleName(arg)
                 val items = target.items.map { this.visitConcatenationItem(it, arg) }
                 val rr = this.nextRule(alternativeRuleName, RuntimeRuleKind.NON_TERMINAL, false, false)
-                rr.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, items.toTypedArray())
-                this.originalRuleItem[Pair(rr.runtimeRuleSetNumber, rr.number)] = target
+                rr.rhsOpt = RuntimeRuleRhs(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, items.toTypedArray())
+                this.originalRuleItem[Pair(rr.runtimeRuleSetNumber, rr.ruleNumber)] = target
                 return rr
             }
         }
@@ -293,7 +292,7 @@ internal class ConverterToRuntimeRules(
         val multiRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)//this.createSimpleListRuleName(arg)
         val nrule = this.nextRule(multiRuleName, RuntimeRuleKind.NON_TERMINAL, false, false)
         nrule.rhsOpt = this.createRhsForSimpleList(target, multiRuleName)
-        this.originalRuleItem[Pair(nrule.runtimeRuleSetNumber, nrule.number)] = target
+        this.originalRuleItem[Pair(nrule.runtimeRuleSetNumber, nrule.ruleNumber)] = target
         return nrule
     }
 
@@ -301,16 +300,16 @@ internal class ConverterToRuntimeRules(
         val listRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)//this.createSeparatedListRuleName(arg)
         val nrule = this.nextRule(listRuleName, RuntimeRuleKind.NON_TERMINAL, false, false)
         nrule.rhsOpt = this.createRhsForSeparatedList(target, listRuleName)
-        this.originalRuleItem[Pair(nrule.runtimeRuleSetNumber, nrule.number)] = target
+        this.originalRuleItem[Pair(nrule.runtimeRuleSetNumber, nrule.ruleNumber)] = target
         return nrule
     }
 
     //private fun createRhsForEmbedded() {
     //    val item = this.visitEmbedded(target, arg)
-    //    RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, arrayOf(item))
+    //    RuntimeRuleRhs(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, arrayOf(item))
     //}
 
-    private fun createRhsForChoice(target: Choice, arg: String): RuntimeRuleItem {
+    private fun createRhsForChoice(target: Choice, arg: String): RuntimeRuleRhs {
         return when (target.alternative.size) {
             1 -> createRhs(target.alternative[0], arg)
             else -> {
@@ -321,26 +320,26 @@ internal class ConverterToRuntimeRules(
                     else -> throw RuntimeException("unsupported")
                 }
                 val items = target.alternative.map { this.visitChoiceAlternative(it, arg) }
-                RuntimeRuleItem(RuntimeRuleRhsItemsKind.CHOICE, choiceKind, RuntimeRuleListKind.NONE, -1, 0, items.toTypedArray())
+                RuntimeRuleRhs(RuntimeRuleRhsItemsKind.CHOICE, choiceKind, RuntimeRuleListKind.NONE, -1, 0, items.toTypedArray())
             }
         }
     }
 
-    private fun createRhsForSimpleList(target: SimpleList, arg: String): RuntimeRuleItem {
+    private fun createRhsForSimpleList(target: SimpleList, arg: String): RuntimeRuleRhs {
         val item = this.visitSimpleItem(target.item, arg)
         val items = when (target.min) {
             0 -> {
                 val emptyRule = this.createEmptyRuntimeRuleFor(arg)
-                this.originalRuleItem[Pair(emptyRule.runtimeRuleSetNumber, emptyRule.number)] = target
+                this.originalRuleItem[Pair(emptyRule.runtimeRuleSetNumber, emptyRule.ruleNumber)] = target
                 arrayOf(item, emptyRule)
             }
 
             else -> arrayOf(item)
         }
-        return RuntimeRuleItem(RuntimeRuleRhsItemsKind.LIST, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.MULTI, target.min, target.max, items)
+        return RuntimeRuleRhs(RuntimeRuleRhsItemsKind.LIST, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.MULTI, target.min, target.max, items)
     }
 
-    private fun createRhsForSeparatedList(target: SeparatedList, arg: String): RuntimeRuleItem {
+    private fun createRhsForSeparatedList(target: SeparatedList, arg: String): RuntimeRuleRhs {
         val item = this.visitSimpleItem(target.item, arg)
         val separator = this.visitSimpleItem(target.separator, arg)
         val kind = RuntimeRuleListKind.SEPARATED_LIST
@@ -352,12 +351,12 @@ internal class ConverterToRuntimeRules(
         val items = when (target.min) {
             0 -> {
                 val emptyRule = this.createEmptyRuntimeRuleFor(arg)
-                this.originalRuleItem[Pair(emptyRule.runtimeRuleSetNumber, emptyRule.number)] = target
+                this.originalRuleItem[Pair(emptyRule.runtimeRuleSetNumber, emptyRule.ruleNumber)] = target
                 arrayOf(item, separator, emptyRule)
             }
 
             else -> arrayOf(item, separator)
         }
-        return RuntimeRuleItem(RuntimeRuleRhsItemsKind.LIST, RuntimeRuleChoiceKind.NONE, kind, target.min, target.max, items)
+        return RuntimeRuleRhs(RuntimeRuleRhsItemsKind.LIST, RuntimeRuleChoiceKind.NONE, kind, target.min, target.max, items)
     }
 }

@@ -16,15 +16,8 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.util.Debug
-import net.akehurst.language.agl.util.debug
-import net.akehurst.language.collections.LazyMutableMapNonNull
-import net.akehurst.language.collections.lazyMutableMapNonNull
-import net.akehurst.language.collections.mutableQueueOf
-import net.akehurst.language.collections.mutableStackOf
 
 internal class FirstFollowCache4(
     val usedRules: Set<RuntimeRule>
@@ -43,8 +36,8 @@ internal class FirstFollowCache4(
 
         data class ParentOfInContext(
 //            val parentFollowAtEnd: FollowDeferred,
-//            val parentNextInfo: Set<Pair<RulePosition, FollowDeferred>>,
-            val parent: RulePosition
+//            val parentNextInfo: Set<Pair<RuleOptionPosition, FollowDeferred>>,
+            val parent: RuleOptionPosition
         )
     }
 
@@ -54,15 +47,15 @@ internal class FirstFollowCache4(
 
     // entry point from calcWidth
     // target states for WIDTH transition, rulePosition should NOT be atEnd
- //   fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, parentFollow: FollowDeferred): Set<FirstTerminalInfo> {
+ //   fun firstTerminalInContext(context: RuleOptionPosition, rulePosition: RuleOptionPosition, parentFollow: FollowDeferred): Set<FirstTerminalInfo> {
         // calculate firstTerm by closure down from rulePosition.
         // calculate follow of firstTerm by using the parentFollow of the terminal in the closure
 //    }
 
     // target states for HEIGHT or GRAFT transition, rulePosition should be atEnd
     // entry point from calcHeightGraft
- //   fun parentInContext(contextContext: RulePosition, context: RulePosition, completedRule: RuntimeRule): Set<ParentOfInContext> {
-        // each used rule from the RuleSet has a RulePosition in which it is the item (where it is used)
+ //   fun parentInContext(contextContext: RuleOptionPosition, context: RuleOptionPosition, completedRule: RuntimeRule): Set<ParentOfInContext> {
+        // each used rule from the RuleSet has a RuleOptionPosition in which it is the item (where it is used)
 //    }
 
 

@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.grammar.grammar.asm
 
-import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.api.grammar.*
 
 data class RuleDefault(
@@ -25,7 +24,7 @@ data class RuleDefault(
     override val isOverride: Boolean,
     override val isSkip: Boolean,
     override val isLeaf: Boolean
-) : Rule {
+) : GrammarRule {
 
     companion object {
         class CompressedLeafRule(override val name: String, override val value: String, override val isPattern: Boolean) : Terminal, RuleItemAbstract() {
@@ -33,7 +32,7 @@ data class RuleDefault(
             override val allNonTerminal: Set<NonTerminal> = emptySet()
             override val allEmbedded: Set<Embedded> = emptySet()
 
-            override fun setOwningRule(rule: Rule, indices: List<Int>) {
+            override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
                 TODO("not implemented")
             }
 
@@ -62,7 +61,7 @@ data class RuleDefault(
                         val items = item.items.mapIndexed { idx, it -> this.compressRuleItem("$compressedName$idx", it) }
                         val pattern = items.joinToString(separator = "") { "(${it.value})" }
                         CompressedLeafRule(compressedName, pattern, true)
-                        //throw GrammarExeception("Rule ${rhs.owningRule.name}, compressing ${rhs::class} to leaf is not yet supported", null)
+                        //throw GrammarExeception("GrammarRule ${rhs.owningRule.name}, compressing ${rhs::class} to leaf is not yet supported", null)
                     }
                 }
 
@@ -92,7 +91,7 @@ data class RuleDefault(
                     this.compressRuleItem(compressedName, item.referencedRule(grammar).rhs)
                 }
 
-                else -> throw GrammarExeception("Rule ${item.owningRule.name}, compressing ${item::class} to leaf is not yet supported", null)
+                else -> throw GrammarExeception("GrammarRule ${item.owningRule.name}, compressing ${item::class} to leaf is not yet supported", null)
             }
         }
 

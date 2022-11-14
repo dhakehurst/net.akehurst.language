@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.agl.grammar.grammar.PseudoRuleNames
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.typeModel.*
 
@@ -32,7 +31,7 @@ class TypeModelFromGrammar(
         const val UNNAMED_GROUP_PROPERTY_NAME = "\$group"
     }
 
-    // Rule.name -> ElementType
+    // GrammarRule.name -> ElementType
     private val _ruleToType = mutableMapOf<String, RuleType>()
     private val _typeForRuleItem = mutableMapOf<RuleItem, RuleType>()
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredRuleType, String>, Int>()
@@ -109,7 +108,7 @@ class TypeModelFromGrammar(
     //    return _typeModel
     //}
 
-    private fun typeForRhs(rule: Rule): RuleType {
+    private fun typeForRhs(rule: GrammarRule): RuleType {
         val type = _ruleToType[rule.name]
         return if (null != type) {
             type // return the type if it exists, also stops infinite recursion
@@ -210,7 +209,7 @@ class TypeModelFromGrammar(
         }
     }
 
-    private fun typeForConcatenation(rule: Rule, items: List<ConcatenationItem>): StructuredRuleType {
+    private fun typeForConcatenation(rule: GrammarRule, items: List<ConcatenationItem>): StructuredRuleType {
         val concatType = findOrCreateElementType(rule.name) as StructuredRuleType
         //this._ruleToType[rule.name] = concatType //halt recursion
         items.forEachIndexed { idx, it ->
@@ -219,7 +218,7 @@ class TypeModelFromGrammar(
         return concatType
     }
 
-    private fun typeForChoiceRule(choiceRule: Rule): RuleType { //name: String, alternative: List<Concatenation>): RuleType {
+    private fun typeForChoiceRule(choiceRule: GrammarRule): RuleType { //name: String, alternative: List<Concatenation>): RuleType {
         //val choiceType = findOrCreateElementType(choiceRule.name)
         val t = populateTypeForChoice(choiceRule.rhs as Choice, choiceRule.name) as RuleType
         return when (t) {
@@ -324,7 +323,7 @@ class TypeModelFromGrammar(
         }
     }
 
-    private fun newUnnamed(owningRule: Rule): String {
+    private fun newUnnamed(owningRule: GrammarRule): String {
         return "Tuple"
     }
 
@@ -394,7 +393,7 @@ class TypeModelFromGrammar(
         }
     }
 
-    private fun createPropertyDeclarationForReferencedRule(refRule: Rule, et: StructuredRuleType, ruleItem: SimpleItem, childIndex: Int) {
+    private fun createPropertyDeclarationForReferencedRule(refRule: GrammarRule, et: StructuredRuleType, ruleItem: SimpleItem, childIndex: Int) {
         val rhs = refRule.rhs
         when (rhs) {
             is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, PrimitiveType.STRING), PrimitiveType.STRING, false, childIndex)

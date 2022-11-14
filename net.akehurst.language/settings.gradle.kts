@@ -29,5 +29,6 @@ pluginManagement {
 rootProject.name = file(".").name
 
 include("agl-processor")
+include("test-generated-parser")
 include("test-Java-api-agl-processor")
 include("test-JS-api-agl-processor")

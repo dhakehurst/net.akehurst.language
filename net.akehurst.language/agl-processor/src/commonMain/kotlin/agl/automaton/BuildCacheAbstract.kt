@@ -16,8 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.graph.RuntimeState
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -48,13 +47,13 @@ internal abstract class BuildCacheAbstract(
     }
 
     /*
-     * return the LookaheadSet for the given RulePosition.
-     * i.e. the set of all possible Terminals that would be expected in a sentence after the given RulePosition.
+     * return the LookaheadSet for the given RuleOptionPosition.
+     * i.e. the set of all possible Terminals that would be expected in a sentence after the given RuleOptionPosition.
      *
      * firstOf needs to iterate along a rule (calling .next()) and down (recursively stopping appropriately)
      * next() needs to be called to skip over empty rules (empty or empty lists)
     */
-    override fun expectedAt(rulePosition: RulePosition, ifReachedEnd: LookaheadSetPart): LookaheadSetPart {
+    override fun expectedAt(rulePosition: RuleOptionPosition, ifReachedEnd: LookaheadSetPart): LookaheadSetPart {
         return when {
             rulePosition.isAtEnd -> ifReachedEnd
             else -> {
@@ -65,7 +64,7 @@ internal abstract class BuildCacheAbstract(
         }
     }
 
-    private fun firstOfRpNotEmpty(rulePosition: RulePosition, doneRp: MutableMap<RulePosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
+    private fun firstOfRpNotEmpty(rulePosition: RuleOptionPosition, doneRp: MutableMap<RuleOptionPosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
         var existing = doneRp[rulePosition]
         if (null == existing) {
             /*DEBUG*/ if (rulePosition.isAtEnd) error("Internal Error")
@@ -73,7 +72,7 @@ internal abstract class BuildCacheAbstract(
             var result = LookaheadSetPart.EMPTY
             var rps = setOf(rulePosition)
             while (rps.isNotEmpty()) { // loop here to handle empties
-                val nrps = mutableSetOf<RulePosition>()
+                val nrps = mutableSetOf<RuleOptionPosition>()
                 for (rp in rps) {
                     //TODO: handle self recursion, i.e. multi/slist perhaps filter out rp from rp.next or need a 'done' map to results
                     val item = rp.item
@@ -113,30 +112,30 @@ internal abstract class BuildCacheAbstract(
         return existing
     }
 
-    private fun firstOfNotEmpty(rule: RuntimeRule, doneRp: MutableMap<RulePosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
+    private fun firstOfNotEmpty(rule: RuntimeRule, doneRp: MutableMap<RuleOptionPosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
         return when {
-            0 > rule.number -> when { // handle special kinds of RuntimeRule
-                RuntimeRuleSet.GOAL_RULE_NUMBER == rule.number -> TODO()
-                RuntimeRuleSet.EOT_RULE_NUMBER == rule.number -> TODO()
-                RuntimeRuleSet.SKIP_RULE_NUMBER == rule.number -> TODO()
-                RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER == rule.number -> firstOfNotEmptySafe(rule, doneRp, done)
-                RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD_RULE_NUMBER == rule.number -> TODO()
+            0 > rule.ruleNumber -> when { // handle special kinds of RuntimeRule
+                RuntimeRuleSet.GOAL_RULE_NUMBER == rule.ruleNumber -> TODO()
+                RuntimeRuleSet.EOT_RULE_NUMBER == rule.ruleNumber -> TODO()
+                RuntimeRuleSet.SKIP_RULE_NUMBER == rule.ruleNumber -> TODO()
+                RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER == rule.ruleNumber -> firstOfNotEmptySafe(rule, doneRp, done)
+                RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD_RULE_NUMBER == rule.ruleNumber -> TODO()
                 else -> error("unsupported rule number $rule")
             }
-            done[rule.number] -> _firstOfNotEmpty[rule.number] ?: FirstOfResult(false, LookaheadSetPart.EMPTY)
+            done[rule.ruleNumber] -> _firstOfNotEmpty[rule.ruleNumber] ?: FirstOfResult(false, LookaheadSetPart.EMPTY)
             else -> {
                 var result: FirstOfResult? = null//_firstOfNotEmpty[rule.number]
                 if (null == result) {
-                    done[rule.number] = true
+                    done[rule.ruleNumber] = true
                     result = firstOfNotEmptySafe(rule, doneRp, done)
-                    _firstOfNotEmpty[rule.number] = result
+                    _firstOfNotEmpty[rule.ruleNumber] = result
                 }
                 result
             }
         }
     }
 
-    private fun firstOfNotEmptySafe(rule: RuntimeRule, doneRp: MutableMap<RulePosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
+    private fun firstOfNotEmptySafe(rule: RuntimeRule, doneRp: MutableMap<RuleOptionPosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
         var needsNext = false
         var result = LookaheadSetPart.EMPTY
         val pos = rule.rulePositionsAt[0]

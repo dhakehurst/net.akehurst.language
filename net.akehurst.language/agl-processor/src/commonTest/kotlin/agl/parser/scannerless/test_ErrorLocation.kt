@@ -111,7 +111,7 @@ internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
     @Test
     fun concatenation_afterSecondLiteral_WS_fail() {
         val rrs = runtimeRuleSet {
-            skip("WS") { pattern("\\s+") }
+            concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { literal("a"); literal("b") }
         }
         val goal = "S"
@@ -127,7 +127,7 @@ internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
     @Test
     fun concatenation_afterEOL_WS_fail() {
         val rrs = runtimeRuleSet {
-            skip("WS") { pattern("\\s+") }
+            concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { literal("a"); literal("b") }
         }
         val goal = "S"

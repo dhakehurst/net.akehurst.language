@@ -240,10 +240,10 @@ class LanguageRegistry {
                     configurationContext = ContextFromGrammar(this.grammar.processor!!.grammar),
                     configuration = """
                         references {
-                            in scope property typeReference refers-to Rule
-                            in identifiable property typeReference refers-to Rule
-                            in referenceDefinition property typeReference refers-to Rule
-                            in referenceDefinition property propertyReference refers-to Rule
+                            in scope property typeReference refers-to GrammarRule
+                            in identifiable property typeReference refers-to GrammarRule
+                            in referenceDefinition property typeReference refers-to GrammarRule
+                            in referenceDefinition property propertyReference refers-to GrammarRule
                         } 
                     """.trimIndent()
                 )

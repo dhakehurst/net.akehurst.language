@@ -39,7 +39,7 @@ internal class test_bodmas_sList_root_choiceEqual : test_ScanOnDemandParserAbstr
     // WS = "\s+" ;
     private companion object {
         val rrs = runtimeRuleSet {
-            skip("WS") { pattern("\\s+") }
+            concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { ref("expr") }
             choice("expr",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("root")

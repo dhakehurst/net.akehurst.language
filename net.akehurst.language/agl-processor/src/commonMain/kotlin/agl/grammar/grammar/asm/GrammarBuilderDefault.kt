@@ -70,7 +70,7 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
         return ConcatenationDefault(sequence.toList())
     }
 
-    class RuleBuilder(val rule: Rule) {
+    class RuleBuilder(val rule: GrammarRule) {
 
         fun empty() {
             this.rule.rhs = EmptyRuleDefault()

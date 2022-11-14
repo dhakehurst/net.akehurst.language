@@ -18,7 +18,6 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
 import net.akehurst.language.api.parser.InputLocation
@@ -40,7 +39,7 @@ import net.akehurst.language.api.sppt.*
     override val identity: SPPTNodeIdentity by lazy {
         SPPTNodeIdentityDefault(
             this.runtimeRule.runtimeRuleSetNumber,
-            this.runtimeRule.number,
+            this.runtimeRule.ruleNumber,
             this.startPosition
         )
     }

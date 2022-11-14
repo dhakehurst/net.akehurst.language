@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
@@ -32,13 +32,13 @@ internal class BuildCacheLC1(
     private companion object {
         class ClosureItemLC1(
             val parentItem: ClosureItemLC1?, //needed for height/graft
-            val rulePosition: RulePosition,
-            val next: RulePosition?,
+            val rulePosition: RuleOptionPosition,
+            val next: RuleOptionPosition?,
             val lookaheadSet: LookaheadSetPart
         ) {
             val allPrev: Set<ClosureItemLC1> by lazy { if (null == parentItem) mutableSetOf() else parentItem.allPrev + parentItem }
 
-            val allRulePositionsButTop: List<RulePosition> by lazy {
+            val allRulePositionsButTop: List<RuleOptionPosition> by lazy {
                 if (null == parentItem) {
                     mutableListOf()
                 } else {
@@ -80,31 +80,31 @@ internal class BuildCacheLC1(
         }
 
         data class PossibleTransInfo(
-            val prev: RulePosition,
+            val prev: RuleOptionPosition,
             val parent: PossibleState?,
             val parentFirstOfNext: LookaheadSetPart,
             val action: Transition.ParseAction,
             val firstOf: LookaheadSetPart,
             val firstOfNext: LookaheadSetPart
         ) {
-            val to: List<RulePosition>
+            val to: List<RuleOptionPosition>
                 get() = when (this.action) {
-                    Transition.ParseAction.WIDTH, Transition.ParseAction.EMBED -> this.firstOf.fullContent.map { RulePosition(it, 0, RulePosition.END_OF_RULE) }
+                    Transition.ParseAction.WIDTH, Transition.ParseAction.EMBED -> this.firstOf.fullContent.map { RuleOptionPosition(it, 0, RuleOptionPosition.END_OF_RULE) }
                     Transition.ParseAction.HEIGHT, Transition.ParseAction.GRAFT -> this.parent?.rulePosition?.next()?.toList() ?: emptyList()
                     Transition.ParseAction.GOAL -> listOf(prev.atEnd())
                 }
         }
 
         class PossibleState(
-            val firstOfCache: Map<RulePosition, MutableMap<RulePosition?, LookaheadSetPart>>,
-            val rulePosition: RulePosition
+            val firstOfCache: Map<RuleOptionPosition, MutableMap<RuleOptionPosition?, LookaheadSetPart>>,
+            val rulePosition: RuleOptionPosition
         ) {
             val isAtStart: Boolean get() = this.rulePosition.isAtStart
             val isAtEnd: Boolean get() = this.rulePosition.isAtEnd
             val isGoalStart: Boolean get() = this.rulePosition.runtimeRule.isGoal && this.isAtStart
             val isGoalEnd: Boolean get() = this.rulePosition.runtimeRule.isGoal && this.isAtEnd
 
-            val outTransInfo = mutableMapOf<RulePosition?, MutableSet<PossibleTransInfo>>()
+            val outTransInfo = mutableMapOf<RuleOptionPosition?, MutableSet<PossibleTransInfo>>()
 
             val mergedTransInfo: Set<TransInfo> by lazy {
                 val tis = this.outTransInfo.values.flatten().toSet()
@@ -158,7 +158,7 @@ internal class BuildCacheLC1(
 
             val allPrev get() = outTransInfo.values.flatMap { it.map { it.prev } }.toSet().toList()
 
-            fun setTransInfo(prev: RulePosition, parent: PossibleState?, parentFirstOfNext: LookaheadSetPart, firstOf: LookaheadSetPart, firstOfNext: LookaheadSetPart) {
+            fun setTransInfo(prev: RuleOptionPosition, parent: PossibleState?, parentFirstOfNext: LookaheadSetPart, firstOf: LookaheadSetPart, firstOfNext: LookaheadSetPart) {
                 val action = when {
                     rulePosition.runtimeRule.isGoal -> when {
                         rulePosition.isAtEnd -> Transition.ParseAction.GOAL    // RP(G,0,EOR)
@@ -182,7 +182,7 @@ internal class BuildCacheLC1(
                 set.add(PossibleTransInfo(prev, parent, parentFirstOfNext, action, firstOf, firstOfNext))
             }
 
-            fun firstOfNext(prev: RulePosition?): LookaheadSetPart = this.firstOfCache[this.rulePosition]!!.get(prev)!!
+            fun firstOfNext(prev: RuleOptionPosition?): LookaheadSetPart = this.firstOfCache[this.rulePosition]!!.get(prev)!!
 
             override fun hashCode(): Int = this.rulePosition.hashCode()
             override fun equals(other: Any?): Boolean = when (other) {
@@ -213,12 +213,12 @@ internal class BuildCacheLC1(
 
     }
 
-    private val _calcClosureLR0 = mutableMapOf<RulePosition, Set<RulePosition>>()
+    private val _calcClosureLR0 = mutableMapOf<RuleOptionPosition, Set<RuleOptionPosition>>()
     private val _closureItems = mutableMapOf<Pair<ParserState, ParserState>, List<ClosureItemLC1>>()
 
     // Pair( listOf(RulePositions-of-previous-state), listOf(RuntimeRules-of-fromState) ) -> mapOf
     //    to-state-rule-positions -> HeightGraftInfo
-    private val _heightOrGraftInto = mutableMapOf<Pair<List<RulePosition>, List<RuntimeRule>>, MutableMap<List<RulePosition>, HeightGraftInfo>>()
+    private val _heightOrGraftInto = mutableMapOf<Pair<List<RuleOptionPosition>, List<RuntimeRule>>, MutableMap<List<RuleOptionPosition>, HeightGraftInfo>>()
 
     override fun clearAndOff() {
         _calcClosureLR0.clear()
@@ -228,7 +228,7 @@ internal class BuildCacheLC1(
 
     override fun stateInfo(): Set<StateInfo> = this.stateInfo2()
 
-    private fun mergeStates(unmerged: Map<RulePosition, PossibleState>): Set<StateInfo> {
+    private fun mergeStates(unmerged: Map<RuleOptionPosition, PossibleState>): Set<StateInfo> {
         // merge states with transitions to the same (next) state with same action
         val statesAtEnd = unmerged.filter { it.key.isAtEnd || it.key.isGoal }
         val statesAtEndMapped = statesAtEnd.values.map { state ->
@@ -305,19 +305,19 @@ internal class BuildCacheLC1(
 
     internal fun stateInfo2(): Set<StateInfo> {
         data class L1Trans(
-            val parent: RulePosition?,
+            val parent: RuleOptionPosition?,
             val action: Transition.ParseAction,
-            val to: RulePosition,
+            val to: RuleOptionPosition,
             val guard: LookaheadSetPart,
             val up: LookaheadSetPart
         )
 
         class L1State(
             var parent: L1State?,
-            val rulePosition: RulePosition, // position in rule (no need for position 0)
+            val rulePosition: RuleOptionPosition, // position in rule (no need for position 0)
             val followAtEnd: LookaheadSetPart, // terminals expected at the end of the rule (same for all RPs for this rule)
         ) {
-            val prev: RulePosition = when {
+            val prev: RuleOptionPosition = when {
                 null == parent -> rulePosition // RP(G,0,0)
                 parent!!.rulePosition.isAtStart -> parent!!.prev
                 else -> parent!!.rulePosition
@@ -328,12 +328,12 @@ internal class BuildCacheLC1(
                     parent!!.rulePosition.isAtStart -> parent!!.prevState
                     else -> parent!!
                 }
-            private val parentNextNotAtEnd: Set<RulePosition>
+            private val parentNextNotAtEnd: Set<RuleOptionPosition>
                 get() = when (parent) {
                     null -> emptySet()
                     else -> parent!!.nextNotAtEnd
                 }
-            val nextNotAtEnd: Set<RulePosition>
+            val nextNotAtEnd: Set<RuleOptionPosition>
                 get() = when {
                     rulePosition.isAtEnd -> parentNextNotAtEnd
                     else -> rulePosition.next().flatMap { nxRp ->
@@ -357,7 +357,7 @@ internal class BuildCacheLC1(
                 }.reduce { acc, l -> acc.union(l) }
             }
 
-            fun outTransitions(parentOf: Map<Pair<RulePosition, RuntimeRule>, Set<L1State>>): Set<L1Trans> {
+            fun outTransitions(parentOf: Map<Pair<RuleOptionPosition, RuntimeRule>, Set<L1State>>): Set<L1Trans> {
                 return when {
                     null == parent && rulePosition.isAtEnd -> emptySet() // G,0,EOR
                     rulePosition.isAtEnd -> {
@@ -412,15 +412,15 @@ internal class BuildCacheLC1(
         }
 
         data class L0L1Trans(
-            val prev: Set<Set<RulePosition>>,
-            val parent: Set<RulePosition>,
-            val to: Set<RulePosition>,
+            val prev: Set<Set<RuleOptionPosition>>,
+            val parent: Set<RuleOptionPosition>,
+            val to: Set<RuleOptionPosition>,
             val action: Transition.ParseAction,
             val lookahead: Set<LookaheadInfoPart>
         )
 
         class L0State(
-            val rulePosition: Set<RulePosition>,
+            val rulePosition: Set<RuleOptionPosition>,
             val outTransitions: Set<L0L1Trans>
         ) {
             override fun hashCode(): Int = rulePosition.hashCode()
@@ -438,7 +438,7 @@ internal class BuildCacheLC1(
         val finishRP = this.stateSet.finishRulePosition
         val finishState = L1State(null, finishRP, LookaheadSetPart.EOT)
 
-        val parentOf = lazyMutableMapNonNull<Pair<RulePosition, RuntimeRule>, MutableSet<L1State>> { mutableSetOf() }
+        val parentOf = lazyMutableMapNonNull<Pair<RuleOptionPosition, RuntimeRule>, MutableSet<L1State>> { mutableSetOf() }
         val l1States = mutableSetOf(startState, finishState)
         val todo = mutableStackOf(startState)
         while (todo.isNotEmpty) {
@@ -482,7 +482,7 @@ internal class BuildCacheLC1(
             }
         }
 
-        val l0States = mutableMapOf<RulePosition, L0State>()
+        val l0States = mutableMapOf<RuleOptionPosition, L0State>()
         for (state in l1States) {
             if (state.rulePosition.isGoal || state.rulePosition.isAtStart.not()) {
                 val trs = state.outTransitions(parentOf)
@@ -710,7 +710,7 @@ internal class BuildCacheLC1(
     private fun cacheHeightOrGraftInto(prev: ParserState, from: ParserState, hgis: Set<HeightGraftInfo>) {
         val key = Pair(prev.rulePositions, from.runtimeRules)
         val map = this._heightOrGraftInto[key] ?: run {
-            val x = mutableMapOf<List<RulePosition>, HeightGraftInfo>()
+            val x = mutableMapOf<List<RuleOptionPosition>, HeightGraftInfo>()
             this._heightOrGraftInto[key] = x
             x
         }
@@ -828,7 +828,7 @@ internal class BuildCacheLC1(
                             val ci = ClosureItemLC1(parent, rp, next, lhs)
                             val dnCls = traverseRulePositions(ci)
                             when (rp.position) {
-                                //                                 RulePosition.START_OF_RULE -> calcAndCacheWidthInfo(listOf(parent.rulePosition), dnCls)
+                                //                                 RuleOptionPosition.START_OF_RULE -> calcAndCacheWidthInfo(listOf(parent.rulePosition), dnCls)
                             }
                             result.addAll(dnCls)
                         }
@@ -877,7 +877,7 @@ internal class BuildCacheLC1(
                             // possible Prevs = (prev, ifAtEnd)
 
                             when (rp.position) {
-                                RulePosition.END_OF_RULE -> {
+                                RuleOptionPosition.END_OF_RULE -> {
                                     // can't traverse down, but should cache heightGraft
                                     cacheUpClosure(runtimeRule, upCls)
                                     val prev = parent.rulePosition
@@ -893,7 +893,7 @@ internal class BuildCacheLC1(
                                     val dnCls = traverseRulePositionsForRule(clsItem, upCls + parent)
                                     cacheDnClosure(parent.rulePosition, dnCls)
                                     when {
-                                        RulePosition.START_OF_RULE == rp.position -> {
+                                        RuleOptionPosition.START_OF_RULE == rp.position -> {
                                             resultItems.addAll(dnCls)
                                         }
                                         else -> {
@@ -914,7 +914,7 @@ internal class BuildCacheLC1(
     }
     */
 /*
-    private fun dnClosureLC1(rp: RulePosition): Set<ClosureItemLC1> {
+    private fun dnClosureLC1(rp: RuleOptionPosition): Set<ClosureItemLC1> {
         val upLhs: LookaheadSetPart = LookaheadSetPart.UP
         return when {
             rp.isAtEnd -> emptySet()
@@ -936,7 +936,7 @@ internal class BuildCacheLC1(
     }
 */
     /*
-    private fun calcLookaheadDown(rulePosition: RulePosition, ifReachEnd: LookaheadSetPart): LookaheadSetPart {
+    private fun calcLookaheadDown(rulePosition: RuleOptionPosition, ifReachEnd: LookaheadSetPart): LookaheadSetPart {
         return when {
             rulePosition.isAtEnd -> ifReachEnd
             else -> {
@@ -1033,7 +1033,7 @@ internal class BuildCacheLC1(
         return items
     }
 
-    private fun pFirstTerm(rp: RulePosition, done: MutableSet<RulePosition> = mutableSetOf()): Set<RuntimeRule> {
+    private fun pFirstTerm(rp: RuleOptionPosition, done: MutableSet<RuleOptionPosition> = mutableSetOf()): Set<RuntimeRule> {
         return if (done.contains(rp)) {
             emptySet()
         } else {

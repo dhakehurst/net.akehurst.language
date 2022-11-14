@@ -25,7 +25,7 @@ import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.*
 import net.akehurst.language.agl.runtime.structure.RuleOption
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
@@ -385,8 +385,8 @@ internal class RuntimeParser(
                             val p2 = t2.to.rulePositions.first().position
                             when {
                                 p1 == p2 -> 0
-                                RulePosition.END_OF_RULE == p1 -> 1
-                                RulePosition.END_OF_RULE == p2 -> -1
+                                RuleOptionPosition.END_OF_RULE == p1 -> 1
+                                RuleOptionPosition.END_OF_RULE == p2 -> -1
                                 p1 > p2 -> 1
                                 p1 < p2 -> -1
                                 else -> 0// should never happen !

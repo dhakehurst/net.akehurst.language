@@ -43,7 +43,7 @@ internal class test_Converter {
         multiMax: Int,
         itemsSize: Int
     ) {
-        assertEquals(number, r.number)
+        assertEquals(number, r.ruleNumber)
         assertEquals(tag, r.tag)
         assertEquals(value, r.value)
         assertEquals(ruleKind, r.kind)

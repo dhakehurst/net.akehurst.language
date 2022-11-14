@@ -38,7 +38,7 @@ internal class test_bodmas_exprOpExprRules_choicePriority : test_ScanOnDemandPar
     // WS = "\s+" ;
     private companion object {
         val rrs = runtimeRuleSet {
-            skip("WS") { pattern("\\s+") }
+            concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { ref("expr") }
             choice("expr",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
                 ref("var")

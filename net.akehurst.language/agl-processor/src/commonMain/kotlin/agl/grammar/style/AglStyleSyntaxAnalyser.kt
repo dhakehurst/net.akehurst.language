@@ -68,7 +68,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<List<AglStyleRule>, Sente
                                 _issues.raise(loc, "Terminal Pattern ${sel} not found for style rule")
 
                             } else {
-                                _issues.raise(loc, "Rule '${sel}' not found for style rule")
+                                _issues.raise(loc, "GrammarRule '${sel}' not found for style rule")
                             }
                         } else {
                             //no issues

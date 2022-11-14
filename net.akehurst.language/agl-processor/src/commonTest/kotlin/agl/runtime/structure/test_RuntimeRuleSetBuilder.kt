@@ -33,7 +33,7 @@ class test_RuntimeRuleSetBuilder {
 
         assertNotNull(actual)
         assertEquals(1, actual.runtimeRules.size)
-        assertEquals(0, actual.runtimeRules[0].number)
+        assertEquals(0, actual.runtimeRules[0].ruleNumber)
         assertEquals("a", actual.runtimeRules[0].value)
         assertEquals(RuntimeRuleKind.TERMINAL, actual.runtimeRules[0].kind)
         assertEquals(false, actual.runtimeRules[0].isEmptyRule)
@@ -56,7 +56,7 @@ class test_RuntimeRuleSetBuilder {
         val actual = sut.ruleSet()
 
         assertNotNull(actual)
-        assertEquals(0, actual.runtimeRules[0].number)
+        assertEquals(0, actual.runtimeRules[0].ruleNumber)
         assertEquals("[a-z]", actual.runtimeRules[0].value)
         assertEquals(RuntimeRuleKind.TERMINAL, actual.runtimeRules[0].kind)
         assertEquals(false, actual.runtimeRules[0].isEmptyRule)
@@ -78,7 +78,7 @@ class test_RuntimeRuleSetBuilder {
         val actual = sut.ruleSet()
 
         assertNotNull(actual)
-        assertEquals(1, actual.runtimeRules[1].number)
+        assertEquals(1, actual.runtimeRules[1].ruleNumber)
         assertEquals("§empty.a", actual.runtimeRules[1].tag)
         assertEquals(RuntimeRuleKind.TERMINAL, actual.runtimeRules[1].kind)
         assertEquals(true, actual.runtimeRules[1].isEmptyRule)
@@ -96,7 +96,7 @@ class test_RuntimeRuleSetBuilder {
         val actual = sut.ruleSet()
 
         assertNotNull(actual)
-        assertEquals(0, actual.runtimeRules[0].number)
+        assertEquals(0, actual.runtimeRules[0].ruleNumber)
         assertEquals("a", actual.runtimeRules[0].tag)
         assertEquals(RuntimeRuleKind.NON_TERMINAL, actual.runtimeRules[0].kind)
         assertEquals(false, actual.runtimeRules[0].isEmptyRule)
@@ -106,7 +106,7 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(0, actual.runtimeRules[1].rhs.multiMin)
         assertEquals(0, actual.runtimeRules[1].rhs.multiMax)
         assertNotNull(actual.runtimeRules[0].emptyRuleItem)
-        assertEquals(1, actual.runtimeRules[0].emptyRuleItem.number)
+        assertEquals(1, actual.runtimeRules[0].emptyRuleItem.ruleNumber)
         assertEquals("§empty.a", actual.runtimeRules[0].emptyRuleItem.tag)
         assertEquals(RuntimeRuleKind.TERMINAL, actual.runtimeRules[0].emptyRuleItem.kind)
         assertEquals(true, actual.runtimeRules[0].emptyRuleItem.isEmptyRule)
@@ -126,8 +126,8 @@ class test_RuntimeRuleSetBuilder {
 
         assertNotNull(actual)
         assertEquals(4, actual.runtimeRules.size)
-        assertEquals(0, actual.runtimeRules[0].number)
-        assertEquals(1, actual.runtimeRules[1].number)
+        assertEquals(0, actual.runtimeRules[0].ruleNumber)
+        assertEquals(1, actual.runtimeRules[1].ruleNumber)
         assertEquals("abc", actual.runtimeRules[3].tag)
         assertEquals(RuntimeRuleKind.NON_TERMINAL, actual.runtimeRules[3].kind)
         assertEquals(false, actual.runtimeRules[3].isEmptyRule)
@@ -154,8 +154,8 @@ class test_RuntimeRuleSetBuilder {
 
         assertNotNull(actual)
         assertEquals(4, actual.runtimeRules.size)
-        assertEquals(0, actual.runtimeRules[0].number)
-        assertEquals(1, actual.runtimeRules[1].number)
+        assertEquals(0, actual.runtimeRules[0].ruleNumber)
+        assertEquals(1, actual.runtimeRules[1].ruleNumber)
         assertEquals("abc", actual.runtimeRules[3].tag)
         assertEquals(RuntimeRuleKind.NON_TERMINAL, actual.runtimeRules[3].kind)
         assertEquals(false, actual.runtimeRules[3].isEmptyRule)
@@ -183,8 +183,8 @@ class test_RuntimeRuleSetBuilder {
 
         assertNotNull(actual)
         assertEquals(4, actual.runtimeRules.size)
-        assertEquals(0, actual.runtimeRules[0].number)
-        assertEquals(1, actual.runtimeRules[1].number)
+        assertEquals(0, actual.runtimeRules[0].ruleNumber)
+        assertEquals(1, actual.runtimeRules[1].ruleNumber)
         assertEquals("abc", actual.runtimeRules[3].tag)
         assertEquals(RuntimeRuleKind.NON_TERMINAL, actual.runtimeRules[3].kind)
         assertEquals(false, actual.runtimeRules[3].isEmptyRule)
@@ -210,8 +210,8 @@ class test_RuntimeRuleSetBuilder {
 
         assertNotNull(actual)
         assertEquals(2, actual.runtimeRules.size)
-        assertEquals(0, actual.runtimeRules[0].number)
-        assertEquals(1, actual.runtimeRules[1].number)
+        assertEquals(0, actual.runtimeRules[0].ruleNumber)
+        assertEquals(1, actual.runtimeRules[1].ruleNumber)
         assertEquals("abc", actual.runtimeRules[1].tag)
         assertEquals(RuntimeRuleKind.NON_TERMINAL, actual.runtimeRules[1].kind)
         assertEquals(false, actual.runtimeRules[1].isEmptyRule)

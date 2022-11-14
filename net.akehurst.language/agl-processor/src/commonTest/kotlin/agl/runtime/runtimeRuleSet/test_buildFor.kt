@@ -3,10 +3,9 @@ package net.akehurst.language.agl.runtime.runtimeRuleSet
 import net.akehurst.language.agl.automaton.AutomatonTest
 import net.akehurst.language.agl.automaton.automaton
 import net.akehurst.language.agl.automaton.test_AutomatonUtilsAbstract
-import net.akehurst.language.agl.automaton.test_multi_0_n_literal
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhs
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -90,7 +89,7 @@ internal class test_buildFor : test_AutomatonUtilsAbstract() {
         val M = rrs.findRuntimeRule("M")
         val a = rrs.findRuntimeRule("'a'")
         val b = rrs.findRuntimeRule("'b'")
-        val eM = M.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
+        val eM = M.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
 
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
@@ -135,7 +134,7 @@ internal class test_buildFor : test_AutomatonUtilsAbstract() {
         val S2 = rrs.findRuntimeRule("S2")
         val ABCX = rrs.findRuntimeRule("ABCX")
         val ABCopt = rrs.findRuntimeRule("ABCopt")
-        val eABCopt = ABCopt.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
+        val eABCopt = ABCopt.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
         val ABC = rrs.findRuntimeRule("ABC")
         val x = rrs.findRuntimeRule("'x'")
         val y = rrs.findRuntimeRule("'y'")

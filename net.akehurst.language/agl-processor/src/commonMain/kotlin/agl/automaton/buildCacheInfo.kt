@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 
@@ -145,28 +145,28 @@ internal data class LookaheadInfoPart(
 }
 
 internal data class TransInfo(
-    val prev:Set<Set<RulePosition>>,
-    val parent:Set<RulePosition>,
+    val prev:Set<Set<RuleOptionPosition>>,
+    val parent:Set<RuleOptionPosition>,
     val action: Transition.ParseAction,
-    val to:Set<RulePosition>,
+    val to:Set<RuleOptionPosition>,
     val lookahead: Set<LookaheadInfoPart>
 )
 internal data class StateInfo(
-    val rulePositions: List<RulePosition>,
+    val rulePositions: List<RuleOptionPosition>,
     val possibleTrans:Set<TransInfo>
 ) {
-    val possiblePrev: Set<Set<RulePosition>> get() = possibleTrans.flatMap { it.prev }.toSet()
+    val possiblePrev: Set<Set<RuleOptionPosition>> get() = possibleTrans.flatMap { it.prev }.toSet()
 }
 
 internal data class WidthInfo(
     val action: Transition.ParseAction,
-    val to: RulePosition,
+    val to: RuleOptionPosition,
     val lookaheadSet: LookaheadSetPart
 )
 
 internal data class HeightGraftInfo(
     val action: Transition.ParseAction,
-    val parentNext: List<RulePosition>, // to state
+    val parentNext: List<RuleOptionPosition>, // to state
     val lhs:Set<LookaheadInfoPart>
 ) {
     override fun toString(): String {

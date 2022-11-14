@@ -38,7 +38,6 @@ internal enum class RuntimeRuleChoiceKind {
 }
 
 internal enum class RuntimeRuleListKind {
-    NONE,
     MULTI,                       // r = a? ; , n : a* ; n : a+ ; ,            TODO: n : a0..5
     SEPARATED_LIST,              // r = [ a / ',' ]* ;  n : [ a / ',' ]+ ;    TODO: n : [ a / ',' ]0..6 ;
     LEFT_ASSOCIATIVE_LIST,       // r = [ a < '+' ]* ;  n : [ a < ',' ]+ ;    TODO: support this

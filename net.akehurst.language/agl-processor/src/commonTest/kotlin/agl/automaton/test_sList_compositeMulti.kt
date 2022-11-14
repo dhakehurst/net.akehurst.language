@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhs
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -43,7 +43,7 @@ internal class test_sList_compositeMulti : test_AutomatonAbstract() {
         }
 
         val S = rrs.findRuntimeRule("S")
-        val Se = S.rhs.items[RuntimeRuleItem.SLIST__EMPTY_RULE]
+        val Se = S.rhs.items[RuntimeRuleRhs.SLIST__EMPTY_RULE]
         val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val G = SM.startState.runtimeRules.first()
         val nl = rrs.findRuntimeRule("nl")

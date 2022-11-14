@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.graph.StateInfoUncompressed
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.util.Debug
@@ -32,8 +32,8 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
 
     class NextNotAtEnd(
         val previousNextNotAtEnd: NextNotAtEnd?,
-        val prev: RulePosition,
-        val rulePosition: RulePosition
+        val prev: RuleOptionPosition,
+        val rulePosition: RuleOptionPosition
     ) {
         private val _hashCode_cache = arrayOf(previousNextNotAtEnd?.prev, previousNextNotAtEnd?.rulePosition, prev, rulePosition).contentHashCode()
         override fun hashCode(): Int = this._hashCode_cache
@@ -65,7 +65,7 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
 
         data class FollowDeferredCalculation(
             val context: StateInfoDeferred,
-            val next: RulePosition,
+            val next: RuleOptionPosition,
             val followAtEnd: FollowDeferred
         ) : FollowDeferred {
             override fun terminals(ff: FirstFollowCache2): Set<RuntimeRule> = ff.followInContext(context, next, followAtEnd)
@@ -87,7 +87,7 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
         }
 
         data class StateInfoDeferred(
-            val rulePosition: RulePosition,
+            val rulePosition: RuleOptionPosition,
             val follow:FollowDeferred
         )
 
@@ -110,7 +110,7 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
             val isRoot: Boolean
             val asChild : ClosureItemChild
 
-            val rulePosition: RulePosition
+            val rulePosition: RuleOptionPosition
             val parentFollow: FollowDeferred
             val follow: FollowDeferred
 
@@ -147,7 +147,7 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
 
         class ClosureItemRoot(
             override val context: StateInfoDeferred,
-            override val rulePosition: RulePosition,
+            override val rulePosition: RuleOptionPosition,
             override val parentFollow: FollowDeferred
         ) : ClosureItemAbstract() {
             override val isRoot: Boolean = true
@@ -159,7 +159,7 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
 
         class ClosureItemChild(
             val parent: ClosureItem,
-            override val rulePosition: RulePosition
+            override val rulePosition: RuleOptionPosition
         ) : ClosureItemAbstract() {
             override val isRoot: Boolean = false
             override val asChild: ClosureItemChild get() = this
@@ -176,35 +176,35 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
 
     }
 
-    // prev/context -> ( RulePosition -> Boolean )
-    private val _doneFollow = lazyMutableMapNonNull<RulePosition, MutableMap<ClosureItem, Boolean>> { mutableMapOf() }
+    // prev/context -> ( RuleOptionPosition -> Boolean )
+    private val _doneFollow = lazyMutableMapNonNull<RuleOptionPosition, MutableMap<ClosureItem, Boolean>> { mutableMapOf() }
 
-    // prev/context -> ( RulePosition -> Set<Terminal-RuntimeRule> )
-    private val _firstTerminal = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RulePosition, MutableSet<RuntimeRule>>> { lazyMutableMapNonNull { hashSetOf() } }
+    // prev/context -> ( RuleOptionPosition -> Set<Terminal-RuntimeRule> )
+    private val _firstTerminal = lazyMutableMapNonNull<RuleOptionPosition, LazyMutableMapNonNull<RuleOptionPosition, MutableSet<RuntimeRule>>> { lazyMutableMapNonNull { hashSetOf() } }
 
-    // prev/context -> ( RulePosition -> function to get value from _firstTerminal )
-    private val _followInContext = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RulePosition, MutableSet<RuntimeRule>>> { lazyMutableMapNonNull { hashSetOf() } }
+    // prev/context -> ( RuleOptionPosition -> function to get value from _firstTerminal )
+    private val _followInContext = lazyMutableMapNonNull<RuleOptionPosition, LazyMutableMapNonNull<RuleOptionPosition, MutableSet<RuntimeRule>>> { lazyMutableMapNonNull { hashSetOf() } }
 
-    // prev/context -> ( RulePosition -> Boolean indicates if closure does not resolve an Empty terminal )
-    private val _needsNext = lazyMutableMapNonNull<RulePosition, MutableMap<ClosureItem, Boolean>> { mutableMapOf() }
+    // prev/context -> ( RuleOptionPosition -> Boolean indicates if closure does not resolve an Empty terminal )
+    private val _needsNext = lazyMutableMapNonNull<RuleOptionPosition, MutableMap<ClosureItem, Boolean>> { mutableMapOf() }
 
     // firstOfPrev -> ( firstOfRulePosition -> Set<Pair<firstTermPrev, firstTermRP>> )
     private val _firstOfInContextAsReferenceToFunc =
-        lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RulePosition, MutableSet<Triple<ReferenceFunc, RulePosition, RulePosition>>>> { lazyMutableMapNonNull { hashSetOf() } }
+        lazyMutableMapNonNull<RuleOptionPosition, LazyMutableMapNonNull<RuleOptionPosition, MutableSet<Triple<ReferenceFunc, RuleOptionPosition, RuleOptionPosition>>>> { lazyMutableMapNonNull { hashSetOf() } }
 
     // prev/context -> ( RuntimeRule -> set of Terminal-RuntimeRules that could follow given RuntimeRule in given context/prev )
-    private val _followAtEndInContext = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<RuntimeRule>>> { lazyMutableMapNonNull { hashSetOf() } }
+    private val _followAtEndInContext = lazyMutableMapNonNull<RuleOptionPosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<RuntimeRule>>> { lazyMutableMapNonNull { hashSetOf() } }
 
     // followAtEndPrev -> ( TerminalRule -> Set<Function> )
     private val _followAtEndInContextAsFunc =
-        lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<FollowDeferred>>> { lazyMutableMapNonNull { hashSetOf() } }
+        lazyMutableMapNonNull<RuleOptionPosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<FollowDeferred>>> { lazyMutableMapNonNull { hashSetOf() } }
 
     // followAtEndPrev -> ( TerminalRule -> Set<Pair<refPrev, refRuntimeRule>> )
     private val _followAtEndInContextAsReferenceToFollowAtEnd =
-        lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<Pair<RulePosition, RuntimeRule>>>> { lazyMutableMapNonNull { hashSetOf() } }
+        lazyMutableMapNonNull<RuleOptionPosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<Pair<RuleOptionPosition, RuntimeRule>>>> { lazyMutableMapNonNull { hashSetOf() } }
 
     // prev/context -> ( TerminalRule -> ParentRulePosition )
-    private val _parentInContext = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<ParentOfInContext>>> { lazyMutableMapNonNull { hashSetOf() } }
+    private val _parentInContext = lazyMutableMapNonNull<RuleOptionPosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<ParentOfInContext>>> { lazyMutableMapNonNull { hashSetOf() } }
 
     init {
         // firstTerm(context=RP(G,0,SOR), rulePosition=RP(G,0,EOR) ) = UP
@@ -243,12 +243,12 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
 
     // guard for HEIGHT or GRAFT transition (target maybe atEnd)
     // also used to resolve terminals in FollowDeferredCalculation
-    //fun followFromContext(context: StateInfoDeferred, rulePosition: RulePosition): Set<RuntimeRule> {
+    //fun followFromContext(context: StateInfoDeferred, rulePosition: RuleOptionPosition): Set<RuntimeRule> {
     //    processClosureFor(context, context, followAtEndOfContext, false)
    //     return this._followInContext[context][rulePosition]
    // }
 
-    fun followInContext(context: StateInfoDeferred, rulePosition: RulePosition, follow: FollowDeferred): Set<RuntimeRule> {
+    fun followInContext(context: StateInfoDeferred, rulePosition: RuleOptionPosition, follow: FollowDeferred): Set<RuntimeRule> {
         processClosureFor(context, StateInfoDeferred(rulePosition, follow), false)
         return this._followInContext[context.rulePosition][rulePosition]
     }
@@ -298,7 +298,7 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
     /**
      * only add firstOf if not empty
      */
-    private fun addFirstTerminalAndFirstOfInContext(prev: StateInfoDeferred, rulePosition: RulePosition, terminal: RuntimeRule) {
+    private fun addFirstTerminalAndFirstOfInContext(prev: StateInfoDeferred, rulePosition: RuleOptionPosition, terminal: RuntimeRule) {
         if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.NONE) { "add firstTerm(${prev.rulePosition}[${prev.follow}],$rulePosition) = ${terminal.tag}" }
         if (Debug.CHECK) check(prev.rulePosition.isAtEnd.not())
         this._firstTerminal[prev.rulePosition][rulePosition].add(terminal)
@@ -309,25 +309,25 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
         }
     }
 
-    private fun addFollowInContext(prev: StateInfoDeferred, rulePosition: RulePosition, terminal: RuntimeRule) {
+    private fun addFollowInContext(prev: StateInfoDeferred, rulePosition: RuleOptionPosition, terminal: RuntimeRule) {
         if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.NONE) { "add follow(${prev.rulePosition}[${prev.follow}],$rulePosition) = ${terminal.tag}" }
         if (Debug.CHECK) check(prev.rulePosition.isAtEnd.not())
         this._followInContext[prev.rulePosition][rulePosition].add(terminal)
     }
 
-    private fun addAllFollowInContext(prev: StateInfoDeferred, rulePosition: RulePosition, terminals: Set<RuntimeRule>) {
+    private fun addAllFollowInContext(prev: StateInfoDeferred, rulePosition: RuleOptionPosition, terminals: Set<RuntimeRule>) {
         if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.NONE) { "add follow(${prev.rulePosition}[${prev.follow}],$rulePosition) = ${terminals.joinToString { it.tag }}" }
         if (Debug.CHECK) check(prev.rulePosition.isAtEnd.not())
         this._followInContext[prev.rulePosition][rulePosition].addAll(terminals)
     }
 
-    private fun addFollowInContextAsReferenceToFirstTerminal(tgtPrev: RulePosition, tgtRulePosition: RulePosition, srcPrev: RulePosition, srcRulePosition: RulePosition) {
+    private fun addFollowInContextAsReferenceToFirstTerminal(tgtPrev: RuleOptionPosition, tgtRulePosition: RuleOptionPosition, srcPrev: RuleOptionPosition, srcRulePosition: RuleOptionPosition) {
         if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.NONE) { "add follow($tgtPrev,$tgtRulePosition) = firstTerm($srcPrev,$srcRulePosition)" }
         if (Debug.CHECK) check(tgtPrev.isAtEnd.not() && srcPrev.isAtEnd.not())
         _firstOfInContextAsReferenceToFunc[tgtPrev][tgtRulePosition].add(Triple(ReferenceFunc.FIRST_TERM, srcPrev, srcRulePosition))
     }
 
-    private fun addFollowAtEndInContext(prev: RulePosition, runtimeRule: RuntimeRule, terminal: RuntimeRule) {
+    private fun addFollowAtEndInContext(prev: RuleOptionPosition, runtimeRule: RuntimeRule, terminal: RuntimeRule) {
         if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.NONE) { "add followAtEnd($prev,${runtimeRule.tag}) = ${terminal.tag}" }
         if (Debug.CHECK) check(prev.isAtEnd.not())
         this._followAtEndInContext[prev][runtimeRule].add(terminal)
@@ -345,7 +345,7 @@ internal class FirstFollowCache2(val stateSet: ParserStateSet) {
         _followAtEndInContextAsFunc[prev.rulePosition][runtimeRule].add(followAtEnd)
     }
 
-    private fun addFollowInContextAsReferenceToFollow(followPrev: RulePosition, followRuntimeRule: RuntimeRule, refPrev: RulePosition, refRuntimeRule: RuntimeRule) {
+    private fun addFollowInContextAsReferenceToFollow(followPrev: RuleOptionPosition, followRuntimeRule: RuntimeRule, refPrev: RuleOptionPosition, refRuntimeRule: RuntimeRule) {
         if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.NONE) { "add followAtEnd($followPrev,${followRuntimeRule.tag}) = follow($refPrev,$refRuntimeRule)" }
         if (Debug.CHECK) check(followPrev.isAtEnd.not() && refPrev.isAtEnd.not())
         _followAtEndInContextAsReferenceToFollowAtEnd[followPrev][followRuntimeRule].add(Pair(refPrev, refRuntimeRule))

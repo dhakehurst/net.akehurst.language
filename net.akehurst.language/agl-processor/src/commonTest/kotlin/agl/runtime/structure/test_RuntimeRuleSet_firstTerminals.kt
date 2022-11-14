@@ -33,7 +33,7 @@ class test_RuntimeRuleSet_firstTerminals {
         val r = rb.rule("r").choice(RuntimeRuleChoiceKind.PRIORITY_LONGEST, Aa, Bb)
 
         val sut = rb.ruleSet()
-        val actual = sut.firstTerminals[r.number]
+        val actual = sut.firstTerminals[r.ruleNumber]
         val expected = setOf(A, B)
 
         assertEquals(expected, actual)

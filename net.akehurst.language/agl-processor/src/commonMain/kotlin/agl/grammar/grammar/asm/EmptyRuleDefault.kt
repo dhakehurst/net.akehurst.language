@@ -30,7 +30,7 @@ class EmptyRuleDefault : RuleItemAbstract(), EmptyRule {
 
     override val allEmbedded: Set<Embedded> get() = emptySet()
 
-    override fun setOwningRule(rule: Rule, indices: List<Int>) {
+    override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
         this.index = indices
     }

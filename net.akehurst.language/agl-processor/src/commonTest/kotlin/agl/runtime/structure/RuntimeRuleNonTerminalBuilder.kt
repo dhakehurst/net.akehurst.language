@@ -48,7 +48,7 @@ internal class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, va
         }
     }
 
-    fun withRhs(rhs: RuntimeRuleItem): RuntimeRule {
+    fun withRhs(rhs: RuntimeRuleRhs): RuntimeRule {
         val rr = this.build()
         rr.rhsOpt = rhs
         return rr
@@ -62,7 +62,7 @@ internal class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, va
     fun empty(): RuntimeRule {
         val rr = this.build()
         val e = RuntimeRuleTerminalBuilder(this.rrsb).empty(rr)
-        rr.rhsOpt = RuntimeRuleItem(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 0, 0, arrayOf(e))
+        rr.rhsOpt = RuntimeRuleRhs(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, 0, 0, arrayOf(e))
         return rr
     }
 

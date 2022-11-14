@@ -22,7 +22,7 @@ abstract class ChoiceAbstract(
 	override val alternative: List<Concatenation>
 ) : RuleItemAbstract(), Choice {
 
-	override fun setOwningRule(rule: Rule, indices: List<Int>) {
+	override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
 		this._owningRule = rule
 		this.index = indices
 		var i: Int = 0

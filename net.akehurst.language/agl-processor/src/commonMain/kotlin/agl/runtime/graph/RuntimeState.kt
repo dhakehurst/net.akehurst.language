@@ -19,11 +19,11 @@ package net.akehurst.language.agl.runtime.graph
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.automaton.Transition
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 
 internal data class StateInfoUncompressed(
-    val rulePosition: RulePosition,
+    val rulePosition: RuleOptionPosition,
     val follow: Set<RuntimeRule>
 )
 
@@ -37,7 +37,7 @@ internal class RuntimeState(
     val optionList: List<Int> get() = state.optionList
 
     val uncompressed: Set<StateInfoUncompressed> by lazy {
-        //TODO: Maybe runtimeLookahead should be indexed by RulePosition
+        //TODO: Maybe runtimeLookahead should be indexed by RuleOptionPosition
         this.state.rulePositions.flatMap { rp ->
             this.runtimeLookaheadSet.map { grd ->
                 StateInfoUncompressed(rp, grd.fullContent)

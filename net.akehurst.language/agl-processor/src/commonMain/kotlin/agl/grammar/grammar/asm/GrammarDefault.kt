@@ -24,7 +24,7 @@ class GrammarDefault(
 ) : GrammarAbstract(namespace, name) {
 
     // override this so that property is correctly exported/defined in JS and available for serialisation
-    //override val rule: MutableList<Rule> get() = super.rule
+    //override val rule: MutableList<GrammarRule> get() = super.rule
 }
 
 abstract class GrammarAbstract(
@@ -34,15 +34,15 @@ abstract class GrammarAbstract(
 
     override val extends: MutableList<Grammar> = mutableListOf<Grammar>()
 
-    override val rule: MutableList<Rule> = mutableListOf<Rule>()
+    override val rule: MutableList<GrammarRule> = mutableListOf<GrammarRule>()
 
-    override val allRule: List<Rule> by lazy {
+    override val allRule: List<GrammarRule> by lazy {
         //TODO: Handle situation where super grammar/rule is included more than once ?
         val rules = this.extends.flatMap { it.allRule }.toMutableList()
         this.rule.forEach { rule ->
             if (rule.isOverride) {
                 val overridden = rules.find { it.name == rule.name }
-                    ?: throw GrammarRuleNotFoundException("Rule ${rule.name} is marked as overridden, but there is no super rule with that name to override.")
+                    ?: throw GrammarRuleNotFoundException("GrammarRule ${rule.name} is marked as overridden, but there is no super rule with that name to override.")
                 rules.remove(overridden)
                 rules.add(rule)
             } else {
@@ -61,7 +61,7 @@ abstract class GrammarAbstract(
         }.toSet()
     }
 
-    override val allNonTerminalRule: Set<Rule> by lazy {
+    override val allNonTerminalRule: Set<GrammarRule> by lazy {
         this.allRule.filter { it.isLeaf.not() }.toSet()
     }
 
@@ -73,10 +73,10 @@ abstract class GrammarAbstract(
         this.allEmbeddedRules.map { it.embeddedGrammar }.toSet()
     }
 
-    override fun findNonTerminalRule(ruleName: String): Rule? {
+    override fun findNonTerminalRule(ruleName: String): GrammarRule? {
         val all = this.allRule.filter { it.name == ruleName }
         return when {
-            all.isEmpty() -> null//throw GrammarRuleNotFoundException("NonTerminal Rule '${ruleName}' not found in grammar '${this.name}'")
+            all.isEmpty() -> null//throw GrammarRuleNotFoundException("NonTerminal GrammarRule '${ruleName}' not found in grammar '${this.name}'")
             all.size > 1 -> throw GrammarRuleNotFoundException("More than one rule named '${ruleName}' in grammar '${this.name}', have you remembered the 'override' modifier")
             else -> all.first()
         }

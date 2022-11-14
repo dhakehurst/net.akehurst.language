@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleItem
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhs
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -55,11 +55,11 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
         val G = SM.startState.runtimeRules.first()
         val optA = rrs.findRuntimeRule("optA")
         val A = rrs.findRuntimeRule("A")
-        val E_optA = optA.rhs.items[RuntimeRuleItem.MULTI__EMPTY_RULE]
+        val E_optA = optA.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
         val B = rrs.findRuntimeRule("B")
         val L = rrs.findRuntimeRule("L")
         val Es = rrs.findRuntimeRule("Es")
-        val E_Es = Es.rhs.items[RuntimeRuleItem.SLIST__EMPTY_RULE]
+        val E_Es = Es.rhs.items[RuntimeRuleRhs.SLIST__EMPTY_RULE]
         val T_a = rrs.findRuntimeRule("'a'")
         val T_b = rrs.findRuntimeRule("'b'")
         val T_c = rrs.findRuntimeRule("'c'")

@@ -16,18 +16,17 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.structure.*
 
 internal data class ClosureItemLC0(
     val parentItem: ClosureItemLC0?, //needed for height/graft
-    val rulePosition: RulePosition
+    val rulePosition: RuleOptionPosition
 ) {
     val allPrev: Set<ClosureItemLC0> = if (null == parentItem) mutableSetOf() else parentItem.allPrev + parentItem
 
-    val prev: List<RulePosition> by lazy {
+    val prev: List<RuleOptionPosition> by lazy {
         if (null == this.parentItem) {
-            emptyList<RulePosition>()
+            emptyList<RuleOptionPosition>()
         } else {
             var x: ClosureItemLC0 = this.parentItem
             while (x.rulePosition.isAtStart && x.rulePosition.runtimeRule.kind != RuntimeRuleKind.GOAL) {
@@ -58,18 +57,18 @@ internal class BuildCacheLC0(
     stateSet: ParserStateSet
 ) : BuildCacheAbstract(stateSet) {
 
-    private val _upClosure = mutableMapOf<RulePosition, Set<ClosureItemLC0>>()
-    private val _dnClosure = mutableMapOf<RulePosition, Set<ClosureItemLC0>>()
+    private val _upClosure = mutableMapOf<RuleOptionPosition, Set<ClosureItemLC0>>()
+    private val _dnClosure = mutableMapOf<RuleOptionPosition, Set<ClosureItemLC0>>()
 
-    private val _stateInfo = mutableMapOf<List<RulePosition>, StateInfo>()
+    private val _stateInfo = mutableMapOf<List<RuleOptionPosition>, StateInfo>()
 
     // from-state-listOf-rule-positions -> mapOf
     //    to-state-terminal-rule -> WidthInfo
-    private val _widthInto = mutableMapOf<List<RulePosition>, MutableMap<RuntimeRule, WidthInfo>>()
+    private val _widthInto = mutableMapOf<List<RuleOptionPosition>, MutableMap<RuntimeRule, WidthInfo>>()
 
     // Pair( listOf(RulePositions-of-previous-state), listOf(RuntimeRules-of-fromState) ) -> mapOf
     //    to-state-rule-positions -> HeightGraftInfo
-    private val _heightOrGraftInto = mutableMapOf<Pair<List<RulePosition>, List<RuntimeRule>>, MutableSet<HeightGraftInfo>>()
+    private val _heightOrGraftInto = mutableMapOf<Pair<List<RuleOptionPosition>, List<RuntimeRule>>, MutableSet<HeightGraftInfo>>()
 
     override fun clearAndOff() {
         _upClosure.clear()
@@ -102,7 +101,7 @@ internal class BuildCacheLC0(
         }
     }
 /*
-    private fun cacheStateInfo(rulePositions: List<RulePosition>, prev: List<RulePosition>) {
+    private fun cacheStateInfo(rulePositions: List<RuleOptionPosition>, prev: List<RuleOptionPosition>) {
         val existing = this._stateInfo[rulePositions]
         if (null == existing) {
             this._stateInfo[rulePositions] = StateInfo(rulePositions, listOf(prev))
@@ -112,33 +111,33 @@ internal class BuildCacheLC0(
         }
     }
 */
-    private fun calcAndCacheWidthInfo(fromRulePositions: List<RulePosition>, bottomTerminals: Set<RuntimeRule>): Set<WidthInfo> {
+    private fun calcAndCacheWidthInfo(fromRulePositions: List<RuleOptionPosition>, bottomTerminals: Set<RuntimeRule>): Set<WidthInfo> {
         val wis = calcWidthInfo(fromRulePositions, bottomTerminals)
         cacheWidthInfo(fromRulePositions, wis)
         return wis
     }
 
-    private fun calcWidthInfo(fromRulePositions: List<RulePosition>, bottomTerminals: Set<RuntimeRule>): Set<WidthInfo> {
+    private fun calcWidthInfo(fromRulePositions: List<RuleOptionPosition>, bottomTerminals: Set<RuntimeRule>): Set<WidthInfo> {
         // lookahead comes from closure on prev
         // upLhs can always be LookaheadSet.UP because the actual LH is carried at runtime
         // thus we don't need prevState in to compute width targets
 //        val filt = dnCls.filter { it.rulePosition.item!!.kind == RuntimeRuleKind.TERMINAL || it.rulePosition.item!!.kind == RuntimeRuleKind.EMBEDDED }
         //       val grouped = filt.groupBy { it.rulePosition.item!! }.map {
         //           val rr = it.key
-        //           val rp = RulePosition(rr, 0, RulePosition.END_OF_RULE)
+        //           val rp = RuleOptionPosition(rr, 0, RuleOptionPosition.END_OF_RULE)
 //            val lhs = LookaheadSet.ANY
 //            WidthInfo(rp, lhs)
 //        }.toSet()
         //don't group them, because we need the info on the lookahead for the runtime calc of next lookaheads
         //return grouped
         return bottomTerminals.map {
-            val rp = RulePosition(it, 0, RulePosition.END_OF_RULE)
+            val rp = RuleOptionPosition(it, 0, RuleOptionPosition.END_OF_RULE)
             val lhs = LookaheadSetPart.ANY
             WidthInfo(Transition.ParseAction.WIDTH, rp, lhs)
         }.toSet()
     }
 
-    private fun cacheWidthInfo(fromRulePositions: List<RulePosition>, wis: Set<WidthInfo>) {
+    private fun cacheWidthInfo(fromRulePositions: List<RuleOptionPosition>, wis: Set<WidthInfo>) {
         val map = this._widthInto[fromRulePositions] ?: run {
             val x = mutableMapOf<RuntimeRule, WidthInfo>()
             this._widthInto[fromRulePositions] = x
@@ -154,13 +153,13 @@ internal class BuildCacheLC0(
         }
     }
 
-    private fun calcAndCacheHeightOrGraftInto(prev: List<RulePosition>, from: List<RuntimeRule>, upCls: Set<ClosureItemLC0>): Set<HeightGraftInfo> {
+    private fun calcAndCacheHeightOrGraftInto(prev: List<RuleOptionPosition>, from: List<RuntimeRule>, upCls: Set<ClosureItemLC0>): Set<HeightGraftInfo> {
         val hgi = calcHeightOrGraftInto(from, upCls)
         cacheHeightOrGraftInto(prev, from, hgi)
         return hgi
     }
 
-    private fun cacheHeightOrGraftInto(prev: List<RulePosition>, from: List<RuntimeRule>, hgis: Set<HeightGraftInfo>) {
+    private fun cacheHeightOrGraftInto(prev: List<RuleOptionPosition>, from: List<RuntimeRule>, hgis: Set<HeightGraftInfo>) {
         val key = Pair(prev, from)
         val set = this._heightOrGraftInto[key] ?: run {
             val x = mutableSetOf<HeightGraftInfo>()
@@ -200,7 +199,7 @@ internal class BuildCacheLC0(
         val grouped = res.groupBy { listOf(it.action, it.parentNext) }//, it.lhs) }
             .map {
                 val action = it.key[0] as Transition.ParseAction
-                val parentNext = it.key[1] as List<RulePosition>
+                val parentNext = it.key[1] as List<RuleOptionPosition>
                 val lhs = it.value.map{it.lhs}.reduce { acc, e -> acc.union(e) }
                 HeightGraftInfo(action, (parentNext), lhs)
             }
@@ -263,10 +262,10 @@ internal class BuildCacheLC0(
         }
     }
 
-    private fun createMergedListsOfRulePositions(): List<List<RulePosition>> {
+    private fun createMergedListsOfRulePositions(): List<List<RuleOptionPosition>> {
         val map = createRulePositionsIndexByFirstItem()
-        val result = mutableListOf<List<RulePosition>>()
-        val allReadyMerged = mutableSetOf<RulePosition>()
+        val result = mutableListOf<List<RuleOptionPosition>>()
+        val allReadyMerged = mutableSetOf<RuleOptionPosition>()
         for (list in map.values) {
             when (list.size) {
                 // if only one item, then must be state on its own
@@ -307,17 +306,17 @@ internal class BuildCacheLC0(
         return result
     }
 
-    private fun createRulePositionsIndexByFirstItem(): Map<RuntimeRule, List<RulePosition>> {
-        // key is first item of RulePosition's rule
-        val map = mutableMapOf<RuntimeRule, MutableList<RulePosition>>()
+    private fun createRulePositionsIndexByFirstItem(): Map<RuntimeRule, List<RuleOptionPosition>> {
+        // key is first item of RuleOptionPosition's rule
+        val map = mutableMapOf<RuntimeRule, MutableList<RuleOptionPosition>>()
         for (rr in this.stateSet.usedNonTerminalRules) {
             for (rp in rr.rulePositions) {
-                if (RulePosition.START_OF_RULE == rp.position) {
+                if (RuleOptionPosition.START_OF_RULE == rp.position) {
                     // do nothing, SOR position RPs are not made into a state, ther than for GOAL
                 } else {
-                    val key = rp.runtimeRule.item(rp.option, RulePosition.START_OF_RULE)!!
+                    val key = rp.runtimeRule.item(rp.option, RuleOptionPosition.START_OF_RULE)!!
                     val list = map[key] ?: run {
-                        map[key] = mutableListOf<RulePosition>()
+                        map[key] = mutableListOf<RuleOptionPosition>()
                         map[key]!!
                     }
                     list.add(rp)
@@ -327,7 +326,7 @@ internal class BuildCacheLC0(
         return map
     }
 
-    private fun rulePositionsAreSameState(rp1: RulePosition, rp2: RulePosition): Boolean {
+    private fun rulePositionsAreSameState(rp1: RuleOptionPosition, rp2: RuleOptionPosition): Boolean {
         val sameItemsUntil = when (rp1.runtimeRule.kind) {
             //RuntimeRuleKind.GOAL -> error("")
             RuntimeRuleKind.NON_TERMINAL -> when (rp1.runtimeRule.rhs.itemsKind) {
@@ -342,7 +341,7 @@ internal class BuildCacheLC0(
                             rp1.runtimeRule.item(rp1.option, 0) == rp2.runtimeRule.item(rp2.option, 0)
                         }
                         RuntimeRuleRhsItemsKind.CONCATENATION -> {
-                            val pIndex = if (rp1.position == RulePosition.END_OF_RULE) rp1.runtimeRule.rhs.items.size else rp1.position
+                            val pIndex = if (rp1.position == RuleOptionPosition.END_OF_RULE) rp1.runtimeRule.rhs.items.size else rp1.position
                             rp1.position == rp2.position && (1..pIndex).all { p ->
                                 rp1.runtimeRule.item(rp1.option, p) == rp2.runtimeRule.item(rp2.option, p)
                             }
@@ -359,7 +358,7 @@ internal class BuildCacheLC0(
                             rp1.runtimeRule.item(rp1.option, 0) == rp2.runtimeRule.item(rp2.option, 0)
                         }
                         RuntimeRuleRhsItemsKind.CONCATENATION -> {
-                            val pIndex = if (rp2.position == RulePosition.END_OF_RULE) rp2.runtimeRule.rhs.items.size else rp2.position
+                            val pIndex = if (rp2.position == RuleOptionPosition.END_OF_RULE) rp2.runtimeRule.rhs.items.size else rp2.position
                             (1..pIndex).all { p ->
                                 rp1.runtimeRule.item(rp1.option, p) == rp2.runtimeRule.item(rp2.option, p)
                             }
@@ -377,7 +376,7 @@ internal class BuildCacheLC0(
     }
 */
 
-    internal fun dnClosureLR0(rp: RulePosition): Set<ClosureItemLC0> {
+    internal fun dnClosureLR0(rp: RuleOptionPosition): Set<ClosureItemLC0> {
         return if (_cacheOff) {
             val ci = ClosureItemLC0(null, rp)
             calcDnClosureLR0(ci, mutableSetOf())

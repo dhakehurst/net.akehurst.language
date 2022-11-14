@@ -16,8 +16,8 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
-import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.api.automaton.ParseAction
+import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleListKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
 
@@ -90,18 +90,18 @@ internal class Transition(
             val target = trans.to.firstRule
             val targetRp = trans.to.rulePositions[0]
             return when (trans.action) {
-                Transition.ParseAction.GRAFT -> when (target.rhs.itemsKind) {
+                ParseAction.GRAFT -> when (target.rhs.itemsKind) {
                     RuntimeRuleRhsItemsKind.LIST -> when (target.rhs.listKind) {
                         RuntimeRuleListKind.MULTI -> when {
                             targetRp.isAtEnd -> ToEndMultiGraftRuntimeGuard(trans)
-                            targetRp.position == RulePosition.POSITION_MULIT_ITEM -> ToItemMultiGraftRuntimeGuard(trans)
+                            targetRp.position == RuleOptionPosition.POSITION_MULIT_ITEM -> ToItemMultiGraftRuntimeGuard(trans)
                             else -> TODO()
                         }
 
                         RuntimeRuleListKind.SEPARATED_LIST -> when {
                             targetRp.isAtEnd -> ToEndSListGraftRuntimeGuard(trans)
-                            targetRp.position == RulePosition.POSITION_SLIST_ITEM -> ToItemSListGraftRuntimeGuard(trans)
-                            targetRp.position == RulePosition.POSITION_SLIST_SEPARATOR -> ToSeparatorSListGraftRuntimeGuard(trans)
+                            targetRp.position == RuleOptionPosition.POSITION_SLIST_ITEM -> ToItemSListGraftRuntimeGuard(trans)
+                            targetRp.position == RuleOptionPosition.POSITION_SLIST_SEPARATOR -> ToSeparatorSListGraftRuntimeGuard(trans)
                             else -> TODO()
                         }
 
@@ -114,15 +114,6 @@ internal class Transition(
                 else -> DefaultRuntimeGuard
             }
         }
-    }
-
-    internal enum class ParseAction {
-        HEIGHT, // reduce first
-        GRAFT,  // reduce other
-        WIDTH,  // shift
-        GOAL,    // goal
-        EMBED,
-//        GRAFT_OR_HEIGHT // try graft if fails do height -- reduces ambiguity on recursive rules
     }
 
     val context by lazy {
