@@ -16,7 +16,9 @@
 
 package net.akehurst.language.agl.parser
 
+import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.api.messages.Message
+import net.akehurst.language.agl.api.runtime.RulePosition
 import net.akehurst.language.agl.automaton.*
 import net.akehurst.language.agl.automaton.LookaheadSetPart
 import net.akehurst.language.agl.automaton.ParserState
@@ -24,6 +26,7 @@ import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.runtime.graph.*
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.runtime.structure.RuleOption
 import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
@@ -250,7 +253,7 @@ internal class RuntimeParser(
         }
         return lg
     }
-
+/*
     private fun useGoal(lt: SPPTNode): SPPTNode {
         //FIXME: use GrowingChildren
         // need to re-write top of the tree so that any initial skip nodes come under the userGoal node
@@ -278,7 +281,7 @@ internal class RuntimeParser(
         }
         return userGoalNode
     }
-
+*/
     private fun growNode(toProcess: ParseGraph.Companion.NextToProcess, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs) {
         when (toProcess.growingNode.state.runtimeRules.first().kind) {//FIXME
             RuntimeRuleKind.GOAL -> when {
@@ -302,11 +305,11 @@ internal class RuntimeParser(
         var grown = false
         for (it in transitions) {
             val g = when (it.action) {
-                Transition.ParseAction.GOAL -> error("Should never happen")
-                Transition.ParseAction.WIDTH -> doWidth(toProcess, it, possibleEndOfText, growArgs)
-                Transition.ParseAction.HEIGHT -> error("Should never happen")
-                Transition.ParseAction.GRAFT -> error("Should never happen")
-                Transition.ParseAction.EMBED -> doEmbedded(toProcess, it, possibleEndOfText, growArgs)
+                ParseAction.GOAL -> error("Should never happen")
+                ParseAction.WIDTH -> doWidth(toProcess, it, possibleEndOfText, growArgs)
+                ParseAction.HEIGHT -> error("Should never happen")
+                ParseAction.GRAFT -> error("Should never happen")
+                ParseAction.EMBED -> doEmbedded(toProcess, it, possibleEndOfText, growArgs)
             }
             grown = grown || g
         }
@@ -378,21 +381,21 @@ internal class RuntimeParser(
                 }
 
                 else -> {
-                    val trgs = it.value.filter { it.action == Transition.ParseAction.GRAFT }
+                    val trgs = it.value.filter { it.action == ParseAction.GRAFT }
                         // if multiple GRAFT trans to same rule, prefer left most target
                         .sortedWith(Comparator { t1, t2 ->
                             val p1 = t1.to.rulePositions.first().position
                             val p2 = t2.to.rulePositions.first().position
                             when {
                                 p1 == p2 -> 0
-                                RuleOptionPosition.END_OF_RULE == p1 -> 1
-                                RuleOptionPosition.END_OF_RULE == p2 -> -1
+                                RulePosition.END_OF_RULE == p1 -> 1
+                                RulePosition.END_OF_RULE == p2 -> -1
                                 p1 > p2 -> 1
                                 p1 < p2 -> -1
                                 else -> 0// should never happen !
                             }
                         })
-                    val trhs = it.value.filter { it.action == Transition.ParseAction.HEIGHT }
+                    val trhs = it.value.filter { it.action == ParseAction.HEIGHT }
                     if (trgs.isNotEmpty() && trhs.isNotEmpty()) {
                         var doneIt = false
                         var i = 0
@@ -424,11 +427,11 @@ internal class RuntimeParser(
         tr: Transition, toProcess: ParseGraph.Companion.ToProcessTriple, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs
     ): Boolean {
         return when (tr.action) {
-            Transition.ParseAction.WIDTH -> doWidth(toProcess, tr, possibleEndOfText, growArgs)
-            Transition.ParseAction.EMBED -> doEmbedded(toProcess, tr, possibleEndOfText, growArgs)
-            Transition.ParseAction.HEIGHT -> doHeight(toProcess, tr, possibleEndOfText, growArgs)
-            Transition.ParseAction.GRAFT -> doGraft(toProcess, tr, possibleEndOfText, growArgs)
-            Transition.ParseAction.GOAL -> doGoal(toProcess, tr, possibleEndOfText, growArgs)
+            ParseAction.WIDTH -> doWidth(toProcess, tr, possibleEndOfText, growArgs)
+            ParseAction.EMBED -> doEmbedded(toProcess, tr, possibleEndOfText, growArgs)
+            ParseAction.HEIGHT -> doHeight(toProcess, tr, possibleEndOfText, growArgs)
+            ParseAction.GRAFT -> doGraft(toProcess, tr, possibleEndOfText, growArgs)
+            ParseAction.GOAL -> doGoal(toProcess, tr, possibleEndOfText, growArgs)
         }
     }
 
@@ -473,7 +476,7 @@ internal class RuntimeParser(
     ): Boolean {
         return when {
             growArgs.heightGraftOnly -> false
-            growArgs.nonEmptyWidthOnly && transition.to.firstRule.isEmptyRule -> false
+            growArgs.nonEmptyWidthOnly && transition.to.firstRule.isEmptyTerminal -> false
             else -> {
                 rememberForErrorComputation(toProcess)
                 val l = this.graph.input.findOrTryCreateLeaf(transition.to.firstRule, toProcess.growingNode.nextInputPosition)
@@ -489,7 +492,7 @@ internal class RuntimeParser(
                             this.graph.isLookingAt(lh, eot, rt, nextInputPositionAfterSkip)
                         }
                     }
-                    if (transition.to.firstRule.isEmptyRule.not()) {
+                    if (transition.to.firstRule.isEmptyTerminal.not()) {
                         this.lastToTryWidthTrans.add(toProcess)
                     }
                     if (growArgs.noLookahead || hasLh) {
@@ -664,13 +667,13 @@ internal class RuntimeParser(
         runtimeLookaheadSet: Set<LookaheadSet>,
         transition: Transition
     ): Pair<RuntimeParser, Set<LookaheadSet>> {
-        val embeddedRule = transition.to.runtimeRules.first() // should only ever be one
-        val embeddedRuntimeRuleSet = embeddedRule.embeddedRuntimeRuleSet ?: error("Should never be null")
-        val embeddedStartRule = embeddedRule.embeddedStartRule ?: error("Should never be null")
-        val embeddedS0 = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedStartRule, this.stateSet.automatonKind).startState
+        val embeddedRhs = transition.to.runtimeRules.first().rhs as RuntimeRuleRhsEmbedded // should only ever be one
+        val embeddedRuntimeRuleSet = embeddedRhs.embeddedRuntimeRuleSet
+        val embeddedStartRule = embeddedRhs.embeddedStartRule
+        val embeddedS0 = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedStartRule.tag, this.stateSet.automatonKind).startState
         val embeddedSkipStateSet = embeddedRuntimeRuleSet.skipParserStateSet
         val embeddedParser = RuntimeParser(embeddedS0.stateSet, embeddedSkipStateSet, embeddedStartRule, this.input)
-        val skipTerms = this.stateSet.runtimeRuleSet.firstSkipTerminals.toSet()
+        val skipTerms = this.skipStateSet.firstTerminals
         val endingLookahead = transition.lookahead.first().guard //should ony ever be one
         val embeddedPossibleEOT = endingLookahead.unionContent(embeddedS0.stateSet, skipTerms)
         // Embedded text could end with this.skipTerms or lh from transition

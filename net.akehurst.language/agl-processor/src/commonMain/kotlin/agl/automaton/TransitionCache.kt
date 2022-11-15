@@ -16,7 +16,8 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
+import net.akehurst.language.agl.api.automaton.ParseAction
+import net.akehurst.language.agl.api.runtime.RulePosition
 import net.akehurst.language.agl.util.Debug
 
 internal interface TransitionCache {
@@ -26,10 +27,10 @@ internal interface TransitionCache {
     fun createTransition(
         previousStates: Set<ParserState>,
         from:ParserState,
-        action: Transition.ParseAction,
+        action: ParseAction,
         to: ParserState,
         lookahead: Set<Lookahead>,
-        prevGuard: Set<RuleOptionPosition>?
+        prevGuard: Set<RulePosition>?
     )
     fun addTransition(previousStates: Set<ParserState>, tr: Transition): Transition
 
@@ -50,10 +51,10 @@ internal class TransitionCacheLC0 : TransitionCache {
     override fun createTransition(
         previousStates: Set<ParserState>,
         from: ParserState,
-        action: Transition.ParseAction,
+        action: ParseAction,
         to: ParserState,
         lookahead: Set<Lookahead>,
-        prevGuard: Set<RuleOptionPosition>?
+        prevGuard: Set<RulePosition>?
     ) {
         TODO("not implemented")
     }
@@ -87,7 +88,7 @@ internal class TransitionCacheLC1 : TransitionCache {
             val grouped = set.groupBy { listOf(it.from, it.action, it.to) }
             val merged = grouped.map { me ->
                 val from = me.key[0] as ParserState
-                val action = me.key[1] as Transition.ParseAction
+                val action = me.key[1] as ParseAction
                 val to = me.key[2] as ParserState
                 val lhs = Lookahead.merge(automaton, me.value.flatMap { it.lookahead }.toSet())
                 Transition(from,to,action,lhs)
@@ -103,7 +104,7 @@ internal class TransitionCacheLC1 : TransitionCache {
 
     // transitions stored here
     // (action,to) --> Pair<previous, transition>
-    private val _transitionsByTo = mutableMapOf<Pair<Transition.ParseAction,ParserState>, Pair<Set<ParserState>, Transition>>()
+    private val _transitionsByTo = mutableMapOf<Pair<ParseAction,ParserState>, Pair<Set<ParserState>, Transition>>()
 
     // transitions referenced here
     private val _transitionsByPrevious: MutableMap<ParserState, MutableList<Transition>> = mutableMapOf()
@@ -156,10 +157,10 @@ internal class TransitionCacheLC1 : TransitionCache {
     override fun createTransition(
         previousStates: Set<ParserState>,
         from:ParserState,
-        action: Transition.ParseAction,
+        action: ParseAction,
         to: ParserState,
         lookahead: Set<Lookahead>,
-        prevGuard: Set<RuleOptionPosition>?
+        prevGuard: Set<RulePosition>?
     ) {
         val trans = Transition(from, to, action, lookahead)
         this.addTransition(previousStates, trans)

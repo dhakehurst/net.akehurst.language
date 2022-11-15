@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.api.automaton.Automaton
-import net.akehurst.language.agl.api.runtime.RuleKind
+import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.api.runtime.RulePosition
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.runtime.structure.*
@@ -50,10 +50,15 @@ internal class ParserStateSet(
         calcUsedRules(this.startState.runtimeRules.first())
     }
     val usedTerminalRules: Set<RuntimeRule> by lazy {
-        this.usedRules.filter { it.kind === RuleKind.TERMINAL }.toSet()
+        this.usedRules.filter { it.isTerminal }.toSet()
     }
     val usedNonTerminalRules: Set<RuntimeRule> by lazy {
-        this.usedRules.filter { it.kind !== RuleKind.TERMINAL }.toSet()
+        this.usedRules.filter { it.isNonTerminal }.toSet()
+    }
+    val firstTerminals : Set<RuntimeRule> by lazy {
+        this.startState.transitions(this.startState,this.startState,this.startState).map {
+            it.to.firstRule
+        }.toSet()
     }
 
     /*
@@ -66,14 +71,14 @@ internal class ParserStateSet(
     val allBuiltStates: List<ParserState> get() = this.states.values.toList()
     val allBuiltTransitions: Set<Transition> get() = this.allBuiltStates.flatMap { it.outTransitions.allBuiltTransitions }.toSet()
 
-    val goalRule by lazy { RuntimeRuleSet.createGoalRule(userGoalRule) }
+    val goalRule by lazy { runtimeRuleSet.goalRuleFor[userGoalRule.tag] }
     val startRulePosition by lazy { RulePosition(goalRule, RulePosition.START_OF_RULE) }
     val finishRulePosition by lazy { RulePosition(goalRule, RulePosition.END_OF_RULE) }
     override val startState: ParserState by lazy { this.createState(listOf(startRulePosition)) }
     val finishState: ParserState by lazy { this.createState(listOf(finishRulePosition)) }
 
     /*
-    internal val firstTerminals = lazyMutableMapNonNull<RuleOptionPosition, List<RuntimeRule>> { rp ->
+    internal val firstTerminals = lazyMutableMapNonNull<RulePosition, List<RuntimeRule>> { rp ->
         when (rp.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> listOf(rp.runtimeRule)
             RuntimeRuleKind.EMBEDDED -> {
@@ -124,20 +129,20 @@ internal class ParserStateSet(
         return state
     }
 
-    internal fun fetchState(rulePositions: List<RuleOptionPosition>): ParserState? =
+    internal fun fetchState(rulePositions: List<RulePosition>): ParserState? =
         this.allBuiltStates.firstOrNull { it.rulePositions.toSet() == rulePositions.toSet() }
 
-    internal fun fetchOrCreateState(rulePositions: List<RuleOptionPosition>): ParserState =
+    internal fun fetchOrCreateState(rulePositions: List<RulePosition>): ParserState =
         fetchState(rulePositions) ?: this.createState(rulePositions)
 
-    internal fun fetchCompatibleState(rulePositions: List<RuleOptionPosition>): ParserState? {
+    internal fun fetchCompatibleState(rulePositions: List<RulePosition>): ParserState? {
         val existing = this.allBuiltStates.firstOrNull {
             it.rulePositions.containsAll(rulePositions)
         }
         return existing
     }
 
-    internal fun fetchCompatibleOrCreateState(rulePositions: List<RuleOptionPosition>): ParserState =
+    internal fun fetchCompatibleOrCreateState(rulePositions: List<RulePosition>): ParserState =
         fetchCompatibleState(rulePositions) ?: this.createState(rulePositions)
 
     internal fun createLookaheadSet(includeRT: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet {
@@ -205,11 +210,11 @@ internal class ParserStateSet(
                 val action = ti.action
                 val to = this.fetchState(ti.to.toList()) ?: error("Internal error, state not created for ${ti.to}")
                 val prevGuard = when (action) {
-                    Transition.ParseAction.GOAL,
-                    Transition.ParseAction.WIDTH,
-                    Transition.ParseAction.EMBED,
-                    Transition.ParseAction.HEIGHT -> null
-                    Transition.ParseAction.GRAFT -> ti.parent.toSet()
+                    ParseAction.GOAL,
+                    ParseAction.WIDTH,
+                    ParseAction.EMBED,
+                    ParseAction.HEIGHT -> null
+                    ParseAction.GRAFT -> ti.parent.toSet()
                 }
                 val lhs = ti.lookahead.map { Lookahead(it.guard.lhs(this), it.up.lhs(this)) }.toSet()
                 state.outTransitions.createTransition(previousStates.toSet(), state, action, to, lhs, prevGuard)
@@ -251,11 +256,11 @@ internal class ParserStateSet(
 
 
     /*
-        fun expectedAfter(rulePosition: RuleOptionPosition, doneDn: MutableMap<RuleOptionPosition, Set<RuntimeRule>> = mutableMapOf(), doneUp: MutableMap<RuleOptionPosition, Set<RuntimeRule>> = mutableMapOf()): Set<RuntimeRule> {
+        fun expectedAfter(rulePosition: RulePosition, doneDn: MutableMap<RulePosition, Set<RuntimeRule>> = mutableMapOf(), doneUp: MutableMap<RulePosition, Set<RuntimeRule>> = mutableMapOf()): Set<RuntimeRule> {
             return when {
                 doneDn.containsKey(rulePosition) -> doneDn[rulePosition]!!
                 rulePosition.runtimeRule == this.startState.runtimeRule -> when {
-                    rulePosition.isAtStart -> this.expectedAfter(RuleOptionPosition(rulePosition.item!!, 0, 0), doneDn, doneUp)
+                    rulePosition.isAtStart -> this.expectedAfter(RulePosition(rulePosition.item!!, 0, 0), doneDn, doneUp)
                     rulePosition.isAtEnd -> LookaheadSet.UP.content
                     else -> error("should never happen")
                 }

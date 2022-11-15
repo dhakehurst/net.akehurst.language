@@ -6,9 +6,9 @@ import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.collections.MapNotNull
 
 interface RuleSet {
-    val goalRuleFor: MapNotNull<String,Rule>
+    val goalRuleFor: MapNotNull<String, Rule>
 
-    fun findRuntimeRule(s: String): Rule
+    fun findRuntimeRule(tag: String): Rule
     fun fetchStateSetFor(userGoalRuleName: String, automatonKind: AutomatonKind): Automaton
     fun usedAutomatonToString(userGoalRuleName: String, withStates: Boolean = false): String
 }
@@ -17,8 +17,8 @@ interface Rule {
 }
 
 data class RulePosition(
-    val rule:Rule,
-    val position:Int
+    val rule: Rule,
+    val position: Int
 ) {
     companion object {
         const val START_OF_RULE = 0
@@ -35,4 +35,7 @@ data class RulePosition(
         const val POSITION_SLIST_SEPARATOR = 1 //TODO: make -ve
         const val POSITION_SLIST_ITEM = 2 //TODO: make -ve
     }
+
+    val isAtStart get() = START_OF_RULE == position
+    val isAtEnd get() = END_OF_RULE == position
 }

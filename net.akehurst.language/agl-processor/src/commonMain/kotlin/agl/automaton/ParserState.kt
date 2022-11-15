@@ -40,24 +40,20 @@ internal class ParserState(
         AutomatonKind.LOOKAHEAD_1 -> TransitionCacheLC1()
     }
 
-    val rulePositionIdentity = rulePositions.map { it.identity }.toSet()
-
     //TODO: fast at runtime if not lazy
-    val runtimeRules: List<RuntimeRule> by lazy { this.rulePositions.map { it.runtimeRule }.toList() }
-    val runtimeRulesSet: Set<RuntimeRule> by lazy { this.rulePositions.map { it.runtimeRule }.toSet() }
-    val optionList: List<Int> by lazy { this.rulePositions.map { it.option } }
+    val runtimeRules: List<RuntimeRule> by lazy { this.rulePositions.map { it.rule as RuntimeRule }.toList() }
+    val runtimeRulesSet: Set<RuntimeRule> by lazy { this.rulePositions.map { it.rule as RuntimeRule }.toSet() }
+    val priorityList: List<Int> by lazy { this.runtimeRules.map { it.optionIndex } }
     val positionList: List<Int> by lazy { this.rulePositions.map { it.position }.toList() }
-    val priorityList: List<Int> by lazy { this.rulePositions.map { it.priority }.toList() }
     val choiceKindList: List<RuntimeRuleChoiceKind> by lazy {
         this.rulePositions.mapNotNull {
             when {
-                it.runtimeRule.kind != RuntimeRuleKind.NON_TERMINAL -> null
-                it.runtimeRule.rhs.itemsKind != RuntimeRuleRhsItemsKind.CHOICE -> null
-                else -> it.runtimeRule.rhs.choiceKind
+                (it.rule as RuntimeRule).choiceKind == RuntimeRuleChoiceKind.NONE -> null
+                else -> it.rule.choiceKind
             }
         }.toSet().toList()
     }
-    val isChoice: Boolean by lazy { this.choiceKindList.isNotEmpty() } // it should be empty if not a choice
+    val isChoice: Boolean by lazy { this.firstRuleChoiceKind != RuntimeRuleChoiceKind.NONE }
 
     val firstRuleChoiceKind by lazy {
         if (Debug.CHECK) check(1 == this.choiceKindList.size)
@@ -68,8 +64,8 @@ internal class ParserState(
 
     val isLeaf: Boolean get() = this.firstRule.kind == RuntimeRuleKind.TERMINAL //should only be one RP if it is a leaf
 
-    val isAtEnd: Boolean get()= this.rulePositions.any { it.isAtEnd } //all in state should be either atEnd or notAtEnd
-    val isNotAtEnd: Boolean get()= this.rulePositions.any { it.isAtEnd.not() } //all in state should be either atEnd or notAtEnd
+    val isAtEnd: Boolean get() = this.rulePositions.any { it.isAtEnd } //all in state should be either atEnd or notAtEnd
+    val isNotAtEnd: Boolean get() = this.rulePositions.any { it.isAtEnd.not() } //all in state should be either atEnd or notAtEnd
 
     val isGoal = this.firstRule.kind == RuntimeRuleKind.GOAL
     val isUserGoal = this.firstRule == this.stateSet.userGoalRule
@@ -81,13 +77,13 @@ internal class ParserState(
     internal fun createLookaheadSet(includesUP: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet =
         this.stateSet.createLookaheadSet(includesUP, includeEOT, matchAny, content)
 
-    fun transitions(prevPrev: ParserState, previousState: ParserState, sourceState: ParserState): List<Transition> {
+    fun transitions(prevPrev: ParserState, previousState: ParserState, sourceState: ParserState): List<Transition> { //FIXME sourceState is always this.state when called
         val cache: List<Transition>? = this.outTransitions.findTransitionByPrevious(previousState)
         val trans = if (null == cache) {
             check(this.stateSet.preBuilt.not()) { "Transitions not built for $this -previous-> $previousState -previous-> $prevPrev" }
             //do not pass RuntimeState (in particular runtimeLookahead) into transition calculator
             // or trans cannot be cached by ParserState. if cache by runtimeLookahead then explosion of data like LR(1)
-            val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calcFilteredTransitions(prevPrev, previousState,sourceState).toList()
+            val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calcFilteredTransitions(prevPrev, previousState, sourceState).toList()
             val storedTrans = filteredTransitions.map { this.outTransitions.addTransition(setOf(previousState), it) }
             storedTrans
         } else {

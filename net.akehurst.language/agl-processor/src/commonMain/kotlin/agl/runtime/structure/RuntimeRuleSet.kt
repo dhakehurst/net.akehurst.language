@@ -55,13 +55,13 @@ internal class RuntimeRuleSet(
         val ANY_LOOKAHEAD_RULE_TAG = "<ANY>"
         val UNKNOWN_LOOKAHEAD_RULE_TAG = "<UNKNOWN>"
 
-        val END_OF_TEXT = RuntimeRule(EOT_RULE_NUMBER, 0, END_OF_TEXT_TAG, false, RuntimeRuleRhsCommonTerminal())
-        val USE_RUNTIME_LOOKAHEAD = RuntimeRule(USE_RUNTIME_LOOKAHEAD_RULE_NUMBER, 0, USE_RUNTIME_LOOKAHEAD_RULE_TAG, false, RuntimeRuleRhsCommonTerminal())
-        val ANY_LOOKAHEAD = RuntimeRule(ANY_LOOKAHEAD_RULE_NUMBER, 0, ANY_LOOKAHEAD_RULE_TAG, false, RuntimeRuleRhsCommonTerminal())
-        val UNKNOWN_RULE = RuntimeRule(UNKNOWN_LOOKAHEAD_RULE_NUMBER, 0, UNKNOWN_LOOKAHEAD_RULE_TAG, false, RuntimeRuleRhsCommonTerminal())
+        val END_OF_TEXT = RuntimeRule(EOT_RULE_NUMBER, 0, END_OF_TEXT_TAG, RuntimeRuleChoiceKind.NONE,false, RuntimeRuleRhsCommonTerminal())
+        val USE_RUNTIME_LOOKAHEAD = RuntimeRule(USE_RUNTIME_LOOKAHEAD_RULE_NUMBER, 0, USE_RUNTIME_LOOKAHEAD_RULE_TAG, RuntimeRuleChoiceKind.NONE,false, RuntimeRuleRhsCommonTerminal())
+        val ANY_LOOKAHEAD = RuntimeRule(ANY_LOOKAHEAD_RULE_NUMBER, 0, ANY_LOOKAHEAD_RULE_TAG, RuntimeRuleChoiceKind.NONE,false, RuntimeRuleRhsCommonTerminal())
+        val UNKNOWN_RULE = RuntimeRule(UNKNOWN_LOOKAHEAD_RULE_NUMBER, 0, UNKNOWN_LOOKAHEAD_RULE_TAG, RuntimeRuleChoiceKind.NONE,false, RuntimeRuleRhsCommonTerminal())
 
         private fun createGoalRule(userGoalRule: RuntimeRule): RuntimeRule {
-            val gr = RuntimeRule(GOAL_RULE_NUMBER, 0, GOAL_TAG, false, RuntimeRuleRhsGoal(userGoalRule.runtimeRuleSet, userGoalRule.ruleNumber))
+            val gr = RuntimeRule(GOAL_RULE_NUMBER, 0, GOAL_TAG, RuntimeRuleChoiceKind.NONE,false, RuntimeRuleRhsGoal(userGoalRule.runtimeRuleSet, userGoalRule.ruleNumber))
             return gr
         }
 
@@ -84,14 +84,6 @@ internal class RuntimeRuleSet(
     // used if scanning (excluding skip)
     val nonSkipTerminals: List<RuntimeRule> by lazy { this.runtimeRules.filter {it.isTerminal && it.isSkip.not() } }
 
-    // used to add to lookahead
-    val firstSkipTerminals: List<RuntimeRule> by lazy {
-        FirstOf(skipParserStateSet).
-        this.skipRules.flatMap {
-            firstTerminals[it.ruleNumber]
-        }
-    }
-
     // used if scanning (including skip)
     val terminalRules: List<RuntimeRule> by lazy {
         this.runtimeRules.flatMap {
@@ -102,7 +94,7 @@ internal class RuntimeRuleSet(
             }
         }
     }
-
+/*
     val firstTerminals: Array<Set<RuntimeRule>> by lazy {
         this.runtimeRules.map { this.calcFirstTerminals(it) }
             .toTypedArray()
@@ -112,12 +104,14 @@ internal class RuntimeRuleSet(
     val expectedTerminalRulePositions = lazyMap<RuleOptionPosition, Array<RuleOptionPosition>> {
         calcExpectedTerminalRulePositions(it).toTypedArray()
     }
-
+*/
+    /*
     // used when calculating lookahead
     val firstTerminals2 = lazyMutableMapNonNull<RuleOptionPosition, List<RuntimeRule>> {
         val trps = expectedTerminalRulePositions[it] ?: arrayOf()
         trps.flatMap { it.items }.toSet().toList()
     }
+*/
 
     // userGoalRule -> ParserStateSet
     private val states_cache = mutableMapOf<String, ParserStateSet>()
@@ -210,6 +204,7 @@ internal class RuntimeRuleSet(
             return this.skipStateSet.values.mapNotNull { it.fetchOrNull(rulePosition) }.first() //TODO: maybe more than 1 !
         }
     */
+    /*
     internal fun calcLookahead(parent: RulePositionWithLookahead?, childRP: RuleOptionPosition, ifEmpty: Set<RuntimeRule>): Set<RuntimeRule> {
         return when (childRP.runtimeRule.kind) {
             RuntimeRuleKind.TERMINAL -> useParentLH(parent, ifEmpty)
@@ -277,7 +272,7 @@ internal class RuntimeRuleSet(
             }
         }
     }
-
+*/
     internal fun buildFor(userGoalRuleName: String, automatonKind: AutomatonKind): ParserStateSet {
         val s0 = this.fetchStateSetFor(userGoalRuleName, automatonKind).startState
         return s0.stateSet.build()
@@ -308,7 +303,7 @@ internal class RuntimeRuleSet(
             ?: throw ParserException("Terminal RuntimeRule ${tag} not found")
         return this.runtimeRules[number]
     }
-
+    /*
     // used when calculating lookahead ?
     private fun calcExpectedItemRulePositionTransitive(rp: RuleOptionPosition): Set<RuleOptionPosition> {
         val s = setOf(rp)//rp.runtimeRule.calcExpectedRulePositions(rp.position)
@@ -355,18 +350,19 @@ internal class RuntimeRuleSet(
         }.toSet() //TODO: cache ?
     }
 
-    private fun calcFirstSubRules(runtimeRule: RuntimeRule): Set<RuntimeRule> {
-        return runtimeRule.findSubRulesAt(0)
-    }
 
-    private fun calcFirstTerminals(runtimeRule: RuntimeRule): Set<RuntimeRule> {
-        var rr = runtimeRule.findTerminalAt(0)
-        for (r in this.calcFirstSubRules(runtimeRule)) {
-            rr += r.findTerminalAt(0)
-        }
-        return rr
-    }
+      private fun calcFirstSubRules(runtimeRule: RuntimeRule): Set<RuntimeRule> {
+          return runtimeRule.findSubRulesAt(0)
+      }
 
+      private fun calcFirstTerminals(runtimeRule: RuntimeRule): Set<RuntimeRule> {
+          var rr = runtimeRule.findTerminalAt(0)
+          for (r in this.calcFirstSubRules(runtimeRule)) {
+              rr += r.findTerminalAt(0)
+          }
+          return rr
+      }
+  */
     override fun usedAutomatonToString(userGoalRuleName: String, withStates: Boolean): String {
         val b = StringBuilder()
         val states = this.states_cache[userGoalRuleName]!!.allBuiltStates
@@ -410,19 +406,7 @@ internal class RuntimeRuleSet(
     internal fun clone(): RuntimeRuleSet {
         val clone = RuntimeRuleSet(nextRuntimeRuleSetNumber++)
         val clonedRules = this.runtimeRules.map { rr ->
-            val clonedEmbeddedRuntimeRuleSet = rr.embeddedRuntimeRuleSet?.clone()
-            val clonedEmbeddedStartRule = rr.embeddedStartRule?.let { clonedEmbeddedRuntimeRuleSet?.runtimeRules?.get(it.ruleNumber) }
-            RuntimeRule(
-                clone.number,
-                rr.ruleNumber,
-                rr.name,
-                rr.value,
-                rr.kind,
-                rr.isPattern,
-                rr.isSkip,
-                clonedEmbeddedRuntimeRuleSet,
-                clonedEmbeddedStartRule
-            )
+            RuntimeRule(rr.ruleNumber, rr.optionIndex, rr.name, rr.choiceKind,rr.isSkip,rr.rhs.clone())
         }
         clone.setRules(clonedRules)
         this.runtimeRules.forEach { rr ->

@@ -16,8 +16,11 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
+import net.akehurst.language.agl.api.automaton.ParseAction
+import net.akehurst.language.agl.api.runtime.RulePosition
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 
 internal data class LookaheadSetPart(
@@ -43,7 +46,11 @@ internal data class LookaheadSetPart(
 
     val regex by lazy {
         val str = this.content.joinToString(prefix = "(", separator = ")|(", postfix = ")") {
-            if (it.isPattern) it.value else "\\Q${it.value}\\E"
+            when(it.rhs) {
+                is RuntimeRuleRhsLiteral -> "\\Q${it.rhs.value}\\E"
+                is RuntimeRuleRhsPattern -> it.rhs.pattern
+                else -> error("Internal Error: rhs not a literal that can be joined to a regex")
+            }
         }
         Regex(str)
     }
@@ -145,28 +152,28 @@ internal data class LookaheadInfoPart(
 }
 
 internal data class TransInfo(
-    val prev:Set<Set<RuleOptionPosition>>,
-    val parent:Set<RuleOptionPosition>,
-    val action: Transition.ParseAction,
-    val to:Set<RuleOptionPosition>,
+    val prev:Set<Set<RulePosition>>,
+    val parent:Set<RulePosition>,
+    val action: ParseAction,
+    val to:Set<RulePosition>,
     val lookahead: Set<LookaheadInfoPart>
 )
 internal data class StateInfo(
-    val rulePositions: List<RuleOptionPosition>,
+    val rulePositions: List<RulePosition>,
     val possibleTrans:Set<TransInfo>
 ) {
-    val possiblePrev: Set<Set<RuleOptionPosition>> get() = possibleTrans.flatMap { it.prev }.toSet()
+    val possiblePrev: Set<Set<RulePosition>> get() = possibleTrans.flatMap { it.prev }.toSet()
 }
 
 internal data class WidthInfo(
-    val action: Transition.ParseAction,
-    val to: RuleOptionPosition,
+    val action: ParseAction,
+    val to: RulePosition,
     val lookaheadSet: LookaheadSetPart
 )
 
 internal data class HeightGraftInfo(
-    val action: Transition.ParseAction,
-    val parentNext: List<RuleOptionPosition>, // to state
+    val action: ParseAction,
+    val parentNext: List<RulePosition>, // to state
     val lhs:Set<LookaheadInfoPart>
 ) {
     override fun toString(): String {

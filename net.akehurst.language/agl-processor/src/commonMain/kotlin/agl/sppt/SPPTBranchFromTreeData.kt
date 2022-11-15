@@ -19,6 +19,7 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.TreeData
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.isTerminal
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTException
 import net.akehurst.language.api.sppt.SPPTLeaf
@@ -48,8 +49,9 @@ import net.akehurst.language.api.sppt.SPPTNode
                 val rp = when (child.rulePositions.size) {
                     1 -> child.rulePositions[0]
                     else -> {
-                        val possChild = this.runtimeRule.rulePositionsAt[childIndx].first { prioList.contains(it.option) }
-                        child.rulePositions.first { it.runtimeRule == possChild.item }
+                        TODO()
+                    //    val possChild = this.runtimeRule.rulePositionsAt[childIndx].first { prioList.contains(it.option) }
+                    //    child.rulePositions.first { it.rule == possChild.item }
                     }
                 }
                 when {
@@ -81,17 +83,17 @@ import net.akehurst.language.api.sppt.SPPTNode
                                 }
                             }
                             val eolPositions = emptyList<Int>() //TODO calc ?
-                            listOf(SPPTLeafFromInput(this.input, rp.runtimeRule, child.startPosition, child.nextInputPosition, -1)) + skipNodes
+                            listOf(SPPTLeafFromInput(this.input, rp.rule as RuntimeRule, child.startPosition, child.nextInputPosition, -1)) + skipNodes
                         }
                         else -> {
                             val eolPositions = emptyList<Int>() //TODO calc ?
-                            listOf(SPPTLeafFromInput(this.input, rp.runtimeRule, child.startPosition, child.nextInputPosition, -1))
+                            listOf(SPPTLeafFromInput(this.input, rp.rule as RuntimeRule, child.startPosition, child.nextInputPosition, -1))
                         }
                     }
                     child.isEmbedded -> {
-                        listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.runtimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
+                        listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.rule.optionIndex, child.startPosition, child.nextInputPosition, -1))
                     }
-                        else -> listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.runtimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
+                        else -> listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.rule.optionIndex, child.startPosition, child.nextInputPosition, -1))
                     /*
                     else -> {
                         val possChildren = this.runtimeRule.rulePositionsAt[chIndx].filter { it.option == this.option }

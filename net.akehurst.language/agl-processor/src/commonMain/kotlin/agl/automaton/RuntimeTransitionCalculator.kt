@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 
@@ -54,12 +55,12 @@ internal class RuntimeTransitionCalculator(
                 val heightOrGraftInto = this.stateSet.buildCache.heightOrGraftInto(prevPrev, previousState, sourceState)
                 for (hg in heightOrGraftInto) {
                     when (hg.action) {
-                        Transition.ParseAction.GOAL -> {
+                        ParseAction.GOAL -> {
                             when {
                                 (sourceState.isGoal && this.stateSet.isSkip) -> {
                                     // must be end of skip. TODO: can do something better than this!
                                     val to = sourceState
-                                    __transitions.add(Transition(sourceState, to, Transition.ParseAction.GOAL, setOf(Lookahead.EMPTY)))
+                                    __transitions.add(Transition(sourceState, to, ParseAction.GOAL, setOf(Lookahead.EMPTY)))
                                 }
 
                                 else -> {
@@ -70,12 +71,12 @@ internal class RuntimeTransitionCalculator(
                             }
                         }
 
-                        Transition.ParseAction.HEIGHT -> {
+                        ParseAction.HEIGHT -> {
                             val ts = this.createHeightTransition3(sourceState, hg)
                             __transitions.add(ts)
                         }
 
-                        Transition.ParseAction.GRAFT -> {
+                        ParseAction.GRAFT -> {
                             val ts = this.createGraftTransition3(sourceState, hg)
                             __transitions.add(ts)
                         }
@@ -248,14 +249,14 @@ internal class RuntimeTransitionCalculator(
     private fun createHeightTransition3(sourceState: ParserState, hg: HeightGraftInfo): Transition {
         val to = this.stateSet.fetchCompatibleOrCreateState(hg.parentNext)
         val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), it.up.lhs(this.stateSet)) }.toSet()
-        val trs = Transition(sourceState, to, Transition.ParseAction.HEIGHT, lookaheadInfo)
+        val trs = Transition(sourceState, to, ParseAction.HEIGHT, lookaheadInfo)
         return trs
     }
 
     private fun createGraftTransition3(sourceState: ParserState, hg: HeightGraftInfo): Transition {
         val to = this.stateSet.fetchCompatibleOrCreateState(hg.parentNext)
         val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), LookaheadSet.EMPTY) }.toSet()
-        val trs = Transition(sourceState, to, Transition.ParseAction.GRAFT, lookaheadInfo)
+        val trs = Transition(sourceState, to, ParseAction.GRAFT, lookaheadInfo)
         return trs
     }
 
@@ -264,7 +265,7 @@ internal class RuntimeTransitionCalculator(
         //// must compute lookaheadInfo, because for embedded grammars, guard for completion of GOAL is not necessarily EOT
         //val lookaheadInfo = hg.lhs.map { Lookahead(it.guard.lhs(this.stateSet), LookaheadSet.EMPTY) }.toSet()
         val lookaheadInfo = hg.lhs.map { Lookahead(LookaheadSet.EOT, LookaheadSet.EMPTY) }.toSet()
-        val trs = Transition(sourceState, to, Transition.ParseAction.GOAL, lookaheadInfo)
+        val trs = Transition(sourceState, to, ParseAction.GOAL, lookaheadInfo)
         return trs
     }
 

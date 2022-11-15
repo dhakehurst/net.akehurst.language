@@ -50,18 +50,6 @@ internal class test_b_aSc : test_AutomatonAbstract() {
     private val c = rrs.findRuntimeRule("'c'")
 
     @Test
-    fun closures() {
-        val ffc = FirstFollowCache(SM)
-
-        val actual = ffc.calcAllClosures(FirstFollowCache.Companion.ClosureItemRoot(RP(G, 0, SOR), RP(S1, 0, 2), emptyList()))
-        val expected = setOf(
-            FirstFollowCache.Companion.ClosureItemRoot(RP(G, 0, SOR), RP(G, 0, SOR), emptyList())
-        )
-
-        assertEquals(expected, actual)
-    }
-
-    @Test
     fun automaton_parse_b() {
         //given
         val parser = ScanOnDemandParser(rrs)

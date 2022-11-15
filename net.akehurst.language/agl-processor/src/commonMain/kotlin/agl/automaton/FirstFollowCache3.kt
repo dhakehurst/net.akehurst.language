@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
+import net.akehurst.language.agl.api.runtime.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
@@ -31,18 +31,18 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         data class ParentOfInContext(
             val parentNextContextFollow: LookaheadSetPart,
             val parentNext: Set<ParentNext>,
-            val parent: RuleOptionPosition
+            val parent: RulePosition
         )
     }
 
-    // prev/context -> ( RuleOptionPosition -> Boolean )
-    private val _doneFollow = lazyMutableMapNonNull<RuleOptionPosition, MutableMap<ClosureItem, Boolean>> { mutableMapOf() }
+    // prev/context -> ( RulePosition -> Boolean )
+    private val _doneFollow = lazyMutableMapNonNull<RulePosition, MutableMap<ClosureItem, Boolean>> { mutableMapOf() }
 
-    // prev/context -> ( RuleOptionPosition -> Set<Terminal-RuntimeRule> )
-    private val _firstTerminal = lazyMutableMapNonNull<RuleOptionPosition, LazyMutableMapNonNull<RuleOptionPosition, MutableSet<FirstTerminalInfo>>> { lazyMutableMapNonNull { hashSetOf() } }
+    // prev/context -> ( RulePosition -> Set<Terminal-RuntimeRule> )
+    private val _firstTerminal = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RulePosition, MutableSet<FirstTerminalInfo>>> { lazyMutableMapNonNull { hashSetOf() } }
 
     // prev/context -> ( TerminalRule -> ParentRulePosition )
-    private val _parentInContext = lazyMutableMapNonNull<RuleOptionPosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<ParentNext>>> { lazyMutableMapNonNull { hashSetOf() } }
+    private val _parentInContext = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<ParentNext>>> { lazyMutableMapNonNull { hashSetOf() } }
 
     fun clear() {
         this._doneFollow.clear()
@@ -52,8 +52,8 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
 
     // entry point from calcWidth
     // target states for WIDTH transition, rulePosition should NOT be atEnd
-    //fun firstTerminalInContext(context: RuleOptionPosition, rulePosition: RuleOptionPosition, nextContext:Set<RuleOptionPosition>, nextContextFollow: FollowDeferred): Set<FirstTerminalInfo> {
-    fun firstTerminalInContext(context: RuleOptionPosition, rulePosition: RuleOptionPosition, nextContextFollow: LookaheadSetPart): Set<FirstTerminalInfo> {
+    //fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, nextContext:Set<RulePosition>, nextContextFollow: FollowDeferred): Set<FirstTerminalInfo> {
+    fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, nextContextFollow: LookaheadSetPart): Set<FirstTerminalInfo> {
         check(context.isAtEnd.not()) { "firstTerminal($context,$rulePosition)" }
         processClosureFor(context, rulePosition, nextContextFollow) //nextContext, nextContextFollow)
         //processClosureFor(context, rulePosition, FollowDeferredLiteral(runtimeLookahead))
@@ -62,7 +62,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
 
     // target states for HEIGHT or GRAFT transition, rulePosition should be atEnd
     // entry point from calcHeightGraft
-    fun parentInContext(contextContext: RuleOptionPosition, context: RuleOptionPosition, nextContext: Set<RuleOptionPosition>, completedRule: RuntimeRule): Set<ParentNext> {
+    fun parentInContext(contextContext: RulePosition, context: RulePosition, nextContext: Set<RulePosition>, completedRule: RuntimeRule): Set<ParentNext> {
         processClosureFor(contextContext, context, LookaheadSetPart.RT) //nextContext, FollowDeferredLiteral.RT)
 
         val ctx = if (context.isAtStart) contextContext else context
@@ -76,8 +76,8 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
      * typically true if there is an 'empty' terminal involved or the 'end' of a rule is reached
      */
     // internal so we can use in testing
-    //internal fun processClosureFor(context: RuleOptionPosition, rulePosition: RuleOptionPosition, nextContext:Set<RuleOptionPosition>, nextContextFollow: FollowDeferred) {
-    internal fun processClosureFor(context: RuleOptionPosition, rulePosition: RuleOptionPosition, nextContextFollow: LookaheadSetPart) {
+    //internal fun processClosureFor(context: RulePosition, rulePosition: RulePosition, nextContext:Set<RulePosition>, nextContextFollow: FollowDeferred) {
+    internal fun processClosureFor(context: RulePosition, rulePosition: RulePosition, nextContextFollow: LookaheadSetPart) {
         //val cls = ClosureItemRoot(this, context, rulePosition, parentFollow)
         val graph = ClosureGraph(this, context, rulePosition, nextContextFollow) //nextContext, nextContextFollow)
         val cls = graph.root
@@ -95,14 +95,14 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
     /**
      * only add firstOf if not empty
      */
-    private fun addFirstTerminalInContext(prev: RuleOptionPosition, rulePosition: RuleOptionPosition, firstTerminalInfo: FirstTerminalInfo) {
+    private fun addFirstTerminalInContext(prev: RulePosition, rulePosition: RulePosition, firstTerminalInfo: FirstTerminalInfo) {
         if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.NONE) { "add firstTerm($prev,$rulePosition) = $firstTerminalInfo" }
         if (Debug.CHECK) check(prev.isAtEnd.not())
         this._firstTerminal[prev][rulePosition].add(firstTerminalInfo)
     }
 
-    //private fun addParentInContext(prev: RuleOptionPosition, completedRule: RuntimeRule, parentOf: ParentOfInContext) {
-    private fun addParentInContext(prev: RuleOptionPosition, completedRule: RuntimeRule, parentNext: Set<ParentNext>) {
+    //private fun addParentInContext(prev: RulePosition, completedRule: RuntimeRule, parentOf: ParentOfInContext) {
+    private fun addParentInContext(prev: RulePosition, completedRule: RuntimeRule, parentNext: Set<ParentNext>) {
         if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.NONE) { "add parentOf($prev,${completedRule.tag}) = $parentNext" }
         this._parentInContext[prev][completedRule].addAll(parentNext)
     }
@@ -264,7 +264,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
      * in RulePositionUpInfo, rulePosition is the Child
      * in RulePositionDownInfo, rulePosition is the parent
      */
-    private fun doForRoot(rulePosition: RuleOptionPosition, upInfo: RulePositionUpInfo, downInfo: FirstTerminalInfo) {
+    private fun doForRoot(rulePosition: RulePosition, upInfo: RulePositionUpInfo, downInfo: FirstTerminalInfo) {
         this.addFirstTerminalInContext(upInfo.context, rulePosition, downInfo)
     }
 
@@ -272,7 +272,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         this.addParentInContext(cls.upInfo.context, cls.rulePosition.runtimeRule, cls.parentNext)
     }
 
-    private fun doForEmbedded(rulePosition: RuleOptionPosition, upInfo: RulePositionUpInfo, downInfo: FirstTerminalInfo) {
+    private fun doForEmbedded(rulePosition: RulePosition, upInfo: RulePositionUpInfo, downInfo: FirstTerminalInfo) {
         this.addFirstTerminalInContext(upInfo.context, rulePosition, downInfo)
     }
 }

@@ -50,24 +50,13 @@ internal  class GrowingNodeIndex(
 
         // used to augment the GrowingNodeIndex (GSS node identity) for MULTI and SEPARATED_LIST
         // needed because the 'RuleOptionPosition' does not capture the 'position' in the list
-        fun listSize(runtimeRule: RuntimeRule, numNonSkipChildren: Int): Int = when (runtimeRule.kind) {
-            RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.itemsKind) {
-                RuntimeRuleRhsItemsKind.EMPTY -> 0
-                RuntimeRuleRhsItemsKind.CONCATENATION -> numNonSkipChildren
-                RuntimeRuleRhsItemsKind.CHOICE -> 1
-                RuntimeRuleRhsItemsKind.LIST -> when (runtimeRule.rhs.listKind) {
-                    RuntimeRuleListKind.MULTI -> numNonSkipChildren
-                    RuntimeRuleListKind.SEPARATED_LIST -> numNonSkipChildren
-                    RuntimeRuleListKind.NONE -> TODO()
-                    RuntimeRuleListKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
-                    RuntimeRuleListKind.LEFT_ASSOCIATIVE_LIST -> TODO()
-                    RuntimeRuleListKind.UNORDERED -> TODO()
-                }
+        fun listSize(runtimeRule: RuntimeRule, numNonSkipChildren: Int): Int = when (runtimeRule.rhs) {
+                is RuntimeRuleRhsConcatenation -> numNonSkipChildren
+                is RuntimeRuleRhsGoal -> numNonSkipChildren
+                is RuntimeRuleRhsListSimple -> numNonSkipChildren
+                is RuntimeRuleRhsListSeparated -> numNonSkipChildren
+                else -> 0
             }
-            RuntimeRuleKind.TERMINAL -> 0
-            RuntimeRuleKind.EMBEDDED -> 0
-            RuntimeRuleKind.GOAL -> numNonSkipChildren
-        }
     }
 
     private val _hashCode = arrayOf(runtimeState,startPosition,nextInputPosition,numNonSkipChildren).contentHashCode()
@@ -148,14 +137,14 @@ internal class CompleteNodeIndex(
     //TODO: don't store data twice..also prefer not to create 2 objects!
     val preferred by lazy { PreferredChildIndex(runtimeRulesSet, startPosition) }
 
-    val highestPriorityRule get() = this.state.rulePositions.maxByOrNull { it.priority }!!.runtimeRule
-    val firstRule: RuntimeRule by lazy { this.state.rulePositions[0].runtimeRule }
+    val highestPriorityRule get() = this.state.rulePositions.maxBy { (it.rule as RuntimeRule).optionIndex }.rule as RuntimeRule
+    val firstRule: RuntimeRule by lazy { this.state.rulePositions[0].rule as RuntimeRule }
     val isLeaf: Boolean get() = firstRule.kind == RuntimeRuleKind.TERMINAL //should only be one if true
     val isEmbedded: Boolean get() = firstRule.kind == RuntimeRuleKind.EMBEDDED //should only be one if true
     val hasSkipData: Boolean get() = this.nextInputPosition != nextInputPositionAfterSkip
 
-    val optionList: List<Int> by lazy { this.state.rulePositions.map { it.option } }
-    val priorityList: List<Int> by lazy { this.state.rulePositions.map { it.priority } }
+    val optionList: List<Int> get() = this.state.priorityList
+    val priorityList: List<Int> get() = this.state.priorityList
 
     override fun hashCode(): Int = this.hashCode_cache
     override fun equals(other: Any?): Boolean = when {

@@ -17,6 +17,8 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.agl.automaton.FirstOf
+import net.akehurst.language.agl.api.runtime.RulePosition
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleListKind
@@ -144,7 +146,7 @@ internal class ClosureGraph(
                 val allNextFollow = nexts.map { next ->
                     when {
                         next.isAtEnd -> nextContextFollow
-                        else -> FirstOf(ffc.stateSet).expectedAt(next, nextContextFollow)
+                        else -> FirstOf(ffc.stateSet.usedRules.size).expectedAt(next, nextContextFollow)
                     }
                 }
                 allNextFollow.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
@@ -168,7 +170,7 @@ internal class ClosureGraph(
                 for (prntNext in parent.rulePosition.next()) {
                     val prntNextFollow = when (prntNext.isAtEnd) {
                         true -> gpInfo.nextContextFollow
-                        else -> FirstOf(parent.ffc.stateSet).expectedAt(prntNext, gpInfo.nextContextFollow)
+                        else -> FirstOf(parent.ffc.stateSet.usedRules.size).expectedAt(prntNext, gpInfo.nextContextFollow)
                     }
                     val pn = ParentNext(atStart, prntNext, prntNextFollow, prntNextContextFollow)
                     result.add(pn)
@@ -234,15 +236,18 @@ internal class ClosureGraph(
                 val rp = this.rulePosition
                 val rr = rp.runtimeRule
                 val str = when {
-                    rr.isNonTerminal && rr.rhs.listKind == RuntimeRuleListKind.SEPARATED_LIST -> when {
-                        rp.isAtStart -> rr.tag + 'b'
-                        rp.position == RuleOptionPosition.POSITION_SLIST_SEPARATOR -> rr.tag + 's'
-                        rp.position == RuleOptionPosition.POSITION_SLIST_ITEM -> rr.tag + 'i'
-                        rp.isAtEnd -> rr.tag + 'e'
+                    rr.isNonTerminal -> when(rr.rhs) {
+                        //rr.rhs.itemsKind == RuntimeRuleRhsItemsKind.CHOICE -> "${rr.tag}${rp.option}"
+                        is RuntimeRuleRhsListSeparated->when {
+                            rp.isAtStart -> rr.tag + 'b'
+                            rp.position == RulePosition.POSITION_SLIST_SEPARATOR -> rr.tag + 's'
+                            rp.position == RulePosition.POSITION_SLIST_ITEM -> rr.tag + 'i'
+                            rp.isAtEnd -> rr.tag + 'e'
+                            else -> TODO()
+                        }
                         else -> TODO()
                     }
 
-                    rr.isNonTerminal && rr.rhs.itemsKind == RuntimeRuleRhsItemsKind.CHOICE -> "${rr.tag}${rp.option}"
                     else -> rr.tag
                 }
                 return if (done.contains(this)) {
@@ -252,11 +257,7 @@ internal class ClosureGraph(
                     when (this) {
                         is ClosureItemRootGraph -> listOf(str)
                         is ClosureItemChildGraph -> setOf(parent).flatMap { p ->
-                            //if (done.contains(p)) {
-                            //    listOf("...${str}")
-                            //} else {
                             p.shortStringRec(newDone).map { "$it-$str" }
-                            //}
                         }
 
                         else -> error("Internal Error: subtype of ClosureItemAbstractGraph not handled - ${this::class.simpleName}")

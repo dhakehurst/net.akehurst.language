@@ -489,7 +489,7 @@ internal class ScanOnDemandParser(
             .flatMap {
                 when (it.kind) {
                     RuntimeRuleKind.TERMINAL -> listOf(it)
-                    RuntimeRuleKind.NON_TERMINAL -> this.runtimeRuleSet.firstTerminals[it.ruleNumber]
+                    //RuntimeRuleKind.NON_TERMINAL -> this.runtimeRuleSet.firstTerminals[it.ruleNumber]
                     else -> TODO()
                 }
             }

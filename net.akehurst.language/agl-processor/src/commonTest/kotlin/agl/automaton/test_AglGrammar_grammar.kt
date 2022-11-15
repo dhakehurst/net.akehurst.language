@@ -62,23 +62,6 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
     private val goal = "grammarDefinition"
 
     @Test
-    fun rule_firstTerminals() {
-        // rule = ruleTypeLabels IDENTIFIER '='  choice';'
-        // ruleTypeLabels = isOverride isSkip isLeaf
-        // isOverride 'override'?
-        // isSkip 'skip'?
-        // isLeaf 'leaf'?
-
-
-        val actual = rrs.firstTerminals[R_rule.ruleNumber]
-
-        val expected = setOf<RuntimeRule>(R_override, R_overrideEmpty)
-
-        assertEquals(expected, actual)
-
-    }
-
-    @Test
     fun parse_xxx() {
         val parser = ScanOnDemandParser(rrs)
         parser.parseForGoal(goal, "namespace test grammar Test { S = 'a' ; }", AutomatonKind.LOOKAHEAD_1)
