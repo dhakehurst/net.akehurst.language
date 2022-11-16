@@ -1,5 +1,8 @@
+import net.akehurst.language.agl.api.automaton.Automaton
 import net.akehurst.language.agl.api.generator.GeneratorConstants
-import net.akehurst.language.agl.automaton.
+import net.akehurst.language.agl.api.runtime.RuleSet
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.processor.AutomatonKind
 
 // sample
 object GrammarName_GoalRuleName : GeneratorConstants() {
@@ -14,15 +17,18 @@ object GrammarName_GoalRuleName : GeneratorConstants() {
     // G = S
     // S = a
 
-    val runtimeRuleSet = runtimeRuleSet {
+    val runtimeRuleSet: RuleSet = RuleSet.build {
         concatenation("S") { literal("a") }
     }
-    val userGoalRuleName = "S"
-    val G = runtimeRuleSet.goalRuleFor[userGoalRuleName]
 
-    val stateSetNumber = RuntimeRuleSet.nextRuntimeRuleSetNumber++
-    val automaton_S = automaton(runtimeRuleSet, AutomatonKind.LOOKAHEAD_1, userGoalRuleName, stateSetNumber, false) {
-        state(G, SR)
-        state(G, ER)
+    val automaton_S = Automaton.build(runtimeRuleSet, AutomatonKind.LOOKAHEAD_1, "S", false) {
+        // G = . S
+        state(0, 0, SR)
+        // G = S .
+        state(1, 0, ER)
+        // S = a .
+        state(2, 0, ER)
+        // a.
+        state(3, 0, ER)
     }
 }

@@ -79,7 +79,7 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))       // G = . S
             val s1 = state(RP(T_a, 0, EOR))       // 'a'
             val s2 = state(RP(E_optA, 0, EOR))
@@ -119,7 +119,7 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))       // G = . S
             val s1 = state(RP(T_a, 0, EOR))       // 'a'
             val s2 = state(RP(E_optA, 0, EOR))
@@ -159,7 +159,7 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))       // G = . S
             val s1 = state(RP(T_a, 0, EOR))       // 'a'
             val s2 = state(RP(E_optA, 0, EOR))
@@ -203,7 +203,7 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
             assertEquals(1, result.sppt!!.maxNumHeads)
         }
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
 
         }
 

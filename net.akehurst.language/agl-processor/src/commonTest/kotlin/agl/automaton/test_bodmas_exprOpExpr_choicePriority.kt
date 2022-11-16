@@ -62,7 +62,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
         assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S */
             val s1 = state(RP(v, 0, EOR))     /* v .     */
             val s2 = state(RP(E, 0, EOR))     /* E = v . */
@@ -93,7 +93,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
         //when
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S   */
 
 
@@ -110,7 +110,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
 
         }
 

@@ -16,10 +16,22 @@
 
 package net.akehurst.language.agl.api.automaton
 
+import net.akehurst.language.agl.api.runtime.Rule
+import net.akehurst.language.agl.api.runtime.RuleSet
+import net.akehurst.language.agl.automaton.TransitionBuilderDefault
+import net.akehurst.language.agl.automaton.automaton
+import net.akehurst.language.api.processor.AutomatonKind
+
 interface Automaton {
-
-    val startState : State
-
+    companion object {
+        fun build(
+            rrs: RuleSet,
+            automatonKind: AutomatonKind,
+            userGoalRule: String,
+            isSkip: Boolean,
+            init: AutomatonBuilder.() -> Unit
+        ): Automaton = automaton(rrs, automatonKind, userGoalRule, isSkip, init)
+    }
 }
 
 interface State {
@@ -32,4 +44,14 @@ enum class ParseAction {
     WIDTH,  // shift
     GOAL,    // goal
     EMBED,
+}
+
+
+interface AutomatonBuilder {
+    fun state(ruleNumber:Int, option:Int, position:Int): State
+    fun transition(action: ParseAction, init: TransitionBuilder.() -> Unit)
+}
+
+interface TransitionBuilder {
+
 }

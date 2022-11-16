@@ -49,7 +49,7 @@ class test_ParseGraph_abc {
 
         val text = "a"
         val input = InputFromString(rrs.terminalRules.size,text)
-        val sut = ParseGraph(input, 0,10,10)
+        val sut = ParseGraph(input, 0)
 
         val gr = RuntimeRuleSet.createGoalRule(r_S)
         val startState = rrs.fetchStateSetFor(r_S, AutomatonKind.LOOKAHEAD_1).startState
@@ -70,7 +70,7 @@ class test_ParseGraph_abc {
         val userGoalRule = RuntimeRule(rrs.number,0,"a", "a", RuntimeRuleKind.TERMINAL, false, false)
         val text = "a"
         val input = InputFromString(rrs.terminalRules.size,text)
-        val sut = ParseGraph(input, 0,10,10)
+        val sut = ParseGraph(input, 0)
 
         val gr = RuntimeRuleSet.createGoalRule(userGoalRule)
         val startState = RulePositionWithLookahead(RuleOptionPosition(gr,0,0), emptySet())

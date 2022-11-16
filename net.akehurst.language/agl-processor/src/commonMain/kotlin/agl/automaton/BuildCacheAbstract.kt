@@ -53,7 +53,7 @@ internal abstract class BuildCacheAbstract(
      *
      * firstOf needs to iterate along a rule (calling .next()) and down (recursively stopping appropriately)
      * next() needs to be called to skip over empty rules (empty or empty lists)
-    */
+
     override fun expectedAt(rulePosition: RulePosition, ifReachedEnd: LookaheadSetPart): LookaheadSetPart {
         return when {
             rulePosition.isAtEnd -> ifReachedEnd
@@ -120,7 +120,7 @@ internal abstract class BuildCacheAbstract(
                 RuntimeRuleSet.EOT_RULE_NUMBER == rule.ruleNumber -> TODO()
                 RuntimeRuleSet.SKIP_RULE_NUMBER == rule.ruleNumber -> TODO()
                 RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER == rule.ruleNumber -> firstOfNotEmptySafe(rule, doneRp, done)
-                RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD_RULE_NUMBER == rule.ruleNumber -> TODO()
+                RuntimeRuleSet.RUNTIME_LOOKAHEAD_RULE_NUMBER == rule.ruleNumber -> TODO()
                 else -> error("unsupported rule number $rule")
             }
             done[rule.ruleNumber] -> _firstOfNotEmpty[rule.ruleNumber] ?: FirstOfResult(false, LookaheadSetPart.EMPTY)
@@ -167,5 +167,5 @@ internal abstract class BuildCacheAbstract(
         }
         return FirstOfResult(needsNext, result)
     }
-
+    */
 }

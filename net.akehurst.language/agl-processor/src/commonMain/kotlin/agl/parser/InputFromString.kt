@@ -17,7 +17,11 @@
 package net.akehurst.language.agl.parser
 
 import agl.runtime.graph.CompletedNodesStore
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.regex.RegexMatcher
@@ -99,18 +103,15 @@ internal class InputFromString(
         return if (null!=r) {
              r
         } else {
-            //val v = terminalRule.regex.matchesAt(this.text, position)
-            //isLookingAt_cache[Pair(position,terminalRule.number)] = v
-            //v
+            val rhs = terminalRule.rhs
             val matched = when {
-                this.isEnd(position) -> if (terminalRule.value == END_OF_TEXT) true else false //TODO: do we need this
-                terminalRule.isPattern -> terminalRule.regex.matchesAt(this.text, position)
-                else -> this.text.regionMatches(position, terminalRule.value, 0, terminalRule.value.length)
-                //else ->pattern.match(this.text, position)
+                this.isEnd(position) -> if (terminalRule == RuntimeRuleSet.END_OF_TEXT) true else false //TODO: do we need this
+                rhs is RuntimeRuleRhsPattern -> rhs.regex.matchesAt(this.text, position)
+                rhs is RuntimeRuleRhsLiteral ->this.text.regionMatches(position, rhs.value, 0, rhs.value.length)
+                else -> error("Internal Error: not handled")
             }
             isLookingAt_cache[Pair(position,terminalRule)] = matched
             matched
-
         }
     }
 
@@ -119,7 +120,7 @@ internal class InputFromString(
         //val match = stext.startsWith(patternText)//regionMatches(position, patternText, 0, patternText.length, false)
         val match = this.isLookingAt(position,terminalRule)
         return if (match) {
-            val text = terminalRule.value
+            val text = (terminalRule as RuntimeRuleRhsLiteral).value
             val eolPositions = emptyList<Int>() //this.eolPositions(text)
             RegexMatcher.MatchResult(text, eolPositions)
             //matchedText
@@ -171,11 +172,12 @@ internal class InputFromString(
     }
 
     internal fun tryMatchText(position: Int, terminalRule: RuntimeRule): RegexMatcher.MatchResult? {
+        val rhs = terminalRule.rhs
         val matched = when {
-            this.isEnd(position) -> if (terminalRule.value == END_OF_TEXT) RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
-            terminalRule.isPattern -> this.matchRegEx2(position, terminalRule.regex)
-            else -> this.matchLiteral(position, terminalRule)
-            //else ->pattern.match(this.text, position)
+            this.isEnd(position) -> if (terminalRule == RuntimeRuleSet.END_OF_TEXT) RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
+            rhs is RuntimeRuleRhsPattern -> this.matchRegEx2(position, rhs.regex)
+            rhs is RuntimeRuleRhsLiteral -> this.matchLiteral(position, terminalRule)
+            else -> error("Internal Error: not handled")
         }
         return matched
     }
@@ -204,7 +206,7 @@ internal class InputFromString(
 
     private fun tryCreateLeaf(terminalRuntimeRule: RuntimeRule, atInputPosition: Int): SPPTLeaf {
         // LeafIndex passed as argument because we already created it to try and find the leaf in the cache
-        return if (terminalRuntimeRule.isEmptyRule) {
+        return if (terminalRuntimeRule.rhs is RuntimeRuleRhsEmpty) {
             //val location = this.nextLocation(lastLocation, 0)
             //val leaf = SPPTLeafDefault(terminalRuntimeRule, location, true, "", 0)
             val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, atInputPosition, 0)

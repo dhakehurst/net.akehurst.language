@@ -49,7 +49,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(RP(G, o0, SOR))
             state(RP(a, o0, EOR))
             state(RP(S, o0, p1))
@@ -81,7 +81,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))
             val s1 = state(RP(S, 0, 1))
             val s2 = state(RP(S, 0, 2))

@@ -2,15 +2,16 @@ package net.akehurst.language.agl.api.runtime
 
 import net.akehurst.language.agl.api.automaton.Automaton
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.collections.MapNotNull
 
 interface RuleSet {
-    val goalRuleFor: MapNotNull<String, Rule>
 
-    fun findRuntimeRule(tag: String): Rule
-    fun fetchStateSetFor(userGoalRuleName: String, automatonKind: AutomatonKind): Automaton
-    fun usedAutomatonToString(userGoalRuleName: String, withStates: Boolean = false): String
+    companion object {
+        fun build(init:RuleSetBuilder.()->Unit) = runtimeRuleSet(init)
+    }
+
 }
 
 interface Rule {
@@ -38,4 +39,15 @@ data class RulePosition(
 
     val isAtStart get() = START_OF_RULE == position
     val isAtEnd get() = END_OF_RULE == position
+}
+
+enum class RuntimeRuleChoiceKind {
+    NONE,
+    AMBIGUOUS,
+    LONGEST_PRIORITY,
+    PRIORITY_LONGEST
+}
+
+interface RuleSetBuilder {
+
 }

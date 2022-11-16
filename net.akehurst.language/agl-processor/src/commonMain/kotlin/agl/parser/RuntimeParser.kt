@@ -20,23 +20,17 @@ import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.api.messages.Message
 import net.akehurst.language.agl.api.runtime.RulePosition
 import net.akehurst.language.agl.automaton.*
-import net.akehurst.language.agl.automaton.LookaheadSetPart
-import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
-import net.akehurst.language.agl.automaton.ParserStateSet
-import net.akehurst.language.agl.automaton.Transition
-import net.akehurst.language.agl.runtime.graph.*
-import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.runtime.structure.RuleOption
-import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
+import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
+import net.akehurst.language.agl.runtime.graph.ParseGraph
+import net.akehurst.language.agl.runtime.graph.TreeData
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParserTerminatedException
-import net.akehurst.language.api.sppt.SPPTNode
 import kotlin.math.max
 
 internal class RuntimeParser(
@@ -58,7 +52,7 @@ internal class RuntimeParser(
         val normalArgs = GrowArgs(true, false, false, false)
     }
 
-    val graph = ParseGraph(input, this.stateSet.number, this.stateSet.usedTerminalRules.size, this.stateSet.usedNonTerminalRules.size)
+    val graph = ParseGraph(input, this.stateSet.number)
 
     //var lastGrown: Set<ParseGraph.Companion.ToProcessTriple> = mutableSetOf()
     val canGrow: Boolean get() = this.graph.canGrow
@@ -91,7 +85,7 @@ internal class RuntimeParser(
         val initialSkipData = if (this.stateSet.isSkip) {
             null
         } else {
-            val skipLhsp = gState.rulePositions.map { this.stateSet.buildCache.expectedAt(it, LookaheadSetPart.EOT) }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
+            val skipLhsp = gState.rulePositions.map { this.stateSet.firstOf.expectedAt(it, LookaheadSetPart.EOT) }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
             val endOfSkipLookaheadSet = this.stateSet.createLookaheadSet(skipLhsp)
             this.tryParseSkipUntilNone(setOf(endOfSkipLookaheadSet), startPosition, normalArgs) //TODO: think this might allow some wrong things, might be a better way
         }
@@ -673,7 +667,7 @@ internal class RuntimeParser(
         val embeddedS0 = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedStartRule.tag, this.stateSet.automatonKind).startState
         val embeddedSkipStateSet = embeddedRuntimeRuleSet.skipParserStateSet
         val embeddedParser = RuntimeParser(embeddedS0.stateSet, embeddedSkipStateSet, embeddedStartRule, this.input)
-        val skipTerms = this.skipStateSet.firstTerminals
+        val skipTerms = this.skipStateSet?.firstTerminals ?: emptySet()
         val endingLookahead = transition.lookahead.first().guard //should ony ever be one
         val embeddedPossibleEOT = endingLookahead.unionContent(embeddedS0.stateSet, skipTerms)
         // Embedded text could end with this.skipTerms or lh from transition

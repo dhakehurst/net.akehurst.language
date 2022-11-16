@@ -18,6 +18,7 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 
 internal class RuntimeTransitionCalculator(
@@ -44,9 +45,10 @@ internal class RuntimeTransitionCalculator(
             sourceState.isGoal -> {
                 val widthInto = this.stateSet.buildCache.widthInto(previousState, sourceState)
                 for (wi in widthInto) {
-                    when (wi.to.runtimeRule.kind) {
-                        RuntimeRuleKind.TERMINAL, RuntimeRuleKind.EMBEDDED -> __transitions.add(this.createWidthOrEmbeddedTransition(sourceState, wi))
-                        RuntimeRuleKind.GOAL, RuntimeRuleKind.NON_TERMINAL -> error("Should never happen")
+                    val rr = wi.to.rule as RuntimeRule
+                    when {
+                        rr.isTerminal -> __transitions.add(this.createWidthOrEmbeddedTransition(sourceState, wi))
+                        else -> error("Should never happen")
                     }
                 }
             }

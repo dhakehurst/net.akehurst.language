@@ -82,7 +82,7 @@ internal class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstrac
             assertEquals(1, result.sppt!!.maxNumHeads)
         }
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(RP(G, o0, SOR))    // G = . S
             state(RP(G, o0, EOR))    // G = S .
             state(RP(S, o0, EOR))    // S = E .

@@ -12,16 +12,14 @@ internal class Scanner(
 ) {
 
     fun scan(inputText: String, includeSkipRules: Boolean): List<SPPTLeaf> {
-        val undefined = RuntimeRule(-1, -5, "undefined", "", RuntimeRuleKind.TERMINAL, false, true)
+        val undefined = RuntimeRuleSet.UNDEFINED_RULE
         //TODO: improve this algorithm...it is not efficient I think, also doesn't work!
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, inputText)
         var terminals = if (includeSkipRules) this.runtimeRuleSet.terminalRules else this.runtimeRuleSet.nonSkipTerminals
-        var result = mutableListOf<SPPTLeaf>()
+        val result = mutableListOf<SPPTLeaf>()
 
         //eliminate tokens that are empty matches
-        terminals = terminals.filter {
-            it.value.isNotEmpty()
-        }.toTypedArray()
+        terminals = terminals.filter { it.isEmptyTerminal.not() }
 
         var startPosition = 0
         var nextInputPosition = 0

@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.parser
 
+import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.processor.ParseResultDefault
@@ -85,7 +86,7 @@ internal class ScanOnDemandParser(
 
     private fun createRuntimeParser(goalRuleName: String, input: InputFromString, automatonKind: AutomatonKind):RuntimeParser {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
-        val s0 = runtimeRuleSet.fetchStateSetFor(goalRule, automatonKind).startState
+        val s0 = runtimeRuleSet.fetchStateSetFor(goalRuleName, automatonKind).startState
         val skipStateSet = runtimeRuleSet.skipParserStateSet
         return RuntimeParser(s0.stateSet, skipStateSet, goalRule, input)
     }
@@ -219,9 +220,9 @@ internal class ScanOnDemandParser(
                         } else {
                             val errors: Set<Pair<Int, Set<RuntimeRule>>> = trs.mapNotNull { tr ->
                                 when (tr.action) {
-                                    Transition.ParseAction.GOAL -> null
-                                    Transition.ParseAction.WIDTH,
-                                    Transition.ParseAction.EMBED -> {
+                                    ParseAction.GOAL -> null
+                                    ParseAction.WIDTH,
+                                    ParseAction.EMBED -> {
                                         //TODO: find failure in embedded parser!
                                         val embLastDropped = rp.embeddedLastDropped[tr]?.flatMap { it.triples } //TODO: change this to lastGrown
                                         if (null == embLastDropped) {
@@ -229,7 +230,7 @@ internal class ScanOnDemandParser(
                                             val l = input.findOrTryCreateLeaf(tr.to.firstRule, lg.nextInputPosition)
                                             when (l) {
                                                 null -> {
-                                                    val expected = tr.to.runtimeRules.filter { it.isEmptyRule.not() }
+                                                    val expected = tr.to.runtimeRules.filter { it.isEmptyTerminal.not() }
                                                     if (expected.isEmpty()) {
                                                         null
                                                     } else {
@@ -239,15 +240,15 @@ internal class ScanOnDemandParser(
 
                                                 else -> {
                                                     val rtLh = when (tr.action) {
-                                                        Transition.ParseAction.WIDTH -> lg.runtimeState.runtimeLookaheadSet
-                                                        Transition.ParseAction.EMBED -> lg.runtimeState.runtimeLookaheadSet
-                                                        Transition.ParseAction.HEIGHT -> prev!!.runtimeState.runtimeLookaheadSet
-                                                        Transition.ParseAction.GRAFT -> prev!!.runtimeState.runtimeLookaheadSet
-                                                        Transition.ParseAction.GOAL -> prev!!.runtimeState.runtimeLookaheadSet
+                                                        ParseAction.WIDTH -> lg.runtimeState.runtimeLookaheadSet
+                                                        ParseAction.EMBED -> lg.runtimeState.runtimeLookaheadSet
+                                                        ParseAction.HEIGHT -> prev!!.runtimeState.runtimeLookaheadSet
+                                                        ParseAction.GRAFT -> prev!!.runtimeState.runtimeLookaheadSet
+                                                        ParseAction.GOAL -> prev!!.runtimeState.runtimeLookaheadSet
                                                     }
                                                     val expected = tr.lookahead
                                                         .flatMap { lh -> possibleEndOfText.flatMap { eot -> rtLh.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }
-                                                        .filter { it.isEmptyRule.not() }
+                                                        .filter { it.isEmptyTerminal.not() }
                                                     if (expected.isEmpty()) {
                                                         null
                                                     } else {
@@ -280,11 +281,11 @@ internal class ScanOnDemandParser(
                     if (beforeRuntimeCheck.isNotEmpty()) {
                         val pairs: Set<Pair<Int, Set<RuntimeRule>>> = beforeRuntimeCheck.mapNotNull { tr ->
                             val rtLh = when (tr.action) {
-                                Transition.ParseAction.WIDTH -> lg.runtimeState.runtimeLookaheadSet
-                                Transition.ParseAction.EMBED -> lg.runtimeState.runtimeLookaheadSet
-                                Transition.ParseAction.HEIGHT -> prev.runtimeState.runtimeLookaheadSet
-                                Transition.ParseAction.GRAFT -> prev.runtimeState.runtimeLookaheadSet
-                                Transition.ParseAction.GOAL -> prev.runtimeState.runtimeLookaheadSet
+                                ParseAction.WIDTH -> lg.runtimeState.runtimeLookaheadSet
+                                ParseAction.EMBED -> lg.runtimeState.runtimeLookaheadSet
+                                ParseAction.HEIGHT -> prev.runtimeState.runtimeLookaheadSet
+                                ParseAction.GRAFT -> prev.runtimeState.runtimeLookaheadSet
+                                ParseAction.GOAL -> prev.runtimeState.runtimeLookaheadSet
                             }
                             val runtimeGuardPassed = tr.runtimeGuard.invoke( prev.numNonSkipChildren)
                             errorPairs(rp, input, lg, tr, possibleEndOfText, rtLh, runtimeGuardPassed)
@@ -300,11 +301,11 @@ internal class ScanOnDemandParser(
                             val trs2 = lg2.runtimeState.transitions(prevPrev2.state, prev2.runtimeState.state)
                             trs2.mapNotNull { tr2 ->
                                 val rtLh = when (tr2.action) {
-                                    Transition.ParseAction.WIDTH -> lg2.runtimeState.runtimeLookaheadSet
-                                    Transition.ParseAction.EMBED -> lg2.runtimeState.runtimeLookaheadSet
-                                    Transition.ParseAction.HEIGHT -> prev2.runtimeState.runtimeLookaheadSet
-                                    Transition.ParseAction.GRAFT -> prev2.runtimeState.runtimeLookaheadSet
-                                    Transition.ParseAction.GOAL ->prev2.runtimeState.runtimeLookaheadSet
+                                    ParseAction.WIDTH -> lg2.runtimeState.runtimeLookaheadSet
+                                    ParseAction.EMBED -> lg2.runtimeState.runtimeLookaheadSet
+                                    ParseAction.HEIGHT -> prev2.runtimeState.runtimeLookaheadSet
+                                    ParseAction.GRAFT -> prev2.runtimeState.runtimeLookaheadSet
+                                    ParseAction.GOAL ->prev2.runtimeState.runtimeLookaheadSet
                                 }
                                 val runtimeGuardPassed = tr2.runtimeGuard.invoke( prev2.numNonSkipChildren)
                                 errorPairs(rp, input, lg, tr2, possibleEndOfText, rtLh, runtimeGuardPassed)
@@ -327,14 +328,14 @@ internal class ScanOnDemandParser(
         runtimeGuardPassed: Boolean
     ): Pair<Int, Set<RuntimeRule>>? {
         return when (transition.action) {
-            Transition.ParseAction.GOAL -> null
-            Transition.ParseAction.WIDTH,
-            Transition.ParseAction.EMBED -> {
+            ParseAction.GOAL -> null
+            ParseAction.WIDTH,
+            ParseAction.EMBED -> {
                 // try grab 'to' token, if nothing then that is error else lookahead is error
                 val l = input.findOrTryCreateLeaf(transition.to.firstRule, lg.nextInputPosition)
                 when (l) {
                     null -> {
-                        val expected = transition.to.runtimeRules.filter { it.isEmptyRule.not() }
+                        val expected = transition.to.runtimeRules.filter { it.isEmptyTerminal.not() }
                         if (expected.isEmpty()) {
                             null
                         } else {
@@ -349,7 +350,7 @@ internal class ScanOnDemandParser(
 
                         val expected = transition.lookahead
                             .flatMap { lh -> possibleEndOfText.flatMap { eot -> runtimeLookahead.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }
-                            .filter { it.isEmptyRule.not() }
+                            .filter { it.isEmptyTerminal.not() }
                         if (expected.isEmpty()) {
                             null
                         } else {
@@ -435,11 +436,11 @@ internal class ScanOnDemandParser(
             val tr = tr_lh.first
             val lh = tr_lh.second
             when (tr.action) {
-                Transition.ParseAction.GOAL -> lh
-                Transition.ParseAction.WIDTH -> tr.to.runtimeRulesSet
-                Transition.ParseAction.GRAFT -> lh
-                Transition.ParseAction.HEIGHT -> lh
-                Transition.ParseAction.EMBED -> TODO()
+                ParseAction.GOAL -> lh
+                ParseAction.WIDTH -> tr.to.runtimeRulesSet
+                ParseAction.GRAFT -> lh
+                ParseAction.HEIGHT -> lh
+                ParseAction.EMBED -> TODO()
             }
         }.toSet()
         return result

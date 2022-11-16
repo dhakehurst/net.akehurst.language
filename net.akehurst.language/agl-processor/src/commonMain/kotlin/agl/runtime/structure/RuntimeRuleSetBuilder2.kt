@@ -16,26 +16,29 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.api.runtime.RuleSet
+import net.akehurst.language.agl.api.runtime.RuleSetBuilder
+import net.akehurst.language.agl.api.runtime.RuntimeRuleChoiceKind
 import net.akehurst.language.collections.lazyMutableMapNonNull
 
 @DslMarker
 internal annotation class RuntimeRuleSetDslMarker
 
-internal fun runtimeRuleSet(init: RuntimeRuleSetBuilder2.() -> Unit): RuleSet {
+fun runtimeRuleSet(init: RuntimeRuleSetBuilder2.() -> Unit): RuleSet {
     val b = RuntimeRuleSetBuilder2()
     b.init()
     return b.build()
 }
 
 @RuntimeRuleSetDslMarker
-internal class RuntimeRuleSetBuilder2 {
+class RuntimeRuleSetBuilder2 : RuleSetBuilder {
 
-    val runtimeRuleSet = RuntimeRuleSet(RuntimeRuleSet.nextRuntimeRuleSetNumber++)
+    internal val runtimeRuleSet = RuntimeRuleSet(RuntimeRuleSet.nextRuntimeRuleSetNumber++)
 
     private val _ruleBuilders = lazyMutableMapNonNull<String, MutableList<RuntimeRuleBuilder>> { mutableListOf() }
 
-    fun build(): RuntimeRuleSet {
+    internal fun build(): RuntimeRuleSet {
         if (this.runtimeRuleSet.runtimeRules.isEmpty()) {
             val ruleMap = this._ruleBuilders.values.flatMapIndexed { ruleNumber, it ->
                 it.mapIndexedNotNull { optionNumber, rb ->
@@ -74,7 +77,7 @@ internal class RuntimeRuleSetBuilder2 {
             //do nothing
         } else {
             val rb = RuntimeRuleBuilder(this, name, RuntimeRuleChoiceKind.NONE, isSkip) {
-                RuntimeRuleRhsLiteral(this.runtimeRuleSet, value)
+                RuntimeRuleRhsLiteral(value)
             }
             this._ruleBuilders[tag].add(rb)
         }
@@ -86,7 +89,7 @@ internal class RuntimeRuleSetBuilder2 {
             //do nothing
         } else {
             val rb = RuntimeRuleBuilder(this, name, RuntimeRuleChoiceKind.NONE, isSkip) {
-                RuntimeRuleRhsPattern(this.runtimeRuleSet, pattern)
+                RuntimeRuleRhsPattern(pattern)
             }
             this._ruleBuilders[tag].add(rb)
         }
@@ -99,7 +102,7 @@ internal class RuntimeRuleSetBuilder2 {
         } else {
             val rb = RuntimeRuleBuilder(this, tag, RuntimeRuleChoiceKind.NONE, isSkip) { ruleMap ->
                 val rn = ruleMap[ruleThatIsEmptyTag] ?: error("Rule with tag $tag not found")
-                RuntimeRuleRhsEmpty(runtimeRuleSet, rn)
+                RuntimeRuleRhsEmpty(rn)
             }
             this._ruleBuilders[tag].add(rb)
         }
@@ -112,7 +115,7 @@ internal class RuntimeRuleSetBuilder2 {
         b.choices.forEach { itemRefs ->
             val rb = RuntimeRuleBuilder(this, name, choiceKind, isSkip) { ruleMap ->
                 val items = itemRefs.map { ruleMap[it.tag] ?: error("Rule with tag $name not found") }
-                RuntimeRuleRhsConcatenation(runtimeRuleSet, items)
+                RuntimeRuleRhsConcatenation(items)
             }
             this._ruleBuilders[name].add(rb)
         }
@@ -165,9 +168,9 @@ internal class RuntimeRuleSetBuilder2 {
         }
     }
 
-    fun embedded(name: String, embeddedRuleSet: RuntimeRuleSet, startRule: RuntimeRule, isSkip: Boolean = false) {
+    fun embedded(name: String, embeddedRuleSet: RuleSet, startRule: Rule, isSkip: Boolean = false) {
         val rb = RuntimeRuleBuilder(this, name, RuntimeRuleChoiceKind.NONE, isSkip) {
-            RuntimeRuleRhsEmbedded(this.runtimeRuleSet, embeddedRuleSet, startRule)
+            RuntimeRuleRhsEmbedded(embeddedRuleSet as RuntimeRuleSet, startRule as RuntimeRule)
         }
         this._ruleBuilders[name].add(rb)
     }
@@ -185,7 +188,7 @@ internal class RuntimeRuleBuilder(
 
     fun buildRule(number: Int, option: Int): RuntimeRule {
         if (null == this.rule) {
-            this.rule = RuntimeRule(rrsb.runtimeRuleSet, number, option, name, choiceKind, isSkip)
+            this.rule = RuntimeRule(rrsb.runtimeRuleSet.number, number, option, name, choiceKind, isSkip)
         }
         return this.rule!!
     }
@@ -198,11 +201,11 @@ internal class RuntimeRuleBuilder(
 internal data class RuntimeRuleRef(val tag: String)
 
 @RuntimeRuleSetDslMarker
-internal class RuntimeRuleRhsBuilder(
+class RuntimeRuleRhsBuilder(
     val rrsb: RuntimeRuleSetBuilder2
 ) {
 
-    val itemRefs = mutableListOf<RuntimeRuleRef>()
+    internal val itemRefs = mutableListOf<RuntimeRuleRef>()
 
     fun empty(ruleName:String) {
         val tag = this.rrsb.emptyRule(ruleName)

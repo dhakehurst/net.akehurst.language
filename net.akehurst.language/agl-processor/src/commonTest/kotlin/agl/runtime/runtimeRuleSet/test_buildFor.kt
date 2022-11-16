@@ -26,7 +26,7 @@ internal class test_buildFor : test_AutomatonUtilsAbstract() {
 
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(RP(G, o0, SOR))   // G = . S
             state(RP(G, o0, EOR))   // G = S .
             state(RP(S, o0, p1))    // S = a . b c
@@ -58,7 +58,7 @@ internal class test_buildFor : test_AutomatonUtilsAbstract() {
 
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(RP(G, o0, SOR))   // G = . S
             state(RP(G, o0, EOR))   // G = S .
             state(RP(S, o0, EOR))    // S = a .
@@ -97,7 +97,7 @@ internal class test_buildFor : test_AutomatonUtilsAbstract() {
         parser.parseForGoal("S", "ba", AutomatonKind.LOOKAHEAD_1)
         parser.parseForGoal("S", "a", AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(RP(G, o0, SOR))   // G = . S
             state(RP(G, o0, EOR))   // G = S .
             state(RP(S, o0, EOR))    // S = S1 .
@@ -148,7 +148,7 @@ internal class test_buildFor : test_AutomatonUtilsAbstract() {
         parser.parseForGoal("S", "abcx", AutomatonKind.LOOKAHEAD_1)
         parser.parseForGoal("S", "x", AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(RP(G, o0, SOR))     // G = . S
             state(RP(G, o0, EOR))     // G = S .
             state(RP(S, o0, EOR))     // S = ABCX .

@@ -354,7 +354,7 @@ internal class BuildCacheLC1(
                     when {
                         nx.isAtEnd -> followAtEnd
                         nx.isGoal -> LookaheadSetPart.EOT
-                        else -> expectedAt(nx, followAtEnd)
+                        else -> stateSet.firstOf.expectedAt(nx, followAtEnd)
                     }
                 }.reduce { acc, l -> acc.union(l) }
             }
@@ -371,7 +371,7 @@ internal class BuildCacheLC1(
                         val targets = parent!!.rulePosition.next()
                         val to = targets.map { tgt ->
                             // expectedAt(tgt) - follow(parent) if atEnd
-                            val grd = expectedAt(tgt, parentFollowAtEnd)
+                            val grd = stateSet.firstOf.expectedAt(tgt, parentFollowAtEnd)
                             val up = when (action) {
                                 ParseAction.HEIGHT -> parentFollowAtEnd
                                 ParseAction.EMBED,
@@ -457,7 +457,7 @@ internal class BuildCacheLC1(
                         if (l1States.contains(childState).not()) {
                             l1States.add(childState)
                             val pr = childState.prev
-                            parentOf[Pair(pr, childRP.runtimeRule)].add(state)
+                            parentOf[Pair(pr, childRP.rule as RuntimeRule)].add(state)
                             todo.push(childState)
                         } else {
                             // already done
@@ -1040,12 +1040,12 @@ internal class BuildCacheLC1(
             emptySet()
         } else {
             when {
-                rp.isTerminal -> setOf(rp.runtimeRule)
-                rp.item!!.isTerminal -> setOf(rp.item!!)
+                rp.isTerminal -> setOf(rp.rule as RuntimeRule)
+                //rp.item!!.isTerminal -> rp.items
                 else -> {
                     done.add(rp)
-                    val x = rp.item!!.rulePositionsAt[0].flatMap { pFirstTerm(it, done) }.toSet()
-                    x
+                    rp.items.flatMap { pFirstTerm(it.rulePositions[0],done) }.toSet()
+                    //rp.item!!.rulePositionsAt[0].flatMap { pFirstTerm(it, done) }.toSet()
                 }
             }
         }

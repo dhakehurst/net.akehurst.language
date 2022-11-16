@@ -68,7 +68,7 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
         parser.parseForGoal("S", "abcdefghi", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))       // {}
             val s1 = state(RP(a, 0, EOR))       // {0}
             val s2 = state(RP(AB, 0, 1))   // {0}
@@ -107,7 +107,7 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
         val parser = ScanOnDemandParser(rrs)
         parser.parseForGoal("S", "abcdefghi", AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))
             val s1 = state(RP(a, 0, EOR))
             val s2 = state(RP(S, 0, 1))

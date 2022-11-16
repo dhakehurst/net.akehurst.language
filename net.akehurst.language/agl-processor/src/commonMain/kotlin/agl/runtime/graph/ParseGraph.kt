@@ -27,9 +27,7 @@ import net.akehurst.language.agl.util.Debug
 
 internal class ParseGraph(
     val input: InputFromString,
-    val stateSetNumber: Int,
-    numTerminalRules: Int,
-    numNonTerminalRules: Int
+    val stateSetNumber: Int
 ) {
 
     companion object {

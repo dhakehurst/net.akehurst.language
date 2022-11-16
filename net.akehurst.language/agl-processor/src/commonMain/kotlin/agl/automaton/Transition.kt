@@ -17,9 +17,10 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.api.automaton.ParseAction
-import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
+import net.akehurst.language.agl.api.runtime.RulePosition
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleListKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsList
 
 //internal typealias RuntimeGuard = Transition.(GrowingNodeIndex, ParserState?) -> Boolean
 
@@ -37,8 +38,9 @@ internal class Transition(
     companion object {
 
         class ToEndMultiGraftRuntimeGuard(val trans: Transition) : RuntimeGuard {
-            val min = trans.to.firstRule.rhs.multiMin
-            val max = trans.to.firstRule.rhs.multiMax
+            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsList
+            val min = rhs.min
+            val max = rhs.max
 
             override fun invoke(numNonSkipChildren: Int): Boolean = this.min <= numNonSkipChildren + 1 && (-1 == max || numNonSkipChildren + 1 <= max)
 
@@ -46,8 +48,9 @@ internal class Transition(
         }
 
         class ToItemMultiGraftRuntimeGuard(val trans: Transition) : RuntimeGuard {
-            val min = trans.to.firstRule.rhs.multiMin
-            val max = trans.to.firstRule.rhs.multiMax
+            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsList
+            val min = rhs.min
+            val max = rhs.max
 
             override fun invoke(numNonSkipChildren: Int): Boolean = -1 == max || numNonSkipChildren + 1 < max
 
@@ -55,8 +58,9 @@ internal class Transition(
         }
 
         class ToEndSListGraftRuntimeGuard(val trans: Transition) : RuntimeGuard {
-            val min = trans.to.firstRule.rhs.multiMin
-            val max = trans.to.firstRule.rhs.multiMax
+            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsList
+            val min = rhs.min
+            val max = rhs.max
 
             override fun invoke(numNonSkipChildren: Int): Boolean = this.min <= (numNonSkipChildren / 2) + 1 && (-1 == max || (numNonSkipChildren / 2) + 1 <= max)
 
@@ -64,8 +68,9 @@ internal class Transition(
         }
 
         class ToItemSListGraftRuntimeGuard(val trans: Transition) : RuntimeGuard {
-            val min = trans.to.firstRule.rhs.multiMin
-            val max = trans.to.firstRule.rhs.multiMax
+            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsList
+            val min = rhs.min
+            val max = rhs.max
 
             override fun invoke(numNonSkipChildren: Int): Boolean = -1 == max || (numNonSkipChildren / 2) + 1 < max
 
@@ -73,8 +78,9 @@ internal class Transition(
         }
 
         class ToSeparatorSListGraftRuntimeGuard(val trans: Transition) : RuntimeGuard {
-            val min = trans.to.firstRule.rhs.multiMin
-            val max = trans.to.firstRule.rhs.multiMax
+            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsList
+            val min = rhs.min
+            val max = rhs.max
 
             override fun invoke(numNonSkipChildren: Int): Boolean = -1 == max || (numNonSkipChildren / 2) + 1 < max
 
@@ -89,26 +95,23 @@ internal class Transition(
         fun runtimeGuardFor(trans: Transition): RuntimeGuard {
             val target = trans.to.firstRule
             val targetRp = trans.to.rulePositions[0]
+            val tgtRhs = target.rhs
             return when (trans.action) {
-                ParseAction.GRAFT -> when (target.rhs.itemsKind) {
-                    RuntimeRuleRhsItemsKind.LIST -> when (target.rhs.listKind) {
-                        RuntimeRuleListKind.MULTI -> when {
-                            targetRp.isAtEnd -> ToEndMultiGraftRuntimeGuard(trans)
-                            targetRp.position == RuleOptionPosition.POSITION_MULIT_ITEM -> ToItemMultiGraftRuntimeGuard(trans)
-                            else -> TODO()
-                        }
-
-                        RuntimeRuleListKind.SEPARATED_LIST -> when {
-                            targetRp.isAtEnd -> ToEndSListGraftRuntimeGuard(trans)
-                            targetRp.position == RuleOptionPosition.POSITION_SLIST_ITEM -> ToItemSListGraftRuntimeGuard(trans)
-                            targetRp.position == RuleOptionPosition.POSITION_SLIST_SEPARATOR -> ToSeparatorSListGraftRuntimeGuard(trans)
-                            else -> TODO()
-                        }
-
+                ParseAction.GRAFT -> when (tgtRhs) {
+                    is RuntimeRuleRhsListSimple -> when {
+                        targetRp.isAtEnd -> ToEndMultiGraftRuntimeGuard(trans)
+                        targetRp.position == RulePosition.POSITION_MULIT_ITEM -> ToItemMultiGraftRuntimeGuard(trans)
                         else -> TODO()
                     }
 
-                    else -> DefaultRuntimeGuard
+                    is RuntimeRuleRhsListSeparated -> when {
+                        targetRp.isAtEnd -> ToEndSListGraftRuntimeGuard(trans)
+                        targetRp.position == RulePosition.POSITION_SLIST_ITEM -> ToItemSListGraftRuntimeGuard(trans)
+                        targetRp.position == RulePosition.POSITION_SLIST_SEPARATOR -> ToSeparatorSListGraftRuntimeGuard(trans)
+                        else -> TODO()
+                    }
+
+                    else -> TODO()
                 }
 
                 else -> DefaultRuntimeGuard

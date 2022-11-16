@@ -42,7 +42,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1, false) {
+        val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
             val s1 = state(RP(G, 0, EOR))      // G = S .
             val s2 = state(RP(S, 0, EOR))      // S = 'a' .
@@ -82,7 +82,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1, false) {
+        val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
             val s1 = state(RP(a, 0, EOR))      // a
             val s2 = state(RP(S, 0, 1))   // S = a . b c d
@@ -137,7 +137,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
 
         val actual = SM.build()
 
-        val expected = automaton(rrs, automatonKind, "S", 1, false) {
+        val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
             val s1 = state(RP(a, 0, EOR))      // a
             val s2 = state(RP(b, 0, EOR))      // b
@@ -198,7 +198,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
 
         val actual = SM.build()
 
-        val expected = automaton(rrs, automatonKind, "S", 1, false) {
+        val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
             val s1 = state(RP(a, 0, EOR))      // a
             val s2 = state(RP(A, 0, EOR))      // A = a .
@@ -247,7 +247,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
 
         val actual = SM.build()
 
-        val expected = automaton(rrs, automatonKind, "S", 1, false) {
+        val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
             val s1 = state(RP(eS, 0, EOR))      // eS
             val s2 = state(RP(S, 0, EOR))      // S = eS .
@@ -294,7 +294,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1, false) {
+        val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
             val s1 = state(RP(a, 0, EOR))      // a
             val s2 = state(RP(eoA, 0, EOR))    // empty-oA
@@ -370,7 +370,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         //val actual = SM.build()
         //println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1, false) {
+        val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -407,7 +407,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1, false) {
+        val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -444,7 +444,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         //println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1, false) {
+        val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -481,7 +481,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         //println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1, false) {
+        val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -517,7 +517,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         //println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1, false) {
+        val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -560,7 +560,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         //println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1, false) {
+        val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -614,7 +614,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1, false) {
+        val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -658,7 +658,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         //val actual = SM.build()
         //println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1, false) {
+        val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -696,7 +696,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         //val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1, false) {
+        val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
 
 
@@ -734,7 +734,7 @@ internal class test_ParserStateSet_build_LC1 : test_AutomatonUtilsAbstract() {
         val actual = SM.build()
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, automatonKind, "S", 1, false) {
+        val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
             val s1 = state(RP(a, 0, EOR))      // a
             val s2 = state(RP(S, 0, EOR))      // S = a .

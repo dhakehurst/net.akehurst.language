@@ -70,10 +70,6 @@ internal class ParserState(
     val isGoal = this.firstRule.kind == RuntimeRuleKind.GOAL
     val isUserGoal = this.firstRule == this.stateSet.userGoalRule
 
-    fun firstOf(ifReachedEnd: LookaheadSet): LookaheadSetPart = this.rulePositions.map {
-        stateSet.buildCache.expectedAt(it, LookaheadSetPart(ifReachedEnd.includesRT, ifReachedEnd.includesEOT, ifReachedEnd.matchANY, ifReachedEnd.content))
-    }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
-
     internal fun createLookaheadSet(includesUP: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet =
         this.stateSet.createLookaheadSet(includesUP, includeEOT, matchAny, content)
 

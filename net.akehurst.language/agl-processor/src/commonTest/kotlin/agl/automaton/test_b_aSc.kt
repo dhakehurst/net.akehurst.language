@@ -61,7 +61,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
         //when
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S   */
             val s1 = state(RP(b, 0, EOR))     /* b . */
             val s2 = state(RP(a, 0, EOR))     /* a .       */
@@ -90,7 +90,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
         //when
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
             val s1 = state(RP(b, 0, EOR))      // b .
             val s2 = state(RP(a, 0, EOR))      // a .
@@ -133,7 +133,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
         //when
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S   */
             val s1 = state(RP(b, 0, EOR))     /* b . */
             val s2 = state(RP(a, 0, EOR))     /* a .       */
@@ -176,7 +176,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
         //when
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S   */
             val s1 = state(RP(a, 0, EOR))     /* b . */
             val s2 = state(RP(b, 0, EOR))     /* a .       */
@@ -222,7 +222,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
         //when
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S   */
             val s1 = state(RP(b, 0, EOR))     /* b . */
             val s2 = state(RP(a, 0, EOR))     /* a .       */
@@ -261,7 +261,7 @@ internal class test_b_aSc : test_AutomatonAbstract() {
             assertEquals(1, result.sppt!!.maxNumHeads)
         }
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S   */
             val s1 = state(RP(G, 0, EOR))     /* G = S .   */
             val s2 = state(RP(S, 0, EOR))     /* S = b . */

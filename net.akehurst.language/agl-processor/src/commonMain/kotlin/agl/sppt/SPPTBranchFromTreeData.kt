@@ -26,7 +26,7 @@ import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 
 //TODO: currently this has to be public, because otherwise kotlin does not
-// use the non-mangled names for properties
+// use the non-mangled names for properties - necessary for tree serialisation
 /*internal */ class SPPTBranchFromTreeData internal constructor(
     private val _treeData: TreeData,
     input: InputFromString,

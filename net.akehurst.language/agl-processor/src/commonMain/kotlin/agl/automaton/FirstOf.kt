@@ -21,7 +21,7 @@ internal class FirstOf(
     }
 
     // index by RuntimeRule.number
-    private val _firstOfNotEmpty = Array<FirstOfResult?>(this.runtimeRulesSize, { null })
+    private val _firstOfNotEmpty = MutableList<FirstOfResult?>(this.runtimeRulesSize, { null })
 
     /*
      * return the LookaheadSet for the given RulePosition.
@@ -31,6 +31,7 @@ internal class FirstOf(
      * next() needs to be called to skip over empty rules (empty or empty lists)
     */
     fun expectedAt(rulePosition: RulePosition, ifReachedEnd: LookaheadSetPart): LookaheadSetPart {
+        this._firstOfNotEmpty.clear()
         return when {
             rulePosition.isAtEnd -> ifReachedEnd
             else -> {
@@ -53,19 +54,19 @@ internal class FirstOf(
                 for (rp in rps) {
                     //TODO: handle self recursion, i.e. multi/slist perhaps filter out rp from rp.next or need a 'done' map to results
                     val item = rp.item
+                    val rhs = item?.rhs
                     when {
                         //item is null only when rp.isAtEnd
-                        null == item /*rp.isAtEnd*/ -> needsNext = true
-                        item.isEmptyTerminal -> nrps.addAll(rp.next())
-                        else -> when (item.rhs) {
+                        null == rhs /*rp.isAtEnd*/ -> needsNext = true
+                        else -> when (rhs) {
+                            is RuntimeRuleRhsEmpty -> nrps.addAll(rp.next())
                             is RuntimeRuleRhsGoal -> TODO()
                             is RuntimeRuleRhsEmbedded -> {
-                                val embSS = item.rhs.embeddedRuntimeRuleSet.fetchStateSetFor(item.rhs.embeddedStartRule.tag, AutomatonKind.LOOKAHEAD_1)
-                                val fo = FirstOf(embSS.runtimeRuleSet.runtimeRules.size)
-                                val f = fo.firstOfNotEmpty(
-                                    item.rhs.embeddedStartRule,
+                                val embSS = rhs.embeddedRuntimeRuleSet.fetchStateSetFor(rhs.embeddedStartRule.tag, AutomatonKind.LOOKAHEAD_1)
+                                val f = embSS.firstOf.firstOfNotEmpty(
+                                    rhs.embeddedStartRule,
                                     doneRp,
-                                    BooleanArray(item.rhs.embeddedRuntimeRuleSet.runtimeRules.size)
+                                    BooleanArray(rhs.embeddedRuntimeRuleSet.runtimeRules.size)
                                 )
                                 result = result.union(f.result)
                                 if (f.needsFirstOfParentNext) {
@@ -98,7 +99,7 @@ internal class FirstOf(
                 RuntimeRuleSet.EOT_RULE_NUMBER == rule.ruleNumber -> TODO()
                 RuntimeRuleSet.SKIP_RULE_NUMBER == rule.ruleNumber -> TODO()
                 RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER == rule.ruleNumber -> firstOfNotEmptySafe(rule, doneRp, done)
-                RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD_RULE_NUMBER == rule.ruleNumber -> TODO()
+                RuntimeRuleSet.RUNTIME_LOOKAHEAD_RULE_NUMBER == rule.ruleNumber -> TODO()
                 else -> error("unsupported rule number $rule")
             }
 
@@ -118,18 +119,17 @@ internal class FirstOf(
     private fun firstOfNotEmptySafe(rule: RuntimeRule, doneRp: MutableMap<RulePosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
         var needsNext = false
         var result = LookaheadSetPart.EMPTY
-        val pos = rule.rulePositionsAt[0]
-        for (rp in pos) {
-            val item = rp.item
+        val rp = rule.rulePositionsAt[0]
+        val item = rp?.item
+        val rhs = item?.rhs
+        if(null!=rhs) {
             when {
-                null == item -> error("should never happen")
-                item.isEmptyTerminal -> needsNext = true //should not happen
-                else -> when (item.rhs) {
+                 item.isEmptyTerminal -> needsNext = true //should not happen
+                else -> when (rhs) {
                     is RuntimeRuleRhsGoal -> error("should never happen")
                     is RuntimeRuleRhsEmbedded -> {
-                        val embSS = item.rhs.embeddedRuntimeRuleSet.fetchStateSetFor(item.rhs.embeddedStartRule.tag, AutomatonKind.LOOKAHEAD_1)
-                        val fo = FirstOf(embSS.runtimeRuleSet.runtimeRules.size)
-                        val f = fo.firstOfNotEmpty(item.rhs.embeddedStartRule, doneRp, BooleanArray(item.rhs.embeddedRuntimeRuleSet.runtimeRules.size))
+                        val embSS = rhs.embeddedRuntimeRuleSet.fetchStateSetFor(rhs.embeddedStartRule.tag, AutomatonKind.LOOKAHEAD_1)
+                        val f = embSS.firstOf.firstOfNotEmpty(rhs.embeddedStartRule, doneRp, BooleanArray(rhs.embeddedRuntimeRuleSet.runtimeRules.size))
                         result = result.union(f.result)
                         if (f.needsFirstOfParentNext) {
                             needsNext = true

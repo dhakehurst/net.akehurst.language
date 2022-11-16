@@ -16,9 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.api.automaton.Automaton
-import net.akehurst.language.agl.api.automaton.ParseAction
-import net.akehurst.language.agl.api.automaton.State
+import net.akehurst.language.agl.api.automaton.*
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.api.runtime.RulePosition
 import net.akehurst.language.agl.api.runtime.RuleSet
@@ -29,29 +27,30 @@ import net.akehurst.language.api.processor.AutomatonKind
 @DslMarker
 internal annotation class AglAutomatonDslMarker
 
-fun automaton(
+internal fun automaton(
     rrs: RuleSet,
     automatonKind: AutomatonKind,
     userGoalRule: String,
-    stateSetNumber: Int,
     isSkip: Boolean,
-    init: AutomatonBuilder.() -> Unit
+    init: AutomatonBuilderDefault.() -> Unit
 ): Automaton {
-    val b = AutomatonBuilder(rrs as RuntimeRuleSet, automatonKind, userGoalRule, stateSetNumber, isSkip)
+    val b = AutomatonBuilderDefault(rrs as RuntimeRuleSet, automatonKind, userGoalRule, isSkip)
     b.init()
     return b.build()
 }
 
 @AglAutomatonDslMarker
-class AutomatonBuilder(
-    rrs: RuleSet,
+class AutomatonBuilderDefault(
+    val rrs: RuleSet,
     automatonKind: AutomatonKind,
     userGoalRule: String,
-    stateSetNumber: Int,
     isSkip: Boolean
-) {
+) : AutomatonBuilder {
 
-    private val result = ParserStateSet(stateSetNumber, rrs as RuntimeRuleSet, rrs.goalRuleFor[userGoalRule] as RuntimeRule, isSkip, automatonKind)
+    private val result = rrs.fetchStateSetFor(
+        userGoalRule,
+        automatonKind
+    ) as ParserStateSet //ParserStateSet(rrs as RuntimeRuleSet, rrs.goalRuleFor[userGoalRule] as RuntimeRule, isSkip, automatonKind)
     private var nextState = 0
 
     val GOAL = ParseAction.GOAL
@@ -59,7 +58,10 @@ class AutomatonBuilder(
     val HEIGHT = ParseAction.HEIGHT
     val GRAFT = ParseAction.GRAFT
 
-    fun state(rule:Rule, position:Int):State =result.createState(listOf(RulePosition(rule as RuntimeRule, position)))
+    override fun state(ruleNumber: Int, option: Int, position: Int): State
+    = state((rrs as RuntimeRuleSet).runtimeRules[ruleNumber] ,option, position)
+
+    fun state(rule: Rule, option: Int, position: Int): State = result.createState(listOf(RulePosition(rule as RuntimeRule, position)))
 
     fun state(vararg rulePositions: RulePosition): State {
         return result.createState(rulePositions.toList())
@@ -93,7 +95,7 @@ class AutomatonBuilder(
         to: ParserState,
         action: ParseAction,
         prevGuard: Set<RulePosition>?,
-        init: TransitionBuilder.() -> Unit
+        init: TransitionBuilderDefault.() -> Unit
     ) = transition(setOf(previousState), from, to, action, prevGuard, init)
 
     internal fun transition(
@@ -102,9 +104,9 @@ class AutomatonBuilder(
         to: ParserState,
         action: ParseAction,
         prevGuard: Set<RulePosition>?,
-        init: TransitionBuilder.() -> Unit
+        init: TransitionBuilderDefault.() -> Unit
     ) {
-        val b = TransitionBuilder(result, action)
+        val b = TransitionBuilderDefault(result, action)
         b.ctx(previousStates)
         b.src(from)
         b.tgt(to)
@@ -114,11 +116,11 @@ class AutomatonBuilder(
         from.outTransitions.addTransition(previousStates, trans)
     }
 
-    fun transition(
-        action: ParseAction,
-        init: TransitionBuilder.() -> Unit
-    ) {
-        val b = TransitionBuilder(result, action)
+    override fun transition(action: ParseAction, init: TransitionBuilder.() -> Unit) {
+        this.transition(action, init as (TransitionBuilderDefault.() -> Unit))
+    }
+    fun transition(action: ParseAction, init: TransitionBuilderDefault.() -> Unit) {
+        val b = TransitionBuilderDefault(result, action)
         b.init()
         b.build()
     }
@@ -152,10 +154,10 @@ class AutomatonBuilder(
 }
 
 @AglAutomatonDslMarker
-class TransitionBuilder internal constructor(
+class TransitionBuilderDefault internal constructor(
     private val stateSet: ParserStateSet,
     val action: ParseAction
-) {
+) : TransitionBuilder {
 
     private var _context = emptySet<State>()
     private lateinit var _src: State
@@ -172,7 +174,7 @@ class TransitionBuilder internal constructor(
     }
 
     fun ctx(runtimeRule: Rule, option: Int, position: Int) {
-        val rp = RulePosition(runtimeRule,position)
+        val rp = RulePosition(runtimeRule, position)
         val state = this.stateSet.fetchState(listOf(rp)) ?: error("State for $rp not defined")
         this.ctx(setOf(state))
     }
@@ -183,14 +185,14 @@ class TransitionBuilder internal constructor(
     }
 
     fun src(runtimeRule: Rule, option: Int, position: Int) {
-        val rp = RulePosition(runtimeRule,  position)
+        val rp = RulePosition(runtimeRule, position)
         val state = this.stateSet.fetchState(listOf(rp)) ?: error("State for $rp not defined")
         this.src(state)
     }
 
     fun tgt(runtimeRule: Rule) = tgt(runtimeRule, RulePosition.END_OF_RULE)
     fun tgt(runtimeRule: Rule, position: Int) {
-        val rp = RulePosition(runtimeRule,  position)
+        val rp = RulePosition(runtimeRule, position)
         val state = this.stateSet.fetchState(listOf(rp)) ?: error("State for $rp not defined")
         this.tgt(state)
     }
@@ -212,7 +214,12 @@ class TransitionBuilder internal constructor(
     }
 
     fun lhg(guard: Set<Rule>, up: Set<Rule>) {
-        this._lhg.add(Lookahead(LookaheadSet.createFromRuntimeRules(this.stateSet, guard as Set<RuntimeRule>), LookaheadSet.createFromRuntimeRules(this.stateSet, up as Set<RuntimeRule>)))
+        this._lhg.add(
+            Lookahead(
+                LookaheadSet.createFromRuntimeRules(this.stateSet, guard as Set<RuntimeRule>),
+                LookaheadSet.createFromRuntimeRules(this.stateSet, up as Set<RuntimeRule>)
+            )
+        )
     }
 
     /**

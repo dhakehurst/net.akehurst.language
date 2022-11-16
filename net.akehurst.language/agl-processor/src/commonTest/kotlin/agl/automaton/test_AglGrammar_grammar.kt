@@ -19,11 +19,9 @@ package net.akehurst.language.agl.automaton
 import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhs
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
 
@@ -67,7 +65,7 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
         parser.parseForGoal(goal, "namespace test grammar Test { S = 'a' ; }", AutomatonKind.LOOKAHEAD_1)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(R_grammarDefinition, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
 
 
         }

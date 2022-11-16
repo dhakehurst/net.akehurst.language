@@ -16,8 +16,12 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.agl.automaton.FirstOf
 import net.akehurst.language.agl.api.runtime.RulePosition
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.isGoal
+import net.akehurst.language.agl.runtime.structure.items
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
 import net.akehurst.language.collections.LazyMutableMapNonNull
@@ -43,6 +47,8 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
 
     // prev/context -> ( TerminalRule -> ParentRulePosition )
     private val _parentInContext = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<ParentNext>>> { lazyMutableMapNonNull { hashSetOf() } }
+
+    val firstOf = FirstOf(stateSet.usedRules.size)
 
     fun clear() {
         this._doneFollow.clear()
@@ -122,25 +128,26 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         todoList.enqueue(graph.root)
         while (todoList.isNotEmpty) {
             val cls = todoList.dequeue()
-            val item = cls.rulePosition.item ?: error("Internal Error: should never be null")
-            when {
-                item.isTerminal -> cls.createAndAddChild(item.asTerminalRulePosition)
-                item.isEmbedded -> {
-                    cls.createAndAddChild(item.asTerminalRulePosition)
-                }
-                else -> {
-                    val childRulePositions = item.rulePositionsAt[0]
-                    for (childRp in childRulePositions) {
-                        val child = cls.createAndAddChild(childRp)
-                        ///cls.addChild(child)
-                        if (null == child) {
-                            // don't follow down the closure
-                            //val short = child.shortString
+            for( item in cls.rulePosition.items) {
+                when {
+                    item.isTerminal -> cls.createAndAddChild(item.asTerminalRulePosition)
+                    item.isNonTerminal -> {
+                        val childRp = item.rulePositionsAt[0]
+                        if (null!=childRp) {
+                            val child = cls.createAndAddChild(childRp)
+                            ///cls.addChild(child)
+                            if (null == child) {
+                                // don't follow down the closure
+                                //val short = child.shortString
+                            } else {
+                                todoList.enqueue(child)
+                                //println("todo: ${childCls.shortString}")
+                            }
                         } else {
-                            todoList.enqueue(child)
-                            //println("todo: ${childCls.shortString}")
+                            error("Internal Error: should never happen")
                         }
                     }
+                    else -> error("Internal Error: should never happen")
                 }
             }
         }
@@ -269,7 +276,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
     }
 
     private fun doForNonRoot(cls:ClosureItem) {
-        this.addParentInContext(cls.upInfo.context, cls.rulePosition.runtimeRule, cls.parentNext)
+        this.addParentInContext(cls.upInfo.context, cls.rulePosition.rule as RuntimeRule, cls.parentNext)
     }
 
     private fun doForEmbedded(rulePosition: RulePosition, upInfo: RulePositionUpInfo, downInfo: FirstTerminalInfo) {

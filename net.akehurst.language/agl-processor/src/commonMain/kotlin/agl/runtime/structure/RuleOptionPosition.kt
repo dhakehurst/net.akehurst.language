@@ -31,16 +31,18 @@ internal data class RuleOption(
 
 internal val RulePosition.isGoal: Boolean get() = (this.rule as RuntimeRule).isGoal
 val RulePosition.isTerminal get() = (this.rule as RuntimeRule).isTerminal
+val RulePosition.isEmbedded get() = (this.rule as RuntimeRule).isEmbedded
 
 internal val RulePosition.item: RuntimeRule?
     get() = when {
         this.isAtEnd -> null
         else -> (this.rule as RuntimeRule).item(this.position)
     }
-internal val RulePosition.items: List<RuntimeRule>
+internal val RulePosition.items: Set<RuntimeRule>
     get() = if (this.isAtEnd) {
-        emptyList()
+        emptySet()
     } else {
+        val rhsItems = (this.rule as RuntimeRule).item(position)
         listOf((this.rule as RuntimeRule).item(position)).mapNotNull { it }
     }
 
@@ -95,14 +97,6 @@ internal class RuleOptionPosition(
     val isNonTerminal get() = this.runtimeRule.isNonTerminal
     val isEmbedded get() = this.runtimeRule.isEmbedded
     val isTerminalOrEmbedded get() = this.isTerminal || this.isEmbedded
-
-
-    val items: List<RuntimeRule>
-    val item: RuntimeRule?
-        get() = when {
-            END_OF_RULE == this.position -> null
-            else -> runtimeRule.item(option, position)
-        }
 
     val priority //TODO: I think that priority is always == option !
         get() = when (this.runtimeRule.kind) {

@@ -53,7 +53,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(RP(G, o0, SOR))     /* {}     G = . S    */
             state(RP(G, o0, EOR))     /* {}     G = S .    */
             state(RP(S, o0, EOR))     /* {0}    S = a .    */
@@ -77,7 +77,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(RP(G, o0, SOR))     /* {}     G = . S    */
             state(RP(G, o0, EOR))     /* {}     G = S .    */
             state(RP(S, o0, EOR))     /* {0}    S = a .    */
@@ -109,7 +109,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(RP(G, o0, SOR))     /* {}     G = . S    */
             state(RP(G, o0, EOR))     /* {}     G = S .    */
             state(RP(S, o0, EOR))     /* {0}    S = a .    */
@@ -136,7 +136,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         //println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(RP(G, o0, SOR))     /* {}     G = . S    */
             state(RP(G, o0, EOR))     /* {}     G = S .    */
             state(RP(S, o0, EOR))     /* {0}    S = a .    */

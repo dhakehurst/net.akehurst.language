@@ -18,17 +18,16 @@ package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.api.runtime.RulePosition
+import net.akehurst.language.agl.collections.indexFunction
 import net.akehurst.language.collections.lazyMutableMapNonNull
 
 /**
  * identified by: (runtimeRuleSetNumber, number, optionIndex)
  */
 internal class RuntimeRule(
-    val runtimeRuleSet: RuntimeRuleSet,
+    val runtimeRuleSetNumber: Int,
     val ruleNumber: Int,
-    val optionIndex: Int,
     val name: String?,
-    val choiceKind: RuntimeRuleChoiceKind,
     val isSkip: Boolean
 ) : Rule {
 
@@ -38,8 +37,6 @@ internal class RuntimeRule(
     }
 
     val rhs get() = this._rhs
-
-    val runtimeRuleSetNumber: Int get() = runtimeRuleSet.number
 
     //TODO: neeeds properties:
     // isUnnamedLiteral - so we can eliminate from AsmSimple
@@ -61,6 +58,10 @@ internal class RuntimeRule(
         is RuntimeRuleRhsEmbedded -> true
         else -> false
     }
+    val isPattern = this.rhs is RuntimeRuleRhsPattern
+    /**
+     * Empty, Literal, Pattern, Embedded
+     */
     val isTerminal = when (this.rhs) {
         is RuntimeRuleRhsEmpty -> true
         is RuntimeRuleRhsLiteral -> true
@@ -68,7 +69,12 @@ internal class RuntimeRule(
         is RuntimeRuleRhsEmbedded -> true
         else -> false
     }
+
+    /**
+     * Goal, Concatenation, ListSimple, ListSeparated
+     */
     val isNonTerminal = when (this.rhs) {
+        is RuntimeRuleRhsGoal -> true
         is RuntimeRuleRhsConcatenation -> true
         is RuntimeRuleRhsListSimple -> true
         is RuntimeRuleRhsListSeparated -> true
@@ -87,11 +93,9 @@ internal class RuntimeRule(
 
     val asTerminalRulePosition by lazy { RulePosition(this, RulePosition.END_OF_RULE) }
 
-    val rulePositions: List<RulePosition> get() = rhs.rulePositions
+    val rulePositions: Set<RulePosition> get() = rhs.rulePositions
 
-    val rulePositionsAt = lazyMutableMapNonNull<Int,RulePosition?> { index ->
-        rhs.rulePositionAt(index)
-    }
+    val rulePositionsAt = indexFunction {index ->  rhs.rulePositionAt(index) }
 
     /*
         fun findTerminalAt(n: Int): Set<RuntimeRule> {
@@ -126,42 +130,7 @@ internal class RuntimeRule(
             }
         }
     */
-    fun item(position: Int): RuntimeRule? {
-        val rhs = this.rhs
-        return when (rhs) {
-            is RuntimeRuleRhsGoal -> when (position) {
-                0 -> rhs.userGoalRule
-                else -> error("Should not happen")
-            }// always a concatenation
-            is RuntimeRuleRhsLiteral -> null
-            is RuntimeRuleRhsPattern -> null
-            is RuntimeRuleRhsEmbedded -> null //an embedded grammar is treated like a terminal, matches or not, so no 'items'
-            is RuntimeRuleRhsEmpty -> null
-            is RuntimeRuleRhsConcatenation -> when {
-                RulePosition.END_OF_RULE == position -> null
-                rhs.items.size > position -> rhs.items[position]
-                else -> null
-            }
-
-            is RuntimeRuleRhsListSimple -> when (position) {
-                RulePosition.END_OF_RULE -> null
-                RulePosition.START_OF_RULE -> rhs.repeatedItem
-                RulePosition.POSITION_MULIT_ITEM -> rhs.repeatedItem
-                else -> error("Should not happen")
-            }
-
-            is RuntimeRuleRhsListSeparated -> when (position) {
-                RulePosition.START_OF_RULE -> rhs.repeatedItem
-                RulePosition.POSITION_SLIST_ITEM -> rhs.repeatedItem
-                RulePosition.POSITION_SLIST_SEPARATOR -> rhs.separator
-                RulePosition.END_OF_RULE -> null
-                else -> error("Should not happen")
-            }
-
-            is RuntimeRuleRhsTerminal -> error("Should not happen")
-            is RuntimeRuleRhsNonTerminal -> error("Should not happen")
-        }
-    }
+    fun rhsItemsAt(position: Int): Set<RuntimeRule>  = this.rhs.rhsItemsAt(position)
 
     /*
         private fun findAllNonTerminalAt(n: Int): Set<RuntimeRule> {
@@ -372,14 +341,13 @@ internal class RuntimeRule(
         }
     */
     // --- Any ---
-    private val _hashCode = arrayOf(this.runtimeRuleSetNumber, this.ruleNumber, this.optionIndex).contentHashCode()
+    private val _hashCode = arrayOf(this.runtimeRuleSetNumber, this.ruleNumber).contentHashCode()
     override fun hashCode(): Int = _hashCode
 
     override fun equals(other: Any?): Boolean = when {
         other !is RuntimeRule -> false
         this.runtimeRuleSetNumber != other.runtimeRuleSetNumber -> false
         this.ruleNumber != other.ruleNumber -> false
-        this.optionIndex != other.optionIndex -> false
         else -> true
     }
 

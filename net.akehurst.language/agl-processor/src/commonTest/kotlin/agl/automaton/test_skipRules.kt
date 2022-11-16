@@ -122,7 +122,7 @@ internal class test_skipRules : test_AutomatonAbstract() {
         parser.parseForGoal("S", "aba", AutomatonKind.LOOKAHEAD_1)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
 
 
         }
@@ -134,7 +134,7 @@ internal class test_skipRules : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
 
         }
 

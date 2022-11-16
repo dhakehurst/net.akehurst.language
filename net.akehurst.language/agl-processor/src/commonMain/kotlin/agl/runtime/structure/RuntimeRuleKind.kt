@@ -30,13 +30,6 @@ internal enum class RuntimeRuleRhsItemsKind {
     LIST              // see RuntimeRuleListKind
 }
 
-internal enum class RuntimeRuleChoiceKind {
-    NONE,
-    AMBIGUOUS,
-    LONGEST_PRIORITY,
-    PRIORITY_LONGEST
-}
-
 internal enum class RuntimeRuleListKind {
     MULTI,                       // r = a? ; , n : a* ; n : a+ ; ,            TODO: n : a0..5
     SEPARATED_LIST,              // r = [ a / ',' ]* ;  n : [ a / ',' ]+ ;    TODO: n : [ a / ',' ]0..6 ;

@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.agl.api.runtime.RulePosition
 import kotlin.jvm.JvmInline
 
 @JvmInline
@@ -23,7 +24,7 @@ internal value class StateNumber(val value:Int)
 
 //TODO: how is this different to ParentRelation ?
 internal data class RulePositionWithLookahead(
-    val rulePosition: RuleOptionPosition,
+    val rulePosition: RulePosition,
     val lookahead: Set<RuntimeRule>
 ) {
 

@@ -69,7 +69,7 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
         assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, o0, SOR))     /* G = . S */
             val s1 = state(RP(v, o0, EOR))     /* v .     */
             val s2 = state(RP(R, o0, EOR))     /* R = v .     */
@@ -103,7 +103,7 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))      /* G = . S   */
             val s2 = state(RP(v, 0, EOR))      /* 'v' .   */
             val s4 = state(RP(R, 0, EOR))   /* root = vr .   */
@@ -143,7 +143,7 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))      /* G = . S   */
             val s2 = state(RP(v, 0, EOR))      /* 'v' .   */
             val s4 = state(RP(R, 0, EOR))   /* root = vr .   */
@@ -182,7 +182,7 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))      /* G = . S   */
             val s2 = state(RP(v, 0, EOR))      /* 'v' .   */
             val s4 = state(RP(R, 0, EOR))   /* root = vr .   */
@@ -218,7 +218,7 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
         val parser = ScanOnDemandParser(rrs)
         val result = parser.parseForGoal("S", "v/v", AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 1, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, o0, SOR))      /* G = . S */
             val s1 = state(RP(G, o0, EOR))      /* G = S . */
             val s2 = state(RP(S, o0, EOR))      /* S = E . */

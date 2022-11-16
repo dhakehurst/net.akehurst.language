@@ -60,18 +60,18 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
         assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(G, SOR)     /* G = . S   */
-            val s1 = state(a, EOR)     /* a .       */
-            val s2 = state(ABC, p1)    /* ABC = a . bc */
-            val s21 = state(ABD, p1)    /* ABD = a . bd */
-            val s3 = state(b, EOR)     /* b . */
-            val s4 = state(ABC, p2)    /* ABC = ab . c  */
-            val s41 = state(ABD, p2)    /*  ABD = ab . d */
-            val s5 = state(c, EOR)     /* c . */
-            val s6 = state(d, EOR)     /* c . */
-            val s7 = state(ABC, EOR)   /* ABC = abc . */
-            val s8 = state(S, EOR)     /* S = ABC . */
+            val s1 = state(a, 0, EOR)     /* a .       */
+            val s2 = state(ABC, 0, p1)    /* ABC = a . bc */
+            val s21 = state(ABD, 0, p1)    /* ABD = a . bd */
+            val s3 = state(b, 0, EOR)     /* b . */
+            val s4 = state(ABC, 0, p2)    /* ABC = ab . c  */
+            val s41 = state(ABD, 0, p2)    /*  ABD = ab . d */
+            val s5 = state(c, 0, EOR)     /* c . */
+            val s6 = state(d, 0, EOR)     /* c . */
+            val s7 = state(ABC, 0, EOR)   /* ABC = abc . */
+            val s8 = state(S, 0, EOR)     /* S = ABC . */
             val s9 = state(G, EOR)     /* G = S .   */
 
             transition(WIDTH) { src(s0); tgt(s1); lhg(b); ctx(setOf(s0)) }
@@ -101,7 +101,7 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
         assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S   */
             val s1 = state(RP(a, 0, EOR))     /* a .       */
             val s2 = state(RP(ABC, 0, 1), RP(ABD, 0, 1)) /* ABC = a . bc | ABD = a . bd */
@@ -141,7 +141,7 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
             assertEquals(1, result.sppt!!.maxNumHeads)
         }
 
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", 0, false) {
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S   */
             val s1 = state(RP(G, 0, EOR))     /* G = S .   */
             val s2 = state(RP(S, 0, EOR))     /* S = ABC . */
