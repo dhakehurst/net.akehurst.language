@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.*
@@ -137,7 +136,7 @@ internal class CompleteNodeIndex(
     //TODO: don't store data twice..also prefer not to create 2 objects!
     val preferred by lazy { PreferredChildIndex(runtimeRulesSet, startPosition) }
 
-    val highestPriorityRule get() = this.state.rulePositions.maxBy { (it.rule as RuntimeRule).optionIndex }.rule as RuntimeRule
+    val highestPriorityRule get() = this.state.rulePositions.maxBy { it.option }.rule as RuntimeRule
     val firstRule: RuntimeRule by lazy { this.state.rulePositions[0].rule as RuntimeRule }
     val isLeaf: Boolean get() = firstRule.kind == RuntimeRuleKind.TERMINAL //should only be one if true
     val isEmbedded: Boolean get() = firstRule.kind == RuntimeRuleKind.EMBEDDED //should only be one if true

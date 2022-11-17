@@ -16,7 +16,6 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.parser.InputLocation
 
 internal class LanguageProcessorConfigurationDefault<AsmType : Any, ContextType : Any>(

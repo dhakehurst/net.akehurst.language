@@ -16,10 +16,6 @@
 
 package net.akehurst.language.util
 
-import net.akehurst.language.collections.LazyMap
-import kotlin.properties.ReadOnlyProperty
-import kotlin.reflect.KProperty
-
 internal fun <E> MutableSet<E>.addIfNotNull(e: E?) = e?.let { this.add(it) }
 
 internal fun <V> cached(initializer: () -> V) = CachedValue(initializer)

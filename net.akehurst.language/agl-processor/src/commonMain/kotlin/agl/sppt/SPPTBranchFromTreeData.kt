@@ -19,7 +19,6 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.TreeData
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.isTerminal
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTException
 import net.akehurst.language.api.sppt.SPPTLeaf
@@ -91,9 +90,9 @@ import net.akehurst.language.api.sppt.SPPTNode
                         }
                     }
                     child.isEmbedded -> {
-                        listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.rule.optionIndex, child.startPosition, child.nextInputPosition, -1))
+                        listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
                     }
-                        else -> listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.rule.optionIndex, child.startPosition, child.nextInputPosition, -1))
+                        else -> listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
                     /*
                     else -> {
                         val possChildren = this.runtimeRule.rulePositionsAt[chIndx].filter { it.option == this.option }

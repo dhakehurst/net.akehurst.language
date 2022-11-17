@@ -17,10 +17,10 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.api.automaton.ParseAction
-import net.akehurst.language.agl.api.runtime.RulePosition
-import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleListKind
+import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsList
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSimple
 
 //internal typealias RuntimeGuard = Transition.(GrowingNodeIndex, ParserState?) -> Boolean
 

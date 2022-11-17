@@ -19,7 +19,10 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.sppt.*
+import net.akehurst.language.api.sppt.SPPTBranch
+import net.akehurst.language.api.sppt.SPPTException
+import net.akehurst.language.api.sppt.SPPTLeaf
+import net.akehurst.language.api.sppt.SPPTNode
 
 //TODO: currently this has to be public, because otherwise kotlin does not
 // use the non-mangled names for properties

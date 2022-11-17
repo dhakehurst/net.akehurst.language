@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.api.automaton.ParseAction
-import net.akehurst.language.agl.api.runtime.RulePosition
+import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.util.Debug
 
 internal interface TransitionCache {

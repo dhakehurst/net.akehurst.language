@@ -17,6 +17,7 @@
 package net.akehurst.language.parser.expectedTerminalsAt
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -62,7 +63,7 @@ class test_a {
             val position = data.position
 
             val result = parser.expectedTerminalsAt(goal, sentence, position, AutomatonKind.LOOKAHEAD_1)
-            val actual = result.filter { it.isEmptyRule.not() }.map { it.value }
+            val actual = result.filter { it.isEmptyTerminal.not() }.map { (it.rhs as RuntimeRuleRhsLiteral).value }
             val expected = data.expected
             assertEquals(expected, actual,data.toString())
         }

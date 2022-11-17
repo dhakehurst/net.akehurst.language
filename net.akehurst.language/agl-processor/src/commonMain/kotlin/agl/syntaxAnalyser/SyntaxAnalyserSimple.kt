@@ -21,7 +21,6 @@ import net.akehurst.language.agl.collections.mutableListSeparated
 import net.akehurst.language.agl.grammar.scopes.ScopeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.grammar.RuleItem

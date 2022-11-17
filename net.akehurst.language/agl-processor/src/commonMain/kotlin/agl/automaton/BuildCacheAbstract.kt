@@ -16,13 +16,6 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.api.runtime.RulePosition
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.runtime.structure.next
-import net.akehurst.language.api.processor.AutomatonKind
-
 internal abstract class BuildCacheAbstract(
     val stateSet: ParserStateSet
 ) : BuildCache {

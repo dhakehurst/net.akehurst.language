@@ -17,10 +17,7 @@
 package net.akehurst.language.agl.processor.java8
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.grammar.Grammar
 import org.junit.Test
-import java.nio.file.Files
-import java.nio.file.Paths
 import kotlin.test.assertNotNull
 
 class test_Java8_Grammars {

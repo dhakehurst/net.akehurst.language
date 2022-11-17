@@ -16,11 +16,10 @@
 package net.akehurst.language.processor.dot
 
 
-import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

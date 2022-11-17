@@ -15,7 +15,6 @@
  */
 package net.akehurst.language.agl.grammar.scopes
 
-import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation

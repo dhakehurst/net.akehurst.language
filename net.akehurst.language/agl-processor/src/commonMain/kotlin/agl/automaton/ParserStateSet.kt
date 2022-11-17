@@ -23,7 +23,6 @@ import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.collections.*
 
 internal class ParserStateSet(
     val number: Int,

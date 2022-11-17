@@ -1,10 +1,6 @@
 package net.akehurst.language.agl.api.runtime
 
-import net.akehurst.language.agl.api.automaton.Automaton
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.collections.MapNotNull
 
 interface RuleSet {
 
@@ -41,4 +37,6 @@ interface ConcatenationBuilder {
 interface ChoiceBuilder {
     fun concatenation(init: ConcatenationBuilder.() -> Unit)
     fun ref(ruleName: String)
+    fun literal(value: String)
+    fun pattern(pattern: String)
 }

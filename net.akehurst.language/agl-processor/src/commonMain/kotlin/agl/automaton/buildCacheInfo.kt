@@ -17,11 +17,7 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.api.automaton.ParseAction
-import net.akehurst.language.agl.api.runtime.RulePosition
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 
 internal data class LookaheadSetPart(
     val includesRT: Boolean,
@@ -47,8 +43,8 @@ internal data class LookaheadSetPart(
     val regex by lazy {
         val str = this.content.joinToString(prefix = "(", separator = ")|(", postfix = ")") {
             when(it.rhs) {
-                is RuntimeRuleRhsLiteral -> "\\Q${it.rhs.value}\\E"
-                is RuntimeRuleRhsPattern -> it.rhs.pattern
+                is RuntimeRuleRhsLiteral -> "\\Q${(it.rhs as RuntimeRuleRhsLiteral).value}\\E"
+                is RuntimeRuleRhsPattern -> (it.rhs as RuntimeRuleRhsPattern).pattern
                 else -> error("Internal Error: rhs not a literal that can be joined to a regex")
             }
         }

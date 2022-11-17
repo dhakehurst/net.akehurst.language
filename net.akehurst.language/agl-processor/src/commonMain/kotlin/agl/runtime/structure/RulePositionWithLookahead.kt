@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.agl.api.runtime.RulePosition
 import kotlin.jvm.JvmInline
 
 @JvmInline

@@ -213,15 +213,15 @@ internal class RuntimeRuleChoiceBuilder(
 
     fun empty(ruleName: String) = concatenation { empty(ruleName) }
 
-    fun literal(value: String) = concatenation { literal(value) }
+    override fun literal(value: String) = concatenation { literal(value) }
 
-    fun pattern(pattern: String) = concatenation { pattern(pattern) }
+    override fun pattern(pattern: String) = concatenation { pattern(pattern) }
 
     override fun ref(name: String) = concatenation { ref(name) }
 
-    override fun concatenation(init: ConcatenationBuilder.() -> Unit) = concatenation(init as RuntimeRuleConcatenationBuilder.() -> Unit)
+    override fun concatenation(init: ConcatenationBuilder.() -> Unit) = concat(init as RuntimeRuleConcatenationBuilder.() -> Unit)
 
-    fun concatenation(init: RuntimeRuleConcatenationBuilder.() -> Unit) {
+    private fun concat(init: RuntimeRuleConcatenationBuilder.() -> Unit) {
         val b = RuntimeRuleConcatenationBuilder(rrsb)
         b.init()
         choices.add(b)

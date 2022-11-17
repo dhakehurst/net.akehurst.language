@@ -19,7 +19,6 @@ package net.akehurst.language.agl.automaton
 import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 
 internal class RuntimeTransitionCalculator(
     val stateSet: ParserStateSet

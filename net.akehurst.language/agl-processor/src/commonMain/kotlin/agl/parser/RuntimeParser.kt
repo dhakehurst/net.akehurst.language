@@ -18,12 +18,12 @@ package net.akehurst.language.agl.parser
 
 import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.api.messages.Message
-import net.akehurst.language.agl.api.runtime.RulePosition
 import net.akehurst.language.agl.automaton.*
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.TreeData
+import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded

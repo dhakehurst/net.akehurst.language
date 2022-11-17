@@ -17,7 +17,6 @@
 package net.akehurst.language.api.analyser
 
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 
 class SemanticAnalyserException(message: String, cause: Throwable?) : RuntimeException(message, cause)

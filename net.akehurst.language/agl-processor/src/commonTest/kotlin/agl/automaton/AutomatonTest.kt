@@ -110,31 +110,21 @@ internal object AutomatonTest {
         else -> true
     }
 
-    private fun RuleOptionPosition.matches(other: RuleOptionPosition): Boolean = when {
+    private fun RulePosition.matches(other: RulePosition): Boolean = when {
         this.option != other.option -> false
         this.position != other.position -> false
-        else -> this.runtimeRule.matches(other.runtimeRule)
+        else -> this.rule.matches(other.rule)
     }
 
     private fun RuntimeRule.matches(other: RuntimeRule): Boolean = when {
         this.name != other.name -> false
-        this.value != other.value -> false
-        this.kind != other.kind -> false
-        this.isPattern != other.isPattern -> false
         this.isSkip != other.isSkip -> false
-        this.kind == RuntimeRuleKind.NON_TERMINAL && this.rhs.matches(other.rhs).not() -> false
-        //TODO: this.embeddedRuntimeRuleSet != other.embeddedRuntimeRuleSet -> false
-        //TODO: this.embeddedStartRule?.matches(other.embeddedStartRule)?.not() -> false
+        this.rhs.matches(other.rhs).not() -> false
         else -> true
     }
 
-    private fun RuntimeRuleRhs.matches(other: RuntimeRuleRhs): Boolean = when {
-        this.itemsKind != other.itemsKind -> false
-        this.choiceKind != other.choiceKind -> false
-        this.listKind != other.listKind -> false
-        this.multiMin != other.multiMin -> false
-        this.multiMax != other.multiMax -> false
-        else -> this.items.all { t -> other.items.any { o -> t.name == o.name && t.value == o.value } }
+    private fun RuntimeRuleRhs.matches(other: RuntimeRuleRhs): Boolean {
+TODO()
     }
 
     private fun Lookahead.matches(other: Lookahead,config: MatchConfiguration): Boolean = when {

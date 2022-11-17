@@ -18,7 +18,6 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -30,7 +29,7 @@ class test_ParseGraph {
     @Test
     fun construct() {
         val rrs = RuntimeRuleSet(RuntimeRuleSet.nextRuntimeRuleSetNumber++)
-        val goalRule = RuntimeRule(rrs.number, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
+        val goalRule = RuntimeRule(rrs.number, 0, "a",  false)
         val text = ""
         val input = InputFromString(rrs.terminalRules.size,text)
 
@@ -42,7 +41,7 @@ class test_ParseGraph {
     @Test
     fun canGrow_empty() {
         val rrs = RuntimeRuleSet(RuntimeRuleSet.nextRuntimeRuleSetNumber++)
-        val goalRule = RuntimeRule(rrs.number, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
+        val goalRule = RuntimeRule(rrs.number, 0, "a",  false)
         val text = ""
         val input = InputFromString(rrs.terminalRules.size,text)
         val sut = ParseGraph(input, 0)
@@ -56,12 +55,12 @@ class test_ParseGraph {
     fun start() {
         val rrs = RuntimeRuleSet(RuntimeRuleSet.nextRuntimeRuleSetNumber++)
 
-        val userGoalRule = RuntimeRule(rrs.number, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
+        val userGoalRule = RuntimeRule(rrs.number, 0, "a",  false)
         val text = "a"
         val input = InputFromString(rrs.terminalRules.size,text)
         val sut = ParseGraph(input, 0)
 
-        val gr = RuntimeRuleSet.createGoalRule(userGoalRule)
+        val gr = rrs.goalRuleFor["a"]
         val startState = rrs.fetchStateSetFor(userGoalRule, AutomatonKind.LOOKAHEAD_1).startState
         sut.start(startState, 0, setOf(startState.stateSet.createLookaheadSet(false,true,false, emptySet())), null)
 

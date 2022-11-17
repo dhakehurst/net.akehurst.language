@@ -16,16 +16,12 @@
 
 package net.akehurst.language.agl.processor.java8
 
-import java.util.ArrayList
-
-import org.junit.Assert
+import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
-
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.agl.processor.Agl
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlin.test.assertEquals

@@ -206,6 +206,10 @@ internal class RuntimeRuleRhsChoice(
 
 internal sealed class RuntimeRuleRhsList(
 ) : RuntimeRuleRhsNonTerminal() {
+    companion object {
+        const val MULTIPLICITY_N = -1
+    }
+
     abstract val min: Int
     abstract val max: Int
 }

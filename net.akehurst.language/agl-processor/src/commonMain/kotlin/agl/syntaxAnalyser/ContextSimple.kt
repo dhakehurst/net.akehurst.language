@@ -19,7 +19,6 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.grammar.scopes.ScopeModel
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.AsmElementSimple
-import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.ScopeSimple
 import net.akehurst.language.api.processor.SentenceContext
 

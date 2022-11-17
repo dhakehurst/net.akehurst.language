@@ -20,16 +20,11 @@ import net.akehurst.language.agl.grammar.GrammarRegistryDefault
 import net.akehurst.language.agl.grammar.format.AglFormatGrammar
 import net.akehurst.language.agl.grammar.format.AglFormatSyntaxAnalyser
 import net.akehurst.language.agl.grammar.grammar.*
-import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
-import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
-import net.akehurst.language.agl.grammar.grammar.AglGrammarSyntaxAnalyser
 import net.akehurst.language.agl.grammar.scopes.AglScopesGrammar
 import net.akehurst.language.agl.grammar.scopes.AglScopesSyntaxAnalyser
 import net.akehurst.language.agl.grammar.scopes.ScopeModel
 import net.akehurst.language.agl.grammar.style.AglStyleGrammar
 import net.akehurst.language.agl.grammar.style.AglStyleSyntaxAnalyser
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.style.AglStyleRule

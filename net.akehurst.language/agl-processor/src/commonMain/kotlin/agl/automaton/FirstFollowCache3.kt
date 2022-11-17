@@ -17,11 +17,7 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.agl.automaton.FirstOf
-import net.akehurst.language.agl.api.runtime.RulePosition
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.isGoal
-import net.akehurst.language.agl.runtime.structure.items
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
 import net.akehurst.language.collections.LazyMutableMapNonNull
@@ -132,8 +128,8 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
                 when {
                     item.isTerminal -> cls.createAndAddChild(item.asTerminalRulePosition)
                     item.isNonTerminal -> {
-                        val childRp = item.rulePositionsAt[0]
-                        if (null!=childRp) {
+                        val childRps = item.rulePositionsAt[0]
+                        for (childRp in childRps) {
                             val child = cls.createAndAddChild(childRp)
                             ///cls.addChild(child)
                             if (null == child) {
@@ -143,8 +139,6 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
                                 todoList.enqueue(child)
                                 //println("todo: ${childCls.shortString}")
                             }
-                        } else {
-                            error("Internal Error: should never happen")
                         }
                     }
                     else -> error("Internal Error: should never happen")

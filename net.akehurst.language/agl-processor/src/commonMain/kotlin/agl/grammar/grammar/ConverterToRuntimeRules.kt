@@ -89,13 +89,13 @@ internal class ConverterToRuntimeRules(
         return newRule
     }
 
-   // private fun createEmptyRuntimeRuleFor(tag: String): RuntimeRule {
-   //     val ruleThatIsEmpty = this.findNamedRule(tag) ?: error("Should always exist")
-   //     val en = "§empty.$tag"
-   //     val emptyRuntimeRule = this.terminalRule(en, en, RuntimeRuleKind.TERMINAL, false, false)
-   //     emptyRuntimeRule.rhsOpt = RuntimeRuleRhs(RuntimeRuleRhsItemsKind.EMPTY, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, arrayOf(ruleThatIsEmpty))
-   //     return emptyRuntimeRule
-   // }
+    // private fun createEmptyRuntimeRuleFor(tag: String): RuntimeRule {
+    //     val ruleThatIsEmpty = this.findNamedRule(tag) ?: error("Should always exist")
+    //     val en = "§empty.$tag"
+    //     val emptyRuntimeRule = this.terminalRule(en, en, RuntimeRuleKind.TERMINAL, false, false)
+    //     emptyRuntimeRule.rhsOpt = RuntimeRuleRhs(RuntimeRuleRhsItemsKind.EMPTY, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, arrayOf(ruleThatIsEmpty))
+    //     return emptyRuntimeRule
+    // }
 
     //private fun embedded(embeddedGrammar: Grammar, embeddedStartRule: GrammarRule): Pair<RuntimeRuleSet, RuntimeRule> {
     //     val embeddedConverter = embeddedConverters[embeddedGrammar]
@@ -222,11 +222,11 @@ internal class ConverterToRuntimeRules(
         else -> error("${target::class} is not a supported subtype of TangibleItem")
     }
 
-   // private fun visitEmptyRule(target: EmptyRule, arg: String): RuntimeRule {
+    // private fun visitEmptyRule(target: EmptyRule, arg: String): RuntimeRule {
     //    val emptyRule = this.createEmptyRuntimeRuleFor(arg)
     //    this.originalRuleItem[Pair(emptyRule.runtimeRuleSetNumber, emptyRule.ruleNumber)] = target
-   //     return emptyRule
-   // }
+    //     return emptyRule
+    // }
 
     private fun visitTerminal(target: Terminal, arg: String): RuntimeRule {
         val existing = this.findTerminal(target.value)
@@ -272,16 +272,15 @@ internal class ConverterToRuntimeRules(
     private fun visitGroup(target: Group, arg: String): RuntimeRule {
         return when (target.choice.alternative.size) {
             0 -> error("Should not happen")
-            1 -> {
-                val alt = target.choice.alternative[0]
-                when(alt.items.size) {
-                    0 -> error("Should not happen")
-                    1 ->
-                        this.visitChoiceAlternative(, arg)
-
-                    else ->
-                }
-            }
+            //1 -> {
+            //    val alt = target.choice.alternative[0]
+            //    when(alt.items.size) {
+            //        0 -> error("Should not happen")
+            //         1 ->
+            //            this.visitChoiceAlternative(, arg)
+            //        else ->
+            //    }
+            //}
             else -> {
                 val groupRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)//createGroupRuleName(arg)
                 this.createPseudoRuleForChoice(target.choice, groupRuleName)

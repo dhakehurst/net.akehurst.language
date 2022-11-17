@@ -16,8 +16,6 @@
 
 package net.akehurst.language.agl.regex
 
-import kotlin.properties.Delegates
-
 internal class State(
         val number: Int,
         val isSplit: Boolean

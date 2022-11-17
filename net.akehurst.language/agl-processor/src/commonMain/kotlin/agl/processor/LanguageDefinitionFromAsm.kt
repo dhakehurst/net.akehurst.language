@@ -17,9 +17,9 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
-import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.util.CachedValue
 import net.akehurst.language.util.cached

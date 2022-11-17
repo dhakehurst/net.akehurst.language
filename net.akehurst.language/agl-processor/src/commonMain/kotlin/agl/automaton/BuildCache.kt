@@ -16,8 +16,6 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.api.runtime.RulePosition
-
 internal interface BuildCache {
     fun switchCacheOn()
     fun clearAndOff()

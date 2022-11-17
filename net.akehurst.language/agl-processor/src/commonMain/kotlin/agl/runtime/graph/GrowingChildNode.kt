@@ -16,11 +16,11 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.automaton.ParserState
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.runtime.structure.RuleOptionId
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleListKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
 import net.akehurst.language.api.sppt.SPPTNode
 
 internal class GrowingChildNode(
@@ -156,19 +156,14 @@ internal class GrowingChildNode(
                 1 == children.size -> children
                 else -> {
                     val rr = ruleOption.runtimeRule
-                    val i = when (rr.kind) {
-                        RuntimeRuleKind.TERMINAL -> 0
-                        RuntimeRuleKind.EMBEDDED -> 0
-                        RuntimeRuleKind.GOAL,
-                        RuntimeRuleKind.NON_TERMINAL -> when (rr.rhs.itemsKind) {
-                            RuntimeRuleRhsItemsKind.EMPTY -> TODO()
-                            RuntimeRuleRhsItemsKind.CONCATENATION -> ruleOptionList.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule }
-                            RuntimeRuleRhsItemsKind.CHOICE -> ruleOptionList.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
-                            RuntimeRuleRhsItemsKind.LIST -> when(rr.rhs.listKind) {
-                                RuntimeRuleListKind.MULTI -> ruleOptionList.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
-                                RuntimeRuleListKind.SEPARATED_LIST -> ruleOptionList.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
-                                else -> TODO()
-                            }
+                    val rhs = rr.rhs
+                    val i = when (rhs) {
+                        is RuntimeRuleRhsTerminal -> 0
+                        is RuntimeRuleRhsNonTerminal -> when (rhs) {
+                            is RuntimeRuleRhsGoal -> ruleOptionList.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule }
+                            is RuntimeRuleRhsConcatenation -> ruleOptionList.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule }
+                            is RuntimeRuleRhsChoice -> ruleOptionList.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
+                            is RuntimeRuleRhsList -> ruleOptionList.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
                         }
                     }
                     if (-1==i) emptyList() else listOf(children[i])

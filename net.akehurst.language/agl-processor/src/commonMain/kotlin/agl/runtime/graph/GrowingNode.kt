@@ -18,9 +18,7 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.ParserState
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTBranchFromTreeData
 import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.agl.sppt.ToStringVisitor

@@ -16,21 +16,13 @@
 package net.akehurst.language.agl.processor.thirdparty.projectIT
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.processor.dot.test_Dot_Singles
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
-import org.junit.runners.Parameterized.Parameters
-import java.io.BufferedReader
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.nio.file.DirectoryStream
-import java.util.stream.Stream
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
 

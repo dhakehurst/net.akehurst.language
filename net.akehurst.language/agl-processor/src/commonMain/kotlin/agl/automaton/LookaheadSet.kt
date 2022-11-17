@@ -1,6 +1,8 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 
 internal class Lookahead(
@@ -109,7 +111,11 @@ internal class LookaheadSet(
 
     val regex by lazy {
         val str = this.content.joinToString(prefix = "(", separator = ")|(", postfix = ")") {
-            if (it.isPattern) it.value else "\\Q${it.value}\\E"
+            if (it.isPattern) {
+                (it.rhs as RuntimeRuleRhsPattern).pattern
+            } else {
+                "\\Q${(it.rhs as RuntimeRuleRhsLiteral).value}\\E"
+            }
         }
         Regex(str)
     }
@@ -130,7 +136,7 @@ internal class LookaheadSet(
             else -> {
                 var resolvedContent = this.content
                 resolvedContent = if (this.includesRT) {
-                    val resolvedRT = if(runtimeLookahead.includesEOT) runtimeLookahead.content.union(eotLookahead.content) else runtimeLookahead.content
+                    val resolvedRT = if (runtimeLookahead.includesEOT) runtimeLookahead.content.union(eotLookahead.content) else runtimeLookahead.content
                     resolvedContent.union(resolvedRT)
                 } else {
                     resolvedContent

@@ -1,8 +1,6 @@
 package net.akehurst.language.agl.agl.parser
 
 import net.akehurst.language.agl.parser.InputFromString
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.api.sppt.SPPTLeaf

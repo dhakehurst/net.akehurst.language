@@ -16,8 +16,8 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.agl.grammar.grammar.asm.*
 import net.akehurst.language.agl.grammar.GrammarRegistryDefault
+import net.akehurst.language.agl.grammar.grammar.asm.*
 import net.akehurst.language.agl.syntaxAnalyser.BranchHandler
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserAbstract
 import net.akehurst.language.api.grammar.*

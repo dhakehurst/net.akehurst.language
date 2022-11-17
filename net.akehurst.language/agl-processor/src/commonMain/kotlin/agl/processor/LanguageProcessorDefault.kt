@@ -23,20 +23,18 @@ import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
 import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.analyser.SyntaxAnalyser
-import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.typeModel.TypeModel
 
 internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(

@@ -18,10 +18,6 @@ package net.akehurst.language.agl.parser
 
 import agl.runtime.graph.CompletedNodesStore
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.regex.RegexMatcher

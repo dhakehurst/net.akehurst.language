@@ -23,8 +23,14 @@ import net.akehurst.language.agl.sppt.SPPT2InputText
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.*
-import kotlin.test.*
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class test_Java8_Singles_aglOptm {
 

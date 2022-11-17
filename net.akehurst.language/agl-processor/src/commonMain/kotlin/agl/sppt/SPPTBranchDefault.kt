@@ -16,9 +16,6 @@
 
 package net.akehurst.language.agl.sppt
 
-import net.akehurst.language.api.sppt.*
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.api.parser.InputLocation
 /*
 //TODO: currently this has to be public, because otherwise kotlin does not
 // use the non-mangled names for properties

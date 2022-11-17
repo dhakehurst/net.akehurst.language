@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.processor.java8
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.runner.RunWith
