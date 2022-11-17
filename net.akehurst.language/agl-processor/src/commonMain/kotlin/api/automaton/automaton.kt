@@ -16,10 +16,9 @@
 
 package net.akehurst.language.agl.api.automaton
 
-import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.api.runtime.RuleSet
-import net.akehurst.language.agl.automaton.TransitionBuilderDefault
 import net.akehurst.language.agl.automaton.automaton
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 
 interface Automaton {
@@ -30,12 +29,8 @@ interface Automaton {
             userGoalRule: String,
             isSkip: Boolean,
             init: AutomatonBuilder.() -> Unit
-        ): Automaton = automaton(rrs, automatonKind, userGoalRule, isSkip, init)
+        ): Automaton = automaton(rrs as RuntimeRuleSet, automatonKind, userGoalRule, isSkip, init)
     }
-}
-
-interface State {
-
 }
 
 enum class ParseAction {
@@ -46,12 +41,18 @@ enum class ParseAction {
     EMBED,
 }
 
+@DslMarker
+internal annotation class AglAutomatonDslMarker
 
+@AglAutomatonDslMarker
 interface AutomatonBuilder {
-    fun state(ruleNumber:Int, option:Int, position:Int): State
-    fun transition(action: ParseAction, init: TransitionBuilder.() -> Unit)
+    fun state(ruleNumber:Int, option:Int, position:Int)
+    //fun transition(action: ParseAction, init: TransitionBuilder.() -> Unit)
 }
 
+@AglAutomatonDslMarker
 interface TransitionBuilder {
-
+    fun ctx(vararg stateNumbers: Int)
+    fun src(stateNumber:Int)
+    fun tgt(stateNumber:Int)
 }

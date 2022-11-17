@@ -19,6 +19,7 @@ package net.akehurst.language.agl.runtime.graph
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.automaton.Transition
+import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 
 internal data class StateInfoUncompressed(

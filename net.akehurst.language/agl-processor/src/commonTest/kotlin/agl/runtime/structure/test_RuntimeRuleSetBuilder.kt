@@ -22,6 +22,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
+@Deprecated("Use runtimeRuleSet { ... }")
 class test_RuntimeRuleSetBuilder {
 
     @Test
@@ -44,7 +45,7 @@ class test_RuntimeRuleSetBuilder {
             actual.runtimeRules[0].rhs
         }
         assertFailsWith(ParserException::class) {
-            actual.runtimeRules[0].ruleThatIsEmpty
+        //    actual.runtimeRules[0].ruleThatIsEmpty
         }
     }
 
@@ -64,7 +65,7 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(false, actual.runtimeRules[0].isSkip)
         assertEquals(null, actual.runtimeRules[0].rhsOpt)
         assertFailsWith(ParserException::class) {
-            actual.runtimeRules[0].ruleThatIsEmpty
+        //    actual.runtimeRules[0].ruleThatIsEmpty
         }
     }
 
@@ -81,11 +82,11 @@ class test_RuntimeRuleSetBuilder {
         assertEquals(1, actual.runtimeRules[1].ruleNumber)
         assertEquals("§empty.a", actual.runtimeRules[1].tag)
         assertEquals(RuntimeRuleKind.TERMINAL, actual.runtimeRules[1].kind)
-        assertEquals(true, actual.runtimeRules[1].isEmptyRule)
+        assertEquals(true, actual.runtimeRules[1].isEmptyTerminal)
         assertEquals(false, actual.runtimeRules[1].isPattern)
         assertEquals(false, actual.runtimeRules[1].isSkip)
         assertNotNull(actual.runtimeRules[1].rhs)
-        assertEquals(ruleThatIsEmpty, actual.runtimeRules[1].ruleThatIsEmpty)
+        //assertEquals(ruleThatIsEmpty, actual.runtimeRules[1].ruleThatIsEmpty)
     }
 
     @Test

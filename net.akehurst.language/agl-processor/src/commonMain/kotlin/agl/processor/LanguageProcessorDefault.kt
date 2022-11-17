@@ -21,6 +21,8 @@ import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.sppt.SPPTParserDefault
@@ -172,10 +174,13 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
         //    .map { this._converterToRuntimeRules.originalRuleItemFor(it.runtimeRuleSetNumber, it.number) }
         //val expected = grammarExpected.flatMap { this._completionProvider.provideFor(it, desiredDepth) }
         val items = parserExpected.map {
-            when {
-                it==RuntimeRuleSet.END_OF_TEXT -> CompletionItem(CompletionItemKind.LITERAL, it.tag, it.tag)
-                else -> CompletionItem(CompletionItemKind.LITERAL,it.tag, it.value)
+            val rhs = it.rhs
+            val v = when(rhs){
+                is RuntimeRuleRhsLiteral -> rhs.value
+                is RuntimeRuleRhsPattern -> rhs.pattern
+                else -> it.tag
             }
+            CompletionItem(CompletionItemKind.LITERAL, it.tag, v)
         }
         return ExpectedAtResultDefault(items, emptyList())
     }

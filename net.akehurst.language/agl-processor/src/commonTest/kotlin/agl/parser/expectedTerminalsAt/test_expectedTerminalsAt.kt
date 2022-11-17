@@ -18,7 +18,6 @@ package net.akehurst.language.parser.expectedTerminalsAt
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals

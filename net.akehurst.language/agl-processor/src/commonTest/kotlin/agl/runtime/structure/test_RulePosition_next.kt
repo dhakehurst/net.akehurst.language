@@ -17,8 +17,6 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.api.runtime.Rule
-import net.akehurst.language.agl.api.runtime.RulePosition
-import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

@@ -41,7 +41,7 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
         concatenation("ABD") { literal("a"); literal("b"); literal("d") }
     }
     private val S = rrs.findRuntimeRule("S")
-    private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+    private val SM = rrs.fetchStateSetFor("S", AutomatonKind.LOOKAHEAD_1)
     private val G = SM.startState.runtimeRules.first()
     private val ABC = rrs.findRuntimeRule("ABC")
     private val ABD = rrs.findRuntimeRule("ABD")
@@ -61,7 +61,7 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(G, SOR)     /* G = . S   */
+            val s0 = state(G, 0, SOR)     /* G = . S   */
             val s1 = state(a, 0, EOR)     /* a .       */
             val s2 = state(ABC, 0, p1)    /* ABC = a . bc */
             val s21 = state(ABD, 0, p1)    /* ABD = a . bd */
@@ -72,7 +72,7 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
             val s6 = state(d, 0, EOR)     /* c . */
             val s7 = state(ABC, 0, EOR)   /* ABC = abc . */
             val s8 = state(S, 0, EOR)     /* S = ABC . */
-            val s9 = state(G, EOR)     /* G = S .   */
+            val s9 = state(G, 0, EOR)     /* G = S .   */
 
             transition(WIDTH) { src(s0); tgt(s1); lhg(b); ctx(setOf(s0)) }
             transition(HEIGHT) { src(s1); tgt(s2); lhg(setOf(b), setOf(EOT)); ctx(setOf(s0)) }

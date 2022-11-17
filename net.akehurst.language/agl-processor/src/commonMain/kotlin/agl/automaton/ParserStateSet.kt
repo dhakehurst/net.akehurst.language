@@ -19,7 +19,6 @@ package net.akehurst.language.agl.automaton
 import net.akehurst.language.agl.agl.automaton.FirstOf
 import net.akehurst.language.agl.api.automaton.Automaton
 import net.akehurst.language.agl.api.automaton.ParseAction
-import net.akehurst.language.agl.api.runtime.RulePosition
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
@@ -34,7 +33,6 @@ internal class ParserStateSet(
     val automatonKind: AutomatonKind
 ) : Automaton {
 
-    val number = RuntimeRuleSet.nex
     private var nextLookaheadSetId = 0
     private val lookaheadSets = mutableListOf<LookaheadSet>()
     private var nextStateNumber = 0
@@ -74,9 +72,9 @@ internal class ParserStateSet(
     val allBuiltTransitions: Set<Transition> get() = this.allBuiltStates.flatMap { it.outTransitions.allBuiltTransitions }.toSet()
 
     val goalRule by lazy { runtimeRuleSet.goalRuleFor[userGoalRule.tag] }
-    val startRulePosition by lazy { RulePosition(goalRule, RulePosition.START_OF_RULE) }
-    val finishRulePosition by lazy { RulePosition(goalRule, RulePosition.END_OF_RULE) }
-    override val startState: ParserState by lazy { this.createState(listOf(startRulePosition)) }
+    val startRulePosition by lazy { RulePosition(goalRule, 0, RulePosition.START_OF_RULE) }
+    val finishRulePosition by lazy { RulePosition(goalRule, 0, RulePosition.END_OF_RULE) }
+    val startState: ParserState by lazy { this.createState(listOf(startRulePosition)) }
     val finishState: ParserState by lazy { this.createState(listOf(finishRulePosition)) }
 
     val firstOf = FirstOf(usedRules.size)
@@ -234,10 +232,8 @@ internal class ParserStateSet(
         return when {
             0 > rule.ruleNumber -> {
                 used.add(rule)
-                for (rhsi in rule.rhs.rhsItems) {
-                    for(sr in rhsi.rules) {
+                for (sr in rule.rhs.rhsItems) {
                         calcUsedRules(sr, used, done)
-                    }
                 }
                 used
             }
@@ -246,10 +242,8 @@ internal class ParserStateSet(
                 rule.kind === RuntimeRuleKind.NON_TERMINAL -> {
                     used.add(rule)
                     done[rule.ruleNumber] = true
-                    for (rhsi in rule.rhs.rhsItems) {
-                        for(sr in rhsi.rules) {
-                            calcUsedRules(sr, used, done)
-                        }
+                    for (sr in rule.rhs.rhsItems) {
+                        calcUsedRules(sr, used, done)
                     }
                     used
                 }

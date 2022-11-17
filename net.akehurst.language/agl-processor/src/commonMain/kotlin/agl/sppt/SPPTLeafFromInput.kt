@@ -18,6 +18,8 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
@@ -98,7 +100,7 @@ import net.akehurst.language.api.sppt.*
     override var tagList: List<String> = mutableListOf<String>() //TODO: initialise late
 
     override val matchedText: String get() = input[startPosition, nextInputPosition]
-    override val isEmptyLeaf: Boolean get() = this.runtimeRule.isEmptyRule
+    override val isEmptyLeaf: Boolean get() = this.runtimeRule.isEmptyTerminal
     override val metaTags: List<String> by lazy { //TODO: make this configurable on the LanguageProcessor
         val map = mutableMapOf<String, String>(
             "\$keyword" to "'[a-zA-Z_][a-zA-Z0-9_-]*'"
@@ -127,9 +129,9 @@ import net.akehurst.language.api.sppt.*
     override fun toString(): String {
         val name = when {
             this.runtimeRule == RuntimeRuleSet.END_OF_TEXT -> RuntimeRuleSet.END_OF_TEXT_TAG
-            this.runtimeRule.isEmptyRule -> "§empty"
-            this.isLiteral -> "'${this.runtimeRule.value}'"
-            this.isPattern -> "\"${this.runtimeRule.value}\""
+            this.runtimeRule.isEmptyTerminal -> "§empty"
+            this.isLiteral -> "'${(this.runtimeRule.rhs as RuntimeRuleRhsLiteral).value}'"
+            this.isPattern -> "\"${(this.runtimeRule.rhs as RuntimeRuleRhsPattern).pattern}\""
             else -> this.name //shouldn't happen!
         }
 

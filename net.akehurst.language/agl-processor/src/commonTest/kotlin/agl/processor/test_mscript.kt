@@ -19,7 +19,9 @@ import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.typeModel.PrimitiveType
 import net.akehurst.language.api.typeModel.TypeModelTest
 import net.akehurst.language.api.typeModel.typeModel

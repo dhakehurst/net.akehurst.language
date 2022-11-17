@@ -21,9 +21,11 @@ import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.processor.AutomatonKind
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.parser.scanondemand.leftRecursive.test_hiddenLeft1
 import test.assertEqualsWarning
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

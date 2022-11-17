@@ -20,6 +20,7 @@ import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsList
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 
@@ -54,12 +55,11 @@ import net.akehurst.language.api.sppt.*
 
     override val isSkip: Boolean get() = runtimeRule.isSkip
 
-    override val isList: Boolean get() = this.runtimeRule.kind== RuntimeRuleKind.NON_TERMINAL && this.runtimeRule.rhs.itemsKind== RuntimeRuleRhsItemsKind.LIST
+    override val isList: Boolean get() = this.runtimeRule.rhs is RuntimeRuleRhsList
 
-    override val isOptional: Boolean get() = this.runtimeRule.kind== RuntimeRuleKind.NON_TERMINAL
-            && this.runtimeRule.rhs.itemsKind== RuntimeRuleRhsItemsKind.LIST
-            && this.runtimeRule.rhs.multiMin==0
-            && this.runtimeRule.rhs.multiMax==1
+    override val isOptional: Boolean get() = this.runtimeRule.rhs is RuntimeRuleRhsList
+            && (this.runtimeRule.rhs as RuntimeRuleRhsList).min==0
+            && (this.runtimeRule.rhs as RuntimeRuleRhsList).max==1
 
     // match empty if start and next-input positions are the same
     override val isEmptyMatch: Boolean get() = this.startPosition == this.nextInputPosition

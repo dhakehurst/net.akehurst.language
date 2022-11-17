@@ -43,7 +43,7 @@ internal class test_ab_cOa_bc : test_AutomatonAbstract() {
         concatenation("bc") { literal("b"); literal("c") }
     }
     private val S = rrs.findRuntimeRule("S")
-    private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+    private val SM = rrs.fetchStateSetFor("S", AutomatonKind.LOOKAHEAD_1)
     private val G = SM.startState.runtimeRules.first()
     private val ab_c = rrs.findRuntimeRule("ab_c")
     private val a_bc = rrs.findRuntimeRule("a_bc")

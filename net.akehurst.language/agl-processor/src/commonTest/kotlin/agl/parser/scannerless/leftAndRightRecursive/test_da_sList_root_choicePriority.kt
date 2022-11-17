@@ -19,7 +19,6 @@ package net.akehurst.language.parser.scanondemand.choicePriority
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.parser.scanondemand.choiceEqual.test_bodmas_exprOpExprRules_root_choiceEqual_WS
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals

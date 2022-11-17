@@ -17,9 +17,7 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.api.runtime.Rule
-import net.akehurst.language.agl.api.runtime.RulePosition
 import net.akehurst.language.agl.collections.indexFunction
-import net.akehurst.language.collections.lazyMutableMapNonNull
 
 /**
  * identified by: (runtimeRuleSetNumber, number, optionIndex)
@@ -46,11 +44,13 @@ internal class RuntimeRule(
     val isExplicitlyNamed: Boolean get() = this.name != null
     val tag: String get() = this.name ?: if (this.isTerminal) this.rhs.toString() else error("Internal Error: no tag")
 
+    /*
     val emptyRuleItem: RuntimeRule
         get() = when {
             isEmptyTerminal -> (rhs as RuntimeRuleRhsEmpty).ruleThatIsEmpty
             else -> error("Internal Error: Not an EmptyTerminal ")
         }
+*/
 
     val isGoal = this.rhs is RuntimeRuleRhsGoal
     val isEmptyTerminal = this.rhs is RuntimeRuleRhsEmpty
@@ -89,9 +89,9 @@ internal class RuntimeRule(
         else -> error("Internal Error")
     }
 
-    val ruleThatIsEmpty: RuntimeRule get() = (this.rhs as RuntimeRuleRhsEmpty).ruleThatIsEmpty
+    //val ruleThatIsEmpty: RuntimeRule get() = (this.rhs as RuntimeRuleRhsEmpty).ruleThatIsEmpty
 
-    val asTerminalRulePosition by lazy { RulePosition(this, RulePosition.END_OF_RULE) }
+    val asTerminalRulePosition by lazy { RulePosition(this, 0, RulePosition.END_OF_RULE) }
 
     val rulePositions: Set<RulePosition> get() = rhs.rulePositions
 
@@ -202,6 +202,7 @@ internal class RuntimeRule(
             return result
         }
     */
+    /*
     internal fun calcExpectedRulePositions(position: Int): List<RulePosition> {
         return when {
             position == RulePosition.END_OF_RULE -> emptyList()
@@ -290,7 +291,7 @@ internal class RuntimeRule(
             }
         }
     }
-
+*/
     /*
         internal fun calcItemsAt(position: Int): Set<RuntimeRule> {
             //TODO: would it be faster to return an array here?

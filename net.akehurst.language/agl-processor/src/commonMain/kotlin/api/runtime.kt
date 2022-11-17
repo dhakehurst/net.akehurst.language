@@ -9,7 +9,7 @@ import net.akehurst.language.collections.MapNotNull
 interface RuleSet {
 
     companion object {
-        fun build(init:RuleSetBuilder.()->Unit) = runtimeRuleSet(init)
+        fun build(init:RuleSetBuilder.()->Unit) : RuleSet = runtimeRuleSet(init)
     }
 
 }
@@ -17,37 +17,28 @@ interface RuleSet {
 interface Rule {
 }
 
-data class RulePosition(
-    val rule: Rule,
-    val position: Int
-) {
-    companion object {
-        const val START_OF_RULE = 0
-        const val END_OF_RULE = -1
+@DslMarker
+internal annotation class RuntimeRuleSetDslMarker
 
-        const val OPTION_MULTI_ITEM = 0
-        const val OPTION_MULTI_EMPTY = 1
-
-        const val OPTION_SLIST_ITEM_OR_SEPERATOR = 0
-        const val OPTION_SLIST_EMPTY = 1
-
-        //for use in multi and separated list
-        const val POSITION_MULIT_ITEM = 1 //TODO: make -ve
-        const val POSITION_SLIST_SEPARATOR = 1 //TODO: make -ve
-        const val POSITION_SLIST_ITEM = 2 //TODO: make -ve
-    }
-
-    val isAtStart get() = START_OF_RULE == position
-    val isAtEnd get() = END_OF_RULE == position
-}
-
-enum class RuntimeRuleChoiceKind {
-    NONE,
-    AMBIGUOUS,
-    LONGEST_PRIORITY,
-    PRIORITY_LONGEST
-}
-
+@RuntimeRuleSetDslMarker
 interface RuleSetBuilder {
 
+    fun concatenation(ruleName:String, isSkip: Boolean = false, init: ConcatenationBuilder.() -> Unit)
+    fun choiceLongest(ruleName:String, isSkip: Boolean = false, init: ChoiceBuilder.() -> Unit)
+    fun choicePriority(ruleName:String, isSkip: Boolean = false, init: ChoiceBuilder.() -> Unit)
+
+}
+
+@RuntimeRuleSetDslMarker
+interface ConcatenationBuilder {
+    fun empty(ruleName: String)
+    fun literal(value: String)
+    fun pattern(pattern: String)
+    fun ref(name:String)
+}
+
+@RuntimeRuleSetDslMarker
+interface ChoiceBuilder {
+    fun concatenation(init: ConcatenationBuilder.() -> Unit)
+    fun ref(ruleName: String)
 }

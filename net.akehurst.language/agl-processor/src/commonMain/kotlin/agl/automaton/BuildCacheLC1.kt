@@ -17,13 +17,8 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.api.automaton.ParseAction
-import net.akehurst.language.agl.api.runtime.RulePosition
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.util.Debug
-import net.akehurst.language.collections.MutableQueue
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.collections.mutableStackOf
 
@@ -73,6 +68,7 @@ internal class BuildCacheLC1(
                         other.lookaheadSet == this.lookaheadSet &&
                         other.parentItem?.lookaheadSet == this.parentItem?.lookaheadSet
                         && other.allPrev == this.allPrev
+
                 else -> false
             }
 
@@ -91,7 +87,7 @@ internal class BuildCacheLC1(
         ) {
             val to: List<RulePosition>
                 get() = when (this.action) {
-                    ParseAction.WIDTH, ParseAction.EMBED -> this.firstOf.fullContent.map { RulePosition(it, RulePosition.END_OF_RULE) }
+                    ParseAction.WIDTH, ParseAction.EMBED -> this.firstOf.fullContent.map { RulePosition(it, 0, RulePosition.END_OF_RULE) }
                     ParseAction.HEIGHT, ParseAction.GRAFT -> this.parent?.rulePosition?.next()?.toList() ?: emptyList()
                     ParseAction.GOAL -> listOf(prev.atEnd())
                 }
@@ -125,6 +121,7 @@ internal class BuildCacheLC1(
                                 }
                             }.reduce { acc, l -> acc.union(l) }
                         }
+
                         ParseAction.HEIGHT, ParseAction.GRAFT -> it.firstOfNext
                     }
                     TransInfo(setOf(setOf(it.prev)), parent.toSet(), it.action, it.to.toSet(), setOf(LookaheadInfoPart(lhs, LookaheadSetPart.EMPTY)))
@@ -150,6 +147,7 @@ internal class BuildCacheLC1(
                             }
                             this.firstOfCache[tr.to.first()]!!.get(this.rulePosition)!!
                         }.reduce { acc, it -> acc.union(it) }
+
                         ParseAction.HEIGHT, ParseAction.GRAFT -> me.value.map { tr -> tr.firstOfNext }.reduce { acc, it -> acc.union(it) }
                     }
                     val lhInfo = parentFirstOfNext.map { LookaheadInfoPart(lookaheadSet, it) }.toSet()
@@ -167,6 +165,7 @@ internal class BuildCacheLC1(
                         rulePosition.isAtStart -> ParseAction.WIDTH // RP(G,0,SOR)
                         else -> error("should not happen")
                     }
+
                     this.rulePosition.isAtEnd -> when {
                         null == parent -> error("should not happen")
                         parent.isGoalStart -> ParseAction.GRAFT
@@ -174,6 +173,7 @@ internal class BuildCacheLC1(
                         parent.isAtEnd -> error("should not happen")
                         else -> ParseAction.GRAFT
                     }
+
                     else -> ParseAction.WIDTH
                 }
                 var set = outTransInfo[prev]
@@ -383,6 +383,7 @@ internal class BuildCacheLC1(
                         }
                         to.map { p -> L1Trans(parent!!.rulePosition, action, p.first, p.second, p.third) }.toSet()
                     }
+
                     else -> {
                         val action = ParseAction.WIDTH
                         val tgts = pFirstTerm(this.rulePosition)
@@ -450,7 +451,7 @@ internal class BuildCacheLC1(
                 rp.isAtEnd -> l1States.add(state)
                 else -> {
                     // item is only null if rp isTerminal (handled above)
-                    val rps = rp.item!!.rulePositions
+                    val rps = rp.items.flatMap { it.rulePositions }
                     for (childRP in rps) {
                         val childLhs = state.expectedAt
                         val childState = L1State(state, childRP, childLhs)
@@ -652,7 +653,7 @@ internal class BuildCacheLC1(
         // if there are multiple fromState.rulePositions then they should have same firstOf or they would not be merged.
         // after a WIDTH, fromState becomes the prevState, therefore
         // the lookahead is the firstOf the parent.next of the 'to' state, in the context of the fromStateRulePositions
-        if (Debug.OUTPUT_SM_BUILD) Debug.debug(Debug.IndentDelta.INC_AFTER) { "START calcWidthInfo($prevState, $fromState) - ${fromState.rulePositions.map { it.item?.tag }}" }
+        if (Debug.OUTPUT_SM_BUILD) Debug.debug(Debug.IndentDelta.INC_AFTER) { "START calcWidthInfo($prevState, $fromState) - ${fromState.rulePositions.map { it.rule.tag }}" }
         this.firstFollowCache.clear()
         //FirstFollow3
         val firstTerminals = prevState.rulePositions.flatMap { prev ->
@@ -703,7 +704,11 @@ internal class BuildCacheLC1(
         //}
     }
 
-    private fun calcAndCacheHeightOrGraftInto(prevPrev: ParserState, prev: ParserState, from: ParserState): Set<HeightGraftInfo> {//, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
+    private fun calcAndCacheHeightOrGraftInto(
+        prevPrev: ParserState,
+        prev: ParserState,
+        from: ParserState
+    ): Set<HeightGraftInfo> {//, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
         val hgi = calcHeightOrGraftInto(prevPrev, prev, from)//, upCls)
         cacheHeightOrGraftInto(prev, from, hgi)
         return hgi
@@ -915,28 +920,28 @@ internal class BuildCacheLC1(
     }
     }
     */
-/*
-    private fun dnClosureLC1(rp: RulePosition): Set<ClosureItemLC1> {
-        val upLhs: LookaheadSetPart = LookaheadSetPart.UP
-        return when {
-            rp.isAtEnd -> emptySet()
-            _cacheOff -> {
-                val lhs = calcLookaheadDown(rp, upLhs)
-                val ci = ClosureItemLC1(null, rp, null, lhs)
-                calcDnClosureLC1(ci)//, mutableSetOf(ci))
-            }
-            else -> {
-                _dnClosure[rp] ?: run {
+    /*
+        private fun dnClosureLC1(rp: RulePosition): Set<ClosureItemLC1> {
+            val upLhs: LookaheadSetPart = LookaheadSetPart.UP
+            return when {
+                rp.isAtEnd -> emptySet()
+                _cacheOff -> {
                     val lhs = calcLookaheadDown(rp, upLhs)
                     val ci = ClosureItemLC1(null, rp, null, lhs)
-                    val v = calcDnClosureLC1(ci)//, mutableSetOf(ci))
-                    _dnClosure[rp] = v
-                    v
+                    calcDnClosureLC1(ci)//, mutableSetOf(ci))
+                }
+                else -> {
+                    _dnClosure[rp] ?: run {
+                        val lhs = calcLookaheadDown(rp, upLhs)
+                        val ci = ClosureItemLC1(null, rp, null, lhs)
+                        val v = calcDnClosureLC1(ci)//, mutableSetOf(ci))
+                        _dnClosure[rp] = v
+                        v
+                    }
                 }
             }
         }
-    }
-*/
+    */
     /*
     private fun calcLookaheadDown(rulePosition: RulePosition, ifReachEnd: LookaheadSetPart): LookaheadSetPart {
         return when {
@@ -1044,7 +1049,7 @@ internal class BuildCacheLC1(
                 //rp.item!!.isTerminal -> rp.items
                 else -> {
                     done.add(rp)
-                    rp.items.flatMap { pFirstTerm(it.rulePositions[0],done) }.toSet()
+                    rp.items.flatMap { it.rulePositionsAt[0].flatMap { pFirstTerm(it, done) } }.toSet()
                     //rp.item!!.rulePositionsAt[0].flatMap { pFirstTerm(it, done) }.toSet()
                 }
             }

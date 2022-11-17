@@ -16,8 +16,12 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.agl.api.runtime.RulePosition
-import net.akehurst.language.agl.api.runtime.RuntimeRuleChoiceKind
+enum class RuntimeRuleChoiceKind {
+    NONE,
+    AMBIGUOUS,
+    LONGEST_PRIORITY,
+    PRIORITY_LONGEST
+}
 
 internal sealed class RuntimeRuleRhs {
 
@@ -34,10 +38,11 @@ internal sealed class RuntimeRuleRhs {
     lateinit var runtimeRule: RuntimeRule;
 
     abstract val rulePositions: Set<RulePosition>
-    abstract val rhsItems:Set<RuntimeRule>
+    abstract val rhsItems: Set<RuntimeRule>
 
-    abstract fun rhsItemsAt(position: Int) : Set<RuntimeRule>
+    abstract fun rhsItemsAt(position: Int): Set<RuntimeRule>
 
+    /*
     fun findItemAt(n: Int): Array<out RuntimeRule> {
         return when (this.itemsKind) {
             RuntimeRuleRhsItemsKind.EMPTY -> emptyArray<RuntimeRule>()
@@ -72,8 +77,12 @@ internal sealed class RuntimeRuleRhs {
             }
         }
     }
-
+*/
     abstract fun rulePositionAt(position: Int): Set<RulePosition>
+
+    fun clone(): RuntimeRuleRhs {
+        TODO()
+    }
 }
 
 internal sealed class RuntimeRuleRhsTerminal : RuntimeRuleRhs() {
@@ -101,10 +110,8 @@ internal class RuntimeRuleRhsLiteral(
     override fun toString(): String = "'$value'"
 }
 
-internal class RuntimeRuleRhsEmpty(
-    val ruleThatIsEmpty: RuntimeRule
-) : RuntimeRuleRhsTerminal() {
-    override fun toString(): String = "EMPTY(${ruleThatIsEmpty.tag})"
+internal class RuntimeRuleRhsEmpty() : RuntimeRuleRhsTerminal() {
+    override fun toString(): String = RuntimeRuleSet.EMPTY.tag
 }
 
 internal class RuntimeRuleRhsEmbedded(
@@ -122,17 +129,18 @@ internal class RuntimeRuleRhsGoal(
     override val rhsItems: Set<RuntimeRule> = setOf(userGoalRuleItem)
     override val rulePositions: Set<RulePosition> by lazy {
         setOf(
-            RulePosition(runtimeRule, RulePosition.START_OF_RULE),
-            RulePosition(runtimeRule, RulePosition.END_OF_RULE)
+            RulePosition(runtimeRule, 0, RulePosition.START_OF_RULE),
+            RulePosition(runtimeRule, 0, RulePosition.END_OF_RULE)
         )
     }
+
     override fun rulePositionAt(position: Int): Set<RulePosition> = when {
         RulePosition.END_OF_RULE == position -> setOf(rulePositions.last())
         position < 1 -> setOf(rulePositions.first())
         else -> emptySet()
     }
 
-    override fun rhsItemsAt(position: Int): Set<RuntimeRule> = when(position) {
+    override fun rhsItemsAt(position: Int): Set<RuntimeRule> = when (position) {
         0 -> setOf(userGoalRuleItem)
         else -> emptySet()
     }
@@ -148,8 +156,8 @@ internal class RuntimeRuleRhsConcatenation(
 
     private val _rulePositions: List<RulePosition> by lazy {
         this.concatItems.mapIndexedNotNull { index, _ ->
-            if (0 == index) null else RulePosition(runtimeRule, index)
-        } + RulePosition(runtimeRule, RulePosition.END_OF_RULE)
+            if (0 == index) null else RulePosition(runtimeRule, 0, index)
+        } + RulePosition(runtimeRule, 0, RulePosition.END_OF_RULE)
     }
     override val rulePositions: Set<RulePosition> get() = _rulePositions.toSet()
     override fun rulePositionAt(position: Int): Set<RulePosition> = when {
@@ -162,30 +170,44 @@ internal class RuntimeRuleRhsConcatenation(
         position < this.concatItems.size -> setOf(this.concatItems[position])
         else -> emptySet()
     }
+
     override fun toString(): String = "CONCAT(${this.rhsItems.map { "${it.tag}[${it.ruleNumber}]" }.joinToString(" ")})"
 }
 
 internal class RuntimeRuleRhsChoice(
     val choiceKind: RuntimeRuleChoiceKind,
-    val options: List<List<RuntimeRule>>
+    val options: List<RuntimeRuleRhs>
 ) : RuntimeRuleRhsNonTerminal() {
-    override val rhsItems: Set<RuntimeRule> get() = options.flatten().toSet()
+
+    private val _rulePositions: List<Set<RulePosition>> by lazy {
+        this.options.mapIndexed { option, choiceRhs ->
+            choiceRhs.rulePositions.map { rp ->
+                RulePosition(rp.rule, option, rp.position)
+            }.toSet()
+        }
+    }
+
+    override val rhsItems: Set<RuntimeRule> get() = options.flatMap { it.rhsItems }.toSet()
     override val rulePositions: Set<RulePosition>
-        get() = TODO("not implemented")
+        get() = options.flatMap { choiceRhs ->
+            choiceRhs.rulePositions
+        }.toSet()
 
     override fun rhsItemsAt(position: Int): Set<RuntimeRule> {
-        TODO("not implemented")
+        return options.flatMap { choiceRhs -> choiceRhs.rhsItemsAt(position) }.toSet()
     }
 
     override fun rulePositionAt(position: Int): Set<RulePosition> {
-        TODO("not implemented")
+        return options.flatMap { choiceRhs ->
+            choiceRhs.rulePositionAt(position)
+        }.toSet()
     }
 }
 
-internal abstract class RuntimeRuleRhsList(
+internal sealed class RuntimeRuleRhsList(
 ) : RuntimeRuleRhsNonTerminal() {
-    abstract val min:Int
-    abstract val max:Int
+    abstract val min: Int
+    abstract val max: Int
 }
 
 internal class RuntimeRuleRhsListSimple(
@@ -195,18 +217,28 @@ internal class RuntimeRuleRhsListSimple(
 ) : RuntimeRuleRhsList() {
     override val rhsItems: Set<RuntimeRule> = setOf(repeatedRhsItem)
     override val rulePositions: Set<RulePosition> by lazy {
-        setOf(
-            RulePosition(runtimeRule, RulePosition.POSITION_MULIT_ITEM),
-            RulePosition(runtimeRule, RulePosition.END_OF_RULE)
-        )
-    }
-    override fun rulePositionAt(position: Int): Set<RulePosition> = when {
-        RulePosition.END_OF_RULE == position -> rulePositions.last()
-        position < max -> rulePositions[0]
-        else -> null
+        when {
+            min < 0 -> error("Internal Error: min must be > 0")
+            min > 0 -> setOf(
+                RulePosition(runtimeRule, RulePosition.OPTION_MULTI_ITEM, RulePosition.POSITION_MULIT_ITEM),
+                RulePosition(runtimeRule, RulePosition.OPTION_MULTI_ITEM, RulePosition.END_OF_RULE)
+            )
+
+            else /* min == 0 */ -> setOf(
+                RulePosition(runtimeRule, RulePosition.OPTION_MULTI_ITEM, RulePosition.POSITION_MULIT_ITEM),
+                RulePosition(runtimeRule, RulePosition.OPTION_MULTI_ITEM, RulePosition.END_OF_RULE),
+                RulePosition(runtimeRule, RulePosition.OPTION_MULTI_EMPTY, RulePosition.END_OF_RULE)
+            )
+        }
     }
 
-    override fun rhsItemsAt(position: Int): Set<RuntimeRule> = when(position) {
+    override fun rulePositionAt(position: Int): Set<RulePosition> = when {
+        RulePosition.END_OF_RULE == position -> setOf(rulePositions.last())
+        position < max -> setOf(rulePositions.first())
+        else -> emptySet()
+    }
+
+    override fun rhsItemsAt(position: Int): Set<RuntimeRule> = when (position) {
         RulePosition.START_OF_RULE -> setOf(repeatedRhsItem)
         RulePosition.POSITION_MULIT_ITEM -> setOf(repeatedRhsItem)
         else -> emptySet()
@@ -221,22 +253,25 @@ internal class RuntimeRuleRhsListSeparated(
     val repeatedRhsItem: RuntimeRule,
     val separatorRhsItem: RuntimeRule
 ) : RuntimeRuleRhsList() {
-    override val rhsItems: List<RuntimeRule> = listOf(repeatedRhsItem, separatorRhsItem)
-    override val rulePositions: List<RulePosition> by lazy {
-        listOf(
-            RulePosition(runtimeRule, RulePosition.POSITION_MULIT_ITEM),
-            RulePosition(runtimeRule, RulePosition.POSITION_SLIST_SEPARATOR),
-            RulePosition(runtimeRule, RulePosition.END_OF_RULE)
+    override val rhsItems: Set<RuntimeRule> = setOf(repeatedRhsItem, separatorRhsItem)
+    override val rulePositions: Set<RulePosition> by lazy {
+        setOf(
+            RulePosition(runtimeRule, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePosition(runtimeRule, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePosition(runtimeRule, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE)
         )
     }
-    override fun rulePositionAt(position: Int): RulePosition? {
+
+    override fun rulePositionAt(position: Int): Set<RulePosition> {
         TODO("not implemented")
     }
-    override fun rhsItemsAt(position: Int): Set<RuntimeRule> = when(position) {
+
+    override fun rhsItemsAt(position: Int): Set<RuntimeRule> = when (position) {
         RulePosition.START_OF_RULE -> setOf(repeatedRhsItem)
         RulePosition.POSITION_SLIST_ITEM -> setOf(repeatedRhsItem)
         RulePosition.POSITION_SLIST_SEPARATOR -> setOf(repeatedRhsItem)
         else -> emptySet()
     }
+
     override fun toString(): String = "SLIST ${repeatedRhsItem.tag} ${separatorRhsItem.tag} {$min, $max}"
 }

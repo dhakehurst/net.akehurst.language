@@ -20,10 +20,8 @@ import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.ParseResult
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import test.assertEqualsWarning
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

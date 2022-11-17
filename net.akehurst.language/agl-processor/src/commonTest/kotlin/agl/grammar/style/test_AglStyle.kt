@@ -2,8 +2,6 @@ package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.api.style.AglStyleRule
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

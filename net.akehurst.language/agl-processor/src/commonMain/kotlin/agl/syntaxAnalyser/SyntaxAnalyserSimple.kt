@@ -441,7 +441,7 @@ class SyntaxAnalyserSimple(
         }
     }
 
-
+/*
     private fun createValueFromBranch1(target: SPPTBranch, path: AsmElementPath, scope: ScopeSimple<AsmElementPath>?): Any? {
         val br = target as SPPTBranchFromInputAndGrownChildren //SPPTBranchDefault //TODO: make write thing available on interface
         val elType = typeModel.let { typeModel.findType(target.name) }
@@ -573,7 +573,7 @@ class SyntaxAnalyserSimple(
             RuntimeRuleKind.GOAL -> runtimeRule.tag
         }
     }
-
+*/
     private fun getReferable(scopeFor: String, el: AsmElementSimple): String? {
         val prop = scopeModel.getReferablePropertyNameFor(scopeFor, el.typeName)
         return if (null == prop) {

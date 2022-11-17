@@ -1,7 +1,6 @@
 import net.akehurst.language.agl.api.automaton.Automaton
 import net.akehurst.language.agl.api.generator.GeneratorConstants
 import net.akehurst.language.agl.api.runtime.RuleSet
-import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 
 // sample
@@ -30,5 +29,7 @@ object GrammarName_GoalRuleName : GeneratorConstants() {
         state(2, 0, ER)
         // a.
         state(3, 0, ER)
+
+        transition(WIDTH) { src(0); tgt(3) }
     }
 }

@@ -21,7 +21,6 @@ import net.akehurst.language.api.typeModel.PrimitiveType
 import net.akehurst.language.api.typeModel.TypeModelTest
 import net.akehurst.language.api.typeModel.typeModel
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 

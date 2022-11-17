@@ -16,8 +16,6 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.agl.api.runtime.RulePosition
-
 internal typealias RuleOptionId = RuleOption //TODO: Make this an Int
 
 internal data class RuleOption(
@@ -29,56 +27,142 @@ internal data class RuleOption(
     override fun toString(): String = "RuleOption{${runtimeRule.tag},$option}"
 }
 
-internal val RulePosition.isGoal: Boolean get() = (this.rule as RuntimeRule).isGoal
-val RulePosition.isTerminal get() = (this.rule as RuntimeRule).isTerminal
-val RulePosition.isEmbedded get() = (this.rule as RuntimeRule).isEmbedded
+internal class RulePosition(
+    val rule: RuntimeRule,
+    val option:Int,
+    val position: Int
+) {
+    companion object {
+        const val START_OF_RULE = 0
+        const val END_OF_RULE = -1
 
+        const val OPTION_MULTI_ITEM = 0
+        const val OPTION_MULTI_EMPTY = 1
+
+        const val OPTION_SLIST_ITEM_OR_SEPERATOR = 0
+        const val OPTION_SLIST_EMPTY = 1
+
+        //for use in multi and separated list
+        const val POSITION_MULIT_ITEM = 1 //TODO: make -ve
+        const val POSITION_SLIST_SEPARATOR = 1 //TODO: make -ve
+        const val POSITION_SLIST_ITEM = 2 //TODO: make -ve
+    }
+
+    val isAtStart get() = START_OF_RULE == position
+    val isAtEnd get() = END_OF_RULE == position
+    val isGoal: Boolean get() = this.rule.isGoal
+    val isTerminal get() = this.rule.isTerminal
+    val isEmbedded get() = this.rule.isEmbedded
+
+    val items: Set<RuntimeRule>
+        get() = if (this.isAtEnd) {
+            emptySet()
+        } else {
+            this.rule.rhs.rhsItemsAt(position)
+        }
+
+    fun atEnd() = RulePosition(this.rule, this.option, END_OF_RULE)
+    fun next(): Set<RulePosition> = when {
+        isAtEnd -> emptySet()
+        else -> {
+            val rhs = (this.rule as RuntimeRule).rhs
+            when (rhs) {
+                is RuntimeRuleRhsTerminal -> emptySet()
+                is RuntimeRuleRhsNonTerminal -> when (rhs) {
+                    is RuntimeRuleRhsGoal -> when {
+                        isAtStart -> setOf(rhs.rulePositions.last())
+                        else -> emptySet()
+                    }
+
+                    is RuntimeRuleRhsConcatenation -> {
+                        val np = this.position + 1
+                        when {
+                            np == rhs.concatItems.size -> setOf(rhs.rulePositions.last())
+                            np < rhs.concatItems.size -> rhs.rulePositionAt(np)
+                            else -> emptySet()
+                        }
+                    }
+                    is RuntimeRuleRhsChoice -> {
+                        TODO()
+                    }
+                    is RuntimeRuleRhsListSimple -> {
+                        TODO()
+                    }
+
+                    is RuntimeRuleRhsListSeparated -> {
+                        TODO()
+                    }
+
+                    else -> emptySet()
+
+                }
+            }
+        }
+    }
+
+    private val _hashCode get() = arrayOf(this.rule, this.option, this.position).contentHashCode()
+    override fun hashCode(): Int = _hashCode
+
+    override fun equals(other: Any?): Boolean = when {
+        other !is RulePosition -> false
+        this.position != other.position -> false
+        this.option != other.option -> false
+        this.rule != other.rule -> false
+        else -> true
+    }
+
+    override fun toString(): String {
+        val r = when {
+            rule == RuntimeRuleSet.END_OF_TEXT -> RuntimeRuleSet.END_OF_TEXT_TAG
+            //runtimeRule.isTerminal -> if (runtimeRule.isPattern) "\"${runtimeRule.name}\"" else "'${runtimeRule.name}'"
+            else -> rule.tag
+        }
+        val rhs = rule.rhs
+        val o = when(rhs) {
+            is RuntimeRuleRhsTerminal -> option
+            is RuntimeRuleRhsNonTerminal -> when(rhs) {
+                is RuntimeRuleRhsGoal -> option
+                is RuntimeRuleRhsConcatenation -> option
+                is RuntimeRuleRhsChoice -> option
+                is RuntimeRuleRhsList -> when (option) {
+                    OPTION_MULTI_EMPTY -> "E"
+                    OPTION_MULTI_ITEM -> "I"
+                    else -> option
+                }
+            }
+        }
+        val p = when(rhs) {
+            is RuntimeRuleRhsTerminal -> position
+            is RuntimeRuleRhsNonTerminal -> when(rhs) {
+                is RuntimeRuleRhsGoal -> position
+                is RuntimeRuleRhsConcatenation -> position
+                is RuntimeRuleRhsChoice -> position
+                is RuntimeRuleRhsList -> when (rhs) {
+                    is RuntimeRuleRhsListSimple -> when (position) {
+                        START_OF_RULE -> "BR"
+                        POSITION_MULIT_ITEM -> "MI"
+                        END_OF_RULE -> "ER"
+                        else -> position
+                    }
+                    is RuntimeRuleRhsListSeparated ->when (position) {
+                        START_OF_RULE -> "BR"
+                        POSITION_SLIST_SEPARATOR -> "LS"
+                        POSITION_SLIST_ITEM -> "LI"
+                        END_OF_RULE -> "ER"
+                        else -> position
+                    }
+                }
+            }
+        }
+        return "${rule.runtimeRuleSetNumber}.RP(${r},$o,$p)"
+    }
+}
+/*
 internal val RulePosition.item: RuntimeRule?
     get() = when {
         this.isAtEnd -> null
         else -> (this.rule as RuntimeRule).item(this.position)
     }
-internal val RulePosition.items: Set<RuntimeRule>
-    get() = if (this.isAtEnd) {
-        emptySet()
-    } else {
-        val rhsItems = (this.rule as RuntimeRule).item(position)
-        listOf((this.rule as RuntimeRule).item(position)).mapNotNull { it }
-    }
-
-internal fun RulePosition.atEnd() = RulePosition(this.rule, RulePosition.END_OF_RULE)
-internal fun RulePosition.next(): Set<RulePosition> = when {
-    isAtEnd -> emptySet()
-    else -> {
-        val rhs = (this.rule as RuntimeRule).rhs
-        return when (rhs) {
-            is RuntimeRuleRhsGoal -> when {
-                isAtStart -> setOf(rhs.rulePositions.last())
-                else -> emptySet()
-            }
-
-            is RuntimeRuleRhsConcatenation -> {
-                val np = this.position + 1
-                when {
-                    np == rhs.items.size -> setOf(rhs.rulePositions.last())
-                    np < rhs.items.size -> setOf(rhs.rulePositions[np])
-                    else -> emptySet()
-                }
-            }
-            is RuntimeRuleRhsListEmpty -> {
-
-            }
-            is RuntimeRuleRhsListSimple -> {
-            }
-
-            is RuntimeRuleRhsListSeparated -> {
-            }
-
-            else -> emptySet()
-
-        }
-    }
-}
 
 
 internal class RuleOptionPosition(
@@ -241,80 +325,7 @@ internal class RuleOptionPosition(
         }
     }
 
-    private val _hashCode get() = arrayOf(this.runtimeRule, this.option, this.position).contentHashCode()
-    override fun hashCode(): Int = _hashCode
 
-    override fun equals(other: Any?): Boolean = when (other) {
-        is RuleOptionPosition -> this.option == other.option &&
-                this.position == other.position &&
-                this.runtimeRule.runtimeRuleSetNumber == other.runtimeRule.runtimeRuleSetNumber &&
-                this.runtimeRule.ruleNumber == other.runtimeRule.ruleNumber
-
-        else -> false
-    }
-
-    override fun toString(): String {
-        val r = when {
-            runtimeRule == RuntimeRuleSet.END_OF_TEXT -> RuntimeRuleSet.END_OF_TEXT_TAG
-            //runtimeRule.isTerminal -> if (runtimeRule.isPattern) "\"${runtimeRule.name}\"" else "'${runtimeRule.name}'"
-            else -> runtimeRule.tag
-        }
-        val o = when (runtimeRule.kind) {
-            RuntimeRuleKind.GOAL -> option
-            RuntimeRuleKind.TERMINAL -> option
-            RuntimeRuleKind.EMBEDDED -> option
-            RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.itemsKind) {
-                RuntimeRuleRhsItemsKind.EMPTY -> option
-                RuntimeRuleRhsItemsKind.CHOICE -> option
-                RuntimeRuleRhsItemsKind.CONCATENATION -> option
-                RuntimeRuleRhsItemsKind.LIST -> when (runtimeRule.rhs.listKind) {
-                    RuntimeRuleListKind.NONE -> option
-                    RuntimeRuleListKind.MULTI -> when (option) {
-                        OPTION_MULTI_EMPTY -> "ME"
-                        OPTION_MULTI_ITEM -> "MI"
-                        else -> option
-                    }
-
-                    RuntimeRuleListKind.SEPARATED_LIST -> when (option) {
-                        OPTION_SLIST_EMPTY -> "LE"
-                        OPTION_SLIST_ITEM_OR_SEPERATOR -> "LI"
-                        else -> option
-                    }
-
-                    else -> option //TODO other list types
-                }
-            }
-        }
-        val p = when (runtimeRule.kind) {
-            RuntimeRuleKind.GOAL -> position
-            RuntimeRuleKind.TERMINAL -> position
-            RuntimeRuleKind.EMBEDDED -> position
-            RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.itemsKind) {
-                RuntimeRuleRhsItemsKind.EMPTY -> position
-                RuntimeRuleRhsItemsKind.CHOICE -> position
-                RuntimeRuleRhsItemsKind.CONCATENATION -> position
-                RuntimeRuleRhsItemsKind.LIST -> when (runtimeRule.rhs.listKind) {
-                    RuntimeRuleListKind.NONE -> position
-                    RuntimeRuleListKind.MULTI -> when (position) {
-                        START_OF_RULE -> "BR"
-                        POSITION_MULIT_ITEM -> "MI"
-                        END_OF_RULE -> "ER"
-                        else -> position
-                    }
-
-                    RuntimeRuleListKind.SEPARATED_LIST -> when (position) {
-                        START_OF_RULE -> "BR"
-                        POSITION_SLIST_SEPARATOR -> "LS"
-                        POSITION_SLIST_ITEM -> "LI"
-                        END_OF_RULE -> "ER"
-                        else -> position
-                    }
-
-                    else -> position //TODO other list types
-                }
-            }
-        }
-        return "${runtimeRule.runtimeRuleSetNumber}.RP(${r},$o,$p)"
-    }
 
 }
+ */

@@ -18,6 +18,7 @@ package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.api.parser.ParserException
 
+@Deprecated("Use runtimeRuleSet { ... }")
 internal class RuntimeRuleNonTerminalBuilder(val rrsb: RuntimeRuleSetBuilder, val name: String) {
 
     private var kind: RuntimeRuleKind = RuntimeRuleKind.NON_TERMINAL

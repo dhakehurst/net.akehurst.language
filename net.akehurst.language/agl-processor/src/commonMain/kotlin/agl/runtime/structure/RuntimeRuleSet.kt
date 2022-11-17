@@ -16,8 +16,6 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.agl.api.runtime.Rule
-import net.akehurst.language.agl.api.runtime.RulePosition
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.api.grammar.Grammar
@@ -43,6 +41,7 @@ internal class RuntimeRuleSet(
         const val RUNTIME_LOOKAHEAD_RULE_NUMBER = -6
         const val ANY_LOOKAHEAD_RULE_NUMBER = -7
         const val UNDEFINED_LOOKAHEAD_RULE_NUMBER = -8
+        const val EMPTY_RULE_NUMBER = -9
 
         const val END_OF_TEXT_TAG = "<EOT>"
         const val GOAL_TAG = "<GOAL>"
@@ -51,6 +50,7 @@ internal class RuntimeRuleSet(
         const val RUNTIME_LOOKAHEAD_RULE_TAG = "<RT>"
         const val ANY_LOOKAHEAD_RULE_TAG = "<ANY>"
         const val UNDEFINED_LOOKAHEAD_RULE_TAG = "<UNDEFINED>"
+        const val EMPTY_RULE_TAG = "<EMPTY>"
 
         val END_OF_TEXT = RuntimeRule(NO_RRS, EOT_RULE_NUMBER, END_OF_TEXT_TAG, false)
             .also { it.setRhs(RuntimeRuleRhsCommonTerminal()) }
@@ -59,6 +59,8 @@ internal class RuntimeRuleSet(
         val ANY_LOOKAHEAD = RuntimeRule(NO_RRS, ANY_LOOKAHEAD_RULE_NUMBER, ANY_LOOKAHEAD_RULE_TAG, false)
             .also { it.setRhs(RuntimeRuleRhsCommonTerminal()) }
         val UNDEFINED_RULE = RuntimeRule(NO_RRS, UNDEFINED_LOOKAHEAD_RULE_NUMBER, UNDEFINED_LOOKAHEAD_RULE_TAG, false)
+            .also { it.setRhs(RuntimeRuleRhsCommonTerminal()) }
+        val EMPTY = RuntimeRule(NO_RRS, EMPTY_RULE_NUMBER, EMPTY_RULE_TAG, false)
             .also { it.setRhs(RuntimeRuleRhsCommonTerminal()) }
     }
 
@@ -119,17 +121,16 @@ internal class RuntimeRuleSet(
         if (skipRules.isEmpty()) {
             null
         } else {
-            //FIXME: make every skip rule have same SKIP_CHOICE_RULE_NUMBER, but different optionIndex !
-            val extraSkipRules = mutableListOf<RuntimeRule>() //FIXME: where to store these !!
-            skipRules.forEachIndexed { index, skpRl ->
-                extraSkipRules.add(
-                    RuntimeRule(this.number, SKIP_CHOICE_RULE_NUMBER, index, SKIP_CHOICE_RULE_TAG, RuntimeRuleChoiceKind.LONGEST_PRIORITY, false).also {
-                        it.setRhs(RuntimeRuleRhsConcatenation(listOf(RhsItem(this, SKIP_CHOICE_RULE_NUMBER))))
-                    }
-                )
+
+            val skipChoiceRule = RuntimeRule(this.number, SKIP_CHOICE_RULE_NUMBER, SKIP_CHOICE_RULE_TAG, false).also {
+                val options = skipRules.mapIndexed { index, skpRl ->
+                    RuntimeRuleRhsConcatenation(listOf(skpRl))
+                }
+                val rhs = RuntimeRuleRhsChoice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, options)
+                it.setRhs(rhs)
             }
-            val skipMultiRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, 0, SKIP_RULE_TAG, RuntimeRuleChoiceKind.NONE, false)
-                .also { it.setRhs(RuntimeRuleRhsListSimple(1, -1, RhsItem(this, SKIP_CHOICE_RULE_NUMBER))) }
+            val skipMultiRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, SKIP_RULE_TAG, false)
+                .also { it.setRhs(RuntimeRuleRhsListSimple(1, -1, skipChoiceRule)) }
 
             //TODO: how to set AutomatonKind here!
             val ss = ParserStateSet(nextStateSetNumber++, this, skipMultiRule, true, AutomatonKind.LOOKAHEAD_1)
@@ -163,10 +164,6 @@ internal class RuntimeRuleSet(
             }
         }
         this.runtimeRules = rules
-    }
-
-    internal fun findRuntimeRules(ruleNumber: Int): List<RuntimeRule> {
-
     }
 
     internal fun automatonFor(goalRuleName: String, automatonKind: AutomatonKind): ParserStateSet {
@@ -281,8 +278,10 @@ internal class RuntimeRuleSet(
         val s0 = this.fetchStateSetFor(userGoalRuleName, automatonKind).startState
         return s0.stateSet.build()
     }
+    fun fetchStateSetFor(userGoalRule: RuntimeRule, automatonKind: AutomatonKind): ParserStateSet =
+        fetchStateSetFor(userGoalRule.tag, automatonKind)
 
-    override fun fetchStateSetFor(userGoalRuleName: String, automatonKind: AutomatonKind): ParserStateSet {
+    fun fetchStateSetFor(userGoalRuleName: String, automatonKind: AutomatonKind): ParserStateSet {
         //TODO: need to cache by possibleEndOfText also
         var stateSet = this.states_cache[userGoalRuleName]
         if (null == stateSet) {
