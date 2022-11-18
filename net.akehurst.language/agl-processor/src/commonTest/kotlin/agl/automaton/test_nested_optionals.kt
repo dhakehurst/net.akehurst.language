@@ -55,11 +55,11 @@ internal class test_nested_optionals : test_AutomatonAbstract() {
     private val R = rrs.findRuntimeRule("R")
     private val Os = rrs.findRuntimeRule("Os")
     private val Bo = rrs.findRuntimeRule("Bo")
-    private val Bo_E = Bo.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
+    private val Bo_E = EMPTY
     private val Co = rrs.findRuntimeRule("Co")
-    private val Co_E = Co.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
+    private val Co_E = EMPTY
     private val Do = rrs.findRuntimeRule("Do")
-    private val Do_E = Do.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
+    private val Do_E = EMPTY
     private val a = rrs.findRuntimeRule("'a'")
     private val b = rrs.findRuntimeRule("'b'")
     private val c = rrs.findRuntimeRule("'c'")

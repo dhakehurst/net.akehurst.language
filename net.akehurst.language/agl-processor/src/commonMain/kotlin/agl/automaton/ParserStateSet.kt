@@ -238,7 +238,7 @@ internal class ParserStateSet(
             }
             done[rule.ruleNumber] -> used
             else -> when {
-                rule.kind === RuntimeRuleKind.NON_TERMINAL -> {
+                rule.isTerminal -> {
                     used.add(rule)
                     done[rule.ruleNumber] = true
                     for (sr in rule.rhs.rhsItems) {
@@ -307,6 +307,40 @@ internal class ParserStateSet(
     override fun equals(other: Any?): Boolean = when (other) {
         is ParserStateSet -> this.number == other.number
         else -> false
+    }
+
+    fun usedAutomatonToString(withStates: Boolean=false): String {
+        val b = StringBuilder()
+        val states = this.allBuiltStates
+        val transitions = states.flatMap { it.outTransitions.allBuiltTransitions }
+
+        b.append("States: ${states.size}  Transitions: ${transitions.size} ")
+        b.append("\n")
+
+        if (withStates) {
+            states.forEach {
+                val str = "$it {${it.outTransitions.allPrevious.map { it.number.value }}}"
+                b.append(str).append("\n")
+            }
+        }
+
+        transitions.sortedBy { it.from.rulePositions.toString() }.sortedBy { it.to.rulePositions.toString() }
+            .forEach { tr ->
+                val prev = tr.from.outTransitions.previousFor(tr)
+                    .map { it.number.value } //transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }
+                    .sorted()
+                val frStr = "${tr.from.number.value}:${tr.from.rulePositions}"
+                val toStr = "${tr.to.number.value}:${tr.to.rulePositions}"
+                val trStr = "$frStr --> $toStr"
+                val lh = tr.lookahead.joinToString(separator = "|") { "[${it.guard.fullContent.joinToString { it.tag }}](${it.up.fullContent.joinToString { it.tag }})" }
+                b.append(trStr)
+                b.append(" ${tr.action} ")
+                b.append(lh)
+                b.append(" {${prev.joinToString()}} ")
+                b.append("\n")
+            }
+
+        return b.toString()
     }
 
     override fun toString(): String = "ParserStateSet{$number (${this.userGoalRule.tag}) }"

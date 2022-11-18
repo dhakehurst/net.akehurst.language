@@ -39,6 +39,7 @@ internal class ParserState(
     }
 
     //TODO: fast at runtime if not lazy
+    val rulePositionIdentity = rulePositions.map { it.identity }.toSet()
     val runtimeRules: List<RuntimeRule> by lazy { this.rulePositions.map { it.rule as RuntimeRule }.toList() }
     val runtimeRulesSet: Set<RuntimeRule> by lazy { this.rulePositions.map { it.rule as RuntimeRule }.toSet() }
     val optionList: List<Int> by lazy { this.rulePositions.map { it.option }.toList() }
@@ -62,12 +63,12 @@ internal class ParserState(
 
     val firstRule get() = runtimeRules.first()
 
-    val isLeaf: Boolean get() = this.firstRule.kind == RuntimeRuleKind.TERMINAL //should only be one RP if it is a leaf
+    val isLeaf: Boolean get() = this.firstRule.isTerminal
 
     val isAtEnd: Boolean get() = this.rulePositions.any { it.isAtEnd } //all in state should be either atEnd or notAtEnd
     val isNotAtEnd: Boolean get() = this.rulePositions.any { it.isAtEnd.not() } //all in state should be either atEnd or notAtEnd
 
-    val isGoal = this.firstRule.kind == RuntimeRuleKind.GOAL
+    val isGoal = this.firstRule.isGoal
     val isUserGoal = this.firstRule == this.stateSet.userGoalRule
 
     internal fun createLookaheadSet(includesUP: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet =

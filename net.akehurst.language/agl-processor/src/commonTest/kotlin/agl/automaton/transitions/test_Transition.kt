@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.StateNumber
@@ -60,13 +61,13 @@ internal class test_Transition : test_AutomatonUtilsAbstract() {
         val tr1 = Transition(
             from = s1,
             to = s2,
-            action = Transition.ParseAction.HEIGHT,
+            action = ParseAction.HEIGHT,
             lookahead = setOf(Lookahead(LHS(EOT, d).lhs(stateSet), LHS(EOT, d).lhs(stateSet)), Lookahead(LHS(a).lhs(stateSet), LHS(a).lhs(stateSet)))
         )
         val tr2 = Transition(
             from = s1,
             to = s2,
-            action = Transition.ParseAction.HEIGHT,
+            action = ParseAction.HEIGHT,
             lookahead = setOf(
                 Lookahead(LHS(EOT).lhs(stateSet), LHS(EOT).lhs(stateSet)),
                 Lookahead(LHS(d).lhs(stateSet), LHS(d).lhs(stateSet)),

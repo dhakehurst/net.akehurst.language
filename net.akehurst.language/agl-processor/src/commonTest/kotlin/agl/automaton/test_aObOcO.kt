@@ -42,11 +42,11 @@ internal class test_aObOcO : test_AutomatonAbstract() {
     private val S = rrs.findRuntimeRule("S")
     private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
     private val aOpt = rrs.findRuntimeRule("aOpt")
-    private val aOpt_E = aOpt.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
+    private val aOpt_E = EMPTY
     private val bOpt = rrs.findRuntimeRule("bOpt")
-    private val bOpt_E = bOpt.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
+    private val bOpt_E = EMPTY
     private val cOpt = rrs.findRuntimeRule("cOpt")
-    private val cOpt_E = cOpt.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
+    private val cOpt_E = EMPTY
     private val a = rrs.findRuntimeRule("'a'")
     private val b = rrs.findRuntimeRule("'b'")
     private val c = rrs.findRuntimeRule("'c'")

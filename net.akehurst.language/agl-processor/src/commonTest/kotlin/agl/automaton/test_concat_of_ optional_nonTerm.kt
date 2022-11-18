@@ -55,11 +55,11 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
         val G = SM.startState.runtimeRules.first()
         val optA = rrs.findRuntimeRule("optA")
         val A = rrs.findRuntimeRule("A")
-        val E_optA = optA.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
+        val E_optA = EMPTY
         val B = rrs.findRuntimeRule("B")
         val L = rrs.findRuntimeRule("L")
         val Es = rrs.findRuntimeRule("Es")
-        val E_Es = Es.rhs.items[RuntimeRuleRhs.SLIST__EMPTY_RULE]
+        val E_Es = EMPTY
         val T_a = rrs.findRuntimeRule("'a'")
         val T_b = rrs.findRuntimeRule("'b'")
         val T_c = rrs.findRuntimeRule("'c'")

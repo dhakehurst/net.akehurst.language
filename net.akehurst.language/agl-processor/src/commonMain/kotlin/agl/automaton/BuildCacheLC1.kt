@@ -450,7 +450,6 @@ internal class BuildCacheLC1(
             when {
                 rp.isAtEnd -> l1States.add(state)
                 else -> {
-                    // item is only null if rp isTerminal (handled above)
                     val rps = rp.items.flatMap { it.rulePositions }
                     for (childRP in rps) {
                         val childLhs = state.expectedAt
@@ -458,7 +457,7 @@ internal class BuildCacheLC1(
                         if (l1States.contains(childState).not()) {
                             l1States.add(childState)
                             val pr = childState.prev
-                            parentOf[Pair(pr, childRP.rule as RuntimeRule)].add(state)
+                            parentOf[Pair(pr, childRP.rule)].add(state)
                             todo.push(childState)
                         } else {
                             // already done

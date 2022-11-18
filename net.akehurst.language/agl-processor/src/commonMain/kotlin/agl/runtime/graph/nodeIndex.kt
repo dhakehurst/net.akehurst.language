@@ -138,8 +138,8 @@ internal class CompleteNodeIndex(
 
     val highestPriorityRule get() = this.state.rulePositions.maxBy { it.option }.rule as RuntimeRule
     val firstRule: RuntimeRule by lazy { this.state.rulePositions[0].rule as RuntimeRule }
-    val isLeaf: Boolean get() = firstRule.kind == RuntimeRuleKind.TERMINAL //should only be one if true
-    val isEmbedded: Boolean get() = firstRule.kind == RuntimeRuleKind.EMBEDDED //should only be one if true
+    val isLeaf: Boolean get() = firstRule.isTerminal //should only be one if true
+    val isEmbedded: Boolean get() = firstRule.isEmbedded //should only be one if true
     val hasSkipData: Boolean get() = this.nextInputPosition != nextInputPositionAfterSkip
 
     val optionList: List<Int> get() = this.state.priorityList

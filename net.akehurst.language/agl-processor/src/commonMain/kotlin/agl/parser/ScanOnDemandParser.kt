@@ -488,8 +488,8 @@ internal class ScanOnDemandParser(
     override fun expectedTerminalsAt(goalRuleName: String, inputText: String, position: Int, automatonKind: AutomatonKind): Set<RuntimeRule> {
         return this.expectedAt(goalRuleName, inputText, position, automatonKind)
             .flatMap {
-                when (it.kind) {
-                    RuntimeRuleKind.TERMINAL -> listOf(it)
+                when {
+                    it.isTerminal -> listOf(it)
                     //RuntimeRuleKind.NON_TERMINAL -> this.runtimeRuleSet.firstTerminals[it.ruleNumber]
                     else -> TODO()
                 }

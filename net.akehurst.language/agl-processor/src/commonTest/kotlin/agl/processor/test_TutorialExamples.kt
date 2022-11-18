@@ -25,11 +25,6 @@ class test_TutorialExamples {
 
 
     @Test
-    fun example1() {
-
-    }
-
-    @Test
     fun example3_int_as_userDefinedType() {
         val grammarStr = """
             namespace test

@@ -22,29 +22,69 @@ import kotlin.test.assertEquals
 class test_RuntimeRule_rulePositions {
 
     @Test
-    fun rulePositions_list_separated_0_0() {
-        // S = ['a'/',']?
+    fun rulePositions_literal_0_0() {
+        // 'a' ?
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",0,0,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            literal("'a'", "a")
+        }
+        val ta = rrs.findRuntimeRule("'a'")
+
+        val expected = setOf<RulePosition>()
+
+        //when
+        val actual = ta.rulePositions
+
+        //then
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun rulePositions_concat_literal_0_0() {
+        // S = 'a' ?
+
+        //given
+        val rrs = runtimeRuleSet {
+            concatenation("S") { literal("a") }
         }
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_EMPTY,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_EMPTY,RulePosition.END_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+            RulePosition(S, 0, RulePosition.END_OF_RULE)
         )
 
         //when
         val actual = S.rulePositions
 
         //then
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun rulePositions_list_separated_0_0() {
+        // S = ['a'/',']?
+
+        //given
+        val rrs = runtimeRuleSet {
+            sList("S", 0, 0, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
+        }
+        val S = rrs.findRuntimeRule("S")
+
+        val expected = setOf(
+            RulePosition(S, RulePosition.OPTION_SLIST_EMPTY, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_EMPTY, RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
+        )
+
+        //when
+        val actual = S.rulePositions
+
+        //then
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -53,24 +93,24 @@ class test_RuntimeRule_rulePositions {
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",0,1,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 0, 1, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_EMPTY,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_EMPTY,RulePosition.END_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_EMPTY, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_EMPTY, RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
         val actual = S.rulePositions
 
         //then
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -79,25 +119,25 @@ class test_RuntimeRule_rulePositions {
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",0,2,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 0, 2, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_EMPTY,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_EMPTY,RulePosition.END_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_EMPTY, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_EMPTY, RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
         val actual = S.rulePositions
 
         //then
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -106,26 +146,26 @@ class test_RuntimeRule_rulePositions {
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",0,5,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 0, 5, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_EMPTY,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_EMPTY,RulePosition.END_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_ITEM),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_EMPTY, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_EMPTY, RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
         val actual = S.rulePositions
 
         //then
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -134,26 +174,26 @@ class test_RuntimeRule_rulePositions {
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",0,RuntimeRuleRhsList.MULTIPLICITY_N,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 0, RuntimeRuleRhsList.MULTIPLICITY_N, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_EMPTY,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_EMPTY,RulePosition.END_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_ITEM),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_EMPTY, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_EMPTY, RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
         val actual = S.rulePositions
 
         //then
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -162,22 +202,22 @@ class test_RuntimeRule_rulePositions {
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",1,0,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 1, 0, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
         val actual = S.rulePositions
 
         //then
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -186,22 +226,22 @@ class test_RuntimeRule_rulePositions {
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",1,1,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 1, 1, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
         val actual = S.rulePositions
 
         //then
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -210,23 +250,23 @@ class test_RuntimeRule_rulePositions {
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",1,2,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 1, 2, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
         val actual = S.rulePositions
 
         //then
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -235,24 +275,24 @@ class test_RuntimeRule_rulePositions {
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",1,5,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 1, 5, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_ITEM),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
         val actual = S.rulePositions
 
         //then
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -261,24 +301,24 @@ class test_RuntimeRule_rulePositions {
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",1,RuntimeRuleRhsList.MULTIPLICITY_N,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 1, RuntimeRuleRhsList.MULTIPLICITY_N, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_ITEM),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
         val actual = S.rulePositions
 
         //then
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -287,23 +327,23 @@ class test_RuntimeRule_rulePositions {
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",2,2,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 2, 2, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
         val actual = S.rulePositions
 
         //then
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -312,24 +352,24 @@ class test_RuntimeRule_rulePositions {
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",2,5,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 2, 5, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_ITEM),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
         val actual = S.rulePositions
 
         //then
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -338,24 +378,24 @@ class test_RuntimeRule_rulePositions {
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",2,RuntimeRuleRhsList.MULTIPLICITY_N,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 2, RuntimeRuleRhsList.MULTIPLICITY_N, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_ITEM),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
         val actual = S.rulePositions
 
         //then
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -364,24 +404,24 @@ class test_RuntimeRule_rulePositions {
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",5,5,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 5, 5, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_ITEM),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
         val actual = S.rulePositions
 
         //then
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -390,24 +430,24 @@ class test_RuntimeRule_rulePositions {
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",5,7,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 5, 7, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_ITEM),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
         val actual = S.rulePositions
 
         //then
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -416,24 +456,24 @@ class test_RuntimeRule_rulePositions {
 
         //given
         val rrs = runtimeRuleSet {
-            sList("S",5, RuntimeRuleRhsList.MULTIPLICITY_N,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 5, RuntimeRuleRhsList.MULTIPLICITY_N, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val S = rrs.findRuntimeRule("S")
 
         val expected = setOf(
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.START_OF_RULE),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_ITEM),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.POSITION_SLIST_SEPARATOR),
-            RulePosition(S,RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR,RulePosition.END_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+            RulePosition(S, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
         )
 
         //when
         val actual = S.rulePositions
 
         //then
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
 }

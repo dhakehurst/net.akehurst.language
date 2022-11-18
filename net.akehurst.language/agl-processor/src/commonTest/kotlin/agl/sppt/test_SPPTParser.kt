@@ -169,7 +169,7 @@ class test_SPPTParser {
         val actual = sut.addTree(treeString)
 
         assertNotNull(actual)
-        assertEquals("a { §empty.a }", actual.toStringAll)
+        assertEquals("a { <EMPTY> }", actual.toStringAll)
     }
 
     @Test

@@ -43,7 +43,7 @@ internal class GrowingNode(
 
     var previous: MutableMap<GrowingNodeIndex, PreviousInfo> = mutableMapOf()
     val next: MutableSet<GrowingNode> = mutableSetOf() //TODO: do we actually need this?
-    val isLeaf: Boolean get() = this.runtimeRules.first().kind == RuntimeRuleKind.TERMINAL
+    val isLeaf: Boolean get() = this.runtimeRules.first().isTerminal
     val isEmptyMatch: Boolean get() = this.currentState.isAtEnd && this.startPosition == this.nextInputPosition
 
     fun addNext(value: GrowingNode) {

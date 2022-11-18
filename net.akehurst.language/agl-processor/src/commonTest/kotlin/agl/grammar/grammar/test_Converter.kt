@@ -16,9 +16,11 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
+import net.akehurst.language.agl.automaton.AutomatonTest
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
 import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -26,186 +28,97 @@ import kotlin.test.assertTrue
 
 internal class test_Converter {
 
-    private fun checkRule(
-        number: Int,
-        r: RuntimeRule,
-        tag: String,
-        value: String,
-        ruleKind: RuntimeRuleKind,
-        isPattern: Boolean,
-        isSkip: Boolean,
-        embeddedRuntimeRuleSet: RuntimeRuleSet?,
-        embeddedStartRule: RuntimeRule?,
-        itemsKind: RuntimeRuleRhsItemsKind,
-        choiceKind: RuntimeRuleChoiceKind,
-        listKind: RuntimeRuleListKind,
-        multiMin: Int,
-        multiMax: Int,
-        itemsSize: Int
-    ) {
-        assertEquals(number, r.ruleNumber)
-        assertEquals(tag, r.tag)
-        assertEquals(value, r.value)
-        assertEquals(ruleKind, r.kind)
-        assertEquals(isPattern, r.isPattern)
-        assertEquals(isSkip, r.isSkip)
-        assertEquals(embeddedRuntimeRuleSet, r.embeddedRuntimeRuleSet)
-        assertEquals(embeddedStartRule, r.embeddedStartRule)
-
-        if (null != r.rhsOpt) {
-            assertEquals(itemsKind, r.rhs.itemsKind)
-            assertEquals(listKind, r.rhs.listKind)
-            assertEquals(choiceKind, r.rhs.choiceKind)
-            assertEquals(multiMin, r.rhs.multiMin)
-            assertEquals(multiMax, r.rhs.multiMax)
-            assertEquals(itemsSize, r.rhs.items.size)
-        }
-    }
-
-    /** check empty rule */
-    private fun checkERule(n: Int, r: RuntimeRule, ptext: String, isSkip: Boolean, ruleThatIsEmpty: RuntimeRule) {
-        checkRule(
-            n, r, ptext, ptext, RuntimeRuleKind.TERMINAL, false, isSkip, null, null,
-            RuntimeRuleRhsItemsKind.EMPTY, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, 1
-        )
-        assertEquals(ruleThatIsEmpty, r.rhs.items[0])
-    }
-
-    /** check terminal (pattern or literal) rule */
-    private fun checkTRule(n: Int, r: RuntimeRule, tag: String, ptext: String, isPattern: Boolean, isSkip: Boolean) {
-        checkRule(
-            n, r, tag, ptext, RuntimeRuleKind.TERMINAL, isPattern, isSkip, null, null,
-            RuntimeRuleRhsItemsKind.EMPTY, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, 0
-        )
-        assertEquals(null, r.rhsOpt)
-    }
-
-    /** check concatenation rule */
-    private fun checkNRule(n: Int, r: RuntimeRule, tag: String, isSkip: Boolean, numItems: Int) {
-        checkRule(
-            n, r, tag, "", RuntimeRuleKind.NON_TERMINAL, false, isSkip, null, null,
-            RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, numItems
-        )
-    }
-
-    /** check choice rule */
-    private fun checkCRule(n: Int, r: RuntimeRule, tag: String, isSkip: Boolean, choiceKind: RuntimeRuleChoiceKind, numItems: Int) {
-        checkRule(
-            n, r, tag, "", RuntimeRuleKind.NON_TERMINAL, false, isSkip, null, null,
-            RuntimeRuleRhsItemsKind.CHOICE, choiceKind, RuntimeRuleListKind.NONE, -1, 0, numItems
-        )
-    }
-
-    /** check list rule */
-    private fun checkLRule(n: Int, r: RuntimeRule, tag: String, isSkip: Boolean, listKind: RuntimeRuleListKind, numItems: Int, min: Int, max: Int) {
-        checkRule(
-            n, r, tag, "", RuntimeRuleKind.NON_TERMINAL, false, isSkip, null, null,
-            RuntimeRuleRhsItemsKind.LIST, RuntimeRuleChoiceKind.NONE, listKind, min, max, numItems
-        )
-    }
-
-    private fun checkItems(owner: RuntimeRule, vararg items: RuntimeRule) {
-        assertTrue(owner.rhs.items.contentEquals(items))
-    }
-
     @Test
     fun construct() {
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        assertNotNull(sut)
+        val expected = runtimeRuleSet {
+
+        }
+        assertTrue(expected.matches(actual))
     }
 
     @Test
     fun emptyRule() {
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").empty()
+        gb.rule("S").empty()
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            concatenation("S") { empty() }
+        }
 
-        assertEquals(2, actual.runtimeRules.size)
-        this.checkNRule(0, actual.runtimeRules[0], "r", false, 1)
-        this.checkERule(1, actual.runtimeRules[1], "§empty.r", false, actual.runtimeRules[0])
-
+        assertTrue(expected.matches(actual))
     }
 
     @Test
-    fun terminalLiteralRule() {
-        // r = 'a' ;
+    fun leaf_terminalLiteralRule() {
+        // S = 'a' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").concatenation(gb.terminalLiteral("a"))
+        gb.leaf("A").concatenation(gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            literal("A", "a")
+        }
 
-        assertEquals(2, actual.runtimeRules.size)
-        this.checkNRule(0, actual.runtimeRules[0], "r", false, 1)
-        this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
-    fun terminalLiteralRule_2() {
-        // r = 'a' 'a' ;
+    fun single_terminalLiteralRule_when_used_twice() {
+        // S = 'a' 'a' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").concatenation(gb.terminalLiteral("a"), gb.terminalLiteral("a"))
+        gb.rule("S").concatenation(gb.terminalLiteral("a"), gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            concatenation("S") { ref("'a'"); ref("'a'") }
+            literal("'a'", "a")
+        }
 
-        assertEquals(2, actual.runtimeRules.size)
-        this.checkNRule(0, actual.runtimeRules[0], "r", false, 2)
-        this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1], actual.runtimeRules[1])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
-    fun terminalPatternRule() {
-        // r = "[a-c]" ;
+    fun leaf_terminalPatternRule() {
+        // S = "[a-c]" ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").concatenation(gb.terminalPattern("[a-c]"))
+        gb.leaf("ABC").concatenation(gb.terminalPattern("[a-c]"))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            pattern("ABC", "[a-c]")
+        }
 
-        assertEquals(2, actual.runtimeRules.size)
-        this.checkNRule(0, actual.runtimeRules[0], "r", false, 1)
-        this.checkTRule(1, actual.runtimeRules[1], "\"[a-c]\"", "[a-c]", true, false)
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
     fun concatenationLiteralRule() {
-        // r = 'a' 'b' 'c' ;
+        // S = 'a' 'b' 'c' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").concatenation(gb.terminalLiteral("a"), gb.terminalLiteral("b"), gb.terminalLiteral("c"))
+        gb.rule("r").concatenation(gb.terminalLiteral("S"), gb.terminalLiteral("b"), gb.terminalLiteral("c"))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            concatenation("S") { literal("a"); literal("b"); literal("c") }
+        }
 
-        assertEquals(4, actual.runtimeRules.size)
-        this.checkNRule(0, actual.runtimeRules[0], "r", false, 3)
-        this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
-        this.checkTRule(2, actual.runtimeRules[2], "'b'", "b", false, false)
-        this.checkTRule(3, actual.runtimeRules[3], "'c'", "c", false, false)
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1], actual.runtimeRules[2], actual.runtimeRules[3])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
@@ -218,26 +131,19 @@ internal class test_Converter {
         gb.rule("a").concatenation(gb.terminalLiteral("a"))
         gb.rule("b").concatenation(gb.terminalLiteral("b"))
         gb.rule("c").concatenation(gb.terminalLiteral("c"))
-        gb.rule("r").concatenation(gb.nonTerminal("a"), gb.nonTerminal("b"), gb.nonTerminal("c"))
+        gb.rule("S").concatenation(gb.nonTerminal("a"), gb.nonTerminal("b"), gb.nonTerminal("c"))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            concatenation("S") { ref("a"); ref("b"); ref("c") }
+            concatenation("a") { literal("a") }
+            concatenation("b") { literal("b") }
+            concatenation("c") { literal("c") }
+        }
 
-        assertEquals(7, actual.runtimeRules.size)
-        this.checkNRule(0, actual.runtimeRules[0], "a", false, 1)
-        this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
-        this.checkNRule(2, actual.runtimeRules[2], "b", false, 1)
-        this.checkTRule(3, actual.runtimeRules[3], "'b'", "b", false, false)
-        this.checkNRule(4, actual.runtimeRules[4], "c", false, 1)
-        this.checkTRule(5, actual.runtimeRules[5], "'c'", "c", false, false)
-        this.checkNRule(6, actual.runtimeRules[6], "r", false, 3)
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1])
-        this.checkItems(actual.runtimeRules[2], actual.runtimeRules[3])
-        this.checkItems(actual.runtimeRules[4], actual.runtimeRules[5])
-        this.checkItems(actual.runtimeRules[6], actual.runtimeRules[0], actual.runtimeRules[2], actual.runtimeRules[4])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
@@ -247,17 +153,17 @@ internal class test_Converter {
         gb.rule("r").choiceLongestFromConcatenation(gb.concatenation(gb.terminalLiteral("a")), gb.concatenation(gb.terminalLiteral("b")), gb.concatenation(gb.terminalLiteral("c")))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            choiceLongest("S") {
+                literal("a")
+                literal("b")
+                literal("c")
+            }
+        }
 
-        assertEquals(4, actual.runtimeRules.size)
-        this.checkCRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleChoiceKind.LONGEST_PRIORITY, 3)
-        this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
-        this.checkTRule(2, actual.runtimeRules[2], "'b'", "b", false, false)
-        this.checkTRule(3, actual.runtimeRules[3], "'c'", "c", false, false)
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1], actual.runtimeRules[2], actual.runtimeRules[3])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
@@ -270,26 +176,23 @@ internal class test_Converter {
         gb.rule("a").concatenation(gb.terminalLiteral("a"))
         gb.rule("b").concatenation(gb.terminalLiteral("b"))
         gb.rule("c").concatenation(gb.terminalLiteral("c"))
-        gb.rule("r").choiceLongestFromConcatenation(gb.concatenation(gb.nonTerminal("a")), gb.concatenation(gb.nonTerminal("b")), gb.concatenation(gb.nonTerminal("c")))
+        gb.rule("S").choiceLongestFromConcatenation(gb.concatenation(gb.nonTerminal("a")), gb.concatenation(gb.nonTerminal("b")), gb.concatenation(gb.nonTerminal("c")))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            choiceLongest("S") {
+                ref("a")
+                ref("b")
+                ref("c")
+            }
+            concatenation("a") { literal("a") }
+            concatenation("b") { literal("b") }
+            concatenation("c") { literal("c") }
+        }
 
-        assertEquals(7, actual.runtimeRules.size)
-        this.checkNRule(0, actual.runtimeRules[0], "a", false, 1)
-        this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
-        this.checkNRule(2, actual.runtimeRules[2], "b", false, 1)
-        this.checkTRule(3, actual.runtimeRules[3], "'b'", "b", false, false)
-        this.checkNRule(4, actual.runtimeRules[4], "c", false, 1)
-        this.checkTRule(5, actual.runtimeRules[5], "'c'", "c", false, false)
-        this.checkCRule(6, actual.runtimeRules[6], "r", false, RuntimeRuleChoiceKind.LONGEST_PRIORITY, 3)
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1])
-        this.checkItems(actual.runtimeRules[2], actual.runtimeRules[3])
-        this.checkItems(actual.runtimeRules[4], actual.runtimeRules[5])
-        this.checkItems(actual.runtimeRules[6], actual.runtimeRules[0], actual.runtimeRules[2], actual.runtimeRules[4])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
@@ -299,19 +202,17 @@ internal class test_Converter {
         gb.rule("r").choiceLongestFromConcatenation(gb.concatenation(gb.terminalLiteral("a"), gb.terminalLiteral("b")), gb.concatenation(gb.terminalLiteral("c")))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            choiceLongest("S") {
+                ref("ab")
+                literal("c")
+            }
+            concatenation("ab") { literal("a"); literal("b") }
+        }
 
-        assertEquals(5, actual.runtimeRules.size)
-        this.checkCRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleChoiceKind.LONGEST_PRIORITY, 2)
-        this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
-        this.checkTRule(2, actual.runtimeRules[2], "'b'", "b", false, false)
-        this.checkNRule(3, actual.runtimeRules[3], "§r§choice1", false, 2)
-        this.checkTRule(4, actual.runtimeRules[4], "'c'", "c", false, false)
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[3], actual.runtimeRules[4])
-        this.checkItems(actual.runtimeRules[3], actual.runtimeRules[1], actual.runtimeRules[2])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
@@ -325,17 +226,17 @@ internal class test_Converter {
         )
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            choicePriority("S") {
+                literal("a")
+                literal("b")
+                literal("c")
+            }
+        }
 
-        assertEquals(4, actual.runtimeRules.size)
-        this.checkCRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleChoiceKind.PRIORITY_LONGEST, 3)
-        this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
-        this.checkTRule(2, actual.runtimeRules[2], "'b'", "b", false, false)
-        this.checkTRule(3, actual.runtimeRules[3], "'c'", "c", false, false)
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1], actual.runtimeRules[2], actual.runtimeRules[3])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
@@ -348,50 +249,44 @@ internal class test_Converter {
         gb.rule("a").concatenation(gb.terminalLiteral("a"))
         gb.rule("b").concatenation(gb.terminalLiteral("b"))
         gb.rule("c").concatenation(gb.terminalLiteral("c"))
-        gb.rule("r").choicePriority(
+        gb.rule("S").choicePriority(
             gb.concatenation(gb.nonTerminal("a")),
             gb.concatenation(gb.nonTerminal("b")),
             gb.concatenation(gb.nonTerminal("c"))
         )
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            choicePriority("S") {
+                ref("a")
+                ref("b")
+                ref("c")
+            }
+            concatenation("a") { literal("a") }
+            concatenation("b") { literal("b") }
+            concatenation("c") { literal("c") }
+        }
 
-        assertEquals(7, actual.runtimeRules.size)
-        this.checkNRule(0, actual.runtimeRules[0], "a", false, 1)
-        this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
-        this.checkNRule(2, actual.runtimeRules[2], "b", false, 1)
-        this.checkTRule(3, actual.runtimeRules[3], "'b'", "b", false, false)
-        this.checkNRule(4, actual.runtimeRules[4], "c", false, 1)
-        this.checkTRule(5, actual.runtimeRules[5], "'c'", "c", false, false)
-        this.checkCRule(6, actual.runtimeRules[6], "r", false, RuntimeRuleChoiceKind.PRIORITY_LONGEST, 3)
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1])
-        this.checkItems(actual.runtimeRules[2], actual.runtimeRules[3])
-        this.checkItems(actual.runtimeRules[4], actual.runtimeRules[5])
-        this.checkItems(actual.runtimeRules[6], actual.runtimeRules[0], actual.runtimeRules[2], actual.runtimeRules[4])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
     fun multi_0_1_LiteralRule() {
-        // r = 'a'? ;
+        // S = 'a'? ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").multi(0, 1, gb.terminalLiteral("a"))
+        gb.rule("S").multi(0, 1, gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            multi("S", 0, 1, "'a'")
+            literal("'a'", "a")
+        }
 
-        assertEquals(3, actual.runtimeRules.size)
-        this.checkLRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleListKind.MULTI, 2, 0, 1)
-        this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
-        this.checkERule(2, actual.runtimeRules[2], "§empty.r", false, actual.runtimeRules[0])
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1], actual.runtimeRules[2])
-        this.checkItems(actual.runtimeRules[2], actual.runtimeRules[0])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
@@ -403,19 +298,14 @@ internal class test_Converter {
         gb.rule("a").concatenation(gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            multi("S", 0, 1, "a")
+            concatenation("a") { literal("a") }
+        }
 
-        assertEquals(4, actual.runtimeRules.size)
-        this.checkLRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleListKind.MULTI, 2, 0, 1)
-        this.checkNRule(1, actual.runtimeRules[1], "a", false, 1)
-        this.checkTRule(2, actual.runtimeRules[2], "'a'", "a", false, false)
-        this.checkERule(3, actual.runtimeRules[3], "§empty.r", false, actual.runtimeRules[0])
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1], actual.runtimeRules[3])
-        this.checkItems(actual.runtimeRules[1], actual.runtimeRules[2])
-        this.checkItems(actual.runtimeRules[3], actual.runtimeRules[0])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
@@ -425,41 +315,33 @@ internal class test_Converter {
         gb.rule("r").multi(0, -1, gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            multi("S", 0, -1, "'a'")
+            literal("'a'", "a")
+        }
 
-        assertEquals(3, actual.runtimeRules.size)
-        this.checkLRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleListKind.MULTI, 2, 0, -1)
-        this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
-        this.checkERule(2, actual.runtimeRules[2], "§empty.r", false, actual.runtimeRules[0])
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1], actual.runtimeRules[2])
-        this.checkItems(actual.runtimeRules[2], actual.runtimeRules[0])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
     fun multi_0_n_NonTerminalRule() {
-        // r = a* ;
+        // S = a* ;
         // a = 'a' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").multi(0, -1, gb.nonTerminal("a"))
+        gb.rule("S").multi(0, -1, gb.nonTerminal("a"))
         gb.rule("a").concatenation(gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            multi("S", 0, -1, "a")
+            concatenation("a") { literal("a") }
+        }
 
-        assertEquals(4, actual.runtimeRules.size)
-        this.checkLRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleListKind.MULTI, 2, 0, -1)
-        this.checkNRule(1, actual.runtimeRules[1], "a", false, 1)
-        this.checkTRule(2, actual.runtimeRules[2], "'a'", "a", false, false)
-        this.checkERule(3, actual.runtimeRules[3], "§empty.r", false, actual.runtimeRules[0])
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1], actual.runtimeRules[3])
-        this.checkItems(actual.runtimeRules[1], actual.runtimeRules[2])
-        this.checkItems(actual.runtimeRules[3], actual.runtimeRules[0])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
@@ -469,83 +351,73 @@ internal class test_Converter {
         gb.rule("r").multi(1, -1, gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            multi("S", 1, -1, "'a'")
+            literal("'a'", "a")
+        }
 
-        assertEquals(2, actual.runtimeRules.size)
-        this.checkLRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleListKind.MULTI, 1, 1, -1)
-        this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
     fun multi_1_n_NonTerminalRule() {
-        // r = a+ ;
+        // S = a+ ;
         // a = 'a' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").multi(1, -1, gb.nonTerminal("a"))
+        gb.rule("S").multi(1, -1, gb.nonTerminal("a"))
         gb.rule("a").concatenation(gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            multi("S", 1, -1, "a")
+            concatenation("a") { literal("a") }
+        }
 
-        assertEquals(3, actual.runtimeRules.size)
-        this.checkLRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleListKind.MULTI, 1, 1, -1)
-        this.checkNRule(1, actual.runtimeRules[1], "a", false, 1)
-        this.checkTRule(2, actual.runtimeRules[2], "'a'", "a", false, false)
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1])
-        this.checkItems(actual.runtimeRules[1], actual.runtimeRules[2])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
     fun sList_0_1_LiteralRule() {
-        // r = ['a' / ',']? ;
+        // S = ['a' / ',']? ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").separatedList(0, 1, gb.terminalLiteral(","), gb.terminalLiteral("a"))
+        gb.rule("S").separatedList(0, 1, gb.terminalLiteral(","), gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            sList("S", 0, 1, "'a'", "','")
+            literal("'a'","a")
+            literal("','",",")
+        }
 
-        assertEquals(4, actual.runtimeRules.size)
-        this.checkLRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleListKind.SEPARATED_LIST, 3, 0, 1)
-        this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
-        this.checkTRule(2, actual.runtimeRules[2], "','", ",", false, false)
-        this.checkERule(3, actual.runtimeRules[3], "§empty.r", false, actual.runtimeRules[0])
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1], actual.runtimeRules[2], actual.runtimeRules[3])
-        this.checkItems(actual.runtimeRules[3], actual.runtimeRules[0])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
     fun sList_0_1_NonTerminalRule() {
-        // r = [a / ',']? ;
+        // S = [a / c]? ;
         // a = 'a' ;
+        // c = ',' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("r").separatedList(0, 1, gb.terminalLiteral(","), gb.nonTerminal("a"))
+        gb.rule("S").separatedList(0, 1, gb.terminalLiteral("c"), gb.nonTerminal("a"))
         gb.rule("a").concatenation(gb.terminalLiteral("a"))
+        gb.rule("c").concatenation(gb.terminalLiteral(","))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            sList("S", 0, 1, "a", "c")
+            concatenation("a") { literal("a") }
+            concatenation("c") { literal(",") }
+        }
 
-        assertEquals(5, actual.runtimeRules.size)
-        this.checkLRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleListKind.SEPARATED_LIST, 3, 0, 1)
-        this.checkNRule(1, actual.runtimeRules[1], "a", false, 1)
-        this.checkTRule(2, actual.runtimeRules[2], "'a'", "a", false, false)
-        this.checkTRule(3, actual.runtimeRules[3], "','", ",", false, false)
-        this.checkERule(4, actual.runtimeRules[4], "§empty.r", false, actual.runtimeRules[0])
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1], actual.runtimeRules[3], actual.runtimeRules[4])
-        this.checkItems(actual.runtimeRules[1], actual.runtimeRules[2])
-        this.checkItems(actual.runtimeRules[4], actual.runtimeRules[0])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
@@ -555,43 +427,36 @@ internal class test_Converter {
         gb.rule("r").separatedList(0, -1, gb.terminalLiteral(","), gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            sList("S", 0, -1, "'a'", "','")
+            literal("'a'","a")
+            literal("','",",")
+        }
 
-        assertEquals(4, actual.runtimeRules.size)
-        this.checkLRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleListKind.SEPARATED_LIST, 3, 0, -1)
-        this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
-        this.checkTRule(2, actual.runtimeRules[2], "','", ",", false, false)
-        this.checkERule(3, actual.runtimeRules[3], "§empty.r", false, actual.runtimeRules[0])
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1], actual.runtimeRules[2], actual.runtimeRules[3])
-        this.checkItems(actual.runtimeRules[3], actual.runtimeRules[0])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
     fun sList_0_n_NonTerminalRule() {
-        // r = [a / ',']* ;
+        // S = [a / c]* ;
         // a = 'a' ;
+        // c = ',' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
         gb.rule("r").separatedList(0, -1, gb.terminalLiteral(","), gb.nonTerminal("a"))
         gb.rule("a").choiceLongestFromConcatenation(gb.concatenation(gb.terminalLiteral("a")))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            sList("S", 0, -1, "a", "c")
+            concatenation("a") { literal("a") }
+            concatenation("c") { literal(",") }
+        }
 
-        assertEquals(5, actual.runtimeRules.size)
-        this.checkLRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleListKind.SEPARATED_LIST, 3, 0, -1)
-        this.checkNRule(1, actual.runtimeRules[1], "a", false, 1)
-        this.checkTRule(2, actual.runtimeRules[2], "'a'", "a", false, false)
-        this.checkTRule(3, actual.runtimeRules[3], "','", ",", false, false)
-        this.checkERule(4, actual.runtimeRules[4], "§empty.r", false, actual.runtimeRules[0])
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1], actual.runtimeRules[3], actual.runtimeRules[4])
-        this.checkItems(actual.runtimeRules[1], actual.runtimeRules[2])
-        this.checkItems(actual.runtimeRules[4], actual.runtimeRules[0])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
@@ -601,39 +466,36 @@ internal class test_Converter {
         gb.rule("r").separatedList(1, -1, gb.terminalLiteral(","), gb.terminalLiteral("a"))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            sList("S", 1, -1, "'a'", "','")
+            literal("'a'","a")
+            literal("','",",")
+        }
 
-        assertEquals(3, actual.runtimeRules.size)
-        this.checkLRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleListKind.SEPARATED_LIST, 2, 1, -1)
-        this.checkTRule(1, actual.runtimeRules[1], "'a'", "a", false, false)
-        this.checkTRule(2, actual.runtimeRules[2], "','", ",", false, false)
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1], actual.runtimeRules[2])
+        assertTrue(expected.matches(actual))
     }
 
     @Test
     fun sList_1_n_NonTerminalRule() {
-        // r = [a / ',']+ ;
+        // S = [a / c]+ ;
         // a = 'a' ;
+        // c = ',' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
         gb.rule("r").separatedList(1, -1, gb.terminalLiteral(","), gb.nonTerminal("a"))
         gb.rule("a").choiceLongestFromConcatenation(gb.concatenation(gb.terminalLiteral("a")))
         val grammar = gb.grammar
 
-        val sut = ConverterToRuntimeRules(grammar)
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
-        val actual = sut.runtimeRuleSet
+        val expected = runtimeRuleSet {
+            sList("S", 1, -1, "a", "c")
+            concatenation("a") { literal("a") }
+            concatenation("c") { literal(",") }
+        }
 
-        assertEquals(4, actual.runtimeRules.size)
-        this.checkLRule(0, actual.runtimeRules[0], "r", false, RuntimeRuleListKind.SEPARATED_LIST, 2, 1, -1)
-        this.checkNRule(1, actual.runtimeRules[1], "a", false, 1)
-        this.checkTRule(2, actual.runtimeRules[2], "'a'", "a", false, false)
-        this.checkTRule(3, actual.runtimeRules[3], "','", ",", false, false)
-
-        this.checkItems(actual.runtimeRules[0], actual.runtimeRules[1], actual.runtimeRules[3])
-        this.checkItems(actual.runtimeRules[1], actual.runtimeRules[2])
+        assertTrue(expected.matches(actual))
     }
 
 }

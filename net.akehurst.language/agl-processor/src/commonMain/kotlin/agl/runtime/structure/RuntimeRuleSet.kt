@@ -53,15 +53,15 @@ internal class RuntimeRuleSet(
         const val EMPTY_RULE_TAG = "<EMPTY>"
 
         val END_OF_TEXT = RuntimeRule(NO_RRS, EOT_RULE_NUMBER, END_OF_TEXT_TAG, false)
-            .also { it.setRhs(RuntimeRuleRhsCommonTerminal()) }
+            .also { it.setRhs(RuntimeRuleRhsCommonTerminal(it)) }
         val USE_RUNTIME_LOOKAHEAD = RuntimeRule(NO_RRS, RUNTIME_LOOKAHEAD_RULE_NUMBER, RUNTIME_LOOKAHEAD_RULE_TAG, false)
-            .also { it.setRhs(RuntimeRuleRhsCommonTerminal()) }
+            .also { it.setRhs(RuntimeRuleRhsCommonTerminal(it)) }
         val ANY_LOOKAHEAD = RuntimeRule(NO_RRS, ANY_LOOKAHEAD_RULE_NUMBER, ANY_LOOKAHEAD_RULE_TAG, false)
-            .also { it.setRhs(RuntimeRuleRhsCommonTerminal()) }
+            .also { it.setRhs(RuntimeRuleRhsCommonTerminal(it)) }
         val UNDEFINED_RULE = RuntimeRule(NO_RRS, UNDEFINED_LOOKAHEAD_RULE_NUMBER, UNDEFINED_LOOKAHEAD_RULE_TAG, false)
-            .also { it.setRhs(RuntimeRuleRhsCommonTerminal()) }
+            .also { it.setRhs(RuntimeRuleRhsCommonTerminal(it)) }
         val EMPTY = RuntimeRule(NO_RRS, EMPTY_RULE_NUMBER, EMPTY_RULE_TAG, false)
-            .also { it.setRhs(RuntimeRuleRhsCommonTerminal()) }
+            .also { it.setRhs(RuntimeRuleRhsEmpty(it)) }
     }
 
     private val nonTerminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
@@ -71,11 +71,12 @@ internal class RuntimeRuleSet(
     val goalRuleFor = lazyMutableMapNonNull<String, RuntimeRule> {
         val ug = this.findRuntimeRule(it)
         val gr = RuntimeRule(this.number, GOAL_RULE_NUMBER, GOAL_TAG, false)
-        gr.setRhs(RuntimeRuleRhsGoal(ug))
+        gr.setRhs(RuntimeRuleRhsGoal(gr,ug))
         gr
     }
 
-    lateinit var runtimeRules: List<RuntimeRule>; private set
+    // Mutable list used, so that 'setRules' can set it
+    val runtimeRules: List<RuntimeRule> = mutableListOf()
 
     val skipRules: List<RuntimeRule> by lazy { this.runtimeRules.filter { it.isSkip } }
 
@@ -121,16 +122,15 @@ internal class RuntimeRuleSet(
         if (skipRules.isEmpty()) {
             null
         } else {
-
             val skipChoiceRule = RuntimeRule(this.number, SKIP_CHOICE_RULE_NUMBER, SKIP_CHOICE_RULE_TAG, false).also {
                 val options = skipRules.mapIndexed { index, skpRl ->
-                    RuntimeRuleRhsConcatenation(listOf(skpRl))
+                    RuntimeRuleRhsConcatenation(it,listOf(skpRl))
                 }
-                val rhs = RuntimeRuleRhsChoice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, options)
+                val rhs = RuntimeRuleRhsChoice(it,RuntimeRuleChoiceKind.LONGEST_PRIORITY, options)
                 it.setRhs(rhs)
             }
             val skipMultiRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, SKIP_RULE_TAG, false)
-                .also { it.setRhs(RuntimeRuleRhsListSimple(1, -1, skipChoiceRule)) }
+                .also { it.setRhs(RuntimeRuleRhsListSimple(it,1, -1, skipChoiceRule)) }
 
             //TODO: how to set AutomatonKind here!
             val ss = ParserStateSet(nextStateSetNumber++, this, skipMultiRule, true, AutomatonKind.LOOKAHEAD_1)
@@ -153,17 +153,15 @@ internal class RuntimeRuleSet(
     private var nextStateSetNumber = 0
 
     fun setRules(rules: List<RuntimeRule>) {
+        (this.runtimeRules as MutableList).clear()
         for (rr in rules) {
-            when (rr.kind) {
-                RuntimeRuleKind.GOAL -> { /*do nothing*/
-                }
-
-                RuntimeRuleKind.TERMINAL -> this.terminalRuleNumber[rr.tag] = rr.ruleNumber
-                RuntimeRuleKind.NON_TERMINAL -> this.nonTerminalRuleNumber[rr.tag] = rr.ruleNumber
-                RuntimeRuleKind.EMBEDDED -> this.embeddedRuleNumber[rr.tag] = rr.ruleNumber
+            when {
+                rr.isTerminal -> this.terminalRuleNumber[rr.tag] = rr.ruleNumber
+                rr.isNonTerminal -> this.nonTerminalRuleNumber[rr.tag] = rr.ruleNumber
+                rr.isEmbedded -> this.embeddedRuleNumber[rr.tag] = rr.ruleNumber
             }
         }
-        this.runtimeRules = rules
+        this.runtimeRules.addAll(rules)
     }
 
     internal fun automatonFor(goalRuleName: String, automatonKind: AutomatonKind): ParserStateSet {
@@ -278,6 +276,7 @@ internal class RuntimeRuleSet(
         val s0 = this.fetchStateSetFor(userGoalRuleName, automatonKind).startState
         return s0.stateSet.build()
     }
+
     fun fetchStateSetFor(userGoalRule: RuntimeRule, automatonKind: AutomatonKind): ParserStateSet =
         fetchStateSetFor(userGoalRule.tag, automatonKind)
 
@@ -367,39 +366,8 @@ internal class RuntimeRuleSet(
           return rr
       }
   */
-    fun usedAutomatonToString(userGoalRuleName: String, withStates: Boolean=false): String {
-        val b = StringBuilder()
-        val states = this.states_cache[userGoalRuleName]!!.allBuiltStates
-        val transitions = states.flatMap { it.outTransitions.allBuiltTransitions }
-
-        b.append("States: ${states.size}  Transitions: ${transitions.size} ")
-        b.append("\n")
-
-        if (withStates) {
-            states.forEach {
-                val str = "$it {${it.outTransitions.allPrevious.map { it.number.value }}}"
-                b.append(str).append("\n")
-            }
-        }
-
-        transitions.sortedBy { it.from.rulePositions.toString() }.sortedBy { it.to.rulePositions.toString() }
-            .forEach { tr ->
-                val prev = tr.from.outTransitions.previousFor(tr)
-                    .map { it.number.value } //transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }
-                    .sorted()
-                val frStr = "${tr.from.number.value}:${tr.from.rulePositions}"
-                val toStr = "${tr.to.number.value}:${tr.to.rulePositions}"
-                val trStr = "$frStr --> $toStr"
-                val lh = tr.lookahead.joinToString(separator = "|") { "[${it.guard.fullContent.joinToString { it.tag }}](${it.up.fullContent.joinToString { it.tag }})" }
-                b.append(trStr)
-                b.append(" ${tr.action} ")
-                b.append(lh)
-                b.append(" {${prev.joinToString()}} ")
-                b.append("\n")
-            }
-
-        return b.toString()
-    }
+    fun usedAutomatonToString(userGoalRuleName: String, withStates: Boolean = false) =
+        this.states_cache[userGoalRuleName]!!.usedAutomatonToString(withStates)
 
     internal fun fullAutomatonToString(goalRuleName: String, automatonKind: AutomatonKind): String {
         this.buildFor(goalRuleName, automatonKind)
@@ -410,7 +378,7 @@ internal class RuntimeRuleSet(
     internal fun clone(): RuntimeRuleSet {
         val clone = RuntimeRuleSet(nextRuntimeRuleSetNumber++)
         val clonedRules = this.runtimeRules.map { rr ->
-            RuntimeRule(clone.number, rr.ruleNumber, rr.name,  rr.isSkip).also {
+            RuntimeRule(clone.number, rr.ruleNumber, rr.name, rr.isSkip).also {
                 it.setRhs(rr.rhs.clone())
             }
         }

@@ -52,36 +52,38 @@ internal class RuntimeRule(
         }
 */
 
-    val isGoal = this.rhs is RuntimeRuleRhsGoal
-    val isEmptyTerminal = this.rhs is RuntimeRuleRhsEmpty
-    val isEmbedded = when (this.rhs) {
+    val isGoal get() = this.rhs is RuntimeRuleRhsGoal
+    val isEmptyTerminal get() = this.rhs is RuntimeRuleRhsEmpty
+    val isEmbedded get() = when (this.rhs) {
         is RuntimeRuleRhsEmbedded -> true
         else -> false
     }
-    val isPattern = this.rhs is RuntimeRuleRhsPattern
+    val isPattern get() = this.rhs is RuntimeRuleRhsPattern
     /**
      * Empty, Literal, Pattern, Embedded
      */
-    val isTerminal = when (this.rhs) {
+    val isTerminal get() = when (this.rhs) {
+        is RuntimeRuleRhsNonTerminal -> false
         is RuntimeRuleRhsEmpty -> true
         is RuntimeRuleRhsLiteral -> true
         is RuntimeRuleRhsPattern -> true
         is RuntimeRuleRhsEmbedded -> true
-        else -> false
+        is RuntimeRuleRhsCommonTerminal -> true
     }
 
     /**
      * Goal, Concatenation, ListSimple, ListSeparated
      */
-    val isNonTerminal = when (this.rhs) {
+    val isNonTerminal get() = when (this.rhs) {
+        is RuntimeRuleRhsTerminal -> false
         is RuntimeRuleRhsGoal -> true
         is RuntimeRuleRhsConcatenation -> true
-        is RuntimeRuleRhsListSimple -> true
-        is RuntimeRuleRhsListSeparated -> true
-        else -> false
+        is RuntimeRuleRhsChoice -> true
+        is RuntimeRuleRhsList -> true
     }
 
-    val kind = when {
+    @Deprecated("use 'rhs is'")
+    val kind get() = when {
         isEmbedded -> RuntimeRuleKind.EMBEDDED
         isGoal -> RuntimeRuleKind.GOAL
         isTerminal -> RuntimeRuleKind.TERMINAL

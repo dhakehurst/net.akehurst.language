@@ -18,6 +18,8 @@ package net.akehurst.language.agl.parser
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.api.parser.InputLocation
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -178,7 +180,9 @@ internal class test_InputFromString {
         val inputText = ""
         val sut = InputFromString(10,inputText)
 
-        val rr = RuntimeRule(0,1,"","",RuntimeRuleKind.TERMINAL,false,false)
+        val rr = RuntimeRule(0,1,"",false).also {
+            it.setRhs(RuntimeRuleRhsLiteral(it,""))
+        }
         val actual = sut.tryMatchText(0, rr)
 
         assertEquals(null, actual)
@@ -189,7 +193,9 @@ internal class test_InputFromString {
         val inputText = ""
         val sut = InputFromString(10,inputText)
 
-        val rr = RuntimeRule(0,1,"'abc'","abc",RuntimeRuleKind.TERMINAL,false,false)
+        val rr = RuntimeRule(0,1,"'abc'",false).also {
+            it.setRhs(RuntimeRuleRhsLiteral(it,"abc"))
+        }
         val actual = sut.tryMatchText(0, rr)
 
         assertEquals(null, actual)
@@ -200,7 +206,9 @@ internal class test_InputFromString {
         val inputText = ""
         val sut = InputFromString(10,inputText)
 
-        val rr = RuntimeRule(0,1,"","",RuntimeRuleKind.TERMINAL,false,false)
+        val rr = RuntimeRule(0,1,"",false).also {
+            it.setRhs(RuntimeRuleRhsPattern(it,""))
+        }
         val actual = sut.tryMatchText(0, rr)
 
         assertEquals(null, actual)
@@ -211,7 +219,9 @@ internal class test_InputFromString {
         val inputText = ""
         val sut = InputFromString(10,inputText)
 
-        val rr = RuntimeRule(0,1,"'abc'","abc",RuntimeRuleKind.TERMINAL,false,false)
+        val rr = RuntimeRule(0,1,"'abc'",false).also {
+            it.setRhs(RuntimeRuleRhsPattern(it,"abc"))
+        }
         val actual = sut.tryMatchText(0, rr)
 
         assertEquals(null, actual)
@@ -222,19 +232,22 @@ internal class test_InputFromString {
         val inputText = ""
         val sut = InputFromString(10,inputText)
 
-        val rr = RuntimeRule(0,1,"'[a-c]'","[a-c]",RuntimeRuleKind.TERMINAL,true,false)
+        val rr = RuntimeRule(0,1,"'[a-c]'",false).also {
+            it.setRhs(RuntimeRuleRhsPattern(it,"[a-c]"))
+        }
         val actual = sut.tryMatchText(0, rr)
 
         assertEquals(null, actual)
     }
-
 
     @Test
     fun tryMatchText_abc_at_start_pattern_abc() {
         val inputText = "abc"
         val sut = InputFromString(10,inputText)
 
-        val rr = RuntimeRule(0,1,"'abc'","abc",RuntimeRuleKind.TERMINAL,false,false)
+        val rr = RuntimeRule(0,1,"'abc'",false).also {
+            it.setRhs(RuntimeRuleRhsPattern(it,"abc"))
+        }
         val actual = sut.tryMatchText(0, rr)
 
         assertEquals("abc", actual?.matchedText)
@@ -245,7 +258,9 @@ internal class test_InputFromString {
         val inputText = "abc"
         val sut = InputFromString(10,inputText)
 
-        val rr = RuntimeRule(0,1,"'[a-c]'","[a-c]",RuntimeRuleKind.TERMINAL,true,false)
+        val rr = RuntimeRule(0,1,"'[a-c]'",false).also {
+            it.setRhs(RuntimeRuleRhsPattern(it,"[a-c]"))
+        }
         val actual = sut.tryMatchText(0, rr)
 
         assertEquals("a", actual?.matchedText)
@@ -256,7 +271,9 @@ internal class test_InputFromString {
         val inputText = "abc"
         val sut = InputFromString(10,inputText)
 
-        val rr = RuntimeRule(0,1,"'[a-c]'","[a-c]",RuntimeRuleKind.TERMINAL,true,false)
+        val rr = RuntimeRule(0,1,"'[a-c]'",false).also {
+            it.setRhs(RuntimeRuleRhsPattern(it,"[a-c]"))
+        }
         val actual = sut.tryMatchText(1, rr)
 
         assertEquals("b", actual?.matchedText)

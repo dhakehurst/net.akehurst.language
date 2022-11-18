@@ -22,7 +22,7 @@ internal data class RuleOption(
     val runtimeRule: RuntimeRule,
     val option: Int
 ) {
-    val isGoal = this.runtimeRule.kind == RuntimeRuleKind.GOAL
+    val isGoal = this.runtimeRule.isGoal
 
     override fun toString(): String = "RuleOption{${runtimeRule.tag},$option}"
 }
@@ -48,6 +48,8 @@ internal class RulePosition(
         const val POSITION_SLIST_ITEM = 2 //TODO: make -ve
     }
 
+    val identity: RuleOptionId = RuleOption(rule, option) //TODO: Make this an Int
+
     val isAtStart get() = START_OF_RULE == position
     val isAtEnd get() = END_OF_RULE == position
     val isGoal: Boolean get() = this.rule.isGoal
@@ -64,40 +66,7 @@ internal class RulePosition(
     fun atEnd() = RulePosition(this.rule, this.option, END_OF_RULE)
     fun next(): Set<RulePosition> = when {
         isAtEnd -> emptySet()
-        else -> {
-            val rhs = (this.rule as RuntimeRule).rhs
-            when (rhs) {
-                is RuntimeRuleRhsTerminal -> emptySet()
-                is RuntimeRuleRhsNonTerminal -> when (rhs) {
-                    is RuntimeRuleRhsGoal -> when {
-                        isAtStart -> setOf(rhs.rulePositions.last())
-                        else -> emptySet()
-                    }
-
-                    is RuntimeRuleRhsConcatenation -> {
-                        val np = this.position + 1
-                        when {
-                            np == rhs.concatItems.size -> setOf(rhs.rulePositions.last())
-                            np < rhs.concatItems.size -> rhs.rulePositionAt(np)
-                            else -> emptySet()
-                        }
-                    }
-                    is RuntimeRuleRhsChoice -> {
-                        TODO()
-                    }
-                    is RuntimeRuleRhsListSimple -> {
-                        TODO()
-                    }
-
-                    is RuntimeRuleRhsListSeparated -> {
-                        TODO()
-                    }
-
-                    else -> emptySet()
-
-                }
-            }
-        }
+        else -> rule.rhs.nextRulePositions(this)
     }
 
     private val _hashCode get() = arrayOf(this.rule, this.option, this.position).contentHashCode()

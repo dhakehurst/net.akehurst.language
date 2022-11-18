@@ -1,4 +1,20 @@
-package net.akehurst.language.agl.runtime.runtimeRuleSet
+/**
+ * Copyright (C) 2020 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.automaton.AutomatonTest
 import net.akehurst.language.agl.automaton.automaton
@@ -89,7 +105,7 @@ internal class test_buildFor : test_AutomatonUtilsAbstract() {
         val M = rrs.findRuntimeRule("M")
         val a = rrs.findRuntimeRule("'a'")
         val b = rrs.findRuntimeRule("'b'")
-        val eM = M.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
+        val eM = EMPTY
 
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
@@ -134,7 +150,7 @@ internal class test_buildFor : test_AutomatonUtilsAbstract() {
         val S2 = rrs.findRuntimeRule("S2")
         val ABCX = rrs.findRuntimeRule("ABCX")
         val ABCopt = rrs.findRuntimeRule("ABCopt")
-        val eABCopt = ABCopt.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
+        val eABCopt = EMPTY
         val ABC = rrs.findRuntimeRule("ABC")
         val x = rrs.findRuntimeRule("'x'")
         val y = rrs.findRuntimeRule("'y'")

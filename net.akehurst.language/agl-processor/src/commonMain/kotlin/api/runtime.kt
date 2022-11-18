@@ -27,7 +27,7 @@ interface RuleSetBuilder {
 
 @RuntimeRuleSetDslMarker
 interface ConcatenationBuilder {
-    fun empty(ruleName: String)
+    fun empty()
     fun literal(value: String)
     fun pattern(pattern: String)
     fun ref(name:String)

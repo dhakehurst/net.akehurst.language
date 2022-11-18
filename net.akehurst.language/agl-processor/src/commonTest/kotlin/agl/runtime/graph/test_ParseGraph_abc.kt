@@ -22,6 +22,7 @@ import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class test_ParseGraph_abc {
 
@@ -55,7 +56,7 @@ class test_ParseGraph_abc {
         val startState = rrs.fetchStateSetFor(r_S, AutomatonKind.LOOKAHEAD_1).startState
         sut.start(startState, 0, setOf(LookaheadSet.EMPTY), null)
 
-        assertEquals(RuntimeRuleKind.GOAL, gr.kind)
+        assertTrue(gr.isGoal)
         assertEquals(true, sut.canGrow)
         assertEquals(1, sut.numberOfHeads)
 

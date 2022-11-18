@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuleOptionPosition
+import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhs
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
@@ -48,43 +48,17 @@ internal class test_skipRules : test_AutomatonAbstract() {
         val skipSS = rrs.skipParserStateSet!!
         val sk0 = skipSS.startState
         val skG = sk0.runtimeRules.first()                    // G = skS ;
-        val skM = skG.rhs.items[0]                            // skS = skC+
-        val skC = skM.rhs.items[RuntimeRuleRhs.MULTI__ITEM]  // skC = WS | CM
+        //val skM = skG.rhs.items[0]                            // skS = skC+
+        //val skC = skM.rhs.items[RuntimeRuleRhs.MULTI__ITEM]  // skC = WS | CM
         val skWS = rrs.findRuntimeRule("WS")
         val skCM = rrs.findRuntimeRule("COMMENT")
 
-        val sk1 = skipSS.createState(listOf(RuleOptionPosition(skWS, 0, RuleOptionPosition.END_OF_RULE)))
+        val sk1 = skipSS.createState(listOf(RulePosition(skWS, 0, RulePosition.END_OF_RULE)))
 
         val lhs_a = SM.createLookaheadSet(false,false, false,setOf(a))
         val lhs_skWCU = SM.createLookaheadSet(true, false, false,setOf(skWS, skCM))
         val lhs_aT = SM.createLookaheadSet(false, true, false,setOf(a))
         val lhs_WS_CM_UP = SM.createLookaheadSet(true, false, false,setOf(skWS, skCM))
-    }
-
-    @Test
-    fun firstTerminals() {
-        //TODO
-        var actual = skipSS.firstTerminals[RuleOptionPosition(skG, 0, 0)]
-        var expected = listOf(skWS, skCM)
-        assertEquals(expected, actual)
-
-        actual = skipSS.firstTerminals[RuleOptionPosition(skM, 0, 0)]
-        expected = listOf(skWS, skCM)
-        assertEquals(expected, actual)
-
-        actual = skipSS.firstTerminals[RuleOptionPosition(skM, 0, RuleOptionPosition.POSITION_MULIT_ITEM)]
-        expected = listOf(skWS, skCM)
-        assertEquals(expected, actual)
-
-        actual = skipSS.firstTerminals[RuleOptionPosition(skC, 0, 0)]
-        expected = listOf(skWS)
-        assertEquals(expected, actual)
-
-        actual = skipSS.firstTerminals[RuleOptionPosition(skC, 1, 0)]
-        expected = listOf(skCM)
-        assertEquals(expected, actual)
-
-
     }
 
 /* TODO
@@ -93,8 +67,8 @@ internal class test_skipRules : test_AutomatonAbstract() {
         val actual = sk0.widthInto(RuntimeState(sk0, setOf(LookaheadSet.EMPTY))).toList()
 
         val expected = listOf(
-            WidthInfo(RuleOptionPosition(skWS, 0, RuleOptionPosition.END_OF_RULE), lhs_skWCU.part),
-            WidthInfo(RuleOptionPosition(skCM, 0, RuleOptionPosition.END_OF_RULE), lhs_skWCU.part)
+            WidthInfo(RulePosition(skWS, 0, RulePosition.END_OF_RULE), lhs_skWCU.part),
+            WidthInfo(RulePosition(skCM, 0, RulePosition.END_OF_RULE), lhs_skWCU.part)
         )
         assertEquals(expected, actual)
     }
@@ -107,8 +81,8 @@ internal class test_skipRules : test_AutomatonAbstract() {
         val expected = listOf(
             HeightGraftInfo(
                 Transition.ParseAction.HEIGHT,
-                listOf(RuleOptionPosition(skC, 0, RuleOptionPosition.START_OF_RULE)),
-                listOf(RuleOptionPosition(skC, 0, RuleOptionPosition.END_OF_RULE)),
+                listOf(RulePosition(skC, 0, RulePosition.START_OF_RULE)),
+                listOf(RulePosition(skC, 0, RulePosition.END_OF_RULE)),
                 setOf(LookaheadInfoPart(LHS(skWS,skCM,UP),LHS(skWS,skCM,UP)))
             )
         )
@@ -120,8 +94,8 @@ internal class test_skipRules : test_AutomatonAbstract() {
     fun parse_aba() {
         val parser = ScanOnDemandParser(rrs)
         parser.parseForGoal("S", "aba", AutomatonKind.LOOKAHEAD_1)
-        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-        println(rrs.usedAutomatonToString("S"))
+        val actual = parser.runtimeRuleSet.skipParserStateSet!!
+        println(actual.usedAutomatonToString())
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
 
 

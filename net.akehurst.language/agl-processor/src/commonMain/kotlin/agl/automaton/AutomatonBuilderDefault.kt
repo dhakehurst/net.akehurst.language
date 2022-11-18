@@ -29,7 +29,7 @@ internal fun automaton(
     userGoalRule: String,
     isSkip: Boolean,
     init: AutomatonBuilderDefault.() -> Unit
-): Automaton {
+): ParserStateSet {
     val b = AutomatonBuilderDefault(rrs, automatonKind, userGoalRule, isSkip)
     b.init()
     return b.build()

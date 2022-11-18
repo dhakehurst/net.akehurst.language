@@ -18,6 +18,8 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.api.automaton.Automaton
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
+import net.akehurst.language.agl.collections.CollectionsTest.matches
 import kotlin.test.fail
 
 internal object AutomatonTest {
@@ -35,20 +37,6 @@ internal object AutomatonTest {
         }
     }.toSet()
 
-    private fun <E> Set<E>.matches(other: Set<E>, matches: (t: E, o: E) -> Boolean): Boolean {
-        val thisList = this.toList()
-        val foundThis = mutableListOf<E>()
-        val foundOther = mutableListOf<E>()
-        for (i in this.indices) {
-            val thisElement = thisList[i]
-            val otherElement = other.firstOrNull { matches(thisElement, it) }
-            if (null != otherElement) {
-                foundThis.add(thisElement)
-                foundOther.add(otherElement)
-            }
-        }
-        return foundThis.size == foundOther.size && foundThis.size == thisList.size
-    }
 
     fun <O, E> assertMatches(expectedObject: O, actualObject: O, setName: String, expected: Set<E>, actual: Set<E>, matches: (t: E, o: E) -> Boolean) {
         val thisList = expected.toList()
@@ -110,22 +98,7 @@ internal object AutomatonTest {
         else -> true
     }
 
-    private fun RulePosition.matches(other: RulePosition): Boolean = when {
-        this.option != other.option -> false
-        this.position != other.position -> false
-        else -> this.rule.matches(other.rule)
-    }
 
-    private fun RuntimeRule.matches(other: RuntimeRule): Boolean = when {
-        this.name != other.name -> false
-        this.isSkip != other.isSkip -> false
-        this.rhs.matches(other.rhs).not() -> false
-        else -> true
-    }
-
-    private fun RuntimeRuleRhs.matches(other: RuntimeRuleRhs): Boolean {
-TODO()
-    }
 
     private fun Lookahead.matches(other: Lookahead,config: MatchConfiguration): Boolean = when {
         this.guard.matches(other.guard,config).not() -> false

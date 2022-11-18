@@ -247,45 +247,45 @@ internal class RuntimeParser(
         }
         return lg
     }
-/*
-    private fun useGoal(lt: SPPTNode): SPPTNode {
-        //FIXME: use GrowingChildren
-        // need to re-write top of the tree so that any initial skip nodes come under the userGoal node
-        val goal = lt as SPPTBranchFromInputAndGrownChildren
 
-        val goalRpId = setOf(RuleOption(this.userGoalRule, 0))
-        val goalFirstChildren = goal.grownChildrenAlternatives.values.first()
-        val userGoalNode = if (goalFirstChildren.hasSkipAtStart) {
-            //has skip at start
-            val skipNodes = goalFirstChildren.firstChild(this.stateSet.startState.rulePositionIdentity)!!.children
-            val ugn = goalFirstChildren.firstNonSkipChild(goalRpId)!!.children[0] as SPPTBranchFromInputAndGrownChildren
-            val startPosition = skipNodes[0].startPosition
-            val nugn = SPPTBranchFromInputAndGrownChildren(this.input, ugn.runtimeRule, ugn.option, startPosition, ugn.nextInputPosition, ugn.priority)
-            ugn.grownChildrenAlternatives.values.forEach {
-                val nc = GrowingChildren().appendSkipIfNotEmpty(emptySet(), skipNodes)
-                //nc._firstChild!!.nextChild = it.firstChild
-                //nc._lastChild = it.lastChild
-                nc.concatenate(it)
-                nugn.grownChildrenAlternatives[ugn.option] = nc
+    /*
+        private fun useGoal(lt: SPPTNode): SPPTNode {
+            //FIXME: use GrowingChildren
+            // need to re-write top of the tree so that any initial skip nodes come under the userGoal node
+            val goal = lt as SPPTBranchFromInputAndGrownChildren
+
+            val goalRpId = setOf(RuleOption(this.userGoalRule, 0))
+            val goalFirstChildren = goal.grownChildrenAlternatives.values.first()
+            val userGoalNode = if (goalFirstChildren.hasSkipAtStart) {
+                //has skip at start
+                val skipNodes = goalFirstChildren.firstChild(this.stateSet.startState.rulePositionIdentity)!!.children
+                val ugn = goalFirstChildren.firstNonSkipChild(goalRpId)!!.children[0] as SPPTBranchFromInputAndGrownChildren
+                val startPosition = skipNodes[0].startPosition
+                val nugn = SPPTBranchFromInputAndGrownChildren(this.input, ugn.runtimeRule, ugn.option, startPosition, ugn.nextInputPosition, ugn.priority)
+                ugn.grownChildrenAlternatives.values.forEach {
+                    val nc = GrowingChildren().appendSkipIfNotEmpty(emptySet(), skipNodes)
+                    //nc._firstChild!!.nextChild = it.firstChild
+                    //nc._lastChild = it.lastChild
+                    nc.concatenate(it)
+                    nugn.grownChildrenAlternatives[ugn.option] = nc
+                }
+                nugn
+            } else {
+
+                goalFirstChildren.firstChild(goalRpId)!!.children[0]
             }
-            nugn
-        } else {
-
-            goalFirstChildren.firstChild(goalRpId)!!.children[0]
+            return userGoalNode
         }
-        return userGoalNode
-    }
-*/
+    */
     private fun growNode(toProcess: ParseGraph.Companion.NextToProcess, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs) {
-        when (toProcess.growingNode.state.runtimeRules.first().kind) {//FIXME
-            RuntimeRuleKind.GOAL -> when {
+        val rr = toProcess.growingNode.state.firstRule//FIXME: is there only one?
+        when {
+            rr.isGoal -> when {
                 toProcess.growingNode.state.isAtEnd -> graph.recordGoal(toProcess.growingNode)
                 else -> this.growGoalNode(toProcess, possibleEndOfText, growArgs)
             }
 
-            RuntimeRuleKind.TERMINAL -> this.growNormal(toProcess, possibleEndOfText, growArgs)
-            RuntimeRuleKind.NON_TERMINAL -> this.growNormal(toProcess, possibleEndOfText, growArgs)
-            RuntimeRuleKind.EMBEDDED -> this.growNormal(toProcess, possibleEndOfText, growArgs)
+            else -> this.growNormal(toProcess, possibleEndOfText, growArgs)
         }
     }
 
@@ -478,7 +478,7 @@ internal class RuntimeParser(
                     val lh = transition.lookahead.map { it.guard }.reduce { acc, e -> acc.union(this.stateSet, e) } //TODO:reduce to 1 in SM
                     val runtimeLhs = toProcess.growingNode.runtimeState.runtimeLookaheadSet
 
-                    val skipData = parseSkipIfAny(l.nextInputPosition,runtimeLhs, lh, possibleEndOfText, growArgs)
+                    val skipData = parseSkipIfAny(l.nextInputPosition, runtimeLhs, lh, possibleEndOfText, growArgs)
                     val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: l.nextInputPosition
 
                     val hasLh = possibleEndOfText.any { eot ->
@@ -608,7 +608,7 @@ internal class RuntimeParser(
         }
     }
 
-    fun parseSkipIfAny(atPosition:Int, runtimeLhs:Set<LookaheadSet>, lh:LookaheadSet, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): TreeData? {
+    fun parseSkipIfAny(atPosition: Int, runtimeLhs: Set<LookaheadSet>, lh: LookaheadSet, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): TreeData? {
 
         return if (null == skipParser) {
             //this is a skipParser, so no skipData
@@ -624,7 +624,7 @@ internal class RuntimeParser(
         }
     }
 
-    private fun tryParseSkipUntilNone(possibleEndOfSkip: Set<LookaheadSet>, startPosition: Int, growArgs:GrowArgs): TreeData? {
+    private fun tryParseSkipUntilNone(possibleEndOfSkip: Set<LookaheadSet>, startPosition: Int, growArgs: GrowArgs): TreeData? {
         val key = Pair(startPosition, possibleEndOfSkip)
         return if (_skip_cache.containsKey(key)) {
             // can cache null as a valid result
@@ -639,7 +639,7 @@ internal class RuntimeParser(
         }
     }
 
-    private fun tryParseSkip(possibleEndOfSkip: Set<LookaheadSet>, startPosition: Int, growArgs:GrowArgs): TreeData? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
+    private fun tryParseSkip(possibleEndOfSkip: Set<LookaheadSet>, startPosition: Int, growArgs: GrowArgs): TreeData? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
         if (Debug.OUTPUT_RUNTIME) println("*** Start skip Parser")
         skipParser!!.reset()
         skipParser.start(startPosition, possibleEndOfSkip)
