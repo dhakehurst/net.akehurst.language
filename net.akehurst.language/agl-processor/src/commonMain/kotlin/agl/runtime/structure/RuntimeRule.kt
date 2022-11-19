@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.api.runtime.Rule
-import net.akehurst.language.agl.collections.indexFunction
 
 /**
  * identified by: (runtimeRuleSetNumber, number, optionIndex)
@@ -54,42 +53,47 @@ internal class RuntimeRule(
 
     val isGoal get() = this.rhs is RuntimeRuleRhsGoal
     val isEmptyTerminal get() = this.rhs is RuntimeRuleRhsEmpty
-    val isEmbedded get() = when (this.rhs) {
-        is RuntimeRuleRhsEmbedded -> true
-        else -> false
-    }
+    val isEmbedded
+        get() = when (this.rhs) {
+            is RuntimeRuleRhsEmbedded -> true
+            else -> false
+        }
     val isPattern get() = this.rhs is RuntimeRuleRhsPattern
+
     /**
      * Empty, Literal, Pattern, Embedded
      */
-    val isTerminal get() = when (this.rhs) {
-        is RuntimeRuleRhsNonTerminal -> false
-        is RuntimeRuleRhsEmpty -> true
-        is RuntimeRuleRhsLiteral -> true
-        is RuntimeRuleRhsPattern -> true
-        is RuntimeRuleRhsEmbedded -> true
-        is RuntimeRuleRhsCommonTerminal -> true
-    }
+    val isTerminal
+        get() = when (this.rhs) {
+            is RuntimeRuleRhsNonTerminal -> false
+            is RuntimeRuleRhsEmpty -> true
+            is RuntimeRuleRhsLiteral -> true
+            is RuntimeRuleRhsPattern -> true
+            is RuntimeRuleRhsEmbedded -> true
+            is RuntimeRuleRhsCommonTerminal -> true
+        }
 
     /**
      * Goal, Concatenation, ListSimple, ListSeparated
      */
-    val isNonTerminal get() = when (this.rhs) {
-        is RuntimeRuleRhsTerminal -> false
-        is RuntimeRuleRhsGoal -> true
-        is RuntimeRuleRhsConcatenation -> true
-        is RuntimeRuleRhsChoice -> true
-        is RuntimeRuleRhsList -> true
-    }
+    val isNonTerminal
+        get() = when (this.rhs) {
+            is RuntimeRuleRhsTerminal -> false
+            is RuntimeRuleRhsGoal -> true
+            is RuntimeRuleRhsConcatenation -> true
+            is RuntimeRuleRhsChoice -> true
+            is RuntimeRuleRhsList -> true
+        }
 
     @Deprecated("use 'rhs is'")
-    val kind get() = when {
-        isEmbedded -> RuntimeRuleKind.EMBEDDED
-        isGoal -> RuntimeRuleKind.GOAL
-        isTerminal -> RuntimeRuleKind.TERMINAL
-        isNonTerminal -> RuntimeRuleKind.NON_TERMINAL
-        else -> error("Internal Error")
-    }
+    val kind
+        get() = when {
+            isEmbedded -> RuntimeRuleKind.EMBEDDED
+            isGoal -> RuntimeRuleKind.GOAL
+            isTerminal -> RuntimeRuleKind.TERMINAL
+            isNonTerminal -> RuntimeRuleKind.NON_TERMINAL
+            else -> error("Internal Error")
+        }
 
     //val ruleThatIsEmpty: RuntimeRule get() = (this.rhs as RuntimeRuleRhsEmpty).ruleThatIsEmpty
 
@@ -97,7 +101,7 @@ internal class RuntimeRule(
 
     val rulePositions: Set<RulePosition> get() = rhs.rulePositions
 
-    val rulePositionsAt = indexFunction {index ->  rhs.rulePositionAt(index) }
+    val rulePositionsAtStart get() = rhs.rulePositionsAtStart
 
     /*
         fun findTerminalAt(n: Int): Set<RuntimeRule> {
@@ -132,7 +136,7 @@ internal class RuntimeRule(
             }
         }
     */
-    fun rhsItemsAt(position: Int): Set<RuntimeRule>  = this.rhs.rhsItemsAt(position)
+    fun rhsItemsAt(position: Int): Set<RuntimeRule> = this.rhs.rhsItemsAt(position)
 
     /*
         private fun findAllNonTerminalAt(n: Int): Set<RuntimeRule> {

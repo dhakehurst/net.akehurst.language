@@ -128,7 +128,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
                 when {
                     item.isTerminal -> cls.createAndAddChild(item.asTerminalRulePosition)
                     item.isNonTerminal -> {
-                        val childRps = item.rulePositionsAt[0]
+                        val childRps = item.rulePositionsAtStart
                         for (childRp in childRps) {
                             val child = cls.createAndAddChild(childRp)
                             ///cls.addChild(child)

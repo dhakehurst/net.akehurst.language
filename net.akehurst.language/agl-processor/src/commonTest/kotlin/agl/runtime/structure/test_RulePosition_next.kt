@@ -38,7 +38,7 @@ internal class test_RulePosition_next {
         val PLI = RulePosition.POSITION_SLIST_ITEM
         val PLS = RulePosition.POSITION_SLIST_SEPARATOR
 
-        fun RP(rr: RuntimeRule, opt: Int, pos: Int): RulePosition = RulePosition(rr,opt, pos)
+        fun RP(rr: RuntimeRule, opt: Int, pos: Int): RulePosition = RulePosition(rr, opt, pos)
     }
 
     //empty
@@ -51,7 +51,7 @@ internal class test_RulePosition_next {
         //val gr = RuntimeRuleSet.createGoalRule(r_S)
 
         val rrs = runtimeRuleSet {
-            concatenation("S"){ empty() }
+            concatenation("S") { empty() }
         }
         val r_S = rrs.findRuntimeRule("S")
 
@@ -61,21 +61,83 @@ internal class test_RulePosition_next {
         assertEquals(expected, actual)
     }
 
+    // concatenation
+    // S = a b c
+    @Test
+    fun concat__S_0_0() {
+        val rrs = runtimeRuleSet {
+            concatenation("S") { literal("a");literal("b"); literal("c") }
+        }
+        val r_S = rrs.findRuntimeRule("S")
+
+        val actual: Set<RulePosition> = RP(r_S, 0, SOR).next()
+        val expected: Set<RulePosition> = setOf(
+            RP(r_S, 0, 1)
+        )
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun concat__S_0_1() {
+        val rrs = runtimeRuleSet {
+            concatenation("S") { literal("a");literal("b"); literal("c") }
+        }
+        val r_S = rrs.findRuntimeRule("S")
+
+        val actual: Set<RulePosition> = RP(r_S, 0, 1).next()
+        val expected: Set<RulePosition> = setOf(
+            RP(r_S, 0, 2)
+        )
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun concat__S_0_2() {
+        val rrs = runtimeRuleSet {
+            concatenation("S") { literal("a");literal("b"); literal("c") }
+        }
+        val r_S = rrs.findRuntimeRule("S")
+
+        val actual: Set<RulePosition> = RP(r_S, 0, 2).next()
+        val expected: Set<RulePosition> = setOf(
+            RP(r_S, 0, EOR)
+        )
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun concat__S_0_EOR() {
+        val rrs = runtimeRuleSet {
+            concatenation("S") { literal("a");literal("b"); literal("c") }
+        }
+        val r_S = rrs.findRuntimeRule("S")
+
+        val actual: Set<RulePosition> = RP(r_S, 0, EOR).next()
+        val expected: Set<RulePosition> = setOf()
+
+        assertEquals(expected, actual)
+    }
+
     // choice equal
-    // S = 'a' | 'b' | 'c';
+    // S = 'a' | 'b' 'x' | 'c' 'y' 'z';
     @Test
     fun choiceEquals__S_0_0() {
         val rrs = runtimeRuleSet {
             choiceLongest("S") {
-                literal("a")
-                literal("b")
-                literal("c")
+                concatenation { literal("a") }
+                concatenation { literal("b"); literal("x") }
+                concatenation { literal("c"); literal("y"); literal("z") }
             }
         }
         val r_S = rrs.findRuntimeRule("S")
 
         val actual: Set<RulePosition> = RP(r_S, 0, SOR).next()
-        val expected: Set<RulePosition> = setOf(RP(r_S, 0, EOR))
+        val expected: Set<RulePosition> = setOf(
+            RP(r_S, 0, EOR)
+        )
 
         assertEquals(expected, actual)
     }
@@ -84,16 +146,17 @@ internal class test_RulePosition_next {
     @Test
     fun choiceEquals__S_1_0() {
         val rrs = runtimeRuleSet {
-            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                literal("a")
-                literal("b")
-                literal("c")
+            choiceLongest("S") {
+                concatenation { literal("a") }
+                concatenation { literal("b"); literal("x") }
+                concatenation { literal("c"); literal("y"); literal("z") }
             }
         }
+
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, 0, SOR).next()
-        val expected: Set<RulePosition> = setOf(RP(r_S, 0, EOR))
+        val actual: Set<RulePosition> = RP(r_S, 1, SOR).next()
+        val expected: Set<RulePosition> = setOf(RP(r_S, 1, 1))
 
         assertEquals(expected, actual)
     }
@@ -102,32 +165,29 @@ internal class test_RulePosition_next {
     @Test
     fun choiceEquals__S_2_0() {
         val rrs = runtimeRuleSet {
-            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                literal("a")
-                literal("b")
-                literal("c")
+            choiceLongest("S") {
+                concatenation { literal("a") }
+                concatenation { literal("b"); literal("x") }
+                concatenation { literal("c"); literal("y"); literal("z") }
             }
         }
+
         val r_S = rrs.findRuntimeRule("S")
 
-        val actual: Set<RulePosition> = RP(r_S, 0, SOR).next()
-        val expected: Set<RulePosition> = setOf(RP(r_S, 0, EOR))
+        val actual: Set<RulePosition> = RP(r_S, 2, SOR).next()
+        val expected: Set<RulePosition> = setOf(RP(r_S, 2, 1))
 
         assertEquals(expected, actual)
     }
 
-    // choice priority
-
-    // concatenation
-
-    // - multi
+// - multi
 
     // -- S = 'a'? ;
     @Test
     fun multi01__S_Empty_start() {
         val rrs = runtimeRuleSet {
-            multi("S",0,1,"'a'")
-            literal("'a'","a")
+            multi("S", 0, 1, "'a'")
+            literal("'a'", "a")
         }
         val r_S = rrs.findRuntimeRule("S")
 
@@ -140,8 +200,8 @@ internal class test_RulePosition_next {
     @Test
     fun multi01__S_Empty_end() {
         val rrs = runtimeRuleSet {
-            multi("S",0,1,"'a'")
-            literal("'a'","a")
+            multi("S", 0, 1, "'a'")
+            literal("'a'", "a")
         }
         val r_S = rrs.findRuntimeRule("S")
 
@@ -154,8 +214,8 @@ internal class test_RulePosition_next {
     @Test
     fun multi01__S_Item_start() {
         val rrs = runtimeRuleSet {
-            multi("S",0,1,"'a'")
-            literal("'a'","a")
+            multi("S", 0, 1, "'a'")
+            literal("'a'", "a")
         }
         val r_S = rrs.findRuntimeRule("S")
 
@@ -168,15 +228,15 @@ internal class test_RulePosition_next {
     @Test
     fun multi01__S_Item_mid() {
         val rrs = runtimeRuleSet {
-            multi("S",0,1,"'a'")
-            literal("'a'","a")
+            multi("S", 0, 1, "'a'")
+            literal("'a'", "a")
         }
         val r_S = rrs.findRuntimeRule("S")
 
         val actual: Set<RulePosition> = RP(r_S, OMI, PMI).next()
         val expected: Set<RulePosition> = setOf(
-                RP(r_S, RulePosition.OPTION_MULTI_ITEM, PMI),
-                RP(r_S, RulePosition.OPTION_MULTI_ITEM, EOR)
+            RP(r_S, RulePosition.OPTION_MULTI_ITEM, PMI),
+            RP(r_S, RulePosition.OPTION_MULTI_ITEM, EOR)
         )
 
         assertEquals(expected, actual)
@@ -185,8 +245,8 @@ internal class test_RulePosition_next {
     @Test
     fun multi01__S_Item_end() {
         val rrs = runtimeRuleSet {
-            multi("S",0,1,"'a'")
-            literal("'a'","a")
+            multi("S", 0, 1, "'a'")
+            literal("'a'", "a")
         }
         val r_S = rrs.findRuntimeRule("S")
 
@@ -196,15 +256,15 @@ internal class test_RulePosition_next {
         assertEquals(expected, actual)
     }
 
-    // - sList
+// - sList
 
     // -- S = ['a' / ',']* ;
     @Test
     fun sList0n__S_Empty_start() {
         val rrs = runtimeRuleSet {
-            sList("S",0,-1,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 0, -1, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val r_S = rrs.findRuntimeRule("S")
 
@@ -217,9 +277,9 @@ internal class test_RulePosition_next {
     @Test
     fun sList0n__S_Empty_end() {
         val rrs = runtimeRuleSet {
-            sList("S",0,-1,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 0, -1, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val r_S = rrs.findRuntimeRule("S")
 
@@ -232,16 +292,16 @@ internal class test_RulePosition_next {
     @Test
     fun sList0n__S_Item_start() {
         val rrs = runtimeRuleSet {
-            sList("S",0,-1,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 0, -1, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val r_S = rrs.findRuntimeRule("S")
 
         val actual: Set<RulePosition> = RP(r_S, OLI, SOR).next()
         val expected: Set<RulePosition> = setOf(
-                RP(r_S, 0, EOR),
-                RP(r_S, 0, PLS)
+            RP(r_S, 0, EOR),
+            RP(r_S, 0, PLS)
         )
 
         assertEquals(expected, actual)
@@ -250,9 +310,9 @@ internal class test_RulePosition_next {
     @Test
     fun sList0n__S_Sep_sep() {
         val rrs = runtimeRuleSet {
-            sList("S",0,-1,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 0, -1, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val r_S = rrs.findRuntimeRule("S")
 
@@ -265,9 +325,9 @@ internal class test_RulePosition_next {
     @Test
     fun sList0n__S_Item_end() {
         val rrs = runtimeRuleSet {
-            sList("S",0,-1,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 0, -1, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val r_S = rrs.findRuntimeRule("S")
 
@@ -280,9 +340,9 @@ internal class test_RulePosition_next {
     @Test
     fun sList0n__S_Sep_end() {
         val rrs = runtimeRuleSet {
-            sList("S",0,-1,"'a'","','")
-            literal("'a'","a")
-            literal("','",",")
+            sList("S", 0, -1, "'a'", "','")
+            literal("'a'", "a")
+            literal("','", ",")
         }
         val r_S = rrs.findRuntimeRule("S")
 
@@ -292,7 +352,7 @@ internal class test_RulePosition_next {
         assertEquals(expected, actual)
     }
 
-    // -- S = ['a' / ',']+ ;
+// -- S = ['a' / ',']+ ;
 
 
     @Test
@@ -343,8 +403,8 @@ internal class test_RulePosition_next {
         val rp = RP(S, 0, SOR)
         val actual = rp.next()
         val expected: Set<RulePosition> = setOf(
-                RP(S, OLI, PLS),
-                RP(S, OLI, EOR)
+            RP(S, OLI, PLS),
+            RP(S, OLI, EOR)
         )
 
         assertEquals(expected, actual)
@@ -363,7 +423,7 @@ internal class test_RulePosition_next {
         val rp = RP(S, OLS, PLS)
         val actual = rp.next()
         val expected: Set<RulePosition> = setOf(
-                RP(S, OLS, PLI)
+            RP(S, OLS, PLI)
         )
 
         assertEquals(expected, actual)

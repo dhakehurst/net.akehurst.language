@@ -120,7 +120,7 @@ internal class FirstOf(
     private fun firstOfNotEmptySafe(rule: RuntimeRule, doneRp: MutableMap<RulePosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
         var needsNext = false
         var result = LookaheadSetPart.EMPTY
-        val rps = rule.rulePositionsAt[0]
+        val rps = rule.rulePositionsAtStart
         for (rp in rps) {
             for (item in rp.items) {
                 val rhs = item.rhs

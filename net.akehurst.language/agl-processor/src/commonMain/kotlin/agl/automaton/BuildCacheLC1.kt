@@ -1048,7 +1048,7 @@ internal class BuildCacheLC1(
                 //rp.item!!.isTerminal -> rp.items
                 else -> {
                     done.add(rp)
-                    rp.items.flatMap { it.rulePositionsAt[0].flatMap { pFirstTerm(it, done) } }.toSet()
+                    rp.items.flatMap { it.rulePositionsAtStart.flatMap { pFirstTerm(it, done) } }.toSet()
                     //rp.item!!.rulePositionsAt[0].flatMap { pFirstTerm(it, done) }.toSet()
                 }
             }
