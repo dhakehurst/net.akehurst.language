@@ -633,16 +633,17 @@ internal class BuildCacheLC1(
     }
 
     internal fun stateInfo3(): Set<StateInfo> {
-        val stateRps = this.stateSet.usedNonTerminalRules.flatMap { it.rulePositions } + this.stateSet.usedTerminalRules.map { it.asTerminalRulePosition }
+        val stateRps = this.stateSet.usedNonTerminalRules.flatMap { it.rulePositions }+
+                this.stateSet.usedTerminalRules.map { it.asTerminalRulePosition }
         firstFollowCache.processAllClosures()
         val stateInfo = mutableSetOf<StateInfo>()
         for (srcRp in stateRps) {
             val transInfo = mutableSetOf<TransInfo>()
-            for(ctx in firstFollowCache.possibleContextsFor(srcRp)) {
+            for (ctx in firstFollowCache.possibleContextsFor(srcRp)) {
                 val tis = when {
                     srcRp.isAtEnd -> {
                         val hgtis = mutableSetOf<TransInfo>()
-                        for(ctxCtx in firstFollowCache.possibleContextsFor(ctx)) {
+                        for (ctxCtx in firstFollowCache.possibleContextsFor(ctx)) {
                             val pns = this.firstFollowCache.parentInContext(ctxCtx, ctx, emptySet(), srcRp.rule)
                             val hgInfo = pns.map { parentNext ->
                                 val action = when {
@@ -823,7 +824,7 @@ internal class BuildCacheLC1(
         return mergeHeightGraft(hgInfo)
     }
 
-    fun mergeHeightGraft(hgInfo:Set<HeightGraftInfo>): Set<HeightGraftInfo> {
+    fun mergeHeightGraft(hgInfo: Set<HeightGraftInfo>): Set<HeightGraftInfo> {
         val infoAtEnd = hgInfo.filter { it.parentNext.first().isAtEnd }
         val infoNotAtEnd = hgInfo.filter { it.parentNext.first().isAtEnd.not() }
         val infoAtEndMerged = infoAtEnd.groupBy { Pair(it.action, it.parentNext) }

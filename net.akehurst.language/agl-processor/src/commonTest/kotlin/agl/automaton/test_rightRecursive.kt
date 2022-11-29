@@ -71,19 +71,18 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
     }
 
     @Test
-    fun stateInfo() {
-        val bc = BuildCacheLC1(SM)
-
-        val actual = bc.stateInfo2()
-    }
-
-    @Test
     fun buildFor() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(G,o0,SOR)
+            state(G,o0,EOR)
+            state(S,o0,EOR)
+            state(S,o1,EOR)
+            state(S1,o0,p1)
+            state(S1,o0,EOR)
+            state(a,o0,EOR)
         }
 
         AutomatonTest.assertEquals(expected, actual)

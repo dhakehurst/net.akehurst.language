@@ -208,7 +208,7 @@ internal class RuntimeRuleRhsConcatenation(
 
     private val _rulePositions: List<RulePosition> by lazy {
         this.concatItems.mapIndexedNotNull { index, _ ->
-            RulePosition(rule, 0, index)
+            if(RulePosition.START_OF_RULE==index) null else RulePosition(rule, 0, index)
         } + RulePosition(rule, 0, RulePosition.END_OF_RULE)
     }
     override val rulePositions: Set<RulePosition> get() = _rulePositions.toSet()
@@ -241,14 +241,6 @@ internal class RuntimeRuleRhsChoice(
     val choiceKind: RuntimeRuleChoiceKind,
     val options: List<RuntimeRuleRhs>
 ) : RuntimeRuleRhsNonTerminal(rule) {
-
-    private val _rulePositions: List<Set<RulePosition>> by lazy {
-        this.options.mapIndexed { option, choiceRhs ->
-            choiceRhs.rulePositions.map { rp ->
-                RulePosition(rp.rule, option, rp.position)
-            }.toSet()
-        }
-    }
 
     override val rhsItems: Set<RuntimeRule> get() = options.flatMap { it.rhsItems }.toSet()
     override val rulePositions: Set<RulePosition>
