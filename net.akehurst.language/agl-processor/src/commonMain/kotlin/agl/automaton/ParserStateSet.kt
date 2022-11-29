@@ -54,8 +54,8 @@ internal class ParserStateSet(
     val usedNonTerminalRules: Set<RuntimeRule> by lazy {
         this.usedRules.filter { it.isNonTerminal }.toSet()
     }
-    val firstTerminals : Set<RuntimeRule> by lazy {
-        this.startState.transitions(this.startState,this.startState,this.startState).map {
+    val firstTerminals: Set<RuntimeRule> by lazy {
+        this.startState.transitions(this.startState, this.startState, this.startState).map {
             it.to.firstRule
         }.toSet()
     }
@@ -70,13 +70,13 @@ internal class ParserStateSet(
     val allBuiltStates: List<ParserState> get() = this.states.values.toList()
     val allBuiltTransitions: Set<Transition> get() = this.allBuiltStates.flatMap { it.outTransitions.allBuiltTransitions }.toSet()
 
-    val goalRule by lazy { runtimeRuleSet.goalRuleFor[userGoalRule.tag] }
+    val goalRule by lazy { runtimeRuleSet.goalRuleFor[userGoalRule] }
     val startRulePosition by lazy { RulePosition(goalRule, 0, RulePosition.START_OF_RULE) }
     val finishRulePosition by lazy { RulePosition(goalRule, 0, RulePosition.END_OF_RULE) }
     val startState: ParserState by lazy { this.createState(listOf(startRulePosition)) }
     val finishState: ParserState by lazy { this.createState(listOf(finishRulePosition)) }
-
-    val firstOf = FirstOf(usedRules.size)
+    
+    val firstOf = FirstOf()
 
     /*
     internal val firstTerminals = lazyMutableMapNonNull<RulePosition, List<RuntimeRule>> { rp ->
@@ -124,10 +124,15 @@ internal class ParserStateSet(
     //fun createWithParent(upLhs: LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet = this.runtimeRuleSet.createWithParent(upLhs, parentLookahead)
 
     internal fun createState(rulePositions: List<RulePosition>): ParserState {
-        check(this.states.contains(rulePositions).not()) { "State already created for $rulePositions" }
-        val state = ParserState(StateNumber(this.nextStateNumber++), rulePositions, this)
-        this.states[rulePositions] = state
-        return state
+        if (Debug.CHECK) check(this.states.contains(rulePositions).not()) { "State already created for $rulePositions" }
+        val existing = this.states[rulePositions]
+        return if (null!=existing) {
+            existing
+        } else {
+            val state = ParserState(StateNumber(this.nextStateNumber++), rulePositions, this)
+            this.states[rulePositions] = state
+            state
+        }
     }
 
     internal fun fetchState(rulePositions: List<RulePosition>): ParserState? =
@@ -157,6 +162,7 @@ internal class ParserStateSet(
                 includeRT && includeEOT && matchAny.not() -> LookaheadSet.RT_EOT
                 else -> error("Internal Error: situation not handled")
             }
+
             else -> {
                 val existing = this.lookaheadSets.firstOrNull {
                     it.includesRT == includeRT &&
@@ -176,7 +182,7 @@ internal class ParserStateSet(
         }
     }
 
-    internal fun createLookaheadSet(part:LookaheadSetPart):LookaheadSet = createLookaheadSet(part.includesRT, part.includesEOT,part.matchANY,part.content)
+    internal fun createLookaheadSet(part: LookaheadSetPart): LookaheadSet = createLookaheadSet(part.includesRT, part.includesEOT, part.matchANY, part.content)
 
     //private val createWithParent_cache = mutableMapOf<Pair<Int, Int>, LookaheadSet>()
     //fun createWithParent(eotLhs: LookaheadSet, runtimeLookahead: LookaheadSet): LookaheadSet {
@@ -200,7 +206,7 @@ internal class ParserStateSet(
         val stateInfos = this.buildCache.stateInfo()
         for (si in stateInfos) {
             if (si.rulePositions != this.startState.rulePositions) {
-                if(Debug.CHECK)  check(this.states.contains(si.rulePositions).not()) { "State already created for $si.rulePositions" }
+                if (Debug.CHECK) check(this.states.contains(si.rulePositions).not()) { "State already created for $si.rulePositions" }
                 val state = this.fetchCompatibleOrCreateState(si.rulePositions)
             }
         }
@@ -210,15 +216,8 @@ internal class ParserStateSet(
                 val previousStates = ti.prev.map { p -> this.fetchState(p.toList()) ?: error("Internal error, state not created for $p") }
                 val action = ti.action
                 val to = this.fetchState(ti.to.toList()) ?: error("Internal error, state not created for ${ti.to}")
-                val prevGuard = when (action) {
-                    ParseAction.GOAL,
-                    ParseAction.WIDTH,
-                    ParseAction.EMBED,
-                    ParseAction.HEIGHT -> null
-                    ParseAction.GRAFT -> ti.parent.toSet()
-                }
                 val lhs = ti.lookahead.map { Lookahead(it.guard.lhs(this), it.up.lhs(this)) }.toSet()
-                state.outTransitions.createTransition(previousStates.toSet(), state, action, to, lhs, prevGuard)
+                state.outTransitions.createTransition(previousStates.toSet(), state, action, to, lhs)
             }
         }
     }
@@ -229,26 +228,28 @@ internal class ParserStateSet(
         done: BooleanArray = BooleanArray(this.runtimeRuleSet.runtimeRules.size)
     ): Set<RuntimeRule> {
         return when {
-            0 > rule.ruleNumber -> {
+            rule.isGoal -> {
                 used.add(rule)
                 for (sr in rule.rhs.rhsItems) {
-                        calcUsedRules(sr, used, done)
+                    calcUsedRules(sr, used, done)
                 }
                 used
             }
-            done[rule.ruleNumber] -> used
+
+            rule.ruleNumber>0 && done[rule.ruleNumber] -> used
             else -> when {
-                rule.isTerminal -> {
+                rule.isNonTerminal -> {
                     used.add(rule)
-                    done[rule.ruleNumber] = true
+                    if (rule.ruleNumber>0) done[rule.ruleNumber] = true
                     for (sr in rule.rhs.rhsItems) {
                         calcUsedRules(sr, used, done)
                     }
                     used
                 }
+
                 else -> {
                     used.add(rule)
-                    done[rule.ruleNumber] = true
+                    if (rule.ruleNumber>0) done[rule.ruleNumber] = true
                     used
                 }
             }
@@ -309,7 +310,7 @@ internal class ParserStateSet(
         else -> false
     }
 
-    fun usedAutomatonToString(withStates: Boolean=false): String {
+    fun usedAutomatonToString(withStates: Boolean = false): String {
         val b = StringBuilder()
         val states = this.allBuiltStates
         val transitions = states.flatMap { it.outTransitions.allBuiltTransitions }

@@ -103,12 +103,9 @@ internal sealed class RuntimeRuleRhs(
     }
 */
 
-
     abstract fun nextRulePositions(current: RulePosition): Set<RulePosition>
 
-    fun clone(): RuntimeRuleRhs {
-        TODO()
-    }
+    abstract fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs
 }
 
 internal sealed class RuntimeRuleRhsTerminal(
@@ -121,9 +118,17 @@ internal sealed class RuntimeRuleRhsTerminal(
     override fun nextRulePositions(current: RulePosition): Set<RulePosition> = emptySet()
 }
 
+internal class RuntimeRuleRhsEmpty(
+    rule: RuntimeRule
+) : RuntimeRuleRhsTerminal(rule) {
+    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsEmpty(rule) //only one EMPTY rule
+    override fun toString(): String = RuntimeRuleSet.EMPTY.tag
+}
+
 internal class RuntimeRuleRhsCommonTerminal(
     rule: RuntimeRule
 ) : RuntimeRuleRhsTerminal(rule) {
+    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsCommonTerminal(clonedRules[rule.tag]!!)
     override fun toString(): String = "<Common>"
 }
 
@@ -132,6 +137,7 @@ internal class RuntimeRuleRhsPattern(
     val pattern: String
 ) : RuntimeRuleRhsTerminal(rule) {
     internal val regex by lazy { Regex(this.pattern) }
+    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsPattern(clonedRules[rule.tag]!!, pattern)
     override fun toString(): String = "\"$pattern\""
 }
 
@@ -139,13 +145,8 @@ internal class RuntimeRuleRhsLiteral(
     rule: RuntimeRule,
     val value: String
 ) : RuntimeRuleRhsTerminal(rule) {
+    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsLiteral(clonedRules[rule.tag]!!, value)
     override fun toString(): String = "'$value'"
-}
-
-internal class RuntimeRuleRhsEmpty(
-    rule: RuntimeRule
-) : RuntimeRuleRhsTerminal(rule) {
-    override fun toString(): String = RuntimeRuleSet.EMPTY.tag
 }
 
 internal class RuntimeRuleRhsEmbedded(
@@ -153,6 +154,14 @@ internal class RuntimeRuleRhsEmbedded(
     val embeddedRuntimeRuleSet: RuntimeRuleSet,
     val embeddedStartRule: RuntimeRule
 ) : RuntimeRuleRhsTerminal(rule) {
+    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs {
+        val emClone = embeddedRuntimeRuleSet.clone()
+        return RuntimeRuleRhsEmbedded(
+            clonedRules[rule.tag]!!,
+            emClone,
+            emClone.findRuntimeRule(embeddedStartRule.tag)
+        )
+    }
 }
 
 internal sealed class RuntimeRuleRhsNonTerminal(
@@ -171,10 +180,7 @@ internal class RuntimeRuleRhsGoal(
             RulePosition(rule, 0, RulePosition.END_OF_RULE)
         )
 
-    override val rulePositionsAtStart: Set<RulePosition>
-        get() = setOf(
-            RulePosition(rule, 0, RulePosition.START_OF_RULE)
-        )
+    override val rulePositionsAtStart: Set<RulePosition> get() = setOf(RulePosition(rule, 0, RulePosition.START_OF_RULE))
 
     override fun rhsItemsAt(position: Int): Set<RuntimeRule> = when (position) {
         0 -> setOf(userGoalRuleItem)
@@ -186,6 +192,10 @@ internal class RuntimeRuleRhsGoal(
         else -> emptySet()
     }
 
+    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsGoal(
+        clonedRules[rule.tag]!!,
+        clonedRules[userGoalRuleItem.tag]!!
+    )
     override fun toString(): String = "GOAL (${userGoalRuleItem.tag}[${userGoalRuleItem.ruleNumber}]"
 }
 
@@ -203,10 +213,7 @@ internal class RuntimeRuleRhsConcatenation(
     }
     override val rulePositions: Set<RulePosition> get() = _rulePositions.toSet()
 
-    override val rulePositionsAtStart: Set<RulePosition>
-        get() = setOf(
-            RulePosition(rule, 0, RulePosition.START_OF_RULE)
-        )
+    override val rulePositionsAtStart: Set<RulePosition> get() = setOf(RulePosition(rule, 0, RulePosition.START_OF_RULE))
 
     override fun rhsItemsAt(position: Int): Set<RuntimeRule> = when {
         position < this.concatItems.size -> setOf(this.concatItems[position])
@@ -222,6 +229,10 @@ internal class RuntimeRuleRhsConcatenation(
         }
     }
 
+    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsConcatenation(
+        clonedRules[rule.tag]!!,
+        concatItems.map { clonedRules[it.tag]!! }
+    )
     override fun toString(): String = "CONCAT(${this.rhsItems.map { "${it.tag}[${it.ruleNumber}]" }.joinToString(" ")})"
 }
 
@@ -241,8 +252,8 @@ internal class RuntimeRuleRhsChoice(
 
     override val rhsItems: Set<RuntimeRule> get() = options.flatMap { it.rhsItems }.toSet()
     override val rulePositions: Set<RulePosition>
-        get() = options.flatMap { choiceRhs ->
-            choiceRhs.rulePositions
+        get() = options.flatMapIndexed { op, choiceRhs ->
+            choiceRhs.rulePositions.map { RulePosition(rule, op, it.position) }
         }.toSet()
 
     override fun rhsItemsAt(position: Int): Set<RuntimeRule> {
@@ -250,14 +261,20 @@ internal class RuntimeRuleRhsChoice(
     }
 
     override val rulePositionsAtStart: Set<RulePosition>
-        get() = options.mapIndexed { i, op ->
-            RulePosition(rule, i, RulePosition.START_OF_RULE)
+        get() = options.mapIndexed { op, _ ->
+            RulePosition(rule, op, RulePosition.START_OF_RULE)
         }.toSet()
 
     override fun nextRulePositions(current: RulePosition): Set<RulePosition> =
         this.options[current.option].nextRulePositions(current).map {
-            RulePosition(rule,current.option,it.position)
+            RulePosition(rule, current.option, it.position)
         }.toSet()
+
+    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsChoice(
+        clonedRules[rule.tag]!!,
+        choiceKind,
+        options.map { it.clone(clonedRules) }
+    )
 
     override fun toString(): String = "CHOICE(${this.rhsItems.map { "${it.tag}[${it.ruleNumber}]" }.joinToString(" | ")})"
 
@@ -347,6 +364,13 @@ internal class RuntimeRuleRhsListSimple(
         else -> emptySet()
     }
 
+    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsListSimple(
+        clonedRules[rule.tag]!!,
+        min,
+        max,
+        clonedRules[repeatedRhsItem.tag]!!
+    )
+
     override fun toString(): String = "LIST ${repeatedRhsItem.tag} {$min, $max}"
 }
 
@@ -424,6 +448,14 @@ internal class RuntimeRuleRhsListSeparated(
 
         else -> error("This should never happen!")
     }
+
+    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsListSeparated(
+        clonedRules[rule.tag]!!,
+        min,
+        max,
+        clonedRules[repeatedRhsItem.tag]!!,
+        clonedRules[separatorRhsItem.tag]!!
+    )
 
     override fun toString(): String = "SLIST ${repeatedRhsItem.tag} ${separatorRhsItem.tag} {$min, $max}"
 }

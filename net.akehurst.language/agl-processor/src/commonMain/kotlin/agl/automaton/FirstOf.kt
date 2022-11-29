@@ -5,7 +5,6 @@ import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.processor.AutomatonKind
 
 internal class FirstOf(
-    val runtimeRulesSize: Int
 ) {
 
     companion object {
@@ -20,7 +19,7 @@ internal class FirstOf(
     }
 
     // index by RuntimeRule.number
-    private val _firstOfNotEmpty = MutableList<FirstOfResult?>(this.runtimeRulesSize, { null })
+    private val _firstOfNotEmpty = hashMapOf<Int,FirstOfResult>()
 
     /*
      * return the LookaheadSet for the given RulePosition.
@@ -35,13 +34,13 @@ internal class FirstOf(
             rulePosition.isAtEnd -> ifReachedEnd
             else -> {
                 // this will iterate .next() until end of rule so no need to do it here
-                val res = firstOfRpNotEmpty(rulePosition, mutableMapOf(), BooleanArray(this.runtimeRulesSize))
+                val res = firstOfRpNotEmpty(rulePosition, mutableMapOf(), hashMapOf<Int,Boolean>())
                 res.endResult(ifReachedEnd)
             }
         }
     }
 
-    private fun firstOfRpNotEmpty(rulePosition: RulePosition, doneRp: MutableMap<RulePosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
+    private fun firstOfRpNotEmpty(rulePosition: RulePosition, doneRp: MutableMap<RulePosition, FirstOfResult>, done: MutableMap<Int,Boolean>): FirstOfResult {
         var existing = doneRp[rulePosition]
         if (null == existing) {
             /*DEBUG*/ if (rulePosition.isAtEnd) error("Internal Error")
@@ -65,7 +64,7 @@ internal class FirstOf(
                                     val f = embSS.firstOf.firstOfNotEmpty(
                                         rhs.embeddedStartRule,
                                         doneRp,
-                                        BooleanArray(rhs.embeddedRuntimeRuleSet.runtimeRules.size)
+                                        hashMapOf()
                                     )
                                     result = result.union(f.result)
                                     if (f.needsFirstOfParentNext) {
@@ -93,7 +92,7 @@ internal class FirstOf(
         return existing
     }
 
-    private fun firstOfNotEmpty(rule: RuntimeRule, doneRp: MutableMap<RulePosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
+    private fun firstOfNotEmpty(rule: RuntimeRule, doneRp: MutableMap<RulePosition, FirstOfResult>, done: MutableMap<Int,Boolean>): FirstOfResult {
         return when {
             0 > rule.ruleNumber -> when { // handle special kinds of RuntimeRule
                 RuntimeRuleSet.GOAL_RULE_NUMBER == rule.ruleNumber -> TODO()
@@ -104,7 +103,7 @@ internal class FirstOf(
                 else -> error("unsupported rule number $rule")
             }
 
-            done[rule.ruleNumber] -> _firstOfNotEmpty[rule.ruleNumber] ?: FirstOfResult(false, LookaheadSetPart.EMPTY)
+            done.containsKey(rule.ruleNumber) -> _firstOfNotEmpty[rule.ruleNumber] ?: FirstOfResult(false, LookaheadSetPart.EMPTY)
             else -> {
                 var result: FirstOfResult? = null//_firstOfNotEmpty[rule.number]
                 if (null == result) {
@@ -117,7 +116,7 @@ internal class FirstOf(
         }
     }
 
-    private fun firstOfNotEmptySafe(rule: RuntimeRule, doneRp: MutableMap<RulePosition, FirstOfResult>, done: BooleanArray): FirstOfResult {
+    private fun firstOfNotEmptySafe(rule: RuntimeRule, doneRp: MutableMap<RulePosition, FirstOfResult>, done: MutableMap<Int,Boolean>): FirstOfResult {
         var needsNext = false
         var result = LookaheadSetPart.EMPTY
         val rps = rule.rulePositionsAtStart
@@ -130,7 +129,7 @@ internal class FirstOf(
                         is RuntimeRuleRhsGoal -> error("should never happen")
                         is RuntimeRuleRhsEmbedded -> {
                             val embSS = rhs.embeddedRuntimeRuleSet.fetchStateSetFor(rhs.embeddedStartRule.tag, AutomatonKind.LOOKAHEAD_1)
-                            val f = embSS.firstOf.firstOfNotEmpty(rhs.embeddedStartRule, doneRp, BooleanArray(rhs.embeddedRuntimeRuleSet.runtimeRules.size))
+                            val f = embSS.firstOf.firstOfNotEmpty(rhs.embeddedStartRule, doneRp, hashMapOf())
                             result = result.union(f.result)
                             if (f.needsFirstOfParentNext) {
                                 needsNext = true

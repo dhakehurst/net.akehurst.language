@@ -83,7 +83,7 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-
+            state(G,o0,SOR)
         }
 
         AutomatonTest.assertEquals(expected, actual)

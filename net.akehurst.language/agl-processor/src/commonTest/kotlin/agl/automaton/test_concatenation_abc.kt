@@ -82,14 +82,14 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, 0, SOR))
-            val s1 = state(RP(S, 0, 1))
-            val s2 = state(RP(S, 0, 2))
-            val s3 = state(RP(G, 0, EOR))
-            val s4 = state(RP(S, 0, EOR))
-            val s5 = state(RP(a, 0, EOR))
-            val s6 = state(RP(b, 0, EOR))
-            val s7 = state(RP(c, 0, EOR))
+            state(RP(G, 0, SOR))
+            state(RP(S, 0, 1))
+            state(RP(S, 0, 2))
+            state(RP(G, 0, EOR))
+            state(RP(S, 0, EOR))
+            state(RP(a, 0, EOR))
+            state(RP(b, 0, EOR))
+            state(RP(c, 0, EOR))
 
             transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(a); lhg(b) }
             transition(WIDTH) { ctx(G, o0, SOR); src(S, o0, p1); tgt(b); lhg(c) }

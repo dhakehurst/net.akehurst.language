@@ -96,7 +96,16 @@ internal class RuntimeTransitionCalculator(
             }
         }
 
-        return __transitions.toSet()
+        return __transitions
+    }
+
+    internal fun createWidthTransFor(from:ParserState, widthInto:Set<WidthInfo>): Set<Transition> {
+        __transitions.clear()
+        for (wi in widthInto) {
+            val ts = this.createWidthOrEmbeddedTransition(from, wi)
+            __transitions.add(ts)
+        }
+        return __transitions
     }
 
     /*

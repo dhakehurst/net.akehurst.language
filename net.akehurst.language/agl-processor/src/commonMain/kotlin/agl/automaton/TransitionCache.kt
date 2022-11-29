@@ -29,8 +29,7 @@ internal interface TransitionCache {
         from:ParserState,
         action: ParseAction,
         to: ParserState,
-        lookahead: Set<Lookahead>,
-        prevGuard: Set<RulePosition>?
+        lookahead: Set<Lookahead>
     )
     fun addTransition(previousStates: Set<ParserState>, tr: Transition): Transition
 
@@ -53,8 +52,7 @@ internal class TransitionCacheLC0 : TransitionCache {
         from: ParserState,
         action: ParseAction,
         to: ParserState,
-        lookahead: Set<Lookahead>,
-        prevGuard: Set<RulePosition>?
+        lookahead: Set<Lookahead>
     ) {
         TODO("not implemented")
     }
@@ -159,8 +157,7 @@ internal class TransitionCacheLC1 : TransitionCache {
         from:ParserState,
         action: ParseAction,
         to: ParserState,
-        lookahead: Set<Lookahead>,
-        prevGuard: Set<RulePosition>?
+        lookahead: Set<Lookahead>
     ) {
         val trans = Transition(from, to, action, lookahead)
         this.addTransition(previousStates, trans)

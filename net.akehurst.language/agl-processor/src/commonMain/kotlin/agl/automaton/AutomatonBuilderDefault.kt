@@ -39,11 +39,11 @@ internal fun automaton(
 internal class AutomatonBuilderDefault(
     val rrs: RuntimeRuleSet,
     automatonKind: AutomatonKind,
-    userGoalRule: String,
+    userGoalRuleName: String,
     isSkip: Boolean
 ) : AutomatonBuilder {
 
-    private val result = rrs.fetchStateSetFor(userGoalRule, automatonKind)
+    private val result = ParserStateSet(rrs.nextStateSetNumber++, rrs, rrs.findRuntimeRule(userGoalRuleName), isSkip, automatonKind)
     private var nextState = 0
 
     val GOAL = ParseAction.GOAL

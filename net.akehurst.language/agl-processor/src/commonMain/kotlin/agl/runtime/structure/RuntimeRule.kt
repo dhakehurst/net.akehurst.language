@@ -85,6 +85,8 @@ internal class RuntimeRule(
             is RuntimeRuleRhsList -> true
         }
 
+    val isChoice get() = this.rhs is RuntimeRuleRhsChoice
+
     @Deprecated("use 'rhs is'")
     val kind
         get() = when {
@@ -99,6 +101,7 @@ internal class RuntimeRule(
 
     val asTerminalRulePosition by lazy { RulePosition(this, 0, RulePosition.END_OF_RULE) }
 
+    //TODO: only used in slow automaton alg from BuildCache, remove when that goes
     val rulePositions: Set<RulePosition> get() = rhs.rulePositions
 
     val rulePositionsAtStart get() = rhs.rulePositionsAtStart

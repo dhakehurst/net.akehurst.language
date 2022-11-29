@@ -54,7 +54,7 @@ internal class ParserState(
             }
         }.toSet().toList()
     }
-    val isChoice: Boolean by lazy { this.firstRuleChoiceKind != RuntimeRuleChoiceKind.NONE }
+    val isChoice: Boolean by lazy { this.firstRule.isChoice }
 
     val firstRuleChoiceKind by lazy {
         if (Debug.CHECK) check(1 == this.choiceKindList.size)

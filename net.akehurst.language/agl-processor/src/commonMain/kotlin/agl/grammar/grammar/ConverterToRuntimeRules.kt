@@ -31,11 +31,11 @@ internal class ConverterToRuntimeRules(
     val grammar: Grammar
 ) {
 
-    private val _runtimeRuleSet = RuntimeRuleSet(RuntimeRuleSet.numberForGrammar[grammar])
+    private val _ruleSetNumber = RuntimeRuleSet.numberForGrammar[grammar]
     val runtimeRuleSet: RuntimeRuleSet by lazy {
         this.visitGrammar(grammar, "")
-        _runtimeRuleSet.setRules(this.runtimeRules.values.toList())
-        _runtimeRuleSet
+        val rules = this.runtimeRules.values.toList()
+        RuntimeRuleSet(_ruleSetNumber,rules)
     }
 
     fun originalRuleItemFor(runtimeRuleSetNumber: Int, runtimeRuleNumber: Int): RuleItem = this.originalRuleItem[Pair(runtimeRuleSetNumber, runtimeRuleNumber)]
@@ -56,13 +56,13 @@ internal class ConverterToRuntimeRules(
 
     private fun nextRule(name: String, isSkip: Boolean): RuntimeRule {
         if (Debug.CHECK) check(this.runtimeRules.containsKey(name).not())
-        val newRule = RuntimeRule(_runtimeRuleSet.number, runtimeRules.size, name, isSkip)
+        val newRule = RuntimeRule(_ruleSetNumber, runtimeRules.size, name, isSkip)
         runtimeRules[name] = newRule
         return newRule
     }
 
     private fun terminalRule(name: String?, value: String, kind: RuntimeRuleKind, isPattern: Boolean, isSkip: Boolean): RuntimeRule {
-        val newRule = RuntimeRule(_runtimeRuleSet.number, runtimeRules.size, name, isSkip).also {
+        val newRule = RuntimeRule(_ruleSetNumber, runtimeRules.size, name, isSkip).also {
             if (isPattern) {
                 it.setRhs(RuntimeRuleRhsPattern(it,value))
             } else {
@@ -81,7 +81,7 @@ internal class ConverterToRuntimeRules(
         val embeddedConverter = embeddedConverters[embeddedGrammar]
         val embeddedRuntimeRuleSet = embeddedConverter.runtimeRuleSet
         val embeddedStartRuntimeRule = embeddedRuntimeRuleSet.findRuntimeRule(embeddedGoalRuleName)
-        val newRule = RuntimeRule(_runtimeRuleSet.number, runtimeRules.size, embeddedRuleName, isSkip).also {
+        val newRule = RuntimeRule(_ruleSetNumber, runtimeRules.size, embeddedRuleName, isSkip).also {
             it.setRhs(RuntimeRuleRhsEmbedded(it,embeddedRuntimeRuleSet, embeddedStartRuntimeRule))
         }
         runtimeRules[newRule.tag] = newRule

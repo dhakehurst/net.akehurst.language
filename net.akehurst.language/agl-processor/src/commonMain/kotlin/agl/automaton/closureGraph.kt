@@ -65,7 +65,7 @@ internal interface ClosureItem {
     val graph: ClosureGraph
     val rulePosition: RulePosition
 
-    val children: Set<ClosureItem>
+    //val children: Set<ClosureItem>
 
     val upInfo: RulePositionUpInfo
     val downInfo: Set<FirstTerminalInfo>
@@ -80,7 +80,7 @@ internal interface ClosureItem {
      * create child and link to parents
      * return child if it was new
      */
-    fun createAndAddChild(childRulePosition: RulePosition): ClosureItemChild?
+    fun createAndAddChildAtStart(childRulePosition: RulePosition): ClosureItemChild?
 
     //fun resolveUp()
     fun resolveDown()
@@ -185,11 +185,11 @@ internal class ClosureGraph(
             private var _resolveDownCalled = false
             protected var _resolveUpCalled = false
 
-            override val children: Set<ClosureItem> get() = this.graph.childrenOf(this)
+            //override val children: Set<ClosureItem> get() = this.graph.startChildrenOf(this)
 
             override val shortString: List<String> get() = this.shortStringRec(mutableSetOf())
 
-            override fun createAndAddChild(childRulePosition: RulePosition): ClosureItemChild? {
+            override fun createAndAddChildAtStart(childRulePosition: RulePosition): ClosureItemChild? {
                 val child = ClosureItemChildGraph(this.ffc, this.graph, childRulePosition, this)
                 val added = this.graph.addParentOf(child, this)
                 return if (added) child else null
@@ -209,15 +209,15 @@ internal class ClosureGraph(
                 } else {
                     this.downInfo = mutableSetOf()
                     this._resolveDownCalled = true
-                    val children = graph.childrenOf(this)
+                    val children = graph.startChildrenOf(this)
                     if (children.isEmpty()) {
-                        //assume this is a terminal
-                        val firstTerminalInfo = when {
-                            this.rulePosition.isTerminal -> FirstTerminalInfo(this.rulePosition.rule as RuntimeRule, this.upInfo.nextContextFollow)
-                            else -> error("Internal Error: should be terminal or embedded")
+                         when {
+                            this.rulePosition.isTerminal -> {
+                                val firstTerminalInfo = FirstTerminalInfo(this.rulePosition.rule, this.upInfo.nextContextFollow)
+                                (this.downInfo as MutableSet).add(firstTerminalInfo)
+                            }
+                            else -> Unit //error("Internal Error: should be terminal or embedded")
                         }
-                        (this.downInfo as MutableSet).add(firstTerminalInfo)
-
                     } else {
                         for (child in children) {
                             child.resolveDown()
@@ -329,7 +329,7 @@ internal class ClosureGraph(
 
     }
 
-    private val _childrenOf = lazyMutableMapNonNull<ClosureItem, MutableSet<ClosureItem>> { mutableSetOf() }
+    private val _startChildrenOf = lazyMutableMapNonNull<ClosureItem, MutableSet<ClosureItem>> { mutableSetOf() }
     private val _parentsOf = lazyMutableMapNonNull<ClosureItem, MutableSet<ClosureItem>> { mutableSetOf() }
 
     val rootUpInfo = RulePositionUpInfo(
@@ -349,11 +349,15 @@ internal class ClosureGraph(
         }
     }
 
-    fun childrenOf(child: ClosureItem): Set<ClosureItem> = this._childrenOf[child]
+    fun startChildrenOf(child: ClosureItem): Set<ClosureItem> = this._startChildrenOf[child]
     fun parentsOf(child: ClosureItem): Set<ClosureItem> = this._parentsOf[child]
 
     fun addParentOf(child: ClosureItemChild, extraParent: ClosureItem): Boolean {
-        this._childrenOf[extraParent].add(child)
+        when {
+            (RulePosition.START_OF_RULE == child.rulePosition.position) -> this._startChildrenOf[extraParent].add(child)
+            child.rulePosition.isTerminal -> this._startChildrenOf[extraParent].add(child)
+            else -> Unit
+        }
         return _parentsOf[child].add(extraParent)
     }
 

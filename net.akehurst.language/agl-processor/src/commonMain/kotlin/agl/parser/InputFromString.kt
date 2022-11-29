@@ -116,7 +116,7 @@ internal class InputFromString(
         //val match = stext.startsWith(patternText)//regionMatches(position, patternText, 0, patternText.length, false)
         val match = this.isLookingAt(position,terminalRule)
         return if (match) {
-            val text = (terminalRule as RuntimeRuleRhsLiteral).value
+            val text = (terminalRule.rhs as RuntimeRuleRhsLiteral).value
             val eolPositions = emptyList<Int>() //this.eolPositions(text)
             RegexMatcher.MatchResult(text, eolPositions)
             //matchedText

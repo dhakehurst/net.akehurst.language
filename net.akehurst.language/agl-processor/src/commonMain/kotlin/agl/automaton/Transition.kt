@@ -111,7 +111,7 @@ internal class Transition(
                         else -> TODO()
                     }
 
-                    else -> TODO()
+                    else -> DefaultRuntimeGuard
                 }
 
                 else -> DefaultRuntimeGuard

@@ -24,7 +24,8 @@ import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.collections.lazyMutableMapNonNull
 
 internal class RuntimeRuleSet(
-    val number: Int
+    val number: Int,
+    val runtimeRules: List<RuntimeRule>
 ) : RuleSet {
 
     companion object {
@@ -68,15 +69,15 @@ internal class RuntimeRuleSet(
     private val terminalRuleNumber: MutableMap<String, Int> = mutableMapOf()
     private val embeddedRuleNumber: MutableMap<String, Int> = mutableMapOf()
 
-    val goalRuleFor = lazyMutableMapNonNull<String, RuntimeRule> {
-        val ug = this.findRuntimeRule(it)
+    val goalRuleFor = lazyMutableMapNonNull<RuntimeRule, RuntimeRule> {
+        val ug = it //this.findRuntimeRule(it)
         val gr = RuntimeRule(this.number, GOAL_RULE_NUMBER, GOAL_TAG, false)
         gr.setRhs(RuntimeRuleRhsGoal(gr,ug))
         gr
     }
 
     // Mutable list used, so that 'setRules' can set it
-    val runtimeRules: List<RuntimeRule> = mutableListOf()
+    //val runtimeRules: List<RuntimeRule> = mutableListOf()
 
     val skipRules: List<RuntimeRule> by lazy { this.runtimeRules.filter { it.isSkip } }
 
@@ -138,6 +139,7 @@ internal class RuntimeRuleSet(
         }
     }
 
+    /*
     //called from ParserStateSet, which adds the Goal GrammarRule bits
     internal val parentPosition = lazyMutableMapNonNull<RuntimeRule, Set<RulePosition>> { childRR ->
         //TODO: this is slow, is there a better way?
@@ -149,19 +151,17 @@ internal class RuntimeRuleSet(
             f
         }.toSet()
     }
+*/
+    internal var nextStateSetNumber = 0
 
-    private var nextStateSetNumber = 0
-
-    fun setRules(rules: List<RuntimeRule>) {
-        (this.runtimeRules as MutableList).clear()
-        for (rr in rules) {
+    init {
+        for (rr in this.runtimeRules) {
             when {
                 rr.isTerminal -> this.terminalRuleNumber[rr.tag] = rr.ruleNumber
                 rr.isNonTerminal -> this.nonTerminalRuleNumber[rr.tag] = rr.ruleNumber
                 rr.isEmbedded -> this.embeddedRuleNumber[rr.tag] = rr.ruleNumber
             }
         }
-        this.runtimeRules.addAll(rules)
     }
 
     internal fun automatonFor(goalRuleName: String, automatonKind: AutomatonKind): ParserStateSet {
@@ -273,8 +273,8 @@ internal class RuntimeRuleSet(
     }
 */
     internal fun buildFor(userGoalRuleName: String, automatonKind: AutomatonKind): ParserStateSet {
-        val s0 = this.fetchStateSetFor(userGoalRuleName, automatonKind).startState
-        return s0.stateSet.build()
+        val ss = this.fetchStateSetFor(userGoalRuleName, automatonKind)
+        return ss.build()
     }
 
     fun fetchStateSetFor(userGoalRule: RuntimeRule, automatonKind: AutomatonKind): ParserStateSet =
@@ -284,7 +284,7 @@ internal class RuntimeRuleSet(
         //TODO: need to cache by possibleEndOfText also
         var stateSet = this.states_cache[userGoalRuleName]
         if (null == stateSet) {
-            stateSet = ParserStateSet(nextStateSetNumber++, this, this.goalRuleFor[userGoalRuleName] as RuntimeRule, false, automatonKind)
+            stateSet = ParserStateSet(nextStateSetNumber++, this, this.findRuntimeRule(userGoalRuleName), false, automatonKind)
             this.states_cache[userGoalRuleName] = stateSet
         }
         return stateSet
@@ -296,7 +296,7 @@ internal class RuntimeRuleSet(
         val number = this.nonTerminalRuleNumber[tag]
             ?: this.terminalRuleNumber[tag]
             ?: this.embeddedRuleNumber[tag]
-            ?: throw ParserException("RuntimeRule '${tag}' not found")
+            ?: error("Internal Error: RuntimeRule '${tag}' not found")
         return this.runtimeRules[number]
     }
 
@@ -376,13 +376,17 @@ internal class RuntimeRuleSet(
 
     // only used in test
     internal fun clone(): RuntimeRuleSet {
-        val clone = RuntimeRuleSet(nextRuntimeRuleSetNumber++)
-        val clonedRules = this.runtimeRules.map { rr ->
-            RuntimeRule(clone.number, rr.ruleNumber, rr.name, rr.isSkip).also {
-                it.setRhs(rr.rhs.clone())
-            }
+        val cloneNumber = nextRuntimeRuleSetNumber++
+        val clonedRules = this.runtimeRules.associate { rr ->
+            val cr = RuntimeRule(cloneNumber, rr.ruleNumber, rr.name, rr.isSkip)
+            Pair(rr.tag, cr)
         }
-        clone.setRules(clonedRules)
+        this.runtimeRules.forEach {
+            val cr = clonedRules[it.tag] ?: error("Internal Error: cannot find cloned rule with tag '${it.tag}' ")
+            cr.setRhs(it.rhs.clone(clonedRules))
+        }
+        val rules = clonedRules.values.toList()
+        val clone = RuntimeRuleSet(cloneNumber,rules)
         return clone
     }
 
