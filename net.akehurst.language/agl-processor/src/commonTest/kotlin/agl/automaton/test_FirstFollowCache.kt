@@ -29,7 +29,16 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
 
     val sut = FirstFollowCache3()
 
-    private fun check_calcAllClosure(G: RuntimeRule, expectedShortStr:Set<String>) {
+    private fun check_calcFirstTermClosure(context: RulePosition, rulePosition: RulePosition, nextContextFollow: LookaheadSetPart, expectedShortStr: Set<String>) {
+        val graph = ClosureGraph(context, rulePosition, nextContextFollow)
+        sut.calcFirstTermClosure(graph)
+
+        assertEquals(expectedShortStr.size, graph.nonRootClosures.size)
+        val actualShortStr = graph.nonRootClosures.flatMap { cls -> cls.shortString }.toSet()
+        assertEquals(expectedShortStr, actualShortStr)
+    }
+
+    private fun check_calcAllClosure(G: RuntimeRule, expectedShortStr: Set<String>) {
         val graph = ClosureGraph(RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT)
         sut.calcAllClosure(graph)
 
@@ -54,17 +63,28 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         val S1 = rrs.findRuntimeRule("S1")
         val a = rrs.findRuntimeRule("'a'")
 
-        check_calcAllClosure(G,setOf(
-            "G-S-a",
-            "G-S-S1-S-a",
-            "G-S-S1-S-S-a",
-            "G-S-S1-a",
-            "G",
-            "G-S",
-            "G-S-S1",
-            "G-S-S1-S",
-            "G-S-s1-S-S",
-        ))
+        check_calcFirstTermClosure(
+            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
+            setOf(
+                "G-S",
+                "G-S-a",
+                "G-S-S1-S-a"
+            )
+        )
+
+        check_calcAllClosure(
+            G, setOf(
+                "G-S-a",
+                "G-S-S1-S-a",
+                "G-S-S1-S-S-a",
+                "G-S-S1-a",
+                "G",
+                "G-S",
+                "G-S-S1",
+                "G-S-S1-S",
+                "G-S-s1-S-S",
+            )
+        )
     }
 
     @Test
@@ -79,7 +99,6 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         val S = rrs.findRuntimeRule("S")
         val G = rrs.goalRuleFor[S]
         val a = rrs.findRuntimeRule("'a'")
-
 
 
     }

@@ -125,7 +125,8 @@ internal class FirstFollowCache3 {
         this._possibleContexts[rp].add(ctx)
     }
 
-    private fun calcFirstTermClosure(graph: ClosureGraph) {
+    //internal not private so we can test it
+    internal fun calcFirstTermClosure(graph: ClosureGraph) {
         //TODO: when we get duplicate closureItem, connect it don't discard it
         // creating a upside down tree.
         // then process closure needs to work from bottom up doing all branches.
