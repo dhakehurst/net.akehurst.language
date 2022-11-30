@@ -39,8 +39,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
     }
 
     private val S = rrs.findRuntimeRule("S")
-    private val SM = rrs.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
-    private val G = SM.startState.runtimeRules.first()
+    private val G = rrs.goalRuleFor[S]
     private val S1 = rrs.findRuntimeRule("S1")
     private val a = rrs.findRuntimeRule("'a'")
 
@@ -134,7 +133,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
     @Test
     fun buildFor() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
-        //println(rrs.usedAutomatonToString("S"))
+        println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(RP(G, o0, SOR))     /* {}     G = . S    */

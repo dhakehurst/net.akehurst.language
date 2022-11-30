@@ -60,7 +60,7 @@ internal class RulePosition(
         get() = if (this.isAtEnd) {
             emptySet()
         } else {
-            this.rule.rhs.rhsItemsAt(position)
+            this.rule.rhs.rhsItemsAt(option, position)
         }
 
     fun atEnd() = RulePosition(this.rule, this.option, END_OF_RULE)

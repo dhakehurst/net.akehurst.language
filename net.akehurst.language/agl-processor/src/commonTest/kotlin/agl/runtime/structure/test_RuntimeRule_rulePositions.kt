@@ -34,7 +34,7 @@ class test_RuntimeRule_rulePositions {
         val expected = setOf<RulePosition>()
 
         //when
-        val actual = ta.rulePositions
+        val actual = ta.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)
@@ -55,7 +55,7 @@ class test_RuntimeRule_rulePositions {
         )
 
         //when
-        val actual = S.rulePositions
+        val actual = S.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)
@@ -81,7 +81,7 @@ class test_RuntimeRule_rulePositions {
         )
 
         //when
-        val actual = S.rulePositions
+        val actual = S.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)
@@ -107,7 +107,7 @@ class test_RuntimeRule_rulePositions {
         )
 
         //when
-        val actual = S.rulePositions
+        val actual = S.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)
@@ -134,7 +134,7 @@ class test_RuntimeRule_rulePositions {
         )
 
         //when
-        val actual = S.rulePositions
+        val actual = S.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)
@@ -162,7 +162,7 @@ class test_RuntimeRule_rulePositions {
         )
 
         //when
-        val actual = S.rulePositions
+        val actual = S.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)
@@ -190,7 +190,7 @@ class test_RuntimeRule_rulePositions {
         )
 
         //when
-        val actual = S.rulePositions
+        val actual = S.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)
@@ -214,7 +214,7 @@ class test_RuntimeRule_rulePositions {
         )
 
         //when
-        val actual = S.rulePositions
+        val actual = S.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)
@@ -238,7 +238,7 @@ class test_RuntimeRule_rulePositions {
         )
 
         //when
-        val actual = S.rulePositions
+        val actual = S.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)
@@ -263,7 +263,7 @@ class test_RuntimeRule_rulePositions {
         )
 
         //when
-        val actual = S.rulePositions
+        val actual = S.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)
@@ -289,7 +289,7 @@ class test_RuntimeRule_rulePositions {
         )
 
         //when
-        val actual = S.rulePositions
+        val actual = S.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)
@@ -315,7 +315,7 @@ class test_RuntimeRule_rulePositions {
         )
 
         //when
-        val actual = S.rulePositions
+        val actual = S.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)
@@ -340,7 +340,7 @@ class test_RuntimeRule_rulePositions {
         )
 
         //when
-        val actual = S.rulePositions
+        val actual = S.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)
@@ -366,7 +366,7 @@ class test_RuntimeRule_rulePositions {
         )
 
         //when
-        val actual = S.rulePositions
+        val actual = S.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)
@@ -392,7 +392,7 @@ class test_RuntimeRule_rulePositions {
         )
 
         //when
-        val actual = S.rulePositions
+        val actual = S.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)
@@ -418,7 +418,7 @@ class test_RuntimeRule_rulePositions {
         )
 
         //when
-        val actual = S.rulePositions
+        val actual = S.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)
@@ -444,7 +444,7 @@ class test_RuntimeRule_rulePositions {
         )
 
         //when
-        val actual = S.rulePositions
+        val actual = S.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)
@@ -470,7 +470,7 @@ class test_RuntimeRule_rulePositions {
         )
 
         //when
-        val actual = S.rulePositions
+        val actual = S.rulePositionsNotAtStart
 
         //then
         assertEquals(expected, actual)

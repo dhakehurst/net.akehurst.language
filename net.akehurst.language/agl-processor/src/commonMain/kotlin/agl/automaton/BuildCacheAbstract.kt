@@ -30,8 +30,7 @@ internal abstract class BuildCacheAbstract(
 
     protected var _cacheOff = true
 
-    // must be lazy because FirstFollowCache uses lazy parts of ParserStateSet
-    protected val firstFollowCache by lazy { FirstFollowCache3(this.stateSet) }
+    protected val firstFollowCache = FirstFollowCache3()
 
     //TODO: use smaller array for done, but would to map rule number!
     private val _firstOfNotEmpty = Array<FirstOfResult?>(this.stateSet.runtimeRuleSet.runtimeRules.size, { null })

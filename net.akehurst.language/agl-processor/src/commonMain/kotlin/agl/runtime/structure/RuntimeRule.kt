@@ -101,8 +101,10 @@ internal class RuntimeRule(
 
     val asTerminalRulePosition by lazy { RulePosition(this, 0, RulePosition.END_OF_RULE) }
 
-    //TODO: only used in slow automaton alg from BuildCache, remove when that goes
-    val rulePositions: Set<RulePosition> get() = rhs.rulePositions
+    //used in automaton build
+    val rulePositions: Set<RulePosition> get() = rulePositionsAtStart + rulePositionsNotAtStart
+
+    val rulePositionsNotAtStart: Set<RulePosition> get() = rhs.rulePositionsNotAtStart
 
     val rulePositionsAtStart get() = rhs.rulePositionsAtStart
 
@@ -139,7 +141,7 @@ internal class RuntimeRule(
             }
         }
     */
-    fun rhsItemsAt(position: Int): Set<RuntimeRule> = this.rhs.rhsItemsAt(position)
+    //fun rhsItemsAt(position: Int): Set<RuntimeRule> = this.rhs.rhsItemsAt(option, position)
 
     /*
         private fun findAllNonTerminalAt(n: Int): Set<RuntimeRule> {

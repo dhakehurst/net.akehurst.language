@@ -633,9 +633,12 @@ internal class BuildCacheLC1(
     }
 
     internal fun stateInfo3(): Set<StateInfo> {
-        val stateRps = this.stateSet.usedNonTerminalRules.flatMap { it.rulePositions }+
+        val stateRps = this.stateSet.usedNonTerminalRules.flatMap { it.rulePositionsNotAtStart }+
                 this.stateSet.usedTerminalRules.map { it.asTerminalRulePosition }
-        firstFollowCache.processAllClosures()
+        val rulePosition = this.stateSet.startRulePosition
+        val context = rulePosition
+        val nextContextFollow = LookaheadSetPart.EOT
+        firstFollowCache.processAllClosures(context,rulePosition,nextContextFollow)
         val stateInfo = mutableSetOf<StateInfo>()
         for (srcRp in stateRps) {
             val transInfo = mutableSetOf<TransInfo>()
@@ -644,7 +647,7 @@ internal class BuildCacheLC1(
                     srcRp.isAtEnd -> {
                         val hgtis = mutableSetOf<TransInfo>()
                         for (ctxCtx in firstFollowCache.possibleContextsFor(ctx)) {
-                            val pns = this.firstFollowCache.parentInContext(ctxCtx, ctx, emptySet(), srcRp.rule)
+                            val pns = this.firstFollowCache.parentInContext(ctxCtx, ctx, srcRp.rule)
                             val hgInfo = pns.map { parentNext ->
                                 val action = when {
                                     parentNext.rulePosition.isGoal -> ParseAction.GOAL
@@ -675,7 +678,13 @@ internal class BuildCacheLC1(
                     else -> {
                         val parentFollow = when {
                             srcRp.isGoal -> LookaheadSetPart.EOT
-                            else -> LookaheadSetPart.RT
+                            else -> {
+                                val ctxCtxs = this.firstFollowCache.possibleContextsFor(ctx)
+                                val x = ctxCtxs.flatMap {cc ->
+                                    this.firstFollowCache.parentInContext(cc,ctx,srcRp.rule)
+                                }.toSet()
+                                x.map { it.follow }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+                            }
                         }
                         val ftis = this.firstFollowCache.firstTerminalInContext(ctx, srcRp, parentFollow) //emptySet(),  parentFollow)
                         val wis = ftis.map { firstTermInfo ->
@@ -801,7 +810,7 @@ internal class BuildCacheLC1(
         val hgInfo: Set<HeightGraftInfo> = prevPrev.rulePositions.flatMap { contextContext ->
             prev.rulePositions.flatMap { context ->
                 val parentsOfFrom = from.runtimeRules.flatMap { fr ->
-                    this.firstFollowCache.parentInContext(contextContext, context, emptySet(), fr)
+                    this.firstFollowCache.parentInContext(contextContext, context, fr)
                 }.toSet()
                 parentsOfFrom.map { parentNext ->
                     val action = when {

@@ -23,7 +23,7 @@ import net.akehurst.language.collections.LazyMutableMapNonNull
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.collections.mutableQueueOf
 
-internal class FirstFollowCache3(val stateSet: ParserStateSet) {
+internal class FirstFollowCache3 {
 
     // prev/context -> ( RulePosition -> Boolean )
     private val _doneFollow = lazyMutableMapNonNull<RulePosition, MutableMap<ClosureItem, Boolean>> { mutableMapOf() }
@@ -43,31 +43,38 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         this._possibleContexts.clear()
     }
 
-    val firstTerminalContexts get() = _firstTerminal.flatMap { (ctx,values) ->
-        values.map { (rp,ft) ->
-            Pair(ctx,rp)
+    val firstTerminalContexts
+        get() = _firstTerminal.flatMap { (ctx, values) ->
+            values.map { (rp, ft) ->
+                Pair(ctx, rp)
+            }
         }
-    }
 
-    fun possibleContextsFor(rp:RulePosition): Set<RulePosition> = _possibleContexts[rp]
+    fun possibleContextsFor(rp: RulePosition): Set<RulePosition> = _possibleContexts[rp]
 
     // entry point from calcWidth
     // target states for WIDTH transition, rulePosition should NOT be atEnd
     //fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, nextContext:Set<RulePosition>, nextContextFollow: FollowDeferred): Set<FirstTerminalInfo> {
     fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, nextContextFollow: LookaheadSetPart): Set<FirstTerminalInfo> {
         check(context.isAtEnd.not()) { "firstTerminal($context,$rulePosition)" }
-        processClosureFor(context, rulePosition, nextContextFollow) //nextContext, nextContextFollow)
-        //processClosureFor(context, rulePosition, FollowDeferredLiteral(runtimeLookahead))
-        return this._firstTerminal[context][rulePosition]
+        return  if (this._firstTerminal.containsKey(context) && this._firstTerminal[context].containsKey(rulePosition)) {
+            this._firstTerminal[context][rulePosition]
+        } else {
+            processClosureFor(context, rulePosition, nextContextFollow)
+            this._firstTerminal[context][rulePosition]
+        }
     }
 
     // target states for HEIGHT or GRAFT transition, rulePosition should be atEnd
     // entry point from calcHeightGraft
-    fun parentInContext(contextContext: RulePosition, context: RulePosition, nextContext: Set<RulePosition>, completedRule: RuntimeRule): Set<ParentNext> {
-        processClosureFor(contextContext, context, LookaheadSetPart.RT) //nextContext, FollowDeferredLiteral.RT)
-
+    fun parentInContext(contextContext: RulePosition, context: RulePosition, completedRule: RuntimeRule): Set<ParentNext> {
         val ctx = if (context.isAtStart) contextContext else context
-        return this._parentInContext[ctx][completedRule]
+        return if (this._parentInContext.containsKey(ctx) && this._parentInContext[ctx].containsKey(completedRule)) {
+            this._parentInContext[ctx][completedRule]
+        } else {
+            processClosureFor(contextContext, context, LookaheadSetPart.RT) //nextContext, FollowDeferredLiteral.RT)
+            this._parentInContext[ctx][completedRule]
+        }
     }
 
     /**
@@ -80,7 +87,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
     //internal fun processClosureFor(context: RulePosition, rulePosition: RulePosition, nextContext:Set<RulePosition>, nextContextFollow: FollowDeferred) {
     private fun processClosureFor(context: RulePosition, rulePosition: RulePosition, nextContextFollow: LookaheadSetPart) {
         //val cls = ClosureItemRoot(this, context, rulePosition, parentFollow)
-        val graph = ClosureGraph(this, context, rulePosition, nextContextFollow) //nextContext, nextContextFollow)
+        val graph = ClosureGraph(context, rulePosition, nextContextFollow) //nextContext, nextContextFollow)
         val cls = graph.root
         val doit = when (this._doneFollow[context][cls]) {
             null -> true
@@ -93,12 +100,9 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         }
     }
 
-    fun processAllClosures() {
+    fun processAllClosures(context: RulePosition, rulePosition: RulePosition, nextContextFollow: LookaheadSetPart) {
         this.clear()
-        val rulePosition = this.stateSet.startRulePosition
-        val context = rulePosition
-        val nextContextFollow =LookaheadSetPart.EOT
-        val graph = ClosureGraph(this, context, rulePosition, nextContextFollow) //nextContext, nextContextFollow)
+        val graph = ClosureGraph(context, rulePosition, nextContextFollow)
         calcAllClosure(graph)
     }
 
@@ -117,7 +121,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         this._parentInContext[prev][completedRule].addAll(parentNext)
     }
 
-    private fun addPossibleContext(rp:RulePosition, ctx:RulePosition) {
+    private fun addPossibleContext(rp: RulePosition, ctx: RulePosition) {
         this._possibleContexts[rp].add(ctx)
     }
 
@@ -136,7 +140,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         todoList.enqueue(graph.root)
         while (todoList.isNotEmpty) {
             val cls = todoList.dequeue()
-            for( item in cls.rulePosition.items) {
+            for (item in cls.rulePosition.items) {
                 when {
                     item.isTerminal -> cls.createAndAddChildAtStart(item.asTerminalRulePosition)
                     item.isNonTerminal -> {
@@ -153,6 +157,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
                             }
                         }
                     }
+
                     else -> error("Internal Error: should never happen")
                 }
             }
@@ -164,7 +169,8 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcFirstTermClosure: ${graph.root}" }
     }
 
-    private fun calcAllClosure(graph: ClosureGraph) {
+    //internal not private so we can test it
+    internal fun calcAllClosure(graph: ClosureGraph) {
         //TODO: when we get duplicate closureItem, connect it don't discard it
         // creating a upside down tree.
         // then process closure needs to work from bottom up doing all branches.
@@ -179,7 +185,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         todoList.enqueue(graph.root)
         while (todoList.isNotEmpty) {
             val cls = todoList.dequeue()
-            for( item in cls.rulePosition.items) {
+            for (item in cls.rulePosition.items) {
                 when {
                     item.isTerminal -> cls.createAndAddChildAtStart(item.asTerminalRulePosition)
                     item.isNonTerminal -> {
@@ -196,6 +202,7 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
                             }
                         }
                     }
+
                     else -> error("Internal Error: should never happen")
                 }
             }
@@ -302,19 +309,25 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
             doForRoot(graph.root.rulePosition, graph.root.upInfo, dwn)
         }
         for (cls in graph.nonRootClosures) {
-            if(cls.downInfo.isEmpty()) {
+            if (cls.downInfo.isEmpty()) {
                 this.addPossibleContext(cls.rulePosition, cls.upInfo.context)
             } else {
-                for (dwn in cls.downInfo) {
-                    when (cls.isRoot) {
-                        true -> doForRoot(cls.rulePosition, cls.upInfo, dwn)
-                        false -> doForNonRoot(cls)
-                    }
-                    when (cls.rulePosition.isEmbedded) {
-                        true -> doForEmbedded(cls.rulePosition, cls.upInfo, dwn)
-                        false -> Unit
-                    }
+                when {
+                    cls.rulePosition.isAtStart -> doForNonRoot(cls)
+                    cls.rulePosition.isTerminal -> doForNonRoot(cls)
+                    else -> cls.downInfo.forEach { dwn -> doForRoot(cls.rulePosition, cls.upInfo, dwn) }
                 }
+                //TODO handle closure not at start!
+                //for (dwn in cls.downInfo) {
+                //    when (cls.isRoot) {
+                //        true -> doForRoot(cls.rulePosition, cls.upInfo, dwn)
+                //        false -> doForNonRoot(cls.upInfo.context, cls.rulePosition, cls.parentNext)
+                //    }
+                //    when (cls.rulePosition.isEmbedded) {
+                //        true -> doForEmbedded(cls.rulePosition, cls.upInfo, dwn)
+                //        false -> Unit
+                //    }
+                //}
             }
         }
     }
@@ -330,8 +343,12 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
     }
 
     private fun doForNonRoot(cls:ClosureItem) {
-        this.addParentInContext(cls.upInfo.context, cls.rulePosition.rule, cls.parentNext)
-        this.addPossibleContext(cls.rulePosition, cls.upInfo.context)
+        val context = cls.upInfo.context
+        val rulePosition = cls.rulePosition
+        val parentNext = cls.parentNext
+        val completedRule = rulePosition.rule
+        this.addParentInContext(context, completedRule, parentNext)
+        this.addPossibleContext(rulePosition, context)
     }
 
     private fun doForEmbedded(rulePosition: RulePosition, upInfo: RulePositionUpInfo, downInfo: FirstTerminalInfo) {
