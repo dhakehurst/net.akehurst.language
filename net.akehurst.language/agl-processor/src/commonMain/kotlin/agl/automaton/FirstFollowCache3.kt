@@ -110,7 +110,8 @@ internal class FirstFollowCache3(val stateSet: ParserStateSet) {
         this._parentInContext[prev][completedRule].addAll(parentNext)
     }
 
-    private fun calcFirstTermClosure(graph: ClosureGraph) {
+    //internal not private so we can test it
+    internal fun calcFirstTermClosure(graph: ClosureGraph) {
         //TODO: when we get duplicate closureItem, connect it don't discard it
         // creating a upside down tree.
         // then process closure needs to work from bottom up doing all branches.

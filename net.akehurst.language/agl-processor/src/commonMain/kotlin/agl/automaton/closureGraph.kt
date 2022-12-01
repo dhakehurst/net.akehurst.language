@@ -242,7 +242,8 @@ internal class ClosureGraph(
                         else -> TODO()
                     }
 
-                    rr.isNonTerminal && rr.rhs.itemsKind == RuntimeRuleRhsItemsKind.CHOICE -> "${rr.tag}${rp.option}"
+                    rr.isNonTerminal && rr.rhs.itemsKind == RuntimeRuleRhsItemsKind.CHOICE -> "${rr.tag}.${rp.option}"
+                    rr.isGoal -> "G"
                     else -> rr.tag
                 }
                 return if (done.contains(this)) {
