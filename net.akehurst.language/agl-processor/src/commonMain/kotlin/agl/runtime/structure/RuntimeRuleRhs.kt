@@ -196,6 +196,7 @@ internal class RuntimeRuleRhsGoal(
         clonedRules[rule.tag]!!,
         clonedRules[userGoalRuleItem.tag]!!
     )
+
     override fun toString(): String = "GOAL (${userGoalRuleItem.tag}[${userGoalRuleItem.ruleNumber}]"
 }
 
@@ -206,11 +207,11 @@ internal class RuntimeRuleRhsConcatenation(
 
     override val rhsItems: Set<RuntimeRule> get() = concatItems.toSet()
 
-    private val _rulePositions: List<RulePosition> by lazy {
-        this.concatItems.mapIndexedNotNull { index, _ ->
-            if(RulePosition.START_OF_RULE==index) null else RulePosition(rule, 0, index)
+    private val _rulePositions: List<RulePosition>
+        get() = this.concatItems.mapIndexedNotNull { index, _ ->
+            if (RulePosition.START_OF_RULE == index) null else RulePosition(rule, 0, index)
         } + RulePosition(rule, 0, RulePosition.END_OF_RULE)
-    }
+
     override val rulePositionsNotAtStart: Set<RulePosition> get() = _rulePositions.toSet()
 
     override val rulePositionsAtStart: Set<RulePosition> get() = setOf(RulePosition(rule, 0, RulePosition.START_OF_RULE))
@@ -224,7 +225,7 @@ internal class RuntimeRuleRhsConcatenation(
         val np = current.position + 1
         return when {
             np == this.concatItems.size -> setOf(this.rulePositionsNotAtStart.last())
-            np < this.concatItems.size -> setOf(this._rulePositions[np])
+            np < this.concatItems.size -> setOf(this._rulePositions[np - 1])
             else -> emptySet()
         }
     }
@@ -233,6 +234,7 @@ internal class RuntimeRuleRhsConcatenation(
         clonedRules[rule.tag]!!,
         concatItems.map { clonedRules[it.tag]!! }
     )
+
     override fun toString(): String = "CONCAT(${this.rhsItems.map { "${it.tag}[${it.ruleNumber}]" }.joinToString(" ")})"
 }
 
@@ -290,36 +292,64 @@ internal class RuntimeRuleRhsListSimple(
     val repeatedRhsItem: RuntimeRule
 ) : RuntimeRuleRhsList(rule) {
     override val rhsItems: Set<RuntimeRule> = setOf(repeatedRhsItem)
-    override val rulePositionsNotAtStart: Set<RulePosition> by lazy {
-        when {
-            min < 0 -> error("Internal Error: min must be > 0")
-            min > 0 -> setOf(
-                RulePosition(rule, RulePosition.OPTION_MULTI_ITEM, RulePosition.POSITION_MULIT_ITEM),
-                RulePosition(rule, RulePosition.OPTION_MULTI_ITEM, RulePosition.END_OF_RULE)
-            )
-
-            else /* min == 0 */ -> setOf(
-                RulePosition(rule, RulePosition.OPTION_MULTI_ITEM, RulePosition.POSITION_MULIT_ITEM),
-                RulePosition(rule, RulePosition.OPTION_MULTI_ITEM, RulePosition.END_OF_RULE),
-                RulePosition(rule, RulePosition.OPTION_MULTI_EMPTY, RulePosition.END_OF_RULE)
-            )
-        }
-    }
 
     override val rulePositionsAtStart: Set<RulePosition>
         get() = when {
             min < 0 -> error("Internal Error: min must be > 0")
+            MULTIPLICITY_N != max && min > max -> error("Internal Error: max must be > min")
+            max == 0 -> setOf(RulePosition(rule, RulePosition.OPTION_MULTI_EMPTY, RulePosition.START_OF_RULE))
             min > 0 -> setOf(RulePosition(rule, RulePosition.OPTION_MULTI_ITEM, RulePosition.START_OF_RULE))
-            else /* min == 0 */ -> setOf(
+            else /* min == 0 && max > 0 */ -> setOf(
                 RulePosition(rule, RulePosition.OPTION_MULTI_ITEM, RulePosition.START_OF_RULE),
                 RulePosition(rule, RulePosition.OPTION_MULTI_EMPTY, RulePosition.START_OF_RULE)
             )
         }
 
-    override fun rhsItemsAt(option: Int, position: Int): Set<RuntimeRule> = when (position) {
-        RulePosition.START_OF_RULE -> setOf(repeatedRhsItem)
-        RulePosition.POSITION_MULIT_ITEM -> setOf(repeatedRhsItem)
-        else -> emptySet()
+    override val rulePositionsNotAtStart: Set<RulePosition>
+        get() = when {
+            min < 0 -> error("Internal Error: min must be > 0")
+            MULTIPLICITY_N != max && min > max -> error("Internal Error: max must be > min")
+            max == 0 -> setOf(
+                RulePosition(rule, RulePosition.OPTION_MULTI_EMPTY, RulePosition.END_OF_RULE)
+            )
+
+            min > 0 -> when (max) {
+                1 -> setOf(
+                    RulePosition(rule, RulePosition.OPTION_MULTI_ITEM, RulePosition.END_OF_RULE)
+                )
+
+                else -> setOf(
+                    RulePosition(rule, RulePosition.OPTION_MULTI_ITEM, RulePosition.POSITION_MULIT_ITEM),
+                    RulePosition(rule, RulePosition.OPTION_MULTI_ITEM, RulePosition.END_OF_RULE)
+                )
+            }
+
+            else /* min == 0 */ -> when (max) {
+                1 -> setOf(
+                    RulePosition(rule, RulePosition.OPTION_MULTI_ITEM, RulePosition.END_OF_RULE),
+                    RulePosition(rule, RulePosition.OPTION_MULTI_EMPTY, RulePosition.END_OF_RULE)
+                )
+
+                else -> setOf(
+                    RulePosition(rule, RulePosition.OPTION_MULTI_ITEM, RulePosition.POSITION_MULIT_ITEM),
+                    RulePosition(rule, RulePosition.OPTION_MULTI_ITEM, RulePosition.END_OF_RULE),
+                    RulePosition(rule, RulePosition.OPTION_MULTI_EMPTY, RulePosition.END_OF_RULE)
+                )
+            }
+        }
+
+    override fun rhsItemsAt(option: Int, position: Int): Set<RuntimeRule> = when (option) {
+        RulePosition.OPTION_MULTI_EMPTY -> when (position) {
+            RulePosition.START_OF_RULE -> setOf(RuntimeRuleSet.EMPTY)
+            else -> emptySet()
+        }
+
+        RulePosition.OPTION_MULTI_ITEM -> when (position) {
+            RulePosition.START_OF_RULE -> setOf(repeatedRhsItem)
+            RulePosition.POSITION_MULIT_ITEM -> setOf(repeatedRhsItem)
+            else -> emptySet()
+        }
+        else -> error("Internal Error: Invalid option value for SimpleList - $option")
     }
 
     override fun nextRulePositions(current: RulePosition): Set<RulePosition> = when (current.option) {
@@ -353,7 +383,7 @@ internal class RuntimeRuleRhsListSimple(
             else -> emptySet()
         }
 
-        else -> emptySet()
+        else -> error("Internal Error: Invalid option value for SimpleList - ${current.option}")
     }
 
     override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsListSimple(
@@ -374,29 +404,63 @@ internal class RuntimeRuleRhsListSeparated(
     val separatorRhsItem: RuntimeRule
 ) : RuntimeRuleRhsList(rule) {
     override val rhsItems: Set<RuntimeRule> = setOf(repeatedRhsItem, separatorRhsItem)
-    override val rulePositionsNotAtStart: Set<RulePosition> by lazy {
-        setOf(
-            RulePosition(rule, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
-            RulePosition(rule, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
-            RulePosition(rule, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE)
-        )
-    }
 
     override val rulePositionsAtStart: Set<RulePosition>
         get() = when {
             min < 0 -> error("Internal Error: min must be > 0")
+            MULTIPLICITY_N != max && min > max -> error("Internal Error: max must be > min")
+            max == 0 -> setOf(RulePosition(rule, RulePosition.OPTION_SLIST_EMPTY, RulePosition.START_OF_RULE))
             min > 0 -> setOf(RulePosition(rule, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE))
-            else /* min == 0 */ -> setOf(
+            else /* min == 0 && max > 0 */ -> setOf(
                 RulePosition(rule, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.START_OF_RULE),
                 RulePosition(rule, RulePosition.OPTION_SLIST_EMPTY, RulePosition.START_OF_RULE)
             )
         }
 
-    override fun rhsItemsAt(option: Int, position: Int): Set<RuntimeRule> = when (position) {
-        RulePosition.START_OF_RULE -> setOf(repeatedRhsItem)
-        RulePosition.POSITION_SLIST_ITEM -> setOf(repeatedRhsItem)
-        RulePosition.POSITION_SLIST_SEPARATOR -> setOf(repeatedRhsItem)
-        else -> emptySet()
+    override val rulePositionsNotAtStart: Set<RulePosition>
+        get() = when {
+            min < 0 -> error("Internal Error: min must be > 0")
+            MULTIPLICITY_N != max && min > max -> error("Internal Error: max must be > min")
+            max == 0 -> setOf(RulePosition(rule, RulePosition.OPTION_SLIST_EMPTY, RulePosition.END_OF_RULE))
+
+            min > 0 -> when (max) {
+                1 -> setOf(RulePosition(rule, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE))
+
+                else -> setOf(
+                    RulePosition(rule, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+                    RulePosition(rule, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+                    RulePosition(rule, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE)
+                )
+            }
+
+            else /* min == 0 */ -> when (max) {
+                1 -> setOf(
+                    RulePosition(rule, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
+                    RulePosition(rule, RulePosition.OPTION_MULTI_EMPTY, RulePosition.END_OF_RULE)
+                )
+
+                else -> setOf(
+                    RulePosition(rule, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_ITEM),
+                    RulePosition(rule, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.POSITION_SLIST_SEPARATOR),
+                    RulePosition(rule, RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR, RulePosition.END_OF_RULE),
+                    RulePosition(rule, RulePosition.OPTION_MULTI_EMPTY, RulePosition.END_OF_RULE)
+                )
+            }
+        }
+
+    override fun rhsItemsAt(option: Int, position: Int): Set<RuntimeRule> = when (option) {
+        RulePosition.OPTION_SLIST_EMPTY -> when (position) {
+            RulePosition.START_OF_RULE -> setOf(RuntimeRuleSet.EMPTY)
+            else -> emptySet()
+        }
+
+        RulePosition.OPTION_SLIST_ITEM_OR_SEPERATOR -> when (position) {
+            RulePosition.START_OF_RULE -> setOf(repeatedRhsItem)
+            RulePosition.POSITION_SLIST_ITEM -> setOf(repeatedRhsItem)
+            RulePosition.POSITION_SLIST_SEPARATOR -> setOf(separatorRhsItem)
+            else -> emptySet()
+        }
+        else -> error("Internal Error: Invalid option value for SeparatedList - $option")
     }
 
     override fun nextRulePositions(current: RulePosition): Set<RulePosition> = when (current.option) {
@@ -438,7 +502,7 @@ internal class RuntimeRuleRhsListSeparated(
             else -> error("This should never happen!")
         }
 
-        else -> error("This should never happen!")
+        else -> error("Internal Error: Invalid option value for SeparatedList - ${current.option}")
     }
 
     override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsListSeparated(

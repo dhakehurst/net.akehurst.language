@@ -50,13 +50,13 @@ internal class test_FirstOf : test_AutomatonUtilsAbstract() {
         val a = rrs.findRuntimeRule("'a'")
 
         assert(RP(G, o0, SOR), LookaheadSetPart.EOT, expected = setOf(a))
-        assert(RP(G, o0, EOR), LookaheadSetPart.EMPTY, expected = emptySet())
+        assert(RP(G, o0, ER), LookaheadSetPart.EMPTY, expected = emptySet())
 
         assert(RP(S, o0, SOR), LookaheadSetPart.EOT, expected = setOf(a))
-        assert(RP(S, o0, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
+        assert(RP(S, o0, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
 
         assert(RP(S, o1, SOR), LookaheadSetPart.EOT, expected = setOf(a))
-        assert(RP(S, o1, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
+        assert(RP(S, o1, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
 
         assert(RP(S1, o0, SOR), LookaheadSetPart.EOT, expected = setOf(a))
         assert(RP(S1, o0, p1), LookaheadSetPart.EOT, expected = setOf(a))

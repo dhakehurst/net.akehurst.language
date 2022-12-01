@@ -68,7 +68,7 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(R_rule, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, userGoalRuleName, false) {
-            val s0 = state(RP(G, 0, SOR))     /* G = . S   */
+            state(RP(G, 0, SR))     /* G = . S   */
 
         }
 
@@ -86,7 +86,7 @@ internal class test_AglGrammar_rule : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(R_rule, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, userGoalRuleName, false) {
-            val s0 = state(RP(G, 0, SOR))     /* G = . S   */
+            val s0 = state(RP(G, 0, SR))     /* G = . S   */
 
         }
 

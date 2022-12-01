@@ -50,7 +50,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(RP(G, o0, SOR))
+            state(RP(G, o0, SR))
             state(RP(a, o0, EOR))
             state(RP(S, o0, p1))
             state(RP(b, o0, EOR))

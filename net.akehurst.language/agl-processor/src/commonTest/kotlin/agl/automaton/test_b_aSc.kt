@@ -135,15 +135,15 @@ internal class test_b_aSc : test_AutomatonAbstract() {
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S   */
-            val s1 = state(RP(b, 0, EOR))     /* b . */
-            val s2 = state(RP(a, 0, EOR))     /* a .       */
-            val s3 = state(RP(S, 0, EOR))     /* S = b . */
-            val s4 = state(RP(G, 0, EOR))     /* G = S .   */
+            val s1 = state(RP(b, 0, ER))     /* b . */
+            val s2 = state(RP(a, 0, ER))     /* a .       */
+            val s3 = state(RP(S, 0, ER))     /* S = b . */
+            val s4 = state(RP(G, 0, ER))     /* G = S .   */
             val s5 = state(RP(S1, 0, 1)) /* S1 = a . S c  */
             val s6 = state(RP(S1, 0, 2)) /* S1 = a S . c  */
-            val s7 = state(RP(c, 0, EOR))     /* c .  */
-            val s8 = state(RP(S1, 0, EOR))    /* S1 = a S c . */
-            val s9 = state(RP(S, 1, EOR))    /*  S = S1 . */
+            val s7 = state(RP(c, 0, ER))     /* c .  */
+            val s8 = state(RP(S1, 0, ER))    /* S1 = a S c . */
+            val s9 = state(RP(S, 1, ER))    /*  S = S1 . */
 
             transition(s0, s0, s1, WIDTH, setOf(EOT), setOf(), null)
             transition(s0, s0, s2, WIDTH, setOf(b, a), setOf(), null)
@@ -178,15 +178,15 @@ internal class test_b_aSc : test_AutomatonAbstract() {
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S   */
-            val s1 = state(RP(a, 0, EOR))     /* b . */
-            val s2 = state(RP(b, 0, EOR))     /* a .       */
-            val s4 = state(RP(S, 0, EOR))     /* S = b . */
-            val s9 = state(RP(G, 0, EOR))     /* G = S .   */
+            val s1 = state(RP(a, 0, ER))     /* b . */
+            val s2 = state(RP(b, 0, ER))     /* a .       */
+            val s4 = state(RP(S, 0, ER))     /* S = b . */
+            val s9 = state(RP(G, 0, ER))     /* G = S .   */
             val s3 = state(RP(S1, 0, 1)) /* S1 = a . S c  */
             val s5 = state(RP(S1, 0, 2)) /* S1 = a S . c  */
-            val s6 = state(RP(c, 0, EOR))     /* c .  */
-            val s7 = state(RP(S1, 0, EOR))    /* S1 = a S c . */
-            val s8 = state(RP(S, 1, EOR))    /*  S = S1 . */
+            val s6 = state(RP(c, 0, ER))     /* c .  */
+            val s7 = state(RP(S1, 0, ER))    /* S1 = a S c . */
+            val s8 = state(RP(S, 1, ER))    /*  S = S1 . */
 
             transition(s0, s0, s1, WIDTH, null) { lhg(setOf(b,a)) }
             transition(s0, s0, s2, WIDTH, null) { lhg(setOf(EOT)) }
@@ -224,15 +224,15 @@ internal class test_b_aSc : test_AutomatonAbstract() {
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S   */
-            val s1 = state(RP(b, 0, EOR))     /* b . */
-            val s2 = state(RP(a, 0, EOR))     /* a .       */
+            val s1 = state(RP(b, 0, ER))     /* b . */
+            val s2 = state(RP(a, 0, ER))     /* a .       */
             val s3 = state(RP(S1, 0, 1))     /* S1 = a . S c */
-            val s4 = state(RP(S, 0, EOR))     /* S = b . */
+            val s4 = state(RP(S, 0, ER))     /* S = b . */
             val s5 = state(RP(S1, 0, 2))     /* S1 = a S . c */
-            val s6 = state(RP(c, 0, EOR))     /* c .       */
-            val s7 = state(RP(S1, 0, EOR))     /* S1 = a S c . */
-            val s8 = state(RP(S, 1, EOR))     /* S = S1 . */
-            val s9 = state(RP(G, 0, EOR))     /* G = S .   */
+            val s6 = state(RP(c, 0, ER))     /* c .       */
+            val s7 = state(RP(S1, 0, ER))     /* S1 = a S c . */
+            val s8 = state(RP(S, 1, ER))     /* S = S1 . */
+            val s9 = state(RP(G, 0, ER))     /* G = S .   */
 
             transition(s0, s0, s1, WIDTH, setOf(EOT), setOf(), null)
             transition(s0, s0, s2, WIDTH, setOf(b, a), setOf(), null)
@@ -263,13 +263,13 @@ internal class test_b_aSc : test_AutomatonAbstract() {
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S   */
-            val s1 = state(RP(G, 0, EOR))     /* G = S .   */
-            val s2 = state(RP(S, 0, EOR))     /* S = b . */
-            val s3 = state(RP(S, 1, EOR))     /* S = S1 . */
-            val s4 = state(RP(S1, 0, EOR))     /* S1 = a S c . */
-            val s5 = state(RP(c, 0, EOR))     /* c .       */
-            val s6 = state(RP(a, 0, EOR))     /* a .       */
-            val s7 = state(RP(b, 0, EOR))     /* b . */
+            val s1 = state(RP(G, 0, ER))     /* G = S .   */
+            val s2 = state(RP(S, 0, ER))     /* S = b . */
+            val s3 = state(RP(S, 1, ER))     /* S = S1 . */
+            val s4 = state(RP(S1, 0, ER))     /* S1 = a S c . */
+            val s5 = state(RP(c, 0, ER))     /* c .       */
+            val s6 = state(RP(a, 0, ER))     /* a .       */
+            val s7 = state(RP(b, 0, ER))     /* b . */
             val s8 = state(RP(S1, 0, 1))     /* S1 = a . S c */
             val s9 = state(RP(S1, 0, 2))     /* S1 = a S . c */
 

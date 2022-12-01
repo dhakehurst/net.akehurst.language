@@ -103,15 +103,15 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S   */
-            val s1 = state(RP(a, 0, EOR))     /* a .       */
+            val s1 = state(RP(a, 0, ER))     /* a .       */
             val s2 = state(RP(ABC, 0, 1), RP(ABD, 0, 1)) /* ABC = a . bc | ABD = a . bd */
-            val s3 = state(RP(b, 0, EOR))     /* b . */
+            val s3 = state(RP(b, 0, ER))     /* b . */
             val s4 = state(RP(ABC, 0, 2), RP(ABD, 0, 2)) /* ABC = ab . c | ABD = ab . d */
-            val s5 = state(RP(c, 0, EOR))     /* c . */
-            val s6 = state(RP(d, 0, EOR))     /* c . */
-            val s7 = state(RP(ABD, 0, EOR))     /* ABD = abd . */
-            val s8 = state(RP(S, 1, EOR))     /* S = ABD . */
-            val s9 = state(RP(G, 0, EOR))     /* G = S .   */
+            val s5 = state(RP(c, 0, ER))     /* c . */
+            val s6 = state(RP(d, 0, ER))     /* c . */
+            val s7 = state(RP(ABD, 0, ER))     /* ABD = abd . */
+            val s8 = state(RP(S, 1, ER))     /* S = ABD . */
+            val s9 = state(RP(G, 0, ER))     /* G = S .   */
 
             transition(s0, s0, s1, WIDTH, setOf(b), setOf(), null)
             transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(EOT)), setOf(RP(ABC, 0, SOR), RP(ABD, 0, SOR)))
@@ -143,15 +143,15 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))     /* G = . S   */
-            val s1 = state(RP(G, 0, EOR))     /* G = S .   */
-            val s2 = state(RP(S, 0, EOR))     /* S = ABC . */
-            val s3 = state(RP(S, 1, EOR))     /* S = ABD . */
-            val s4 = state(RP(ABD, 0, EOR))     /* ABD = abd . */
-            val s5 = state(RP(d, 0, EOR))     /* c . */
-            val s6 = state(RP(b, 0, EOR))     /* b . */
-            val s7 = state(RP(a, 0, EOR))     /* a .       */
-            val s8 = state(RP(ABC, 0, EOR))     /* ABC = abc . */
-            val s9 = state(RP(c, 0, EOR))     /* c . */
+            val s1 = state(RP(G, 0, ER))     /* G = S .   */
+            val s2 = state(RP(S, 0, ER))     /* S = ABC . */
+            val s3 = state(RP(S, 1, ER))     /* S = ABD . */
+            val s4 = state(RP(ABD, 0, ER))     /* ABD = abd . */
+            val s5 = state(RP(d, 0, ER))     /* c . */
+            val s6 = state(RP(b, 0, ER))     /* b . */
+            val s7 = state(RP(a, 0, ER))     /* a .       */
+            val s8 = state(RP(ABC, 0, ER))     /* ABC = abc . */
+            val s9 = state(RP(c, 0, ER))     /* c . */
             val s10 = state(RP(ABC, 0, 1), RP(ABD, 0, 1)) /* ABC = a . bc | ABD = a . bd */
             val s11 = state(RP(ABC, 0, 2), RP(ABD, 0, 2)) /* ABC = ab . c | ABD = ab . d */
 

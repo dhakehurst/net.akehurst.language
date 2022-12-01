@@ -115,15 +115,15 @@ internal class test_buildFor : test_AutomatonUtilsAbstract() {
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(RP(G, o0, SOR))   // G = . S
-            state(RP(G, o0, EOR))   // G = S .
-            state(RP(S, o0, EOR))    // S = S1 .
+            state(RP(G, o0, ER))   // G = S .
+            state(RP(S, o0, ER))    // S = S1 .
             state(RP(S1, o0, p1))   // S1 = M . S2
-            state(RP(S1, o0, EOR))  // S1 = M S2 .
-            state(RP(M, OME, EOR))  // S1 = b*   [] .
+            state(RP(S1, o0, ER))  // S1 = M S2 .
+            state(RP(M, OME, ER))  // S1 = b*   [] .
             state(RP(M, OMI, PMI))  // S1 = b*   [--b . b--]
-            state(RP(M, OMI, EOR))  // S1 = b*   [--b] .
-            state(RP(S2, o0, EOR))   // S2 = S3 .
-            state(RP(S3, o0, EOR))   // S3 = a .
+            state(RP(M, OMI, ER))  // S1 = b*   [--b] .
+            state(RP(S2, o0, ER))   // S2 = S3 .
+            state(RP(S3, o0, ER))   // S3 = a .
             state(RP(a))            // a .
             state(RP(b))            // b .
             state(RP(eM))            // <empty>.M .
@@ -166,19 +166,19 @@ internal class test_buildFor : test_AutomatonUtilsAbstract() {
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(RP(G, o0, SOR))     // G = . S
-            state(RP(G, o0, EOR))     // G = S .
-            state(RP(S, o0, EOR))     // S = ABCX .
-            state(RP(S, o1, EOR))     // S = S2 .
+            state(RP(G, o0, ER))     // G = S .
+            state(RP(S, o0, ER))     // S = ABCX .
+            state(RP(S, o1, ER))     // S = S2 .
             state(RP(S2, o0, p1))     // S2 = S . y S
             state(RP(S2, o0, p2))     // S2 = S y . S
-            state(RP(S2, o0, EOR))    // S2 = S y S .
+            state(RP(S2, o0, ER))    // S2 = S y S .
             state(RP(ABCX, o0, p1))   // ABCX = ABCopt . x
-            state(RP(ABCX, o0, EOR))  // ABCX = ABCopt x .
-            state(RP(ABCopt, OME, EOR))  // ABCopt = <empty> .
-            state(RP(ABCopt, OMI, EOR))  // ABCopt = ABC .
+            state(RP(ABCX, o0, ER))  // ABCX = ABCopt x .
+            state(RP(ABCopt, OME, ER))  // ABCopt = <empty> .
+            state(RP(ABCopt, OMI, ER))  // ABCopt = ABC .
             state(RP(ABC, o0, p1))      // ABC = a . b c
             state(RP(ABC, o0, p2))      // ABC = a b . c
-            state(RP(ABC, o0, EOR))      // ABC = a b c .
+            state(RP(ABC, o0, ER))      // ABC = a b c .
             state(RP(x))
             state(RP(y))
             state(RP(a))

@@ -19,7 +19,7 @@ package net.akehurst.language.agl.runtime.structure
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class test_RuntimeRule_rulePositionsAt {
+class test_RuntimeRule_rulePositionsAtStart {
 
     @Test
     fun literal() {

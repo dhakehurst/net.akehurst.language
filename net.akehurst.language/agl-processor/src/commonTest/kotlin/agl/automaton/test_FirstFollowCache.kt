@@ -21,6 +21,7 @@ import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -34,15 +35,13 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         sut.calcFirstTermClosure(graph)
 
         val actualShortStr = graph.nonRootClosures.flatMap { cls -> cls.shortString }.toSet()
-        assertEquals(expectedShortStr.size, actualShortStr.size)
         assertEquals(expectedShortStr, actualShortStr)
     }
 
     private fun check_calcAllClosure(G: RuntimeRule, expectedShortStr: Set<String>) {
-        val graph = ClosureGraph(RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT)
+        val graph = ClosureGraph(RP(G, o0, SR), RP(G, o0, SR), LookaheadSetPart.EOT)
         sut.calcAllClosure(graph)
 
-        assertEquals(expectedShortStr.size, graph.nonRootClosures.size)
         val actualShortStr = graph.nonRootClosures.flatMap { cls -> cls.shortString }.toSet()
         assertEquals(expectedShortStr, actualShortStr)
     }
@@ -79,15 +78,16 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
 
         check_calcAllClosure(
             G, setOf(
-                "G-S-a",
-                "G-S-S1-S-a",
-                "G-S-S1-S-S-a",
-                "G-S-S1-a",
-                "G",
-                "G-S",
-                "G-S-S1",
-                "G-S-S1-S",
-                "G-S-s1-S-S",
+                "G-S.0",
+                "G-S.1",
+                "G-S.0-'a'",
+                "G-S.1-S1",
+                "G-S.1-S1-S.0",
+                "G-S.1-S1-S.1",
+                "G-S.1-S1-'a'",
+                "G-S.1-S1-S.0-'a'",
+                "G-S.1-S1-S.1-S1",
+                "G-S.1-S1-S.1-S1-'a'"
             )
         )
     }
@@ -108,4 +108,42 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
 
     }
 
+
+    @Test
+    fun sList_0_n_literal() {
+        val rrs = runtimeRuleSet {
+            sList("S", 0, -1, "'a'", "'b'")
+            literal("'a'", "a")
+            literal("'b'", "b")
+        }
+        val S = rrs.findRuntimeRule("S")
+        val G = rrs.goalRuleFor[S]
+        val a = rrs.findRuntimeRule("'a'")
+        val b = rrs.findRuntimeRule("'b'")
+
+        check_calcFirstTermClosure(
+            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
+            setOf(
+                "G-S.b",
+                "G-S.b-'a'",
+                "G-S.b-<E>"
+            )
+        )
+
+        check_calcAllClosure(
+            G, setOf(
+                "G-S.0",
+                "G-S.1",
+                "G-S.0-'a'",
+                "G-S.1-S1",
+                "G-S.1-S1-S.0",
+                "G-S.1-S1-S.1",
+                "G-S.1-S1-'a'",
+                "G-S.1-S1-S.0-'a'",
+                "G-S.1-S1-S.1-S1",
+                "G-S.1-S1-S.1-S1-'a'"
+            )
+        )
+
+    }
 }

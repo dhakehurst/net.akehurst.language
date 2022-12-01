@@ -97,17 +97,17 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))                                // G = . S
-            val s1 = state(RP(a, 0, EOR))                                // a .
+            val s1 = state(RP(a, 0, ER))                                // a .
             val s2 = state(RP(ABCZ, 0, 1), RP(ABC, 0, 1))    // ABCZ = a . b c z , ABC = a . b c
-            val s3 = state(RP(b, 0, EOR))                                // b .
+            val s3 = state(RP(b, 0, ER))                                // b .
             val s4 = state(RP(ABCZ, 0, 2), RP(ABC, 0, 2))    // ABCZ = a b . c z , ABC = a b . c
-            val s5 = state(RP(c, 0, EOR))                                // c .
+            val s5 = state(RP(c, 0, ER))                                // c .
             val s6 = state(RP(ABCZ, 0, 3))                          // ABCZ = a b c . z
-            val s7 = state(RP(ABC, 0, EOR))                                // ABC = a b c .
-            val s8 = state(RP(z, 0, EOR))                                // z .
-            val s9 = state(RP(ABCZ, 0, EOR))                             // ABCZ = a b c z .
-            val s10 = state(RP(S, 0, EOR))                               // S = ABC .
-            val s11 = state(RP(G, 0, EOR))                               // G = S .
+            val s7 = state(RP(ABC, 0, ER))                                // ABC = a b c .
+            val s8 = state(RP(z, 0, ER))                                // z .
+            val s9 = state(RP(ABCZ, 0, ER))                             // ABCZ = a b c z .
+            val s10 = state(RP(S, 0, ER))                               // S = ABC .
+            val s11 = state(RP(G, 0, ER))                               // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(b), emptySet(), null)
             transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(EOT)), setOf(RP(ABCZ, 0, 0), RP(ABC, 0, 0)))
@@ -150,15 +150,15 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))                                // G = . S
-            val s1 = state(RP(G, 0, EOR))                               // G = S .
-            val s2 = state(RP(S, 0, EOR))                               // S = ABCZ .
-            val s3 = state(RP(S, 1, EOR))                               // S = ABC .
-            val s4 = state(RP(ABC, 0, EOR))                                // ABC = a b c .
-            val s5 = state(RP(c, 0, EOR))                                // c .
-            val s6 = state(RP(b, 0, EOR))                                // b .
-            val s7 = state(RP(a, 0, EOR))                                // a .
-            val s8 = state(RP(ABCZ, 0, EOR))                             // ABCZ = a b c z .
-            val s9 = state(RP(z, 0, EOR))                                // z .
+            val s1 = state(RP(G, 0, ER))                               // G = S .
+            val s2 = state(RP(S, 0, ER))                               // S = ABCZ .
+            val s3 = state(RP(S, 1, ER))                               // S = ABC .
+            val s4 = state(RP(ABC, 0, ER))                                // ABC = a b c .
+            val s5 = state(RP(c, 0, ER))                                // c .
+            val s6 = state(RP(b, 0, ER))                                // b .
+            val s7 = state(RP(a, 0, ER))                                // a .
+            val s8 = state(RP(ABCZ, 0, ER))                             // ABCZ = a b c z .
+            val s9 = state(RP(z, 0, ER))                                // z .
             val s10 = state(RP(ABCZ, 0, 1), RP(ABC, 0, 1))    // ABCZ = a . b c z , ABC = a . b c
             val s11 = state(RP(ABCZ, 0, 2), RP(ABC, 0, 2))    // ABCZ = a b . c z , ABC = a b . c
             val s12 = state(RP(ABCZ, 0, 3))                          // ABCZ = a b c . z

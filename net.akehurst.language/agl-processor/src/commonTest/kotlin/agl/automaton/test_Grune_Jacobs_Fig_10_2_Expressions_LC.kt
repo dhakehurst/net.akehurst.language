@@ -83,7 +83,7 @@ internal class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstrac
         }
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(RP(G, o0, SOR))    // G = . S
+            state(RP(G, o0, SR))    // G = . S
             state(RP(G, o0, EOR))    // G = S .
             state(RP(S, o0, EOR))    // S = E .
             state(RP(E, o0, EOR))    // E = E1 .
@@ -107,7 +107,7 @@ internal class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstrac
             state(RP(T1, o1, EOR))    // T1 = T . m F
             state(RP(T1, o2, EOR))    // T1 = T m . F
 
-            transition(WIDTH) { src(G, o0, SOR); tgt(o); lhg(setOf(v,o)); ctx(RP(G, o0, SOR)) }
+            transition(WIDTH) { src(G, o0, SR); tgt(o); lhg(setOf(v,o)); ctx(RP(G, o0, SOR)) }
             transition(WIDTH) { src(E1,o0,p2); tgt(o); lhg(setOf(v,o)); ctx(RP(G, o0, SOR));  }
             transition(WIDTH) { src(F2,o0,p1); tgt(o); lhg(setOf(v,o)); ctx(RP(G, o0, SOR));  }
             /*

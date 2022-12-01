@@ -79,14 +79,14 @@ internal class test_nested_optionals : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, o0, SOR))
+            val s0 = state(RP(G, o0, SR))
             val s1 = state(RP(i, o0, EOR))
             val s2 = state(RP(S, o0, p1))
             val s3 = state(RP(a, o0, EOR))
 
 
 
-            transition(WIDTH) { ctx(G,o0,SOR); src(S,o0,p1); tgt(a); lhg(b) }
+            transition(WIDTH) { ctx(G,o0,SR); src(S,o0,p1); tgt(a); lhg(b) }
             transition(WIDTH) { ctx(G,o0,SOR); src(G,o0,p1); tgt(i); lhg(a) }
             transition(HEIGHT) { ctx(G,o0,SOR); src(i); tgt(S,o0,p1); lhg(a) }
 

@@ -80,7 +80,7 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, 0, SOR))       // G = . S
+            val s0 = state(RP(G, 0, SR))       // G = . S
             val s1 = state(RP(T_a, 0, EOR))       // 'a'
             val s2 = state(RP(E_optA, 0, EOR))
             val s3 = state(RP(optA, 1, EOR))
@@ -123,21 +123,21 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
             val s0 = state(RP(G, 0, SOR))       // G = . S
             val s1 = state(RP(T_a, 0, EOR))       // 'a'
             val s2 = state(RP(E_optA, 0, EOR))
-            val s3 = state(RP(optA, 1, EOR))
+            val s3 = state(RP(optA, 1, ER))
             val s4 = state(RP(S, 0, 1))
-            val s5 = state(RP(T_b, 0, EOR))
+            val s5 = state(RP(T_b, 0, ER))
             val s6 = state(RP(B, 0, 1))
-            val s7 = state(RP(T_c, 0, EOR))
+            val s7 = state(RP(T_c, 0, ER))
             val s8 = state(RP(L, 0, 1))
-            val s9 = state(RP(T_e, 0, EOR))
-            val s10 = state(RP(E_Es, 0, EOR))
-            val s11 = state(RP(Es, OLI, EOR))
+            val s9 = state(RP(T_e, 0, ER))
+            val s10 = state(RP(E_Es, 0, ER))
+            val s11 = state(RP(Es, OLI, ER))
             val s12 = state(RP(L, 0, 2))
-            val s13 = state(RP(T_d, 0, EOR))
-            val s14 = state(RP(L, 0, EOR))
-            val s15 = state(RP(B, 0, EOR))
-            val s16 = state(RP(S, 0, EOR))
-            val s17 = state(RP(G, 0, EOR))
+            val s13 = state(RP(T_d, 0, ER))
+            val s14 = state(RP(L, 0, ER))
+            val s15 = state(RP(B, 0, ER))
+            val s16 = state(RP(S, 0, ER))
+            val s17 = state(RP(G, 0, ER))
             // S =  optA B ;
             // optA = A? ;
             // A = 'a'
@@ -161,23 +161,23 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))       // G = . S
-            val s1 = state(RP(T_a, 0, EOR))       // 'a'
-            val s2 = state(RP(E_optA, 0, EOR))
-            val s3 = state(RP(optA, 1, EOR))
+            val s1 = state(RP(T_a, 0, ER))       // 'a'
+            val s2 = state(RP(E_optA, 0, ER))
+            val s3 = state(RP(optA, 1, ER))
             val s4 = state(RP(S, 0, 1))
-            val s5 = state(RP(T_b, 0, EOR))
+            val s5 = state(RP(T_b, 0, ER))
             val s6 = state(RP(B, 0, 1))
-            val s7 = state(RP(T_c, 0, EOR))
+            val s7 = state(RP(T_c, 0, ER))
             val s8 = state(RP(L, 0, 1))
-            val s9 = state(RP(T_e, 0, EOR))
-            val s10 = state(RP(E_Es, 0, EOR))
-            val s11 = state(RP(Es, OLI, EOR))
+            val s9 = state(RP(T_e, 0, ER))
+            val s10 = state(RP(E_Es, 0, ER))
+            val s11 = state(RP(Es, OLI, ER))
             val s12 = state(RP(L, 0, 2))
-            val s13 = state(RP(T_d, 0, EOR))
-            val s14 = state(RP(L, 0, EOR))
-            val s15 = state(RP(B, 0, EOR))
-            val s16 = state(RP(S, 0, EOR))
-            val s17 = state(RP(G, 0, EOR))
+            val s13 = state(RP(T_d, 0, ER))
+            val s14 = state(RP(L, 0, ER))
+            val s15 = state(RP(B, 0, ER))
+            val s16 = state(RP(S, 0, ER))
+            val s17 = state(RP(G, 0, ER))
             // S =  optA B ;
             // optA = A? ;
             // A = 'a'

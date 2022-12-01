@@ -76,7 +76,7 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(G,o0,SOR)
+            state(G,o0,SR)
             state(G,o0,EOR)
             state(S,o0,EOR)
             state(S,o1,EOR)
@@ -107,6 +107,10 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
         println("--No Build--")
         println(rrs_noBuild.usedAutomatonToString("S"))
 
-        AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild)
+        AutomatonTest.assertMatches(
+            automaton_preBuild, automaton_noBuild, AutomatonTest.MatchConfiguration(
+                no_lookahead_compare = true
+            )
+        )
     }
 }

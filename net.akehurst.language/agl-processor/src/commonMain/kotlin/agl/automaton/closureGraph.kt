@@ -23,6 +23,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsChoice
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
 import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.collections.MapNotNull
 import net.akehurst.language.collections.lazyMutableMapNonNull
 
 internal data class RulePositionUpInfo(
@@ -67,7 +68,7 @@ internal interface ClosureItem {
     val graph: ClosureGraph
     val rulePosition: RulePosition
 
-    //val children: Set<ClosureItem>
+    val children: Set<ClosureItem>
 
     val upInfo: RulePositionUpInfo
     val downInfo: Set<FirstTerminalInfo>
@@ -186,7 +187,7 @@ internal class ClosureGraph(
             private var _resolveDownCalled = false
             protected var _resolveUpCalled = false
 
-            //override val children: Set<ClosureItem> get() = this.graph.startChildrenOf(this)
+            override val children: Set<ClosureItem> get() = this.graph.childrenOf(this)
 
             override val shortString: List<String> get() = this.shortStringRec(mutableSetOf())
 
@@ -210,7 +211,7 @@ internal class ClosureGraph(
                 } else {
                     this.downInfo = mutableSetOf()
                     this._resolveDownCalled = true
-                    val children = graph.startChildrenOf(this)
+                    val children = this.children //graph.startChildrenOf(this)
                     if (children.isEmpty()) {
                         when {
                             this.rulePosition.isTerminal -> {
@@ -233,22 +234,24 @@ internal class ClosureGraph(
                 val rp = this.rulePosition
                 val rr = rp.rule as RuntimeRule
                 val str = when {
+                    rr.isGoal -> "G"
+                    rr.isEmptyTerminal -> "<E>"
                     rr.isNonTerminal -> when (rr.rhs) {
                         is RuntimeRuleRhsGoal -> rr.tag
                         is RuntimeRuleRhsConcatenation -> rr.tag
                         is RuntimeRuleRhsChoice -> "${rr.tag}.${rp.option}"
                         is RuntimeRuleRhsListSimple -> when {
-                            rp.isAtStart -> rr.tag + 'b'
-                            rp.position == RulePosition.POSITION_MULIT_ITEM -> rr.tag + 'i'
-                            rp.isAtEnd -> rr.tag + 'e'
+                            rp.isAtStart -> rr.tag + ".b"
+                            rp.position == RulePosition.POSITION_MULIT_ITEM -> rr.tag + ".i"
+                            rp.isAtEnd -> rr.tag + ".e"
                             else -> TODO()
                         }
 
                         is RuntimeRuleRhsListSeparated -> when {
-                            rp.isAtStart -> rr.tag + 'b'
-                            rp.position == RulePosition.POSITION_SLIST_SEPARATOR -> rr.tag + 's'
-                            rp.position == RulePosition.POSITION_SLIST_ITEM -> rr.tag + 'i'
-                            rp.isAtEnd -> rr.tag + 'e'
+                            rp.isAtStart -> rr.tag + ".b"
+                            rp.position == RulePosition.POSITION_SLIST_SEPARATOR -> rr.tag + ".s"
+                            rp.position == RulePosition.POSITION_SLIST_ITEM -> rr.tag + ".i"
+                            rp.isAtEnd -> rr.tag + ".e"
                             else -> TODO()
                         }
 
@@ -339,7 +342,7 @@ internal class ClosureGraph(
 
     }
 
-    private val _startChildrenOf = lazyMutableMapNonNull<ClosureItem, MutableSet<ClosureItem>> { mutableSetOf() }
+    private val _childrenOf = lazyMutableMapNonNull<ClosureItem, MapNotNull<Int,MutableSet<ClosureItem>>> { lazyMutableMapNonNull {mutableSetOf()} }
     private val _parentsOf = lazyMutableMapNonNull<ClosureItem, MutableSet<ClosureItem>> { mutableSetOf() }
 
     // so we can test ClosureGraph
@@ -362,16 +365,12 @@ internal class ClosureGraph(
         }
     }
 
-    fun startChildrenOf(child: ClosureItem): Set<ClosureItem> = this._startChildrenOf[child]
+    fun childrenOf(parent: ClosureItem): Set<ClosureItem> = this._childrenOf[parent][parent.rulePosition.position]
     fun parentsOf(child: ClosureItem): Set<ClosureItem> = this._parentsOf[child]
 
-    fun addParentOf(child: ClosureItemChild, extraParent: ClosureItem): Boolean {
-        when {
-            (RulePosition.START_OF_RULE == extraParent.rulePosition.position) -> this._startChildrenOf[extraParent].add(child)
-            //child.rulePosition.isTerminal -> this._startChildrenOf[extraParent].add(child)
-            else -> Unit
-        }
-        return _parentsOf[child].add(extraParent)
+    fun addParentOf(child: ClosureItemChild, parent: ClosureItem): Boolean {
+         this._childrenOf[parent][parent.rulePosition.position].add(child)
+         return _parentsOf[child].add(parent)
     }
 
 

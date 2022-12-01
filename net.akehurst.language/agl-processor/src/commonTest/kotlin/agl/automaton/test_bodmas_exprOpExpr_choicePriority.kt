@@ -63,7 +63,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, 0, SOR))     /* G = . S */
+            val s0 = state(RP(G, 0, SR))     /* G = . S */
             val s1 = state(RP(v, 0, EOR))     /* v .     */
             val s2 = state(RP(E, 0, EOR))     /* E = v . */
             val s3 = state(RP(S, 0, EOR))     /* S = E . */
@@ -94,7 +94,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, 0, SOR))     /* G = . S   */
+            val s0 = state(RP(G, 0, SR))     /* G = . S   */
 
 
             //transition(null, s0, s1, WIDTH, setOf(b), setOf(), null)

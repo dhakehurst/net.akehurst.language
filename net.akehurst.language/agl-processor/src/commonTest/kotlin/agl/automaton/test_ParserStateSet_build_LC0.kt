@@ -138,15 +138,15 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
 
         val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
-            val s1 = state(RP(a, 0, EOR))      // a
-            val s2 = state(RP(b, 0, EOR))      // b
-            val s3 = state(RP(c, 0, EOR))      // c
-            val s4 = state(RP(d, 0, EOR))      // d
-            val s5 = state(RP(S, 0, EOR))      // S = a .
-            val s6 = state(RP(S, 1, EOR))      // S = b .
-            val s7 = state(RP(S, 2, EOR))      // S = c .
-            val s8 = state(RP(S, 3, EOR))      // S = d .
-            val s9 = state(RP(G, 0, EOR))      // G = S .
+            val s1 = state(RP(a, 0, ER))      // a
+            val s2 = state(RP(b, 0, ER))      // b
+            val s3 = state(RP(c, 0, ER))      // c
+            val s4 = state(RP(d, 0, ER))      // d
+            val s5 = state(RP(S, 0, ER))      // S = a .
+            val s6 = state(RP(S, 1, ER))      // S = b .
+            val s7 = state(RP(S, 2, ER))      // S = c .
+            val s8 = state(RP(S, 3, ER))      // S = d .
+            val s9 = state(RP(G, 0, ER))      // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(ANY), setOf(), null)
             transition(s0, s0, s2, WIDTH, setOf(ANY), setOf(), null)
@@ -200,16 +200,16 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
 
         val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
-            val s1 = state(RP(a, 0, EOR))      // a
-            val s2 = state(RP(A, 0, EOR))      // A = a .
+            val s1 = state(RP(a, 0, ER))      // a
+            val s2 = state(RP(A, 0, ER))      // A = a .
             val s3 = state(RP(S, 0, 1))   // S = A . B C
-            val s4 = state(RP(b, 0, EOR))      // b
-            val s5 = state(RP(B, 0, EOR))      // B = b .
+            val s4 = state(RP(b, 0, ER))      // b
+            val s5 = state(RP(B, 0, ER))      // B = b .
             val s6 = state(RP(S, 0, 2))   // S = A B . C
-            val s7 = state(RP(c, 0, EOR))      // c
-            val s8 = state(RP(C, 0, EOR))      // C = c .
-            val s9 = state(RP(S, 0, EOR))      // S = A B C .
-            val s10 = state(RP(G, 0, EOR))      // G = S .
+            val s7 = state(RP(c, 0, ER))      // c
+            val s8 = state(RP(C, 0, ER))      // C = c .
+            val s9 = state(RP(S, 0, ER))      // S = A B C .
+            val s10 = state(RP(G, 0, ER))      // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(ANY), setOf(), null)
             transition(s0, s1, s2, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(A, 0, SOR)))
@@ -251,9 +251,9 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
 
         val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
-            val s1 = state(RP(eS, 0, EOR))      // eS
-            val s2 = state(RP(S, 0, EOR))      // S = eS .
-            val s3 = state(RP(G, 0, EOR))      // G = S .
+            val s1 = state(RP(eS, 0, ER))      // eS
+            val s2 = state(RP(S, 0, ER))      // S = eS .
+            val s3 = state(RP(G, 0, ER))      // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(ANY), setOf(), null)
             transition(s0, s1, s2, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, 0, SOR)))
@@ -298,22 +298,22 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
 
         val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
-            val s1 = state(RP(a, 0, EOR))      // a
-            val s2 = state(RP(eoA, 0, EOR))    // empty-oA
-            val s3 = state(RP(oA, 0, EOR))     // oA = a .
-            val s4 = state(RP(oA, 1, EOR))     // oA =  .
+            val s1 = state(RP(a, 0, ER))      // a
+            val s2 = state(RP(eoA, 0, ER))    // empty-oA
+            val s3 = state(RP(oA, 0, ER))     // oA = a .
+            val s4 = state(RP(oA, 1, ER))     // oA =  .
             val s5 = state(RP(S, 0, 1))   // S = oA . oB oC
-            val s6 = state(RP(b, 0, EOR))      // b
-            val s7 = state(RP(eoB, 0, EOR))    // empty-oB
-            val s8 = state(RP(oB, 0, EOR))     // oB = b .
-            val s9 = state(RP(oB, 1, EOR))     // oB = .
+            val s6 = state(RP(b, 0, ER))      // b
+            val s7 = state(RP(eoB, 0, ER))    // empty-oB
+            val s8 = state(RP(oB, 0, ER))     // oB = b .
+            val s9 = state(RP(oB, 1, ER))     // oB = .
             val s10 = state(RP(S, 0, 2))   // S = oA oB . oC
-            val s11 = state(RP(c, 0, EOR))      // c
-            val s12 = state(RP(eoC, 0, EOR))    // empty-oC
-            val s13 = state(RP(oC, 0, EOR))     // oC = c .
-            val s14 = state(RP(oC, 1, EOR))     // oC = .
-            val s15 = state(RP(S, 0, EOR))      // S = oA oB oC .
-            val s16 = state(RP(G, 0, EOR))      // G = S .
+            val s11 = state(RP(c, 0, ER))      // c
+            val s12 = state(RP(eoC, 0, ER))    // empty-oC
+            val s13 = state(RP(oC, 0, ER))     // oC = c .
+            val s14 = state(RP(oC, 1, ER))     // oC = .
+            val s15 = state(RP(S, 0, ER))      // S = oA oB oC .
+            val s16 = state(RP(G, 0, ER))      // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(ANY), setOf(), null)
             transition(s0, s0, s2, WIDTH, setOf(ANY), setOf(), null)
@@ -379,13 +379,13 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
 
         val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
-            val s1 = state(RP(a, 0, EOR))      // a
+            val s1 = state(RP(a, 0, ER))      // a
             val s2 = state(RP(ABC1, 0, 1), RP(ABC2, 0, 1))       // ABC1 = a . b c, ABC2 = a . b c
             val s3 = state(RP(b, 0, SOR))      // b
             val s4 = state(RP(ABC1, 0, 2), RP(ABC2, 0, 2))      // ABC1 = a b . c, ABC2 = a b . c
-            val s5 = state(RP(c, 0, EOR))      // c
-            val s6 = state(RP(ABC1, 0, EOR), RP(ABC2, 0, EOR))    // ABC1 = a b c ., ABC2 = a b c .
-            val s7 = state(RP(S, 0, EOR), RP(S, 1, EOR))          // S = ABC1 ., S = ABC2 .
+            val s5 = state(RP(c, 0, ER))      // c
+            val s6 = state(RP(ABC1, 0, ER), RP(ABC2, 0, ER))    // ABC1 = a b c ., ABC2 = a b c .
+            val s7 = state(RP(S, 0, ER), RP(S, 1, ER))          // S = ABC1 ., S = ABC2 .
             val s8 = state(RP(G, 0, SOR))                             // G = S .
 
             transition(s0, s0, s1, WIDTH, setOf(ANY), setOf(), null)
@@ -760,12 +760,12 @@ internal class test_ParserStateSet_build_LC0 : test_AutomatonUtilsAbstract() {
 
         val expected = automaton(rrs, automatonKind, "S", false) {
             val s0 = state(RP(G, 0, SOR))      // G = . S
-            val s1 = state(RP(a, 0, EOR))      // a
-            val s2 = state(RP(S, 0, EOR))      // S = a .
+            val s1 = state(RP(a, 0, ER))      // a
+            val s2 = state(RP(S, 0, ER))      // S = a .
             val s3 = state(RP(S1, 0, 1))  // S1 = a . S
-            val s4 = state(RP(G, 0, EOR))      // G = S .
-            val s5 = state(RP(S1, 0, EOR))     // S1 = a S .
-            val s6 = state(RP(S, 1, EOR))      // S = S1 .
+            val s4 = state(RP(G, 0, ER))      // G = S .
+            val s5 = state(RP(S1, 0, ER))     // S1 = a S .
+            val s6 = state(RP(S, 1, ER))      // S = S1 .
 
             transition(s0, s0, s1, WIDTH, setOf(ANY), emptySet(), null)
             transition(setOf(s0, s3), s1, s2, HEIGHT, setOf(ANY), setOf(setOf(ANY)), setOf(RP(S, 0, SOR)))
