@@ -33,8 +33,8 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         val graph = ClosureGraph(context, rulePosition, nextContextFollow)
         sut.calcFirstTermClosure(graph)
 
-        assertEquals(expectedShortStr.size, graph.nonRootClosures.size)
         val actualShortStr = graph.nonRootClosures.flatMap { cls -> cls.shortString }.toSet()
+        assertEquals(expectedShortStr.size, actualShortStr.size)
         assertEquals(expectedShortStr, actualShortStr)
     }
 
@@ -66,9 +66,14 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         check_calcFirstTermClosure(
             RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
             setOf(
-                "G-S",
-                "G-S-a",
-                "G-S-S1-S-a"
+                "G-S.0",
+                "G-S.1",
+                "G-S.0-'a'",
+                "G-S.1-S1",
+                "G-S.1-S1-S.0",
+                "G-S.1-S1-S.1",
+                "G-S.1-S1-S.0-'a'",
+                "G-S.1-S1-S.1-S1",
             )
         )
 
