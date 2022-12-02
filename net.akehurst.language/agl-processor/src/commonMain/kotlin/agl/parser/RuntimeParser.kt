@@ -680,7 +680,7 @@ internal class RuntimeParser(
     }
 
     // Use current/growing runtimeLookahead
-    private fun doEmbedded(
+    internal fun doEmbedded(
         toProcess: ParseGraph.Companion.ToProcessTriple, transition: Transition, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs
     ): Boolean {
         return when {

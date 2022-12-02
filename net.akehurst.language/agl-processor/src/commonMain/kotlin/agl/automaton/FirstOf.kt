@@ -51,35 +51,37 @@ internal class FirstOf(
                 val nrps = mutableSetOf<RulePosition>()
                 for (rp in rps) {
                     //TODO: handle self recursion, i.e. multi/slist perhaps filter out rp from rp.next or need a 'done' map to results
-                    for (item in rp.items) {
-                        val rhs = item?.rhs
-                        when {
-                            //item is null only when rp.isAtEnd
-                            null == rhs /*rp.isAtEnd*/ -> needsNext = true
-                            else -> when (rhs) {
-                                is RuntimeRuleRhsEmpty -> nrps.addAll(rp.next())
-                                is RuntimeRuleRhsGoal -> TODO()
-                                is RuntimeRuleRhsEmbedded -> {
-                                    val embSS = rhs.embeddedRuntimeRuleSet.fetchStateSetFor(rhs.embeddedStartRule.tag, AutomatonKind.LOOKAHEAD_1)
-                                    val f = embSS.firstOf.firstOfNotEmpty(
-                                        rhs.embeddedStartRule,
-                                        doneRp,
-                                        hashMapOf()
-                                    )
-                                    result = result.union(f.result)
-                                    if (f.needsFirstOfParentNext) {
-                                        needsNext = true
+                    if (rp.isAtEnd) {
+                        needsNext = true
+                    } else {
+                        for (item in rp.items) {
+                            val rhs = item.rhs
+                            when {
+                                else -> when (rhs) {
+                                    is RuntimeRuleRhsEmpty -> nrps.addAll(rp.next())
+                                    is RuntimeRuleRhsGoal -> TODO()
+                                    is RuntimeRuleRhsEmbedded -> {
+                                        val embSS = rhs.embeddedRuntimeRuleSet.fetchStateSetFor(rhs.embeddedStartRule.tag, AutomatonKind.LOOKAHEAD_1)
+                                        val f = embSS.firstOf.firstOfNotEmpty(
+                                            rhs.embeddedStartRule,
+                                            doneRp,
+                                            hashMapOf()
+                                        )
+                                        result = result.union(f.result)
+                                        if (f.needsFirstOfParentNext) {
+                                            needsNext = true
+                                        }
                                     }
+
+                                    is RuntimeRuleRhsTerminal -> result = result.union(LookaheadSetPart(false, false, false, setOf(item)))
+
+                                    is RuntimeRuleRhsNonTerminal -> {
+                                        val f = firstOfNotEmpty(item, doneRp, done)
+                                        result = result.union(f.result)
+                                        if (f.needsFirstOfParentNext) nrps.addAll(rp.next())
+                                    }
+
                                 }
-
-                                is RuntimeRuleRhsTerminal -> result = result.union(LookaheadSetPart(false, false, false, setOf(item)))
-
-                                is RuntimeRuleRhsNonTerminal -> {
-                                    val f = firstOfNotEmpty(item, doneRp, done)
-                                    result = result.union(f.result)
-                                    if (f.needsFirstOfParentNext) nrps.addAll(rp.next())
-                                }
-
                             }
                         }
                     }

@@ -133,18 +133,26 @@ internal class LookaheadSet(
             runtimeLookahead.includesRT -> error("EOT lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
             //EOT == this -> eotLookahead.part
             //RT == this -> runtimeLookahead.part
-            else -> {
-                var resolvedContent = this.content
-                resolvedContent = if (this.includesRT) {
-                    val resolvedRT = if (runtimeLookahead.includesEOT) runtimeLookahead.content.union(eotLookahead.content) else runtimeLookahead.content
-                    resolvedContent.union(resolvedRT)
-                } else {
-                    resolvedContent
+            this.matchANY || (this.includesEOT && eotLookahead.matchANY) || (this.includesRT && runtimeLookahead.matchANY) -> LookaheadSetPart(false, false, true, emptySet())
+            else -> when {
+                this.includesEOT && this.includesRT -> {
+                    val resolvedContent = this.content.union(runtimeLookahead.content).union(eotLookahead.content)
+                    val eot = eotLookahead.includesEOT || runtimeLookahead.includesEOT
+                    LookaheadSetPart(false, eot, false, resolvedContent)
                 }
-                resolvedContent = if (this.includesEOT) resolvedContent.union(eotLookahead.content) else resolvedContent
-                val eot = this.includesEOT || (this.includesRT && runtimeLookahead.includesEOT)
-                val ma = this.matchANY || (this.includesEOT && eotLookahead.matchANY) || (this.includesRT && runtimeLookahead.matchANY)
-                LookaheadSetPart(false, eot, ma, resolvedContent)
+                this.includesEOT -> {
+                    val resolvedContent = this.content.union(eotLookahead.content)
+                    val eot = eotLookahead.includesEOT
+                    LookaheadSetPart(false, eot, false, resolvedContent)
+                }
+                this.includesRT -> {
+                    val resolvedContent = this.content.union(runtimeLookahead.content)
+                    val eot = runtimeLookahead.includesEOT
+                    LookaheadSetPart(false, eot, false, resolvedContent)
+                }
+                else -> {
+                    LookaheadSetPart(false, false, false, this.content)
+                }
             }
         }
     }

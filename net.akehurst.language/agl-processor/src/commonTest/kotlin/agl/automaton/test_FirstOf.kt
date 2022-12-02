@@ -91,4 +91,53 @@ internal class test_FirstOf : test_AutomatonUtilsAbstract() {
         assert(RP(a, o0, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
     }
 
+    @Test
+    fun hiddenRight2() {
+        // S = S1 | 'a'
+        // S1 = S C B
+        // B = 'b' | Be
+        // Be = <empty>
+        // C = 'c'
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("S1")
+                literal("a")
+            }
+            concatenation("S1") { ref("S"); ref("C"); ref("B") }
+            choice("B", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("b")
+                ref("Be")
+            }
+            concatenation("Be") { empty() }
+            concatenation("C") { literal("c") }
+        }
+        val S = rrs.findRuntimeRule("S")
+        val G = rrs.goalRuleFor[S]
+        val S1 = rrs.findRuntimeRule("S1")
+        val B = rrs.findRuntimeRule("B")
+        val Be = rrs.findRuntimeRule("Be")
+        val a = rrs.findRuntimeRule("'a'")
+        val b = rrs.findRuntimeRule("'b'")
+        val c = rrs.findRuntimeRule("'c'")
+
+
+        assert(RP(G, o0, SOR), LookaheadSetPart.EOT, expected = setOf(a))
+        assert(RP(G, o0, ER), LookaheadSetPart.EMPTY, expected = emptySet())
+
+        assert(RP(S, o0, SOR), LookaheadSetPart.EOT, expected = setOf(a))
+        assert(RP(S, o0, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
+
+        assert(RP(S, o1, SOR), LookaheadSetPart.EOT, expected = setOf(a))
+        assert(RP(S, o1, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
+
+        assert(RP(S1, o0, SOR), LookaheadSetPart.EOT, expected = setOf(a))
+        assert(RP(S1, o0, p1), LookaheadSetPart.EOT, expected = setOf(c))
+
+        assert(RP(S1, o0, p2), LookaheadSetPart.EOT, expected = setOf(EOT, b))
+        assert(RP(S1, o0, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
+
+        assert(RP(a, o0, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
+        assert(RP(b, o0, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
+        assert(RP(c, o0, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
+    }
 }

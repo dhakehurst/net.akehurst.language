@@ -32,6 +32,7 @@ internal abstract class test_AutomatonUtilsAbstract {
         val EOT = RuntimeRuleSet.END_OF_TEXT
         val RT = RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD
         val ANY = RuntimeRuleSet.ANY_LOOKAHEAD
+        val UNDEFINED = RuntimeRuleSet.UNDEFINED_RULE
 
         const val ER = RulePosition.END_OF_RULE
         const val EOR = RulePosition.END_OF_RULE
