@@ -57,7 +57,9 @@ internal class ParseGraph(
             val growingNode: GrowingNodeIndex,
             val previous: GrowingNodeIndex?,
             val remainingHead:GrowingNodeIndex?
-        )
+        ) {
+            override fun toString(): String = "$growingNode ==> $previous ==> $remainingHead"
+        }
     }
 
     enum class MergeOptions {
@@ -102,6 +104,8 @@ internal class ParseGraph(
         // 5) high priority first if same choice point...else !!
         //TODO: how do we ensure lower choices are done first ?
         when {
+            parent.state.firstRule.isEmptyTerminal -> -1
+            child.state.firstRule.isEmptyTerminal -> 1
             // 1) nextInputPosition lower number first
             parent.nextInputPosition < child.nextInputPosition -> 1
             parent.nextInputPosition > child.nextInputPosition -> -1

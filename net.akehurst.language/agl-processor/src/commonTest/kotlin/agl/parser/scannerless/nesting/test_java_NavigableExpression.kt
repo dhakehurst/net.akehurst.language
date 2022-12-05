@@ -18,10 +18,11 @@ package net.akehurst.language.parser.scanondemand.nesting
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-internal class test_java_example : test_ScanOnDemandParserAbstract() {
+internal class test_java_NavigableExpression : test_ScanOnDemandParserAbstract() {
 
     // NavigableExpression
     //   = MethodReference
@@ -78,13 +79,15 @@ internal class test_java_example : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
+                expectedNumGSSHeads = 2,
                 expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun MethodInvocation_Postfix() {
+        rrs.buildFor("NavigableExpression",AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("NavigableExpression"))
         val goal = "NavigableExpression"
         val sentence = "f(i++)"
 
@@ -107,7 +110,7 @@ internal class test_java_example : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 1,
+            expectedNumGSSHeads = 2,
             expectedTrees = arrayOf(expected)
         )
     }

@@ -16,20 +16,22 @@
 
 package net.akehurst.language.parser.scanondemand.whitespace
 
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
 internal class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
-    // S =  'a' | S1 ;
-    // S1 = S 'a' ;
+    // S =  'a' | S 'a' ;
     // skip WS = "\s+" ;
 
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("WS", true) { pattern("\\s+") }
-            concatenation("S") { literal("a") }
-            concatenation("S") { ref("S"); literal("a") }
+            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                concatenation { ref("S"); literal("a") }
+            }
         }
         val goal = "S"
     }
@@ -73,10 +75,10 @@ internal class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
         val sentence = "aa"
 
         val expected = """
-            S { S1 {
+            S { 
                 S { 'a' }
                 'a'
-              } }
+            }
         """.trimIndent()
 
         super.test(
@@ -93,7 +95,7 @@ internal class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
         val sentence = "a a"
 
         val expected = """
-            S|1 { S1 { S { 'a' WS { "\s+" : ' ' } } 'a' } }
+            S { S { 'a' WS { "\s+" : ' ' } } 'a' }
         """.trimIndent()
 
         super.test(
@@ -110,13 +112,13 @@ internal class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
         val sentence = "aaa"
 
         val expected = """
-            S { S1 {
-                S { S1 {
-                    S { 'a' }
-                    'a'
-                  } }
+            S { 
+              S { 
+                 S { 'a' }
                 'a'
-              } }
+              } 
+              'a'
+            }
         """.trimIndent()
 
         super.test(
@@ -134,14 +136,12 @@ internal class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
         val sentence = "a a a"
 
         val expected = """
-            S|1 { S1 {
-                    S|1 { S1 {
-                            S { 'a' WS { "\s+" : ' ' } }
-                            'a' WS { "\s+" : ' ' }
-                        }
-                    }
-                    'a'
-                }
+            S|1 { 
+              S { 
+                S { 'a' WS { "\s+" : ' ' } }
+                'a' WS { "\s+" : ' ' }       
+              }
+              'a'
             }
         """.trimIndent()
 
@@ -159,16 +159,12 @@ internal class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
         val sentence = " a a a "
 
         val expected = """
-            S|1 { WS { "\s+" : ' ' }
-                S1 {
-                    S|1 {
-                        S1 {
-                            S { 'a' WS { "\s+" : ' ' } }
-                            'a' WS { "\s+" : ' ' }
-                        }
-                    }
-                    'a' WS { "\s+" : ' ' }
-                }
+            S { WS { "\s+" : ' ' }
+               S {
+                  S { 'a' WS { "\s+" : ' ' } }
+                  'a' WS { "\s+" : ' ' }
+               }
+              'a' WS { "\s+" : ' ' }
             }
         """.trimIndent()
 
@@ -185,7 +181,7 @@ internal class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
     fun aWS500() {
         val sentence = "a ".repeat(500)
 
-        val expected = "S { S1 { ".repeat(499) + "S { 'a' WS { \"\\s+\" : ' ' } }" + "'a' WS { \"\\s+\" : ' ' } } }".repeat(499)
+        val expected = "S { ".repeat(499) + "S { 'a' WS { \"\\s+\" : ' ' } }" + "'a' WS { \"\\s+\" : ' ' } }".repeat(499)
 
         super.test(
                 rrs = rrs,

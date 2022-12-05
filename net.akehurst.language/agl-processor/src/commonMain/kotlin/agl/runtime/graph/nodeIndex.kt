@@ -50,11 +50,8 @@ internal  class GrowingNodeIndex(
         // used to augment the GrowingNodeIndex (GSS node identity) for MULTI and SEPARATED_LIST
         // needed because the 'RuleOptionPosition' does not capture the 'position' in the list
         fun listSize(runtimeRule: RuntimeRule, numNonSkipChildren: Int): Int = when (runtimeRule.rhs) {
-                is RuntimeRuleRhsConcatenation -> numNonSkipChildren
-                is RuntimeRuleRhsGoal -> numNonSkipChildren
-                is RuntimeRuleRhsListSimple -> numNonSkipChildren
-                is RuntimeRuleRhsListSeparated -> numNonSkipChildren
-                else -> 0
+                is RuntimeRuleRhsNonTerminal -> numNonSkipChildren
+                is RuntimeRuleRhsTerminal -> 0
             }
     }
 

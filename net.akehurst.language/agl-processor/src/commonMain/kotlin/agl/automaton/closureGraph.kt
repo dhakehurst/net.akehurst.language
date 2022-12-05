@@ -224,7 +224,9 @@ internal class ClosureGraph(
                     } else {
                         for (child in children) {
                             child.resolveDown()
-                            (this.downInfo as MutableSet).addAll(child.downInfo)
+                            if (this.rulePosition.isAtStart) {
+                                (this.downInfo as MutableSet).addAll(child.downInfo)
+                            }
                         }
                     }
                 }

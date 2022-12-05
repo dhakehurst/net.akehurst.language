@@ -140,4 +140,51 @@ internal class test_FirstOf : test_AutomatonUtilsAbstract() {
         assert(RP(b, o0, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
         assert(RP(c, o0, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
     }
+
+    @Test
+    fun java8_NavigableExpression() {
+        // NavigableExpression
+        //   = MethodReference
+        //   | GenericMethodInvocation
+        //   ;
+        // MethodReference = MethodInvocation '::' IDENTIFIER ;
+        // GenericMethodInvocation = TypeArguments? MethodInvocation ;
+        // MethodInvocation = IDENTIFIER '(' Expression ')' ;
+        // TypeArguments = '<>' ;
+        //
+        // Expression = Postfix | IDENTIFIER ;
+        // Postfix = Expression '++' ;
+        //
+        // leaf IDENTIFIER = "[A-Za-z]+" ;
+        val rrs = runtimeRuleSet {
+            choice("NavigableExpression",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("MethodReference")
+                ref("GenericMethodInvocation")
+            }
+            concatenation("MethodReference") { ref("MethodInvocation"); literal("::"); ref("IDENTIFIER") }
+            concatenation("GenericMethodInvocation") { ref("optTypeArguments"); ref("MethodInvocation"); }
+            concatenation("MethodInvocation") { ref("IDENTIFIER"); literal("("); ref("Expression"); literal(")")}
+            multi("optTypeArguments",0,1,"TypeArguments")
+            concatenation("TypeArguments") { literal("<>") }
+            choice("Expression",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("Postfix")
+                ref("IDENTIFIER")
+            }
+            concatenation("Postfix") { ref("Expression"); literal("++"); }
+            pattern("IDENTIFIER", "[a-zA-Z]+")
+        }
+        val NavigableExpression = rrs.findRuntimeRule("NavigableExpression")
+        val G = rrs.goalRuleFor[NavigableExpression]
+        val IDENTIFIER = rrs.findTerminalRule("IDENTIFIER")
+        val oc = rrs.findTerminalRule("<>")
+
+        assert(RP(G, o0, SOR), LookaheadSetPart.EOT, expected = setOf(IDENTIFIER,oc))
+        assert(RP(G, o0, EOR), LookaheadSetPart.EMPTY, expected = emptySet())
+
+        assert(RP(NavigableExpression, o0, SOR), LookaheadSetPart.EOT, expected = setOf(IDENTIFIER,oc))
+        assert(RP(NavigableExpression, o0, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
+
+
+    }
+
 }

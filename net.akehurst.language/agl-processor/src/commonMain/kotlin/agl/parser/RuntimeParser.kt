@@ -315,8 +315,10 @@ internal class RuntimeParser(
             val dd = nextToProcess.growingNode
             hd?.let { graph.dropHead(hd) }
             graph.dropData(dd)
-            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped Head: $hd" }
-            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped Data: $dd" }
+            if (Debug.OUTPUT_RUNTIME) {
+                Debug.debug(Debug.IndentDelta.NONE) { "Dropped Head: $hd" }
+                Debug.debug(Debug.IndentDelta.NONE) { "Dropped Data: $dd" }
+            }
         }
     }
 
@@ -447,7 +449,10 @@ internal class RuntimeParser(
                     }
                     val hasLh = lhWithMatch.isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {
                     if (growArgs.noLookahead || hasLh) {
-                        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
+                        if (Debug.OUTPUT_RUNTIME) {
+                            Debug.debug(Debug.IndentDelta.NONE) { "Taking: $toProcess" }
+                            Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
+                        }
                         this.graph.growNextChild(
                             toProcess,
                             newParentState = transition.to,
@@ -490,19 +495,14 @@ internal class RuntimeParser(
                         this.lastToTryWidthTrans.add(toProcess)
                     }
                     if (growArgs.noLookahead || hasLh) {
-                        //val runtimeLhs = lhWithMatch
                         val startPosition = l.startPosition
                         val nextInputPosition = l.nextInputPosition
-                        //this.graph.pushToStackOf(transition.to, runtimeLhs, startPosition, nextInputPosition, curGn, previous, skipData)
-                        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
-                        val newHead = this.graph.pushToStackOf(toProcess, transition.to, setOf(LookaheadSet.EMPTY), startPosition, nextInputPosition, skipData)
-                        //this.nextExpected.addAll(lh.fullContent)
-                        if (newHead == null) {
-                            false
-                        } else {
-                            //this.addToLastGrown(newHead)
-                            true
+                        if (Debug.OUTPUT_RUNTIME) {
+                            Debug.debug(Debug.IndentDelta.NONE) { "Taking: $toProcess" }
+                            Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
                         }
+                        val newHead = this.graph.pushToStackOf(toProcess, transition.to, setOf(LookaheadSet.EMPTY), startPosition, nextInputPosition, skipData)
+                        newHead != null
                     } else {
                         false
                     }
@@ -559,7 +559,10 @@ internal class RuntimeParser(
                             }
                         }.toSet()
                     }
-                    if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
+                    if (Debug.OUTPUT_RUNTIME) {
+                        Debug.debug(Debug.IndentDelta.NONE) { "Taking: $toProcess" }
+                        Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
+                    }
                     this.graph.createWithFirstChild(
                         parentState = transition.to,
                         parentRuntimeLookaheadSet = newRuntimeLhs,
@@ -591,7 +594,10 @@ internal class RuntimeParser(
                     }
                     val hasLh = lhWithMatch.isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {
                     if (growArgs.noLookahead || hasLh) {
-                        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
+                        if (Debug.OUTPUT_RUNTIME) {
+                            Debug.debug(Debug.IndentDelta.NONE) { "Taking: $toProcess" }
+                            Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
+                        }
                         this.graph.growNextChild(
                             toProcess = toProcess,
                             newParentState = transition.to,
@@ -711,7 +717,10 @@ internal class RuntimeParser(
                     }.toSet()
                     val skipData = this.tryParseSkipUntilNone(skipLh, ni, growArgs)//, lh) //TODO: does the result get reused?
                     val nextInput = skipData?.nextInputPosition ?: ni
-                    if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Taking Transition: $transition" }
+                    if (Debug.OUTPUT_RUNTIME) {
+                        Debug.debug(Debug.IndentDelta.NONE) { "Taking: $toProcess" }
+                        Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
+                    }
                     val newHead =
                         this.graph.pushEmbeddedToStackOf(
                             toProcess,

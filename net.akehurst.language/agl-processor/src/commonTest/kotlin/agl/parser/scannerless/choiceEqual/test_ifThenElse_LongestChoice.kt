@@ -200,7 +200,7 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 2,
+                expectedNumGSSHeads = 4,
                 expectedTrees = arrayOf(expected1)
         )
     }

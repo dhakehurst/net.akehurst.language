@@ -149,7 +149,7 @@ internal class Transition(
     override fun toString(): String {
         val ctx = this.context.joinToString { it.rulePositions.toString() }
         val lhsStr = this.lookahead.joinToString(separator = "|") { "[${it.guard.fullContent.joinToString { it.tag }}](${it.up.fullContent.joinToString { it.tag }})" }
-        return "Transition[$ctx] { $from -- $action${lhsStr} --> $to }"
+        return "Transition: $from -- $action${lhsStr} --> $to {$ctx}"
         //return "Transition[$ctx] { $from -- $action${lhsStr} --> $to }${graftPrevGuard?:"[]"}"
     }
 }

@@ -108,6 +108,8 @@ internal class RuntimeRule(
 
     val rulePositionsAtStart get() = rhs.rulePositionsAtStart
 
+    val rhsItems get() = this.rulePositions.flatMap { it.items }.toSet()
+
     /*
         fun findTerminalAt(n: Int): Set<RuntimeRule> {
             return when (kind) {
