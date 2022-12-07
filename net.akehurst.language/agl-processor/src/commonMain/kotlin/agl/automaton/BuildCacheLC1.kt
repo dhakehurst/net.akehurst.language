@@ -637,8 +637,9 @@ internal class BuildCacheLC1(
                 this.stateSet.usedTerminalRules.map { it.asTerminalRulePosition }
         val rulePosition = this.stateSet.startRulePosition
         val context = rulePosition
-        val nextContextFollow = LookaheadSetPart.EOT
-        firstFollowCache.processAllClosures(context,rulePosition,nextContextFollow)
+        val parentNextFollow = LookaheadSetPart.EOT
+        val parentParentNextFollow = LookaheadSetPart.EOT
+        firstFollowCache.processAllClosures(context,rulePosition,parentNextFollow,parentParentNextFollow)
         val stateInfo = mutableSetOf<StateInfo>()
         for (srcRp in stateRps) {
             val transInfo = mutableSetOf<TransInfo>()
@@ -657,10 +658,7 @@ internal class BuildCacheLC1(
                                 val tgt = parentNext.rulePosition
                                 val follow = parentNext.follow
                                 val grd = follow
-                                val up = when (action) {
-                                    ParseAction.HEIGHT -> parentNext.parentNextContextFollow
-                                    else -> LookaheadSetPart.EMPTY
-                                }
+                                val up =  parentNext.parentParentNextNotAtEndFollow // EMPTY if not HEIGHT (not parent.isAtStart)
                                 HeightGraftInfo(action, listOf(tgt), setOf(LookaheadInfoPart(grd, up)))
                             }.toSet()
                             val merged = mergeHeightGraft(hgInfo)
@@ -693,7 +691,7 @@ internal class BuildCacheLC1(
                                 else -> ParseAction.WIDTH
                             }
                             val trp = firstTermInfo.terminalRule.asTerminalRulePosition
-                            val lhs = firstTermInfo.nextContextFollow
+                            val lhs = firstTermInfo.parentNextNotAtEndFollow
                             WidthInfo(action, trp, lhs)
                         }
                         val wisMerged = wis.groupBy { Pair(it.to, it.action) }
@@ -743,7 +741,7 @@ internal class BuildCacheLC1(
                 else -> ParseAction.WIDTH
             }
             val rp = firstTermInfo.terminalRule.asTerminalRulePosition
-            val lhs = firstTermInfo.nextContextFollow
+            val lhs = firstTermInfo.parentNextNotAtEndFollow
             WidthInfo(action, rp, lhs)
         }
         val wisMerged = wis.groupBy { Pair(it.to, it.action) }
@@ -823,7 +821,7 @@ internal class BuildCacheLC1(
                     //val follow = this.firstFollowCache.followInContext(parentContext, tgt, parentFollowAtEnd)
                     val grd = follow
                     val up = when (action) {
-                        ParseAction.HEIGHT -> parentNext.parentNextContextFollow
+                        ParseAction.HEIGHT -> parentNext.parentParentNextNotAtEndFollow
                         ParseAction.EMBED, ParseAction.WIDTH, ParseAction.GRAFT, ParseAction.GOAL -> LookaheadSetPart.EMPTY
                     }
                     HeightGraftInfo(action, listOf(tgt), setOf(LookaheadInfoPart(grd, up)))

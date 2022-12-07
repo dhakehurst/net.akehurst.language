@@ -146,4 +146,82 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         )
 
     }
+
+
+    @Test
+    fun java_NavigableExpression() {
+        // NavigableExpression = MethodReference | GenericMethodInvocation ;
+        // MethodReference = MethodInvocation '::' IDENTIFIER ;
+        // GenericMethodInvocation = TypeArguments? MethodInvocation ;
+        // MethodInvocation = IDENTIFIER '(' Expression ')' ;
+        // TypeArguments = '<>' ;
+        // Expression = Postfix | IDENTIFIER ;
+        // Postfix = Expression '++' ;
+        // leaf IDENTIFIER = "[A-Za-z]+" ;
+        val rrs = runtimeRuleSet {
+            choice("NE",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("MR")
+                ref("GMI")
+            }
+            concatenation("MR") { ref("MI"); literal("::"); ref("id") }
+            concatenation("GMI") { ref("oTA"); ref("MI"); }
+            concatenation("MI") { ref("id"); literal("("); ref("E"); literal(")")}
+            multi("oTA",0,1,"TA")
+            concatenation("TA") { literal("<>") }
+            choice("E",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("P")
+                ref("id")
+            }
+            concatenation("P") { ref("E"); literal("++"); }
+            pattern("id", "[a-zA-Z]+")
+        }
+        val NE = rrs.findRuntimeRule("NE")
+        val G = rrs.goalRuleFor[NE]
+
+        check_calcFirstTermClosure(
+            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
+            setOf(
+                "G-NE.0",
+                "G-NE.1",
+                "G-NE.0-MR[0]",
+                "G-NE.1-GMI[0]",
+                "G-NE.0-MR[0]-MI[0]",
+                "G-NE.1-GMI[0]-oTA.b",
+                "G-NE.0-MR[0]-MI[0]-id",
+                "G-NE.1-GMI[0]-oTA.b-TA[0]",
+                "G-NE.1-GMI[0]-oTA.b-<E>",
+                "G-NE.1-GMI[0]-oTA.b-TA[0]-'<>'"
+            )
+        )
+
+        check_calcAllClosure(
+            G, setOf(
+                "G-NE.0",
+                "G-NE.1",
+                "G-NE.0-MR",
+                "G-NE.1-GMI",
+                "G-NE.0-MR-MI",
+                "G-NE.0-MR-'::'",
+                "G-NE.0-MR-id",
+                "G-NE.1-GMI-oTA.b",
+                "G-NE.1-GMI-oTA.e",
+                "G-NE.1-GMI-MI",
+                "G-NE.0-MR-MI-id",
+                "G-NE.0-MR-MI-'('",
+                "G-NE.0-MR-MI-E.0",
+                "G-NE.0-MR-MI-E.1",
+                "G-NE.0-MR-MI-')'",
+                "G-NE.1-GMI-oTA.b-TA",
+                "G-NE.1-GMI-oTA.b-<E>",
+
+                "G-NE.1-GMI-MI-id",
+                "G-NE.1-GMI-MI-'('",
+                "G-NE.1-GMI-MI-E.0",
+                "G-NE.1-GMI-MI-E.1",
+                "G-NE.1-GMI-MI-')'",
+
+                "G-NE.1-GMI-oTA.b-TA-'<>'",
+            )
+        )
+    }
 }

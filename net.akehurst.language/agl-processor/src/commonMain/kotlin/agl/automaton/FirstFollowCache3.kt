@@ -23,6 +23,16 @@ import net.akehurst.language.collections.LazyMutableMapNonNull
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.collections.mutableQueueOf
 
+/**
+ * RP.firstOf(ifAtEnd)
+ *   isAtEnd -> ifAtEnd
+ *   else -> RP.symbols.rulePositionsAtStart.firstOf(ifAtEnd)
+ *
+ * R.followIn(ctx)
+ *   R.parentOfIn(ctx).next.isAtEnd -> R.parentOfIn(ctx).followIn(R.parentOfIn(ctx).context)
+ *   else -> R.parentOfIn(ctx).next.firstOf(
+ */
+
 internal class FirstFollowCache3 {
 
     // prev/context -> ( RulePosition -> Boolean )
@@ -55,7 +65,7 @@ internal class FirstFollowCache3 {
     // entry point from calcWidth
     // target states for WIDTH transition, rulePosition should NOT be atEnd
     //fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, nextContext:Set<RulePosition>, nextContextFollow: FollowDeferred): Set<FirstTerminalInfo> {
-    fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, nextContextFollow: LookaheadSetPart): Set<FirstTerminalInfo> {
+    fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition): Set<FirstTerminalInfo> {
         check(context.isAtEnd.not()) { "firstTerminal($context,$rulePosition)" }
         return  if (this._firstTerminal.containsKey(context) && this._firstTerminal[context].containsKey(rulePosition)) {
             this._firstTerminal[context][rulePosition]
@@ -72,7 +82,7 @@ internal class FirstFollowCache3 {
         return if (this._parentInContext.containsKey(ctx) && this._parentInContext[ctx].containsKey(completedRule)) {
             this._parentInContext[ctx][completedRule]
         } else {
-            processClosureFor(contextContext, context, LookaheadSetPart.RT) //nextContext, FollowDeferredLiteral.RT)
+            processClosureFor(contextContext, context, LookaheadSetPart.RT, LookaheadSetPart.RT) //FIXME: I think RT is wrong for the second arg here - need prev-RT
             this._parentInContext[ctx][completedRule]
         }
     }
@@ -85,9 +95,9 @@ internal class FirstFollowCache3 {
      */
     // internal so we can use in testing
     //internal fun processClosureFor(context: RulePosition, rulePosition: RulePosition, nextContext:Set<RulePosition>, nextContextFollow: FollowDeferred) {
-    private fun processClosureFor(context: RulePosition, rulePosition: RulePosition, nextContextFollow: LookaheadSetPart) {
+    private fun processClosureFor(context: RulePosition, rulePosition: RulePosition, parentNextNotAtEndFollow: LookaheadSetPart, parentParentNextNotAtEndFollow: LookaheadSetPart) {
         //val cls = ClosureItemRoot(this, context, rulePosition, parentFollow)
-        val graph = ClosureGraph(context, rulePosition, nextContextFollow) //nextContext, nextContextFollow)
+        val graph = ClosureGraph(context, rulePosition, parentNextNotAtEndFollow,parentParentNextNotAtEndFollow)
         val cls = graph.root
         val doit = when (this._doneFollow[context][cls]) {
             null -> true
@@ -100,9 +110,9 @@ internal class FirstFollowCache3 {
         }
     }
 
-    fun processAllClosures(context: RulePosition, rulePosition: RulePosition, nextContextFollow: LookaheadSetPart) {
+    fun processAllClosures(context: RulePosition, rulePosition: RulePosition, parentNextFollow: LookaheadSetPart, parentParentNextFollow: LookaheadSetPart) {
         this.clear()
-        val graph = ClosureGraph(context, rulePosition, nextContextFollow)
+        val graph = ClosureGraph(context, rulePosition, parentNextFollow,parentParentNextFollow)
         calcAllClosure(graph)
     }
 
@@ -143,12 +153,11 @@ internal class FirstFollowCache3 {
             val cls = todoList.dequeue()
             for (item in cls.rulePosition.items) {
                 when {
-                    item.isTerminal -> cls.createAndAddChildAtStart(item.asTerminalRulePosition)
+                    item.isTerminal -> graph.addChild(cls,item.asTerminalRulePosition)
                     item.isNonTerminal -> {
                         val childRps = item.rulePositionsAtStart
                         for (childRp in childRps) {
-                            val child = cls.createAndAddChildAtStart(childRp)
-                            ///cls.addChild(child)
+                            val child = graph.addChild(cls,childRp)
                             if (null == child) {
                                 // don't follow down the closure
                                 //val short = child.shortString
@@ -188,12 +197,11 @@ internal class FirstFollowCache3 {
             val cls = todoList.dequeue()
             for (item in cls.rulePosition.items) {
                 when {
-                    item.isTerminal -> cls.createAndAddChildAtStart(item.asTerminalRulePosition)
+                    item.isTerminal -> graph.addChild(cls,item.asTerminalRulePosition)
                     item.isNonTerminal -> {
                         val childRps = item.rulePositions
                         for (childRp in childRps) {
-                            val child = cls.createAndAddChildAtStart(childRp)
-                            ///cls.addChild(child)
+                            val child = graph.addChild(cls,childRp)
                             if (null == child) {
                                 // don't follow down the closure
                                 //val short = child.shortString
