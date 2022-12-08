@@ -65,7 +65,7 @@ internal class FirstFollowCache3 {
     // entry point from calcWidth
     // target states for WIDTH transition, rulePosition should NOT be atEnd
     //fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, nextContext:Set<RulePosition>, nextContextFollow: FollowDeferred): Set<FirstTerminalInfo> {
-    fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition): Set<FirstTerminalInfo> {
+    fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, nextContextFollow: LookaheadSetPart): Set<FirstTerminalInfo> {
         check(context.isAtEnd.not()) { "firstTerminal($context,$rulePosition)" }
         return  if (this._firstTerminal.containsKey(context) && this._firstTerminal[context].containsKey(rulePosition)) {
             this._firstTerminal[context][rulePosition]
@@ -82,7 +82,7 @@ internal class FirstFollowCache3 {
         return if (this._parentInContext.containsKey(ctx) && this._parentInContext[ctx].containsKey(completedRule)) {
             this._parentInContext[ctx][completedRule]
         } else {
-            processClosureFor(contextContext, context, LookaheadSetPart.RT, LookaheadSetPart.RT) //FIXME: I think RT is wrong for the second arg here - need prev-RT
+            processClosureFor(contextContext, context, LookaheadSetPart.RT)
             this._parentInContext[ctx][completedRule]
         }
     }
@@ -95,9 +95,9 @@ internal class FirstFollowCache3 {
      */
     // internal so we can use in testing
     //internal fun processClosureFor(context: RulePosition, rulePosition: RulePosition, nextContext:Set<RulePosition>, nextContextFollow: FollowDeferred) {
-    private fun processClosureFor(context: RulePosition, rulePosition: RulePosition, parentNextNotAtEndFollow: LookaheadSetPart, parentParentNextNotAtEndFollow: LookaheadSetPart) {
+    private fun processClosureFor(context: RulePosition, rulePosition: RulePosition, parentNextContextFirstOf: LookaheadSetPart) {
         //val cls = ClosureItemRoot(this, context, rulePosition, parentFollow)
-        val graph = ClosureGraph(context, rulePosition, parentNextNotAtEndFollow,parentParentNextNotAtEndFollow)
+        val graph = ClosureGraph(context, rulePosition, parentNextContextFirstOf)
         val cls = graph.root
         val doit = when (this._doneFollow[context][cls]) {
             null -> true
@@ -112,7 +112,7 @@ internal class FirstFollowCache3 {
 
     fun processAllClosures(context: RulePosition, rulePosition: RulePosition, parentNextFollow: LookaheadSetPart, parentParentNextFollow: LookaheadSetPart) {
         this.clear()
-        val graph = ClosureGraph(context, rulePosition, parentNextFollow,parentParentNextFollow)
+        val graph = ClosureGraph(context, rulePosition, parentNextFollow)
         calcAllClosure(graph)
     }
 
@@ -315,16 +315,16 @@ internal class FirstFollowCache3 {
         // other than the start state, firstTerm & firstOf are never called on RPs at the start
         // also never called on a Terminal
         for (dwn in graph.root.downInfo) {
-            doForRoot(graph.root.rulePosition, graph.root.upInfo, dwn)
+            doForRoot(graph.root.rulePosition, graph.root.context, dwn)
         }
         for (cls in graph.nonRootClosures) {
             if (cls.downInfo.isEmpty()) {
-                this.addPossibleContext(cls.rulePosition, cls.upInfo.context)
+                this.addPossibleContext(cls.rulePosition, cls.context)
             } else {
                 when {
                     cls.rulePosition.isAtStart -> doForNonRoot(cls)
                     cls.rulePosition.isTerminal -> doForNonRoot(cls)
-                    else -> cls.downInfo.forEach { dwn -> doForRoot(cls.rulePosition, cls.upInfo, dwn) }
+                    else -> cls.downInfo.forEach { dwn -> doForRoot(cls.rulePosition, cls.context, dwn) }
                 }
                 //TODO handle closure not at start!
                 //for (dwn in cls.downInfo) {
@@ -346,13 +346,13 @@ internal class FirstFollowCache3 {
      * in RulePositionUpInfo, rulePosition is the Child
      * in RulePositionDownInfo, rulePosition is the parent
      */
-    private fun doForRoot(rulePosition: RulePosition, upInfo: RulePositionUpInfo, downInfo: FirstTerminalInfo) {
-        this.addFirstTerminalInContext(upInfo.context, rulePosition, downInfo)
-        this.addPossibleContext(rulePosition, upInfo.context)
+    private fun doForRoot(rulePosition: RulePosition, context: RulePosition, downInfo: FirstTerminalInfo) {
+        this.addFirstTerminalInContext(context, rulePosition, downInfo)
+        this.addPossibleContext(rulePosition, context)
     }
 
     private fun doForNonRoot(cls:ClosureItem) {
-        val context = cls.upInfo.context
+        val context = cls.context
         val rulePosition = cls.rulePosition
         val parentNext = cls.parentNext
         val completedRule = rulePosition.rule

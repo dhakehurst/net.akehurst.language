@@ -658,7 +658,7 @@ internal class BuildCacheLC1(
                                 val tgt = parentNext.rulePosition
                                 val follow = parentNext.follow
                                 val grd = follow
-                                val up =  parentNext.parentParentNextNotAtEndFollow // EMPTY if not HEIGHT (not parent.isAtStart)
+                                val up =  parentNext.parentParentNextContextFirstOf // EMPTY if not HEIGHT (not parent.isAtStart)
                                 HeightGraftInfo(action, listOf(tgt), setOf(LookaheadInfoPart(grd, up)))
                             }.toSet()
                             val merged = mergeHeightGraft(hgInfo)
@@ -821,7 +821,7 @@ internal class BuildCacheLC1(
                     //val follow = this.firstFollowCache.followInContext(parentContext, tgt, parentFollowAtEnd)
                     val grd = follow
                     val up = when (action) {
-                        ParseAction.HEIGHT -> parentNext.parentParentNextNotAtEndFollow
+                        ParseAction.HEIGHT -> parentNext.parentParentNextContextFirstOf
                         ParseAction.EMBED, ParseAction.WIDTH, ParseAction.GRAFT, ParseAction.GOAL -> LookaheadSetPart.EMPTY
                     }
                     HeightGraftInfo(action, listOf(tgt), setOf(LookaheadInfoPart(grd, up)))

@@ -46,6 +46,16 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         assertEquals(expectedShortStr, actualShortStr)
     }
 
+    private fun check_firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, nextContextFollow: LookaheadSetPart, expected: Set<FirstTerminalInfo>) {
+        val actual = sut.firstTerminalInContext(context, rulePosition, nextContextFollow)
+        assertEquals(expected, actual)
+    }
+
+    private fun check_parentInContext(contextContext: RulePosition, context: RulePosition, rule: RuntimeRule, expected: Set<ParentNext>) {
+        val actual = sut.parentInContext(contextContext, context, rule)
+        assertEquals(expected, actual)
+    }
+
     @Test
     fun leftRecursive() {
         // S =  'a' | S1
@@ -68,26 +78,45 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
                 "G-S.0",
                 "G-S.1",
                 "G-S.0-'a'",
-                "G-S.1-S1",
-                "G-S.1-S1-S.0",
-                "G-S.1-S1-S.1",
-                "G-S.1-S1-S.0-'a'",
-                "G-S.1-S1-S.1-S1",
+                "G-S.1-S1[0]",
+                "...S1[0]-S.1-S1[0]",
+                "G-S.1-S1[0]-S.0",
+                "...S1[0]-S.1-S1[0]-S.0",
+                "G-S.1-S1[0]-S.1",
+                "...S.1-S1[0]-S.1",
+                "G-S.1-S1[0]-S.0-'a'",
+                "...S1[0]-S.1-S1[0]-S.0-'a'",
+            )
+        )
+        /*
+                check_calcAllClosure(
+                    G, setOf(
+                        "G-S.0",
+                        "G-S.1",
+                        "G-S.0-'a'",
+                        "G-S.1-S1",
+                        "G-S.1-S1-S.0",
+                        "G-S.1-S1-S.1",
+                        "G-S.1-S1-'a'",
+                        "G-S.1-S1-S.0-'a'",
+                        "G-S.1-S1-S.1-S1",
+                        "G-S.1-S1-S.1-S1-'a'"
+                    )
+                )
+          */
+        check_firstTerminalInContext(
+            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
+            setOf(
+                FirstTerminalInfo(a, LHS(EOT)),
+                FirstTerminalInfo(a, LHS(a))
             )
         )
 
-        check_calcAllClosure(
-            G, setOf(
-                "G-S.0",
-                "G-S.1",
-                "G-S.0-'a'",
-                "G-S.1-S1",
-                "G-S.1-S1-S.0",
-                "G-S.1-S1-S.1",
-                "G-S.1-S1-'a'",
-                "G-S.1-S1-S.0-'a'",
-                "G-S.1-S1-S.1-S1",
-                "G-S.1-S1-S.1-S1-'a'"
+        check_parentInContext(
+            RP(G, o0, SOR), RP(G, o0, SOR), a,
+            setOf(
+                ParentNext(true,RP(S,o0,ER),LHS(EOT),LHS(EOT)),
+                ParentNext(true,RP(S1,o0,p1),LHS(a),LHS(a, EOT))
             )
         )
     }
@@ -159,16 +188,16 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         // Postfix = Expression '++' ;
         // leaf IDENTIFIER = "[A-Za-z]+" ;
         val rrs = runtimeRuleSet {
-            choice("NE",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("NE", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("MR")
                 ref("GMI")
             }
             concatenation("MR") { ref("MI"); literal("::"); ref("id") }
             concatenation("GMI") { ref("oTA"); ref("MI"); }
-            concatenation("MI") { ref("id"); literal("("); ref("E"); literal(")")}
-            multi("oTA",0,1,"TA")
+            concatenation("MI") { ref("id"); literal("("); ref("E"); literal(")") }
+            multi("oTA", 0, 1, "TA")
             concatenation("TA") { literal("<>") }
-            choice("E",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("P")
                 ref("id")
             }
@@ -198,29 +227,26 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
             G, setOf(
                 "G-NE.0",
                 "G-NE.1",
-                "G-NE.0-MR",
-                "G-NE.1-GMI",
-                "G-NE.0-MR-MI",
-                "G-NE.0-MR-'::'",
+                "G-NE.0-MR[0]",
+                "G-NE.0-MR[1]",
+                "G-NE.0-MR[2]",
+                "G-NE.1-GMI[0]",
+                "G-NE.1-GMI[1]",
+                "G-NE.0-MR[0]-MI[0]",
+                "G-NE.0-MR[0]-MI[1]",
+                "G-NE.0-MR[0]-MI[2]",
+                "G-NE.0-MR[0]-MI[3]",
+                "G-NE.0-MR[1]-'::'",
+                "G-NE.0-MR[2]-id",
                 "G-NE.0-MR-id",
-                "G-NE.1-GMI-oTA.b",
-                "G-NE.1-GMI-oTA.e",
-                "G-NE.1-GMI-MI",
-                "G-NE.0-MR-MI-id",
-                "G-NE.0-MR-MI-'('",
-                "G-NE.0-MR-MI-E.0",
-                "G-NE.0-MR-MI-E.1",
-                "G-NE.0-MR-MI-')'",
-                "G-NE.1-GMI-oTA.b-TA",
-                "G-NE.1-GMI-oTA.b-<E>",
-
-                "G-NE.1-GMI-MI-id",
-                "G-NE.1-GMI-MI-'('",
-                "G-NE.1-GMI-MI-E.0",
-                "G-NE.1-GMI-MI-E.1",
-                "G-NE.1-GMI-MI-')'",
-
-                "G-NE.1-GMI-oTA.b-TA-'<>'",
+                "G-NE.1-GMI[0]-oTA.b",
+                "G-NE.1-GMI[0]-oTA.e",
+                "G-NE.1-GMI[1]-MI[0]",
+                "G-NE.1-GMI[1]-MI[1]",
+                "G-NE.1-GMI[1]-MI[2]",
+                "G-NE.1-GMI[1]-MI[3]",
+                "G-NE.0-MR[0]-MI[0]-id",
+                "G-NE.0-MR[0]-MI[1]='('",
             )
         )
     }
