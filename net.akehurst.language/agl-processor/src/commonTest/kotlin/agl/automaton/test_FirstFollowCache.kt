@@ -51,7 +51,27 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         assertEquals(expected, actual)
     }
 
-    private fun check_parentInContext(contextContext: RulePosition, context: RulePosition, contextNextContextFirstOf:LookaheadSetPart, rule: RuntimeRule, expected: Set<ParentNext>) {
+    private fun check_firstTerminalInContext_all(
+        G: RuntimeRule,
+        context: RulePosition,
+        rulePosition: RulePosition,
+        nextContextFollow: LookaheadSetPart,
+        expected: Set<FirstTerminalInfo>
+    ) {
+        val graph = ClosureGraph(RP(G, o0, SR), RP(G, o0, SR), LookaheadSetPart.EOT)
+        sut.calcAllClosure(graph)
+
+        val actual = sut.firstTerminalInContext(context, rulePosition, nextContextFollow)
+        assertEquals(expected, actual)
+    }
+
+    private fun check_parentInContext(
+        contextContext: RulePosition,
+        context: RulePosition,
+        contextNextContextFirstOf: LookaheadSetPart,
+        rule: RuntimeRule,
+        expected: Set<ParentNext>
+    ) {
         sut.firstTerminalInContext(contextContext, context, contextNextContextFirstOf)
         val actual = sut.parentInContext(contextContext, context, rule)
         assertEquals(expected, actual)
@@ -80,40 +100,42 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         val G = rrs.goalRuleFor[S]
         val S1 = rrs.findRuntimeRule("S1")
         val a = rrs.findRuntimeRule("'a'")
-        /*
-                check_calcFirstTermClosure(
-                    RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
-                    setOf(
-                        "G",
-                        "G-S.0",
-                        "G-S.1",
-                        "G-S.0-'a'",
-                        "G-S.1-S1[0]",
-                        "...S1[0]-S.1-S1[0]",
-                        "G-S.1-S1[0]-S.0",
-                        "...S1[0]-S.1-S1[0]-S.0",
-                        "G-S.1-S1[0]-S.1",
-                        "...S.1-S1[0]-S.1",
-                        "G-S.1-S1[0]-S.0-'a'",
-                        "...S1[0]-S.1-S1[0]-S.0-'a'",
-                    )
-                )
 
-                        check_calcAllClosure(
-                            G, setOf(
-                                "G-S.0",
-                                "G-S.1",
-                                "G-S.0-'a'",
-                                "G-S.1-S1",
-                                "G-S.1-S1-S.0",
-                                "G-S.1-S1-S.1",
-                                "G-S.1-S1-'a'",
-                                "G-S.1-S1-S.0-'a'",
-                                "G-S.1-S1-S.1-S1",
-                                "G-S.1-S1-S.1-S1-'a'"
-                            )
-                        )
+        check_calcFirstTermClosure(
+            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
+            setOf(
+                "G",
+                "G-S.0",
+                "G-S.1",
+                "G-S.0-'a'",
+                "G-S.1-S1[0]",
+                "...S1[0]-S.1-S1[0]",
+                "G-S.1-S1[0]-S.0",
+                "...S1[0]-S.1-S1[0]-S.0",
+                "G-S.1-S1[0]-S.1",
+                "...S.1-S1[0]-S.1",
+                "G-S.1-S1[0]-S.0-'a'",
+                "...S1[0]-S.1-S1[0]-S.0-'a'",
+            )
+        )
 
+        check_calcAllClosure(
+            G, setOf(
+                "G-S.0",
+                "G-S.1",
+                "G-S.0-'a'",
+                "G-S.1-S1",
+                "G-S.1-S1-S.0",
+                "G-S.1-S1-S.1",
+                "G-S.1-S1-'a'",
+                "G-S.1-S1-S.0-'a'",
+                "G-S.1-S1-S.1-S1",
+                "G-S.1-S1-S.1-S1-'a'"
+            )
+        )
+
+
+        // G=.S -- W --> 'a'
         check_firstTerminalInContext(
             RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
             setOf(
@@ -121,13 +143,22 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
                 FirstTerminalInfo(a, LHS(a))
             )
         )
-  */
 
         check_parentInContext(
             RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT, a,
             setOf(
-                ParentNext(true,RP(S,o0,ER),LHS(EOT),LHS(EOT)),
-                ParentNext(true,RP(S,o0,ER),LHS(a),LHS(a))
+                ParentNext(true, RP(S, o0, ER), LHS(EOT), LHS(EOT)),
+                ParentNext(true, RP(S, o0, ER), LHS(a), LHS(a))
+            )
+        )
+
+        // G=.S -- W --> 'a'
+        check_firstTerminalInContext_all(
+            G,
+            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
+            setOf(
+                FirstTerminalInfo(a, LHS(EOT)),
+                FirstTerminalInfo(a, LHS(a))
             )
         )
 
@@ -137,18 +168,29 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
             G,
             RP(G, o0, SR), RP(G, o0, SR), a,
             setOf(
-                ParentNext(true,RP(S,o0,ER),LHS(EOT),LHS(EOT)),
-                ParentNext(true,RP(S,o0,ER),LHS(a),LHS(a))
+                ParentNext(true, RP(S, o0, ER), LHS(EOT), LHS(EOT)),
+                ParentNext(true, RP(S, o0, ER), LHS(a), LHS(a))
             )
         )
 
-        // S -- H --> S1=S.a
+        // S -- H[<EOT>]() --> G=S.
+        // S -- H[a](a,<EOT>) --> S1=S.a
         check_parentInContext_all(
             G,
-            RP(G, o0, SR), RP(G, o0, SR), a,
+            RP(G, o0, SR), RP(G, o0, SR), S,
             setOf(
-                ParentNext(false,RP(S1,o0,p1),LHS(a),LHS()),
-                ParentNext(false,RP(S1,o0,p1),LHS(a),LHS()),
+                ParentNext(true, RP(G, o0, ER), LHS(EOT), LHS()),
+                ParentNext(true, RP(S1, o0, p1), LHS(a), LHS(a, EOT)),
+            )
+        )
+
+        // S1=S.a -- W --> 'a'
+        check_firstTerminalInContext_all(
+            G,
+            RP(G, o0, SOR), RP(S1, o0, p1), LookaheadSetPart.EOT,
+            setOf(
+                FirstTerminalInfo(a, LHS(EOT)),
+                FirstTerminalInfo(a, LHS(a))
             )
         )
 
