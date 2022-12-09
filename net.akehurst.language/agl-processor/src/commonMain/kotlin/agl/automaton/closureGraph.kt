@@ -135,36 +135,32 @@ internal class ClosureGraph(
 
         private val firstOf = FirstOf()
 
-        fun nextNotAtEndFollow(
+        fun nextContextFirstOf(
             rulePosition: RulePosition,
-            parentNextNotAtEndFollow: LookaheadSetPart
+            parentNextContextFirstOf: LookaheadSetPart
         ): LookaheadSetPart = when {
-            rulePosition.isTerminal -> parentNextNotAtEndFollow
+            rulePosition.isTerminal -> parentNextContextFirstOf
             else -> {
                 if (Debug.CHECK) check(rulePosition.isAtEnd.not()) { "Internal Error: rulePosition of ClosureItem should never be at end" }
                 val nexts = rulePosition.next()
-                val allNextFollow = nexts.map { next ->
-                    when {
-                        next.isAtEnd -> parentNextNotAtEndFollow
-                        else -> firstOf.expectedAt(next, parentNextNotAtEndFollow)
-                    }
-                }
+                if (Debug.CHECK) check(nexts.isNotEmpty()) { "Internal Error: if not a terminal and not atEnd rulePosition.next() should never be empty" }
+                val allNextFollow = nexts.map { next -> firstOf.expectedAt(next, parentNextContextFirstOf) }
                 allNextFollow.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
             }
         }
 
-        fun parentNext(graph: ClosureGraph, parents: Set<ClosureItem>): Set<ParentNext> {
+        fun parentNext(parents: Set<ClosureItem>): Set<ParentNext> {
             val result = mutableSetOf<ParentNext>()
             for (parent in parents) {
                 val atStart = parent.rulePosition.isAtStart
-                val prntNextContextFollow = when (atStart) {
+                val prntNextContextFirstOf = when (atStart) {
                     true -> parent.parents.map { it.nextContextFirstOf}.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                     false -> LookaheadSetPart.EMPTY
                 }
                 //TODO: can we just use parent.nextNotAtEnd here ?
                 for (prntNext in parent.rulePosition.next()) {
-                    val prntNextFollow = firstOf.expectedAt(prntNext, parent.nextContextFirstOf)
-                    val pn = ParentNext(atStart, prntNext, prntNextFollow, prntNextContextFollow)
+                    val prntNextFirstOf = firstOf.expectedAt(prntNext, parent.nextContextFirstOf)
+                    val pn = ParentNext(atStart, prntNext, prntNextFirstOf, prntNextContextFirstOf)
                     result.add(pn)
                 }
             }
@@ -189,7 +185,7 @@ internal class ClosureGraph(
             override lateinit var downInfo: Set<FirstTerminalInfo>
 
             override val parentNext: Set<ParentNext> by lazy {
-                parentNext(this.graph, this.graph.parentsOf(this))
+                parentNext(this.graph.parentsOf(this))
             }
 
             override fun resolveDown() {
@@ -362,7 +358,11 @@ internal class ClosureGraph(
 
     val root = ClosureItemRootGraph(this, rootRulePosition, rootContext, rootNextContextFirstOf)
 
-    val nonRootClosures: Set<ClosureItem> get() = _parentsOf.keys
+    val nonRootClosures: Set<ClosureItem> get() {
+        //create copy, because queries to _parentsOf might create additional entries
+        // and thus a ConcurrentModificationException whilst iterating over nonRootClosures
+        return _parentsOf.keys.toMutableSet()
+    }
 
     fun resolveAllChildParentInfo() {
         this.root.resolveDown()
@@ -390,7 +390,7 @@ internal class ClosureGraph(
             parent.rulePosition.isAtStart -> parent.context
             else -> parent.rulePosition
         }
-        val childNextContextFirstOf = nextNotAtEndFollow(childRulePosition, parent.nextContextFirstOf)
+        val childNextContextFirstOf = nextContextFirstOf(childRulePosition, parent.nextContextFirstOf)
         val child = ClosureItemChildGraph(this, childRulePosition, childContext, childNextContextFirstOf)
         val added = this.addParentOf(child, parent)
         return if (added) child else null
