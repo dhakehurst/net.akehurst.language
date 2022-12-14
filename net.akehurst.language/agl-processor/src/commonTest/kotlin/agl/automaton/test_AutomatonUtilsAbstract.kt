@@ -30,6 +30,7 @@ internal abstract class test_AutomatonUtilsAbstract {
         const val p2 = 2
         const val p3 = 3
         val EOT = RuntimeRuleSet.END_OF_TEXT
+        val EMPTY = RuntimeRuleSet.EMPTY
         val RT = RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD
         val ANY = RuntimeRuleSet.ANY_LOOKAHEAD
         val UNDEFINED = RuntimeRuleSet.UNDEFINED_RULE
@@ -38,7 +39,6 @@ internal abstract class test_AutomatonUtilsAbstract {
         const val EOR = RulePosition.END_OF_RULE
         const val SR = RulePosition.START_OF_RULE
         const val SOR = RulePosition.START_OF_RULE
-        val EMPTY = RuntimeRuleSet.EMPTY
 
         /**
          * Option for SimpleList Item

@@ -350,6 +350,24 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
             )
         )
 
+        // G=.S -- W[b,<EOT>] --> 'a'
+        // G=.S -- W[<EOT>] --> <empty>
+        check_firstTerminalInContext(
+            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
+            setOf(
+                FirstTerminalInfo(a, LHS(b,EOT)),
+                FirstTerminalInfo(EMPTY, LHS(EOT))
+            )
+        )
+
+        check_parentInContext(
+            RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT, a,
+            setOf(
+                ParentNext(true, RP(S, OLI, PLS), LHS(b), LHS(EOT)),
+                ParentNext(true, RP(S, OLI, ER), LHS(EOT), LHS(EOT))
+            )
+        )
+
     }
 
 
