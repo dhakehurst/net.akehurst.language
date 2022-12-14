@@ -176,7 +176,7 @@ internal class test_FirstOf : test_AutomatonUtilsAbstract() {
         val NavigableExpression = rrs.findRuntimeRule("NavigableExpression")
         val G = rrs.goalRuleFor[NavigableExpression]
         val IDENTIFIER = rrs.findTerminalRule("IDENTIFIER")
-        val oc = rrs.findTerminalRule("<>")
+        val oc = rrs.findTerminalRule("'<>'")
 
         assert(RP(G, o0, SOR), LookaheadSetPart.EOT, expected = setOf(IDENTIFIER,oc))
         assert(RP(G, o0, EOR), LookaheadSetPart.EMPTY, expected = emptySet())

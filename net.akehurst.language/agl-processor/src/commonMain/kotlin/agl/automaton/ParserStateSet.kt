@@ -334,8 +334,8 @@ internal class ParserStateSet(
                 val toStr = "${tr.to.number.value}:${tr.to.rulePositions}"
                 val trStr = "$frStr --> $toStr"
                 val lh = tr.lookahead.joinToString(separator = "|") { "[${it.guard.fullContent.joinToString { it.tag }}](${it.up.fullContent.joinToString { it.tag }})" }
-                b.append(trStr)
                 b.append(" ${tr.action} ")
+                b.append(trStr)
                 b.append(lh)
                 b.append(" {${prev.joinToString()}} ")
                 b.append("\n")

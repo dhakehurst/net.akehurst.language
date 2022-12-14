@@ -28,7 +28,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
 
     // must be fresh per test or automaton is not correct for different parses (due to caching)
     private val rrs = runtimeRuleSet {
-        concatenation("S") { literal("a");literal("b");literal("c") }
+        concatenation("S") { literal("a"); literal("b"); literal("c") }
     }
 
     private val S = rrs.findRuntimeRule("S")
@@ -59,13 +59,13 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
             state(RP(S, o0, EOR))
             state(RP(G, o0, EOR))
 
-            transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(a); lhg(b) }
-            transition(WIDTH) { ctx(G, o0, SOR); src(S, o0, p1); tgt(b); lhg(c) }
-            transition(WIDTH) { ctx(G, o0, SOR); src(S, o0, p2); tgt(c); lhg(RT) }
-            transition(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(EOT) }
-            transition(GRAFT) { ctx(S, o0, p2); src(c); tgt(S); lhg(RT); gpg(S,o0,p2) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(S,o0,p1); lhg(setOf(b), setOf(RT,EOT)) }
-            transition(GRAFT) { ctx(S, o0, p1); src(b); tgt(S,o0,p2); lhg(c); gpg(S,o0,p1) }
+            transition(WIDTH) { src(G, o0, SOR); tgt(a); lhg(b); ctx(G, o0, SOR) }
+            transition(WIDTH) { src(S, o0, p1); tgt(b); lhg(c); ctx(G, o0, SOR) }
+            transition(WIDTH) { src(S, o0, p2); tgt(c); lhg(RT); ctx(G, o0, SOR) }
+            transition(GOAL) { src(S); tgt(G); lhg(EOT); ctx(G, o0, SOR) }
+            transition(GRAFT) { src(c); tgt(S); lhg(RT); gpg(S,o0,p2); ctx(S, o0, p2) }
+            transition(HEIGHT) { src(a); tgt(S,o0,p1); lhg(setOf(b), setOf(EOT)); ctx(G, o0, SOR) }
+            transition(GRAFT) { src(b); tgt(S,o0,p2); lhg(c); gpg(S,o0,p1); ctx(S, o0, p1) }
         }
         AutomatonTest.assertEquals(expected, actual)
     }

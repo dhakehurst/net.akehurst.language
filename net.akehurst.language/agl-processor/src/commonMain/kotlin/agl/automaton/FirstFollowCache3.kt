@@ -65,12 +65,12 @@ internal class FirstFollowCache3 {
     // entry point from calcWidth
     // target states for WIDTH transition, rulePosition should NOT be atEnd
     //fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, nextContext:Set<RulePosition>, nextContextFollow: FollowDeferred): Set<FirstTerminalInfo> {
-    fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, nextContextFirstOf: LookaheadSetPart): Set<FirstTerminalInfo> {
+    fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, parentFollow: LookaheadSetPart): Set<FirstTerminalInfo> {
         check(context.isAtEnd.not()) { "firstTerminal($context,$rulePosition)" }
         return  if (this._firstTerminal.containsKey(context) && this._firstTerminal[context].containsKey(rulePosition)) {
             this._firstTerminal[context][rulePosition]
         } else {
-            processClosureFor(context, rulePosition, nextContextFirstOf)
+            processClosureFor(context, rulePosition, parentFollow)
             this._firstTerminal[context][rulePosition]
         }
     }
@@ -82,9 +82,9 @@ internal class FirstFollowCache3 {
         return if (this._parentInContext.containsKey(ctx) && this._parentInContext[ctx].containsKey(completedRule)) {
             this._parentInContext[ctx][completedRule]
         } else {
-            error("Internal Error: a call to firstTerminalInContext should set all needed entries in _parentInContext")
-            //processClosureFor(contextContext, context, LookaheadSetPart.RT)
-            //this._parentInContext[ctx][completedRule]
+            //error("Internal Error: a call to firstTerminalInContext should set all needed entries in _parentInContext")
+            processClosureFor(contextContext, context, LookaheadSetPart.RT)
+            this._parentInContext[ctx][completedRule]
         }
     }
 
@@ -96,9 +96,9 @@ internal class FirstFollowCache3 {
      */
     // internal so we can use in testing
     //internal fun processClosureFor(context: RulePosition, rulePosition: RulePosition, nextContext:Set<RulePosition>, nextContextFollow: FollowDeferred) {
-    private fun processClosureFor(context: RulePosition, rulePosition: RulePosition, nextContextFirstOf: LookaheadSetPart) {
+    private fun processClosureFor(context: RulePosition, rulePosition: RulePosition, parentFollow: LookaheadSetPart) {
         //val cls = ClosureItemRoot(this, context, rulePosition, parentFollow)
-        val graph = ClosureGraph(context, rulePosition, nextContextFirstOf)
+        val graph = ClosureGraph(context, rulePosition, parentFollow)
         val cls = graph.root
         val doit = when (this._doneFollow[context][cls]) {
             null -> true
@@ -111,9 +111,9 @@ internal class FirstFollowCache3 {
         }
     }
 
-    fun processAllClosures(context: RulePosition, rulePosition: RulePosition, parentNextFollow: LookaheadSetPart, parentParentNextFollow: LookaheadSetPart) {
+    fun processAllClosures(context: RulePosition, rulePosition: RulePosition, parentFollow: LookaheadSetPart, parentParentNextFollow: LookaheadSetPart) {
         this.clear()
-        val graph = ClosureGraph(context, rulePosition, parentNextFollow)
+        val graph = ClosureGraph(context, rulePosition, parentFollow)
         calcAllClosure(graph)
     }
 
