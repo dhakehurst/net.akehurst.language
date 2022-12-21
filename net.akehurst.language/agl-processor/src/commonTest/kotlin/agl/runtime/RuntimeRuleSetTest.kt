@@ -22,7 +22,7 @@ internal object RuntimeRuleSetTest {
 
     fun RuntimeRuleSet.matches(other: RuntimeRuleSet) = when {
         this.runtimeRules.size!=other.runtimeRules.size -> false
-        else -> this.runtimeRules.matches(other.runtimeRules) { t,o -> t.matches(o) }
+        else -> this.runtimeRules.sortedBy { it.tag }.matches(other.runtimeRules.sortedBy { it.tag }) { t,o -> t.matches(o) }
     }
 
     fun RulePosition.matches(other: RulePosition): Boolean = when {

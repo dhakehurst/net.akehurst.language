@@ -144,21 +144,10 @@ internal class ClosureGraph(
 
         fun follow(rp:RulePosition, parentFollow: LookaheadSetPart) :LookaheadSetPart = when {
             rp.isAtEnd -> parentFollow
-            else -> rp.next()
-                .map { firstOf.expectedAt(it, parentFollow) }
-                .fold(LookaheadSetPart.EMPTY) { acc,it-> acc.union(it) }
-        }
-
-        fun nextContextFirstOf(
-            rulePosition: RulePosition,
-            parentNextContextFirstOf: LookaheadSetPart
-        ): LookaheadSetPart = when {
-            rulePosition.isTerminal -> parentNextContextFirstOf
             else -> {
-                if (Debug.CHECK) check(rulePosition.isAtEnd.not()) { "Internal Error: rulePosition of ClosureItem should never be at end" }
-                val nexts = rulePosition.next()
+                val nexts =rp.next()
                 if (Debug.CHECK) check(nexts.isNotEmpty()) { "Internal Error: if not a terminal and not atEnd rulePosition.next() should never be empty" }
-                val allNextFollow = nexts.map { next -> firstOf.expectedAt(next, parentNextContextFirstOf) }
+                val allNextFollow =  nexts.map { firstOf.expectedAt(it, parentFollow) }
                 allNextFollow.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
             }
         }
@@ -168,7 +157,7 @@ internal class ClosureGraph(
             for (parent in parents) {
                 val atStart = parent.rulePosition.isAtStart
                 val prntNextContextFirstOf = when (atStart) {
-                    true -> parent.parents.map { it.parentFollow}.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+                    true -> parent.parentFollow //parent.parents.map { it.parentFollow}.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                     false -> LookaheadSetPart.EMPTY
                 }
                 //TODO: can we just use parent.nextNotAtEnd here ?
@@ -418,7 +407,7 @@ internal class ClosureGraph(
             parent.rulePosition.isAtStart -> parent.context
             else -> parent.rulePosition
         }
-        val childParentFollow = nextContextFirstOf(childRulePosition, parent.follow)
+        val childParentFollow = parent.follow //nextContextFirstOf(childRulePosition, parent.follow)
         val child = ClosureItemChildGraph(this, childRulePosition, childContext, childParentFollow)
         val added = this.addParentOf(child, parent)
         return if (added) child else null

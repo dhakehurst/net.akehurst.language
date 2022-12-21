@@ -1522,7 +1522,7 @@ class test_AglGrammar {
             """
             S {
                 a { 'a' }
-                §S§multi1 { §S§choice1 {
+                §S§multi1 { §S§group1 {
                     'b'
                     c { 'c' }
                 } }

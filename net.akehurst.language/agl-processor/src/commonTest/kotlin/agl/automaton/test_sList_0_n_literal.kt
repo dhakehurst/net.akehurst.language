@@ -42,6 +42,40 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
     private val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
 
     @Test
+    fun parse_empty() {
+        val parser = ScanOnDemandParser(rrs)
+        parser.parseForGoal("S", "", AutomatonKind.LOOKAHEAD_1)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
+            state(G,o0,SR)  // G=.S
+            state(G,o0,ER)  // G=S.
+            state(a,o0,ER)  // a
+            state(EMPTY,o0,ER)  // <empty>
+            state(S,OLE,ER) // S=[EMPTY].
+
+            transition(WIDTH) { src(G,o0,SR); tgt(EMPTY); lhg(EOT); ctx(G,o0,SR)  }
+            transition(WIDTH) { src(G,o0,SR); tgt(a); lhg(setOf(EOT,b)); ctx(G,o0,SR)  }
+            transition(GOAL) { src(S,OLE,ER); tgt(G); lhg(EOT); ctx(G,o0,SR)  }
+            transition(HEIGHT) { src(EMPTY); tgt(S,OLE,ER); lhg(setOf(EOT),setOf(EOT)); ctx(G,o0,SR)  }
+        }
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun parse_a() {
+        val parser = ScanOnDemandParser(rrs)
+        parser.parseForGoal("S", "a", AutomatonKind.LOOKAHEAD_1)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
+
+
+        }
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
     fun parse_aba() {
         val parser = ScanOnDemandParser(rrs)
         parser.parseForGoal("S", "aba", AutomatonKind.LOOKAHEAD_1)
@@ -99,6 +133,8 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
         println("--No Build--")
         println(rrs_noBuild.usedAutomatonToString("S"))
 
-        AutomatonTest.assertEquals(automaton_preBuild, automaton_noBuild)
+        AutomatonTest.assertMatches(automaton_preBuild, automaton_noBuild,AutomatonTest.MatchConfiguration(
+            in_actual_substitue_lookahead_RT_with = setOf(EOT)
+        ))
     }
 }

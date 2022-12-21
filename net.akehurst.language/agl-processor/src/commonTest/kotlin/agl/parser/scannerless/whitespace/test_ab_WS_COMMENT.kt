@@ -96,6 +96,48 @@ internal class test_ab_WS_COMMENT : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
+    fun ab_WS_COMMENT__followed_by__COMMENT_WS_ab() {
+        val goal = "S"
+        val sentence1 = "ab //comment"
+        val sentence2 = """
+            // comment
+            ab
+        """.trimIndent()
+
+        val expected1 = """
+            S {
+              'a' 'b'
+              WS : ' '
+              COMMENT : '//comment'
+            }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence1,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected1)
+        )
+
+        val expected2 = """
+            S {
+                COMMENT : '// comment'
+                WS : '⏎'
+                'a' 'b'
+            }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence2,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected2)
+        )
+    }
+
+    @Test
     fun ab_WS() {
         val goal = "S"
         val sentence = "ab "

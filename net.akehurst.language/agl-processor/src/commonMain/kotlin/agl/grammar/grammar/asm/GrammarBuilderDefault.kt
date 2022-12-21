@@ -94,12 +94,12 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
             this.rule.rhs = ChoicePriorityDefault(alternative.asList());
         }
 
-        fun multi(min: Int, max: Int, item: TangibleItem) {
+        fun multi(min: Int, max: Int, item: SimpleItem) {
             this.rule.rhs = SimpleListDefault(min, max, item)
         }
 
         //TODO: original only allows separator to be a TerminalLiteral here,  I think any Terminal is ok though!
-        fun separatedList(min: Int, max: Int, separator: Terminal, item: TangibleItem) {
+        fun separatedList(min: Int, max: Int, separator: SimpleItem, item: SimpleItem) {
             this.rule.rhs = SeparatedListDefault(min, max, item, separator)//, SeparatedListKind.Flat)
         }
     }

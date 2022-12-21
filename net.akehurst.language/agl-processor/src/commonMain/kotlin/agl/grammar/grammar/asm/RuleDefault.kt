@@ -50,8 +50,9 @@ data class RuleDefault(
             val grammar = item.owningRule.grammar
             return when (item) {
                 is Terminal -> when {
-                    item.isPattern -> CompressedLeafRule(compressedName, "(${item.value})", true)
-                    else -> CompressedLeafRule(compressedName, "(${toRegEx(item.value)})", true)
+                    item.isPattern -> CompressedLeafRule(compressedName, item.value, true)
+                    //else -> CompressedLeafRule(compressedName, "(${toRegEx(item.value)})", true)
+                    else -> CompressedLeafRule(compressedName, toRegEx(item.value), false) //TODO: not escape literals if not needed !
                 }
 
                 is Concatenation -> {
@@ -65,10 +66,13 @@ data class RuleDefault(
                     }
                 }
 
-                is Choice -> {
-                    val ct = item.alternative.mapIndexed { idx, it -> this.compressRuleItem("$compressedName$idx", it) }
-                    val pattern = ct.joinToString(separator = "|") { it.value }
-                    CompressedLeafRule(compressedName, pattern, true)
+                is Choice -> when(item.alternative.size){
+                    1 -> this.compressRuleItem(compressedName, item.alternative[0])
+                    else -> {
+                        val ct = item.alternative.mapIndexed { idx, it -> this.compressRuleItem("$compressedName$idx", it) }
+                        val pattern = ct.joinToString(separator = "|") { "(${it.value})" }
+                        CompressedLeafRule(compressedName, pattern, true)
+                    }
                 }
 
                 is SimpleList -> {

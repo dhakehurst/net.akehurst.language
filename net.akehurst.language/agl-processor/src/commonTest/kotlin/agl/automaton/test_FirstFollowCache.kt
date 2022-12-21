@@ -187,7 +187,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         val G = rrs.goalRuleFor[S]
         val S1 = rrs.findRuntimeRule("S1")
         val a = rrs.findRuntimeRule("'a'")
-
+/*
         check_calcFirstTermClosure(
             RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
             setOf(
@@ -201,6 +201,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
                 "G-S.1-S1[0]-S.0-'a'",
                 "G-S.1-S1[0]-S.1-S1[0]",
                 "G-S.1-S1[0]-S.1-S1[0]-S.0",
+                "G-S.1-S1[0]-S.1-S1[0]-S.1",
                 "G-S.1-S1[0]-S.1-S1[0]-S.0-'a'",
             )
         )
@@ -225,6 +226,9 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
                 "G-S.1-S1[0]-S.1-S1[0]-S.1",
                 "G-S.1-S1[0]-S.1-S1[1]-'a'",
                 "G-S.1-S1[0]-S.1-S1[0]-S.0-'a'",
+                "G-S.1-S1[0]-S.1-S1[0]-S.1-S1[1]",
+                "G-S.1-S1[0]-S.1-S1[0]-S.1-S1[ER]",
+                "G-S.1-S1[0]-S.1-S1[0]-S.1-S1[1]-'a'",
             )
         )
 
@@ -237,11 +241,13 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
             )
         )
 
+        // a -- H[<EOT>](<EOT>) --> S=a.    | G-S.0-'a'
+        // a -- H[a](a, <EOT>) --> S=a.     | G-S.1-S1[0]-S.0-'a', G-S.1-S1[0]-S.1-S1[0]-S.0-'a'
         check_parentInContext(
             RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT, a,
             setOf(
                 ParentNext(true, RP(S, o0, ER), LHS(EOT), LHS(EOT)),
-                ParentNext(true, RP(S, o0, ER), LHS(a), LHS(a))
+                ParentNext(true, RP(S, o0, ER), LHS(a), LHS(a, EOT))
             )
         )
 
@@ -263,27 +269,32 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
             )
         )
 
-        // G=.S -- W --> 'a'
-        // 'a' -- H --> S=a.
+        // a -- H[<EOT>](<EOT>) --> S=a.    | G-S.0-'a'
+        // a -- H[a](a, <EOT>) --> S=a.     | G-S.1-S1[0]-S.0-'a', G-S.1-S1[0]-S.1-S1[0]-S.0-'a'
         check_parentInContext_all(
             G,
             RP(G, o0, SR), RP(G, o0, SR), a,
             setOf(
                 ParentNext(true, RP(S, o0, ER), LHS(EOT), LHS(EOT)),
-                ParentNext(true, RP(S, o0, ER), LHS(a), LHS(a))
+                ParentNext(true, RP(S, o0, ER), LHS(a), LHS(a, EOT))
             )
         )
-
-        // S -- H[<EOT>]() --> G=S.
-        // S -- H[a](a,<EOT>) --> S1=S.a
+*/
+        // S -- H[<EOT>]() --> G=S.            | G-S.0-'a'
+        // S -- H[a](a,<EOT>) --> S1=S.a       | G-S.1-S1[0]-S.0-'a', G-S.1-S1[0]-S.1-S1[0]-S.0-'a'
         check_parentInContext_all(
             G,
             RP(G, o0, SR), RP(G, o0, SR), S,
             setOf(
                 ParentNext(true, RP(G, o0, ER), LHS(EOT), LHS()),
-                ParentNext(true, RP(S1, o0, p1), LHS(a), LHS(a, EOT)),
+                ParentNext(true, RP(S1, o0, p1), LHS(a), LHS(EOT)),
+                ParentNext(true, RP(S1, o0, p1), LHS(a), LHS(a))
             )
         )
+//ParentNext(firstPosition=true, rulePosition=0.RP(<GOAL>,0,-1), firstOf=LHS(<EOT>), parentFollow=LHS()),
+// ParentNext(firstPosition=true, rulePosition=0.RP(S1,0,1), firstOf=LHS('a'), parentFollow=LHS(<EOT>)),
+// ParentNext(firstPosition=true, rulePosition=0.RP(S1,0,1), firstOf=LHS('a'), parentFollow=LHS('a'))]
+
 
         // S1=S.a -- W[<EOT>,a] --> 'a'
         check_firstTerminalInContext_all(
@@ -355,7 +366,7 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
         check_firstTerminalInContext(
             RP(G, o0, SOR), RP(G, o0, SOR), LookaheadSetPart.EOT,
             setOf(
-                FirstTerminalInfo(a, LHS(b,EOT)),
+                FirstTerminalInfo(a, LHS(b, EOT)),
                 FirstTerminalInfo(EMPTY, LHS(EOT))
             )
         )
@@ -424,21 +435,24 @@ internal class test_FirstFollowCache : test_AutomatonUtilsAbstract() {
                 "G-NE.0-MR[0]",
                 "G-NE.0-MR[1]",
                 "G-NE.0-MR[2]",
+                "G-NE.0-MR[ER]",
                 "G-NE.1-GMI[0]",
                 "G-NE.1-GMI[1]",
+                "G-NE.1-GMI[ER]",
                 "G-NE.0-MR[0]-MI[0]",
                 "G-NE.0-MR[0]-MI[1]",
                 "G-NE.0-MR[0]-MI[2]",
                 "G-NE.0-MR[0]-MI[3]",
+                "G-NE.0-MR[0]-MI[ER]",
                 "G-NE.0-MR[1]-'::'",
                 "G-NE.0-MR[2]-id",
-                "G-NE.0-MR-id",
                 "G-NE.1-GMI[0]-oTA.b",
                 "G-NE.1-GMI[0]-oTA.e",
                 "G-NE.1-GMI[1]-MI[0]",
                 "G-NE.1-GMI[1]-MI[1]",
                 "G-NE.1-GMI[1]-MI[2]",
                 "G-NE.1-GMI[1]-MI[3]",
+                "G-NE.1-GMI[1]-MI[ER]",
                 "G-NE.0-MR[0]-MI[0]-id",
                 "G-NE.0-MR[0]-MI[1]='('",
             )

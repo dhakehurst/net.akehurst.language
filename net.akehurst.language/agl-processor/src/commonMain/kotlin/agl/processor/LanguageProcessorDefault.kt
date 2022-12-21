@@ -173,12 +173,11 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
         //val expected = grammarExpected.flatMap { this._completionProvider.provideFor(it, desiredDepth) }
         val items = parserExpected.map {
             val rhs = it.rhs
-            val v = when(rhs){
-                is RuntimeRuleRhsLiteral -> rhs.value
-                is RuntimeRuleRhsPattern -> rhs.pattern
-                else -> it.tag
+            when(rhs){
+                is RuntimeRuleRhsLiteral -> CompletionItem(CompletionItemKind.LITERAL, it.tag, rhs.value)
+                is RuntimeRuleRhsPattern -> CompletionItem(CompletionItemKind.PATTERN, it.tag, rhs.pattern)
+                else -> CompletionItem(CompletionItemKind.LITERAL, it.tag, it.tag)
             }
-            CompletionItem(CompletionItemKind.LITERAL, it.tag, v)
         }
         return ExpectedAtResultDefault(items, emptyList())
     }

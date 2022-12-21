@@ -123,7 +123,7 @@ internal class RulePosition(
                 }
             }
         }
-        return "${rule.runtimeRuleSetNumber}.RP(${r},$o,$p)"
+        return "RP(${rule.runtimeRuleSetNumber}/${r},$o,$p)"
     }
 }
 /*

@@ -330,7 +330,7 @@ internal class ParserStateSet(
                 val prev = tr.from.outTransitions.previousFor(tr)
                     .map { it.number.value } //transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }
                     .sorted()
-                val frStr = "${tr.from.number.value}:${tr.from.rulePositions}"
+                val frStr = "${tr.from.number.value}:(${tr.from.rulePositions.joinToString{"$it"}})"
                 val toStr = "${tr.to.number.value}:${tr.to.rulePositions}"
                 val trStr = "$frStr --> $toStr"
                 val lh = tr.lookahead.joinToString(separator = "|") { "[${it.guard.fullContent.joinToString { it.tag }}](${it.up.fullContent.joinToString { it.tag }})" }

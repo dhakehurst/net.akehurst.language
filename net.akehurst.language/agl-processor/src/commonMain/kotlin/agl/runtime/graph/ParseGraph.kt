@@ -782,7 +782,8 @@ internal class ParseGraph(
            //     else -> lookaheadGuard.content.any { this.input.isLookingAt(nextInputPosition, it) }
             //}
             else -> {
-                val lhs = lookaheadGuard.resolve(eotLookahead, runtimeLookahead)
+                val rtResolved = runtimeLookahead.resolve(eotLookahead, runtimeLookahead)
+                val lhs = lookaheadGuard.resolve(eotLookahead, rtResolved)
                 when {
                     lhs.matchANY -> true
                     lhs.includesEOT && this.input.isEnd(nextInputPosition) -> true
