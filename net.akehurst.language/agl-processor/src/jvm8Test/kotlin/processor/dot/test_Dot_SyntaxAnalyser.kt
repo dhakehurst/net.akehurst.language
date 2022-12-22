@@ -19,6 +19,7 @@ package net.akehurst.language.processor.dot
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -45,10 +46,31 @@ class test_Dot_SyntaxAnalyser {
         val actual = result.asm?.rootElements?.firstOrNull()
         assertNotNull(actual)
         assertEquals(emptyList(),result.issues)
-        assertEquals(null,actual.getPropertyAsString("STRICT"))
-        assertEquals("graph",actual.getPropertyAsString("type"))
-        assertEquals(null,actual.getPropertyAsString("STRICT"))
-        assertEquals(null,actual.getPropertyAsString("STRICT"))
+
+        val expected = asmSimple {
+            root("graph") {
+                propertyString("STRICT", null)
+                propertyString("type", "graph")
+                propertyString("ID", null)
+                propertyListOfElement("stmt_list") {
+                    element("stmt1") {
+                        propertyElement("stmt") {
+                            propertyUnnamedElement("node_stmt") {
+                                propertyElement("node_id") {
+                                    propertyElement("ID") {
+                                        propertyUnnamedString("a")
+                                    }
+                                    propertyString("port",null)
+                                }
+                                propertyString("attr_lists",null)
+                            }
+                        }
+                        propertyUnnamedString(null)
+                    }
+                }
+            }
+        }
+        assertEquals(expected.asString(" "), result.asm?.asString(" "))
     }
 
     @Test

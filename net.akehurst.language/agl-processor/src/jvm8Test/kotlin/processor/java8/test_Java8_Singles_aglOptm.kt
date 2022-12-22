@@ -69,8 +69,18 @@ class test_Java8_Singles_aglOptm {
     fun Types_Type__int() {
 
         val grammarStr = this::class.java.getResource(grammarFile).readText()
-        val goal = "Types.Type"
-        val p = Agl.processorFromString(grammarStr, Agl.configuration { defaultGoalRuleName(goal) })
+        val goal = "Type"
+        val p = Agl.processorFromString(
+            grammarDefinitionStr = grammarStr,
+            configuration = Agl.configuration {
+                targetGrammarName("Types")
+                defaultGoalRuleName(goal)
+            },
+            aglOptions = Agl.options {
+                semanticAnalysis {
+                    active(false) // switch off for performance
+                }
+            })
 
         val sentence = "int"
         val result = p.parse(sentence, Agl.parseOptions { goalRuleName("Type") })//TODO: use build

@@ -19,6 +19,7 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.CompleteNodeIndex
 import net.akehurst.language.agl.runtime.graph.TreeData
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -55,6 +56,17 @@ internal class SPPTFromTreeData(
             } ?: userGoal
 
             return when {
+                uags.isEmbedded -> {
+                    val rp = when (uags.rulePositions.size) {
+                        1 -> uags.rulePositions[0]
+                        else -> {
+                            TODO()
+                            //    val possChild = this.runtimeRule.rulePositionsAt[childIndx].first { prioList.contains(it.option) }
+                            //    child.rulePositions.first { it.rule == possChild.item }
+                        }
+                    }
+                    SPPTBranchFromTreeData(uags.treeData, _input, rp.rule as RuntimeRule, rp.option, uags.startPosition, uags.nextInputPosition, -1)
+                }
                 uags.isLeaf -> {
                     val eolPositions = emptyList<Int>() //TODO calc ?
                     SPPTLeafFromInput(_input, uags.firstRule, uags.startPosition, uags.nextInputPosition, -1)

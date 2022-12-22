@@ -52,7 +52,7 @@ data class RuleDefault(
                 is Terminal -> when {
                     item.isPattern -> CompressedLeafRule(compressedName, item.value, true)
                     //else -> CompressedLeafRule(compressedName, "(${toRegEx(item.value)})", true)
-                    else -> CompressedLeafRule(compressedName, toRegEx(item.value), false) //TODO: not escape literals if not needed !
+                    else -> CompressedLeafRule(compressedName, toRegEx(item.value), false) //TODO: not escape literals if not needed ! asRegexLiteral ?
                 }
 
                 is Concatenation -> {

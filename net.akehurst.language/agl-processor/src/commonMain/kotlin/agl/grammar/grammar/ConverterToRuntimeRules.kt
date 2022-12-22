@@ -132,10 +132,19 @@ internal class ConverterToRuntimeRules(
 
     private fun visitRule(target: GrammarRule, arg: String): RuntimeRule {
         val rule = this.findNamedRule(target.name)
+        val rhs = target.rhs
         return if (null == rule) {
             when {
                 target.isLeaf -> when {
-                    target.rhs is Terminal -> this.terminalRule(target.name, (target.rhs as Terminal).value, RuntimeRuleKind.TERMINAL, (target.rhs as Terminal).isPattern, target.isSkip)
+                    rhs is Terminal -> this.terminalRule(target.name, rhs.value, RuntimeRuleKind.TERMINAL, rhs.isPattern, target.isSkip)
+                    rhs is Concatenation && rhs.items.size==1 && rhs.items[0] is Terminal -> {
+                        val t = (rhs.items[0] as Terminal)
+                        this.terminalRule(target.name, t.value, RuntimeRuleKind.TERMINAL, t.isPattern, target.isSkip)
+                    }
+                    rhs is Choice && rhs.alternative.size==1 && rhs.alternative[0] is Terminal -> {
+                        val t = (rhs.alternative[0] as Terminal)
+                        this.terminalRule(target.name, t.value, RuntimeRuleKind.TERMINAL, t.isPattern, target.isSkip)
+                    }
                     else -> this.buildCompressedRule(target, target.isSkip)
                 }
 

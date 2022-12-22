@@ -39,7 +39,7 @@ grammar Expressions {
 
 }
 
-grammar Text {
+grammar Template {
 
     text = textItem* ;
     textItem
@@ -100,6 +100,6 @@ grammar PiEditGrammar extends Expressions {
 
     classifierReference = var ;
 
-    templateText = Text::text ;
+    templateText = Template::text ;
 
 }

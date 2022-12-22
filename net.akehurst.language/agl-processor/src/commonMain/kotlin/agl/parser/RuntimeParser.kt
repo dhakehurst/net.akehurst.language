@@ -31,6 +31,7 @@ import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParserTerminatedException
+import net.akehurst.language.collections.lazyMutableMapNonNull
 import kotlin.math.max
 
 internal class RuntimeParser(
@@ -193,6 +194,7 @@ internal class RuntimeParser(
         this.lastToGrow = this.graph.peekAllNextToProcess()
 
         var steps = 0
+        val progressSteps = lazyMutableMapNonNull<GrowingNodeIndex,Int> { 0 }
         val doneEmpties = mutableSetOf<ParserState>()
 
         val currentNextInputPosition = this.graph.nextHeadNextInputPosition
@@ -204,6 +206,7 @@ internal class RuntimeParser(
                 println(graph)
             }
             val toProcess = this.graph.nextToProcess()
+            val progStep = progressSteps[toProcess.growingNode] //FIXME: maybe slow - is there a better way?
             if (toProcess.growingNode.isEmptyMatch && doneEmpties.contains(toProcess.growingNode.state)) {
                 //don't do it again
                 doneEmpties.add(toProcess.growingNode.state)
@@ -211,8 +214,10 @@ internal class RuntimeParser(
                 this.growNode(toProcess, possibleEndOfText, growArgs)
                 steps++
             }
-            if (steps > 1000) { //FIXME: make this value part of configuration
-                this.interrupt(Message.PARSER_WONT_STOP)
+            if (progStep > 1000) { //FIXME: make part of config
+                this.interrupt(Message.PARSER_WONT_STOP) //TODO: include why - which node/rule
+            } else {
+                progressSteps[toProcess.growingNode] = progStep+1
             }
         }
         return steps
@@ -716,7 +721,7 @@ internal class RuntimeParser(
                         }
                     }.toSet()
                     val skipData = this.tryParseSkipUntilNone(skipLh, ni, growArgs)//, lh) //TODO: does the result get reused?
-                    val nextInput = skipData?.nextInputPosition ?: ni
+                    //val nextInput = skipData?.nextInputPosition ?: ni
                     if (Debug.OUTPUT_RUNTIME) {
                         Debug.debug(Debug.IndentDelta.NONE) { "Taking: $toProcess" }
                         Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
@@ -727,7 +732,7 @@ internal class RuntimeParser(
                             transition.to,
                             toProcess.growingNode.runtimeState.runtimeLookaheadSet,
                             startPosition,
-                            nextInput,
+                            ni,
                             match,
                             skipData
                         )

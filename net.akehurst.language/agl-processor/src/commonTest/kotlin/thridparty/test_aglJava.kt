@@ -1,4 +1,4 @@
-package thridparty.projectIT
+package thridparty
 
 import net.akehurst.language.agl.processor.Agl
 import kotlin.test.Test
@@ -493,7 +493,7 @@ grammar Packages extends Interfaces {
         """.trimIndent()
         val result =  processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+        assertEquals(emptyList(), result.issues)
     }
 
     @Test
@@ -503,7 +503,7 @@ grammar Packages extends Interfaces {
         val sentence = """
         {}
         """.trimIndent()
-        val result = processor.process(sentence,Agl.options { parse { goalRuleName(goal) } })
+        val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
         assertNotNull(result.asm)
         assertEquals(emptyList(), result.issues)
     }

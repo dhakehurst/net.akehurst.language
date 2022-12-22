@@ -166,6 +166,48 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test
+    fun choice_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = A | B | C ;
+                A = a x;
+                B = b x;
+                C = c x;
+                leaf a = 'a';
+                leaf b = 'b';
+                leaf c = 'c';
+                leaf x = 'x';
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.isEmpty())
+
+        val actual = TypeModelFromGrammar(result.asm!!.last())
+        val expected = typeModel {
+            elementType("S") {
+                subTypes("A","B","C")
+            }
+            elementType("A") {
+                propertyStringType("a", false, 0)
+                propertyStringType("x", false, 1)
+            }
+            elementType("B") {
+                propertyStringType("b", false, 0)
+                propertyStringType("x", false, 1)
+            }
+            elementType("C") {
+                propertyStringType("c", false, 0)
+                propertyStringType("x", false, 1)
+            }
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test
     fun choice_of_choice_1() {
         val grammarStr = """
             namespace test
@@ -185,6 +227,52 @@ class test_deriveTypeModelFromGrammar {
             stringTypeFor("S")
             stringTypeFor("L")
             stringTypeFor("M")
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun choice_of_choice_2() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = A | B | C ;
+                A = a x;
+                B = C | D;
+                C = c x;
+                D = d;
+                leaf a = 'a';
+                leaf b = 'b';
+                leaf c = 'c';
+                leaf d = 'd';
+                leaf x = 'x';
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.isEmpty())
+
+        val actual = TypeModelFromGrammar(result.asm!!.last())
+        val expected = typeModel {
+            elementType("S") {
+                subTypes("A","B","C")
+            }
+            elementType("A") {
+                propertyStringType("a", false, 0)
+                propertyStringType("x", false, 1)
+            }
+            elementType("B") {
+                subTypes("C","D")
+            }
+            elementType("C") {
+                propertyStringType("c", false, 0)
+                propertyStringType("x", false, 1)
+            }
+            elementType("D") {
+                propertyStringType("d", false, 0)
+            }
         }
 
         TypeModelTest.assertEquals(expected, actual)

@@ -54,8 +54,42 @@ import net.akehurst.language.api.sppt.SPPTNode
                     }
                 }
                 when {
-                    child.isEmbedded -> {
-                        listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
+                    child.isEmbedded -> when {
+                        child.hasSkipData -> {
+                            val skipData = this._treeData.skipChildrenAfter(child)
+                            val skipChildren = skipData?.let {
+                                val sr = skipData.completeChildren[skipData.root]!!.values.first().get(0)
+                                val c = skipData.completeChildren[sr]!!.values.first().map {
+                                    skipData.completeChildren[it]!!.values.first().get(0)
+                                }
+                                c
+                            } ?: emptyList()
+                            val skipNodes = skipChildren.map { skch ->
+                                when {
+                                    skch.isLeaf -> {
+                                        val eolPositions = emptyList<Int>() //TODO calc ?
+                                        SPPTLeafFromInput(this.input, skch.firstRule, skch.startPosition, skch.nextInputPosition, -1)
+                                    }
+
+                                    else -> SPPTBranchFromTreeData(
+                                        skch.treeData,
+                                        this.input,
+                                        skch.firstRule,
+                                        skch.optionList[0],
+                                        skch.startPosition,
+                                        skch.nextInputPosition,
+                                        -1
+                                    )
+                                }
+                            }
+                            val eolPositions = emptyList<Int>() //TODO calc ?
+                            listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, child.startPosition, child.nextInputPosition, -1)) + skipNodes
+                        }
+
+                        else -> {
+                            val eolPositions = emptyList<Int>() //TODO calc ?
+                            listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
+                        }
                     }
 
                     rp.isTerminal -> when {

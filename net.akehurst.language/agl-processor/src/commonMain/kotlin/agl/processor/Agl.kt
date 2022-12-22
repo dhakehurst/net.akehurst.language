@@ -112,8 +112,8 @@ object Agl {
                     Agl.configuration {
                         targetGrammarName(grammar.name)
                         defaultGoalRuleName(grammar.rule.first { it.isSkip.not() }.name)
-                        syntaxAnalyserResolver{ g -> SyntaxAnalyserSimple(TypeModelFromGrammar(g))}
-                        semanticAnalyserResolver{ _ -> SemanticAnalyserSimple() }
+                        syntaxAnalyserResolver { g -> SyntaxAnalyserSimple(TypeModelFromGrammar(g)) }
+                        semanticAnalyserResolver { _ -> SemanticAnalyserSimple() }
                         formatter(null) //TODO
                     }
                 )
@@ -153,7 +153,11 @@ object Agl {
             val result = aglProc.process(grammarDefinitionStr, aglOpts)
             val grammars = result.asm
             if (null != grammars) {
-                val tgtGrammar = config.targetGrammarName?.let { tg-> grammars.find { it.name == tg } } ?: grammars.last()
+                val tgtGrammar = when {
+                    null == config.targetGrammarName -> grammars.last()
+                    else -> grammars.find { it.name == config.targetGrammarName }
+                        ?: error("Grammar with name '${config.targetGrammarName}' not found. Options ${grammars.joinToString() { it.name }}")
+                }
                 val goal = config.defaultGoalRuleName ?: tgtGrammar.rule.first { it.isSkip.not() }.name
                 //TODO: what to do with issues if there are any?
                 return when {
@@ -163,6 +167,7 @@ object Agl {
                         //val goalName = goal.substringAfter(".")
                         processorFromGrammar(grammar, config)
                     }
+
                     else -> {
                         processorFromGrammar(tgtGrammar, config)
                     }

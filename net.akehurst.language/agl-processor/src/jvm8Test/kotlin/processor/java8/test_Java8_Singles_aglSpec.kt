@@ -79,7 +79,9 @@ class test_Java8_Singles_aglSpec {
                     active(false) // switch off for performance
                 }
             },
-            configuration = Agl.configuration { defaultGoalRuleName(goal) }
+            configuration = Agl.configuration {
+                defaultGoalRuleName(goal)
+            }
         )
 
         val sentence = "int"

@@ -1,4 +1,4 @@
-package thridparty.projectIT
+package thridparty
 
 import net.akehurst.language.agl.processor.Agl
 import kotlin.test.Test

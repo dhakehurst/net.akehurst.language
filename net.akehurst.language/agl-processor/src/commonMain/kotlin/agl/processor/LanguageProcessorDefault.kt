@@ -23,6 +23,7 @@ import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
@@ -171,12 +172,18 @@ internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
         //    .filter { it !== RuntimeRuleSet.END_OF_TEXT }
         //    .map { this._converterToRuntimeRules.originalRuleItemFor(it.runtimeRuleSetNumber, it.number) }
         //val expected = grammarExpected.flatMap { this._completionProvider.provideFor(it, desiredDepth) }
-        val items = parserExpected.map {
-            val rhs = it.rhs
-            when(rhs){
-                is RuntimeRuleRhsLiteral -> CompletionItem(CompletionItemKind.LITERAL, it.tag, rhs.value)
-                is RuntimeRuleRhsPattern -> CompletionItem(CompletionItemKind.PATTERN, it.tag, rhs.pattern)
-                else -> CompletionItem(CompletionItemKind.LITERAL, it.tag, it.tag)
+        val items = parserExpected.mapNotNull {
+            when {
+                it==RuntimeRuleSet.END_OF_TEXT -> null
+                it==RuntimeRuleSet.EMPTY -> null
+                else -> {
+                    val rhs = it.rhs
+                    when (rhs) {
+                        is RuntimeRuleRhsLiteral -> CompletionItem(CompletionItemKind.LITERAL, it.tag, rhs.value)
+                        is RuntimeRuleRhsPattern -> CompletionItem(CompletionItemKind.PATTERN, it.tag, rhs.pattern)
+                        else -> CompletionItem(CompletionItemKind.LITERAL, it.tag, it.tag)
+                    }
+                }
             }
         }
         return ExpectedAtResultDefault(items, emptyList())

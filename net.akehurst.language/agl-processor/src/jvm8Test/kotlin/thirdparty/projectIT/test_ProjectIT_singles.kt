@@ -16,11 +16,13 @@
 package net.akehurst.language.agl.processor.thirdparty.projectIT
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.sppt.SharedPackedParseTree
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -36,15 +38,26 @@ class test_ProjectIT_singles {
 
     }
 
+    private fun checkSPPT(expected:String, actual:SharedPackedParseTree) {
+        val sppt = processor.spptParser
+        val exp = sppt.parse(expected)
+        assertEquals(exp.toStringAllWithIndent("  "), actual.toStringAllWithIndent("  "))
+        assertEquals(exp, actual)
+    }
+
     @Test
     fun expression_constant_string() {
         val goal = "expression"
         val sentence = """
-            "hell"
+            "hello"
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
+        checkSPPT(
+            "expression { constant { string : '\"hello\"' } }",
+            result.sppt!!
+        )
     }
 
     @Test
@@ -56,6 +69,10 @@ class test_ProjectIT_singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
+        checkSPPT(
+            "expression { constant { number : '12345' } }",
+            result.sppt!!
+        )
     }
 
     @Test
@@ -67,6 +84,10 @@ class test_ProjectIT_singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
+        checkSPPT(
+            "expression { navigationExpression { var : 'variable' } }",
+            result.sppt!!
+        )
     }
 
     @Test
@@ -78,6 +99,16 @@ class test_ProjectIT_singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
+        checkSPPT(
+            """
+                expression { instanceExpression {
+                  var : 'var1' WHITESPACE : ' '
+                  ':' WHITESPACE : ' '
+                  var : 'var2'
+                } }
+            """.trimIndent(),
+            result.sppt!!
+        )
     }
 
     @Test
@@ -89,6 +120,23 @@ class test_ProjectIT_singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
+        checkSPPT(
+            """
+                expression { functionExpression {
+                  var : 'func1'
+                  '('
+                  argList {
+                    expression { navigationExpression { var : 'a' } }
+                    ','
+                    expression { navigationExpression { var : 'd' } }
+                    ','
+                    expression { navigationExpression { var : 'v' } }
+                  }
+                  ')'
+                } }
+            """.trimIndent(),
+            result.sppt!!
+        )
     }
 
     @Test
@@ -100,6 +148,20 @@ class test_ProjectIT_singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
+        checkSPPT(
+            """
+                expression { navigationExpression {
+                  var : 'a'
+                  '.'
+                  var : 'b'
+                  '.'
+                  var : 'c'
+                  '.'
+                  var : 'd'
+                } }
+            """.trimIndent(),
+            result.sppt!!
+        )
     }
 
     @Test
@@ -111,6 +173,32 @@ class test_ProjectIT_singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
+        checkSPPT(
+            """
+                expression { listExpression {
+                  'list' WHITESPACE : ' '
+                  navigationExpression {
+                    var : 'a'
+                    '.'
+                    var : 'b'
+                    '.'
+                    var : 'c' WHITESPACE : ' '
+                  }
+                  listInfo {
+                    §listInfo§multi1 {
+                      listDirection : 'horizontal' WHITESPACE : ' '
+                    }
+                    §listInfo§multi2 { §listInfo§group1 {
+                      listInfoType : 'separator' WHITESPACE : ' '
+                      '['
+                      literal : ','
+                      ']'
+                    } }
+                  }
+                } }
+            """.trimIndent(),
+            result.sppt!!
+        )
     }
 
     @Test
@@ -122,6 +210,22 @@ class test_ProjectIT_singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
+        checkSPPT(
+            """
+                expression { tableExpression {
+                  'table' WHITESPACE : ' '
+                  navigationExpression {
+                    var : 'a'
+                    '.'
+                    var : 'b'
+                    '.'
+                    var : 'c' WHITESPACE : ' '
+                  }
+                  tableInfo { §tableInfo§group1 { 'rows' } }
+                } }
+            """.trimIndent(),
+            result.sppt!!
+        )
     }
 
     @Test
@@ -133,6 +237,10 @@ class test_ProjectIT_singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
+        checkSPPT(
+            "templateText { Template::text { textItem { literal : 'Insurance Product' } } }",
+            result.sppt!!
+        )
     }
 
     @Test
@@ -180,6 +288,19 @@ class test_ProjectIT_singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
+        checkSPPT(
+            """
+                projection {
+                  '['
+                  WHITESPACE : '⏎  '
+                  projectionContent { templateText {
+                    Template::text { textItem { literal : 'Insurance Product⏎' } }
+                  } }
+                  ']'
+                }
+            """.trimIndent(),
+            result.sppt!!
+        )
     }
 
     @Test
@@ -193,6 +314,26 @@ class test_ProjectIT_singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
+        checkSPPT(
+            """
+            projection {
+              '[' WHITESPACE : '⏎  '
+              projectionContent { templateText { Template::text {
+                textItem { literal : 'Insurance Product ' }
+                textItem { embeddedExpression {
+                  '${'$'}{'
+                      §Expressions§expression§embedded1 { Expressions::expression { navigationExpression {
+                        var : 'name'
+                      } } }
+                  '}'
+                } }
+                textItem { literal : ' USES⏎' }
+              } } }
+              ']'
+            }
+            """.trimIndent(),
+            result.sppt!!
+        )
     }
 
     @Test
@@ -200,12 +341,37 @@ class test_ProjectIT_singles {
         val goal = "projection"
         val sentence = """
         [
-          Insurance Product ${"$"}{name} USES
+          Insurance Product ${"$"}{list name} USES
         ]
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
+        checkSPPT(
+            """
+            projection {
+              '[' WHITESPACE : '⏎  '
+              projectionContent { templateText { Template::text {
+                textItem { literal : 'Insurance Product ' }
+                textItem { embeddedExpression {
+                  '${'$'}{'
+                      §Expressions§expression§embedded1 { Expressions::expression { listExpression {
+                        'list' WHITESPACE : ' '
+                        navigationExpression { var : 'name' }
+                        listInfo {
+                          §listInfo§multi1 { §empty }
+                          §listInfo§multi2 { §empty }
+                        }
+                      } } }
+                  '}'
+                } }
+                textItem { literal : ' USES⏎' }
+              } } }
+              ']'
+            }
+            """.trimIndent(),
+            result.sppt!!
+        )
     }
 
     @Test
@@ -219,10 +385,40 @@ class test_ProjectIT_singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
+        checkSPPT(
+            """
+            projection {
+              '[' WHITESPACE : '⏎  '
+              projectionContent { templateText { Template::text {
+                textItem { embeddedExpression {
+                  '${'$'}{'
+                      §Expressions§expression§embedded1 { Expressions::expression { listExpression {
+                        'list' WHITESPACE : ' '
+                        navigationExpression {
+                          var : 'a'
+                          '.'
+                          var : 'b'
+                          '.'
+                          var : 'c' WHITESPACE : ' '
+                        }
+                        listInfo {
+                          §listInfo§multi1 { §empty }
+                          §listInfo§multi2 { §empty }
+                        }
+                      } } }
+                  '}'
+                } }
+                textItem { literal : '⏎' }
+              } } }
+              ']'
+            }
+            """.trimIndent(),
+            result.sppt!!
+        )
     }
 
     @Test
-    fun projection_() {
+    fun projection_2() {
         val goal = "projection"
         val sentence = """
         [
@@ -232,6 +428,56 @@ class test_ProjectIT_singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
+        checkSPPT(
+            """
+            projection {
+              '['
+              WHITESPACE : '⏎  '
+              projectionContent { templateText { Template::text {
+                textItem { literal : 'Insurance Product ' }
+                textItem { embeddedExpression {
+                  '${'$'}{'
+                    §Expressions§expression§embedded1 { Expressions::expression { navigationExpression { var : 'name' } } }
+                    '}'
+                  } }
+                textItem { literal : ' ( public name: ' }
+                textItem { embeddedExpression {
+                  '${'$'}{'
+                    §Expressions§expression§embedded1 { Expressions::expression { navigationExpression { var : 'productName' } } }
+                    '}'
+                  } }
+                textItem { literal : ' ) USES ' }
+                textItem { embeddedExpression {
+                  '${'$'}{'
+                    §Expressions§expression§embedded1 { Expressions::expression { listExpression {
+                        'list'
+                        WHITESPACE : ' '
+                        navigationExpression {
+                            var : 'basedOn'
+                            WHITESPACE : ' '
+                        }
+                        listInfo {
+                            §listInfo§multi1 {
+                            listDirection : 'horizontal'
+                            WHITESPACE : ' '
+                        }
+                            §listInfo§multi2 { §listInfo§group1 {
+                            listInfoType : 'separator'
+                            '['
+                            literal : ', '
+                            ']'
+                        } }
+                        }
+                    } } }
+                    '}'
+                  } }
+                textItem { literal : '⏎' }
+              } } }
+              ']'
+            }
+            """.trimIndent(),
+            result.sppt!!
+        )
     }
 
 }

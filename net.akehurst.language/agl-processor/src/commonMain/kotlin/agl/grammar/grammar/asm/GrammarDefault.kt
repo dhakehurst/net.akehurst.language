@@ -70,7 +70,8 @@ abstract class GrammarAbstract(
     }
 
     override val allEmbeddedGrammars: Set<Grammar>by lazy {
-        this.allEmbeddedRules.map { it.embeddedGrammar }.toSet()
+        val egs = this.allEmbeddedRules.map { it.embeddedGrammar }.toSet()
+        egs + egs.flatMap { it.allEmbeddedGrammars }.toSet()//FIXME: recursion
     }
 
     override fun findNonTerminalRule(ruleName: String): GrammarRule? {
