@@ -16,8 +16,11 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.asm.ScopeSimple
+import net.akehurst.language.api.asm.Scope
 
-interface SentenceContext {
-    val rootScope: ScopeSimple<*>
+/**
+ * E - type of elements in the scope
+ */
+interface SentenceContext<E> {
+    val rootScope: Scope<E>
 }

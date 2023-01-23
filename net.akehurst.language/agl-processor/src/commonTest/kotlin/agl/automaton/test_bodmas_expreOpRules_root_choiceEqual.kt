@@ -149,34 +149,34 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
             val s15 = state(RP(E, o1, ER))   // E = A .
 
             // because GRAFT is done before HEIGHT, RP(A,0,2) never becomes context for this trans, even though prebuild allows for it
-            transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rM, o0, p2)); src(rA, o0, p1); tgt(a); lhg(v) }
+            trans(WIDTH) { ctx(RP(G, o0, SOR), RP(rM, o0, p2)); src(rA, o0, p1); tgt(a); lhg(v) }
             // because GRAFT is done before HEIGHT, RP(M,0,2) never becomes context for this trans, even though prebuild allows for it
-            transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2)); src(rM, o0, p1); tgt(m); lhg(v) }
-            transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(v); lhg(setOf(EOT, m, a)) }
-            transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rM, o0, p2)); src(rA, o0, p2); tgt(v); lhg(setOf(EOT, a, m)) }
-            transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2)); src(rM, o0, p2); tgt(v); lhg(setOf(EOT, a, m)) }
-            transition(GOAL) { ctx(RP(G, o0, SOR)); src(S); tgt(G); lhg(EOT); }
-            transition(GRAFT) { ctx(rA, o0, p2); src(E, o0, ER); tgt(rA); lhg(setOf(EOT)); gpg(rA, o0, p2) } // lhg == [EOT,a,m] for prebuild?
-            transition(GRAFT) { ctx(rA, o0, p2); src(E, o1, ER); tgt(rA); lhg(setOf(EOT)); gpg(rA, o0, p2) } // lhg == [EOT,a,m] for prebuild?
+            trans(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2)); src(rM, o0, p1); tgt(m); lhg(v) }
+            trans(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(v); lhg(setOf(EOT, m, a)) }
+            trans(WIDTH) { ctx(RP(G, o0, SOR), RP(rM, o0, p2)); src(rA, o0, p2); tgt(v); lhg(setOf(EOT, a, m)) }
+            trans(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2)); src(rM, o0, p2); tgt(v); lhg(setOf(EOT, a, m)) }
+            trans(GOAL) { ctx(RP(G, o0, SOR)); src(S); tgt(G); lhg(EOT); }
+            trans(GRAFT) { ctx(rA, o0, p2); src(E, o0, ER); tgt(rA); lhg(setOf(EOT)); gpg(rA, o0, p2) } // lhg == [EOT,a,m] for prebuild?
+            trans(GRAFT) { ctx(rA, o0, p2); src(E, o1, ER); tgt(rA); lhg(setOf(EOT)); gpg(rA, o0, p2) } // lhg == [EOT,a,m] for prebuild?
             //transition(GRAFT) { ctx(rA, o0, p2); src(E,o2,EOR); tgt(rA); lhg(setOf(EOT)); rtg(rA, o0, p2) } //never gets created
             transition(setOf(s0, s9, s13), s3, s5, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(EOT)) }
             transition(setOf(s0, s9), s15, s5, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(EOT)) }
             transition(setOf(s0, s13), s11, s5, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(EOT)) }
             transition(s5, s8, s9, GRAFT, setOf(RP(rA, 0, 1))) { lhg(setOf(v)) }
-            transition(GRAFT) { ctx(rA, o0, p1); src(a); tgt(rA, o0, p2); lhg(v); gpg(rA, o0, p1) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(R); tgt(E); lhg(m, m); lhg(EOT, EOT); lhg(a, a) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2)); src(rM); tgt(E, o1, ER); lhg(m, m); lhg(EOT, EOT); lhg(a, a) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rM, o0, p2)); src(rA); tgt(E, o2, ER); lhg(m, m); lhg(EOT, EOT); lhg(a, a) }
-            transition(GRAFT) { ctx(rM, o0, p2); src(E, o0, ER); tgt(rM); lhg(EOT); gpg(rM, o0, p2) }
-            transition(GRAFT) { ctx(rM, o0, p2); src(E, o2, ER); tgt(rM); lhg(EOT); gpg(rM, o0, p2) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2));src(E); tgt(rM, o0, p1); lhg(m, m); lhg(m, a); lhg(m, EOT) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2)); src(E, o1, ER); tgt(rM, o0, p1); lhg(m, m); lhg(m, a); lhg(m, EOT) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rM, o0, p2)); src(E, o2, ER); tgt(rM, o0, p1); lhg(m, m); lhg(m, a); lhg(m, EOT) }
-            transition(GRAFT) { ctx(rM, o0, p1); src(m); tgt(rM, o0, p2); lhg(v); gpg(rM, o0, p1) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(v); tgt(R); lhg(m, m); lhg(EOT, EOT); lhg(a, a) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(E, o0, ER); tgt(S); lhg(EOT, EOT) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(E, o1, ER); tgt(S); lhg(EOT, EOT) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(E, o2, ER); tgt(S); lhg(EOT, EOT) }
+            trans(GRAFT) { ctx(rA, o0, p1); src(a); tgt(rA, o0, p2); lhg(v); gpg(rA, o0, p1) }
+            trans(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(R); tgt(E); lhg(m, m); lhg(EOT, EOT); lhg(a, a) }
+            trans(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2)); src(rM); tgt(E, o1, ER); lhg(m, m); lhg(EOT, EOT); lhg(a, a) }
+            trans(HEIGHT) { ctx(RP(G, o0, SOR), RP(rM, o0, p2)); src(rA); tgt(E, o2, ER); lhg(m, m); lhg(EOT, EOT); lhg(a, a) }
+            trans(GRAFT) { ctx(rM, o0, p2); src(E, o0, ER); tgt(rM); lhg(EOT); gpg(rM, o0, p2) }
+            trans(GRAFT) { ctx(rM, o0, p2); src(E, o2, ER); tgt(rM); lhg(EOT); gpg(rM, o0, p2) }
+            trans(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2));src(E); tgt(rM, o0, p1); lhg(m, m); lhg(m, a); lhg(m, EOT) }
+            trans(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2)); src(E, o1, ER); tgt(rM, o0, p1); lhg(m, m); lhg(m, a); lhg(m, EOT) }
+            trans(HEIGHT) { ctx(RP(G, o0, SOR), RP(rM, o0, p2)); src(E, o2, ER); tgt(rM, o0, p1); lhg(m, m); lhg(m, a); lhg(m, EOT) }
+            trans(GRAFT) { ctx(rM, o0, p1); src(m); tgt(rM, o0, p2); lhg(v); gpg(rM, o0, p1) }
+            trans(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(v); tgt(R); lhg(m, m); lhg(EOT, EOT); lhg(a, a) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(E, o0, ER); tgt(S); lhg(EOT, EOT) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(E, o1, ER); tgt(S); lhg(EOT, EOT) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(E, o2, ER); tgt(S); lhg(EOT, EOT) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -214,33 +214,33 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
             val s14 = state(RP(rM, o0, p1))   // M = E . m E
             val s15 = state(RP(rM, o0, p2))   // M = E m . E
 
-            transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rA, o0, p1); tgt(a); lhg(v) }
-            transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rM, o0, p1); tgt(m); lhg(v) }
-            transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(v); lhg(setOf(EOT, m, a)) }
-            transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rA, o0, p2); tgt(v); lhg(setOf(EOT, a, m)) }
-            transition(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rM, o0, p2); tgt(v); lhg(setOf(EOT, a, m)) }
-            transition(GOAL) { ctx(RP(G, o0, SOR)); src(S); tgt(G); lhg(EOT) }
-            transition(GRAFT) { ctx(rA, o0, p2); src(E, o0, ER); tgt(rA); lhg(setOf(EOT, a, m)); gpg(rA, o0, p2) }
-            transition(GRAFT) { ctx(rA, o0, p2); src(E, o1, ER); tgt(rA); lhg(setOf(EOT, a, m)); gpg(rA, o0, p2) }
-            transition(GRAFT) { ctx(rA, o0, p2); src(E, o2, ER); tgt(rA); lhg(setOf(EOT, a, m)); gpg(rA, o0, p2) }  //never gets created in on-demand-build !
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o0, ER); tgt(rA, o0, p1); lhg(setOf(a), setOf(EOT, a, m)) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o1, ER); tgt(rA, o0, p1); lhg(setOf(a), setOf(EOT, a, m)) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o2, ER); tgt(rA, o0, p1); lhg(setOf(a), setOf(EOT, a, m)) }
-            transition(GRAFT) { ctx(rA, o0, p1); src(a); tgt(rA, o0, p2); lhg(v); gpg(rA, o0, p1) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(R); tgt(E, o0, ER); lhg(EOT, EOT); lhg(m, m); lhg(a, a) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rM); tgt(E, o1, ER); lhg(EOT, EOT); lhg(m, m); lhg(a, a) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rA); tgt(E, o2, ER); lhg(EOT, EOT); lhg(m, m); lhg(a, a) }
-            transition(GRAFT) { ctx(rM, o0, p2); src(E, o0, ER); tgt(rM); lhg(setOf(EOT, a, m)); gpg(rM, o0, p2) }
-            transition(GRAFT) { ctx(rM, o0, p2); src(E, o1, ER); tgt(rM); lhg(setOf(EOT, a, m)); gpg(rM, o0, p2) }
-            transition(GRAFT) { ctx(rM, o0, p2); src(E, o2, ER); tgt(rM); lhg(setOf(EOT, a, m)); gpg(rM, o0, p2) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o0, ER); tgt(rM, o0, p1); lhg(setOf(m), setOf(EOT, a, m)) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o1, ER); tgt(rM, o0, p1); lhg(setOf(m), setOf(EOT, a, m)) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o2, ER); tgt(rM, o0, p1); lhg(setOf(m), setOf(EOT, a, m)) }
-            transition(GRAFT) { ctx(rM, o0, p1); src(m); tgt(rM, o0, p2); lhg(v); gpg(rM, 0, p1) }
-            transition(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(v); tgt(R); lhg(EOT, EOT); lhg(m, m); lhg(a, a) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(E, o0, ER); tgt(S); lhg(EOT, EOT) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(E, o1, ER); tgt(S); lhg(EOT, EOT) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(E, o2, ER); tgt(S); lhg(EOT, EOT) }
+            trans(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rA, o0, p1); tgt(a); lhg(v) }
+            trans(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rM, o0, p1); tgt(m); lhg(v) }
+            trans(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(v); lhg(setOf(EOT, m, a)) }
+            trans(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rA, o0, p2); tgt(v); lhg(setOf(EOT, a, m)) }
+            trans(WIDTH) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rM, o0, p2); tgt(v); lhg(setOf(EOT, a, m)) }
+            trans(GOAL) { ctx(RP(G, o0, SOR)); src(S); tgt(G); lhg(EOT) }
+            trans(GRAFT) { ctx(rA, o0, p2); src(E, o0, ER); tgt(rA); lhg(setOf(EOT, a, m)); gpg(rA, o0, p2) }
+            trans(GRAFT) { ctx(rA, o0, p2); src(E, o1, ER); tgt(rA); lhg(setOf(EOT, a, m)); gpg(rA, o0, p2) }
+            trans(GRAFT) { ctx(rA, o0, p2); src(E, o2, ER); tgt(rA); lhg(setOf(EOT, a, m)); gpg(rA, o0, p2) }  //never gets created in on-demand-build !
+            trans(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o0, ER); tgt(rA, o0, p1); lhg(setOf(a), setOf(EOT, a, m)) }
+            trans(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o1, ER); tgt(rA, o0, p1); lhg(setOf(a), setOf(EOT, a, m)) }
+            trans(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o2, ER); tgt(rA, o0, p1); lhg(setOf(a), setOf(EOT, a, m)) }
+            trans(GRAFT) { ctx(rA, o0, p1); src(a); tgt(rA, o0, p2); lhg(v); gpg(rA, o0, p1) }
+            trans(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(R); tgt(E, o0, ER); lhg(EOT, EOT); lhg(m, m); lhg(a, a) }
+            trans(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rM); tgt(E, o1, ER); lhg(EOT, EOT); lhg(m, m); lhg(a, a) }
+            trans(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(rA); tgt(E, o2, ER); lhg(EOT, EOT); lhg(m, m); lhg(a, a) }
+            trans(GRAFT) { ctx(rM, o0, p2); src(E, o0, ER); tgt(rM); lhg(setOf(EOT, a, m)); gpg(rM, o0, p2) }
+            trans(GRAFT) { ctx(rM, o0, p2); src(E, o1, ER); tgt(rM); lhg(setOf(EOT, a, m)); gpg(rM, o0, p2) }
+            trans(GRAFT) { ctx(rM, o0, p2); src(E, o2, ER); tgt(rM); lhg(setOf(EOT, a, m)); gpg(rM, o0, p2) }
+            trans(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o0, ER); tgt(rM, o0, p1); lhg(setOf(m), setOf(EOT, a, m)) }
+            trans(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o1, ER); tgt(rM, o0, p1); lhg(setOf(m), setOf(EOT, a, m)) }
+            trans(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(E, o2, ER); tgt(rM, o0, p1); lhg(setOf(m), setOf(EOT, a, m)) }
+            trans(GRAFT) { ctx(rM, o0, p1); src(m); tgt(rM, o0, p2); lhg(v); gpg(rM, 0, p1) }
+            trans(HEIGHT) { ctx(RP(G, o0, SOR), RP(rA, o0, p2), RP(rM, o0, p2)); src(v); tgt(R); lhg(EOT, EOT); lhg(m, m); lhg(a, a) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(E, o0, ER); tgt(S); lhg(EOT, EOT) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(E, o1, ER); tgt(S); lhg(EOT, EOT) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(E, o2, ER); tgt(S); lhg(EOT, EOT) }
         }
 
         AutomatonTest.assertEquals(expected, actual)

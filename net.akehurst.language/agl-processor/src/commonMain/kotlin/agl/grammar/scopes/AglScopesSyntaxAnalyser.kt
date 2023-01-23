@@ -16,6 +16,7 @@
 package net.akehurst.language.agl.grammar.scopes
 
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
@@ -25,7 +26,7 @@ import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, SentenceContext> {
+class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, SentenceContext<GrammarItem>> {
 
     data class PropertyValue(
         val asmObject: Any,
@@ -41,11 +42,11 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, SentenceContext> {
         this.issues.clear()
     }
 
-    override fun configure(configurationContext: SentenceContext, configuration: String): List<LanguageIssue> {
+    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: String): List<LanguageIssue> {
         return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: SentenceContext?): Pair<ScopeModel, List<LanguageIssue>> {
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: SentenceContext<GrammarItem>?): Pair<ScopeModel, List<LanguageIssue>> {
         val asm = this.declarations(sppt.root.asBranch)
 
         if (null != context) {

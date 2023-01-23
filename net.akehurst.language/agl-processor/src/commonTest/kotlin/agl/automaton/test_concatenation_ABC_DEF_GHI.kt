@@ -95,13 +95,13 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
             state(RP(G, o0, EOR))     // G=S.           ctx()
 
 
-            transition(WIDTH) { src(G, o0, SR); tgt(a); lhg(b); ctx(G, o0, SR) }
-            transition(HEIGHT) { src(a); tgt(AB,o0,p1); lhg(b,d); ctx(G, o0, SR) }
-            transition(WIDTH) { src(AB,o0,p1); tgt(b); lhg(RT); ctx(G, o0, SR) }
-            transition(GRAFT) { src(b); tgt(AB,o0,ER); lhg(RT); ctx(AB,o0,p1) }
-            transition(HEIGHT) { src(AB,o0,ER); tgt(ABC,o0,p1); lhg(cT); ctx(G, o0, SR) }
-            transition(WIDTH) { src(ABC,o0,p1); tgt(cT); lhg(RT); ctx(G, o0, SR) }
-            transition(HEIGHT) { src(cT); tgt(C); lhg(d); ctx(ABC,o0,p1) }
+            trans(WIDTH) { src(G, o0, SR); tgt(a); lhg(b); ctx(G, o0, SR) }
+            trans(HEIGHT) { src(a); tgt(AB,o0,p1); lhg(b,d); ctx(G, o0, SR) }
+            trans(WIDTH) { src(AB,o0,p1); tgt(b); lhg(RT); ctx(G, o0, SR) }
+            trans(GRAFT) { src(b); tgt(AB,o0,ER); lhg(RT); ctx(AB,o0,p1) }
+            trans(HEIGHT) { src(AB,o0,ER); tgt(ABC,o0,p1); lhg(cT); ctx(G, o0, SR) }
+            trans(WIDTH) { src(ABC,o0,p1); tgt(cT); lhg(RT); ctx(G, o0, SR) }
+            trans(HEIGHT) { src(cT); tgt(C); lhg(d); ctx(ABC,o0,p1) }
         }
         AutomatonTest.assertEquals(expected, actual)
     }

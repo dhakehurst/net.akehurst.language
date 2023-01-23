@@ -59,10 +59,10 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
             state(RP(a, o0, EOR))     /* {0,5}  a .        */
             state(RP(S1, o0, p1))     /* {0}    S1 = S . a */
 
-            transition(WIDTH) { src(G, o0, SOR); tgt(a); lhg(setOf(EOT, a)); ctx(G, o0, SOR) }
-            transition(GOAL) { src(S); tgt(G); lhg(setOf(EOT)); ctx(G, o0, SOR) }
-            transition(HEIGHT) { src(a); tgt(S); lhg(setOf(EOT, a), setOf(EOT, a)); ctx(G, o0, SOR) }
-            transition(HEIGHT) { src(S); tgt(S1, o0, p1); lhg(setOf(a), setOf(EOT, a)); ctx(G, o0, SOR) }
+            trans(WIDTH) { src(G, o0, SOR); tgt(a); lhg(setOf(EOT, a)); ctx(G, o0, SOR) }
+            trans(GOAL) { src(S); tgt(G); lhg(setOf(EOT)); ctx(G, o0, SOR) }
+            trans(HEIGHT) { src(a); tgt(S); lhg(setOf(EOT, a), setOf(EOT, a)); ctx(G, o0, SOR) }
+            trans(HEIGHT) { src(S); tgt(S1, o0, p1); lhg(setOf(a), setOf(EOT, a)); ctx(G, o0, SOR) }
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -85,15 +85,15 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
             state(RP(S1, o0, p1))     /* {0}    S1 = S . a */
             state(RP(S1, o0, EOR))    /* {0}    S1 = S a . */
 
-            transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(a); lhg(setOf(EOT, a)) }
-            transition(WIDTH) { ctx(G, o0, SOR); src(S1, o0, p1); tgt(a); lhg(setOf(RT)) }
-            transition(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(setOf(EOT)) }
-            transition(GOAL) { ctx(G, o0, SOR); src(S, o1, EOR); tgt(G); lhg(setOf(EOT)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(S); lhg(setOf(EOT, a), setOf(EOT, a)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(S1); tgt(S, o1, ER); lhg(setOf(RT, a), setOf(RT, a)) }
-            transition(GRAFT) { ctx(S1, o0, p1); src(a); tgt(S1); lhg(setOf(RT)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(S); tgt(S1, o0, p1); lhg(setOf(a), setOf(EOT, a)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(S, o1, ER); tgt(S1, o0, p1); lhg(setOf(a), setOf(RT, a)) }
+            trans(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(a); lhg(setOf(EOT, a)) }
+            trans(WIDTH) { ctx(G, o0, SOR); src(S1, o0, p1); tgt(a); lhg(setOf(RT)) }
+            trans(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(setOf(EOT)) }
+            trans(GOAL) { ctx(G, o0, SOR); src(S, o1, EOR); tgt(G); lhg(setOf(EOT)) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(S); lhg(setOf(EOT, a), setOf(EOT, a)) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(S1); tgt(S, o1, ER); lhg(setOf(RT, a), setOf(RT, a)) }
+            trans(GRAFT) { ctx(S1, o0, p1); src(a); tgt(S1); lhg(setOf(RT)) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(S); tgt(S1, o0, p1); lhg(setOf(a), setOf(EOT, a)) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(S, o1, ER); tgt(S1, o0, p1); lhg(setOf(a), setOf(RT, a)) }
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -117,15 +117,15 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
             state(RP(S1, o0, p1))     /* {0}    S1 = S . a */
             state(RP(S1, o0, ER))    /* {0}    S1 = S a . */
 
-            transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(a); lhg(setOf(EOT, a)) }
-            transition(WIDTH) { ctx(G, o0, SOR); src(S1, o0, p1); tgt(a); lhg(setOf(RT)) }
-            transition(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(setOf(EOT)) }
-            transition(GOAL) { ctx(G, o0, SOR); src(S, o1, ER); tgt(G); lhg(setOf(EOT)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(S); lhg(setOf(EOT, a), setOf(EOT, a)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(S1); tgt(S, o1, ER); lhg(setOf(RT, a), setOf(RT, a)) }
-            transition(GRAFT) { ctx(S1, o0, p1); src(a); tgt(S1); lhg(setOf(RT)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(S); tgt(S1, o0, p1); lhg(setOf(a), setOf(EOT, a)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(S, o1, ER); tgt(S1, o0, p1); lhg(setOf(a), setOf(RT, a)) }
+            trans(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(a); lhg(setOf(EOT, a)) }
+            trans(WIDTH) { ctx(G, o0, SOR); src(S1, o0, p1); tgt(a); lhg(setOf(RT)) }
+            trans(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(setOf(EOT)) }
+            trans(GOAL) { ctx(G, o0, SOR); src(S, o1, ER); tgt(G); lhg(setOf(EOT)) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(S); lhg(setOf(EOT, a), setOf(EOT, a)) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(S1); tgt(S, o1, ER); lhg(setOf(RT, a), setOf(RT, a)) }
+            trans(GRAFT) { ctx(S1, o0, p1); src(a); tgt(S1); lhg(setOf(RT)) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(S); tgt(S1, o0, p1); lhg(setOf(a), setOf(EOT, a)) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(S, o1, ER); tgt(S1, o0, p1); lhg(setOf(a), setOf(RT, a)) }
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -144,15 +144,15 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
             state(RP(S1, o0, p1))     /* {0}    S1 = S . a */
             state(RP(S1, o0, ER))    /* {0}    S1 = S a . */
 
-            transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(a); lhg(setOf(EOT, a)) }
-            transition(WIDTH) { ctx(G, o0, SOR); src(S1, o0, p1); tgt(a); lhg(setOf(EOT, a)) }
-            transition(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(setOf(EOT)) }
-            transition(GOAL) { ctx(G, o0, SOR); src(S, o1, ER); tgt(G); lhg(setOf(EOT)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(S); lhg(setOf(EOT, a), setOf(EOT, a)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(S1); tgt(S, o1, ER); lhg(setOf(EOT, a), setOf(EOT, a)) }
-            transition(GRAFT) { ctx(S1, o0, p1); src(a); tgt(S1); lhg(setOf(EOT, a)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(S); tgt(S1, o0, p1); lhg(setOf(a), setOf(EOT, a)) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(S, o1, ER); tgt(S1, o0, p1); lhg(setOf(a), setOf(EOT, a)) }
+            trans(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(a); lhg(setOf(EOT, a)) }
+            trans(WIDTH) { ctx(G, o0, SOR); src(S1, o0, p1); tgt(a); lhg(setOf(EOT, a)) }
+            trans(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(setOf(EOT)) }
+            trans(GOAL) { ctx(G, o0, SOR); src(S, o1, ER); tgt(G); lhg(setOf(EOT)) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(S); lhg(setOf(EOT, a), setOf(EOT, a)) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(S1); tgt(S, o1, ER); lhg(setOf(EOT, a), setOf(EOT, a)) }
+            trans(GRAFT) { ctx(S1, o0, p1); src(a); tgt(S1); lhg(setOf(EOT, a)) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(S); tgt(S1, o0, p1); lhg(setOf(a), setOf(EOT, a)) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(S, o1, ER); tgt(S1, o0, p1); lhg(setOf(a), setOf(EOT, a)) }
         }
 
         AutomatonTest.assertEquals(expected, actual)

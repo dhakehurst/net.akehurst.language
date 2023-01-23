@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2022 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2021 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.regex
+package net.akehurst.language.api.asm
 
-expect fun String.asRegexLiteral():Regex
+/**
+ * E - type of elements in the scope
+ */
+interface Scope<E> {
+    fun isMissing(referableName:String, typeName:String): Boolean
 
-
+}

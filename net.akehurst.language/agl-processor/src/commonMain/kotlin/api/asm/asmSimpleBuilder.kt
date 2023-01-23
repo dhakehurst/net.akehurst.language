@@ -17,9 +17,7 @@
 package net.akehurst.language.api.asm
 
 import net.akehurst.language.agl.grammar.scopes.ScopeModel
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
-import net.akehurst.language.agl.syntaxAnalyser.createReferenceLocalToScope
+import net.akehurst.language.agl.syntaxAnalyser.*
 import net.akehurst.language.agl.syntaxAnalyser.resolveReferencesElement
 import net.akehurst.language.api.typeModel.TupleType
 
@@ -90,10 +88,10 @@ class AsmElementSimpleBuilder(
     fun propertyUnnamedString(value: String?) = this._property(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, value)
     fun propertyString(name: String, value: String?) = this._property(name, value)
     fun propertyNull(name: String) = this._property(name, null)
-    fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElement(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, typeName, init)
-    fun propertyTuple(name:String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple =propertyElement(name, TupleType.INSTANCE_NAME, init)
-    fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElement(name, name, init)
-    fun propertyElement(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
+    fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElementExplicitType(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, typeName, init)
+    fun propertyTuple(name:String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple =propertyElementExplicitType(name, TupleType.INSTANCE_NAME, init)
+    fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElementExplicitType(name, name, init)
+    fun propertyElementExplicitType(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
         val newPath = _element.asmPath + name
         val b = AsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, newPath, typeName, false, _elementScope)
         b.init()

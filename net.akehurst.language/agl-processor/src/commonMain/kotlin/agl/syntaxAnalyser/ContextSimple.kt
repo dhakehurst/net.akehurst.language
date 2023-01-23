@@ -19,18 +19,16 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.grammar.scopes.ScopeModel
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.AsmElementSimple
-import net.akehurst.language.api.asm.ScopeSimple
+import net.akehurst.language.api.asm.Scope
 import net.akehurst.language.api.processor.SentenceContext
 
-class ContextSimple() : SentenceContext {
+class ContextSimple() : SentenceContext<AsmElementPath> {
 
     /**
      * The items in the scope contain a ScopePath to an element in an AsmSimple model
      */
     override var rootScope = ScopeSimple<AsmElementPath>(null, "", ScopeModel.ROOT_SCOPE_TYPE_NAME)
 }
-
-
 
 fun ScopeModel.createReferenceLocalToScope(scope: ScopeSimple<AsmElementPath>, element: AsmElementSimple): String? {
     val prop = this.getReferablePropertyNameFor(scope.forTypeName, element.typeName)
@@ -40,6 +38,62 @@ fun ScopeModel.createReferenceLocalToScope(scope: ScopeSimple<AsmElementPath>, e
         else -> element.getPropertyAsString(prop)
     }
 }
+
+class ScopeSimple<E>(
+    val parent: ScopeSimple<E>?,
+    val forReferenceInParent:String,
+    val forTypeName:String
+) : Scope<E> {
+
+    private val _childScopes = mutableMapOf<String,ScopeSimple<E>>()
+
+    // typeName -> referableName -> item
+    private val _items: MutableMap<String,MutableMap<String,E>> = mutableMapOf()
+
+    val rootScope:ScopeSimple<E> by lazy {
+        var s = this
+        while(null!=s.parent) s = s.parent!!
+        s
+    }
+
+    // accessor needed for serialisation which assumes mutableMap for deserialisation
+    val childScopes:Map<String,ScopeSimple<E>> = _childScopes
+
+    // accessor needed for serialisation which assumes mutableMap for deserialisation
+    val items:Map<String,Map<String,E>> = _items
+
+    val path:List<String> by lazy {
+        if (null==parent) emptyList() else parent.path + forReferenceInParent
+    }
+
+    fun createOrGetChildScope(forReferenceInParent:String, forTypeName:String): ScopeSimple<E> {
+        var child = this._childScopes[forReferenceInParent]
+        if (null==child) {
+            child = ScopeSimple<E>(this, forReferenceInParent, forTypeName)
+            this._childScopes[forReferenceInParent] = child
+        }
+        return child
+    }
+
+    fun addToScope(referableName:String, typeName:String, item:E) {
+        var m = this._items[typeName]
+        if (null==m) {
+            m = mutableMapOf()
+            this._items[typeName] = m
+        }
+        m[referableName]=item
+    }
+
+    fun findOrNull(referableName:String, typeName:String):E? = this._items[typeName]?.get(referableName)
+
+    override fun isMissing(referableName:String, typeName:String):Boolean = null==this.findOrNull(referableName,typeName)
+
+    override fun toString(): String = when {
+        null==parent -> "/$forTypeName"
+        else -> "$parent/$forTypeName"
+    }
+}
+
 
 //fun ScopeModel.createReferenceFromRoot(scope: ScopeSimple<AsmElementPath>, element: AsmElementSimple): AsmElementPath {
 //    return element.asmPath

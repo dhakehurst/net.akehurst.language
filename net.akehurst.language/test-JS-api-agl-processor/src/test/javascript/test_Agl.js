@@ -4,7 +4,7 @@ describe('test_Agl', function () {
 
     it('getBuildStamp', function () {
         let actual = Agl.buildStamp.substring(0,4);
-        let expected = '2022';
+        let expected = '2023';
         assert.equal(actual, expected);
     });
 

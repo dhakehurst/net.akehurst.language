@@ -777,7 +777,7 @@ grammar Mscript {
                     element("line") {
                         propertyListOfElement("statement") {
                             element("expressionStatement") {
-                                propertyElement("expression", "functionCall") {
+                                propertyElementExplicitType("expression", "functionCall") {
                                     propertyString("NAME", "disp")
                                     propertyListOfElement("argumentList") {
                                         element("argument") {

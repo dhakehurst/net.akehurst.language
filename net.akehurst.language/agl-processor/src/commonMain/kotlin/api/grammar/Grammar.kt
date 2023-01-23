@@ -16,6 +16,10 @@
 
 package net.akehurst.language.api.grammar
 
+interface GrammarItem {
+
+}
+
 /**
  *
  * The definition of a Grammar. A grammar defines a list of rules and may be defined to extend a number of other Grammars.

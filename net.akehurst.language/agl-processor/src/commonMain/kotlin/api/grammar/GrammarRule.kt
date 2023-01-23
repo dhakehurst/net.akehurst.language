@@ -16,7 +16,7 @@
 
 package net.akehurst.language.api.grammar
 
-interface GrammarRule {
+interface GrammarRule: GrammarItem {
     val grammar: Grammar
     val name: String
     val isOverride: Boolean

@@ -34,7 +34,7 @@ internal class AglGrammarSemanticAnalyser(
         _locationMap = null
     }
 
-    override fun analyse(asm: List<Grammar>, locationMap: Map<*, InputLocation>?, context: GrammarContext?): SemanticAnalysisResult {
+    override fun analyse(asm: List<Grammar>, locationMap: Map<Any, InputLocation>?, context: GrammarContext?): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
         val issues =  checkGrammar(asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
         return SemanticAnalysisResultDefault(issues)

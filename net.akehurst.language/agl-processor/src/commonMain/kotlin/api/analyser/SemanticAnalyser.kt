@@ -18,6 +18,7 @@ package net.akehurst.language.api.analyser
 
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.SemanticAnalysisResult
+import kotlin.js.JsExport
 
 class SemanticAnalyserException(message: String, cause: Throwable?) : RuntimeException(message, cause)
 
@@ -30,6 +31,6 @@ interface SemanticAnalyser<in AsmType, in ContextType> {
 
     fun clear()
 
-    fun analyse(asm: AsmType, locationMap: Map<*,InputLocation>?=null, context:ContextType?=null): SemanticAnalysisResult
+    fun analyse(asm: AsmType, locationMap: Map<Any,InputLocation>?=null, context:ContextType?=null): SemanticAnalysisResult
 }
 

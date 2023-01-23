@@ -43,7 +43,7 @@ internal class AutomatonBuilderDefault(
     isSkip: Boolean
 ) : AutomatonBuilder {
 
-    private val result = ParserStateSet(rrs.nextStateSetNumber++, rrs, rrs.findRuntimeRule(userGoalRuleName), isSkip, automatonKind)
+    private val result = ParserStateSet(rrs.nextStateSetNumber++, rrs, rrs.findRuntimeRule(userGoalRuleName), isSkip, automatonKind, true)
     private var nextState = 0
 
     val GOAL = ParseAction.GOAL
@@ -52,12 +52,15 @@ internal class AutomatonBuilderDefault(
     val GRAFT = ParseAction.GRAFT
 
     override fun state(ruleNumber: Int, option: Int, position: Int) {
-        state(rrs.runtimeRules[ruleNumber], option, position)
+        when {
+            RuntimeRuleSet.GOAL_RULE_NUMBER == ruleNumber -> state(result.goalRule, option, position)
+            else -> state(rrs.runtimeRules[ruleNumber], option, position)
+        }
     }
 
-    fun state(rule: Rule, option: Int, position: Int) = result.createState(listOf(RulePosition(rule as RuntimeRule, option, position)))
+    internal fun state(rule: Rule, option: Int, position: Int) = result.createState(listOf(RulePosition(rule as RuntimeRule, option, position)))
 
-    fun state(vararg rulePositions: RulePosition) = result.createState(rulePositions.toList())
+    internal fun state(vararg rulePositions: RulePosition) = result.createState(rulePositions.toList())
 
     internal fun transition(
         previousState: ParserState,
@@ -108,10 +111,11 @@ internal class AutomatonBuilderDefault(
         from.outTransitions.addTransition(previousStates, trans)
     }
 
-    //override fun transition(action: ParseAction, init: TransitionBuilder.() -> Unit) {
-    //    this.transition(action, init as (TransitionBuilderDefault.() -> Unit))
-    //}
-    fun transition(action: ParseAction, init: TransitionBuilderDefault.() -> Unit) {
+    override fun transition(action: ParseAction, init: TransitionBuilder.() -> Unit) {
+        this.trans(action, init as (TransitionBuilderDefault.() -> Unit))
+    }
+
+    fun trans(action: ParseAction, init: TransitionBuilderDefault.() -> Unit) {
         val b = TransitionBuilderDefault(result, action)
         b.init()
         b.build()
@@ -160,13 +164,8 @@ internal class TransitionBuilderDefault internal constructor(
         TODO("not implemented")
     }
 
-    override fun src(stateNumber: Int) {
-        TODO("not implemented")
-    }
-
-    override fun tgt(stateNumber: Int) {
-        TODO("not implemented")
-    }
+    override fun source(stateNumber: Int) = this.src(stateSet.allBuiltStates[stateNumber])
+    override fun target(stateNumber: Int) = this.tgt(stateSet.allBuiltStates[stateNumber])
 
     fun ctx(states: Set<ParserState>) {
         _context = states

@@ -20,6 +20,7 @@ import net.akehurst.language.agl.grammar.GrammarRegistryDefault
 import net.akehurst.language.agl.grammar.grammar.asm.*
 import net.akehurst.language.agl.syntaxAnalyser.BranchHandler
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserAbstract
+import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.SentenceContext
@@ -76,7 +77,7 @@ internal class AglGrammarSyntaxAnalyser(
         _issues.clear()
     }
 
-    override fun configure(configurationContext: SentenceContext, configuration: String): List<LanguageIssue> {
+    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: String): List<LanguageIssue> {
         //TODO
         return emptyList()
     }

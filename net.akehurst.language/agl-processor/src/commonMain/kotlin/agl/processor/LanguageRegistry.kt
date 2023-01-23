@@ -26,6 +26,7 @@ import net.akehurst.language.agl.grammar.scopes.ScopeModel
 import net.akehurst.language.agl.grammar.style.AglStyleGrammar
 import net.akehurst.language.agl.grammar.style.AglStyleSyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.style.AglStyleRule
 
@@ -36,9 +37,9 @@ interface AglLanguages {
     val scopesLanguageIdentity: String
 
     val grammar: LanguageDefinition<List<Grammar>, GrammarContext>
-    val style: LanguageDefinition<List<AglStyleRule>, SentenceContext>
-    val format: LanguageDefinition<*, *>
-    val scopes: LanguageDefinition<ScopeModel, SentenceContext>
+    val style: LanguageDefinition<List<AglStyleRule>, SentenceContext<GrammarItem>>
+    val format: LanguageDefinition<Any, Any>
+    val scopes: LanguageDefinition<ScopeModel, SentenceContext<GrammarItem>>
 }
 
 class LanguageRegistry {
@@ -177,7 +178,7 @@ class LanguageRegistry {
             )
         )
 
-        override val scopes: LanguageDefinition<ScopeModel, SentenceContext> = this@LanguageRegistry.registerFromDefinition(
+        override val scopes: LanguageDefinition<ScopeModel, SentenceContext<GrammarItem>> = this@LanguageRegistry.registerFromDefinition(
             LanguageDefinitionFromAsm(
                 identity = scopesLanguageIdentity,
                 grammar = AglScopesGrammar(),

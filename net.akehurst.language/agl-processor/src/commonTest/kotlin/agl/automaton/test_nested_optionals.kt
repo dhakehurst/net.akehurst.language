@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhs
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -86,9 +85,9 @@ internal class test_nested_optionals : test_AutomatonAbstract() {
 
 
 
-            transition(WIDTH) { ctx(G,o0,SR); src(S,o0,p1); tgt(a); lhg(b) }
-            transition(WIDTH) { ctx(G,o0,SOR); src(G,o0,p1); tgt(i); lhg(a) }
-            transition(HEIGHT) { ctx(G,o0,SOR); src(i); tgt(S,o0,p1); lhg(a) }
+            trans(WIDTH) { ctx(G,o0,SR); src(S,o0,p1); tgt(a); lhg(b) }
+            trans(WIDTH) { ctx(G,o0,SOR); src(G,o0,p1); tgt(i); lhg(a) }
+            trans(HEIGHT) { ctx(G,o0,SOR); src(i); tgt(S,o0,p1); lhg(a) }
 
         }
         AutomatonTest.assertEquals(expected, actual)

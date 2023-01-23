@@ -26,7 +26,7 @@ class SemanticAnalyserSimple<AsmType : Any, ContextType : Any> : SemanticAnalyse
 
     }
 
-    override fun analyse(asm: AsmType, locationMap: Map<*, InputLocation>?, arg: ContextType?): SemanticAnalysisResult {
+    override fun analyse(asm: AsmType, locationMap: Map<Any, InputLocation>?, context: ContextType?): SemanticAnalysisResult {
         return SemanticAnalysisResultDefault(emptyList())
     }
 }

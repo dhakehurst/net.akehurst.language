@@ -47,12 +47,12 @@ internal annotation class AglAutomatonDslMarker
 @AglAutomatonDslMarker
 interface AutomatonBuilder {
     fun state(ruleNumber:Int, option:Int, position:Int)
-    //fun transition(action: ParseAction, init: TransitionBuilder.() -> Unit)
+    fun transition(action: ParseAction, init: TransitionBuilder.() -> Unit)
 }
 
 @AglAutomatonDslMarker
 interface TransitionBuilder {
     fun ctx(vararg stateNumbers: Int)
-    fun src(stateNumber:Int)
-    fun tgt(stateNumber:Int)
+    fun source(stateNumber:Int)
+    fun target(stateNumber:Int)
 }

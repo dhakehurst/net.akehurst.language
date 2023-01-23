@@ -16,6 +16,7 @@
 
 package net.akehurst.language.api.analyser
 
+import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
@@ -46,7 +47,7 @@ interface SyntaxAnalyser<out AsmType:Any, in ContextType:Any> { //TODO: make tra
     /**
      * configure the SyntaxAnalyser
      */
-    fun configure(configurationContext:SentenceContext, configuration:String): List<LanguageIssue>
+    fun configure(configurationContext:SentenceContext<GrammarItem>, configuration:String): List<LanguageIssue>
 
     /**
      * map the tree into an instance of the targetType

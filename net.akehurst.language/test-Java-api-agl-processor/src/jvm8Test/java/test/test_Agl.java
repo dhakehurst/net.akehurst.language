@@ -27,7 +27,7 @@ public class test_Agl {
     public void getBuildStamp() {
         String actual = Agl.INSTANCE.getBuildStamp().substring(0, 4);
 
-        String expected = "2022";
+        String expected = "2023";
         Assert.assertEquals(expected, actual);
     }
 

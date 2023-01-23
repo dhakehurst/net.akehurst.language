@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2022 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,13 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.regex
+package net.akehurst.language.agl.formatter
 
-expect fun String.asRegexLiteral():Regex
+import net.akehurst.language.api.processor.FormatResult
+import net.akehurst.language.api.processor.Formatter
 
-
+class FormatterSimple  : Formatter {
+    override fun <T> format(asm: T): FormatResult {
+        TODO("not implemented")
+    }
+}

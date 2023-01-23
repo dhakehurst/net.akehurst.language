@@ -17,6 +17,7 @@ package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
@@ -29,7 +30,7 @@ import net.akehurst.language.api.style.AglStyle
 import net.akehurst.language.api.style.AglStyleRule
 
 
-internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<List<AglStyleRule>, SentenceContext> {
+internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<List<AglStyleRule>, SentenceContext<GrammarItem>> {
 
     companion object {
         //not sure if this should be here or in grammar object
@@ -44,11 +45,11 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<List<AglStyleRule>, Sente
         _issues.clear()
     }
 
-    override fun configure(configurationContext: SentenceContext, configuration: String): List<LanguageIssue> {
+    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: String): List<LanguageIssue> {
         return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: SentenceContext?): Pair<List<AglStyleRule>, List<LanguageIssue>> {
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: SentenceContext<GrammarItem>?): Pair<List<AglStyleRule>, List<LanguageIssue>> {
         val rules: List<AglStyleRule> = this.rules(sppt.root.asBranch, sppt.root.asBranch.branchNonSkipChildren, "")
 
         //TODO: should this be semanticAnalysis ?

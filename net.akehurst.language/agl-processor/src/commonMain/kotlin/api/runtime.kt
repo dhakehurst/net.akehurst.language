@@ -3,11 +3,9 @@ package net.akehurst.language.agl.api.runtime
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 
 interface RuleSet {
-
     companion object {
         fun build(init:RuleSetBuilder.()->Unit) : RuleSet = runtimeRuleSet(init)
     }
-
 }
 
 interface Rule {
@@ -18,11 +16,9 @@ internal annotation class RuntimeRuleSetDslMarker
 
 @RuntimeRuleSetDslMarker
 interface RuleSetBuilder {
-
     fun concatenation(ruleName:String, isSkip: Boolean = false, init: ConcatenationBuilder.() -> Unit)
     fun choiceLongest(ruleName:String, isSkip: Boolean = false, init: ChoiceBuilder.() -> Unit)
     fun choicePriority(ruleName:String, isSkip: Boolean = false, init: ChoiceBuilder.() -> Unit)
-
 }
 
 @RuntimeRuleSetDslMarker

@@ -342,7 +342,7 @@ class test_SyntaxAnalyserSimple {
         val expected1 = asmSimple() {
             root("S") {
                 propertyString("ID", "a")
-                propertyElement("item", "A") {
+                propertyElementExplicitType("item", "A") {
                     propertyString("NUMBER", "8")
                 }
             }
@@ -357,7 +357,7 @@ class test_SyntaxAnalyserSimple {
         val expected2 = asmSimple() {
             root("S") {
                 propertyString("ID", "a")
-                propertyElement("item", "B") {
+                propertyElementExplicitType("item", "B") {
                     propertyString("NAME", "fred")
                 }
             }
@@ -373,7 +373,7 @@ class test_SyntaxAnalyserSimple {
         val expected3 = asmSimple() {
             root("S") {
                 propertyString("ID", "a")
-                propertyElement("item", "C") {
+                propertyElementExplicitType("item", "C") {
                     propertyString("NAME", "fred")
                     propertyString("NUMBER", "8")
                 }

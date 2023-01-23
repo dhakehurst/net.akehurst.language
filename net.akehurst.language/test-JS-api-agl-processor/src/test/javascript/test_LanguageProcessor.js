@@ -5,8 +5,10 @@ describe('test_LanguageProcessor', function () {
     let grammarStr=`
             namespace test
             grammar Test {
-              skip WS="\\s+";
-              S='hello' 'world' '!';
+              skip WS="\\s+" ;
+              S= H W ;
+              H = 'hello' ;
+              W = 'world' '!' ;
             }
         `;
     let proc = Agl.processorFromString(grammarStr);
@@ -27,17 +29,17 @@ describe('test_LanguageProcessor', function () {
     });
 
     it('parse_defaultOptions', function () {
-        let options = proc.parserOptionsDefault();
-        options.goalRuleName="H";
-        let result = proc.parse('hello world !');
+        let options = proc.parseOptionsDefault();
+        options.goalRuleName="W";
+        let result = proc.parse("world !", options);
 
         assert.notEqual(null, result.sppt);
         console.log( result.sppt.toStringAll );
     });
 
     it('parse_buildOptions', function () {
-        let result = proc.parse("world !", proc.parserOptions(b => {
-            b.goalRuleName("H");
+        let result = proc.parse("world !", Agl.parseOptions(b => {
+            b.goalRuleName("W");
         }));
 
         assert.notEqual(null, result.sppt);
@@ -73,7 +75,7 @@ describe('test_LanguageProcessor', function () {
 
     it('process_defaultOptions', function () {
         let options = proc.optionsDefault();
-        options.parser.goalRuleName = "H"
+        options.parse.goalRuleName = "W"
 
         let result = proc.process('world !', options);
 

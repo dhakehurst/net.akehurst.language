@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
@@ -189,4 +190,9 @@ object Agl {
         }
     }
 
+    fun <AsmType : Any, ContextType : Any> processorFromGeneratedCode(
+        generated: GeneratedLanguageProcessorAbstract<AsmType, ContextType>
+    ): LanguageProcessor<AsmType, ContextType> {
+        return LanguageProcessorFromGenerated(generated)
+    }
 }

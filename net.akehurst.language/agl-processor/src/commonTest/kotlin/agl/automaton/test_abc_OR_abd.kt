@@ -74,8 +74,8 @@ internal class test_abc_OR_abd : test_AutomatonAbstract() {
             val s8 = state(S, 0, EOR)     /* S = ABC . */
             val s9 = state(G, 0, EOR)     /* G = S .   */
 
-            transition(WIDTH) { src(s0); tgt(s1); lhg(b); ctx(setOf(s0)) }
-            transition(HEIGHT) { src(s1); tgt(s2); lhg(setOf(b), setOf(EOT)); ctx(setOf(s0)) }
+            trans(WIDTH) { src(s0); tgt(s1); lhg(b); ctx(setOf(s0)) }
+            trans(HEIGHT) { src(s1); tgt(s2); lhg(setOf(b), setOf(EOT)); ctx(setOf(s0)) }
 
 
             transition(s0, s2, s3, WIDTH, setOf(c, d), setOf(), null)

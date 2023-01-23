@@ -18,7 +18,6 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.agl.automaton.FirstOf
 import net.akehurst.language.agl.api.automaton.Automaton
-import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
@@ -29,7 +28,8 @@ internal class ParserStateSet(
     val runtimeRuleSet: RuntimeRuleSet,
     val userGoalRule: RuntimeRule,
     val isSkip: Boolean,
-    val automatonKind: AutomatonKind
+    val automatonKind: AutomatonKind,
+    preBuilt:Boolean
 ) : Automaton {
 
     private var nextLookaheadSetId = 0
@@ -38,7 +38,7 @@ internal class ParserStateSet(
 
     internal val runtimeTransitionCalculator = RuntimeTransitionCalculator(this)
 
-    var preBuilt = false; private set
+    var preBuilt = preBuilt; private set
     internal val buildCache: BuildCache = when (automatonKind) {
         AutomatonKind.LOOKAHEAD_NONE -> TODO() //BuildCacheLC0(this)
         AutomatonKind.LOOKAHEAD_SIMPLE -> TODO()
@@ -65,9 +65,10 @@ internal class ParserStateSet(
      * similar to LR(0) states
      * Lookahead on the transitions allows for equivalence to LR(1)
      */
-    private val states = mutableMapOf<List<RulePosition>, ParserState>()
+    private val _statesByRulePosition = mutableMapOf<List<RulePosition>, ParserState>()
+    private val _states = mutableListOf<ParserState>()
 
-    val allBuiltStates: List<ParserState> get() = this.states.values.toList()
+    val allBuiltStates: List<ParserState> get() = this._states.toList()
     val allBuiltTransitions: Set<Transition> get() = this.allBuiltStates.flatMap { it.outTransitions.allBuiltTransitions }.toSet()
 
     val goalRule by lazy { runtimeRuleSet.goalRuleFor[userGoalRule] }
@@ -124,13 +125,14 @@ internal class ParserStateSet(
     //fun createWithParent(upLhs: LookaheadSet, parentLookahead: LookaheadSet): LookaheadSet = this.runtimeRuleSet.createWithParent(upLhs, parentLookahead)
 
     internal fun createState(rulePositions: List<RulePosition>): ParserState {
-        if (Debug.CHECK) check(this.states.contains(rulePositions).not()) { "State already created for $rulePositions" }
-        val existing = this.states[rulePositions]
+        if (Debug.CHECK) check(this._statesByRulePosition.contains(rulePositions).not()) { "State already created for $rulePositions" }
+        val existing = this._statesByRulePosition[rulePositions]
         return if (null!=existing) {
             existing
         } else {
             val state = ParserState(StateNumber(this.nextStateNumber++), rulePositions, this)
-            this.states[rulePositions] = state
+            this._statesByRulePosition[rulePositions] = state
+            this._states.add(state.number.value, state)
             state
         }
     }
@@ -197,6 +199,7 @@ internal class ParserStateSet(
             this.buildCache.clearAndOff()
         } else {
             // already built
+            //TODO: would like to throw error here! error("Automaton already built")
         }
         return this
     }
@@ -206,7 +209,7 @@ internal class ParserStateSet(
         val stateInfos = this.buildCache.stateInfo()
         for (si in stateInfos) {
             if (si.rulePositions != this.startState.rulePositions) {
-                if (Debug.CHECK) check(this.states.contains(si.rulePositions).not()) { "State already created for $si.rulePositions" }
+                if (Debug.CHECK) check(this._statesByRulePosition.contains(si.rulePositions).not()) { "State already created for $si.rulePositions" }
                 val state = this.fetchCompatibleOrCreateState(si.rulePositions)
             }
         }

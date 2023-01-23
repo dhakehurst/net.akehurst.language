@@ -43,8 +43,7 @@ internal class test_ab_cOa_bc : test_AutomatonAbstract() {
         concatenation("bc") { literal("b"); literal("c") }
     }
     private val S = rrs.findRuntimeRule("S")
-    private val SM = rrs.fetchStateSetFor("S", AutomatonKind.LOOKAHEAD_1)
-    private val G = SM.startState.runtimeRules.first()
+    private val G = rrs.goalRuleFor[S]
     private val ab_c = rrs.findRuntimeRule("ab_c")
     private val a_bc = rrs.findRuntimeRule("a_bc")
     private val ab = rrs.findRuntimeRule("ab")
@@ -84,23 +83,23 @@ internal class test_ab_cOa_bc : test_AutomatonAbstract() {
             state(RP(a, o0, EOR))      /* a . */
             state(RP(c, o0, EOR))      /* c . */
 
-            transition(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(a); lhg(b) }
-            transition(WIDTH) { ctx(G, o0, SOR); src(a_bc, o0, p1); tgt(b); lhg(c) }
-            transition(WIDTH) { ctx(G, o0, SOR); src(ab, o0, p1); tgt(b); lhg(c) }
-            transition(WIDTH) { ctx(G, o0, SOR); src(ab_c, o0, p1); tgt(c); lhg(EOT) }
-            transition(WIDTH) { ctx(a_bc, o0, p1); src(bc, o0, p1); tgt(c); lhg(EOT) }
-            transition(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(EOT) }
-            transition(GOAL) { ctx(G, o0, SOR); src(S,o1,EOR); tgt(G); lhg(EOT) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(ab_c); tgt(S); tgt(EOT) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(a_bc); tgt(S,o1,EOR) }
-            transition(GRAFT) { ctx(a_bc, o0, p1); src(bc); tgt(a_bc) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(a_bc,o0,p1) }
-            transition(GRAFT) { ctx(ab, o0, p1); src(b); tgt(ab) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(ab,o1,p1) }
-            transition(GRAFT) { ctx(ab_c, o0, p1); src(c); tgt(ab_c) }
-            transition(HEIGHT) { ctx(G, o0, SOR); src(ab); tgt(ab_c,o0,p1) }
-            transition(GRAFT) { ctx(bc, o0, p1); src(c); tgt(bc) }
-            transition(HEIGHT) { ctx(a_bc, o0, p1); src(b); tgt(bc,o0,p1) }
+            trans(WIDTH) { ctx(G, o0, SOR); src(G, o0, SOR); tgt(a); lhg(b) }
+            trans(WIDTH) { ctx(G, o0, SOR); src(a_bc, o0, p1); tgt(b); lhg(c) }
+            trans(WIDTH) { ctx(G, o0, SOR); src(ab, o0, p1); tgt(b); lhg(c) }
+            trans(WIDTH) { ctx(G, o0, SOR); src(ab_c, o0, p1); tgt(c); lhg(EOT) }
+            trans(WIDTH) { ctx(a_bc, o0, p1); src(bc, o0, p1); tgt(c); lhg(EOT) }
+            trans(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(EOT) }
+            trans(GOAL) { ctx(G, o0, SOR); src(S,o1,EOR); tgt(G); lhg(EOT) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(ab_c); tgt(S); tgt(EOT) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(a_bc); tgt(S,o1,EOR) }
+            trans(GRAFT) { ctx(a_bc, o0, p1); src(bc); tgt(a_bc) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(a_bc,o0,p1) }
+            trans(GRAFT) { ctx(ab, o0, p1); src(b); tgt(ab) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(ab,o1,p1) }
+            trans(GRAFT) { ctx(ab_c, o0, p1); src(c); tgt(ab_c) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(ab); tgt(ab_c,o0,p1) }
+            trans(GRAFT) { ctx(bc, o0, p1); src(c); tgt(bc) }
+            trans(HEIGHT) { ctx(a_bc, o0, p1); src(b); tgt(bc,o0,p1) }
         }
 
         AutomatonTest.assertEquals(expected, actual)

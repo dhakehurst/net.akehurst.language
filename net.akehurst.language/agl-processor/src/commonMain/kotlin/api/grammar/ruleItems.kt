@@ -59,7 +59,7 @@ interface TangibleItem : SimpleItem {
 }
 
 interface EmptyRule : TangibleItem
-interface Terminal : TangibleItem {
+interface Terminal : TangibleItem, GrammarItem {
     val isPattern: Boolean
     val value: String
 }

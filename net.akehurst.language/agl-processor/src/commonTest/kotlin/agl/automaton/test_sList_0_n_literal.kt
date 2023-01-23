@@ -54,10 +54,10 @@ internal class test_sList_0_n_literal : test_AutomatonAbstract() {
             state(EMPTY,o0,ER)  // <empty>
             state(S,OLE,ER) // S=[EMPTY].
 
-            transition(WIDTH) { src(G,o0,SR); tgt(EMPTY); lhg(EOT); ctx(G,o0,SR)  }
-            transition(WIDTH) { src(G,o0,SR); tgt(a); lhg(setOf(EOT,b)); ctx(G,o0,SR)  }
-            transition(GOAL) { src(S,OLE,ER); tgt(G); lhg(EOT); ctx(G,o0,SR)  }
-            transition(HEIGHT) { src(EMPTY); tgt(S,OLE,ER); lhg(setOf(EOT),setOf(EOT)); ctx(G,o0,SR)  }
+            trans(WIDTH) { src(G,o0,SR); tgt(EMPTY); lhg(EOT); ctx(G,o0,SR)  }
+            trans(WIDTH) { src(G,o0,SR); tgt(a); lhg(setOf(EOT,b)); ctx(G,o0,SR)  }
+            trans(GOAL) { src(S,OLE,ER); tgt(G); lhg(EOT); ctx(G,o0,SR)  }
+            trans(HEIGHT) { src(EMPTY); tgt(S,OLE,ER); lhg(setOf(EOT),setOf(EOT)); ctx(G,o0,SR)  }
         }
         AutomatonTest.assertEquals(expected, actual)
     }
