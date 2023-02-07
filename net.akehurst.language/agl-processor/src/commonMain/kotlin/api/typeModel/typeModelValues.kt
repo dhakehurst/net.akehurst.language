@@ -23,11 +23,11 @@ abstract class AnyValue(
 }
 
 abstract class PrimitiveValue(
-    override val type:PrimitiveType
+    override val type:RuleType
 ): AnyValue(type) {
 }
 
-object NothingValue : PrimitiveValue(PrimitiveType.NOTHING) {
+object NothingValue : PrimitiveValue(NothingType) {
     override val asValue: Nothing? = null
     override fun toString(): String = "NOTHING"
     override fun hashCode(): Int = 0
@@ -39,7 +39,7 @@ object NothingValue : PrimitiveValue(PrimitiveType.NOTHING) {
 
 class StringValue(
     override val asValue:String
-) : PrimitiveValue(PrimitiveType.STRING) {
+) : PrimitiveValue(StringType) {
     override fun toString(): String = "'$asValue'"
     override fun hashCode(): Int = asValue.hashCode()
     override fun equals(other: Any?): Boolean = when(other) {

@@ -45,11 +45,11 @@ class TypeModelBuilder {
 
     private val _model = object : TypeModel {
         override val types = _types
-        override fun findType(name: String): RuleType? = findOrCreateType(name)
+        override fun findType(name: String): RuleType = findOrCreateType(name)
     }
 
     fun stringTypeFor(name: String) {
-        _types[name] = PrimitiveType.STRING
+        _types[name] = StringType
     }
 
     fun elementType(name: String, init: ElementTypeBuilder.() -> Unit = {}): ElementType {
@@ -71,11 +71,14 @@ abstract class StructuredTypeBuilder(
 ) {
     protected abstract val _structuredType: StructuredRuleType
 
-    fun propertyUnnamedPrimitiveType(type: PrimitiveType, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
-        property(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, type, isNullable, childIndex)
+    fun propertyUnnamedAnyType(isNullable: Boolean, childIndex: Int):PropertyDeclaration =
+        property(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, AnyType, isNullable, childIndex)
+
+    fun propertyUnnamedStringType(isNullable: Boolean, childIndex: Int): PropertyDeclaration =
+        property(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, StringType, isNullable, childIndex)
 
     fun propertyStringType(propertyName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
-        property(propertyName, PrimitiveType.STRING, isNullable, childIndex)
+        property(propertyName, StringType, isNullable, childIndex)
 
     // ListSimple
     fun propertyUnnamedListTypeOf(elementTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
@@ -104,12 +107,7 @@ abstract class StructuredTypeBuilder(
         return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
     }
 
-    fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorType: PrimitiveType, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-        val itemType = _model.findType(itemTypeName)!!
-        return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
-    }
-
-    fun propertyListSeparatedTypeOfByPrimitive(propertyName: String, itemTypeName: String, separatorType: PrimitiveType, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
+    fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorType: RuleType, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
         val itemType = _model.findType(itemTypeName)!!
         return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
     }

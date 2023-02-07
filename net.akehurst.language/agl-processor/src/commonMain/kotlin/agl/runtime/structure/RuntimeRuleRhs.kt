@@ -129,7 +129,7 @@ internal class RuntimeRuleRhsCommonTerminal(
     rule: RuntimeRule
 ) : RuntimeRuleRhsTerminal(rule) {
     override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsCommonTerminal(clonedRules[rule.tag]!!)
-    override fun toString(): String = "<Common>"
+    override fun toString(): String = rule.tag
 }
 
 internal class RuntimeRuleRhsPattern(

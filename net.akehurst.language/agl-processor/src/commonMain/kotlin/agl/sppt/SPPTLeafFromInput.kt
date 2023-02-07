@@ -130,8 +130,7 @@ import net.akehurst.language.api.sppt.*
         val name = when {
             this.runtimeRule == RuntimeRuleSet.END_OF_TEXT -> RuntimeRuleSet.END_OF_TEXT_TAG
             this.runtimeRule.isEmptyTerminal -> "§empty"
-            this.isLiteral -> "'${(this.runtimeRule.rhs as RuntimeRuleRhsLiteral).value}'"
-            this.isPattern -> "\"${(this.runtimeRule.rhs as RuntimeRuleRhsPattern).pattern}\""
+            this.runtimeRule.isTerminal -> this.runtimeRule.rhs.toString()
             else -> this.name //shouldn't happen!
         }
 

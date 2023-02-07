@@ -24,7 +24,7 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.typeModel.PrimitiveType
+import net.akehurst.language.api.typeModel.StringType
 import net.akehurst.language.api.typeModel.TypeModelTest
 import net.akehurst.language.api.typeModel.typeModel
 import kotlin.test.Test
@@ -111,7 +111,7 @@ class test_SyntaxAnalyserSimple_datatypes {
                 propertyElementTypeOf("typeArguments","typeArguments",true,1)
             }
             elementType("typeArguments") {
-                propertyListSeparatedTypeOf("typeReference","typeReference",PrimitiveType.STRING,false,1)
+                propertyListSeparatedTypeOf("typeReference","typeReference", StringType,false,1)
             }
         }
 

@@ -35,7 +35,10 @@ object TypeModelTest {
     private fun tmAssertEquals(expected: RuleType?, actual: RuleType?, source:String) {
         when {
             null == expected || null == actual -> fail("should never be null")
-            expected is PrimitiveType && actual is PrimitiveType -> assertSame(expected, actual)
+            expected is NothingType && actual is NothingType -> assertSame(expected, actual)
+            expected is AnyType && actual is AnyType -> assertSame(expected, actual)
+            expected is StringType && actual is StringType -> assertSame(expected, actual)
+            expected is UnnamedSuperTypeType && actual is UnnamedSuperTypeType -> tmAssertEquals(expected, actual)
             expected is ElementType && actual is ElementType -> tmAssertEquals(expected, actual)
             expected is ListSimpleType && actual is ListSimpleType -> tmAssertEquals(expected, actual)
             expected is ListSeparatedType && actual is ListSeparatedType -> tmAssertEquals(expected, actual)
@@ -44,20 +47,23 @@ object TypeModelTest {
         }
     }
 
+    private fun tmAssertEquals(expected: UnnamedSuperTypeType, actual: UnnamedSuperTypeType) {
+        assertEquals(expected.subtypes.size, actual.subtypes.size, "Number of subTypes do not match for '${expected.name}'")
+        for (i in 0 until expected.subtypes.size) {
+            val exp = expected.subtypes[i]
+            val act = actual.subtypes[i]
+            tmAssertEquals(exp,act,"subtypes do not match")
+        }
+    }
+
     private fun tmAssertEquals(expected: ElementType, actual: ElementType) {
         assertEquals(expected.name, actual.name)
         assertEquals(expected.superType.size, actual.superType.size, "Wrong number of superTypes for '${expected.name}'")
-        for (i in 0 until expected.superType.size) {
-            val expEl = expected.superType[i]
-            val actEl = actual.superType[i]
-            assertEquals(expEl.name, actEl.name)
-        }
+        assertEquals(expected.superType.map { it.name }.toSet(), actual.superType.map { it.name }.toSet())
+
         assertEquals(expected.subType.size, actual.subType.size, "Wrong number of subTypes for '${expected.name}'")
-        for (i in 0 until expected.subType.size) {
-            val expEl = expected.subType.toList()[i] //TODO: set set equality !
-            val actEl = actual.subType.toList()[i]
-            assertEquals(expEl.name, actEl.name)
-        }
+        assertEquals(expected.subType.map { it.name }.toSet(), actual.subType.map { it.name }.toSet())
+
         assertEquals(expected.property.size, actual.property.size, "Wrong number of properties for '${expected.name}'")
         for (k in expected.property.keys) {
             val expEl = expected.property[k]

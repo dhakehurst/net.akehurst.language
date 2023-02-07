@@ -39,7 +39,7 @@ internal class ConverterToRuntimeRules(
     }
 
     fun originalRuleItemFor(runtimeRuleSetNumber: Int, runtimeRuleNumber: Int): RuleItem = this.originalRuleItem[Pair(runtimeRuleSetNumber, runtimeRuleNumber)]
-        ?: throw LanguageProcessorException("Cannot find original item for ($runtimeRuleNumber,$runtimeRuleNumber)", null)
+        ?: throw LanguageProcessorException("Cannot find original item for ($runtimeRuleSetNumber,$runtimeRuleNumber)", null)
 
     // index by tag
     private val runtimeRules = mutableMapOf<String, RuntimeRule>()
