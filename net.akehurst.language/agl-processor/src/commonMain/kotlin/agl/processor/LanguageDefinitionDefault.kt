@@ -26,97 +26,73 @@ import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
-class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
+internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     override val identity: String,
     grammarStrArg: String?,
     targetGrammarArg: String?,
     defaultGoalRuleArg: String?,
     buildForDefaultGoal: Boolean,
-    style: String?,
-    format: String?,
+    styleArg: String?,
+    formatArg: String?,
     syntaxAnalyserResolverArg: SyntaxAnalyserResolver<AsmType, ContextType>?,
     semanticAnalyserResolverArg: SemanticAnalyserResolver<AsmType, ContextType>?,
     /** the options to configure building the processor for the registered language */
     aglOptionsArg: ProcessOptions<List<Grammar>, GrammarContext>?
-) : LanguageDefinition<AsmType, ContextType> {
-    //constructor(identity: String, grammarStrArg: String?) : this(identity, grammarStrArg, null, null, null, null, null, null)
+) : LanguageDefinitionAbstract<AsmType, ContextType>(
+    defaultGoalRuleArg,
+    null,
+    buildForDefaultGoal,
+    styleArg,
+    formatArg,
+    syntaxAnalyserResolverArg,
+    semanticAnalyserResolverArg,
+    aglOptionsArg
+) {
 
-    private val _processor_cache: CachedValue<LanguageProcessor<AsmType, ContextType>?> = cached {
-        val g = this.grammarStr
-        if (null == g) {
+    private val _grammar_cache: CachedValue<Grammar?> = cached {
+        val gs = this.grammarStr
+        if (null == gs) {
             null
         } else {
-            val config = Agl.configuration<AsmType, ContextType> {
-                targetGrammarName(targetGrammar)
-                defaultGoalRuleName(defaultGoalRule)
-                syntaxAnalyserResolver(this@LanguageDefinitionDefault.syntaxAnalyserResolver)
-                semanticAnalyserResolver(this@LanguageDefinitionDefault.semanticAnalyserResolver)
-            }
-            val proc = Agl.processorFromString(g, config, aglOptions)
-            if (buildForDefaultGoal) proc.buildFor(null) //null options will use default goal
-            proc
+            _grammarFromString(gs)
         }
-    }
-    private var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = syntaxAnalyserResolverArg
-    private var _semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = semanticAnalyserResolverArg
-
-    override val grammarObservers = mutableListOf<(String?, String?) -> Unit>()
-    override val styleObservers = mutableListOf<(String?, String?) -> Unit>()
-    override val formatObservers = mutableListOf<(String?, String?) -> Unit>()
+    }.apply { this.resetAction = { old -> grammarObservers.forEach { it(old, null) } } }
 
     override var grammarStr: String? by Delegates.observable(grammarStrArg) { _, oldValue, newValue ->
         if (oldValue != newValue) {
-            this._processor_cache.reset()
-            grammarObservers.forEach { it(oldValue, newValue) }
+            this._grammar_cache.reset()
         }
     }
 
     override var targetGrammar: String? by Delegates.observable(targetGrammarArg) { _, oldValue, newValue ->
         if (oldValue != newValue) {
-            this._processor_cache.reset()
-            grammarObservers.forEach { it(oldValue, newValue) }
+            val s = this.grammarStr
+            this.grammarStr = null //TODO: is there a better way to do this, with one change?
+            this.grammarStr = s
         }
     }
 
-    override var defaultGoalRule: String? by Delegates.observable(defaultGoalRuleArg) { _, oldValue, newValue ->
-        if (oldValue != newValue) {
-            this._processor_cache.reset()
-            grammarObservers.forEach { it(oldValue, newValue) }
-        }
-    }
-
-    override var style: String? by Delegates.observable(style) { _, oldValue, newValue ->
-        if (oldValue != newValue) {
-            styleObservers.forEach { it(oldValue, newValue) }
-        }
-    }
-
-    override var format: String? by Delegates.observable(format) { _, oldValue, newValue ->
-        if (oldValue != newValue) {
-            formatObservers.forEach { it(oldValue, newValue) }
-        }
-    }
-
-    override val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>? get() = this._processor_cache.value?.let { proc -> _syntaxAnalyserResolver?.invoke(proc.grammar) }
-
-    override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
-        get() = _syntaxAnalyserResolver
+    override var grammar: Grammar?
+        get() = this._grammar_cache.value
         set(value) {
-            _syntaxAnalyserResolver = value
+            this._grammar_cache.value = value
         }
 
-    override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? get() = this._processor_cache.value?.let { proc -> _semanticAnalyserResolver?.invoke(proc.grammar) }
-
-    override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
-        get() = _semanticAnalyserResolver
-        set(value) {
-            _semanticAnalyserResolver = value
-        }
-
-    override var aglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = aglOptionsArg
-
-    override val processor: LanguageProcessor<AsmType, ContextType>? get() = this._processor_cache.value
 
     override val grammarIsModifiable: Boolean = true
 
+    private fun _grammarFromString(newValue: String?): Grammar? {
+        return if (null == newValue) {
+            null
+        } else {
+            val g = Agl.registry.agl.grammar.processor!!.process(newValue, aglOptions)
+            this._issues = g.issues
+            if (g.issues.isEmpty()) {
+                val tgtName = this.targetGrammar ?: g.asm!!.first().name
+                g.asm!!.firstOrNull { it.name == tgtName }
+            } else {
+                null
+            }
+        }
+    }
 }

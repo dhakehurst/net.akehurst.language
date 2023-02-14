@@ -17,10 +17,14 @@ package net.akehurst.language.processor.dot
 
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.processor.test_mscript
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.typeModel.StringType
+import net.akehurst.language.api.typeModel.TypeModelTest
+import net.akehurst.language.api.typeModel.asString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -32,6 +36,143 @@ class test_Dot_SyntaxAnalyser {
         var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr)
     }
 
+    @Test
+    fun typeModel() {
+        val actual = processor.typeModel
+        val expected = net.akehurst.language.api.typeModel.typeModel("","") {
+            elementType("script") {
+                // script = statementList ;
+                propertyListSeparatedTypeOf("statementList", "line", StringType, false, 0)
+            }
+            elementType("statementList") {
+                // statementList = [line / "\R"]* ;
+                propertyListSeparatedTypeOf("line", "line", StringType, false, 0)
+            }
+            elementType("line") {
+                // line = [statement / ';']* ';'? ;
+                propertyListSeparatedTypeOf("statement", "statement", StringType, false, 0)
+                propertyUnnamedStringType(true, 1)
+            }
+            elementType("statement") {
+                // statement
+                //   = conditional
+                //   | assignment
+                //   | expressionStatement
+                //   //TODO: others
+                //   ;
+                subTypes("conditional", "assignment", "expressionStatement")
+            }
+            elementType("conditional") {
+                // conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
+                propertyElementTypeOf("expression", "expression", false, 1)
+                propertyListSeparatedTypeOf("statementList", "line", StringType, false, 3)
+                propertyListSeparatedTypeOf("statementList2", "line", StringType, false, 5)
+            }
+            elementType("assignment") {
+                // assignment = rootVariable '=' expression ;
+                propertyElementTypeOf("rootVariable", "rootVariable", false, 0)
+                propertyElementTypeOf("expression", "expression", false, 2)
+            }
+            elementType("expressionStatement") {
+                // expressionStatement = expression ;
+                propertyElementTypeOf("expression", "expression", false, 0)
+            }
+            elementType("expression") {
+                // expression
+                //   = rootVariable
+                //   | literalExpression
+                //   | matrix
+                //   | functionCallOrIndex
+                //   | prefixExpression
+                //   | infixExpression
+                //   | groupExpression
+                //   ;
+                subTypes("rootVariable", "literalExpression", "matrix", "functionCallOrIndex", "prefixExpression", "infixExpression", "groupExpression")
+            }
+            elementType("groupExpression") {
+                // groupExpression = '(' expression ')' ;
+                //superType("expression")
+                propertyElementTypeOf("expression", "expression", false, 1)
+            }
+            elementType("functionCallOrIndex") {
+                // functionCall = NAME '(' argumentList ')' ;
+                //superType("expression")
+                propertyStringType("NAME", false, 0)
+                propertyListSeparatedTypeOf("argumentList", "argument", StringType, false, 2)
+            }
+            elementType("argumentList") {
+                // argumentList = [ argument / ',' ]* ;
+                propertyListSeparatedTypeOf("argument", "argument", StringType, false, 0)
+            }
+            elementType("argument") {
+                // argument = expression | colonOperator ;
+                subTypes("expression", "colonOperator")
+            }
+            elementType("prefixExpression") {
+                // prefixExpression = prefixOperator expression ;
+                propertyStringType("prefixOperator", false, 0)
+                propertyElementTypeOf("expression", "expression", false, 1)
+            }
+            stringTypeFor("prefixOperator")
+            //elementType("prefixOperator") {
+            // prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
+            //    propertyUnnamedPrimitiveType(StringType, false, 0)
+            //}
+            elementType("infixExpression") {
+                // infixExpression =  [ expression / infixOperator ]2+ ;
+                propertyListSeparatedTypeOf("expression", "expression", StringType, false, 0)
+            }
+            stringTypeFor("infixOperator")
+            //elementType("infixOperator") {
+            // infixOperator
+            //        = '.*' | '*' | './' | '/' | '.\\' | '\\' | '+' | '-'    // arithmetic
+            //        | '==' | '~=' | '>' | '>=' | '<' | '<='                 // relational
+            //        | '&' | '|' | '&&' | '||' | '~'                         // logical
+            //        | ':'                                                   // vector creation
+            //        ;
+            //    propertyUnnamedPrimitiveType(StringType, false, 0)
+            //}
+            elementType("colonOperator") {
+                propertyStringType("COLON", false, 0)
+            }
+            elementType("matrix") {
+                // matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
+                propertyListSeparatedTypeOf("row", "row", StringType, false, 1)
+            }
+            elementType("row") {
+                // row = expression (','? expression)* ;
+                propertyElementTypeOf("expression", "expression", false, 0)
+                propertyListOfTupleType("\$group", false, 1) {
+                    propertyUnnamedStringType(true, 0)
+                    propertyElementTypeOf("expression", "expression", false, 1)
+                }
+            }
+            elementType("literalExpression") {
+                propertyStringType("literalValue", false, 0)
+            }
+            stringTypeFor("literalValue")
+            //elementType("literalValue") {
+            //    literal
+            //      = BOOLEAN
+            //      | number
+            //      | SINGLE_QUOTE_STRING
+            //      | DOUBLE_QUOTE_STRING
+            //      ;
+            //    propertyUnnamedPrimitiveType(PrimitiveType.ANY, false, 0)
+            //}
+            elementType("rootVariable") {
+                // rootVariable = NAME ;
+                propertyStringType("NAME", false, 0)
+            }
+            stringTypeFor("number")
+            //elementType("number") {
+            // number = INTEGER | REAL ;
+            //    propertyUnnamedPrimitiveType(StringType, false, 0)
+            //}
+        }
+        assertEquals(expected.asString(), actual.asString())
+        TypeModelTest.assertEquals(expected, actual)
+    }
 
     @Test
     fun t1() {

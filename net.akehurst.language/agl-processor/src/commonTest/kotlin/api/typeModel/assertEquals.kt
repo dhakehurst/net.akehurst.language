@@ -58,11 +58,11 @@ object TypeModelTest {
 
     private fun tmAssertEquals(expected: ElementType, actual: ElementType) {
         assertEquals(expected.name, actual.name)
-        assertEquals(expected.superType.size, actual.superType.size, "Wrong number of superTypes for '${expected.name}'")
-        assertEquals(expected.superType.map { it.name }.toSet(), actual.superType.map { it.name }.toSet())
+        assertEquals(expected.supertypes.size, actual.supertypes.size, "Wrong number of superTypes for '${expected.name}'")
+        assertEquals(expected.supertypes.map { it.name }.toSet(), actual.supertypes.map { it.name }.toSet())
 
-        assertEquals(expected.subType.size, actual.subType.size, "Wrong number of subTypes for '${expected.name}'")
-        assertEquals(expected.subType.map { it.name }.toSet(), actual.subType.map { it.name }.toSet())
+        assertEquals(expected.subtypes.size, actual.subtypes.size, "Wrong number of subTypes for '${expected.name}'")
+        assertEquals(expected.subtypes.map { it.name }.toSet(), actual.subtypes.map { it.name }.toSet())
 
         assertEquals(expected.property.size, actual.property.size, "Wrong number of properties for '${expected.name}'")
         for (k in expected.property.keys) {

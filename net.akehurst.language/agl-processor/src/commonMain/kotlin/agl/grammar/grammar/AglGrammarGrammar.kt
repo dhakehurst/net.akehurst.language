@@ -66,8 +66,8 @@ POSITIVE_INTEGER = "[0-9]+" ;
 POSITIVE_INTEGER_GT_ZERO = "[1-9][0-9]*" ;
 }
  */
-internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar") {
-    companion object {
+internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar") {
+    //companion object {
         const val goalRuleName = "grammarDefinition"
         private fun createRules(): List<GrammarRule> {
             val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar")
@@ -138,7 +138,7 @@ internal class AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
             b.leaf("POSITIVE_INTEGER_GT_ZERO").concatenation(b.terminalPattern("[1-9][0-9]*"))
             return b.grammar.rule
         }
-    }
+    //}
 
     init {
         super.rule.addAll(createRules())

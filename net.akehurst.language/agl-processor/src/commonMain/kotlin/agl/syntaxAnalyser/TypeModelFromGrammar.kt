@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.agl.grammar.grammar.PseudoRuleNames
+import net.akehurst.language.agl.collections.toOrderedSet
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.typeModel.*
 
@@ -37,8 +38,11 @@ class TypeModelFromGrammar(
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredRuleType, String>, Int>()
     private val _pseudoRuleNameGenerator = PseudoRuleNames(grammar)
 
+    override val namespace: String get() = grammar.namespace.qualifiedName
+    override val name: String get() = grammar.name
+
     override val types: Map<String, RuleType> by lazy {
-        grammar.allRule
+        grammar.allResolvedRule
             .filter { it.isLeaf.not() && it.isSkip.not() }
             .associateBy({ it.name }) {
                 typeForRhs(it) as RuleType
@@ -77,7 +81,7 @@ class TypeModelFromGrammar(
     private fun findOrCreateElementType(name: String): ElementType {
         val existing = _ruleToType[name]
         return if (null == existing) {
-            val type = ElementType(name)
+            val type = ElementType(this,name)
             _ruleToType[name] = type //halt recursion
             type
         } else {
@@ -88,7 +92,7 @@ class TypeModelFromGrammar(
     private fun createElementType(name: String): ElementType {
         val existing = _ruleToType[name]
         return if (null == existing) {
-            val type = ElementType(name)
+            val type = ElementType(this, name)
             _ruleToType[name] = type //halt recursion
             type
         } else {
@@ -119,7 +123,7 @@ class TypeModelFromGrammar(
                 is EmptyRule -> findOrCreateElementType(rule.name)
                 is Choice -> typeForChoiceRule(rule)
                 is Concatenation -> typeForConcatenation(rule, rhs.items)
-                else -> error("Internal error, unhandled subtype of rule.rhs")
+                else -> error("Internal error, unhandled subtype of rule '${rule.name}'.rhs '${rhs::class.simpleName}' when getting TypeModel from grammar '${this.grammar.qualifiedName}'")
             }
             if (ruleType is ElementType) {
                 _ruleToType[rule.name] = ruleType
@@ -151,7 +155,7 @@ class TypeModelFromGrammar(
                 }
 
                 is Embedded -> {
-                    val embTmfg = TypeModelFromGrammar(ruleItem.embeddedGrammar)
+                    val embTmfg = TypeModelFromGrammar(ruleItem.embeddedGrammarReference.resolved!!) //TODO: check for null
                     val embTm = embTmfg
                     embTm.findType(ruleItem.name) ?: error("Should never happen")
                 }
@@ -313,11 +317,11 @@ class TypeModelFromGrammar(
 
             subtypes.all { it is TupleType } -> when {
                 1 == subtypes.map { (it as TupleType).property.values.map { Pair(it.name, it.type) }.toSet() }.toSet().size -> subtypes.first()
-                else -> UnnamedSuperTypeType(subtypes)
+                else -> UnnamedSuperTypeType(subtypes.toOrderedSet())
             }
 
             else -> {
-                val choiceType = UnnamedSuperTypeType(subtypes)
+                val choiceType = UnnamedSuperTypeType(subtypes.toOrderedSet())
                 //_ruleToType[choiceRule] = choiceType
                 //createUniquePropertyDeclaration(choiceType, UNNAMED_ANY_PROPERTY_NAME, PrimitiveType.ANY, false, 0)
                 choiceType
@@ -334,7 +338,7 @@ class TypeModelFromGrammar(
             is EmptyRule -> Unit
             is Terminal -> Unit //createUniquePropertyDeclaration(et, UNNAMED_STRING_VALUE, propType)
             is Embedded -> {
-                val refRule = ruleItem.referencedRule(ruleItem.embeddedGrammar)
+                val refRule = ruleItem.referencedRule(ruleItem.embeddedGrammarReference.resolved!!) //TODO: check for null
                 createPropertyDeclarationForReferencedRule(refRule, et, ruleItem, childIndex)
             }
 

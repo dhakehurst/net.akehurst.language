@@ -21,8 +21,8 @@ import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.api.grammar.GrammarRule
 
 
-internal class AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglFormat") {
-    companion object {
+internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglFormat") {
+    //companion object {
         const val goalRuleName = "rules"
         private fun createRules(): List<GrammarRule> {
             val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglFormat");
@@ -37,7 +37,7 @@ internal class AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurst
 
             return b.grammar.rule
         }
-    }
+    //}
 
     init {
         super.rule.addAll(createRules())

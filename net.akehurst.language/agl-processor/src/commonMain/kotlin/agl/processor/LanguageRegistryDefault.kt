@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.grammar.GrammarRegistryDefault
 import net.akehurst.language.agl.grammar.format.AglFormatGrammar
 import net.akehurst.language.agl.grammar.format.AglFormatSyntaxAnalyser
 import net.akehurst.language.agl.grammar.grammar.*
@@ -42,24 +41,24 @@ interface AglLanguages {
     val scopes: LanguageDefinition<ScopeModel, SentenceContext<GrammarItem>>
 }
 
-class LanguageRegistry {
+class LanguageRegistryDefault : LanguageRegistry {
 
     private val _registry = mutableMapOf<String, LanguageDefinition<*, *>>()
 
     val agl = object : AglLanguages {
-        override val grammarLanguageIdentity: String = "net.akehurst.language.agl.AglGrammar"
-        override val styleLanguageIdentity: String = "net.akehurst.language.agl.AglStyle"
-        override val formatLanguageIdentity: String = "net.akehurst.language.agl.AglFormat"
-        override val scopesLanguageIdentity: String = "net.akehurst.language.agl.AglScopes"
+        override val grammarLanguageIdentity: String = AglGrammarGrammar.qualifiedName
+        override val styleLanguageIdentity: String = AglStyleGrammar.qualifiedName
+        override val formatLanguageIdentity: String = AglFormatGrammar.qualifiedName
+        override val scopesLanguageIdentity: String = AglScopesGrammar.qualifiedName
 
-        override val grammar = this@LanguageRegistry.registerFromDefinition(
+        override val grammar = this@LanguageRegistryDefault.registerFromDefinition(
             LanguageDefinitionFromAsm(
                 identity = grammarLanguageIdentity,
-                grammar = AglGrammarGrammar(),
+                grammarArg = AglGrammarGrammar,
                 targetGrammar = null,
-                defaultGoalRule = AglGrammarGrammar.goalRuleName,
+                defaultGoalRuleArg = AglGrammarGrammar.goalRuleName,
                 buildForDefaultGoal = false,
-                style = """
+                styleArg = """
                     'namespace' {
                       foreground: darkgreen;
                       font-style: bold;
@@ -95,10 +94,10 @@ class LanguageRegistry {
                       font-style: italic;
                     }
                 """.trimIndent(),
-                format = """
+                formatArg = """
                 """.trimIndent(),
-                syntaxAnalyserResolver = { AglGrammarSyntaxAnalyser(GrammarRegistryDefault) }, //TODO: enable the registry to be changed,
-                semanticAnalyserResolver = { AglGrammarSemanticAnalyser() },
+                syntaxAnalyserResolverArg = { AglGrammarSyntaxAnalyser(this@LanguageRegistryDefault) }, //TODO: enable the registry to be changed,
+                semanticAnalyserResolverArg = { AglGrammarSemanticAnalyser() },
                 aglOptionsArg = Agl.options {
                     parse {
                         goalRuleName(AglScopesGrammar.goalRuleName)
@@ -110,14 +109,14 @@ class LanguageRegistry {
             )
         )
 
-        override val style = this@LanguageRegistry.registerFromDefinition(
+        override val style = this@LanguageRegistryDefault.registerFromDefinition(
             LanguageDefinitionFromAsm(
                 identity = styleLanguageIdentity,
-                grammar = AglStyleGrammar(),
+                grammarArg = AglStyleGrammar,
                 targetGrammar = null,
-                defaultGoalRule = AglStyleGrammar.goalRuleName,
+                defaultGoalRuleArg = AglStyleGrammar.goalRuleName,
                 buildForDefaultGoal = false,
-                style = """
+                styleArg = """
                     META_IDENTIFIER {
                       foreground: orange;
                       font-style: bold;
@@ -139,10 +138,10 @@ class LanguageRegistry {
                       font-style: italic;
                     }
                 """.trimIndent(),
-                format = """
+                formatArg = """
                 """.trimIndent(),
-                syntaxAnalyserResolver = { AglStyleSyntaxAnalyser() },
-                semanticAnalyserResolver = null,
+                syntaxAnalyserResolverArg = { AglStyleSyntaxAnalyser() },
+                semanticAnalyserResolverArg = null,
                 aglOptionsArg = Agl.options {
                     parse {
                         goalRuleName(AglScopesGrammar.goalRuleName)
@@ -154,19 +153,19 @@ class LanguageRegistry {
             )
         )
 
-        override val format = this@LanguageRegistry.registerFromDefinition(
+        override val format = this@LanguageRegistryDefault.registerFromDefinition(
             LanguageDefinitionFromAsm(
                 identity = formatLanguageIdentity,
-                grammar = AglFormatGrammar(),
+                grammarArg = AglFormatGrammar,
                 targetGrammar = null,
-                defaultGoalRule = AglFormatGrammar.goalRuleName,
+                defaultGoalRuleArg = AglFormatGrammar.goalRuleName,
                 buildForDefaultGoal = false,
-                style = """
+                styleArg = """
                 """.trimIndent(),
-                format = """
+                formatArg = """
                 """.trimIndent(),
-                syntaxAnalyserResolver = { AglFormatSyntaxAnalyser() },
-                semanticAnalyserResolver = null,
+                syntaxAnalyserResolverArg = { AglFormatSyntaxAnalyser() },
+                semanticAnalyserResolverArg = null,
                 aglOptionsArg = Agl.options {
                     parse {
                         goalRuleName(AglScopesGrammar.goalRuleName)
@@ -178,14 +177,14 @@ class LanguageRegistry {
             )
         )
 
-        override val scopes: LanguageDefinition<ScopeModel, SentenceContext<GrammarItem>> = this@LanguageRegistry.registerFromDefinition(
+        override val scopes: LanguageDefinition<ScopeModel, SentenceContext<GrammarItem>> = this@LanguageRegistryDefault.registerFromDefinition(
             LanguageDefinitionFromAsm(
                 identity = scopesLanguageIdentity,
-                grammar = AglScopesGrammar(),
+                grammarArg = AglScopesGrammar,
                 targetGrammar = null,
-                defaultGoalRule = AglScopesGrammar.goalRuleName,
+                defaultGoalRuleArg = AglScopesGrammar.goalRuleName,
                 buildForDefaultGoal = false,
-                style = """
+                styleArg = """
                     'scope' {
                       foreground: darkgreen;
                       font-style: bold;
@@ -219,10 +218,10 @@ class LanguageRegistry {
                       font-style: bold;
                     }
                 """.trimIndent(),
-                format = """
+                formatArg = """
                 """.trimIndent(),
-                syntaxAnalyserResolver = { AglScopesSyntaxAnalyser() },
-                semanticAnalyserResolver = null,
+                syntaxAnalyserResolverArg = { AglScopesSyntaxAnalyser() },
+                semanticAnalyserResolverArg = null,
                 aglOptionsArg = Agl.options {
                     parse {
                         goalRuleName(AglScopesGrammar.goalRuleName)
@@ -285,13 +284,24 @@ class LanguageRegistry {
         return this._registry[identity] as LanguageDefinition<AsmType, ContextType>?
     }
 
+    /**
+     * try to find localNamespace.nameOrQName or if not found try to find nameOrQName
+     */
+    fun <AsmType : Any, ContextType : Any> findWithNamespaceOrNull(localNamespace:String, nameOrQName: String): LanguageDefinition<AsmType, ContextType>? {
+        return findOrNull("$localNamespace.$nameOrQName") ?: findOrNull(nameOrQName)
+    }
+
     fun <AsmType : Any, ContextType : Any> findOrPlaceholder(identity: String): LanguageDefinition<AsmType, ContextType> {
         val existing = this.findOrNull<AsmType, ContextType>(identity)
         return if (null == existing) {
             val placeholder = LanguageDefinitionDefault<AsmType, ContextType>(
-                identity, null, null, null, false,
-                style = null,
-                format = null,
+                identity = identity,
+                grammarStrArg = null,
+                targetGrammarArg = null,
+                defaultGoalRuleArg = null,
+                buildForDefaultGoal = false,
+                styleArg = null,
+                formatArg = null,
                 syntaxAnalyserResolverArg = null,
                 semanticAnalyserResolverArg = null,
                 aglOptionsArg = null

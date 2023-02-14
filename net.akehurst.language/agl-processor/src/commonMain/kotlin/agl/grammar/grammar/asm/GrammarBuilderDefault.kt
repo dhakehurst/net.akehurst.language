@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.grammar.grammar.asm
 
-import net.akehurst.language.agl.grammar.GrammarRegistryDefault
+import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.collections.lazyMutableMapNonNull
 
@@ -54,7 +54,10 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
     }
 
     fun embed(embeddedGrammarName:String, embeddedGoalName:String) : Embedded {
-        val embeddedGrammar = GrammarRegistryDefault.find(this.namespace.qualifiedName, embeddedGrammarName)
+        val qn = embeddedGrammarName
+        val def = Agl.registry.findOrNull<Any,Any>(qn) ?: error("Trying to extend grammar '$qn' but cannot find it in the registry")
+        val embeddedGrammar = def.processor!!.grammar
+
         return EmbeddedDefault(embeddedGoalName, embeddedGrammar)
     }
 

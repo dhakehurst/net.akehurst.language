@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
+import net.akehurst.language.api.processor.LanguageRegistry
 
 class GrammarDefault(
     override val namespace: Namespace,
@@ -27,18 +28,30 @@ class GrammarDefault(
     //override val rule: MutableList<GrammarRule> get() = super.rule
 }
 
+data class GrammarReferenceDefault(
+    override val localNamespace: Namespace,
+    override val nameOrQName: String
+) : GrammarReference {
+    override var resolved: Grammar? = null
+    override fun resolveAs(resolved: Grammar) {
+        this.resolved = resolved
+    }
+}
+
 abstract class GrammarAbstract(
     override val namespace: Namespace,
     override val name: String
 ) : Grammar {
 
-    override val extends: MutableList<Grammar> = mutableListOf<Grammar>()
+    override val qualifiedName: String get() = "${namespace.qualifiedName}.$name"
+
+    override val extends: MutableList<GrammarReference> = mutableListOf<GrammarReference>()
 
     override val rule: MutableList<GrammarRule> = mutableListOf<GrammarRule>()
 
-    override val allRule: List<GrammarRule> by lazy {
+    override val allResolvedRule: List<GrammarRule> by lazy {
         //TODO: Handle situation where super grammar/rule is included more than once ?
-        val rules = this.extends.flatMap { it.allRule }.toMutableList()
+        val rules = this.extends.flatMap { it.resolved?.allResolvedRule?: emptyList() }.toMutableList()
         this.rule.forEach { rule ->
             if (rule.isOverride) {
                 val overridden = rules.find { it.name == rule.name }
@@ -52,8 +65,8 @@ abstract class GrammarAbstract(
         rules
     }
 
-    override val allTerminal: Set<Terminal> by lazy {
-        this.allRule.toSet().flatMap {
+    override val allResolvedTerminal: Set<Terminal> by lazy {
+        this.allResolvedRule.toSet().flatMap {
             when (it.isLeaf) {
                 true -> setOf(it.compressedLeaf)
                 false -> it.rhs.allTerminal
@@ -61,21 +74,21 @@ abstract class GrammarAbstract(
         }.toSet()
     }
 
-    override val allNonTerminalRule: Set<GrammarRule> by lazy {
-        this.allRule.filter { it.isLeaf.not() }.toSet()
+    override val allResolvedNonTerminalRule: Set<GrammarRule> by lazy {
+        this.allResolvedRule.filter { it.isLeaf.not() }.toSet()
     }
 
-    override val allEmbeddedRules: Set<Embedded>by lazy {
-        this.allRule.flatMap { it.rhs.allEmbedded }.toSet()
+    override val allResolvedEmbeddedRules: Set<Embedded>by lazy {
+        this.allResolvedRule.flatMap { it.rhs.allEmbedded }.toSet()
     }
 
-    override val allEmbeddedGrammars: Set<Grammar>by lazy {
-        val egs = this.allEmbeddedRules.map { it.embeddedGrammar }.toSet()
-        egs + egs.flatMap { it.allEmbeddedGrammars }.toSet()//FIXME: recursion
+    override val allResolvedEmbeddedGrammars: Set<Grammar> by lazy {
+        val egs = this.allResolvedEmbeddedRules.mapNotNull {  it.embeddedGrammarReference.resolved  }.toSet()
+        egs + egs.flatMap { it.allResolvedEmbeddedGrammars }.toSet()//FIXME: recursion
     }
 
     override fun findNonTerminalRule(ruleName: String): GrammarRule? {
-        val all = this.allRule.filter { it.name == ruleName }
+        val all = this.allResolvedRule.filter { it.name == ruleName }
         return when {
             all.isEmpty() -> null//throw GrammarRuleNotFoundException("NonTerminal GrammarRule '${ruleName}' not found in grammar '${this.name}'")
             all.size > 1 -> throw GrammarRuleNotFoundException("More than one rule named '${ruleName}' in grammar '${this.name}', have you remembered the 'override' modifier")
@@ -84,7 +97,7 @@ abstract class GrammarAbstract(
     }
 
     override fun findTerminalRule(terminalPattern: String): Terminal {
-        val all = this.allTerminal.filter { it.value == terminalPattern }
+        val all = this.allResolvedTerminal.filter { it.value == terminalPattern }
         when {
             all.isEmpty() -> throw GrammarRuleNotFoundException("$terminalPattern in Grammar(${this.name}).findTerminalRule")
             all.size > 1 -> throw GrammarRuleNotFoundException("More than one rule named $terminalPattern in Grammar(${this.name}).findTerminalRule")

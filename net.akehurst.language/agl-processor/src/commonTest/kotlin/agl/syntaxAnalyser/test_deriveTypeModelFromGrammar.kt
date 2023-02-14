@@ -16,6 +16,8 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.collections.mutableOrderedSetOf
+import net.akehurst.language.agl.collections.orderedSetOf
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.typeModel.*
 import kotlin.test.Test
@@ -43,7 +45,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty())
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
             }
         }
@@ -66,7 +68,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty())
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 propertyStringType("a", false, 0)
             }
@@ -89,7 +91,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty())
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
             }
         }
@@ -112,7 +114,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty())
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 propertyStringType("v", false, 0)
             }
@@ -135,7 +137,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty())
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
             }
         }
@@ -157,7 +159,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty())
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             stringTypeFor("S")
         }
 
@@ -185,7 +187,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty())
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 subTypes("A", "B", "C")
             }
@@ -222,7 +224,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty())
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             stringTypeFor("S")
             stringTypeFor("L")
             stringTypeFor("M")
@@ -254,7 +256,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty())
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 subTypes("A", "B", "C")
             }
@@ -273,7 +275,7 @@ class test_deriveTypeModelFromGrammar {
                 propertyStringType("d", false, 0)
             }
         }
-
+println(actual.asString())
         assertEquals(expected.asString(), actual.asString())
         TypeModelTest.assertEquals(expected, actual)
     }
@@ -292,7 +294,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty())
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 propertyUnnamedStringType(true, 0) // of String
             }
@@ -315,7 +317,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 propertyUnnamedListType(StringType, false, 0) // of String
             }
@@ -339,7 +341,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 propertyListSeparatedType("as", StringType, StringType, false, 0)
             }
@@ -367,7 +369,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 propertyListSeparatedTypeOf("as", "a", StringType, false, 0) // of String
             }
@@ -398,7 +400,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 propertyListSeparatedTypeOf("ass", "as", StringType, false, 0) // of String
             }
@@ -432,7 +434,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 propertyStringType("a", false, 0)
                 propertyStringType("b", false, 1)
@@ -463,7 +465,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty())
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 propertyStringType("a", false, 0)
                 propertyStringType("b", false, 2)
@@ -492,7 +494,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 propertyListType("as", StringType, false, 0) // of String
             }
@@ -520,7 +522,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 propertyStringType("a", false, 0)
                 propertyStringType("e", false, 2)
@@ -549,7 +551,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 propertyStringType("a", false, 0)
                 propertyTupleType("\$group", false, 1) {
@@ -581,7 +583,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty())
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 propertyStringType("a", false, 0)
                 propertyStringType("\$group", false, 1)
@@ -611,7 +613,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 propertyStringType("a", false, 0)
                 propertyStringType("\$group", false, 1)
@@ -641,12 +643,12 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 propertyStringType("a", false, 0)
                 property(
                     "\$group", UnnamedSuperTypeType(
-                        listOf(
+                        orderedSetOf(
                             TupleType {
                                 PropertyDeclaration(this, "b", StringType, false, 0)
                                 PropertyDeclaration(this, "c", StringType, false, 1)
@@ -682,11 +684,11 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
-        val expected = typeModel {
+        val expected = typeModel("test", "Test") {
             elementType("S") {
                 propertyStringType("a", false, 0)
                 property(
-                    "\$group", UnnamedSuperTypeType(listOf(
+                    "\$group", UnnamedSuperTypeType(orderedSetOf(
                         TupleType {
                             PropertyDeclaration(this, "b", StringType, false, 0)
                             PropertyDeclaration(this, "c", StringType, false, 1)

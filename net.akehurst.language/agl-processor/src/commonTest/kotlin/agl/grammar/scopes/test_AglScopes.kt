@@ -21,6 +21,9 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.typeModel.TypeModel
+import net.akehurst.language.api.typeModel.TypeModelTest
+import net.akehurst.language.api.typeModel.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -28,6 +31,16 @@ class test_AglScopes {
 
     private companion object {
         val aglProc = Agl.registry.agl.scopes.processor!!
+    }
+
+    @Test
+    fun scopes_typeModel() {
+        val actual = aglProc.typeModel
+        val expected = typeModel("net.akehurst.language.agl","AglScopes") {
+
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
     }
 
     @Test

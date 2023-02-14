@@ -21,21 +21,24 @@ import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 @DslMarker
 annotation class TypeModelDslMarker
 
-fun typeModel(init: TypeModelBuilder.() -> Unit): TypeModel {
-    val b = TypeModelBuilder()
+fun typeModel(namespace: String, name: String, init: TypeModelBuilder.() -> Unit): TypeModel {
+    val b = TypeModelBuilder(namespace, name)
     b.init()
     val m = b.build()
     return m
 }
 
 @TypeModelDslMarker
-class TypeModelBuilder {
+class TypeModelBuilder(
+    val namespace: String,
+    val name: String
+) {
 
     private val _types = mutableMapOf<String, RuleType>()
     private fun findOrCreateType(name: String): ElementType {
         val existing = _types[name]
         return if (null == existing) {
-            val t = ElementType(name)
+            val t = ElementType(_model, name)
             _types[name] = t
             t
         } else {
@@ -44,6 +47,8 @@ class TypeModelBuilder {
     }
 
     private val _model = object : TypeModel {
+        override val namespace: String = this@TypeModelBuilder.namespace
+        override val name: String = this@TypeModelBuilder.name
         override val types = _types
         override fun findType(name: String): RuleType = findOrCreateType(name)
     }
@@ -71,7 +76,7 @@ abstract class StructuredTypeBuilder(
 ) {
     protected abstract val _structuredType: StructuredRuleType
 
-    fun propertyUnnamedAnyType(isNullable: Boolean, childIndex: Int):PropertyDeclaration =
+    fun propertyUnnamedAnyType(isNullable: Boolean, childIndex: Int): PropertyDeclaration =
         property(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, AnyType, isNullable, childIndex)
 
     fun propertyUnnamedStringType(isNullable: Boolean, childIndex: Int): PropertyDeclaration =

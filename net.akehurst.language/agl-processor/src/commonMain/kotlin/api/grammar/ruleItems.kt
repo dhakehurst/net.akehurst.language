@@ -64,6 +64,7 @@ interface Terminal : TangibleItem, GrammarItem {
     val value: String
 }
 interface NonTerminal : TangibleItem {
+    fun referencedRuleOrNull(targetGrammar: Grammar) : GrammarRule?
     fun referencedRule(targetGrammar: Grammar): GrammarRule
 }
 interface Embedded : TangibleItem {
@@ -76,7 +77,7 @@ interface Embedded : TangibleItem {
     /**
      * The Grammar to embed
      */
-    val embeddedGrammar: Grammar
+    val embeddedGrammarReference: GrammarReference
 
     fun referencedRule(targetGrammar: Grammar): GrammarRule
 }

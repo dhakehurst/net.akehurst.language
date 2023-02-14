@@ -16,37 +16,44 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.agl.grammar.GrammarRegistryDefault
 import net.akehurst.language.agl.grammar.grammar.asm.*
+import net.akehurst.language.agl.processor.LanguageDefinitionFromAsm
+import net.akehurst.language.agl.processor.LanguageRegistryDefault
+import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.syntaxAnalyser.BranchHandler
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserAbstract
-import net.akehurst.language.api.asm.AsmElementPath
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
+import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.grammar.*
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 
 internal class AglGrammarSyntaxAnalyser(
-    val grammarRegistry: GrammarRegistry
+    //val languageRegistry: LanguageRegistryDefault
 ) : SyntaxAnalyserAbstract<List<Grammar>, GrammarContext>() {
 
-    var grammarLoader: GrammarLoader? = null
+    override val locationMap = mutableMapOf<Any, InputLocation>()
+
     private val _issues = mutableListOf<LanguageIssue>()
 
     init {
-        this.register("grammarDefinition", this::grammarDefinition as BranchHandler<Grammar>)
+        this.register("grammarDefinition", this::grammarDefinition as BranchHandler<List<Grammar>>)
         this.register("namespace", this::namespace as BranchHandler<Namespace>)
         this.register("definitions", this::definitions as BranchHandler<List<Grammar>>)
         this.register("grammar", this::grammar as BranchHandler<Grammar>)
-        this.register("extends", this::extends as BranchHandler<List<Grammar>>)
+        this.register("extends", this::extends as BranchHandler<List<GrammarReference>>)
         this.register("rules", this::rules as BranchHandler<List<GrammarRule>>)
         this.register("rule", this::rule as BranchHandler<GrammarRule>)
         this.register("ruleTypeLabels", this::ruleTypeLabels as BranchHandler<List<String>>)
         // this.register("ruleType", this::ruleType as BranchHandler<GrammarRule>)
-        this.register("rhs", this::rhs as BranchHandler<GrammarRule>)
-        this.register("empty", this::empty as BranchHandler<GrammarRule>)
+        this.register("rhs", this::rhs as BranchHandler<RuleItem>)
+        this.register("empty", this::empty as BranchHandler<RuleItem>)
         this.register("choice", this::choice as BranchHandler<RuleItem>)
         this.register("simpleChoice", this::simpleChoice as BranchHandler<RuleItem>)
         this.register("priorityChoice", this::priorityChoice as BranchHandler<RuleItem>)
@@ -65,15 +72,16 @@ internal class AglGrammarSyntaxAnalyser(
         this.register("rangeMaxUnbounded", this::rangeMaxUnbounded as BranchHandler<Int>)
         this.register("simpleList", this::simpleList as BranchHandler<SimpleList>)
         this.register("group", this::group as BranchHandler<Group>)
-        this.register("groupedContent", this::groupedContent as BranchHandler<Group>)
+        this.register("groupedContent", this::groupedContent as BranchHandler<RuleItem>)
         this.register("separatedList", this::separatedList as BranchHandler<SeparatedList>)
         this.register("nonTerminal", this::nonTerminal as BranchHandler<NonTerminal>)
-        this.register("embedded", this::embedded as BranchHandler<Terminal>)
+        this.register("embedded", this::embedded as BranchHandler<Embedded>)
         this.register("terminal", this::terminal as BranchHandler<Terminal>)
         this.register("qualifiedName", this::qualifiedName as BranchHandler<String>)
     }
 
     override fun clear() {
+        locationMap.clear()
         _issues.clear()
     }
 
@@ -105,33 +113,75 @@ internal class AglGrammarSyntaxAnalyser(
     // namespace : 'namespace' qualifiedName ;
     private fun namespace(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Namespace {
         val qualifiedName = this.transformBranch<String>(children[0], null)
-        return NamespaceDefault(qualifiedName)
+        return NamespaceDefault(qualifiedName).also { this.locationMap[it] = target.location }
     }
 
     // grammar : 'grammar' IDENTIFIER extends? '{' rules '}' ;
     private fun grammar(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Grammar {
         val namespace = arg as Namespace
         val name = target.nonSkipChildren[1].nonSkipMatchedText
-        val extends = this.transformBranch<List<Grammar>>(children[0], namespace)
-        val result = GrammarDefault(namespace, name)
-        result.extends.addAll(extends)
-
-        this.grammarRegistry.register(result)
-
-        this.transformBranch<List<GrammarRule>>(children[1], result) //creating a GrammarRule adds it to the grammar
-
-        return result
+        val extends = this.transformBranch<List<GrammarReference>>(children[0], namespace)
+        val grmr = GrammarDefault(namespace, name).also { this.locationMap[it] = target.location }
+        grmr.extends.addAll(extends)
+        this.transformBranch<List<GrammarRule>>(children[1], grmr) //creating a GrammarRule adds it to the grammar
+        return grmr
+/*
+        val def = this.languageRegistry.findWithNamespaceOrNull<Any, Any>(namespace.qualifiedName, name)
+        return if (null == def) {
+            this.languageRegistry.registerFromDefinition(
+                LanguageDefinitionFromAsm(
+                    identity = grmr.qualifiedName,
+                    grammarArg = grmr,
+                    targetGrammar = grmr.name,
+                    defaultGoalRuleArg = null,
+                    buildForDefaultGoal = false,
+                    styleArg = null,
+                    formatArg = null,
+                    syntaxAnalyserResolverArg = { g -> SyntaxAnalyserSimple(TypeModelFromGrammar(g)) },
+                    semanticAnalyserResolverArg = { _ -> SemanticAnalyserSimple() },
+                    aglOptionsArg = null
+                )
+            )
+            grmr
+        } else {
+            if(def.identity != grmr.qualifiedName) {
+                _issues.add(LanguageIssue(LanguageIssueKind.WARNING,LanguageProcessorPhase.SYNTAX_ANALYSIS,target.location, "Registered identity '${def.identity}' does not match qualified name of grammar",null))
+            } else {
+                //
+            }
+            def.grammar = grmr
+            grmr
+        }
+*/
     }
 
     // extends : 'extends' [qualifiedName / ',']+ ;
-    private fun extends(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<Grammar> {
+    private fun extends(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<GrammarReference> {
         val localNamespace = arg as Namespace
         return if (children.isEmpty()) {
-            emptyList<Grammar>()
+            emptyList<GrammarReference>()
         } else {
             val extendNameList = children[0].branchNonSkipChildren[0].branchNonSkipChildren.map { it.nonSkipMatchedText }
-            val extendedGrammars = extendNameList.map {
-                this.grammarRegistry.find(localNamespace.qualifiedName, it)
+            val extendedGrammars = extendNameList.mapNotNull {
+                val qn = localNamespace.qualifiedName + "." + it
+                GrammarReferenceDefault(localNamespace, it)
+                /*
+                val def = this.languageRegistry.findWithNamespaceOrNull<Any, Any>(localNamespace.qualifiedName, it)
+                if (null == def) {
+                    _issues.add(
+                        LanguageIssue(
+                            LanguageIssueKind.ERROR,
+                            LanguageProcessorPhase.SYNTAX_ANALYSIS,
+                            target.location,
+                            "Trying to extend but failed to find grammar '$it' as a qualified name or in namespace '${localNamespace.qualifiedName}'",
+                            null
+                        )
+                    )
+                    null
+                } else {
+                    def.grammar
+                }
+                 */
             }
             extendedGrammars
         }
@@ -152,7 +202,7 @@ internal class AglGrammarSyntaxAnalyser(
         val isSkip = type.contains("skip")
         val isLeaf = type.contains("leaf")
         val name = target.nonSkipChildren[1].nonSkipMatchedText
-        val result = RuleDefault(grammar, name, isOverride, isSkip, isLeaf)
+        val result = RuleDefault(grammar, name, isOverride, isSkip, isLeaf).also { this.locationMap[it] = target.location }
         val rhs = this.transformBranch<RuleItem>(children[1], arg)
         result.rhs = rhs
         return result
@@ -178,7 +228,7 @@ internal class AglGrammarSyntaxAnalyser(
 
     // empty = ;
     private fun empty(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem {
-        return EmptyRuleDefault()
+        return EmptyRuleDefault().also { this.locationMap[it] = target.location }
     }
 
     // choice = ambiguousChoice | priorityChoice | simpleChoice ;
@@ -192,7 +242,7 @@ internal class AglGrammarSyntaxAnalyser(
         val alternative = children.mapIndexed { index, it ->
             this.transformBranch<Concatenation>(it, arg)
         }
-        return ChoiceLongestDefault(alternative)
+        return ChoiceLongestDefault(alternative).also { this.locationMap[it] = target.location }
     }
 
     // priorityChoice : [concatenation, '<']* ;
@@ -200,7 +250,7 @@ internal class AglGrammarSyntaxAnalyser(
         val alternative = children.mapIndexed { index, it ->
             this.transformBranch<Concatenation>(it, arg)
         }
-        return ChoicePriorityDefault(alternative)
+        return ChoicePriorityDefault(alternative).also { this.locationMap[it] = target.location }
     }
 
     // ambiguousChoice : [concatenation, '||']* ;
@@ -208,7 +258,7 @@ internal class AglGrammarSyntaxAnalyser(
         val alternative = children.mapIndexed { index, it ->
             this.transformBranch<Concatenation>(it, arg)
         }
-        return ChoiceAmbiguousDefault(alternative)
+        return ChoiceAmbiguousDefault(alternative).also { this.locationMap[it] = target.location }
     }
 
     // concatenation : concatenationItem+ ;
@@ -216,7 +266,7 @@ internal class AglGrammarSyntaxAnalyser(
         val items = children.mapIndexed { index, it ->
             this.transformBranch<ConcatenationItem>(it, arg)
         }
-        return ConcatenationDefault(items)
+        return ConcatenationDefault(items).also { this.locationMap[it] = target.location }
     }
 
     // concatenationItem = simpleItem | listOfItems ;
@@ -280,7 +330,7 @@ internal class AglGrammarSyntaxAnalyser(
     private fun simpleList(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): SimpleList {
         val (min, max) = this.transformBranch<Pair<Int, Int>>(children[1], arg)
         val item = this.transformBranch<SimpleItem>(children[0], arg)
-        return SimpleListDefault(min, max, item)
+        return SimpleListDefault(min, max, item).also { this.locationMap[it] = target.location }
     }
 
     // separatedList : '[' simpleItem '/' terminal ']' multiplicity ;
@@ -288,16 +338,16 @@ internal class AglGrammarSyntaxAnalyser(
         val (min, max) = this.transformBranch<Pair<Int, Int>>(children[2], arg)
         val separator = this.transformBranch<SimpleItem>(children[1], arg)
         val item = this.transformBranch<SimpleItem>(children[0], arg)
-        return SeparatedListDefault(min, max, item, separator)//, SeparatedListKind.Flat)
+        return SeparatedListDefault(min, max, item, separator).also { this.locationMap[it] = target.location }
     }
 
     // group : '(' choice ')' ;
     private fun group(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Group {
         val groupContent = this.transformBranch<RuleItem>(children[0], arg)
         return when (groupContent) {
-            is Choice -> GroupDefault(groupContent)
-            is Concatenation -> GroupDefault(ChoiceLongestDefault(listOf(groupContent)))
-            else -> error("Intertnal Error: type of group content not handled '${groupContent::class.simpleName}'")
+            is Choice -> GroupDefault(groupContent).also { this.locationMap[it] = target.location }
+            is Concatenation -> GroupDefault(ChoiceLongestDefault(listOf(groupContent))).also { this.locationMap[it] = target.location }
+            else -> error("Internal Error: type of group content not handled '${groupContent::class.simpleName}'")
         }
     }
 
@@ -310,16 +360,21 @@ internal class AglGrammarSyntaxAnalyser(
     private fun nonTerminal(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): NonTerminal {
         val thisGrammar = arg as Grammar
         val nonTerminalRef = target.nonSkipChildren[0].nonSkipMatchedText
-        return NonTerminalDefault(nonTerminalRef)
+        val nt = NonTerminalDefault(nonTerminalRef).also { this.locationMap[it] = target.location }
+        return nt
     }
 
     // embedded = qualifiedName '::' nonTerminal ;
     private fun embedded(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Embedded {
         val thisGrammar = arg as Grammar
-        val embeddedGrammarRef = target.nonSkipChildren[0].nonSkipMatchedText
+        val embeddedGrammarStr = target.nonSkipChildren[0].nonSkipMatchedText
         val embeddedStartRuleRef = target.nonSkipChildren[2].nonSkipMatchedText
-        val embeddedGrammar = GrammarRegistryDefault.find(thisGrammar.namespace.qualifiedName, embeddedGrammarRef)
-        return EmbeddedDefault(embeddedStartRuleRef, embeddedGrammar)
+
+        //val def = this.languageRegistry.findWithNamespaceOrNull<Any, Any>(thisGrammar.namespace.qualifiedName, embeddedGrammarRef)
+        //    ?: error("Trying to embed but failed to find grammar '$embeddedGrammarRef' as a qualified name or in namespace '${thisGrammar.namespace.qualifiedName}'")
+        //val embeddedGrammar = def.processor!!.grammar
+        val embeddedGrammarRef = GrammarReferenceDefault(thisGrammar.namespace, embeddedGrammarStr)
+        return EmbeddedDefault(embeddedStartRuleRef, embeddedGrammarRef).also { this.locationMap[it] = target.location }
     }
 
     // terminal : LITERAL | PATTERN ;
@@ -334,7 +389,7 @@ internal class AglGrammarSyntaxAnalyser(
         } else {
             escaped.replace("\\'", "'").replace("\\\\", "\\")
         }
-        return TerminalDefault(value, isPattern)
+        return TerminalDefault(value, isPattern).also { this.locationMap[it] = target.location }
     }
 
     // qualifiedName : (IDENTIFIER / '.')+ ;

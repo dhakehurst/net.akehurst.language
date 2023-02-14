@@ -31,11 +31,7 @@ object Agl {
     val version: String = BuildConfig.version
     val buildStamp: String = BuildConfig.buildStamp
 
-    val registry = LanguageRegistry()
-
-    fun <AsmType : Any, ContextType : Any> register(definition: LanguageDefinition<AsmType, ContextType>) {
-        registry.registerFromDefinition(definition)
-    }
+    val registry = LanguageRegistryDefault()
 
     fun <AsmType : Any, ContextType : Any> configurationDefault(): LanguageProcessorConfiguration<AsmType, ContextType> =
         LanguageProcessorConfigurationDefault()

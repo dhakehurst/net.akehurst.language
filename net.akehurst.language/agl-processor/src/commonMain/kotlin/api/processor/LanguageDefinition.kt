@@ -20,26 +20,34 @@ import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.grammar.Namespace
+
+interface LanguageRegistry {
+    fun findGrammarOrNull(namespace: Namespace, name:String) :Grammar?
+}
 
 interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val identity: String
     var grammarStr: String?
+    val grammarIsModifiable: Boolean
     var targetGrammar:String?
     var defaultGoalRule: String?
-    var style: String?
-    var format: String?
     val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
     val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
     var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
     var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
     /** the options to configure building the processor for the registered language */
     var aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?
-
+    var grammar: Grammar?
     val processor: LanguageProcessor<AsmType, ContextType>?
+    val issues : List<LanguageIssue>
 
-    val grammarObservers: MutableList<(String?, String?) -> Unit>
+    var style: String?
+    var format: String?
+
+    val processorObservers: MutableList<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>
+    val grammarObservers: MutableList<(Grammar?, Grammar?) -> Unit>
     val styleObservers: MutableList<(String?, String?) -> Unit>
     val formatObservers: MutableList<(String?, String?) -> Unit>
 
-    val grammarIsModifiable: Boolean
 }

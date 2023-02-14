@@ -29,8 +29,7 @@ class CachedValue<V>(initializer: () -> V) {
     private var initializer: (() -> V) = initializer
     private var _value: Any? = UNINITIALIZED_VALUE
 
-
-    val value: V
+    var value: V
         get() {
             if (_value === UNINITIALIZED_VALUE) {
                 _value = initializer.invoke()
@@ -38,12 +37,23 @@ class CachedValue<V>(initializer: () -> V) {
             @Suppress("UNCHECKED_CAST")
             return _value as V
         }
+        set(value) {
+            this._value = value
+        }
 
     // no point is making this a delegate..no way to access the delegate to enable reset
     //operator fun getValue(thisRef: Any?, property: KProperty<*>): V = value
 
+    var resetAction:(old:V)->Unit = {}
+
     fun reset() {
-        this._value = UNINITIALIZED_VALUE
+        if (_value==UNINITIALIZED_VALUE) {
+            //do nothing
+        } else {
+            val old = this._value as V
+            this._value = UNINITIALIZED_VALUE
+            this.resetAction.invoke(old)
+        }
     }
 
 }

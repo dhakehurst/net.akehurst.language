@@ -63,7 +63,7 @@ class test_a {
             val position = data.position
 
             val result = parser.expectedTerminalsAt(goal, sentence, position, AutomatonKind.LOOKAHEAD_1)
-            val actual = result.filter { it.isEmptyTerminal.not() }.map { (it.rhs as RuntimeRuleRhsLiteral).value }
+            val actual = result.filter { it.isEmptyTerminal.not() }.map { it.rhs.toString() }
             val expected = data.expected
             assertEquals(expected, actual,data.toString())
         }

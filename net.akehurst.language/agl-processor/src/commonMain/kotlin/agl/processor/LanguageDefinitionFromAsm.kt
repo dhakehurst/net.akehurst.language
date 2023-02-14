@@ -26,79 +26,34 @@ import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
-class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
+internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
     override val identity: String,
-    grammar: Grammar,
+    grammarArg: Grammar,
     override var targetGrammar: String?,
-    override var defaultGoalRule: String?,
+    defaultGoalRuleArg: String?,
     buildForDefaultGoal: Boolean,
-    style: String?,
-    format: String?,
-    syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?,
-    semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?,
+    styleArg: String?,
+    formatArg: String?,
+    syntaxAnalyserResolverArg: SyntaxAnalyserResolver<AsmType, ContextType>?,
+    semanticAnalyserResolverArg: SemanticAnalyserResolver<AsmType, ContextType>?,
     /** the options to configure building the processor for the registered language */
     aglOptionsArg: ProcessOptions<List<Grammar>, GrammarContext>?
-) : LanguageDefinition<AsmType, ContextType> {
-    //constructor(identity: String, grammar: Grammar) : this(identity, grammar, null, null, null, null, null, null)
-
-    private val _grammarAsm: Grammar = grammar
-    private val _processor_cache: CachedValue<LanguageProcessor<AsmType, ContextType>?> = cached {
-        val config = Agl.configuration<AsmType, ContextType> {
-            defaultGoalRuleName(defaultGoalRule)
-            syntaxAnalyserResolver(this@LanguageDefinitionFromAsm.syntaxAnalyserResolver)
-            semanticAnalyserResolver(this@LanguageDefinitionFromAsm.semanticAnalyserResolver)
-        }
-        val proc = Agl.processorFromGrammar(_grammarAsm, config)
-        if (buildForDefaultGoal) proc.buildFor(null) //null options will use default goal
-        proc
-    }
-    private var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null
-    private var _semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null
-
-    override val grammarObservers = mutableListOf<(String?, String?) -> Unit>()
-    override val styleObservers = mutableListOf<(String?, String?) -> Unit>()
-    override val formatObservers = mutableListOf<(String?, String?) -> Unit>()
-
+) : LanguageDefinitionAbstract<AsmType, ContextType>(
+    defaultGoalRuleArg,
+    grammarArg,
+    buildForDefaultGoal,
+    styleArg,
+    formatArg,
+    syntaxAnalyserResolverArg,
+    semanticAnalyserResolverArg,
+    aglOptionsArg
+) {
     override var grammarStr: String?
-        get() = this._grammarAsm.toString() //TODO:
+        get() = this.grammar.toString() //TODO:
         set(value) {
             error("Cannot set the grammar of a LanguageDefinitionFromAsm using a String")
         }
 
-    override var style: String? by Delegates.observable(style) { _, oldValue, newValue ->
-        styleObservers.forEach { it(oldValue, newValue) }
-    }
-
-    override var format: String? by Delegates.observable(format) { _, oldValue, newValue ->
-        formatObservers.forEach { it(oldValue, newValue) }
-    }
-
-    override val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
-        get() = this._processor_cache.value?.let { proc -> _syntaxAnalyserResolver?.invoke(proc.grammar) }
-
-    override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
-        get() = _syntaxAnalyserResolver
-        set(value) {
-            _syntaxAnalyserResolver = value
-        }
-
-    override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
-        get() = this._processor_cache.value?.let { proc -> _semanticAnalyserResolver?.invoke(proc.grammar) }
-
-    override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
-        get() = _semanticAnalyserResolver
-        set(value) {
-            _semanticAnalyserResolver = value
-        }
-
-    override var aglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = aglOptionsArg
-
-    override val processor: LanguageProcessor<AsmType, ContextType>? get() = this._processor_cache.value
-
     override val grammarIsModifiable: Boolean = false
 
-    init {
-        this.syntaxAnalyserResolver = syntaxAnalyserResolver
-        this.semanticAnalyserResolver = semanticAnalyserResolver
-    }
 }

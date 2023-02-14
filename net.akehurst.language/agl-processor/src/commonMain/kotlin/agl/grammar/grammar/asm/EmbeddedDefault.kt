@@ -20,7 +20,7 @@ import net.akehurst.language.api.grammar.*
 
 class EmbeddedDefault(
     override val embeddedGoalName: String,
-    override val embeddedGrammar: Grammar
+    override val embeddedGrammarReference: GrammarReference
 ) : RuleItemAbstract(), Embedded {
 
     override val name: String get() = this.embeddedGoalName
@@ -44,5 +44,5 @@ class EmbeddedDefault(
 
     override val allEmbedded: Set<Embedded> get() = setOf(this)
 
-    override fun toString(): String = "${embeddedGrammar.name}.$embeddedGoalName"
+    override fun toString(): String = "${embeddedGrammarReference.nameOrQName}.$embeddedGoalName"
 }

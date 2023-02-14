@@ -125,7 +125,7 @@ internal class ConverterToRuntimeRules(
     }
 
     private fun visitGrammar(target: Grammar, arg: String): Set<RuntimeRule> {
-        return target.allRule.map {
+        return target.allResolvedRule.map {
             this.visitRule(it, arg)
         }.toSet()
     }
@@ -155,7 +155,7 @@ internal class ConverterToRuntimeRules(
                     } else {
                         (target.rhs as Concatenation).items[0] as Embedded
                     }
-                    val embeddedRule = this.embeddedRule(embeddedRuleName, false, e.embeddedGrammar, e.embeddedGoalName)
+                    val embeddedRule = this.embeddedRule(embeddedRuleName, false, e.embeddedGrammarReference, e.embeddedGoalName)
                     this.originalRuleItem[Pair(embeddedRule.runtimeRuleSetNumber, embeddedRule.ruleNumber)] = e
                     embeddedRule
                 }
@@ -253,10 +253,10 @@ internal class ConverterToRuntimeRules(
     }
 
     private fun visitEmbedded(target: Embedded, arg: String): RuntimeRule {
-        val existing = this.findEmbedded(target.embeddedGrammar, target.embeddedGoalName)
+        val existing = this.findEmbedded(target.embeddedGrammarReference, target.embeddedGoalName)
         return if (null == existing) {
             val embeddedRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)
-            val embeddedRule = this.embeddedRule(embeddedRuleName, false, target.embeddedGrammar, target.embeddedGoalName)
+            val embeddedRule = this.embeddedRule(embeddedRuleName, false, target.embeddedGrammarReference, target.embeddedGoalName)
             this.originalRuleItem[Pair(embeddedRule.runtimeRuleSetNumber, embeddedRule.ruleNumber)] = target
             embeddedRule
         } else {

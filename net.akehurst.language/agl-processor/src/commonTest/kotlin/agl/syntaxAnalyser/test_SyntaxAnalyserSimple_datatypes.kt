@@ -88,7 +88,7 @@ class test_SyntaxAnalyserSimple_datatypes {
     @Test
     fun typeModel() {
         val actual = processor.typeModel
-        val expected = typeModel {
+        val expected = typeModel("","") {
             elementType("unit") {
                 propertyListTypeOf("declaration", "declaration", false, 0)
             }

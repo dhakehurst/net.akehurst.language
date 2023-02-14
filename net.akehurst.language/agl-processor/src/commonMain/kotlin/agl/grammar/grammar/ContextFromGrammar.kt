@@ -19,7 +19,6 @@ package net.akehurst.language.agl.grammar.grammar
 import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.GrammarItem
-import net.akehurst.language.api.grammar.GrammarRule
 import net.akehurst.language.api.processor.SentenceContext
 
 // used by other languages that reference rules  in a grammar
@@ -36,7 +35,7 @@ class ContextFromGrammar(
     override val rootScope = ScopeSimple<GrammarItem>(null, "", grammar.name)
 
     init {
-        grammar.allRule.forEach {
+        grammar.allResolvedRule.forEach {
             rootScope.addToScope(it.name, GRAMMAR_RULE_CONTEXT_TYPE_NAME, it)
         }
         grammar.allTerminal.forEach {

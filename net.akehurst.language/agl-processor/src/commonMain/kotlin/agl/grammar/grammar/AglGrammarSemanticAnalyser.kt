@@ -24,10 +24,17 @@ import net.akehurst.language.api.processor.*
 
 
 internal class AglGrammarSemanticAnalyser(
+    val languageRegistry: LanguageRegistry
 ) : SemanticAnalyser<List<Grammar>, GrammarContext> {
 
     private val issues = mutableListOf<LanguageIssue>()
     private var _locationMap: Map<*, InputLocation>? = null
+
+    private fun error(item:Any, message:String, data:Any?) {
+        val location = this._locationMap?.get(item)
+        val iss = LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.SEMANTIC_ANALYSIS,location, message, data)
+        issues.add(iss)
+    }
 
     override fun clear() {
         this.issues.clear()
@@ -36,18 +43,30 @@ internal class AglGrammarSemanticAnalyser(
 
     override fun analyse(asm: List<Grammar>, locationMap: Map<Any, InputLocation>?, context: GrammarContext?): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
-        val issues =  checkGrammar(asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
+        val issues = checkGrammar(asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
         return SemanticAnalysisResultDefault(issues)
     }
 
     private fun checkGrammar(grammarList: List<Grammar>, automatonKind: AutomatonKind): List<LanguageIssue> {
         grammarList.forEach { grammar ->
+            this.checkExtendsExist(grammar.extends)
             this.checkNonTerminalReferencesExist(grammar)
             if (issues.isEmpty()) {
                 this.checkForAmbiguities(grammar, automatonKind)
             }
         }
         return this.issues
+    }
+
+    private fun checkExtendsExist(refs:List<GrammarReference>) {
+        for(it in refs) {
+            val g = languageRegistry.findGrammarOrNull(it.localNamespace,it.nameOrQName)
+            if (null==g) {
+                this.error(it,"Grammar '${it.nameOrQName}' not found", null)
+            } else {
+                it.resolveAs(g)
+            }
+        }
     }
 
     private fun checkNonTerminalReferencesExist(grammar: Grammar) {
@@ -61,36 +80,43 @@ internal class AglGrammarSemanticAnalyser(
         when (rhs) {
             is EmptyRule -> {
             }
+
             is Terminal -> {
             }
+
             is Embedded -> {
                 try {
-                    rhs.referencedRule(rhs.embeddedGrammar) //will throw 'GrammarRuleNotFoundException' if rule not found
+                    rhs.referencedRule(rhs.embeddedGrammarReference) //will throw 'GrammarRuleNotFoundException' if rule not found
                 } catch (e: GrammarRuleNotFoundException) {
-                    val item = LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, _locationMap!![rhs], e.message!!)
-                    this.issues.add(item)
+                    error(rhs, e.message!!,null)
                 }
             }
+
             is NonTerminal -> {
-                try {
-                  rhs.referencedRule(grammar) //will throw 'GrammarRuleNotFoundException' if rule not found
-                } catch (e: GrammarRuleNotFoundException) {
-                    val item = LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, _locationMap!![rhs], e.message!!)
+
+                val rr = rhs.referencedRuleOrNull(grammar) //will throw 'GrammarRuleNotFoundException' if rule not found
+                if (null == rr) {
+                    val item = LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, _locationMap!![rhs], "Grammar Rule with name '${rhs.name}' not found")
                     this.issues.add(item)
                 }
             }
+
             is Concatenation -> {
                 rhs.items.forEach { checkRuleItem(grammar, it) }
             }
+
             is Choice -> {
                 rhs.alternative.forEach { checkRuleItem(grammar, it) }
             }
+
             is Group -> {
                 rhs.choice.alternative.forEach { checkRuleItem(grammar, it) }
             }
+
             is SimpleList -> {
                 checkRuleItem(grammar, rhs.item)
             }
+
             is SeparatedList -> {
                 checkRuleItem(grammar, rhs.item)
                 checkRuleItem(grammar, rhs.separator)
@@ -113,9 +139,9 @@ internal class AglGrammarSemanticAnalyser(
             val trans = state.outTransitions.allBuiltTransitions
             if (trans.size > 1) {
                 trans.forEach { tr1 ->
-                    val subset = trans.filter {tr2 ->
+                    val subset = trans.filter { tr2 ->
                         tr1.to == tr2.to &&
-                        tr1.context.intersect(tr2.context).isNotEmpty()
+                                tr1.context.intersect(tr2.context).isNotEmpty()
                     }
                     subset.forEach { tr2 ->
                         //TODO: should we compare actions here? prob not

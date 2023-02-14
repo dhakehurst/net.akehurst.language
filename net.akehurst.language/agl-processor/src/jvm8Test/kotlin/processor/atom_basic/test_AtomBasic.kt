@@ -83,7 +83,7 @@ class test_AtomBasic(val data: Data) {
             val resultStr = result.sppt!!.asString
             assertEquals(this.data.text, resultStr)
         } else {
-            assertFailsWith<LanguageProcessorException> {
+            assertFailsWith<LanguageProcessorException>("$data") {
                 processor.parse(this.data.text, Agl.parseOptions { goalRuleName("file") })
             }
         }

@@ -23,7 +23,8 @@ interface OrderedSet<out E> : Set<E> {
 interface MutableOrderedSet<E> : OrderedSet<E>, MutableSet<E>
 
 fun <T> emptyOrderedSet(): OrderedSet<T> = EmptyOrderedSet
-fun <E> mutableOrderedSetOf(): MutableOrderedSet<E> = MutableOrderedSetImpl<E>()
+fun <E> orderedSetOf(vararg elements: E): OrderedSet<E> = OrderedSetImpl<E>(elements.toList())
+fun <E> mutableOrderedSetOf(vararg elements: E): MutableOrderedSet<E> = MutableOrderedSetImpl<E>(elements.toList())
 
 fun <T> Iterable<T>.toOrderedSet(): OrderedSet<T> = when (this) {
     is Collection<T> -> MutableOrderedSetImpl(this)
@@ -125,10 +126,10 @@ class MutableOrderedSetImpl<E> : MutableOrderedSet<E> {
 
     override fun equals(other: Any?): Boolean {
         return when {
-            other !is MutableOrderedSet<*> -> false
+            other !is OrderedSet<*> -> false
             other.size != this.size -> false
             else -> {
-                for (i in 0..this.size) {
+                for (i in 0 until this.size) {
                     if (this[i] != other[i]) return false
                 }
                 true

@@ -26,7 +26,7 @@ import kotlin.test.assertEquals
 
 class test_aOpt {
 
-    private data class Data(val sentence: String, val position: Int, val expected: List<RuntimeRule>)
+    private data class Data(val sentence: String, val position: Int, val expected: Set<RuntimeRule>)
 
     // skip WS = "\s+" ;
     // S = 'a'? ;
@@ -43,21 +43,21 @@ class test_aOpt {
         val EOT = RuntimeRuleSet.END_OF_TEXT
 
         val testData = listOf(
-            Data("", 0, listOf(a, EOT)),
-            Data(" ", 0, listOf(a, EOT)),
-            Data(" ", 1, listOf(a, EOT)),
-            Data("a", 0, listOf(a, EOT)),
-            Data("a", 1, listOf(EOT)),
-            Data(" a", 0, listOf(a, EOT)),
-            Data(" a", 1, listOf(a, EOT)),
-            Data(" a", 2, listOf(EOT)),
-            Data("a ", 0, listOf(a, EOT)),
-            Data("a ", 1, listOf(EOT)),
-            Data("a ", 2, listOf(EOT)),
-            Data(" a ", 0, listOf(a, EOT)),
-            Data(" a ", 1, listOf(a, EOT)),
-            Data(" a ", 2, listOf(EOT)),
-            Data(" a ", 3, listOf(EOT)),
+            Data("", 0, setOf(a, EOT)),
+            Data(" ", 0, setOf(a, EOT)),
+            Data(" ", 1, setOf(a, EOT)),
+            Data("a", 0, setOf(a, EOT)),
+            Data("a", 1, setOf(EOT)),
+            Data(" a", 0, setOf(a, EOT)),
+            Data(" a", 1, setOf(a, EOT)),
+            Data(" a", 2, setOf(EOT)),
+            Data("a ", 0, setOf(a, EOT)),
+            Data("a ", 1, setOf(EOT)),
+            Data("a ", 2, setOf(EOT)),
+            Data(" a ", 0, setOf(a, EOT)),
+            Data(" a ", 1, setOf(a, EOT)),
+            Data(" a ", 2, setOf(EOT)),
+            Data(" a ", 3, setOf(EOT)),
         )
     }
 
@@ -68,7 +68,7 @@ class test_aOpt {
             val position = data.position
 
             val result = parser.expectedTerminalsAt(goal, sentence, position, AutomatonKind.LOOKAHEAD_1)
-            val actual = result.filter  { it.isEmptyTerminal.not() }
+            val actual = result.filter  { it.isEmptyTerminal.not() }.toSet()
             val expected = data.expected
             assertEquals(expected, actual, "${data}")
         }

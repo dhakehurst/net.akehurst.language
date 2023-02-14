@@ -23,8 +23,8 @@ import net.akehurst.language.api.grammar.GrammarRule
 /**
 
  */
-internal class AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglScopes") {
-    companion object {
+internal object AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglScopes") {
+    //companion object {
         const val goalRuleName = "declarations"
         private fun createRules(): List<GrammarRule> {
             val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglStyle");
@@ -50,7 +50,7 @@ internal class AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst.
 
             return b.grammar.rule
         }
-    }
+    //}
     init {
         super.rule.addAll(createRules())
     }

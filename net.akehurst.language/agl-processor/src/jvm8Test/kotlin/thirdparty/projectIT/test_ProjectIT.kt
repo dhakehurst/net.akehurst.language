@@ -78,13 +78,13 @@ class test_ProjectIT(val data: Data) {
     fun test() {
         if(data.valid) {
             val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName("projectionGroup") })
-            assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
+            assertNotNull(result.sppt, "$data\n"+result.issues.joinToString(separator = "\n") { "$it" })
             assertEquals(emptyList(), result.issues)
             val resultStr = result.sppt!!.asString
             assertEquals(this.data.text, resultStr)
             println(result.sppt!!.toStringAll)
         } else {
-            assertFailsWith<LanguageProcessorException> {
+            assertFailsWith<LanguageProcessorException>("$data") {
                 processor.parse(this.data.text, Agl.parseOptions { goalRuleName("projectionGroup") })
             }
         }

@@ -55,7 +55,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     private val parser: Parser by lazy { ScanOnDemandParser(this._runtimeRuleSet) }
 
     override val spptParser: SPPTParser by lazy {
-        val embeddedRuntimeRuleSets = grammar.allEmbeddedGrammars.map {
+        val embeddedRuntimeRuleSets = grammar.allEmbeddedGrammars(registry).map {
             val cvt = ConverterToRuntimeRules(it)
             val rrs = cvt.runtimeRuleSet
             Pair(it.name, rrs)

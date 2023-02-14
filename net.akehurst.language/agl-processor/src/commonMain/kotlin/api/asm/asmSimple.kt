@@ -16,6 +16,8 @@
 
 package net.akehurst.language.api.asm
 
+import net.akehurst.language.collections.mutableStackOf
+
 data class AsmElementPath(val value:String) {
     companion object {
         val ROOT = AsmElementPath("/")
@@ -214,4 +216,26 @@ fun AsmElementReference.equalTo(other: AsmElementReference): Boolean {
         this.reference!=other.reference -> false
         else -> true
     }
+}
+abstract class AsmSimpleTreeWalker {
+    abstract fun root(root: AsmElementSimple)
+    abstract fun element(element: AsmElementSimple)
+    abstract fun property(property: AsmElementProperty)
+}
+fun AsmSimple.traverseDepthFirst(callback:AsmSimpleTreeWalker) {
+    val stack = mutableStackOf<AsmElementSimple>()
+    this.rootElements.forEach {
+        stack.push(it)
+        while (stack.isNotEmpty) {
+            val el = stack.pop()
+            callback.element(el)
+            el.properties.values.forEach {
+                callback.property(it)
+                if (it.value is AsmElementSimple) {
+                    stack.push(it.value)
+                }
+            }
+        }
+    }
+
 }

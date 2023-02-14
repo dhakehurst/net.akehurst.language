@@ -22,7 +22,7 @@ internal class PseudoRuleNames(val grammar: Grammar) {
     private val _itemForPseudoRuleName = mutableMapOf<String, RuleItem>()
 
     init {
-        grammar.allNonTerminalRule.forEach {
+        grammar.allResolvedNonTerminalRule.forEach {
             when {
                 it.isLeaf -> Unit
                 it.isOneEmebedded -> Unit
@@ -58,7 +58,7 @@ internal class PseudoRuleNames(val grammar: Grammar) {
                 is SimpleItem -> when (item) {
                     is Group -> pseudoRulesFor(item.choice) + Pair(item, createGroupRuleName(item.owningRule.name))
                     is TangibleItem -> when (item) {
-                        is Embedded -> setOf(Pair(item, createEmbeddedRuleName(item.embeddedGrammar.name, item.embeddedGoalName)))
+                        is Embedded -> setOf(Pair(item, createEmbeddedRuleName(item.embeddedGrammarReference.name, item.embeddedGoalName)))
                         is Terminal -> emptySet()
                         is NonTerminal -> emptySet()
                         is EmptyRule -> emptySet()

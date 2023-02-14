@@ -20,6 +20,13 @@ interface GrammarItem {
 
 }
 
+interface GrammarReference {
+    val localNamespace: Namespace
+    val nameOrQName: String
+    val resolved:Grammar?
+    fun resolveAs(resolved:Grammar)
+}
+
 /**
  *
  * The definition of a Grammar. A grammar defines a list of rules and may be defined to extend a number of other Grammars.
@@ -27,47 +34,53 @@ interface GrammarItem {
  */
 interface Grammar {
 
-	/**
-	 *
-	 * the namespace of this grammar;
-	 */
-	val namespace: Namespace
-
-	/**
-	 *
-	 * the name of this grammar
-	 */
-	val name: String
-
-	/**
-	 * the List of grammars extended by this one
-	 */
-	val extends: List<Grammar>
-
-	val rule: List<GrammarRule>
-
-	/**
-	 * the List of rules defined by this grammar and those that this grammar extends
-	 * the order of the rules is the order they are defined in with the top of the grammar extension
-	 * hierarchy coming first (in extension order where more than one grammar is extended)
-	 */
-	val allRule : List<GrammarRule>
-
-	/**
-	 * the Set of all non-terminal rules in this grammar and those that this grammar extends
-	 */
-	val allNonTerminalRule: Set<GrammarRule>
-
-	/**
-	 * the Set of all terminals in this grammar and those that this grammar extends
+    /**
+     *
+     * the namespace of this grammar;
      */
-	val allTerminal: Set<Terminal>
+    val namespace: Namespace
 
-	val allEmbeddedRules: Set<Embedded>
+    /**
+     *
+     * the name of this grammar
+     */
+    val name: String
 
-	val allEmbeddedGrammars: Set<Grammar>
+    /**
+     * namespace.name
+     */
+    val qualifiedName: String
 
-	fun findNonTerminalRule(ruleName: String): GrammarRule?
+    /**
+     * the List of grammars extended by this one
+     */
+    val extends: List<GrammarReference>
 
-	fun findTerminalRule(terminalPattern: String): Terminal
+    val rule: List<GrammarRule>
+
+    /**
+     * the List of rules defined by this grammar and those that this grammar extends
+     * the order of the rules is the order they are defined in with the top of the grammar extension
+     * hierarchy coming first (in extension order where more than one grammar is extended)
+     */
+    val allResolvedRule: List<GrammarRule>
+
+    /**
+     * the Set of all non-terminal rules in this grammar and those that this grammar extends
+     */
+    val allResolvedNonTerminalRule: Set<GrammarRule>
+
+    /**
+     * the Set of all terminals in this grammar and those that this grammar extends
+     */
+    val allResolvedTerminal: Set<Terminal>
+
+    val allResolvedEmbeddedRules: Set<Embedded>
+
+    val allResolvedEmbeddedGrammars: Set<Grammar>
+
+    fun findNonTerminalRule(ruleName: String): GrammarRule?
+
+    fun findTerminalRule(terminalPattern: String): Terminal
+
 }
