@@ -219,7 +219,8 @@ fun AsmElementReference.equalTo(other: AsmElementReference): Boolean {
 }
 abstract class AsmSimpleTreeWalker {
     abstract fun root(root: AsmElementSimple)
-    abstract fun element(element: AsmElementSimple)
+    abstract fun beforeElement(element: AsmElementSimple)
+    abstract fun afterElement(element: AsmElementSimple)
     abstract fun property(property: AsmElementProperty)
 }
 fun AsmSimple.traverseDepthFirst(callback:AsmSimpleTreeWalker) {
@@ -228,13 +229,14 @@ fun AsmSimple.traverseDepthFirst(callback:AsmSimpleTreeWalker) {
         stack.push(it)
         while (stack.isNotEmpty) {
             val el = stack.pop()
-            callback.element(el)
+            callback.beforeElement(el)
             el.properties.values.forEach {
                 callback.property(it)
                 if (it.value is AsmElementSimple) {
                     stack.push(it.value)
                 }
             }
+            callback.afterElement(el)
         }
     }
 

@@ -55,10 +55,8 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 
     fun embed(embeddedGrammarName:String, embeddedGoalName:String) : Embedded {
         val qn = embeddedGrammarName
-        val def = Agl.registry.findOrNull<Any,Any>(qn) ?: error("Trying to extend grammar '$qn' but cannot find it in the registry")
-        val embeddedGrammar = def.processor!!.grammar
-
-        return EmbeddedDefault(embeddedGoalName, embeddedGrammar)
+        val embeddedGrammarRef = GrammarReferenceDefault(namespace, embeddedGrammarName)
+        return EmbeddedDefault(embeddedGoalName, embeddedGrammarRef)
     }
 
     fun nonTerminal(name: String): NonTerminal {

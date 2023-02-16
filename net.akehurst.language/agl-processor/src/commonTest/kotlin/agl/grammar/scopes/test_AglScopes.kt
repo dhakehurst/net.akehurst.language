@@ -21,7 +21,6 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.typeModel.TypeModel
 import net.akehurst.language.api.typeModel.TypeModelTest
 import net.akehurst.language.api.typeModel.typeModel
 import kotlin.test.Test
@@ -52,7 +51,7 @@ class test_AglScopes {
 
         val result = aglProc.process(text)
 
-        val expected = ScopeModel()
+        val expected = ScopeModelAgl()
 
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
@@ -72,7 +71,7 @@ class test_AglScopes {
 
         val result = aglProc.process(text)
 
-        val expected = ScopeModel()
+        val expected = ScopeModelAgl()
 
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
@@ -102,7 +101,7 @@ class test_AglScopes {
             }
         )
 
-        val expected = ScopeModel().apply {
+        val expected = ScopeModelAgl().apply {
             scopes["rule1"]=(ScopeDefinition("rule1"))
         }
 
@@ -134,7 +133,7 @@ class test_AglScopes {
             }
         )
 
-        val expected = ScopeModel().apply {
+        val expected = ScopeModelAgl().apply {
             scopes["ruleX"]=(ScopeDefinition("ruleX"))
         }
 
@@ -174,7 +173,7 @@ class test_AglScopes {
             }
         )
 
-        val expected = ScopeModel().apply {
+        val expected = ScopeModelAgl().apply {
             scopes["rule1"]=(ScopeDefinition("rule1").apply {
                 identifiables.add(Identifiable("rule2", "rule3"))
             })
@@ -212,7 +211,7 @@ class test_AglScopes {
             }
         )
 
-        val expected = ScopeModel().apply {
+        val expected = ScopeModelAgl().apply {
             scopes["rule1"]=(ScopeDefinition("rule1").apply {
                 identifiables.add(Identifiable("ruleX", "rule3"))
             })
@@ -260,7 +259,7 @@ class test_AglScopes {
             }
         )
 
-        val expected = ScopeModel().apply {
+        val expected = ScopeModelAgl().apply {
             scopes["rule1"]=(ScopeDefinition("rule1").apply {
                 identifiables.add(Identifiable("rule2", "ruleX"))
             })
@@ -307,7 +306,7 @@ class test_AglScopes {
             }
         )
 
-        val expected = ScopeModel().apply {
+        val expected = ScopeModelAgl().apply {
             references.add(ReferenceDefinition("rule2", "rule3", listOf("rule1")))
         }
 
@@ -343,7 +342,7 @@ class test_AglScopes {
             }
         )
 
-        val expected = ScopeModel().apply {
+        val expected = ScopeModelAgl().apply {
             references.add(ReferenceDefinition("ruleX", "ruleY", listOf("ruleZ", "ruleW")))
         }
 
@@ -370,7 +369,7 @@ class test_AglScopes {
 
         val result = aglProc.process(text)
 
-        val expected = ScopeModel().apply {
+        val expected = ScopeModelAgl().apply {
             references.add(ReferenceDefinition("type1", "prop", listOf("type2", "type3", "type4")))
         }
 

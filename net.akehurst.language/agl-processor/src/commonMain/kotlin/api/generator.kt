@@ -6,6 +6,7 @@ import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
@@ -30,6 +31,7 @@ abstract class GeneratedLanguageProcessorAbstract<AsmType : Any, ContextType : A
     abstract val defaultGoalRuleName: String
     abstract val ruleSet: RuleSet
     abstract val mapToGrammar: (Int, Int) -> RuleItem
+    abstract val scopeModel: ScopeModel?
     abstract val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
     abstract val formatter: Formatter?
     abstract val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?

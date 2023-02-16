@@ -2,17 +2,19 @@ package agl.semanticAnalyser
 
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.processor.SemanticAnalysisResult
+import net.akehurst.language.api.processor.*
 import kotlin.test.Test
 
 class test_SemanticAnalyser {
 
     class TestSemanticAnalyser : SemanticAnalyser<Any,Any> {
         override fun clear() {
+            TODO("not implemented")
+        }
+
+        override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
             TODO("not implemented")
         }
 

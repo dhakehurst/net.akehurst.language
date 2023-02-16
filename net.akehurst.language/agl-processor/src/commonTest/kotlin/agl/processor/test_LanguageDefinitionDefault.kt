@@ -41,12 +41,13 @@ class test_LanguageDefinitionDefault {
         Agl.registry.unregister("ns.test")
         this.sut = Agl.registry.register<AsmSimple, ContextSimple>(
             identity = "ns.test",
-            grammar = null,
+            grammarStr = null,
             targetGrammar = null,
             defaultGoalRule = null,
             buildForDefaultGoal = false,
-            style = null,
-            format = null,
+            scopeModelStr = null,
+            styleStr = null,
+            formatStr = null,
             syntaxAnalyserResolver = null,
             semanticAnalyserResolver = null,
             aglOptions = null
@@ -69,12 +70,13 @@ class test_LanguageDefinitionDefault {
         val g = "namespace ns grammar Test1 { S = 'b'; }"
         val def = Agl.registry.register<AsmSimple, ContextSimple>(
             identity = "ns.Test1",
-            grammar = g,
+            grammarStr = g,
             targetGrammar = null,
             defaultGoalRule = null,
             buildForDefaultGoal = false,
-            style = null,
-            format = null,
+            scopeModelStr = null,
+            styleStr = null,
+            formatStr = null,
             syntaxAnalyserResolver = null,
             semanticAnalyserResolver = null,
             aglOptions = null

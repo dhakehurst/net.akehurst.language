@@ -28,6 +28,7 @@ import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
 import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
+import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
@@ -46,6 +47,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     protected abstract val _runtimeRuleSet: RuntimeRuleSet
     protected abstract val mapToGrammar: (Int, Int)->RuleItem
 
+    abstract override val scopeModel: ScopeModel?
     internal abstract val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
     internal abstract val formatter: Formatter?
     internal abstract val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
@@ -55,7 +57,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     private val parser: Parser by lazy { ScanOnDemandParser(this._runtimeRuleSet) }
 
     override val spptParser: SPPTParser by lazy {
-        val embeddedRuntimeRuleSets = grammar.allEmbeddedGrammars(registry).map {
+        val embeddedRuntimeRuleSets = grammar.allResolvedEmbeddedGrammars.map {
             val cvt = ConverterToRuntimeRules(it)
             val rrs = cvt.runtimeRuleSet
             Pair(it.name, rrs)
@@ -101,7 +103,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         options: ProcessOptions<AsmType, ContextType>?
     ): SyntaxAnalysisResult<AsmType> { //Triple<AsmType?, List<LanguageIssue>, Map<Any, InputLocation>> {
         val opts = defaultOptions(options)
-        val sa: SyntaxAnalyser<AsmType, ContextType> = (this.syntaxAnalyser ?: SyntaxAnalyserSimple(this.typeModel)) as SyntaxAnalyser<AsmType, ContextType>
+        val sa: SyntaxAnalyser<AsmType, ContextType> = this.syntaxAnalyser
+            ?: SyntaxAnalyserSimple(this.typeModel, this.scopeModel) as SyntaxAnalyser<AsmType, ContextType>
         sa.clear()
         val (asm: AsmType, issues) = sa.transform(sppt, this.mapToGrammar, opts.syntaxAnalysis.context)
         return SyntaxAnalysisResultDefault(asm, issues, sa.locationMap)
@@ -112,8 +115,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         options: ProcessOptions<AsmType, ContextType>?
     ): SemanticAnalysisResult {
         val opts = defaultOptions(options)
-        val semAnalyser: SemanticAnalyser<AsmType, ContextType> = ((this.semanticAnalyser as SemanticAnalyser<AsmType, ContextType>?)
-            ?: SemanticAnalyserSimple<AsmType, ContextType>())
+        val semAnalyser: SemanticAnalyser<AsmType, ContextType> = this.semanticAnalyser
+            ?: SemanticAnalyserSimple(this.scopeModel)  as SemanticAnalyser<AsmType, ContextType>
         semAnalyser.clear()
         val lm = opts.semanticAnalysis.locationMap ?: emptyMap<Any, InputLocation>()
         return semAnalyser.analyse(asm, lm, opts.syntaxAnalysis.context)

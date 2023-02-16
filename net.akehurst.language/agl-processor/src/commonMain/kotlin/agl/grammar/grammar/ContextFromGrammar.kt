@@ -38,7 +38,7 @@ class ContextFromGrammar(
         grammar.allResolvedRule.forEach {
             rootScope.addToScope(it.name, GRAMMAR_RULE_CONTEXT_TYPE_NAME, it)
         }
-        grammar.allTerminal.forEach {
+        grammar.allResolvedTerminal.forEach {
             rootScope.addToScope(it.name, GRAMMAR_TERMINAL_CONTEXT_TYPE_NAME, it)
         }
     }

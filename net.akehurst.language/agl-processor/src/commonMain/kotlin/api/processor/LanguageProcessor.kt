@@ -16,6 +16,7 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTParser
@@ -45,6 +46,11 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
      * model of the types instantiated by syntaxAnalysis for the LanguageDefinition of this LanguageProcessor
      */
     val typeModel: TypeModel
+
+    /*
+     * model of the scopes and references for the LanguageDefinition of this LanguageProcessor
+     */
+    val scopeModel: ScopeModel?
 
     /**
      * can be called from a different thread to stop the parser

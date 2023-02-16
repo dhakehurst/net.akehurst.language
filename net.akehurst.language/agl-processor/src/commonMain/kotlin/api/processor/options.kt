@@ -16,6 +16,7 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
@@ -37,6 +38,7 @@ typealias SemanticAnalyserResolver<AsmType, ContextType> = (Grammar) -> Semantic
 interface LanguageProcessorConfiguration<AsmType : Any, ContextType : Any> {
     var targetGrammarName:String?
     var defaultGoalRuleName: String?
+    var scopeModel:ScopeModel?
     var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
     var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
     var formatter: Formatter?

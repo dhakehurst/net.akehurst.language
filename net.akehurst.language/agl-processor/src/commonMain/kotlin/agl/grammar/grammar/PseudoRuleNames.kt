@@ -58,7 +58,7 @@ internal class PseudoRuleNames(val grammar: Grammar) {
                 is SimpleItem -> when (item) {
                     is Group -> pseudoRulesFor(item.choice) + Pair(item, createGroupRuleName(item.owningRule.name))
                     is TangibleItem -> when (item) {
-                        is Embedded -> setOf(Pair(item, createEmbeddedRuleName(item.embeddedGrammarReference.name, item.embeddedGoalName)))
+                        is Embedded -> setOf(Pair(item, createEmbeddedRuleName(item.embeddedGrammarReference.resolved!!.name, item.embeddedGoalName)))
                         is Terminal -> emptySet()
                         is NonTerminal -> emptySet()
                         is EmptyRule -> emptySet()

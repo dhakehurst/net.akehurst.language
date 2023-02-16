@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.agl.grammar.format
 
+import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammar.RuleItem
@@ -30,7 +31,7 @@ internal class AglFormatSyntaxAnalyser : SyntaxAnalyser<Any,Any> {
         TODO("not implemented")
     }
 
-    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: String): List<LanguageIssue> {
+    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
         TODO("not implemented")
     }
 

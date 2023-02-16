@@ -17,7 +17,9 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
+import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
@@ -56,21 +58,15 @@ class test_SyntaxAnalyserSimple_datatypes {
             
             }
         """.trimIndent()
-
+        val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!.first()
         val typeModel by lazy {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
             assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.joinToString(separator = "\n") { "$it" })
             TypeModelFromGrammar(result.asm!!.last())
         }
-        val syntaxAnalyser = SyntaxAnalyserSimple(typeModel)
-        val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
-            grammarStr,
-            Agl.configuration { syntaxAnalyserResolver { syntaxAnalyser } }
-        ).also {
-            val issues = syntaxAnalyser.configure(
-                configurationContext = ContextFromGrammar(it.grammar),
-                configuration = """
+        val scopeModel = ScopeModelAgl.fromString(
+            ContextFromGrammar(grammar), """
                     identify unit by §nothing
                     scope unit {
                         identify primitive by ID
@@ -80,6 +76,17 @@ class test_SyntaxAnalyserSimple_datatypes {
                         in typeReference property type refers-to primitive|datatype
                     }
                 """.trimIndent()
+        ).asm!!
+        val syntaxAnalyser = SyntaxAnalyserSimple(typeModel, scopeModel)
+        val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
+            grammarStr,
+            Agl.configuration {
+                scopeModel(scopeModel)
+                syntaxAnalyserResolver { syntaxAnalyser }
+            }
+        ).also {
+            val issues = syntaxAnalyser.configure(
+                configurationContext = ContextFromGrammar(it.grammar)
             )
             assertEquals(0, issues.size, issues.joinToString(separator = "\n") { "$it" })
         }
@@ -88,7 +95,7 @@ class test_SyntaxAnalyserSimple_datatypes {
     @Test
     fun typeModel() {
         val actual = processor.typeModel
-        val expected = typeModel("","") {
+        val expected = typeModel("", "") {
             elementType("unit") {
                 propertyListTypeOf("declaration", "declaration", false, 0)
             }
@@ -96,26 +103,26 @@ class test_SyntaxAnalyserSimple_datatypes {
                 subTypes("datatype", "primitive")
             }
             elementType("primitive") {
-                propertyStringType("ID",false,1)
+                propertyStringType("ID", false, 1)
             }
             elementType("datatype") {
-                propertyStringType("ID",false,1)
-                propertyListTypeOf("property","property",false,3)
+                propertyStringType("ID", false, 1)
+                propertyListTypeOf("property", "property", false, 3)
             }
             elementType("property") {
-                propertyStringType("ID",false,0)
-                propertyElementTypeOf("typeReference","typeReference",false,2)
+                propertyStringType("ID", false, 0)
+                propertyElementTypeOf("typeReference", "typeReference", false, 2)
             }
             elementType("typeReference") {
-                propertyStringType("type",false,0)
-                propertyElementTypeOf("typeArguments","typeArguments",true,1)
+                propertyStringType("type", false, 0)
+                propertyElementTypeOf("typeArguments", "typeArguments", true, 1)
             }
             elementType("typeArguments") {
-                propertyListSeparatedTypeOf("typeReference","typeReference", StringType,false,1)
+                propertyListSeparatedTypeOf("typeReference", "typeReference", StringType, false, 1)
             }
         }
 
-        TypeModelTest.assertEquals(expected,actual)
+        TypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -208,7 +215,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         }
         val expItems = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(21, 9, 2, 7), "Cannot find 'String' as reference for 'typeReference.type'")
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(21, 9, 2, 7), "Cannot find 'String' as reference for 'typeReference.type'")
         )
 
         assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
@@ -235,7 +242,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         assertNotNull(result.asm)
         assertEquals(emptyList(), result.issues)
 
-        val expected = asmSimple(syntaxAnalyser.scopeModel, ContextSimple()) {
+        val expected = asmSimple(scopeModel, ContextSimple()) {
             root("unit") {
                 propertyListOfElement("declaration") {
                     element("primitive") {

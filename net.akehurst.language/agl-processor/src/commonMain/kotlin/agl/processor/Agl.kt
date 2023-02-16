@@ -72,9 +72,11 @@ object Agl {
     ): LanguageProcessor<AsmType, ContextType> {
         val config = configuration ?: configurationDefault()
         val goal = config.defaultGoalRuleName ?: grammar.rule.first { it.isSkip.not() }.name
+        val scopeModel = config.scopeModel
         return LanguageProcessorDefault<AsmType, ContextType>(
             grammar,
             goal,
+            scopeModel,
             config.syntaxAnalyserResolver?.invoke(grammar),
             config.formatter,
             config.semanticAnalyserResolver?.invoke(grammar)
@@ -109,8 +111,8 @@ object Agl {
                     Agl.configuration {
                         targetGrammarName(grammar.name)
                         defaultGoalRuleName(grammar.rule.first { it.isSkip.not() }.name)
-                        syntaxAnalyserResolver { g -> SyntaxAnalyserSimple(TypeModelFromGrammar(g)) }
-                        semanticAnalyserResolver { _ -> SemanticAnalyserSimple() }
+                        syntaxAnalyserResolver { g -> SyntaxAnalyserSimple(TypeModelFromGrammar(g),null) }
+                        semanticAnalyserResolver { _ -> SemanticAnalyserSimple(null) }
                         formatter(null) //TODO
                     }
                 )

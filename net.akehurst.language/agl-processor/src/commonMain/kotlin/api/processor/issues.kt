@@ -20,13 +20,6 @@ import net.akehurst.language.api.parser.InputLocation
 
 enum class LanguageIssueKind { ERROR, WARNING, INFORMATION }
 
-//FIXME: added because currently Kotlin will not 'export' enums to JS
-object LanguageIssueKind_api {
-    val ERROR = LanguageIssueKind.ERROR
-    val WARNING = LanguageIssueKind.WARNING
-    val INFORMATION = LanguageIssueKind.INFORMATION
-}
-
 enum class LanguageProcessorPhase { PARSE, SYNTAX_ANALYSIS, SEMANTIC_ANALYSIS }
 
 data class LanguageIssue(

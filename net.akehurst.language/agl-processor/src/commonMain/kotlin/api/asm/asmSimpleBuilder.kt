@@ -16,15 +16,16 @@
 
 package net.akehurst.language.api.asm
 
-import net.akehurst.language.agl.grammar.scopes.ScopeModel
+import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
+import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.syntaxAnalyser.*
-import net.akehurst.language.agl.syntaxAnalyser.resolveReferencesElement
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.typeModel.TupleType
 
 @DslMarker
 annotation class AsmSimpleBuilderMarker
 
-fun asmSimple(scopeModel: ScopeModel = ScopeModel(), context: ContextSimple? = null, init: AsmSimpleBuilder.() -> Unit): AsmSimple {
+fun asmSimple(scopeModel: ScopeModelAgl = ScopeModelAgl(), context: ContextSimple? = null, init: AsmSimpleBuilder.() -> Unit): AsmSimple {
     val b = AsmSimpleBuilder(scopeModel, context)
     b.init()
     return b.build()
@@ -32,7 +33,7 @@ fun asmSimple(scopeModel: ScopeModel = ScopeModel(), context: ContextSimple? = n
 
 @AsmSimpleBuilderMarker
 class AsmSimpleBuilder(
-    private val _scopeModel: ScopeModel,
+    private val _scopeModel: ScopeModelAgl,
     private val _context: ContextSimple?
 ) {
 
@@ -47,16 +48,21 @@ class AsmSimpleBuilder(
     }
 
     fun build(): AsmSimple {
+        val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
         _asm.rootElements.forEach { el ->
-            _scopeModel.resolveReferencesElement(el, emptyMap(), _context?.rootScope, _scopeMap)
+            _scopeModel.resolveReferencesElement(issues, el, emptyMap(), _context?.rootScope)
         }
-        return _asm
+        if (issues.issues.isEmpty()) {
+            return _asm
+        } else {
+            error("Issues building asm:\n${issues.issues.joinToString(separator = "\n") { "$it" }}")
+        }
     }
 }
 
 @AsmSimpleBuilderMarker
 class AsmElementSimpleBuilder(
-    private val _scopeModel: ScopeModel,
+    private val _scopeModel: ScopeModelAgl,
     private val _scopeMap: MutableMap<AsmElementPath, ScopeSimple<AsmElementPath>>,
     private val _asm: AsmSimple,
     _asmPath: AsmElementPath,
@@ -72,7 +78,7 @@ class AsmElementSimpleBuilder(
             if (_scopeModel.isScopeDefinition(_element.typeName)) {
                 val refInParent = _scopeModel.createReferenceLocalToScope(_parentScope, _element)
                     ?: error("Trying to create child scope but cannot create a reference for $_element")
-                val newScope = _parentScope.createOrGetChildScope(refInParent, _element.typeName)
+                val newScope = _parentScope.createOrGetChildScope(refInParent, _element.typeName, _element.asmPath)
                 _scopeMap[_asmPath] = newScope
                 newScope
             } else {
@@ -133,7 +139,7 @@ class AsmElementSimpleBuilder(
 
 @AsmSimpleBuilderMarker
 class ListAsmElementSimpleBuilder(
-    private val _scopeModel: ScopeModel,
+    private val _scopeModel: ScopeModelAgl,
     private val _scopeMap: MutableMap<AsmElementPath, ScopeSimple<AsmElementPath>>,
     private val _asm: AsmSimple,
     private val _asmPath: AsmElementPath,

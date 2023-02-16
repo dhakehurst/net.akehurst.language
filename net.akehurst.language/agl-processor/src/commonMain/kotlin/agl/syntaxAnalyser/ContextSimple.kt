@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.grammar.scopes.ScopeModel
+import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.Scope
@@ -27,64 +27,69 @@ class ContextSimple() : SentenceContext<AsmElementPath> {
     /**
      * The items in the scope contain a ScopePath to an element in an AsmSimple model
      */
-    override var rootScope = ScopeSimple<AsmElementPath>(null, "", ScopeModel.ROOT_SCOPE_TYPE_NAME)
+    override var rootScope = ScopeSimple<AsmElementPath>(null, "", ScopeModelAgl.ROOT_SCOPE_TYPE_NAME)
+
 }
 
-fun ScopeModel.createReferenceLocalToScope(scope: ScopeSimple<AsmElementPath>, element: AsmElementSimple): String? {
+fun ScopeModelAgl.createReferenceLocalToScope(scope: ScopeSimple<AsmElementPath>, element: AsmElementSimple): String? {
     val prop = this.getReferablePropertyNameFor(scope.forTypeName, element.typeName)
     return when (prop) {
         null -> null
-        ScopeModel.IDENTIFY_BY_NOTHING -> ""
+        ScopeModelAgl.IDENTIFY_BY_NOTHING -> ""
         else -> element.getPropertyAsString(prop)
     }
 }
 
-class ScopeSimple<E>(
-    val parent: ScopeSimple<E>?,
+class ScopeSimple<AsmElementIdType>(
+    val parent: ScopeSimple<AsmElementIdType>?,
     val forReferenceInParent:String,
     val forTypeName:String
-) : Scope<E> {
+) : Scope<AsmElementIdType> {
 
-    private val _childScopes = mutableMapOf<String,ScopeSimple<E>>()
+    //should only be usde for rootScope
+    val scopeMap = mutableMapOf<AsmElementIdType, ScopeSimple<AsmElementIdType>>()
+
+    private val _childScopes = mutableMapOf<String,ScopeSimple<AsmElementIdType>>()
 
     // typeName -> referableName -> item
-    private val _items: MutableMap<String,MutableMap<String,E>> = mutableMapOf()
+    private val _items: MutableMap<String,MutableMap<String,AsmElementIdType>> = mutableMapOf()
 
-    val rootScope:ScopeSimple<E> by lazy {
+    val rootScope:ScopeSimple<AsmElementIdType> by lazy {
         var s = this
         while(null!=s.parent) s = s.parent!!
         s
     }
 
     // accessor needed for serialisation which assumes mutableMap for deserialisation
-    val childScopes:Map<String,ScopeSimple<E>> = _childScopes
+    val childScopes:Map<String,ScopeSimple<AsmElementIdType>> = _childScopes
 
     // accessor needed for serialisation which assumes mutableMap for deserialisation
-    val items:Map<String,Map<String,E>> = _items
+    val items:Map<String,Map<String,AsmElementIdType>> = _items
 
     val path:List<String> by lazy {
         if (null==parent) emptyList() else parent.path + forReferenceInParent
     }
 
-    fun createOrGetChildScope(forReferenceInParent:String, forTypeName:String): ScopeSimple<E> {
+    fun createOrGetChildScope(forReferenceInParent:String, forTypeName:String, elementId:AsmElementIdType): ScopeSimple<AsmElementIdType> {
         var child = this._childScopes[forReferenceInParent]
         if (null==child) {
-            child = ScopeSimple<E>(this, forReferenceInParent, forTypeName)
+            child = ScopeSimple<AsmElementIdType>(this, forReferenceInParent, forTypeName)
             this._childScopes[forReferenceInParent] = child
         }
+        this.rootScope.scopeMap[elementId] = child
         return child
     }
 
-    fun addToScope(referableName:String, typeName:String, item:E) {
+    fun addToScope(referableName:String, typeName:String, asmElementId:AsmElementIdType) {
         var m = this._items[typeName]
         if (null==m) {
             m = mutableMapOf()
             this._items[typeName] = m
         }
-        m[referableName]=item
+        m[referableName]=asmElementId
     }
 
-    fun findOrNull(referableName:String, typeName:String):E? = this._items[typeName]?.get(referableName)
+    fun findOrNull(referableName:String, typeName:String):AsmElementIdType? = this._items[typeName]?.get(referableName)
 
     override fun isMissing(referableName:String, typeName:String):Boolean = null==this.findOrNull(referableName,typeName)
 
@@ -95,10 +100,10 @@ class ScopeSimple<E>(
 }
 
 
-//fun ScopeModel.createReferenceFromRoot(scope: ScopeSimple<AsmElementPath>, element: AsmElementSimple): AsmElementPath {
+//fun ScopeModelAgl.createReferenceFromRoot(scope: ScopeSimple<AsmElementPath>, element: AsmElementSimple): AsmElementPath {
 //    return element.asmPath
 //}
 
-//fun ScopeModel.resolveReference(asm:AsmSimple, rootScope: ScopeSimple<AsmElementPath>, reference: AsmElementPath): AsmElementSimple? {
+//fun ScopeModelAgl.resolveReference(asm:AsmSimple, rootScope: ScopeSimple<AsmElementPath>, reference: AsmElementPath): AsmElementSimple? {
 //    return asm.index[reference]
 //}

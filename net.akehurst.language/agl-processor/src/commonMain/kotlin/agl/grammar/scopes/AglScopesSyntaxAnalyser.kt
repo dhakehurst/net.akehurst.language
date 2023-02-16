@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.agl.grammar.scopes
 
+import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammar.RuleItem
@@ -26,7 +27,7 @@ import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, SentenceContext<GrammarItem>> {
+class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl, SentenceContext<GrammarItem>> {
 
     data class PropertyValue(
         val asmObject: Any,
@@ -42,16 +43,16 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, SentenceContext<Gramm
         this.issues.clear()
     }
 
-    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: String): List<LanguageIssue> {
+    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
         return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: SentenceContext<GrammarItem>?): Pair<ScopeModel, List<LanguageIssue>> {
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: SentenceContext<GrammarItem>?): Pair<ScopeModelAgl, List<LanguageIssue>> {
         val asm = this.declarations(sppt.root.asBranch)
 
         if (null != context) {
             asm.scopes.forEach { (k, scope) ->
-                val msgStart = if (ScopeModel.ROOT_SCOPE_TYPE_NAME == scope.scopeFor) {
+                val msgStart = if (ScopeModelAgl.ROOT_SCOPE_TYPE_NAME == scope.scopeFor) {
                     //do nothing
                     "In root scope"
                 } else {
@@ -69,7 +70,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, SentenceContext<Gramm
                             val loc = this.locationMap[PropertyValue(identifiable, "typeReference")]
                             issues.raise(loc, "$msgStart '${identifiable.typeName}' not found as identifiable type")
                         }
-                        ScopeModel.IDENTIFY_BY_NOTHING == identifiable.propertyName -> {
+                        ScopeModelAgl.IDENTIFY_BY_NOTHING == identifiable.propertyName -> {
                             //OK
                         }
                         else -> {
@@ -115,12 +116,12 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, SentenceContext<Gramm
     }
 
     // declarations = rootIdentifiables scopes referencesOpt
-    private fun declarations(node: SPPTBranch): ScopeModel {
-        val asm = ScopeModel()
+    private fun declarations(node: SPPTBranch): ScopeModelAgl {
+        val asm = ScopeModelAgl()
         val rootIdentifiables = this.rootIdentifiables(node.branchChild(0))
         val scopes = this.scopes(node.branchChild(1))
         val references = this.referencesOpt(node.branchChild(2))
-        asm.scopes[ScopeModel.ROOT_SCOPE_TYPE_NAME]?.identifiables?.addAll(rootIdentifiables)
+        asm.scopes[ScopeModelAgl.ROOT_SCOPE_TYPE_NAME]?.identifiables?.addAll(rootIdentifiables)
         scopes.forEach {
             asm.scopes[it.scopeFor] = it
         }
@@ -217,7 +218,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModel, SentenceContext<Gramm
     private fun propertyReferenceOrNothing(node: SPPTBranch): String {
         val text = node.nonSkipMatchedText
         return when (text) {
-            "§nothing" -> ScopeModel.IDENTIFY_BY_NOTHING
+            "§nothing" -> ScopeModelAgl.IDENTIFY_BY_NOTHING
             else -> text
         }
     }

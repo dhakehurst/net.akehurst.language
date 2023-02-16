@@ -19,7 +19,7 @@ package net.akehurst.language.api.asm
 /**
  * E - type of elements in the scope
  */
-interface Scope<E> {
+interface Scope<AsmElementIdType> {
     fun isMissing(referableName:String, typeName:String): Boolean
 
 }

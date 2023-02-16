@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
+import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
@@ -32,6 +33,7 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
     override var targetGrammar: String?,
     defaultGoalRuleArg: String?,
     buildForDefaultGoal: Boolean,
+    scopeModelArg: ScopeModel?,
     styleArg: String?,
     formatArg: String?,
     syntaxAnalyserResolverArg: SyntaxAnalyserResolver<AsmType, ContextType>?,
@@ -42,18 +44,23 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
     defaultGoalRuleArg,
     grammarArg,
     buildForDefaultGoal,
+    scopeModelArg,
     styleArg,
     formatArg,
     syntaxAnalyserResolverArg,
     semanticAnalyserResolverArg,
     aglOptionsArg
 ) {
+    override val grammarIsModifiable: Boolean = false
+
     override var grammarStr: String?
         get() = this.grammar.toString() //TODO:
         set(value) {
             error("Cannot set the grammar of a LanguageDefinitionFromAsm using a String")
         }
 
-    override val grammarIsModifiable: Boolean = false
+    override var scopeModelStr: String?
+        get() = this.scopeModel.toString() //TODO:
+        set(value) { error("Cannot set the scopeModel of a LanguageDefinitionFromAsm using a String") }
 
 }

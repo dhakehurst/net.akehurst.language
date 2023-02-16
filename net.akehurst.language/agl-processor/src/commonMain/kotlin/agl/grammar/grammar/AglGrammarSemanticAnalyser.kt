@@ -41,6 +41,11 @@ internal class AglGrammarSemanticAnalyser(
         _locationMap = null
     }
 
+    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
+        //TODO
+        return emptyList()
+    }
+
     override fun analyse(asm: List<Grammar>, locationMap: Map<Any, InputLocation>?, context: GrammarContext?): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
         val issues = checkGrammar(asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
@@ -86,7 +91,7 @@ internal class AglGrammarSemanticAnalyser(
 
             is Embedded -> {
                 try {
-                    rhs.referencedRule(rhs.embeddedGrammarReference) //will throw 'GrammarRuleNotFoundException' if rule not found
+                    rhs.referencedRule(rhs.embeddedGrammarReference.resolved!!) //will throw 'GrammarRuleNotFoundException' if rule not found
                 } catch (e: GrammarRuleNotFoundException) {
                     error(rhs, e.message!!,null)
                 }

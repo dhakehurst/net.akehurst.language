@@ -28,6 +28,7 @@ import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
 import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
+import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
@@ -42,6 +43,7 @@ import net.akehurst.language.api.typeModel.TypeModel
 internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
     override val grammar: Grammar,
     override val defaultGoalRuleName: String,
+    override val scopeModel: ScopeModel?,
     override val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?,
     override val formatter: Formatter?,
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?

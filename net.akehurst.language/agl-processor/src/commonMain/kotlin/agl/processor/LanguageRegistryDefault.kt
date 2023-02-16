@@ -16,16 +16,20 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.agl.grammar.scopes.AglScopesSemanticAnalyser
+import net.akehurst.language.agl.agl.grammar.style.AglStyleSemanticAnalyser
 import net.akehurst.language.agl.grammar.format.AglFormatGrammar
 import net.akehurst.language.agl.grammar.format.AglFormatSyntaxAnalyser
 import net.akehurst.language.agl.grammar.grammar.*
 import net.akehurst.language.agl.grammar.scopes.AglScopesGrammar
 import net.akehurst.language.agl.grammar.scopes.AglScopesSyntaxAnalyser
-import net.akehurst.language.agl.grammar.scopes.ScopeModel
+import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.grammar.style.AglStyleGrammar
 import net.akehurst.language.agl.grammar.style.AglStyleSyntaxAnalyser
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.GrammarItem
+import net.akehurst.language.api.grammar.Namespace
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.style.AglStyleRule
 
@@ -38,7 +42,7 @@ interface AglLanguages {
     val grammar: LanguageDefinition<List<Grammar>, GrammarContext>
     val style: LanguageDefinition<List<AglStyleRule>, SentenceContext<GrammarItem>>
     val format: LanguageDefinition<Any, Any>
-    val scopes: LanguageDefinition<ScopeModel, SentenceContext<GrammarItem>>
+    val scopes: LanguageDefinition<ScopeModelAgl, SentenceContext<GrammarItem>>
 }
 
 class LanguageRegistryDefault : LanguageRegistry {
@@ -58,6 +62,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                 targetGrammar = null,
                 defaultGoalRuleArg = AglGrammarGrammar.goalRuleName,
                 buildForDefaultGoal = false,
+                scopeModelArg = null,
                 styleArg = """
                     'namespace' {
                       foreground: darkgreen;
@@ -96,8 +101,8 @@ class LanguageRegistryDefault : LanguageRegistry {
                 """.trimIndent(),
                 formatArg = """
                 """.trimIndent(),
-                syntaxAnalyserResolverArg = { AglGrammarSyntaxAnalyser(this@LanguageRegistryDefault) }, //TODO: enable the registry to be changed,
-                semanticAnalyserResolverArg = { AglGrammarSemanticAnalyser() },
+                syntaxAnalyserResolverArg = { AglGrammarSyntaxAnalyser() },
+                semanticAnalyserResolverArg = { AglGrammarSemanticAnalyser(this@LanguageRegistryDefault) },
                 aglOptionsArg = Agl.options {
                     parse {
                         goalRuleName(AglScopesGrammar.goalRuleName)
@@ -116,6 +121,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                 targetGrammar = null,
                 defaultGoalRuleArg = AglStyleGrammar.goalRuleName,
                 buildForDefaultGoal = false,
+                scopeModelArg = null,
                 styleArg = """
                     META_IDENTIFIER {
                       foreground: orange;
@@ -141,7 +147,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                 formatArg = """
                 """.trimIndent(),
                 syntaxAnalyserResolverArg = { AglStyleSyntaxAnalyser() },
-                semanticAnalyserResolverArg = null,
+                semanticAnalyserResolverArg = { AglStyleSemanticAnalyser() },
                 aglOptionsArg = Agl.options {
                     parse {
                         goalRuleName(AglScopesGrammar.goalRuleName)
@@ -160,6 +166,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                 targetGrammar = null,
                 defaultGoalRuleArg = AglFormatGrammar.goalRuleName,
                 buildForDefaultGoal = false,
+                scopeModelArg = null,
                 styleArg = """
                 """.trimIndent(),
                 formatArg = """
@@ -177,13 +184,22 @@ class LanguageRegistryDefault : LanguageRegistry {
             )
         )
 
-        override val scopes: LanguageDefinition<ScopeModel, SentenceContext<GrammarItem>> = this@LanguageRegistryDefault.registerFromDefinition(
+        override val scopes: LanguageDefinition<ScopeModelAgl, SentenceContext<GrammarItem>> = this@LanguageRegistryDefault.registerFromDefinition(
             LanguageDefinitionFromAsm(
                 identity = scopesLanguageIdentity,
                 grammarArg = AglScopesGrammar,
                 targetGrammar = null,
                 defaultGoalRuleArg = AglScopesGrammar.goalRuleName,
                 buildForDefaultGoal = false,
+                scopeModelArg = null,
+                /*ScopeModelAgl.fromString(ContextFromGrammar(AglScopesGrammar),"""
+                        references {
+                            in scope property typeReference refers-to GrammarRule
+                            in identifiable property typeReference refers-to GrammarRule
+                            in referenceDefinition property typeReference refers-to GrammarRule
+                            in referenceDefinition property propertyReference refers-to GrammarRule
+                        } 
+                    """.trimIndent()).asm!!,*/
                 styleArg = """
                     'scope' {
                       foreground: darkgreen;
@@ -221,7 +237,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                 formatArg = """
                 """.trimIndent(),
                 syntaxAnalyserResolverArg = { AglScopesSyntaxAnalyser() },
-                semanticAnalyserResolverArg = null,
+                semanticAnalyserResolverArg = { AglScopesSemanticAnalyser() },
                 aglOptionsArg = Agl.options {
                     parse {
                         goalRuleName(AglScopesGrammar.goalRuleName)
@@ -233,14 +249,6 @@ class LanguageRegistryDefault : LanguageRegistry {
             ).also {
                 it.syntaxAnalyser?.configure(
                     configurationContext = ContextFromGrammar(this.grammar.processor!!.grammar),
-                    configuration = """
-                        references {
-                            in scope property typeReference refers-to GrammarRule
-                            in identifiable property typeReference refers-to GrammarRule
-                            in referenceDefinition property typeReference refers-to GrammarRule
-                            in referenceDefinition property propertyReference refers-to GrammarRule
-                        } 
-                    """.trimIndent()
                 )
             }
         )
@@ -257,19 +265,22 @@ class LanguageRegistryDefault : LanguageRegistry {
 
     fun <AsmType : Any, ContextType : Any> register(
         identity: String,
-        grammar: String?,
+        grammarStr: String?,
         targetGrammar: String?,
         defaultGoalRule: String?,
         buildForDefaultGoal: Boolean,
-        style: String?,
-        format: String?,
+        scopeModelStr:String?,
+        styleStr: String?,
+        formatStr: String?,
         syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?,
         semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?,
         aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
     ): LanguageDefinition<AsmType, ContextType> = this.registerFromDefinition(
         LanguageDefinitionDefault<AsmType, ContextType>(
-            identity, grammar, targetGrammar, defaultGoalRule, buildForDefaultGoal,
-            style, format,
+            identity, grammarStr, targetGrammar, defaultGoalRule, buildForDefaultGoal,
+            scopeModelStrArg = scopeModelStr,
+            styleArg = styleStr,
+            formatArg = formatStr,
             syntaxAnalyserResolverArg = syntaxAnalyserResolver,
             semanticAnalyserResolverArg = semanticAnalyserResolver,
             aglOptionsArg = aglOptions
@@ -287,7 +298,7 @@ class LanguageRegistryDefault : LanguageRegistry {
     /**
      * try to find localNamespace.nameOrQName or if not found try to find nameOrQName
      */
-    fun <AsmType : Any, ContextType : Any> findWithNamespaceOrNull(localNamespace:String, nameOrQName: String): LanguageDefinition<AsmType, ContextType>? {
+    fun <AsmType : Any, ContextType : Any> findWithNamespaceOrNull(localNamespace: String, nameOrQName: String): LanguageDefinition<AsmType, ContextType>? {
         return findOrNull("$localNamespace.$nameOrQName") ?: findOrNull(nameOrQName)
     }
 
@@ -300,6 +311,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                 targetGrammarArg = null,
                 defaultGoalRuleArg = null,
                 buildForDefaultGoal = false,
+                scopeModelStrArg = null,
                 styleArg = null,
                 formatArg = null,
                 syntaxAnalyserResolverArg = null,
@@ -311,4 +323,8 @@ class LanguageRegistryDefault : LanguageRegistry {
             existing
         }
     }
+
+    override fun findGrammarOrNull(namespace: Namespace, name: String): Grammar? =
+        this.findWithNamespaceOrNull<Any, Any>(namespace.qualifiedName, name)?.grammar
+
 }

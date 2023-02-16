@@ -16,6 +16,7 @@
 package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
+import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammar.RuleItem
@@ -38,6 +39,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<List<AglStyleRule>, Sente
     }
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
+
     private val _issues = mutableListOf<LanguageIssue>()
 
     override fun clear() {
@@ -45,7 +47,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<List<AglStyleRule>, Sente
         _issues.clear()
     }
 
-    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: String): List<LanguageIssue> {
+    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
         return emptyList()
     }
 

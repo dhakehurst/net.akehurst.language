@@ -16,7 +16,10 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
+import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
+import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
@@ -32,6 +35,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     targetGrammarArg: String?,
     defaultGoalRuleArg: String?,
     buildForDefaultGoal: Boolean,
+    scopeModelStrArg:String?,
     styleArg: String?,
     formatArg: String?,
     syntaxAnalyserResolverArg: SyntaxAnalyserResolver<AsmType, ContextType>?,
@@ -42,6 +46,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     defaultGoalRuleArg,
     null,
     buildForDefaultGoal,
+    null,
     styleArg,
     formatArg,
     syntaxAnalyserResolverArg,
@@ -58,9 +63,23 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         }
     }.apply { this.resetAction = { old -> grammarObservers.forEach { it(old, null) } } }
 
+    private val _scopeModel_cache: CachedValue<ScopeModel?> = cached {
+        val s = this.scopeModelStr
+        if (null == s || null==this.grammar) {
+            null
+        } else {
+            val ctx =ContextFromGrammar(this.grammar!!)
+            ScopeModelAgl.fromString(ctx, s).asm!! as ScopeModel
+        }
+    }.apply { this.resetAction = { old -> scopeModelObservers.forEach { it(old, null) } } }
+
+
+    override val grammarIsModifiable: Boolean = true
+
     override var grammarStr: String? by Delegates.observable(grammarStrArg) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._grammar_cache.reset()
+            this._scopeModel_cache.reset()
         }
     }
 
@@ -75,11 +94,34 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     override var grammar: Grammar?
         get() = this._grammar_cache.value
         set(value) {
-            this._grammar_cache.value = value
+            val oldValue = this._grammar_cache.value
+            if (value==oldValue) {
+                //do nothing
+            } else {
+                this._grammar_cache.value = value
+                this._processor_cache.reset()
+                grammarObservers.forEach { it(oldValue, value) }
+            }
         }
 
+    override var scopeModelStr: String? by Delegates.observable(scopeModelStrArg) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._scopeModel_cache.reset()
+        }
+    }
 
-    override val grammarIsModifiable: Boolean = true
+    override var scopeModel: ScopeModel?
+        get() = this._scopeModel_cache.value
+        set(value) {
+            val oldValue = this._scopeModel_cache.value
+            if (value==oldValue) {
+                //do nothing
+            } else {
+                this._scopeModel_cache.value = value
+                this._processor_cache.reset()
+                scopeModelObservers.forEach { it(oldValue, value) }
+            }
+        }
 
     private fun _grammarFromString(newValue: String?): Grammar? {
         return if (null == newValue) {

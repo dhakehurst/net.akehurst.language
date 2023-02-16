@@ -155,7 +155,7 @@ internal class ConverterToRuntimeRules(
                     } else {
                         (target.rhs as Concatenation).items[0] as Embedded
                     }
-                    val embeddedRule = this.embeddedRule(embeddedRuleName, false, e.embeddedGrammarReference, e.embeddedGoalName)
+                    val embeddedRule = this.embeddedRule(embeddedRuleName, false, e.embeddedGrammarReference.resolved!!, e.embeddedGoalName)
                     this.originalRuleItem[Pair(embeddedRule.runtimeRuleSetNumber, embeddedRule.ruleNumber)] = e
                     embeddedRule
                 }
@@ -253,10 +253,10 @@ internal class ConverterToRuntimeRules(
     }
 
     private fun visitEmbedded(target: Embedded, arg: String): RuntimeRule {
-        val existing = this.findEmbedded(target.embeddedGrammarReference, target.embeddedGoalName)
+        val existing = this.findEmbedded(target.embeddedGrammarReference.resolved!!, target.embeddedGoalName)
         return if (null == existing) {
             val embeddedRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)
-            val embeddedRule = this.embeddedRule(embeddedRuleName, false, target.embeddedGrammarReference, target.embeddedGoalName)
+            val embeddedRule = this.embeddedRule(embeddedRuleName, false, target.embeddedGrammarReference.resolved!!, target.embeddedGoalName)
             this.originalRuleItem[Pair(embeddedRule.runtimeRuleSetNumber, embeddedRule.ruleNumber)] = target
             embeddedRule
         } else {

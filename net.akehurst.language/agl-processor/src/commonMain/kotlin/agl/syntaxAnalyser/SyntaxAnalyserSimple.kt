@@ -18,9 +18,11 @@ package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.collections.emptyListSeparated
 import net.akehurst.language.agl.collections.mutableListSeparated
-import net.akehurst.language.agl.grammar.scopes.ScopeModel
+import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.grammar.Choice
@@ -41,17 +43,23 @@ import net.akehurst.language.api.typeModel.*
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
 class SyntaxAnalyserSimple(
-    val typeModel: TypeModel
+    val typeModel: TypeModel,
+    val scopeModel: ScopeModel?
 ) : SyntaxAnalyser<AsmSimple, ContextSimple> {
+
+    companion object {
+        private const val ns = "net.akehurst.language.agl.syntaxAnalyser"
+        const val CONFIGURATION_KEY_AGL_SCOPE_MODEL = "$ns.scope.model"
+    }
 
     private var _asm: AsmSimple? = null
     private var _context: ContextSimple? = null // cached value, provided on call to transform
-    private val _issues = mutableListOf<LanguageIssue>()
-    private val _scopeMap = mutableMapOf<AsmElementPath, ScopeSimple<AsmElementPath>>()
+    private val _issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
+
+    //private val _scopeMap = mutableMapOf<AsmElementPath, ScopeSimple<AsmElementPath>>()
     private lateinit var _mapToGrammar: (Int, Int) -> RuleItem
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
-    var scopeModel: ScopeModel = ScopeModel()
 
     override fun clear() {
         this.locationMap.clear()
@@ -60,23 +68,8 @@ class SyntaxAnalyserSimple(
         this._issues.clear()
     }
 
-    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: String): List<LanguageIssue> {
-        //TODO: pass grammar as context ?
-        val proc = Agl.registry.agl.scopes.processor ?: error("Scopes language not found!")
-        val result = proc.process(
-            sentence = configuration,
-            Agl.options {
-                syntaxAnalysis {
-                    context(configurationContext)
-                }
-            }
-        )
-        val asm = result.asm
-        if (null == asm) {
-        } else {
-            this.scopeModel = asm
-        }
-        return result.issues
+    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
+        return emptyList()
     }
 
     override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: ContextSimple?): Pair<AsmSimple, List<LanguageIssue>> {
@@ -110,14 +103,8 @@ class SyntaxAnalyserSimple(
         }
         _asm?.addRoot(rootEl)
 
-        _asm!!.rootElements.forEach {
-            val iss = scopeModel.resolveReferencesElement(it, locationMap, context?.rootScope, this._scopeMap)
-            this._issues.addAll(iss)
-        }
-
-        return Pair(_asm!!, _issues)
+        return Pair(_asm!!, _issues.issues)
     }
-
 
     private fun createValue(target: SPPTNode, path: AsmElementPath, scope: ScopeSimple<AsmElementPath>?): Any? {
         val elType = typeModel.let { typeModel.findType(target.name) }
@@ -126,19 +113,19 @@ class SyntaxAnalyserSimple(
                 "No Element Type for ${target.name}" //TODO
             }
 
-            else -> createValue(target, path, elType, scope)
+            else -> createValue(target, path, elType)//, scope)
         }
     }
 
-    private fun createValue(target: SPPTNode, path: AsmElementPath, elType: RuleType, scope: ScopeSimple<AsmElementPath>?): Any? {
+    private fun createValue(target: SPPTNode, path: AsmElementPath, elType: RuleType): Any? {//, scope: ScopeSimple<AsmElementPath>?): Any? {
         val v = when (target) {
             is SPPTLeaf -> createValueFromLeaf(target)
-            is SPPTBranch -> createValueFromBranch(target, path, elType, scope)
+            is SPPTBranch -> createValueFromBranch(target, path, elType)//, scope)
             else -> error("should never happen!")
         }
         if (v is AsmElementSimple) {
             locationMap[v] = target.location
-            this.addToScope(scope, v)
+           // this.addToScope(scope, v)
         }
         return v
     }
@@ -152,11 +139,11 @@ class SyntaxAnalyserSimple(
         return value
     }
 
-    private fun createValueFromBranch(target: SPPTBranch, path: AsmElementPath, elType: RuleType, scope: ScopeSimple<AsmElementPath>?): Any? {
+    private fun createValueFromBranch(target: SPPTBranch, path: AsmElementPath, elType: RuleType):Any?{//, scope: ScopeSimple<AsmElementPath>?): Any? {
         return when (elType) {
             is StringType -> {
                 val ch = target.children[0]
-                createValue(ch, path, elType, scope)
+                createValue(ch, path, elType)//, scope)
             }
 
             is AnyType -> {
@@ -170,8 +157,8 @@ class SyntaxAnalyserSimple(
                                 val ch = target.children[0]
                                 val childType = typeModel.findType(ch.name) ?: error("Internal Error: cannot find type for ${ch.name}")
                                 val chPath = path
-                                val childsScope = scope
-                                createValue(ch, chPath, childType, childsScope)
+                                //val childsScope = scope
+                                createValue(ch, chPath, childType)//, childsScope)
                             }
 
                             else -> {
@@ -181,25 +168,25 @@ class SyntaxAnalyserSimple(
                         //else -> error("Internal Error: cannot find actual type for ${target.name}")
                     }
 
-                    else -> createValue(target, path, actualType, scope)
+                    else -> createValue(target, path, actualType)//, scope)
                 }
             }
 
             is NothingType -> TODO()
 
             is UnnamedSuperTypeType -> {
-                var actualTarget:SPPTNode = target
-                var actualType:RuleType = elType
+                var actualTarget: SPPTNode = target
+                var actualType: RuleType = elType
                 while (actualType is WithSubtypes && actualType.subtypes.isNotEmpty()) {
                     actualType = actualType.subtypes[actualTarget.option]
                     actualTarget = actualTarget.asBranch.nonSkipChildren[0]
                 }
-                this.createValue(actualTarget, path, actualType, scope)
+                this.createValue(actualTarget, path, actualType)//, scope)
             }
 
             is ListSimpleType -> {
                 val el = mutableListOf<Any>()
-                val childsScope = scope
+                //val childsScope = scope
                 for (ch in target.children) {
                     TODO()
                 }
@@ -212,22 +199,22 @@ class SyntaxAnalyserSimple(
 
             is TupleType -> {
                 val el = _asm!!.createElement(path, elType.name)
-                val childsScope = createScope(scope, el)
+                //val childsScope = createScope(scope, el)
                 for (propDecl in elType.property.values) {
                     val propType = propDecl.type
                     val childPath = path + propDecl.name
                     val propertyValue = when (propType) {
                         is AnyType -> {
                             val ch = target.asBranch.nonSkipChildren[propDecl.childIndex]
-                            this.createValue(ch, childPath, propType, childsScope)
+                            this.createValue(ch, childPath, propType)//, childsScope)
                         }
 
                         is StringType -> {
                             val ch = target.asBranch.nonSkipChildren[propDecl.childIndex]
                             val propValue = when {
-                                ch.isLeaf -> this.createValue(ch, childPath, propType, childsScope)
+                                ch.isLeaf -> this.createValue(ch, childPath, propType)//, childsScope)
                                 ch.isEmptyMatch -> null
-                                else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, propType, childsScope)
+                                else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, propType)//, childsScope)
                             }
                             propValue
                         }
@@ -242,7 +229,7 @@ class SyntaxAnalyserSimple(
                                         if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
                                             null
                                         } else {
-                                            this.createValue(b, childPath2, propType, childsScope)
+                                            this.createValue(b, childPath2, propType)//, childsScope)
                                         }
                                     }
                                 }
@@ -254,7 +241,7 @@ class SyntaxAnalyserSimple(
                                         if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
                                             null
                                         } else {
-                                            this.createValue(b, childPath2, propType, childsScope)
+                                            this.createValue(b, childPath2, propType)//, childsScope)
                                         }
                                     }
                                 }
@@ -267,17 +254,17 @@ class SyntaxAnalyserSimple(
                             val propValue = when {
                                 propDecl.isNullable && ch.isOptional -> when {
                                     ch.isEmptyLeaf -> null
-                                    else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, propType, childsScope)
+                                    else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, propType)//, childsScope)
                                 }
 
                                 propType.subtypes.isNotEmpty() && ch.asBranch.nonSkipChildren.size == 1 -> this.createValue(
                                     ch.asBranch.nonSkipChildren[0],
                                     childPath,
                                     propType,
-                                    childsScope
+                                    //childsScope
                                 )
 
-                                else -> this.createValue(ch, childPath, propType, childsScope)
+                                else -> this.createValue(ch, childPath, propType)//, childsScope)
                             }
                             propValue
                         }
@@ -287,10 +274,10 @@ class SyntaxAnalyserSimple(
                             val propValue = when {
                                 propDecl.isNullable && ch.isOptional -> when {
                                     ch.isEmptyLeaf -> null
-                                    else -> this.createValue(ch, childPath, propType, childsScope)
+                                    else -> this.createValue(ch, childPath, propType)//, childsScope)
                                 }
                                 //propType.subType.isNotEmpty() && ch.asBranch.nonSkipChildren.size == 1 -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, childsScope)
-                                else -> this.createValue(ch, childPath, propType, childsScope)
+                                else -> this.createValue(ch, childPath, propType)//, childsScope)
                             }
                             propValue
                         }
@@ -303,8 +290,8 @@ class SyntaxAnalyserSimple(
             }
 
             is ElementType -> {
-                var actualTarget:SPPTNode = target
-                var actualType:ElementType = elType
+                var actualTarget: SPPTNode = target
+                var actualType: ElementType = elType
                 while (actualType.subtypes.isNotEmpty()) {
                     actualType = actualType.subtypes[actualTarget.option]
                     actualTarget = actualTarget.asBranch.nonSkipChildren[0]
@@ -318,21 +305,21 @@ class SyntaxAnalyserSimple(
                 //     else -> elType
                 //}
                 val el = _asm!!.createElement(path, actualType.name)
-                val childsScope = createScope(scope, el)
+                //val childsScope = createScope(scope, el)
                 for (propDecl in actualType.property.values) {
                     val propType = propDecl.type
                     val childPath = path + propDecl.name
                     val ch = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
                     val propertyValue = when (propType) {
                         is AnyType -> {
-                            this.createValue(ch, childPath, propType, childsScope)
+                            this.createValue(ch, childPath, propType)//, childsScope)
                         }
 
                         is StringType -> {
                             val propValue = when {
-                                ch.isLeaf -> this.createValue(ch, childPath, propType, childsScope)
+                                ch.isLeaf -> this.createValue(ch, childPath, propType)//, childsScope)
                                 ch.isEmptyMatch -> null
-                                else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, propType, childsScope)
+                                else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, propType)//, childsScope)
                             }
                             propValue
                         }
@@ -346,7 +333,7 @@ class SyntaxAnalyserSimple(
                                         if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
                                             null
                                         } else {
-                                            this.createValue(b, childPath2, propType.elementType, childsScope)
+                                            this.createValue(b, childPath2, propType.elementType)//, childsScope)
                                         }
                                     }
                                 }
@@ -358,7 +345,7 @@ class SyntaxAnalyserSimple(
                                         if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
                                             null
                                         } else {
-                                            this.createValue(b, childPath2, propType.elementType, childsScope)
+                                            this.createValue(b, childPath2, propType.elementType)//, childsScope)
                                         }
                                     }
                                 }
@@ -380,7 +367,7 @@ class SyntaxAnalyserSimple(
                                             if (cel.isLeaf && cel.asLeaf.isExplicitlyNamed.not()) {
                                                 //do not add iteml
                                             } else {
-                                                val chEl = this.createValue(cel, childPath2, type, childsScope)
+                                                val chEl = this.createValue(cel, childPath2, type)//, childsScope)
                                                 sList.add(chEl)
                                             }
 
@@ -401,7 +388,7 @@ class SyntaxAnalyserSimple(
                                             if (cel.isLeaf && cel.asLeaf.isExplicitlyNamed.not()) {
                                                 //do not add item
                                             } else {
-                                                val chEl = this.createValue(cel, childPath2, type, childsScope)
+                                                val chEl = this.createValue(cel, childPath2, type)//, childsScope)
                                                 sList.add(chEl)
                                             }
 
@@ -418,17 +405,17 @@ class SyntaxAnalyserSimple(
                             val propValue = when {
                                 propDecl.isNullable && ch.isOptional -> when {
                                     ch.isEmptyLeaf -> null
-                                    else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, propType, childsScope)
+                                    else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, propType)//, childsScope)
                                 }
 
                                 propType.subtypes.isNotEmpty() && ch.asBranch.nonSkipChildren.size == 1 -> this.createValue(
                                     ch,
                                     childPath,
                                     propType,
-                                    childsScope
+                                    //childsScope
                                 )
 
-                                else -> this.createValue(ch, childPath, propType, childsScope)
+                                else -> this.createValue(ch, childPath, propType)//, childsScope)
                             }
                             propValue
                         }
@@ -437,17 +424,17 @@ class SyntaxAnalyserSimple(
                             val propValue = when {
                                 propDecl.isNullable && ch.isOptional -> when {
                                     ch.isEmptyLeaf -> null
-                                    else -> this.createValue(ch, childPath, propType, childsScope)
+                                    else -> this.createValue(ch, childPath, propType)//, childsScope)
                                 }
                                 //propType.subType.isNotEmpty() && ch.asBranch.nonSkipChildren.size == 1 -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, childsScope)
-                                else -> this.createValue(ch, childPath, propType, childsScope)
+                                else -> this.createValue(ch, childPath, propType)//, childsScope)
                             }
                             propValue
                         }
 
                         is UnnamedSuperTypeType -> {
                             val actualPropType = propType.subtypes[ch.option]
-                            this.createValue(ch, childPath, actualPropType, childsScope)
+                            this.createValue(ch, childPath, actualPropType)//, childsScope)
                         }
 
                         else -> error("Internal Error: type $propType not handled")
@@ -593,15 +580,15 @@ class SyntaxAnalyserSimple(
             }
         }
     */
-    private fun getReferable(scopeFor: String, el: AsmElementSimple): String? {
-        val prop = scopeModel.getReferablePropertyNameFor(scopeFor, el.typeName)
-        return if (null == prop) {
-            null
-        } else {
-            el.getPropertyAsString(prop)
-        }
-    }
-
+    // private fun getReferable(scopeFor: String, el: AsmElementSimple): String? {
+    //     val prop = scopeModel.getReferablePropertyNameFor(scopeFor, el.typeName)
+    //     return if (null == prop) {
+    //         null
+    //     } else {
+    //         el.getPropertyAsString(prop)
+    //     }
+    // }
+/*
     private fun createScope(scope: ScopeSimple<AsmElementPath>?, el: AsmElementSimple): ScopeSimple<AsmElementPath>? {
         return if (null == scope) {
             null
@@ -609,17 +596,13 @@ class SyntaxAnalyserSimple(
             if (scopeModel.isScopeDefinition(el.typeName)) {
                 val refInParent = scopeModel.createReferenceLocalToScope(scope, el)
                 if (null != refInParent) {
-                    val newScope = scope.createOrGetChildScope(refInParent, el.typeName)
-                    _scopeMap[el.asmPath] = newScope
+                    val newScope = scope.createOrGetChildScope(refInParent, el.typeName, el.asmPath)
+                    //_scopeMap[el.asmPath] = newScope
                     newScope
                 } else {
-                    _issues.add(
-                        LanguageIssue(
-                            LanguageIssueKind.ERROR,
-                            LanguageProcessorPhase.SYNTAX_ANALYSIS,
-                            this.locationMap[el],
-                            "Trying to create child scope but cannot create a reference for $el"
-                        )
+                    _issues.error(
+                        this.locationMap[el],
+                        "Trying to create child scope but cannot create a reference for $el"
                     )
                     scope
                 }
@@ -640,23 +623,16 @@ class SyntaxAnalyserSimple(
                     val contextRef = el.asmPath
                     scope.addToScope(scopeLocalReference, el.typeName, contextRef)
                 } else {
-                    _issues.add(
-                        LanguageIssue(
-                            LanguageIssueKind.ERROR,
-                            LanguageProcessorPhase.SYNTAX_ANALYSIS,
-                            this.locationMap[el],
-                            "Cannot create a local reference in '$scope' for $el"
-                        )
-                    )
+                    _issues.error(this.locationMap[el], "Cannot create a local reference in '$scope' for $el")
                 }
             } else {
                 // no need to add it to scope
             }
         }
     }
-
+*/
     private fun isReference(el: AsmElementSimple, name: String): Boolean {
-        return scopeModel.isReference(el.typeName, name)
+        return scopeModel?.isReference(el.typeName, name) ?: false
     }
 
     private fun setPropertyOrReference(el: AsmElementSimple, name: String, value: Any?) {
@@ -667,75 +643,4 @@ class SyntaxAnalyserSimple(
         }
 
     }
-}
-
-internal fun ScopeModel.resolveReferencesElement(
-    el: AsmElementSimple,
-    locationMap: Map<Any, InputLocation>,
-    parentScope: ScopeSimple<AsmElementPath>?,
-    scopeMap: Map<AsmElementPath, ScopeSimple<AsmElementPath>>
-): List<LanguageIssue> {
-    val scopeModel = this
-    val issues = mutableListOf<LanguageIssue>()
-    val elScope = scopeMap[el.asmPath] ?: parentScope
-    if (null != elScope) {
-        el.properties.forEach { e ->
-            val prop = e.value
-            if (prop.isReference) {
-                val v = prop.value
-                if (null == v) {
-                    //can't set reference, but no issue
-                } else if (v is AsmElementReference) {
-                    val typeNames = scopeModel.getReferredToTypeNameFor(el.typeName, prop.name)
-                    val referreds: List<AsmElementPath> = typeNames.mapNotNull {
-                        elScope.findOrNull(v.reference, it) as AsmElementPath?
-                    }
-                    if (1 < referreds.size) {
-                        val location = locationMap[el] //TODO: should be property location
-                        issues.add(
-                            LanguageIssue(
-                                LanguageIssueKind.WARNING,
-                                LanguageProcessorPhase.SYNTAX_ANALYSIS,
-                                location,
-                                "Multiple options for '${v.reference}' as reference for '${el.typeName}.${prop.name}'"
-                            )
-                        )
-                    }
-                    val referred = referreds.firstOrNull()
-                    if (null == referred) {
-                        val location = locationMap[el] //TODO: should be property location
-                        issues.add(
-                            LanguageIssue(
-                                LanguageIssueKind.ERROR,
-                                LanguageProcessorPhase.SYNTAX_ANALYSIS,
-                                location,
-                                "Cannot find '${v.reference}' as reference for '${el.typeName}.${prop.name}'"
-                            )
-                        )
-                    } else {
-                        val rel = el.asm.index[referred]
-                        el.getPropertyAsReference(prop.name)?.value = rel
-                    }
-
-                } else {
-                    val location = locationMap[el] //TODO: should be property location
-                    issues.add(
-                        LanguageIssue(
-                            LanguageIssueKind.ERROR,
-                            LanguageProcessorPhase.SYNTAX_ANALYSIS,
-                            location,
-                            "Cannot resolve reference property '${el.typeName}.${prop.name}' because it is not defined as a reference"
-                        )
-                    )
-                }
-            } else {
-                // no need to resolve
-            }
-        }
-        el.children.forEach {
-            val chIss = resolveReferencesElement(it, locationMap, elScope, scopeMap)
-            issues.addAll(chIss)
-        }
-    }
-    return issues
 }

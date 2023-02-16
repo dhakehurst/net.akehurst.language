@@ -16,11 +16,12 @@
 
 package net.akehurst.language.api.analyser
 
+import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.SemanticAnalysisResult
+import net.akehurst.language.api.processor.SentenceContext
 import kotlin.js.JsExport
-
-class SemanticAnalyserException(message: String, cause: Throwable?) : RuntimeException(message, cause)
 
 /**
  *
@@ -30,6 +31,8 @@ class SemanticAnalyserException(message: String, cause: Throwable?) : RuntimeExc
 interface SemanticAnalyser<in AsmType, in ContextType> {
 
     fun clear()
+
+    fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue>
 
     fun analyse(asm: AsmType, locationMap: Map<Any,InputLocation>?=null, context:ContextType?=null): SemanticAnalysisResult
 }

@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
+import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
@@ -29,6 +30,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     defaultGoalRuleArg: String?,
     grammarArg: Grammar?,
     buildForDefaultGoal: Boolean,
+    scopeModelArg:ScopeModel?,
     styleArg: String?,
     formatArg: String?,
     syntaxAnalyserResolverArg: SyntaxAnalyserResolver<AsmType, ContextType>?,
@@ -36,14 +38,15 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     aglOptionsArg: ProcessOptions<List<Grammar>, GrammarContext>?
 ): LanguageDefinition<AsmType, ContextType> {
 
-    private val _processor_cache: CachedValue<LanguageProcessor<AsmType, ContextType>?> = cached {
+    protected val _processor_cache: CachedValue<LanguageProcessor<AsmType, ContextType>?> = cached {
         val g = this.grammar
         if (null == g) {
             null
         } else {
             val config = Agl.configuration<AsmType, ContextType> {
-                targetGrammarName(targetGrammar)
-                defaultGoalRuleName(defaultGoalRule)
+                targetGrammarName(this@LanguageDefinitionAbstract.targetGrammar)
+                defaultGoalRuleName(this@LanguageDefinitionAbstract.defaultGoalRule)
+                scopeModel(this@LanguageDefinitionAbstract.scopeModel)
                 syntaxAnalyserResolver(this@LanguageDefinitionAbstract.syntaxAnalyserResolver)
                 semanticAnalyserResolver(this@LanguageDefinitionAbstract.semanticAnalyserResolver)
             }
@@ -68,6 +71,13 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     }
 
     override val processor: LanguageProcessor<AsmType, ContextType>? get() = this._processor_cache.value
+
+    override var scopeModel:ScopeModel? by Delegates.observable(scopeModelArg) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+            scopeModelObservers.forEach { it(oldValue, newValue) }
+        }
+    }
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
         get() = this._processor_cache.value?.let { proc -> _syntaxAnalyserResolver?.invoke(proc.grammar) }
@@ -103,6 +113,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
 
     override val processorObservers = mutableListOf<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>()
     override val grammarObservers = mutableListOf<(Grammar?, Grammar?) -> Unit>()
+    override val scopeModelObservers= mutableListOf<(ScopeModel?, ScopeModel?) -> Unit>()
     override val styleObservers = mutableListOf<(String?, String?) -> Unit>()
     override val formatObservers = mutableListOf<(String?, String?) -> Unit>()
 
