@@ -24,17 +24,20 @@ import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.processor.Formatter
+import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 
 internal class LanguageProcessorFromGenerated<AsmType : Any, ContextType : Any>(
     val generated : GeneratedLanguageProcessorAbstract<AsmType, ContextType>,
 ) : LanguageProcessorAbstract<AsmType, ContextType>() {
 
-    override val defaultGoalRuleName: String  get() = generated.defaultGoalRuleName
+    override val configuration: LanguageProcessorConfiguration<AsmType, ContextType>
+        get() = TODO("not implemented")
+
     override val _runtimeRuleSet: RuntimeRuleSet = generated.ruleSet as RuntimeRuleSet
     override val mapToGrammar: (Int, Int) -> RuleItem = generated.mapToGrammar
     override val scopeModel: ScopeModel? = generated.scopeModel
     override val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>? = generated.syntaxAnalyser
-    override val formatter: Formatter? = generated.formatter
+    override val formatter: Formatter<AsmType>? = generated.formatter
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? = generated.semanticAnalyser
     override val grammar: Grammar = generated.grammar
 

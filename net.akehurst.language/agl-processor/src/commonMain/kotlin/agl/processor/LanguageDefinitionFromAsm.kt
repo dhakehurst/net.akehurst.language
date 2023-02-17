@@ -29,38 +29,41 @@ import kotlin.properties.Delegates
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
     override val identity: String,
-    grammarArg: Grammar,
-    override var targetGrammar: String?,
-    defaultGoalRuleArg: String?,
     buildForDefaultGoal: Boolean,
-    scopeModelArg: ScopeModel?,
-    styleArg: String?,
-    formatArg: String?,
-    syntaxAnalyserResolverArg: SyntaxAnalyserResolver<AsmType, ContextType>?,
-    semanticAnalyserResolverArg: SemanticAnalyserResolver<AsmType, ContextType>?,
-    /** the options to configure building the processor for the registered language */
-    aglOptionsArg: ProcessOptions<List<Grammar>, GrammarContext>?
+    configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
-    defaultGoalRuleArg,
-    grammarArg,
     buildForDefaultGoal,
-    scopeModelArg,
-    styleArg,
-    formatArg,
-    syntaxAnalyserResolverArg,
-    semanticAnalyserResolverArg,
-    aglOptionsArg
+    configuration
 ) {
-    override val grammarIsModifiable: Boolean = false
-
     override var grammarStr: String?
         get() = this.grammar.toString() //TODO:
         set(value) {
             error("Cannot set the grammar of a LanguageDefinitionFromAsm using a String")
         }
+    override val grammarIsModifiable: Boolean = false
 
     override var scopeModelStr: String?
         get() = this.scopeModel.toString() //TODO:
-        set(value) { error("Cannot set the scopeModel of a LanguageDefinitionFromAsm using a String") }
+        set(value) {
+            error("Cannot set the scopeModel of a LanguageDefinitionFromAsm using a String")
+        }
+/*
+    override var aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?
+        get() = error("Cannot get the aglOptions of a LanguageDefinitionFromAsm")
+        set(value) {
+            error("Cannot set the aglOptions of a LanguageDefinitionFromAsm")
+        }
+*/
 
+    override var styleStr: String?
+        get() = this.grammar.toString() //TODO:
+        set(value) {
+            error("Cannot set the styleStr of a LanguageDefinitionFromAsm using a String")
+        }
+
+    override var formatStr: String?
+        get() = this.grammar.toString() //TODO:
+        set(value) {
+            error("Cannot set the formatStr of a LanguageDefinitionFromAsm using a String")
+        }
 }

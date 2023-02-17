@@ -16,13 +16,15 @@
 
 package net.akehurst.language.api.asm
 
+import net.akehurst.language.collections.MutableStack
 import net.akehurst.language.collections.mutableStackOf
 
-data class AsmElementPath(val value:String) {
+data class AsmElementPath(val value: String) {
     companion object {
         val ROOT = AsmElementPath("/")
     }
-    operator fun plus(segment: String)= if(this==ROOT) AsmElementPath("/$segment") else AsmElementPath("$value/$segment")
+
+    operator fun plus(segment: String) = if (this == ROOT) AsmElementPath("/$segment") else AsmElementPath("$value/$segment")
 }
 
 class AsmSimple {
@@ -35,7 +37,7 @@ class AsmSimple {
         (rootElements as MutableList).add(root)
     }
 
-    fun createElement(asmPath:AsmElementPath, typeName: String) = AsmElementSimple(asmPath, this, typeName)
+    fun createElement(asmPath: AsmElementPath, typeName: String) = AsmElementSimple(asmPath, this, typeName)
 
     fun asString(indent: String, currentIndent: String = ""): String = this.rootElements.joinToString(separator = "\n") {
         it.asString(indent, currentIndent)
@@ -90,6 +92,7 @@ class AsmElementSimple(
                 this.joinToString(separator = "\n$newIndent", prefix = "[\n$newIndent", postfix = "\n$currentIndent]") { it?.asStringAny(indent, newIndent) ?: "null" }
             }
         }
+
         is AsmElementSimple -> this.asString(indent, currentIndent)
         else -> error("property value type not handled '${this::class}'")
     }
@@ -158,10 +161,10 @@ val AsmElementSimple.children: List<AsmElementSimple>
 fun AsmSimple.equalTo(other: AsmSimple): Boolean {
     return when {
         this.rootElements.size != other.rootElements.size -> false
-        else ->{
+        else -> {
             for (i in 0..this.rootElements.size) {
                 val t = this.rootElements[i]
-                val o= other.rootElements[i]
+                val o = other.rootElements[i]
                 if (t.equalTo(o).not()) return false
             }
             return true
@@ -175,9 +178,9 @@ fun AsmElementSimple.equalTo(other: AsmElementSimple): Boolean {
         this.typeName != other.typeName -> false
         this.properties.size != other.properties.size -> false
         else -> {
-            this.properties.all { (k,v)->
+            this.properties.all { (k, v) ->
                 val o = other.properties[k]
-                if(null==o) {
+                if (null == o) {
                     false
                 } else {
                     v.equalTo(o)
@@ -189,8 +192,8 @@ fun AsmElementSimple.equalTo(other: AsmElementSimple): Boolean {
 
 fun AsmElementProperty.equalTo(other: AsmElementProperty): Boolean {
     return when {
-        this.name!=other.name -> false
-        this.isReference!=other.isReference -> false
+        this.name != other.name -> false
+        this.isReference != other.isReference -> false
         else -> {
             val t = this.value
             val o = other.value
@@ -201,10 +204,10 @@ fun AsmElementProperty.equalTo(other: AsmElementProperty): Boolean {
                     error("Cannot compare property values: ${t} and ${o}")
                 }
             } else {
-                if(t is AsmElementSimple && o is AsmElementSimple) {
+                if (t is AsmElementSimple && o is AsmElementSimple) {
                     t.equalTo(o)
                 } else {
-                    t==o
+                    t == o
                 }
             }
         }
@@ -213,31 +216,33 @@ fun AsmElementProperty.equalTo(other: AsmElementProperty): Boolean {
 
 fun AsmElementReference.equalTo(other: AsmElementReference): Boolean {
     return when {
-        this.reference!=other.reference -> false
+        this.reference != other.reference -> false
         else -> true
     }
 }
+
 abstract class AsmSimpleTreeWalker {
     abstract fun root(root: AsmElementSimple)
     abstract fun beforeElement(element: AsmElementSimple)
     abstract fun afterElement(element: AsmElementSimple)
     abstract fun property(property: AsmElementProperty)
 }
-fun AsmSimple.traverseDepthFirst(callback:AsmSimpleTreeWalker) {
-    val stack = mutableStackOf<AsmElementSimple>()
-    this.rootElements.forEach {
-        stack.push(it)
-        while (stack.isNotEmpty) {
-            val el = stack.pop()
-            callback.beforeElement(el)
-            el.properties.values.forEach {
-                callback.property(it)
-                if (it.value is AsmElementSimple) {
-                    stack.push(it.value)
+
+fun AsmSimple.traverseDepthFirst(callback: AsmSimpleTreeWalker) {
+    fun traverse(element: Any?) {
+        when (element) {
+            is AsmElementSimple -> {
+                callback.beforeElement(element)
+                for (prop in element.properties.values) {
+                    callback.property(prop)
+                    val pv = prop.value
+                    traverse(pv)
                 }
+                callback.afterElement(element)
             }
-            callback.afterElement(el)
+
+            is List<*> -> element.forEach { lv -> traverse(lv) }
         }
     }
-
+    this.rootElements.forEach { traverse(it) }
 }

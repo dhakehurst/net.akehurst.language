@@ -18,7 +18,7 @@ class test_SemanticAnalyser {
             TODO("not implemented")
         }
 
-        override fun analyse(asm: Any, locationMap: Map<Any, InputLocation>?, context: Any?): SemanticAnalysisResult {
+        override fun analyse(asm: Any, locationMap: Map<Any, InputLocation>?, context: Any?, options: Map<String, Any>): SemanticAnalysisResult {
             val issues =  when (asm) {
                 "error" -> listOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE,null,"error"))
                 "warning" -> listOf(LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.PARSE,null,"error"))
@@ -33,5 +33,6 @@ class test_SemanticAnalyser {
         val asm = Any()
         val sut = TestSemanticAnalyser()
         val actual = sut.analyse("error")
+        TODO()
     }
 }

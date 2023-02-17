@@ -79,6 +79,8 @@ interface Grammar {
 
     val allResolvedEmbeddedGrammars: Set<Grammar>
 
+    fun findAllNonTerminalRule(ruleName: String): List<GrammarRule>
+
     fun findNonTerminalRule(ruleName: String): GrammarRule?
 
     fun findTerminalRule(terminalPattern: String): Terminal

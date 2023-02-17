@@ -19,6 +19,7 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
@@ -81,12 +82,12 @@ class test_SyntaxAnalyserSimple_datatypes {
         val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
             grammarStr,
             Agl.configuration {
-                scopeModel(scopeModel)
-                syntaxAnalyserResolver { syntaxAnalyser }
+                scopeModelResolver { ProcessResultDefault(scopeModel, emptyList()) }
+                syntaxAnalyserResolver {  ProcessResultDefault(syntaxAnalyser, emptyList()) }
             }
         ).also {
             val issues = syntaxAnalyser.configure(
-                configurationContext = ContextFromGrammar(it.grammar)
+                configurationContext = ContextFromGrammar(grammar)
             )
             assertEquals(0, issues.size, issues.joinToString(separator = "\n") { "$it" })
         }
@@ -215,7 +216,12 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         }
         val expItems = listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(21, 9, 2, 7), "Cannot find 'String' as reference for 'typeReference.type'")
+            LanguageIssue(
+                LanguageIssueKind.ERROR,
+                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(21, 9, 2, 7),
+                "Cannot find 'String' as reference for 'typeReference.type'"
+            )
         )
 
         assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))

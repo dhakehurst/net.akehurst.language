@@ -1,11 +1,9 @@
 package test;
 
 import kotlin.Pair;
+import kotlin.Unit;
 import net.akehurst.language.agl.processor.Agl;
-import net.akehurst.language.api.processor.LanguageIssue;
-import net.akehurst.language.api.processor.LanguageProcessor;
-import net.akehurst.language.api.processor.LanguageProcessorConfiguration;
-import net.akehurst.language.api.processor.ParseResult;
+import net.akehurst.language.api.processor.*;
 import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import org.junit.Assert;
 import org.junit.Test;
@@ -39,10 +37,22 @@ public class test_Agl {
     }
 
     @Test
-    public void processorFromString_withConfig() {
+    public void processorFromString_withConfigDefault() {
         LanguageProcessorConfiguration<Object,Object> config = Agl.INSTANCE.configurationDefault();
-        Assert.fail("TODO");
-        LanguageProcessor<Object,Object> proc = Agl.INSTANCE.processorFromString(grammarStr, null, null);
+
+        LanguageProcessor<Object,Object> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null);
+
+        Assert.assertNotNull(proc);
+    }
+
+    @Test
+    public void processorFromString_withConfigSet() {
+        LanguageProcessorConfiguration<Object,Object> config = Agl.INSTANCE.configuration( KotlinFromJava.toKotlin(b-> {
+            b.targetGrammarName("");
+            return Unit.INSTANCE;
+        }));
+
+        LanguageProcessor<Object,Object> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null);
 
         Assert.assertNotNull(proc);
     }

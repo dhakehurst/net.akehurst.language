@@ -36,7 +36,29 @@ class test_AglScopes {
     fun scopes_typeModel() {
         val actual = aglProc.typeModel
         val expected = typeModel("net.akehurst.language.agl","AglScopes") {
-
+            elementType("declarations") {
+                propertyListTypeOf("rootIdentifiables","identifiable",false,0)
+                propertyListTypeOf("scopes","scope",false,1)
+                propertyListTypeOf("references","references",true,2)
+            }
+            elementType("rootIdentifiables") {
+                propertyListTypeOf("identifiable","identifiable",false,0)
+            }
+            elementType("scopes") {
+                propertyListTypeOf("scope","scope",false,0)
+            }
+            elementType("scope") {
+                propertyElementTypeOf("typeReference","typeReference",false,0)
+                propertyListTypeOf("identifiables","identifiable",false,1)
+            }
+            elementType("identifiables") {
+                propertyListTypeOf("identifiable","identifiable",false,0)
+            }
+            elementType("identifiable") {
+                propertyElementTypeOf("typeReference","typeReference",false,0)
+                propertyStringType("propertyReferenceOrNothing",false,1)
+            }
+            //TODO
         }
 
         TypeModelTest.assertEquals(expected, actual)

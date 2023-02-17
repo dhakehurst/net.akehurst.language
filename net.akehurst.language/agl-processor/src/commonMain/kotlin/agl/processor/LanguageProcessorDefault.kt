@@ -18,6 +18,7 @@ package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.agl.parser.Scanner
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
+import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
@@ -41,15 +42,10 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.typeModel.TypeModel
 
 internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
-    override val grammar: Grammar,
-    override val defaultGoalRuleName: String,
-    override val scopeModel: ScopeModel?,
-    override val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?,
-    override val formatter: Formatter?,
-    override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
+    override val configuration: LanguageProcessorConfiguration<AsmType, ContextType>,
 ) : LanguageProcessorAbstract<AsmType, ContextType>() {
 
-    private val _converterToRuntimeRules: ConverterToRuntimeRules by lazy { ConverterToRuntimeRules(this.grammar) }
+    private val _converterToRuntimeRules: ConverterToRuntimeRules by lazy { ConverterToRuntimeRules(configuration.grammarResolver) }
     override val _runtimeRuleSet by lazy { this._converterToRuntimeRules.runtimeRuleSet }
     override val mapToGrammar: (Int, Int) -> RuleItem = { ruleSetNumber, ruleNumber -> this._converterToRuntimeRules.originalRuleItemFor(ruleSetNumber, ruleNumber) }
 

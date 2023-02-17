@@ -20,6 +20,7 @@ import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
 import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.agl.parser.InputFromString
+import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.sppt.SPPTNode
 import kotlin.test.*
@@ -31,7 +32,7 @@ class test_SPPTParser {
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
         val grammar = gb.grammar
 
-        val converter = ConverterToRuntimeRules(grammar)
+        val converter = ConverterToRuntimeRules{ProcessResultDefault(grammar, emptyList())}
         val sut = SPPTParserDefault(converter.runtimeRuleSet)
 
         assertNotNull(sut)

@@ -19,42 +19,43 @@ package net.akehurst.language.agl.automaton
 import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 
 internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
 
 
-    private  val grammar = AglGrammarGrammar
-    private  val converterToRuntimeRules = ConverterToRuntimeRules(grammar)
-    private   val parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
-    private   val rrs = parser.runtimeRuleSet
+    private val grammar = AglGrammarGrammar
+    private val converterToRuntimeRules = ConverterToRuntimeRules { ProcessResultDefault(grammar, emptyList()) }
+    private val parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
+    private val rrs = parser.runtimeRuleSet
 
-    private   val R_grammarDefinition = rrs.findRuntimeRule("grammarDefinition")
-    private    val R_namespace = rrs.findRuntimeRule("namespace")
-    private   val R_rule = rrs.findRuntimeRule("rule")
+    private val R_grammarDefinition = rrs.findRuntimeRule("grammarDefinition")
+    private val R_namespace = rrs.findRuntimeRule("namespace")
+    private val R_rule = rrs.findRuntimeRule("rule")
 
-    private    val R_isOverride = rrs.findRuntimeRule("isOverride")
+    private val R_isOverride = rrs.findRuntimeRule("isOverride")
 //    private   val R_override = R_isOverride.rhs.items[RuntimeRuleRhs.MULTI__ITEM]
 //    private   val R_overrideEmpty = R_isOverride.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
 
-    private    val R_isSkip = rrs.findRuntimeRule("isSkip")
+    private val R_isSkip = rrs.findRuntimeRule("isSkip")
 //    private    val R_skip = R_isSkip.rhs.items[RuntimeRuleRhs.MULTI__ITEM]
 //    private    val R_skipEmpty = R_isSkip.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
 
-    private    val R_isLeaf = rrs.findRuntimeRule("isLeaf")
+    private val R_isLeaf = rrs.findRuntimeRule("isLeaf")
 //    private    val R_leaf = R_isLeaf.rhs.items[RuntimeRuleRhs.MULTI__ITEM]
 //    private   val R_leafEmpty = R_isLeaf.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
 
-    private    val T_IDENTIFIER = rrs.findRuntimeRule("IDENTIFIER")
-    private    val T_namespace = rrs.findRuntimeRule("'namespace'")
-    private    val T_grammar = rrs.findRuntimeRule("'grammar'")
+    private val T_IDENTIFIER = rrs.findRuntimeRule("IDENTIFIER")
+    private val T_namespace = rrs.findRuntimeRule("'namespace'")
+    private val T_grammar = rrs.findRuntimeRule("'grammar'")
 
-    private    val SM = rrs.fetchStateSetFor(R_grammarDefinition, AutomatonKind.LOOKAHEAD_1)
-    private    val s0 = SM.startState
-    private    val G = s0.runtimeRules.first()
+    private val SM = rrs.fetchStateSetFor(R_grammarDefinition, AutomatonKind.LOOKAHEAD_1)
+    private val s0 = SM.startState
+    private val G = s0.runtimeRules.first()
 
-    private    val lhs_IDENTIFIER = LookaheadSetPart(false,false, false,setOf(T_IDENTIFIER))
+    private val lhs_IDENTIFIER = LookaheadSetPart(false, false, false, setOf(T_IDENTIFIER))
 
     private val goal = "grammarDefinition"
 
@@ -88,8 +89,8 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
             "namespace test grammar Test { r = 'a' | 'b' ; }",
             "namespace test grammar Test { r = 'a' | 'b' | 'c' ; }",
 
-        )
-        for(sen in sentences) {
+            )
+        for (sen in sentences) {
             val result = parser_noBuild.parseForGoal(goal, sen, AutomatonKind.LOOKAHEAD_1)
             if (result.issues.isNotEmpty()) {
                 println("--Error: No Build--")
@@ -104,7 +105,7 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
             }
         }
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor(goal)
-        val automaton_preBuild = rrs_preBuild.buildFor(goal,AutomatonKind.LOOKAHEAD_1)
+        val automaton_preBuild = rrs_preBuild.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
 
         println("--No Build--")
         println(rrs_preBuild.usedAutomatonToString(goal))

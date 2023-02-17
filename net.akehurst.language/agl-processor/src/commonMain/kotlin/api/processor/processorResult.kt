@@ -24,7 +24,7 @@ interface ParseResult {
     val issues: List<LanguageIssue>
 }
 
-interface SyntaxAnalysisResult<AsmType: Any> {
+interface SyntaxAnalysisResult<out AsmType: Any> {
     val asm: AsmType?
     val issues: List<LanguageIssue>
     val locationMap: Map<Any, InputLocation>
@@ -34,7 +34,7 @@ interface SemanticAnalysisResult {
     val issues: List<LanguageIssue>
 }
 
-interface  ProcessResult<AsmType: Any> {
+interface  ProcessResult<out AsmType: Any> {
     val asm: AsmType?
     val issues: List<LanguageIssue>
 }

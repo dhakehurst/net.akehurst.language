@@ -17,14 +17,16 @@ package net.akehurst.language.agl.grammar.format
 
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-internal class AglFormatSyntaxAnalyser : SyntaxAnalyser<Any,Any> {
+internal class AglFormatSyntaxAnalyser : SyntaxAnalyser<AglFormatterModel,SentenceContext<GrammarItem>> {
     override val locationMap = mutableMapOf<Any, InputLocation>()
 
     override fun clear() {
@@ -35,7 +37,7 @@ internal class AglFormatSyntaxAnalyser : SyntaxAnalyser<Any,Any> {
         TODO("not implemented")
     }
 
-    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: Any?): Pair<Any, List<LanguageIssue>> {
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: SentenceContext<GrammarItem>?): SyntaxAnalysisResult<AglFormatterModel> {
         TODO("not implemented")
     }
 }

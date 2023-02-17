@@ -16,11 +16,16 @@
 
 package net.akehurst.language.agl.formatter
 
+import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
 
-class FormatterSimple  : Formatter {
-    override fun <T> format(asm: T): FormatResult {
+class FormatterSimple<AsmType>(
+    val model: AglFormatterModel?
+)  : Formatter<AsmType> {
+
+    override fun format(asm: AsmType): FormatResult {
         TODO("not implemented")
     }
 }

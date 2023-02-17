@@ -16,6 +16,12 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
+import net.akehurst.language.agl.api.automaton.ParseAction
+import net.akehurst.language.agl.automaton.LookaheadSet
+import net.akehurst.language.agl.automaton.LookaheadSetPart
+import net.akehurst.language.agl.grammar.grammar.asm.EmbeddedDefault
+import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.grammar.*
@@ -27,13 +33,23 @@ internal class AglGrammarSemanticAnalyser(
     val languageRegistry: LanguageRegistry
 ) : SemanticAnalyser<List<Grammar>, GrammarContext> {
 
-    private val issues = mutableListOf<LanguageIssue>()
-    private var _locationMap: Map<*, InputLocation>? = null
+    companion object {
+        private const val ns = "net.akehurst.language.agl.grammar.grammar"
+        const val OPTIONS_KEY_AMBIGUITY_ANALYSIS = "$ns.ambiguity.analysis"
+    }
 
-    private fun error(item:Any, message:String, data:Any?) {
+    private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+    private var _locationMap: Map<*, InputLocation>? = null
+    private var _analyseAmbiguities = true
+
+    private fun issueWarn(item: Any, message: String, data: Any?) {
         val location = this._locationMap?.get(item)
-        val iss = LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.SEMANTIC_ANALYSIS,location, message, data)
-        issues.add(iss)
+        issues.warn(location, message, data)
+    }
+
+    private fun issueError(item: Any, message: String, data: Any?) {
+        val location = this._locationMap?.get(item)
+        issues.error(location, message, data)
     }
 
     override fun clear() {
@@ -46,8 +62,12 @@ internal class AglGrammarSemanticAnalyser(
         return emptyList()
     }
 
-    override fun analyse(asm: List<Grammar>, locationMap: Map<Any, InputLocation>?, context: GrammarContext?): SemanticAnalysisResult {
+    override fun analyse(asm: List<Grammar>, locationMap: Map<Any, InputLocation>?, context: GrammarContext?, options:Map<String,Any>): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
+        this._analyseAmbiguities = options[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? ?: true
+
+        asm.forEach { languageRegistry.registerIfNot(it) }
+
         val issues = checkGrammar(asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
         return SemanticAnalysisResultDefault(issues)
     }
@@ -56,21 +76,25 @@ internal class AglGrammarSemanticAnalyser(
         grammarList.forEach { grammar ->
             this.checkExtendsExist(grammar.extends)
             this.checkNonTerminalReferencesExist(grammar)
-            if (issues.isEmpty()) {
+            if (issues.issues.isEmpty() && _analyseAmbiguities) {
                 this.checkForAmbiguities(grammar, automatonKind)
             }
         }
-        return this.issues
+        return this.issues.issues
     }
 
-    private fun checkExtendsExist(refs:List<GrammarReference>) {
-        for(it in refs) {
-            val g = languageRegistry.findGrammarOrNull(it.localNamespace,it.nameOrQName)
-            if (null==g) {
-                this.error(it,"Grammar '${it.nameOrQName}' not found", null)
-            } else {
-                it.resolveAs(g)
-            }
+    private fun checkExtendsExist(refs: List<GrammarReference>) {
+        for (it in refs) {
+            checkGrammarExists(it)
+        }
+    }
+
+    private fun checkGrammarExists(ref: GrammarReference) {
+        val g = languageRegistry.findGrammarOrNull(ref.localNamespace, ref.nameOrQName)
+        if (null == g) {
+            this.issueError(ref, "Grammar '${ref.nameOrQName}' not found", null)
+        } else {
+            ref.resolveAs(g)
         }
     }
 
@@ -83,26 +107,15 @@ internal class AglGrammarSemanticAnalyser(
 
     private fun checkRuleItem(grammar: Grammar, rhs: RuleItem) {
         when (rhs) {
-            is EmptyRule -> {
-            }
-
-            is Terminal -> {
-            }
-
-            is Embedded -> {
-                try {
-                    rhs.referencedRule(rhs.embeddedGrammarReference.resolved!!) //will throw 'GrammarRuleNotFoundException' if rule not found
-                } catch (e: GrammarRuleNotFoundException) {
-                    error(rhs, e.message!!,null)
-                }
-            }
-
+            is EmptyRule -> Unit
+            is Terminal -> Unit
+            is Embedded -> checkGrammarExists(rhs.embeddedGrammarReference)
             is NonTerminal -> {
-
-                val rr = rhs.referencedRuleOrNull(grammar) //will throw 'GrammarRuleNotFoundException' if rule not found
-                if (null == rr) {
-                    val item = LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, _locationMap!![rhs], "Grammar Rule with name '${rhs.name}' not found")
-                    this.issues.add(item)
+                val all = grammar.findAllNonTerminalRule(rhs.name)
+                when {
+                    all.isEmpty() -> issueError(rhs, "GrammarRule '${rhs.name}' not found in grammar '${grammar.name}'", null)
+                    all.size > 1 -> issueError(rhs, "More than one rule named '${rhs.name}' in grammar '${grammar.name}', have you remembered the 'override' modifier", null)
+                    else -> Unit //resolved
                 }
             }
 
@@ -132,7 +145,7 @@ internal class AglGrammarSemanticAnalyser(
     private fun checkForAmbiguities(grammar: Grammar, automatonKind: AutomatonKind) {
         val itemsSet = mutableSetOf<LanguageIssue>()
         //TODO: find a way to reuse RuntimeRuleSet rather than re compute here
-        val conv = ConverterToRuntimeRules(grammar)
+        val conv = ConverterToRuntimeRules(){ ProcessResultDefault(grammar, emptyList())}
         val rrs = conv.runtimeRuleSet
         //TODO: pass in goalRuleName
         val goalRuleName = grammar.rule.first { it.isSkip.not() }.name
@@ -144,26 +157,34 @@ internal class AglGrammarSemanticAnalyser(
             val trans = state.outTransitions.allBuiltTransitions
             if (trans.size > 1) {
                 trans.forEach { tr1 ->
-                    val subset = trans.filter { tr2 ->
-                        tr1.to == tr2.to &&
-                                tr1.context.intersect(tr2.context).isNotEmpty()
+                    val same = trans.filter { tr2 ->
+                        when (tr2.action) {
+                            ParseAction.WIDTH,
+                            ParseAction.EMBED -> tr1.lookahead == tr2.lookahead && tr1.to == tr2.to && tr1.context.intersect(tr2.context).isNotEmpty()
+
+                            ParseAction.GOAL,
+                            ParseAction.HEIGHT,
+                            ParseAction.GRAFT -> tr1.lookahead == tr2.lookahead && tr1.context.intersect(tr2.context).isNotEmpty()
+                        }
                     }
-                    subset.forEach { tr2 ->
+                    same.forEach { tr2 ->
                         //TODO: should we compare actions here? prob not
                         if (tr1 !== tr2) {
                             when {
                                 //(tr1.action == Transition.ParseAction.WIDTH && tr2.action == Transition.ParseAction.WIDTH && tr1.to != tr2.to) -> Unit // no error
                                 else -> {
-                                    val lhi = tr1.lookahead.flatMap { it.guard.content }.toSet().intersect(tr2.lookahead.flatMap { it.guard.content }.toSet())
-                                    if (lhi.isNotEmpty() || (tr1.lookahead.map { it.guard.content }.isEmpty() && tr2.lookahead.map { it.guard.content }.isEmpty())) {
+                                    val lhg1 = tr1.lookahead.map { it.guard.part }.reduce{ acc,it -> acc.intersect(it) }
+                                    val lhg2 = tr2.lookahead.map { it.guard.part }.reduce{ acc,it -> acc.intersect(it) }
+                                    val lhi = lhg1.intersect(lhg2)
+                                    if (lhi.isNotEmpty) {
                                         val ori1 = conv.originalRuleItemFor(tr1.to.runtimeRules.first().runtimeRuleSetNumber, tr1.to.runtimeRules.first().ruleNumber) //FIXME
                                         val ori2 = conv.originalRuleItemFor(tr2.to.runtimeRules.first().runtimeRuleSetNumber, tr2.to.runtimeRules.first().ruleNumber) //FIXME
                                         val or1 = ori1.owningRule
                                         val or2 = ori2.owningRule
-                                        val lhStr = lhi.map { it.tag }
-                                        val msg = "Ambiguity on $lhStr between ${or1.name} and ${or2.name}"
-                                        itemsSet.add(LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, _locationMap!![ori1], msg))
-                                        itemsSet.add(LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, _locationMap!![ori2], msg))
+                                        val lhStr = lhi.fullContent.map { it.tag }
+                                        val msg = "Ambiguity on $lhStr with ${or2.name}"
+                                        issueWarn(ori1, msg, null)
+                                        //issueWarn(ori2, msg, null)
                                     }
                                 }
                             }
@@ -174,6 +195,5 @@ internal class AglGrammarSemanticAnalyser(
                 //nothing to check
             }
         }
-        issues.addAll(itemsSet)
     }
 }

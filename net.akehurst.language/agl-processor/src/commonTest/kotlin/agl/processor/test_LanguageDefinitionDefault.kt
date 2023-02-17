@@ -16,11 +16,15 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.style.AglStyleModel
 import kotlin.test.*
 
 class test_LanguageDefinitionDefault {
@@ -29,12 +33,14 @@ class test_LanguageDefinitionDefault {
 
     val processorObserverCalled = mutableListOf<Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>>()
     val processorObserver: (LanguageProcessor<*, *>?, LanguageProcessor<*, *>?) -> Unit = { old, new -> processorObserverCalled.add(Pair(old, new)) }
+    val grammarStrObserverCalled = mutableListOf<Pair<String?, String?>>()
+    val grammarStrObserver: (String?, String?) -> Unit = { old, new -> grammarStrObserverCalled.add(Pair(old, new)) }
     val grammarObserverCalled = mutableListOf<Pair<Grammar?, Grammar?>>()
     val grammarObserver: (Grammar?, Grammar?) -> Unit = { old, new -> grammarObserverCalled.add(Pair(old, new)) }
-    val styleObserverCalled = mutableListOf<Pair<String?, String?>>()
-    val styleObserver: (String?, String?) -> Unit = { old, new -> styleObserverCalled.add(Pair(old, new)) }
-    val formatObserverCalled = mutableListOf<Pair<String?, String?>>()
-    val formatObserver: (String?, String?) -> Unit = { old, new -> formatObserverCalled.add(Pair(old, new)) }
+    val styleObserverCalled = mutableListOf<Pair<AglStyleModel?, AglStyleModel?>>()
+    val styleObserver: (AglStyleModel?, AglStyleModel?) -> Unit = { old, new -> styleObserverCalled.add(Pair(old, new)) }
+    val formatObserverCalled = mutableListOf<Pair<AglFormatterModel?, AglFormatterModel?>>()
+    val formatObserver: (AglFormatterModel?, AglFormatterModel?) -> Unit = { old, new -> formatObserverCalled.add(Pair(old, new)) }
 
     @BeforeTest
     fun before() {
@@ -42,20 +48,14 @@ class test_LanguageDefinitionDefault {
         this.sut = Agl.registry.register<AsmSimple, ContextSimple>(
             identity = "ns.test",
             grammarStr = null,
-            targetGrammar = null,
-            defaultGoalRule = null,
             buildForDefaultGoal = false,
-            scopeModelStr = null,
-            styleStr = null,
-            formatStr = null,
-            syntaxAnalyserResolver = null,
-            semanticAnalyserResolver = null,
-            aglOptions = null
+            configuration = Agl.configurationDefault()
         )
         sut.processorObservers.add(processorObserver)
+        sut.grammarStrObservers.add(grammarStrObserver)
         sut.grammarObservers.add(grammarObserver)
         sut.styleObservers.add(styleObserver)
-        sut.formatObservers.add(formatObserver)
+        sut.formatterObservers.add(formatObserver)
     }
 
     private fun reset() {
@@ -71,15 +71,18 @@ class test_LanguageDefinitionDefault {
         val def = Agl.registry.register<AsmSimple, ContextSimple>(
             identity = "ns.Test1",
             grammarStr = g,
-            targetGrammar = null,
-            defaultGoalRule = null,
             buildForDefaultGoal = false,
-            scopeModelStr = null,
-            styleStr = null,
-            formatStr = null,
-            syntaxAnalyserResolver = null,
-            semanticAnalyserResolver = null,
-            aglOptions = null
+            Agl.configuration {
+                grammarResolver { Agl.grammarFromString<Grammar, GrammarContext>(g) }
+                targetGrammarName(null)
+                defaultGoalRuleName(null)
+                typeModelResolver {  ProcessResultDefault(TypeModelFromGrammar(it.grammar!!), emptyList()) }
+                scopeModelResolver { ProcessResultDefault(null, emptyList()) }
+                syntaxAnalyserResolver { ProcessResultDefault(null, emptyList()) }
+                semanticAnalyserResolver {  ProcessResultDefault(null, emptyList()) }
+                formatterResolver {  ProcessResultDefault(null, emptyList()) }
+                styleResolver {  ProcessResultDefault(null, emptyList()) }
+            }
         )
 
         assertEquals(g, def.grammarStr)
@@ -107,14 +110,15 @@ class test_LanguageDefinitionDefault {
         sut.grammarStr = g
         assertEquals(g, sut.grammarStr)
         assertNull(sut.grammar)
-        assertNull(sut.processor)
+        assertNotNull(sut.processor) //processor created but unusable
         assertEquals(
             listOf(
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^xxxxx", setOf("'namespace'"))
             ), sut.issues
         )
         assertTrue(grammarObserverCalled.isEmpty())
-        assertTrue(processorObserverCalled.isEmpty())
+        assertEquals(listOf(Pair<String?, String?>(null,g)),grammarStrObserverCalled)
+        assertEquals(listOf(Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(null, sut.processor)), processorObserverCalled)
         assertTrue(styleObserverCalled.isEmpty())
         assertTrue(formatObserverCalled.isEmpty())
     }

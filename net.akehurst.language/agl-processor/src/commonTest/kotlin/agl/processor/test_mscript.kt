@@ -253,7 +253,7 @@ grammar Mscript {
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
         }
-        assertEquals(expected.asString(), actual.asString())
+        assertEquals(expected.asString(), actual?.asString())
         TypeModelTest.assertEquals(expected, actual)
     }
 

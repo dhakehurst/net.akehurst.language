@@ -181,6 +181,14 @@ internal class LookaheadSet(
             }
         }
     }
+
+    fun intersect(automaton: ParserStateSet, lookahead: LookaheadSet): LookaheadSet {
+        val rt = this.includesRT && lookahead.includesRT
+        val eot = this.includesEOT && lookahead.includesEOT
+        val ma = this.matchANY && lookahead.matchANY
+        return automaton.createLookaheadSet(rt, eot, ma, this.content.intersect(lookahead.content))
+    }
+
     fun union(automaton: ParserStateSet, lookahead: LookaheadSet): LookaheadSet {
         val rt = this.includesRT || lookahead.includesRT
         val eot = this.includesEOT || lookahead.includesEOT

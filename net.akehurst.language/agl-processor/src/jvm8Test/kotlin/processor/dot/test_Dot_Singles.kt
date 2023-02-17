@@ -18,6 +18,7 @@ package net.akehurst.language.agl.processor.dot
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.processor.AutomatonKind
@@ -250,7 +251,7 @@ class test_Dot_Singles {
         val goal = "stmt_list"
         val sentence = "a -> b ;"
 
-        val converterToRuntimeRules = ConverterToRuntimeRules(processor.grammar)
+        val converterToRuntimeRules = ConverterToRuntimeRules{ ProcessResultDefault(processor.grammar!!, emptyList()) }
         val parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
 
         //fails at season 9 with edge_list

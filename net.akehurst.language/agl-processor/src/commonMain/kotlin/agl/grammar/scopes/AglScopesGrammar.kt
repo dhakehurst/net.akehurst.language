@@ -51,6 +51,41 @@ internal object AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst
             return b.grammar.rule
         }
     //}
+    const val styleStr = """
+        'scope' {
+          foreground: darkgreen;
+          font-style: bold;
+        }
+        'identify' {
+          foreground: darkgreen;
+          font-style: bold;
+        }
+        'by' {
+          foreground: darkgreen;
+          font-style: bold;
+        }
+        'references' {
+          foreground: darkgreen;
+          font-style: bold;
+        }
+        'in' {
+          foreground: darkgreen;
+          font-style: bold;
+        }
+        'property' {
+          foreground: darkgreen;
+          font-style: bold;
+        }
+        'refers-to' {
+          foreground: darkgreen;
+          font-style: bold;
+        }
+        '|' {
+          foreground: darkgreen;
+          font-style: bold;
+        }
+    """
+
     init {
         super.rule.addAll(createRules())
     }

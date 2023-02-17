@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.processor
+package net.akehurst.language.api.formatter
 
-interface Formatter<in AsmType> {
+interface AglFormatterModel {
+    val rules:List<AglFormatterRule>
+}
 
-    fun format(asm:AsmType): FormatResult
+interface AglFormatterRule {
 
 }

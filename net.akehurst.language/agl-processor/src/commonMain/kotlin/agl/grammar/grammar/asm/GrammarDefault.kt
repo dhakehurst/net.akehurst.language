@@ -24,6 +24,12 @@ class GrammarDefault(
     override val name: String
 ) : GrammarAbstract(namespace, name) {
 
+    companion object {
+        fun fromString() {
+
+        }
+    }
+
     // override this so that property is correctly exported/defined in JS and available for serialisation
     //override val rule: MutableList<GrammarRule> get() = super.rule
 }
@@ -55,7 +61,7 @@ abstract class GrammarAbstract(
         this.rule.forEach { rule ->
             if (rule.isOverride) {
                 val overridden = rules.find { it.name == rule.name }
-                    ?: throw GrammarRuleNotFoundException("GrammarRule ${rule.name} is marked as overridden, but there is no super rule with that name to override.")
+                    ?: throw GrammarRuleNotFoundException("GrammarRule ${rule.name} is marked as override, but there is no super rule with that name to override.")
                 rules.remove(overridden)
                 rules.add(rule)
             } else {
@@ -87,6 +93,8 @@ abstract class GrammarAbstract(
         egs + egs.flatMap { it.allResolvedEmbeddedGrammars }.toSet()//FIXME: recursion
     }
 
+    override fun findAllNonTerminalRule(ruleName: String): List<GrammarRule> = this.allResolvedRule.filter { it.name == ruleName }
+
     override fun findNonTerminalRule(ruleName: String): GrammarRule? {
         val all = this.allResolvedRule.filter { it.name == ruleName }
         return when {
@@ -95,6 +103,8 @@ abstract class GrammarAbstract(
             else -> all.first()
         }
     }
+
+
 
     override fun findTerminalRule(terminalPattern: String): Terminal {
         val all = this.allResolvedTerminal.filter { it.value == terminalPattern }

@@ -16,118 +16,178 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.util.CachedValue
 import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
 
 abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
-    defaultGoalRuleArg: String?,
-    grammarArg: Grammar?,
     buildForDefaultGoal: Boolean,
-    scopeModelArg:ScopeModel?,
-    styleArg: String?,
-    formatArg: String?,
-    syntaxAnalyserResolverArg: SyntaxAnalyserResolver<AsmType, ContextType>?,
-    semanticAnalyserResolverArg: SemanticAnalyserResolver<AsmType, ContextType>?,
-    aglOptionsArg: ProcessOptions<List<Grammar>, GrammarContext>?
-): LanguageDefinition<AsmType, ContextType> {
+    configuration: LanguageProcessorConfiguration<AsmType, ContextType>,
+) : LanguageDefinition<AsmType, ContextType> {
 
-    protected val _processor_cache: CachedValue<LanguageProcessor<AsmType, ContextType>?> = cached {
-        val g = this.grammar
-        if (null == g) {
-            null
-        } else {
-            val config = Agl.configuration<AsmType, ContextType> {
-                targetGrammarName(this@LanguageDefinitionAbstract.targetGrammar)
-                defaultGoalRuleName(this@LanguageDefinitionAbstract.defaultGoalRule)
-                scopeModel(this@LanguageDefinitionAbstract.scopeModel)
-                syntaxAnalyserResolver(this@LanguageDefinitionAbstract.syntaxAnalyserResolver)
-                semanticAnalyserResolver(this@LanguageDefinitionAbstract.semanticAnalyserResolver)
+    abstract override val identity: String
+    abstract override var grammarStr: String?
+
+    override var grammar: Grammar?
+        get() = this. _grammar_cache.value
+        set(value) {
+            this. _grammar_cache.reset()
+            val oldValue = null
+            if (oldValue != value) {
+                _grammarResolver = { ProcessResultDefault(value, emptyList()) }
+                grammarObservers.forEach { it(oldValue, value) }
             }
-            val proc = Agl.processorFromGrammar(g, config)
-            if (buildForDefaultGoal) proc.buildFor(null) //null options will use default goal
-            processorObservers.forEach { it(null,proc) }
-            proc
         }
-    }.apply { this.resetAction = { old -> processorObservers.forEach { it(old,null) } } }
 
-    override var defaultGoalRule: String? by Delegates.observable(defaultGoalRuleArg) { _, oldValue, newValue ->
+    abstract override val grammarIsModifiable: Boolean
+
+    override var targetGrammar: String? by Delegates.observable(configuration.targetGrammarName) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }
     }
 
-    override var grammar: Grammar? by Delegates.observable(grammarArg) { _, oldValue, newValue ->
+    override var defaultGoalRule: String? by Delegates.observable(configuration.defaultGoalRuleName) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
-            grammarObservers.forEach { it(oldValue, newValue) }
         }
     }
+
+    abstract override var scopeModelStr: String?
+
+    override var scopeModel: ScopeModel?
+        get() = this.processor?.scopeModel
+        set(value) {
+            val oldValue = this.processor?.scopeModel
+            if (oldValue != value) {
+                _scopeModelResolver = { ProcessResultDefault(value, emptyList()) }
+                scopeModelObservers.forEach { it(oldValue, value) }
+            }
+        }
+
+    override val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
+        get() = this.processor?.syntaxAnalyser
+
+    override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
+        get() = this.processor?.semanticAnalyser
+
+    override val formatter: Formatter<AsmType>?
+        get() = this.processor?.formatter
+
+    abstract override var formatStr: String?
+
+    override var formatterModel: AglFormatterModel?
+        get() = this.processor?.formatterModel
+        set(value) {
+            val oldValue = this.processor?.formatterModel
+            if (oldValue != value) {
+                _formatterResolver = { ProcessResultDefault(value, emptyList()) }
+                formatterObservers.forEach { it(oldValue, value) }
+            }
+        }
+
+    //abstract override var aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?
 
     override val processor: LanguageProcessor<AsmType, ContextType>? get() = this._processor_cache.value
 
-    override var scopeModel:ScopeModel? by Delegates.observable(scopeModelArg) { _, oldValue, newValue ->
-        if (oldValue != newValue) {
-            this._processor_cache.reset()
-            scopeModelObservers.forEach { it(oldValue, newValue) }
-        }
-    }
-
-    override val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
-        get() = this._processor_cache.value?.let { proc -> _syntaxAnalyserResolver?.invoke(proc.grammar) }
-
-    final override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
-        get() = _syntaxAnalyserResolver
-        set(value) {
-            _syntaxAnalyserResolver = value
-        }
-
-    override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
-        get() = this._processor_cache.value?.let { proc -> _semanticAnalyserResolver?.invoke(proc.grammar) }
-
-    final override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
-        get() = _semanticAnalyserResolver
-        set(value) {
-            _semanticAnalyserResolver = value
-        }
-
-    override var aglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = aglOptionsArg
-
-    final override var style: String? by Delegates.observable(styleArg) { _, oldValue, newValue ->
-        if (oldValue != newValue) {
-            styleObservers.forEach { it(oldValue, newValue) }
-        }
-    }
-
-    final override var format: String? by Delegates.observable(formatArg) { _, oldValue, newValue ->
-        if (oldValue != newValue) {
-            formatObservers.forEach { it(oldValue, newValue) }
-        }
-    }
-
-    override val processorObservers = mutableListOf<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>()
-    override val grammarObservers = mutableListOf<(Grammar?, Grammar?) -> Unit>()
-    override val scopeModelObservers= mutableListOf<(ScopeModel?, ScopeModel?) -> Unit>()
-    override val styleObservers = mutableListOf<(String?, String?) -> Unit>()
-    override val formatObservers = mutableListOf<(String?, String?) -> Unit>()
-
     override val issues: List<LanguageIssue> get() = _issues
 
-    init {
-        this.syntaxAnalyserResolver = syntaxAnalyserResolverArg
-        this.semanticAnalyserResolver = semanticAnalyserResolverArg
-    }
+    abstract override var styleStr: String?
+
+    override var style: AglStyleModel?
+        get() = _style
+        set(value) {
+            val oldValue = _style
+            if (oldValue != value) {
+                _styleResolver = { ProcessResultDefault(value, emptyList()) }
+                styleObservers.forEach { it(oldValue, value) }
+            }
+        }
+
+    override val processorObservers = mutableListOf<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>()
+    override val grammarStrObservers = mutableListOf<(String?, String?) -> Unit>()
+    override val grammarObservers = mutableListOf<(Grammar?, Grammar?) -> Unit>()
+    override val scopeStrObservers = mutableListOf<(String?, String?) -> Unit>()
+    override val scopeModelObservers = mutableListOf<(ScopeModel?, ScopeModel?) -> Unit>()
+    override val formatterStrObservers = mutableListOf<(String?, String?) -> Unit>()
+    override val formatterObservers = mutableListOf<(AglFormatterModel?, AglFormatterModel?) -> Unit>()
+    override val styleStrObservers = mutableListOf<(String?, String?) -> Unit>()
+    override val styleObservers = mutableListOf<(AglStyleModel?, AglStyleModel?) -> Unit>()
 
     override fun toString(): String = identity
 
-    protected var _issues = listOf<LanguageIssue>()
-    private var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null
-    private var _semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null
+    // --- implementation ---
 
+    protected val _processor_cache: CachedValue<LanguageProcessor<AsmType, ContextType>?> = cached {
+        val g = this._grammarResolver
+        if (null == g) {
+            null
+        } else {
+            val config = LanguageProcessorConfigurationDefault<AsmType, ContextType>(
+                grammarResolver = {ProcessResultDefault(this.grammar, emptyList())},
+                targetGrammarName = this.targetGrammar,
+                defaultGoalRuleName = this.defaultGoalRule,
+                typeModelResolver = this._typeModelResolver,
+                scopeModelResolver = this._scopeModelResolver,
+                syntaxAnalyserResolver = this._syntaxAnalyserResolver,
+                semanticAnalyserResolver = this._semanticAnalyserResolver,
+                formatterResolver = this._formatterResolver
+            )
+            val proc = Agl.processorFromGrammar(config)
+            if (buildForDefaultGoal) proc.buildFor(null) //null options will use default goal
+            processorObservers.forEach { it(null, proc) }
+            proc
+        }
+    }.apply { this.resetAction = { old -> processorObservers.forEach { it(old, null) } } }
+
+    private var _grammar_cache: CachedValue<Grammar?> = cached {
+        val res = this._grammarResolver?.invoke()
+        this._issues.addAll(res?.issues?: emptyList())
+        res?.asm
+    }.apply { this.resetAction = { old -> grammarObservers.forEach { it(old, null) } } }
+
+    protected var _issues = mutableListOf<LanguageIssue>()
+    protected val _style: AglStyleModel? = null
+    protected var _grammarResolver: GrammarResolver? by Delegates.observable(configuration.grammarResolver) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
+    }
+    protected var _scopeModelResolver: ScopeModelResolver<AsmType, ContextType>? by Delegates.observable(configuration.scopeModelResolver) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
+    }
+    protected var _typeModelResolver: TypeModelResolver<AsmType, ContextType>? by Delegates.observable(configuration.typeModelResolver) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
+    }
+    protected var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? by Delegates.observable(configuration.syntaxAnalyserResolver) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
+    }
+    protected var _semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? by Delegates.observable(configuration.semanticAnalyserResolver) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
+    }
+    protected var _formatterResolver: FormatterResolver<AsmType, ContextType>? by Delegates.observable(configuration.formatterResolver) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
+    }
+    protected var _styleResolver: StyleResolver<AsmType, ContextType>? by Delegates.observable(configuration.styleResolver) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
+    }
 }

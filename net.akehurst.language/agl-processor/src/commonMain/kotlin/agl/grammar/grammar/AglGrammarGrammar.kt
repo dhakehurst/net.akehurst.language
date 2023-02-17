@@ -140,6 +140,43 @@ internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehur
         }
     //}
 
+    const val styleStr:String = """
+        'namespace' {
+          foreground: darkgreen;
+          font-style: bold;
+        }
+        'grammar' {
+          foreground: darkgreen;
+          font-style: bold;
+        }
+        'extends' {
+          foreground: darkgreen;
+          font-style: bold;
+        }
+        'override' {
+          foreground: darkgreen;
+          font-style: bold;
+        }
+        'skip' {
+          foreground: darkgreen;
+          font-style: bold;
+        }
+        'leaf' {
+          foreground: darkgreen;
+          font-style: bold;
+        }
+        LITERAL {
+          foreground: blue;
+        }
+        PATTERN {
+          foreground: darkblue;
+        }
+        IDENTIFIER {
+          foreground: darkred;
+          font-style: italic;
+        }
+    """
+
     init {
         super.rule.addAll(createRules())
     }

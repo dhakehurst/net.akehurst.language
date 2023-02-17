@@ -18,7 +18,7 @@ class AglScopesSemanticAnalyser : SemanticAnalyser<ScopeModelAgl, SentenceContex
         return emptyList()
     }
 
-    override fun analyse(asm: ScopeModelAgl, locationMap: Map<Any, InputLocation>?, context: SentenceContext<GrammarItem>?): SemanticAnalysisResult {
+    override fun analyse(asm: ScopeModelAgl, locationMap: Map<Any, InputLocation>?, context: SentenceContext<GrammarItem>?, options:Map<String,Any>): SemanticAnalysisResult {
         return SemanticAnalysisResultDefault(emptyList())
     }
 }

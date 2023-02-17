@@ -2,6 +2,10 @@ package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -48,7 +52,7 @@ class test_AglStyle {
         val result = process(text)
 
         assertNotNull(result.asm)
-        assertEquals(0, result.asm?.size)
+        assertEquals(0, result.asm?.rules?.size)
 
         assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
@@ -66,8 +70,24 @@ class test_AglStyle {
         val result = process(text)
 
         assertNotNull(result.asm)
-        assertEquals(0, result.asm?.size)
+        assertEquals(0, result.asm?.rules?.size)
         assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
+    }
+
+    @Test
+    fun selector_notFound() {
+
+        val text = """
+            xxx { }
+        """.trimIndent()
+
+        val result = process(text)
+
+        assertNotNull(result.asm)
+        assertEquals(1, result.asm?.rules?.size)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(0,1,1,7),"GrammarRule 'xxx' not found for style rule", null)
+        ), result.issues)
     }
 
     @Test
@@ -80,7 +100,7 @@ class test_AglStyle {
         val result = process(text)
 
         assertNotNull(result.asm)
-        assertEquals(1, result.asm?.size)
+        assertEquals(1, result.asm?.rules?.size)
         assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
 
@@ -97,9 +117,9 @@ class test_AglStyle {
         val result =process(text)
 
         assertNotNull(result.asm)
-        assertEquals(1, result.asm?.size)
-        assertEquals("ID", result.asm!![0].selector.first())
-        assertEquals(2, result.asm!![0].styles.size)
+        assertEquals(1, result.asm?.rules?.size)
+        assertEquals("ID", result.asm!!.rules[0].selector.first())
+        assertEquals(2, result.asm!!.rules[0].styles.size)
         assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
 
@@ -120,7 +140,7 @@ class test_AglStyle {
         val result = process(text)
 
         assertNotNull(result.asm)
-        assertEquals(2, result.asm?.size)
+        assertEquals(2, result.asm?.rules?.size)
         assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
 
@@ -136,7 +156,7 @@ class test_AglStyle {
         val result = process(text)
 
         assertNotNull(result.asm)
-        assertEquals(1, result.asm?.size)
+        assertEquals(1, result.asm?.rules?.size)
         assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
 
@@ -150,7 +170,7 @@ class test_AglStyle {
         val result = process(text)
 
         assertNotNull(result.asm)
-        assertEquals(1, result.asm?.size)
+        assertEquals(1, result.asm?.rules?.size)
         assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
     //TODO more tests

@@ -39,6 +39,8 @@ internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
         }
     //}
 
+    const val styleStr = ""
+
     init {
         super.rule.addAll(createRules())
     }

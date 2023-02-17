@@ -21,6 +21,7 @@ import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 interface ScopeModel {
@@ -71,5 +72,5 @@ interface SyntaxAnalyser<out AsmType:Any, in ContextType:Any> { //TODO: make tra
      * map the tree into an instance of the targetType
      *
      */
-    fun transform(sppt: SharedPackedParseTree, mapToGrammar:(Int,Int)->RuleItem, context: ContextType?): Pair<AsmType, List<LanguageIssue>>
+    fun transform(sppt: SharedPackedParseTree, mapToGrammar:(Int,Int)->RuleItem, context: ContextType?): SyntaxAnalysisResult<AsmType>
 }

@@ -37,11 +37,6 @@ class SemanticAnalyserSimple(
     val scopeModel: ScopeModel?
 ) : SemanticAnalyser<AsmSimple, ContextSimple> {
 
-    companion object {
-        private const val ns = "net.akehurst.language.agl.semanticAnalyser"
-        const val CONFIGURATION_KEY_AGL_SCOPE_MODEL = "$ns.scope.model"
-    }
-
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _scopeModel = scopeModel as ScopeModelAgl?
     private lateinit var _locationMap: Map<*, InputLocation>
@@ -55,7 +50,7 @@ class SemanticAnalyserSimple(
         return emptyList()
     }
 
-    override fun analyse(asm: AsmSimple, locationMap: Map<Any, InputLocation>?, context: ContextSimple?): SemanticAnalysisResult {
+    override fun analyse(asm: AsmSimple, locationMap: Map<Any, InputLocation>?, context: ContextSimple?, options:Map<String,Any>): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
 
         this.buildScope(asm, context?.rootScope)
@@ -80,8 +75,9 @@ class SemanticAnalyserSimple(
                 }
 
                 override fun beforeElement(element: AsmElementSimple) {
-                    addToScope(currentScope.peek(), element)
-                    val chScope = createScope(currentScope.peek(), element)
+                    val scope = currentScope.peek()
+                    addToScope(scope, element)
+                    val chScope = createScope(scope, element)
                     currentScope.push(chScope)
                 }
 

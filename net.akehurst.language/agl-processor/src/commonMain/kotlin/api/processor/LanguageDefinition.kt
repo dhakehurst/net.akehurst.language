@@ -16,14 +16,16 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.Namespace
+import net.akehurst.language.api.style.AglStyleModel
 
 interface LanguageRegistry {
+    fun registerIfNot(grammar:Grammar)
     fun findGrammarOrNull(namespace: Namespace, name:String) :Grammar?
 }
 
@@ -32,26 +34,34 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     var grammarStr: String?
     var grammar: Grammar?
     val grammarIsModifiable: Boolean
+
     var targetGrammar:String?
     var defaultGoalRule: String?
     var scopeModelStr: String?
     var scopeModel:ScopeModel?
     val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
     val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
-    var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
-    var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
-    /** the options to configure building the processor for the registered language */
-    var aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?
+    var formatStr: String?
+    val formatterModel:AglFormatterModel?
+    val formatter: Formatter<AsmType>?
+
+    /** the options for parsing/processing the grammarStr for this language */
+    //var aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?
     val processor: LanguageProcessor<AsmType, ContextType>?
+
+    var styleStr: String?
+    var style: AglStyleModel?
+
     val issues : List<LanguageIssue>
 
-    var style: String?
-    var format: String?
-
     val processorObservers: MutableList<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>
+    val grammarStrObservers : MutableList<(String?, String?) -> Unit>
     val grammarObservers: MutableList<(Grammar?, Grammar?) -> Unit>
+    val scopeStrObservers : MutableList<(String?, String?) -> Unit>
     val scopeModelObservers: MutableList<(ScopeModel?, ScopeModel?) -> Unit>
-    val styleObservers: MutableList<(String?, String?) -> Unit>
-    val formatObservers: MutableList<(String?, String?) -> Unit>
+    val formatterStrObservers : MutableList<(String?, String?) -> Unit>
+    val formatterObservers: MutableList<(AglFormatterModel?, AglFormatterModel?) -> Unit>
+    val styleStrObservers : MutableList<(String?, String?) -> Unit>
+    val styleObservers: MutableList<(AglStyleModel?, AglStyleModel?) -> Unit>
 
 }

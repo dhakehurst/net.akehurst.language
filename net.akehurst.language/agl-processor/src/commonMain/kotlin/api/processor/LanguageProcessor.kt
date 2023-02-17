@@ -17,6 +17,9 @@
 package net.akehurst.language.api.processor
 
 import net.akehurst.language.api.analyser.ScopeModel
+import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTParser
@@ -33,7 +36,9 @@ import net.akehurst.language.api.typeModel.TypeModel
  */
 interface LanguageProcessor<AsmType : Any, ContextType : Any> {
 
-    val grammar: Grammar
+    val issues:List<LanguageIssue>
+
+    val grammar: Grammar?
 
     /**
      * An SPPT parser for this language,
@@ -45,12 +50,20 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     /**
      * model of the types instantiated by syntaxAnalysis for the LanguageDefinition of this LanguageProcessor
      */
-    val typeModel: TypeModel
+    val typeModel: TypeModel?
 
     /*
      * model of the scopes and references for the LanguageDefinition of this LanguageProcessor
      */
     val scopeModel: ScopeModel?
+
+    val formatterModel : AglFormatterModel?
+
+    val syntaxAnalyser:SyntaxAnalyser<AsmType, ContextType>?
+
+    val semanticAnalyser:SemanticAnalyser<AsmType, ContextType>?
+
+    val formatter:Formatter<AsmType>?
 
     /**
      * can be called from a different thread to stop the parser

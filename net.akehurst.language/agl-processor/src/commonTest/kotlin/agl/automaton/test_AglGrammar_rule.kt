@@ -19,6 +19,7 @@ package net.akehurst.language.agl.automaton
 import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhs
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -28,7 +29,7 @@ import kotlin.test.assertNotNull
 internal class test_AglGrammar_rule : test_AutomatonAbstract() {
 
     private val grammar = AglGrammarGrammar
-    private val converterToRuntimeRules = ConverterToRuntimeRules(grammar)
+    private val converterToRuntimeRules = ConverterToRuntimeRules { ProcessResultDefault(grammar, emptyList()) }
     private val parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
     private val rrs = parser.runtimeRuleSet
 

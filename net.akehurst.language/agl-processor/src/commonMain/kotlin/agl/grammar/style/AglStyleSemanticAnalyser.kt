@@ -7,9 +7,10 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.style.AglStyleRule
 
-class AglStyleSemanticAnalyser : SemanticAnalyser<List<AglStyleRule>, SentenceContext<GrammarItem>> {
+class AglStyleSemanticAnalyser : SemanticAnalyser<AglStyleModel, SentenceContext<GrammarItem>> {
     override fun clear() {
 
     }
@@ -18,7 +19,7 @@ class AglStyleSemanticAnalyser : SemanticAnalyser<List<AglStyleRule>, SentenceCo
         return emptyList()
     }
 
-    override fun analyse(asm: List<AglStyleRule>, locationMap: Map<Any, InputLocation>?, context: SentenceContext<GrammarItem>?): SemanticAnalysisResult {
+    override fun analyse(asm: AglStyleModel, locationMap: Map<Any, InputLocation>?, context: SentenceContext<GrammarItem>?, options:Map<String,Any>): SemanticAnalysisResult {
         return SemanticAnalysisResultDefault(emptyList())
     }
 }

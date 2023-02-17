@@ -16,124 +16,65 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
-import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
-import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.util.CachedValue
-import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     override val identity: String,
     grammarStrArg: String?,
-    targetGrammarArg: String?,
-    defaultGoalRuleArg: String?,
     buildForDefaultGoal: Boolean,
-    scopeModelStrArg:String?,
-    styleArg: String?,
-    formatArg: String?,
-    syntaxAnalyserResolverArg: SyntaxAnalyserResolver<AsmType, ContextType>?,
-    semanticAnalyserResolverArg: SemanticAnalyserResolver<AsmType, ContextType>?,
-    /** the options to configure building the processor for the registered language */
-    aglOptionsArg: ProcessOptions<List<Grammar>, GrammarContext>?
+    configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
-    defaultGoalRuleArg,
-    null,
     buildForDefaultGoal,
-    null,
-    styleArg,
-    formatArg,
-    syntaxAnalyserResolverArg,
-    semanticAnalyserResolverArg,
-    aglOptionsArg
+    configuration,
 ) {
-
-    private val _grammar_cache: CachedValue<Grammar?> = cached {
-        val gs = this.grammarStr
-        if (null == gs) {
-            null
-        } else {
-            _grammarFromString(gs)
-        }
-    }.apply { this.resetAction = { old -> grammarObservers.forEach { it(old, null) } } }
-
-    private val _scopeModel_cache: CachedValue<ScopeModel?> = cached {
-        val s = this.scopeModelStr
-        if (null == s || null==this.grammar) {
-            null
-        } else {
-            val ctx =ContextFromGrammar(this.grammar!!)
-            ScopeModelAgl.fromString(ctx, s).asm!! as ScopeModel
-        }
-    }.apply { this.resetAction = { old -> scopeModelObservers.forEach { it(old, null) } } }
-
-
-    override val grammarIsModifiable: Boolean = true
 
     override var grammarStr: String? by Delegates.observable(grammarStrArg) { _, oldValue, newValue ->
         if (oldValue != newValue) {
-            this._grammar_cache.reset()
-            this._scopeModel_cache.reset()
+            super._grammarResolver = {
+               Agl.grammarFromString<List<Grammar>, GrammarContext>(newValue)
+            }
+            grammarStrObservers.forEach { it.invoke(oldValue,newValue) }
         }
     }
 
-    override var targetGrammar: String? by Delegates.observable(targetGrammarArg) { _, oldValue, newValue ->
+    override val grammarIsModifiable: Boolean = true
+
+    override var scopeModelStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
-            val s = this.grammarStr
-            this.grammarStr = null //TODO: is there a better way to do this, with one change?
-            this.grammarStr = s
-        }
-    }
-
-    override var grammar: Grammar?
-        get() = this._grammar_cache.value
-        set(value) {
-            val oldValue = this._grammar_cache.value
-            if (value==oldValue) {
-                //do nothing
-            } else {
-                this._grammar_cache.value = value
-                this._processor_cache.reset()
-                grammarObservers.forEach { it(oldValue, value) }
+            super._scopeModelResolver = {
+                if (null==newValue) {
+                    ProcessResultDefault(null, emptyList())
+                } else {
+                    Agl.registry.agl.scopes.processor!!.process(newValue)
+                }
             }
         }
+    }
 
-    override var scopeModelStr: String? by Delegates.observable(scopeModelStrArg) { _, oldValue, newValue ->
+    override var formatStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
-            this._scopeModel_cache.reset()
+            super._formatterResolver = {
+                if (null==newValue) {
+                    ProcessResultDefault(null, emptyList())
+                } else {
+                    Agl.registry.agl.formatter.processor!!.process(newValue)
+                }
+            }
         }
     }
 
-    override var scopeModel: ScopeModel?
-        get() = this._scopeModel_cache.value
-        set(value) {
-            val oldValue = this._scopeModel_cache.value
-            if (value==oldValue) {
-                //do nothing
-            } else {
-                this._scopeModel_cache.value = value
-                this._processor_cache.reset()
-                scopeModelObservers.forEach { it(oldValue, value) }
-            }
-        }
-
-    private fun _grammarFromString(newValue: String?): Grammar? {
-        return if (null == newValue) {
-            null
-        } else {
-            val g = Agl.registry.agl.grammar.processor!!.process(newValue, aglOptions)
-            this._issues = g.issues
-            if (g.issues.isEmpty()) {
-                val tgtName = this.targetGrammar ?: g.asm!!.first().name
-                g.asm!!.firstOrNull { it.name == tgtName }
-            } else {
-                null
+    override var styleStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            super._styleResolver = {
+                if (null==newValue) {
+                    ProcessResultDefault(null, emptyList())
+                } else {
+                    Agl.registry.agl.style.processor!!.process(newValue)
+                }
             }
         }
     }

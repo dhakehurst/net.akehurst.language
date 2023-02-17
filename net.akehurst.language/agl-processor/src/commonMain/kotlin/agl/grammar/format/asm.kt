@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package net.akehurst.language.agl.grammar.format
 
-package net.akehurst.language.api.processor
+import net.akehurst.language.api.formatter.AglFormatterModel
+import net.akehurst.language.api.formatter.AglFormatterRule
 
-interface Formatter<in AsmType> {
-
-    fun format(asm:AsmType): FormatResult
+class AglFormatterModelDefault(
+    override val rules: List<AglFormatterRule>
+) : AglFormatterModel {
 
 }

@@ -16,17 +16,18 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.asm.Scope
 import net.akehurst.language.api.parser.InputLocation
 
 internal class LanguageProcessorConfigurationDefault<AsmType : Any, ContextType : Any>(
+    override val grammarResolver: GrammarResolver?=null,
     override var targetGrammarName: String? = null,
     override var defaultGoalRuleName: String? = null,
-    override var scopeModel: ScopeModel? = null,
+    override var typeModelResolver: TypeModelResolver<AsmType, ContextType>? = null,
+    override var scopeModelResolver: ScopeModelResolver<AsmType, ContextType>? = null,
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null,
     override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null,
-    override var formatter: Formatter? = null
+    override var formatterResolver: FormatterResolver<AsmType, ContextType>? = null,
+    override val styleResolver: StyleResolver<AsmType, ContextType>? = null
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
 
 internal class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
@@ -47,7 +48,8 @@ internal class SyntaxAnalysisOptionsDefault<AsmType : Any, ContextType : Any>(
 
 internal class SemanticAnalysisOptionsDefault<AsmType : Any, ContextType : Any>(
     override var active: Boolean = true,
-    override var locationMap: Map<Any, InputLocation> = emptyMap()
+    override var locationMap: Map<Any, InputLocation> = emptyMap(),
+    override val options: Map<String, Any> = mutableMapOf()
 ) : SemanticAnalysisOptions<AsmType, ContextType>
 
 @DslMarker
@@ -58,21 +60,32 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any> {
 
     private var _targetGrammarName: String? = null
     private var _defaultGoalRuleName: String? = null
-    private var _scopeModel:ScopeModel? = null
+    private var _grammarResolver: GrammarResolver? = null
+    private var _typeModelResolver: TypeModelResolver<AsmType, ContextType>? = null
+    private var _scopeModelResolver: ScopeModelResolver<AsmType, ContextType>? = null
     private var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null
     private var _semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null
-    private var _formatter: Formatter? = null
+    private var _formatterResolver: FormatterResolver<AsmType, ContextType>? = null
+    private var _styleResolver: StyleResolver<AsmType, ContextType>? = null
 
-    fun targetGrammarName(value:String?) {
-        _targetGrammarName=value
+    fun targetGrammarName(value: String?) {
+        _targetGrammarName = value
     }
 
-    fun defaultGoalRuleName(value:String?) {
-        _defaultGoalRuleName=value
+    fun defaultGoalRuleName(value: String?) {
+        _defaultGoalRuleName = value
     }
 
-    fun scopeModel(value:ScopeModel?) {
-        _scopeModel = value
+    fun grammarResolver(func: GrammarResolver?) {
+        this._grammarResolver = func
+    }
+
+    fun typeModelResolver(func: TypeModelResolver<AsmType, ContextType>?) {
+        this._typeModelResolver = func
+    }
+
+    fun scopeModelResolver(func: ScopeModelResolver<AsmType, ContextType>?) {
+        _scopeModelResolver = func
     }
 
     fun syntaxAnalyserResolver(func: SyntaxAnalyserResolver<AsmType, ContextType>?) {
@@ -83,18 +96,25 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any> {
         _semanticAnalyserResolver = value
     }
 
-    fun formatter(value:Formatter?) {
-        _formatter = value
+    fun formatterResolver(func: FormatterResolver<AsmType, ContextType>?) {
+        _formatterResolver = func
+    }
+
+    fun styleResolver(func: StyleResolver<AsmType, ContextType>?) {
+        _styleResolver = func
     }
 
     fun build(): LanguageProcessorConfiguration<AsmType, ContextType> {
         return LanguageProcessorConfigurationDefault<AsmType, ContextType>(
+            _grammarResolver ?: error("Must supply a grammar to create a processor"),
             _targetGrammarName,
             _defaultGoalRuleName,
-            _scopeModel,
+            _typeModelResolver,
+            _scopeModelResolver,
             _syntaxAnalyserResolver,
             _semanticAnalyserResolver,
-            _formatter
+            _formatterResolver,
+            _styleResolver
         )
     }
 }
@@ -105,9 +125,9 @@ annotation class ProcessOptionsDslMarker
 @ProcessOptionsDslMarker
 class ProcessOptionsBuilder<AsmType : Any, ContextType : Any> {
 
-    private var _parser:ParseOptions = ParseOptionsDefault()
-    private var _syntaxAnalyser:SyntaxAnalysisOptions<AsmType, ContextType> = SyntaxAnalysisOptionsDefault<AsmType, ContextType>()
-    private var _semanticAnalyser:SemanticAnalysisOptions<AsmType, ContextType> = SemanticAnalysisOptionsDefault<AsmType, ContextType>()
+    private var _parser: ParseOptions = ParseOptionsDefault()
+    private var _syntaxAnalyser: SyntaxAnalysisOptions<AsmType, ContextType> = SyntaxAnalysisOptionsDefault<AsmType, ContextType>()
+    private var _semanticAnalyser: SemanticAnalysisOptions<AsmType, ContextType> = SemanticAnalysisOptionsDefault<AsmType, ContextType>()
 
     fun parse(init: ParseOptionsBuilder.() -> Unit) {
         val b = ParseOptionsBuilder()
@@ -121,7 +141,7 @@ class ProcessOptionsBuilder<AsmType : Any, ContextType : Any> {
         _syntaxAnalyser = b.build()
     }
 
-    fun semanticAnalysis(init: SemanticAnalysisOptionsBuilder<AsmType, ContextType>.() -> Unit){
+    fun semanticAnalysis(init: SemanticAnalysisOptionsBuilder<AsmType, ContextType>.() -> Unit) {
         val b = SemanticAnalysisOptionsBuilder<AsmType, ContextType>()
         b.init()
         _semanticAnalyser = b.build()
@@ -174,6 +194,7 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
 
     private var _active = true
     private var _locationMap = emptyMap<Any, InputLocation>()
+    private val _options = mutableMapOf<String, Any>()
 
     fun active(value: Boolean) {
         _active = value
@@ -183,7 +204,11 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
         _locationMap = value
     }
 
+    fun option(key: String, value: Any) {
+        _options[key] = value
+    }
+
     fun build(): SemanticAnalysisOptions<AsmType, ContextType> {
-        return SemanticAnalysisOptionsDefault<AsmType, ContextType>(_active, _locationMap)
+        return SemanticAnalysisOptionsDefault<AsmType, ContextType>(_active, _locationMap, _options)
     }
 }

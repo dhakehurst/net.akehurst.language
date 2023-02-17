@@ -21,6 +21,7 @@ package net.akehurst.language.agl.processor.java8
 //import java.io.BufferedReader
 //import java.io.InputStreamReader
 
+import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
@@ -41,7 +42,16 @@ class test_Java8Agl_Packages(val data: Data) {
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
 
         val processor: LanguageProcessor<Any, Any> by lazy {
-            Agl.processorFromString(grammarStr, Agl.configuration { targetGrammarName("Packages"); defaultGoalRuleName("CompilationUnit") })
+            Agl.processorFromString(
+                grammarStr,
+                Agl.configuration { targetGrammarName("Packages"); defaultGoalRuleName("CompilationUnit") },
+                aglOptions = Agl.options {
+                    semanticAnalysis {
+                        // switch off ambiguity analysis for performance
+                        option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
+                    }
+                }
+            )
         }
 
         var sourceFiles = arrayOf(

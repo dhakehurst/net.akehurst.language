@@ -34,6 +34,6 @@ interface SemanticAnalyser<in AsmType, in ContextType> {
 
     fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue>
 
-    fun analyse(asm: AsmType, locationMap: Map<Any,InputLocation>?=null, context:ContextType?=null): SemanticAnalysisResult
+    fun analyse(asm: AsmType, locationMap: Map<Any, InputLocation>? = null, context: ContextType? = null, options: Map<String, Any> = emptyMap()): SemanticAnalysisResult
 }
 

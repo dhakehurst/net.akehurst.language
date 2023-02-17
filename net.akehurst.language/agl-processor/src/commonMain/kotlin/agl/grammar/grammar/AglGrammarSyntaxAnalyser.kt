@@ -19,6 +19,7 @@ package net.akehurst.language.agl.grammar.grammar
 import net.akehurst.language.agl.grammar.grammar.asm.*
 import net.akehurst.language.agl.processor.LanguageDefinitionFromAsm
 import net.akehurst.language.agl.processor.LanguageRegistryDefault
+import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.syntaxAnalyser.BranchHandler
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserAbstract
@@ -27,10 +28,7 @@ import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
@@ -91,9 +89,9 @@ internal class AglGrammarSyntaxAnalyser(
         return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: GrammarContext?): Pair<List<Grammar>, List<LanguageIssue>> {
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: GrammarContext?): SyntaxAnalysisResult<List<Grammar>> {
         val grammars = this.transformBranch<List<Grammar>>(sppt.root.asBranch, "")
-        return Pair(grammars, _issues) //TODO
+        return SyntaxAnalysisResultDefault(grammars, _issues,locationMap)
     }
 
     // grammarDefinition : namespace definitions ;

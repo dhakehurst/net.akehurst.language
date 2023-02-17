@@ -19,8 +19,12 @@ package net.akehurst.language.api.processor
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.style.AglStyleModel
+import net.akehurst.language.api.style.AglStyleRule
+import net.akehurst.language.api.typeModel.TypeModel
 
 /**
  * Options to configure the building of a language processor
@@ -31,17 +35,24 @@ import net.akehurst.language.api.parser.InputLocation
  * @param formatter a formatter
  */
 
-typealias SyntaxAnalyserResolver<AsmType, ContextType> = (Grammar) -> SyntaxAnalyser<AsmType, ContextType>
-typealias SemanticAnalyserResolver<AsmType, ContextType> = (Grammar) -> SemanticAnalyser<AsmType, ContextType>
-
+typealias GrammarResolver = () -> ProcessResult<Grammar>
+typealias ScopeModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<ScopeModel>
+typealias TypeModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<TypeModel>
+typealias SyntaxAnalyserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<SyntaxAnalyser<AsmType, ContextType>>
+typealias SemanticAnalyserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<SemanticAnalyser<AsmType, ContextType>>
+typealias FormatterResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<AglFormatterModel>
+typealias StyleResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<AglStyleModel>
 
 interface LanguageProcessorConfiguration<AsmType : Any, ContextType : Any> {
-    var targetGrammarName:String?
-    var defaultGoalRuleName: String?
-    var scopeModel:ScopeModel?
-    var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
-    var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
-    var formatter: Formatter?
+    val grammarResolver: GrammarResolver?
+    val targetGrammarName: String?
+    val defaultGoalRuleName: String?
+    val typeModelResolver: TypeModelResolver<AsmType, ContextType>?
+    val scopeModelResolver: ScopeModelResolver<AsmType, ContextType>?
+    val syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
+    val semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
+    val formatterResolver: FormatterResolver<AsmType, ContextType>?
+    val styleResolver: StyleResolver<AsmType, ContextType>?
 }
 
 /**
@@ -66,6 +77,7 @@ interface SyntaxAnalysisOptions<AsmType : Any, ContextType : Any> {
 interface SemanticAnalysisOptions<AsmType : Any, ContextType : Any> {
     var active: Boolean
     var locationMap: Map<Any, InputLocation>
+    val options: Map<String, Any>
 }
 
 /**

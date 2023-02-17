@@ -60,6 +60,16 @@ internal data class LookaheadSetPart(
         return cont
     }
 
+    val isEmpty:Boolean get() = !this.includesRT && !this.includesEOT && !this.matchANY && this.content.isEmpty()
+    val isNotEmpty:Boolean get() = !this.isEmpty
+
+    fun intersect(lookahead: LookaheadSetPart): LookaheadSetPart {
+        val rt = this.includesRT && lookahead.includesRT
+        val eot = this.includesEOT && lookahead.includesEOT
+        val ma = this.matchANY && lookahead.matchANY
+        return LookaheadSetPart(rt, eot, ma, this.content.intersect(lookahead.content))
+    }
+
     fun union(lhs: LookaheadSetPart) = when {
         this.matchANY -> ANY
         lhs.matchANY -> ANY

@@ -17,9 +17,11 @@
 package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.agl.grammar.grammar.PseudoRuleNames
+import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.grammar.*
+import net.akehurst.language.api.processor.GrammarResolver
 import net.akehurst.language.api.processor.LanguageProcessorException
 import net.akehurst.language.collections.LazyMutableMapNonNull
 import net.akehurst.language.collections.lazyMutableMapNonNull
@@ -28,12 +30,16 @@ import net.akehurst.language.collections.lazyMutableMapNonNull
  * arg: String =
  */
 internal class ConverterToRuntimeRules(
-    val grammar: Grammar
+    val grammarResolver: GrammarResolver?
 ) {
 
-    private val _ruleSetNumber = RuntimeRuleSet.numberForGrammar[grammar]
+    private val grammar:Grammar? by lazy {
+        grammarResolver?.invoke()?.asm
+    }
+
+    private val _ruleSetNumber by lazy{ RuntimeRuleSet.numberForGrammar[grammar!!] }
     val runtimeRuleSet: RuntimeRuleSet by lazy {
-        this.visitGrammar(grammar, "")
+        this.visitGrammar(grammar!!, "")
         val rules = this.runtimeRules.values.toList()
         RuntimeRuleSet(_ruleSetNumber, rules)
     }
@@ -48,11 +54,11 @@ internal class ConverterToRuntimeRules(
     private val embeddedRules = mutableMapOf<Pair<Grammar, String>, RuntimeRule>()
     private val originalRuleItem: MutableMap<Pair<Int, Int>, RuleItem> = mutableMapOf()
     private val embeddedConverters: LazyMutableMapNonNull<Grammar, ConverterToRuntimeRules> = lazyMutableMapNonNull { embeddedGrammar ->
-        val embeddedConverter = ConverterToRuntimeRules(embeddedGrammar)
+        val embeddedConverter = ConverterToRuntimeRules() { ProcessResultDefault(embeddedGrammar, emptyList()) }
         embeddedConverter
     }
 
-    private val _pseudoRuleNameGenerator = PseudoRuleNames(grammar)
+    private val _pseudoRuleNameGenerator by lazy{ PseudoRuleNames(grammar!!) }
 
     private fun nextRule(name: String, isSkip: Boolean): RuntimeRule {
         if (Debug.CHECK) check(this.runtimeRules.containsKey(name).not())
@@ -267,7 +273,7 @@ internal class ConverterToRuntimeRules(
     private fun visitNonTerminal(target: NonTerminal, arg: String): RuntimeRule {
         val refName = target.name
         return findNamedRule(refName)
-            ?: this.visitRule(target.referencedRule(this.grammar), arg)
+            ?: this.visitRule(target.referencedRule(this.grammar!!), arg)
     }
 
     private fun createPseudoRuleForChoice(target: Choice, psudeoRuleName: String): RuntimeRule {

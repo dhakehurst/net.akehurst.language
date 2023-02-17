@@ -18,6 +18,7 @@ package net.akehurst.language.processor.java8
 
 //import com.soywiz.korio.async.runBlockingNoSuspensions
 //import com.soywiz.korio.file.std.resourcesVfs
+import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.sppt.SPPT2InputText
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
@@ -47,7 +48,8 @@ class test_Java8_Singles_aglSpec {
                 grammarDefinitionStr = grammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {
-                        active(false) // switch off for performance
+                        // switch off ambiguity analysis for performance
+                        option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
                     }
                 }
             )
@@ -88,7 +90,7 @@ class test_Java8_Singles_aglSpec {
         val result = p.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
         assertEquals(emptyList(), result.issues)
-        assertEqualsWarning(1, result.sppt!!.maxNumHeads)
+        assertEqualsWarning(2, result.sppt!!.maxNumHeads)
     }
 
     @Test
@@ -117,7 +119,7 @@ class test_Java8_Singles_aglSpec {
         assertNotNull(result.sppt)
         assertEquals(emptyList(), result.issues)
 
-        assertEqualsWarning(1, result.sppt!!.maxNumHeads)
+        assertEqualsWarning(2, result.sppt!!.maxNumHeads)
     }
 
     @Test

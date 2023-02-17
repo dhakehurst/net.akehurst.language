@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.agl.processor.statecharttools
 
+import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.LanguageProcessor
@@ -31,11 +32,11 @@ class test_StatechartTools_Singles {
         // must create processor for 'Expressions' so that SText can extend it
         val exprProcessor = Agl.processorFromString<Any, Any>(
             grammarDefinitionStr = grammarStr1,
-            aglOptions = Agl.options { semanticAnalysis { active(false) } }
+            aglOptions = Agl.options { semanticAnalysis { option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false) } }
         )
         var processor: LanguageProcessor<Any, Any> = Agl.processorFromString(
             grammarDefinitionStr = grammarStr2,
-            aglOptions = Agl.options { semanticAnalysis { active(false) } }
+            aglOptions = Agl.options { semanticAnalysis { option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false) } }
         )
     }
 

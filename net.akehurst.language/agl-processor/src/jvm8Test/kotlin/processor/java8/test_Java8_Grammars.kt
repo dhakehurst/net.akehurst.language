@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.processor.java8
 
+import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import org.junit.Test
 import kotlin.test.assertNotNull
@@ -29,7 +30,8 @@ class test_Java8_Grammars {
             sentence = grammarStr,
             options = Agl.options {
                 semanticAnalysis {
-                    active(false) // switch off for performance
+                    // switch off ambiguity analysis for performance
+                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
                 }
             }
         )
@@ -44,7 +46,8 @@ class test_Java8_Grammars {
             sentence = grammarStr,
             options = Agl.options {
                 semanticAnalysis {
-                    active(false) // switch off for performance
+                    // switch off ambiguity analysis for performance
+                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
                 }
             }
         )
@@ -60,7 +63,8 @@ class test_Java8_Grammars {
             sentence = grammarStr,
             options = Agl.options {
                 semanticAnalysis {
-                    active(false) // switch off for performance
+                    // switch off ambiguity analysis for performance
+                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
                 }
             }
         )
@@ -77,7 +81,8 @@ class test_Java8_Grammars {
             sentence = grammarStr,
             options = Agl.options {
                 semanticAnalysis {
-                    active(false) // switch off for performance
+                    // switch off ambiguity analysis for performance
+                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
                 }
             }
         )

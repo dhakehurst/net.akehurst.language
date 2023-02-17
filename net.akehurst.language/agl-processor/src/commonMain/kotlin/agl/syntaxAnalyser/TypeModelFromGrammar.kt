@@ -123,6 +123,18 @@ class TypeModelFromGrammar(
                 is EmptyRule -> findOrCreateElementType(rule.name)
                 is Choice -> typeForChoiceRule(rule)
                 is Concatenation -> typeForConcatenation(rule, rhs.items)
+                is SimpleList -> when (rhs.max) {
+                    1 -> typeForRuleItem(rhs.item) //no need for nullable, when min is 0 we get empty list
+                    else -> ListSimpleType(typeForRuleItem(rhs.item)) //PrimitiveType.LIST //TODO: add list type
+                }
+                is SeparatedList -> when (rhs.max) {
+                    1 -> typeForRuleItem(rhs.item) //no need for nullable, when min is 0 we get empty list
+                    else -> {
+                        val itemType = typeForRuleItem(rhs.item)
+                        val sepType = typeForRuleItem(rhs.separator)
+                        ListSeparatedType(itemType, sepType)
+                    }
+                }
                 else -> error("Internal error, unhandled subtype of rule '${rule.name}'.rhs '${rhs::class.simpleName}' when getting TypeModel from grammar '${this.grammar.qualifiedName}'")
             }
             if (ruleType is ElementType) {

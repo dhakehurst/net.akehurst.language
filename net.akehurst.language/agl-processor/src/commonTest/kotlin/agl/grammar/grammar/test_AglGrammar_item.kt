@@ -18,6 +18,7 @@ package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.processor.ParseResult
@@ -29,7 +30,7 @@ import kotlin.test.assertNotNull
 class test_AglGrammar_item {
 
     private companion object {
-        private val converterToRuntimeRules: ConverterToRuntimeRules = ConverterToRuntimeRules(AglGrammarGrammar)
+        private val converterToRuntimeRules: ConverterToRuntimeRules = ConverterToRuntimeRules { ProcessResultDefault(AglGrammarGrammar, emptyList()) }
         private val parser: Parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
     }
 

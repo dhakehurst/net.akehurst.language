@@ -1,5 +1,9 @@
 package net.akehurst.language.api.style
 
+interface AglStyleModel {
+    val rules:List<AglStyleRule>
+}
+
 data class AglStyleRule(
         val selector:List<String>
 ) {
