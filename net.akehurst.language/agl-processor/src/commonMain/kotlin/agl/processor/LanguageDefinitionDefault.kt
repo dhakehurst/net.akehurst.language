@@ -25,28 +25,37 @@ import kotlin.properties.Delegates
 internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     override val identity: String,
     grammarStrArg: String?,
+    aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
     buildForDefaultGoal: Boolean,
     configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
+    null,
     buildForDefaultGoal,
     configuration,
 ) {
 
-    override var grammarStr: String? by Delegates.observable(grammarStrArg) { _, oldValue, newValue ->
+    override var grammarStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
-            super._grammarResolver = {
-               Agl.grammarFromString<List<Grammar>, GrammarContext>(newValue)
+            val res = Agl.grammarFromString<List<Grammar>, GrammarContext>(newValue, aglOptions)
+            this.grammar = if(null==targetGrammarName) {
+                res.asm?.firstOrNull()
+            } else {
+                res.asm?.firstOrNull { it.name == this.targetGrammarName }
             }
-            grammarStrObservers.forEach { it.invoke(oldValue,newValue) }
+            grammarStrObservers.forEach { it.invoke(oldValue, newValue) }
         }
     }
 
-    override val grammarIsModifiable: Boolean = true
+    init {
+        grammarStr = grammarStrArg
+    }
+
+    override val isModifiable: Boolean = true
 
     override var scopeModelStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             super._scopeModelResolver = {
-                if (null==newValue) {
+                if (null == newValue) {
                     ProcessResultDefault(null, emptyList())
                 } else {
                     Agl.registry.agl.scopes.processor!!.process(newValue)
@@ -55,22 +64,23 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         }
     }
 
-    override var formatStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
-        if (oldValue != newValue) {
-            super._formatterResolver = {
-                if (null==newValue) {
-                    ProcessResultDefault(null, emptyList())
-                } else {
-                    Agl.registry.agl.formatter.processor!!.process(newValue)
+    /*
+        override var formatStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
+            if (oldValue != newValue) {
+                super._formatterResolver = {
+                    if (null==newValue) {
+                        ProcessResultDefault(null, emptyList())
+                    } else {
+                        Agl.registry.agl.formatter.processor!!.process(newValue)
+                    }
                 }
             }
         }
-    }
-
+    */
     override var styleStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             super._styleResolver = {
-                if (null==newValue) {
+                if (null == newValue) {
                     ProcessResultDefault(null, emptyList())
                 } else {
                     Agl.registry.agl.style.processor!!.process(newValue)

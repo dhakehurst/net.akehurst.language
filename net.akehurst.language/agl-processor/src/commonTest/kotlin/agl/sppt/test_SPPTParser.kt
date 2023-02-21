@@ -32,7 +32,7 @@ class test_SPPTParser {
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
         val grammar = gb.grammar
 
-        val converter = ConverterToRuntimeRules{ProcessResultDefault(grammar, emptyList())}
+        val converter = ConverterToRuntimeRules(grammar)
         val sut = SPPTParserDefault(converter.runtimeRuleSet)
 
         assertNotNull(sut)

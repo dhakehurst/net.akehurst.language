@@ -29,9 +29,11 @@ import kotlin.properties.Delegates
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
     override val identity: String,
+    grammar: Grammar,
     buildForDefaultGoal: Boolean,
     configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
+    grammar,
     buildForDefaultGoal,
     configuration
 ) {
@@ -40,7 +42,7 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
         set(value) {
             error("Cannot set the grammar of a LanguageDefinitionFromAsm using a String")
         }
-    override val grammarIsModifiable: Boolean = false
+    override val isModifiable: Boolean = false
 
     override var scopeModelStr: String?
         get() = this.scopeModel.toString() //TODO:
@@ -60,10 +62,12 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
         set(value) {
             error("Cannot set the styleStr of a LanguageDefinitionFromAsm using a String")
         }
-
+/*
     override var formatStr: String?
         get() = this.grammar.toString() //TODO:
         set(value) {
             error("Cannot set the formatStr of a LanguageDefinitionFromAsm using a String")
         }
+
+ */
 }

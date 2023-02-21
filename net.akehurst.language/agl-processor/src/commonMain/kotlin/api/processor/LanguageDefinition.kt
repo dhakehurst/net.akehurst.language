@@ -24,25 +24,29 @@ import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.Namespace
 import net.akehurst.language.api.style.AglStyleModel
 
-interface LanguageRegistry {
-    fun registerIfNot(grammar:Grammar)
-    fun findGrammarOrNull(namespace: Namespace, name:String) :Grammar?
+interface GrammarRegistry {
+    fun register(grammar:Grammar)
+    fun findGrammarOrNull(localNamespace: Namespace, nameOrQName:String) :Grammar?
 }
 
 interface LanguageDefinition<AsmType : Any, ContextType : Any> {
+
     val identity: String
+    val isModifiable: Boolean
+
     var grammarStr: String?
     var grammar: Grammar?
-    val grammarIsModifiable: Boolean
-
-    var targetGrammar:String?
+    var targetGrammarName:String?
     var defaultGoalRule: String?
+
     var scopeModelStr: String?
     var scopeModel:ScopeModel?
+
     val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
     val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
-    var formatStr: String?
-    val formatterModel:AglFormatterModel?
+
+    //var formatStr: String?
+    //val formatterModel:AglFormatterModel?
     val formatter: Formatter<AsmType>?
 
     /** the options for parsing/processing the grammarStr for this language */

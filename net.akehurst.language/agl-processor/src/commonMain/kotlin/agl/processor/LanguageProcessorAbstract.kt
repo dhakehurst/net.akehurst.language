@@ -50,28 +50,29 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     protected abstract val _runtimeRuleSet: RuntimeRuleSet
     protected abstract val mapToGrammar: (Int, Int) -> RuleItem
 
+    abstract override val grammar: Grammar
     protected abstract val configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 
-    private val _completionProvider: CompletionProvider by lazy { CompletionProvider(this.grammar!!) }
+    private val _completionProvider: CompletionProvider by lazy { CompletionProvider(this.grammar) }
     private val _scanner by lazy { Scanner(this._runtimeRuleSet) }
     private val parser: Parser by lazy { ScanOnDemandParser(this._runtimeRuleSet) }
 
     override val spptParser: SPPTParser by lazy {
-        val embeddedRuntimeRuleSets = grammar?.allResolvedEmbeddedGrammars?.map {
-            val cvt = ConverterToRuntimeRules() { ProcessResultDefault(it, emptyList())}
+        val embeddedRuntimeRuleSets = grammar.allResolvedEmbeddedGrammars.map {
+            val cvt = ConverterToRuntimeRules(it)
             val rrs = cvt.runtimeRuleSet
             Pair(it.name, rrs)
-        }?.associate { it } ?: emptyMap()
+        }.associate { it } ?: emptyMap()
         SPPTParserDefault((parser as ScanOnDemandParser).runtimeRuleSet, embeddedRuntimeRuleSets)
     }
 
-    protected val defaultGoalRuleName: String? by lazy { configuration.defaultGoalRuleName ?: grammar?.rule?.first { it.isSkip.not() }?.name }
+    protected val defaultGoalRuleName: String? by lazy { configuration.defaultGoalRuleName ?: grammar.rule.first { it.isSkip.not() }.name }
 
-    override val grammar: Grammar? by lazy {
-        val res = configuration.grammarResolver?.invoke()
-        res?.let { this.issues.addAll(res.issues) }
-        res?.asm
-    }
+    //override val grammar: Grammar? by lazy {
+    //    val res = configuration.grammarResolver?.invoke()
+    //    res?.let { this.issues.addAll(res.issues) }
+    //    res?.asm
+    //}
 
     override val typeModel: TypeModel? by lazy {
         val res = configuration.typeModelResolver?.invoke(this)

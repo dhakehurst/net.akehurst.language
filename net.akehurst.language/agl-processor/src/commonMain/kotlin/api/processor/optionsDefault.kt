@@ -19,7 +19,6 @@ package net.akehurst.language.api.processor
 import net.akehurst.language.api.parser.InputLocation
 
 internal class LanguageProcessorConfigurationDefault<AsmType : Any, ContextType : Any>(
-    override val grammarResolver: GrammarResolver?=null,
     override var targetGrammarName: String? = null,
     override var defaultGoalRuleName: String? = null,
     override var typeModelResolver: TypeModelResolver<AsmType, ContextType>? = null,
@@ -60,7 +59,6 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any> {
 
     private var _targetGrammarName: String? = null
     private var _defaultGoalRuleName: String? = null
-    private var _grammarResolver: GrammarResolver? = null
     private var _typeModelResolver: TypeModelResolver<AsmType, ContextType>? = null
     private var _scopeModelResolver: ScopeModelResolver<AsmType, ContextType>? = null
     private var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null
@@ -74,10 +72,6 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any> {
 
     fun defaultGoalRuleName(value: String?) {
         _defaultGoalRuleName = value
-    }
-
-    fun grammarResolver(func: GrammarResolver?) {
-        this._grammarResolver = func
     }
 
     fun typeModelResolver(func: TypeModelResolver<AsmType, ContextType>?) {
@@ -106,7 +100,6 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any> {
 
     fun build(): LanguageProcessorConfiguration<AsmType, ContextType> {
         return LanguageProcessorConfigurationDefault<AsmType, ContextType>(
-            _grammarResolver ?: error("Must supply a grammar to create a processor"),
             _targetGrammarName,
             _defaultGoalRuleName,
             _typeModelResolver,

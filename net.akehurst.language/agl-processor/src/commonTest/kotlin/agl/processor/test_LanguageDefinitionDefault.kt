@@ -48,6 +48,7 @@ class test_LanguageDefinitionDefault {
         this.sut = Agl.registry.register<AsmSimple, ContextSimple>(
             identity = "ns.test",
             grammarStr = null,
+            aglOptions = null,
             buildForDefaultGoal = false,
             configuration = Agl.configurationDefault()
         )
@@ -71,9 +72,9 @@ class test_LanguageDefinitionDefault {
         val def = Agl.registry.register<AsmSimple, ContextSimple>(
             identity = "ns.Test1",
             grammarStr = g,
+            aglOptions = null,
             buildForDefaultGoal = false,
             Agl.configuration {
-                grammarResolver { Agl.grammarFromString<Grammar, GrammarContext>(g) }
                 targetGrammarName(null)
                 defaultGoalRuleName(null)
                 typeModelResolver {  ProcessResultDefault(TypeModelFromGrammar(it.grammar!!), emptyList()) }
@@ -110,7 +111,7 @@ class test_LanguageDefinitionDefault {
         sut.grammarStr = g
         assertEquals(g, sut.grammarStr)
         assertNull(sut.grammar)
-        assertNotNull(sut.processor) //processor created but unusable
+        assertNull(sut.processor)
         assertEquals(
             listOf(
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^xxxxx", setOf("'namespace'"))

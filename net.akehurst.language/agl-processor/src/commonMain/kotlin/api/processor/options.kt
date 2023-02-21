@@ -35,7 +35,7 @@ import net.akehurst.language.api.typeModel.TypeModel
  * @param formatter a formatter
  */
 
-typealias GrammarResolver = () -> ProcessResult<Grammar>
+//typealias GrammarResolver = () -> ProcessResult<Grammar>
 typealias ScopeModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<ScopeModel>
 typealias TypeModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<TypeModel>
 typealias SyntaxAnalyserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<SyntaxAnalyser<AsmType, ContextType>>
@@ -44,7 +44,7 @@ typealias FormatterResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, 
 typealias StyleResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<AglStyleModel>
 
 interface LanguageProcessorConfiguration<AsmType : Any, ContextType : Any> {
-    val grammarResolver: GrammarResolver?
+    //val grammarResolver: GrammarResolver?
     val targetGrammarName: String?
     val defaultGoalRuleName: String?
     val typeModelResolver: TypeModelResolver<AsmType, ContextType>?

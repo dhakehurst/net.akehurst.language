@@ -17,11 +17,9 @@
 package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.agl.grammar.grammar.PseudoRuleNames
-import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.grammar.*
-import net.akehurst.language.api.processor.GrammarResolver
 import net.akehurst.language.api.processor.LanguageProcessorException
 import net.akehurst.language.collections.LazyMutableMapNonNull
 import net.akehurst.language.collections.lazyMutableMapNonNull
@@ -30,16 +28,12 @@ import net.akehurst.language.collections.lazyMutableMapNonNull
  * arg: String =
  */
 internal class ConverterToRuntimeRules(
-    val grammarResolver: GrammarResolver?
+    val grammar: Grammar
 ) {
 
-    private val grammar:Grammar? by lazy {
-        grammarResolver?.invoke()?.asm
-    }
-
-    private val _ruleSetNumber by lazy{ RuntimeRuleSet.numberForGrammar[grammar!!] }
+    private val _ruleSetNumber by lazy{ RuntimeRuleSet.numberForGrammar[grammar] }
     val runtimeRuleSet: RuntimeRuleSet by lazy {
-        this.visitGrammar(grammar!!, "")
+        this.visitGrammar(grammar, "")
         val rules = this.runtimeRules.values.toList()
         RuntimeRuleSet(_ruleSetNumber, rules)
     }
@@ -54,11 +48,11 @@ internal class ConverterToRuntimeRules(
     private val embeddedRules = mutableMapOf<Pair<Grammar, String>, RuntimeRule>()
     private val originalRuleItem: MutableMap<Pair<Int, Int>, RuleItem> = mutableMapOf()
     private val embeddedConverters: LazyMutableMapNonNull<Grammar, ConverterToRuntimeRules> = lazyMutableMapNonNull { embeddedGrammar ->
-        val embeddedConverter = ConverterToRuntimeRules() { ProcessResultDefault(embeddedGrammar, emptyList()) }
+        val embeddedConverter = ConverterToRuntimeRules(embeddedGrammar)
         embeddedConverter
     }
 
-    private val _pseudoRuleNameGenerator by lazy{ PseudoRuleNames(grammar!!) }
+    private val _pseudoRuleNameGenerator by lazy{ PseudoRuleNames(grammar) }
 
     private fun nextRule(name: String, isSkip: Boolean): RuntimeRule {
         if (Debug.CHECK) check(this.runtimeRules.containsKey(name).not())

@@ -68,10 +68,11 @@ object Agl {
     }
 
     fun <AsmType : Any, ContextType : Any> processorFromGrammar(
+        grammar: Grammar,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = null
     ): LanguageProcessor<AsmType, ContextType> {
         val config = configuration ?: configurationDefault()
-        return LanguageProcessorDefault<AsmType, ContextType>(config)
+        return LanguageProcessorDefault<AsmType, ContextType>(grammar,config)
     }
 
     /**
@@ -90,32 +91,16 @@ object Agl {
         grammarDefinitionStr: String,
         aglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = null
     ): LanguageProcessor<AsmSimple, ContextSimple> {
-        return try {
-            processorFromGrammar(
-                Agl.configuration<AsmSimple, ContextSimple> {
-                    grammarResolver {
-                        val result = Agl.fromString(
-                            Agl.registry.agl.grammar.processor!!,
-                            aglOptions ?: Agl.registry.agl.grammar.processor!!.optionsDefault(),
-                            grammarDefinitionStr
-                        )
-                        val list = result.asm
-                        ProcessResultDefault(list?.firstOrNull(), result.issues)
-                    }
-                    targetGrammarName(null) //use default
-                    defaultGoalRuleName(null) //use default
-                    typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar(p.grammar!!), emptyList()) }
-                    scopeModelResolver { p -> ProcessResultDefault(ScopeModelAgl(), emptyList()) }
-                    syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserSimple(p.typeModel, p.scopeModel), emptyList()) }
-                    semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.scopeModel), emptyList()) }
-                    // formatterResolver { null }
-                }
-            )
-        } catch (e: LanguageProcessorException) {
-            throw e
-        } catch (e: Throwable) {
-            throw LanguageProcessorException("Unable to create processor for grammarDefinitionStr: ${e.message}", e)
+        val config = Agl.configuration<AsmSimple, ContextSimple> {
+            targetGrammarName(null) //use default
+            defaultGoalRuleName(null) //use default
+            typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar(p.grammar!!), emptyList()) }
+            scopeModelResolver { p -> ProcessResultDefault(ScopeModelAgl(), emptyList()) }
+            syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserSimple(p.typeModel, p.scopeModel), emptyList()) }
+            semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.scopeModel), emptyList()) }
+            // formatterResolver { null }
         }
+        return processorFromString(grammarDefinitionStr, config, aglOptions)
     }
 
     /**
@@ -130,27 +115,24 @@ object Agl {
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = null,
         aglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = null
     ): LanguageProcessor<AsmType, ContextType> {
-        val config = LanguageProcessorConfigurationDefault<AsmType, ContextType>(
-            grammarResolver = {
-                val result = Agl.fromString(
-                    Agl.registry.agl.grammar.processor!!,
-                    aglOptions ?: Agl.registry.agl.grammar.processor!!.optionsDefault(),
-                    grammarDefinitionStr
-                )
-                val list = result.asm
-                ProcessResultDefault(list?.firstOrNull(), result.issues)
-            },
-            targetGrammarName = configuration?.targetGrammarName,
-            defaultGoalRuleName = configuration?.defaultGoalRuleName,
-            typeModelResolver = configuration?.typeModelResolver,
-            scopeModelResolver = configuration?.scopeModelResolver,
-            syntaxAnalyserResolver = configuration?.syntaxAnalyserResolver,
-            semanticAnalyserResolver = configuration?.semanticAnalyserResolver,
-            formatterResolver = configuration?.formatterResolver,
-            styleResolver = configuration?.styleResolver
-        )
         return try {
-            processorFromGrammar(config)
+            val res = Agl.grammarFromString<List<Grammar>, GrammarContext>(
+                grammarDefinitionStr,
+                aglOptions ?: Agl.registry.agl.grammar.processor!!.optionsDefault()
+            )
+            if (null==res.asm) {
+                error("Unable to create processor for $grammarDefinitionStr")
+            } else {
+                val grammar = if(null==configuration?.targetGrammarName) {
+                    res.asm?.firstOrNull() ?: error("Unable to create processor for $grammarDefinitionStr")
+                } else {
+                    res.asm?.firstOrNull{it.name==configuration.targetGrammarName} ?: error("Unable to find target grammar '${configuration.targetGrammarName}' in $grammarDefinitionStr")
+                }
+                processorFromGrammar(
+                    grammar,
+                    configuration
+                )
+            }
         } catch (e: LanguageProcessorException) {
             throw e
         } catch (e: Throwable) {
@@ -172,12 +154,12 @@ object Agl {
         return proc.process(sentence, aglOptions)
     }
 
-    fun <AsmType : Any, ContextType : Any> grammarFromString(sentence: String?, aglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = null): ProcessResult<Grammar> {
+    fun <AsmType : Any, ContextType : Any> grammarFromString(sentence: String?, aglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = null): ProcessResult<List<Grammar>> {
         return if (null==sentence) {
             ProcessResultDefault(null, emptyList())
         } else {
             val res = Agl.registry.agl.grammar.processor!!.process(sentence, aglOptions)
-            ProcessResultDefault(res.asm?.firstOrNull(), res.issues)
+            ProcessResultDefault(res.asm?: emptyList(), res.issues)
         }
     }
 }

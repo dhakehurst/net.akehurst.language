@@ -46,8 +46,9 @@ interface AglLanguages {
     val scopes: LanguageDefinition<ScopeModelAgl, SentenceContext<GrammarItem>>
 }
 
-class LanguageRegistryDefault : LanguageRegistry {
+class LanguageRegistryDefault : GrammarRegistry {
 
+    private val _grammars = mutableMapOf<String, Grammar>()
     private val _registry = mutableMapOf<String, LanguageDefinition<*, *>>()
 
     val agl: AglLanguages = object : AglLanguages {
@@ -59,9 +60,9 @@ class LanguageRegistryDefault : LanguageRegistry {
         override val grammar: LanguageDefinition<List<Grammar>, GrammarContext> = this@LanguageRegistryDefault.registerFromDefinition(
             LanguageDefinitionFromAsm(
                 identity = grammarLanguageIdentity,
+                AglGrammarGrammar,
                 buildForDefaultGoal = false,
                 configuration = Agl.configuration {
-                    grammarResolver { ProcessResultDefault(AglGrammarGrammar, emptyList()) }
                     targetGrammarName(AglGrammarGrammar.name)
                     defaultGoalRuleName(AglGrammarGrammar.goalRuleName)
                     typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(AglGrammarGrammar), emptyList()) }
@@ -83,9 +84,9 @@ class LanguageRegistryDefault : LanguageRegistry {
         override val scopes: LanguageDefinition<ScopeModelAgl, SentenceContext<GrammarItem>> = this@LanguageRegistryDefault.registerFromDefinition(
             LanguageDefinitionFromAsm<ScopeModelAgl, SentenceContext<GrammarItem>>(
                 identity = scopesLanguageIdentity,
+                AglScopesGrammar,
                 buildForDefaultGoal = false,
                 configuration = Agl.configuration {
-                    grammarResolver { ProcessResultDefault(AglScopesGrammar, emptyList()) }
                     targetGrammarName(AglScopesGrammar.name)
                     defaultGoalRuleName(AglScopesGrammar.goalRuleName)
                     typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(AglScopesGrammar), emptyList()) }
@@ -111,9 +112,9 @@ class LanguageRegistryDefault : LanguageRegistry {
         override val formatter = this@LanguageRegistryDefault.registerFromDefinition(
             LanguageDefinitionFromAsm<AglFormatterModel, SentenceContext<GrammarItem>>(
                 identity = formatLanguageIdentity,
+                AglFormatGrammar,
                 buildForDefaultGoal = false,
                 configuration = Agl.configuration {
-                    grammarResolver { ProcessResultDefault(AglFormatGrammar, emptyList()) }
                     targetGrammarName(AglFormatGrammar.name)
                     defaultGoalRuleName(AglFormatGrammar.goalRuleName)
                     typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(AglFormatGrammar), emptyList()) }
@@ -135,9 +136,9 @@ class LanguageRegistryDefault : LanguageRegistry {
         override val style: LanguageDefinition<AglStyleModel, SentenceContext<GrammarItem>> = this@LanguageRegistryDefault.registerFromDefinition(
             LanguageDefinitionFromAsm(
                 identity = styleLanguageIdentity,
+                AglStyleGrammar,
                 buildForDefaultGoal = false,
                 configuration = Agl.configuration {
-                    grammarResolver { ProcessResultDefault(AglStyleGrammar, emptyList()) }
                     targetGrammarName(AglStyleGrammar.name)
                     defaultGoalRuleName(AglStyleGrammar.goalRuleName)
                     typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(it.grammar!!), emptyList()) }
@@ -169,14 +170,16 @@ class LanguageRegistryDefault : LanguageRegistry {
     fun <AsmType : Any, ContextType : Any> register(
         identity: String,
         grammarStr: String?,
+        aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
         buildForDefaultGoal: Boolean,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>
     ): LanguageDefinition<AsmType, ContextType> = this.registerFromDefinition(
         LanguageDefinitionDefault<AsmType, ContextType>(
-            identity,
-            grammarStr,
-            buildForDefaultGoal,
-            configuration
+            identity = identity,
+            grammarStrArg = grammarStr,
+            aglOptions = aglOptions,
+            buildForDefaultGoal = buildForDefaultGoal,
+            configuration = configuration
         )
     )
 
@@ -201,6 +204,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             val placeholder = LanguageDefinitionDefault<AsmType, ContextType>(
                 identity = identity,
                 grammarStrArg = null,
+                aglOptions = Agl.registry.agl.grammar.processor?.optionsDefault(),
                 buildForDefaultGoal = false,
                 configuration = Agl.configurationDefault()
             )
@@ -210,11 +214,12 @@ class LanguageRegistryDefault : LanguageRegistry {
         }
     }
 
-    override fun findGrammarOrNull(namespace: Namespace, name: String): Grammar? =
-        this.findWithNamespaceOrNull<Any, Any>(namespace.qualifiedName, name)?.grammar
+    fun findGrammarOrNull(qualifiedName:String):Grammar? = _grammars[qualifiedName]
 
-    override fun registerIfNot(grammar: Grammar) {
-        val def = findOrPlaceholder<Any, Any>(grammar.qualifiedName)
-        def.grammar = grammar
+    override fun findGrammarOrNull(localNamespace: Namespace, nameOrQName: String): Grammar? =
+        findGrammarOrNull("${localNamespace.qualifiedName}.$nameOrQName") ?: findGrammarOrNull(nameOrQName)
+
+    override fun register(grammar: Grammar) {
+        _grammars[grammar.qualifiedName] = grammar
     }
 }

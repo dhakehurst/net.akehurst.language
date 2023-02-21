@@ -251,7 +251,7 @@ class test_Dot_Singles {
         val goal = "stmt_list"
         val sentence = "a -> b ;"
 
-        val converterToRuntimeRules = ConverterToRuntimeRules{ ProcessResultDefault(processor.grammar!!, emptyList()) }
+        val converterToRuntimeRules = ConverterToRuntimeRules(processor.grammar!!)
         val parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
 
         //fails at season 9 with edge_list

@@ -1605,14 +1605,14 @@ class test_AglGrammar {
 
         val grammarStr = """
             namespace test
-            grammar Inner {
-                B = 'b' ;
-            }
             grammar Outer {
                 S = a gB c ;
                 leaf a = 'a' ;
                 leaf c = 'c' ;
                 gB = Inner::B ;
+            }
+            grammar Inner {
+                B = 'b' ;
             }
         """.trimIndent()
 
@@ -1639,15 +1639,15 @@ class test_AglGrammar {
 
         val grammarStr = """
             namespace test
-            grammar Inner {
-                B = 'b' ;
-                C = 'c' ;
-            }
             grammar Outer {
                 S = A gB D ;
                 leaf A = 'a' ;
                 leaf D = 'd' ;
                 gB = Inner::C;
+            }
+            grammar Inner {
+                B = 'b' ;
+                C = 'c' ;
             }
         """.trimIndent()
 

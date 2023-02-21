@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
-import net.akehurst.language.api.processor.LanguageRegistry
 
 class GrammarDefault(
     override val namespace: Namespace,

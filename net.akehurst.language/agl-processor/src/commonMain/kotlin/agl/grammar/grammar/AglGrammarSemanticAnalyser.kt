@@ -17,20 +17,17 @@
 package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.api.automaton.ParseAction
-import net.akehurst.language.agl.automaton.LookaheadSet
-import net.akehurst.language.agl.automaton.LookaheadSetPart
-import net.akehurst.language.agl.grammar.grammar.asm.EmbeddedDefault
 import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.processor.GrammarRegistry
 
 
-internal class AglGrammarSemanticAnalyser(
-    val languageRegistry: LanguageRegistry
+class AglGrammarSemanticAnalyser(
+    val languageRegistry: GrammarRegistry
 ) : SemanticAnalyser<List<Grammar>, GrammarContext> {
 
     companion object {
@@ -66,7 +63,7 @@ internal class AglGrammarSemanticAnalyser(
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
         this._analyseAmbiguities = options[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? ?: true
 
-        asm.forEach { languageRegistry.registerIfNot(it) }
+        asm.forEach { languageRegistry.register(it) }
 
         val issues = checkGrammar(asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
         return SemanticAnalysisResultDefault(issues)
@@ -145,7 +142,7 @@ internal class AglGrammarSemanticAnalyser(
     private fun checkForAmbiguities(grammar: Grammar, automatonKind: AutomatonKind) {
         val itemsSet = mutableSetOf<LanguageIssue>()
         //TODO: find a way to reuse RuntimeRuleSet rather than re compute here
-        val conv = ConverterToRuntimeRules(){ ProcessResultDefault(grammar, emptyList())}
+        val conv = ConverterToRuntimeRules(grammar)
         val rrs = conv.runtimeRuleSet
         //TODO: pass in goalRuleName
         val goalRuleName = grammar.rule.first { it.isSkip.not() }.name
