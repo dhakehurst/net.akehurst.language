@@ -206,24 +206,22 @@ class SyntaxAnalyserSimple(
                 for (propDecl in elType.property.values) {
                     val propType = propDecl.type
                     val childPath = path + propDecl.name
+                    val propTgt = target.asBranch.nonSkipChildren[propDecl.childIndex]
                     val propertyValue = when (propType) {
                         is AnyType -> {
-                            val ch = target.asBranch.nonSkipChildren[propDecl.childIndex]
-                            this.createValue(ch, childPath, propType)//, childsScope)
+                            this.createValue(propTgt, childPath, propType)//, childsScope)
                         }
 
                         is StringType -> {
-                            val ch = target.asBranch.nonSkipChildren[propDecl.childIndex]
                             val propValue = when {
-                                ch.isLeaf -> this.createValue(ch, childPath, propType)//, childsScope)
-                                ch.isEmptyMatch -> null
-                                else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, propType)//, childsScope)
+                                propTgt.isLeaf -> this.createValue(propTgt, childPath, propType)//, childsScope)
+                                propTgt.isEmptyMatch -> null
+                                else -> this.createValue(propTgt.asBranch.nonSkipChildren[0], childPath, propType)//, childsScope)
                             }
                             propValue
                         }
 
                         is ListSimpleType -> {
-                            val ch = target.asBranch.nonSkipChildren[propDecl.childIndex]
                             val propValue = when {
                                 target.isList -> when {
                                     target.isEmptyLeaf -> emptyList<Any>()
@@ -238,8 +236,8 @@ class SyntaxAnalyserSimple(
                                 }
 
                                 else -> when {
-                                    ch.isEmptyLeaf -> emptyList<Any>()
-                                    else -> ch.asBranch.nonSkipChildren.mapIndexedNotNull { ci, b ->
+                                    propTgt.isEmptyLeaf -> emptyList<Any>()
+                                    else -> propTgt.asBranch.nonSkipChildren.mapIndexedNotNull { ci, b ->
                                         val childPath2 = childPath + ci.toString()
                                         if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
                                             null
@@ -253,34 +251,32 @@ class SyntaxAnalyserSimple(
                         }
 
                         is ElementType -> {
-                            val ch = target.asBranch.nonSkipChildren[propDecl.childIndex]
                             val propValue = when {
-                                propDecl.isNullable && ch.isOptional -> when {
-                                    ch.isEmptyLeaf -> null
-                                    else -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, propType)//, childsScope)
+                                propDecl.isNullable && propTgt.isOptional -> when {
+                                    propTgt.isEmptyLeaf -> null
+                                    else -> this.createValue(propTgt.asBranch.nonSkipChildren[0], childPath, propType)//, childsScope)
                                 }
 
-                                propType.subtypes.isNotEmpty() && ch.asBranch.nonSkipChildren.size == 1 -> this.createValue(
-                                    ch.asBranch.nonSkipChildren[0],
+                                propType.subtypes.isNotEmpty() && propTgt.asBranch.nonSkipChildren.size == 1 -> this.createValue(
+                                    propTgt.asBranch.nonSkipChildren[0],
                                     childPath,
                                     propType,
                                     //childsScope
                                 )
 
-                                else -> this.createValue(ch, childPath, propType)//, childsScope)
+                                else -> this.createValue(propTgt, childPath, propType)//, childsScope)
                             }
                             propValue
                         }
 
                         is TupleType -> {
-                            val ch = target.asBranch.nonSkipChildren[propDecl.childIndex]
                             val propValue = when {
-                                propDecl.isNullable && ch.isOptional -> when {
-                                    ch.isEmptyLeaf -> null
-                                    else -> this.createValue(ch, childPath, propType)//, childsScope)
+                                propDecl.isNullable && propTgt.isOptional -> when {
+                                    propTgt.isEmptyLeaf -> null
+                                    else -> this.createValue(propTgt.asBranch.nonSkipChildren[0], childPath, propType)//, childsScope)
                                 }
                                 //propType.subType.isNotEmpty() && ch.asBranch.nonSkipChildren.size == 1 -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, childsScope)
-                                else -> this.createValue(ch, childPath, propType)//, childsScope)
+                                else -> this.createValue(propTgt, childPath, propType)//, childsScope)
                             }
                             propValue
                         }
@@ -430,7 +426,7 @@ class SyntaxAnalyserSimple(
                                 val propValue = when {
                                     propDecl.isNullable && propTgt.isOptional -> when {
                                         propTgt.isEmptyLeaf -> null
-                                        else -> this.createValue(propTgt, childPath, propType)//, childsScope)
+                                        else -> this.createValue(propTgt.asBranch.nonSkipChildren[0], childPath, propType)//, childsScope)
                                     }
                                     //propType.subType.isNotEmpty() && ch.asBranch.nonSkipChildren.size == 1 -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, childsScope)
                                     else -> this.createValue(propTgt, childPath, propType)//, childsScope)

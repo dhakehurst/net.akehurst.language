@@ -19,6 +19,7 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
+import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
@@ -31,16 +32,24 @@ class test_LanguageDefinitionDefault {
 
     lateinit var sut:LanguageDefinition<AsmSimple, ContextSimple>
 
-    val processorObserverCalled = mutableListOf<Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>>()
-    val processorObserver: (LanguageProcessor<*, *>?, LanguageProcessor<*, *>?) -> Unit = { old, new -> processorObserverCalled.add(Pair(old, new)) }
     val grammarStrObserverCalled = mutableListOf<Pair<String?, String?>>()
     val grammarStrObserver: (String?, String?) -> Unit = { old, new -> grammarStrObserverCalled.add(Pair(old, new)) }
     val grammarObserverCalled = mutableListOf<Pair<Grammar?, Grammar?>>()
     val grammarObserver: (Grammar?, Grammar?) -> Unit = { old, new -> grammarObserverCalled.add(Pair(old, new)) }
+    val scopeStrObserverCalled = mutableListOf<Pair<String?, String?>>()
+    val scopeStrObserver: (String?, String?) -> Unit = { old, new -> scopeStrObserverCalled.add(Pair(old, new)) }
+    val scopeModelObserverCalled = mutableListOf<Pair<ScopeModel?, ScopeModel?>>()
+    val scopeModelObserver: (ScopeModel?, ScopeModel?) -> Unit = { old, new -> scopeModelObserverCalled.add(Pair(old, new)) }
+    val processorObserverCalled = mutableListOf<Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>>()
+    val processorObserver: (LanguageProcessor<*, *>?, LanguageProcessor<*, *>?) -> Unit = { old, new -> processorObserverCalled.add(Pair(old, new)) }
+    val styleStrObserverCalled = mutableListOf<Pair<String?, String?>>()
+    val styleStrObserver: (String?, String?) -> Unit = { old, new -> styleStrObserverCalled.add(Pair(old, new)) }
     val styleObserverCalled = mutableListOf<Pair<AglStyleModel?, AglStyleModel?>>()
     val styleObserver: (AglStyleModel?, AglStyleModel?) -> Unit = { old, new -> styleObserverCalled.add(Pair(old, new)) }
-    val formatObserverCalled = mutableListOf<Pair<AglFormatterModel?, AglFormatterModel?>>()
-    val formatObserver: (AglFormatterModel?, AglFormatterModel?) -> Unit = { old, new -> formatObserverCalled.add(Pair(old, new)) }
+    val formatterStrObserverCalled = mutableListOf<Pair<String?, String?>>()
+    val formatterStrObserver: (String?, String?) -> Unit = { old, new -> formatterStrObserverCalled.add(Pair(old, new)) }
+    val formatterObserverCalled = mutableListOf<Pair<AglFormatterModel?, AglFormatterModel?>>()
+    val formatterObserver: (AglFormatterModel?, AglFormatterModel?) -> Unit = { old, new -> formatterObserverCalled.add(Pair(old, new)) }
 
     @BeforeTest
     fun before() {
@@ -52,18 +61,27 @@ class test_LanguageDefinitionDefault {
             buildForDefaultGoal = false,
             configuration = Agl.configurationDefault()
         )
-        sut.processorObservers.add(processorObserver)
         sut.grammarStrObservers.add(grammarStrObserver)
         sut.grammarObservers.add(grammarObserver)
+        sut.scopeStrObservers.add(scopeStrObserver)
+        sut.scopeModelObservers.add(scopeModelObserver)
+        sut.processorObservers.add(processorObserver)
+        sut.styleStrObservers.add(styleStrObserver)
         sut.styleObservers.add(styleObserver)
-        sut.formatterObservers.add(formatObserver)
+        sut.formatterStrObservers.add(formatterStrObserver)
+        sut.formatterObservers.add(formatterObserver)
     }
 
     private fun reset() {
-        this.processorObserverCalled.clear()
+        this.grammarStrObserverCalled.clear()
         this.grammarObserverCalled.clear()
+        this.scopeStrObserverCalled.clear()
+        this.scopeModelObserverCalled.clear()
+        this.processorObserverCalled.clear()
+        this.styleStrObserverCalled.clear()
         this.styleObserverCalled.clear()
-        this.formatObserverCalled.clear()
+        this.formatterStrObserverCalled.clear()
+        this.formatterObserverCalled.clear()
     }
 
     @Test
@@ -99,10 +117,15 @@ class test_LanguageDefinitionDefault {
         assertNull(sut.grammar)
         assertNull(sut.processor)
         assertTrue(sut.issues.isEmpty())
+        assertTrue(grammarStrObserverCalled.isEmpty())
         assertTrue(grammarObserverCalled.isEmpty())
+        assertTrue(scopeStrObserverCalled.isEmpty())
+        assertTrue(scopeModelObserverCalled.isEmpty())
         assertTrue(processorObserverCalled.isEmpty())
+        assertTrue(styleStrObserverCalled.isEmpty())
         assertTrue(styleObserverCalled.isEmpty())
-        assertTrue(formatObserverCalled.isEmpty())
+        assertTrue(formatterStrObserverCalled.isEmpty())
+        assertTrue(formatterObserverCalled.isEmpty())
     }
 
     @Test
@@ -117,11 +140,15 @@ class test_LanguageDefinitionDefault {
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^xxxxx", setOf("'namespace'"))
             ), sut.issues
         )
-        assertTrue(grammarObserverCalled.isEmpty())
         assertEquals(listOf(Pair<String?, String?>(null,g)),grammarStrObserverCalled)
-        assertEquals(listOf(Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(null, sut.processor)), processorObserverCalled)
-        assertTrue(styleObserverCalled.isEmpty())
-        assertTrue(formatObserverCalled.isEmpty())
+        assertEquals(emptyList(), grammarObserverCalled)
+        assertEquals(emptyList(), scopeStrObserverCalled)
+        assertEquals(emptyList(), scopeModelObserverCalled)
+        assertEquals(emptyList(), processorObserverCalled)
+        assertEquals(emptyList(), styleStrObserverCalled)
+        assertEquals(emptyList(), styleObserverCalled)
+        assertEquals(emptyList(), formatterStrObserverCalled)
+        assertEquals(emptyList(), formatterObserverCalled)
     }
 
     @Test
@@ -129,23 +156,29 @@ class test_LanguageDefinitionDefault {
         val g = "namespace ns grammar Test extends XX { S = 'b'; }"
         sut.grammarStr = g
         assertEquals(g, sut.grammarStr)
-        assertNull(sut.grammar)
+        assertNull(sut.grammar) // should be a grammar...though it is invalid
         assertNull(sut.processor)
         assertEquals(
             listOf(
                 LanguageIssue(
                     LanguageIssueKind.ERROR,
-                    LanguageProcessorPhase.SYNTAX_ANALYSIS,
+                    LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                     InputLocation(26, 27, 1, 11),
-                    "Trying to extend but failed to find grammar 'XX' as a qualified name or in namespace 'ns'",
+                    "Grammar 'XX' not found",
                     null
                 )
             ), sut.issues
         )
-        assertTrue(grammarObserverCalled.isEmpty())
-        assertTrue(processorObserverCalled.isEmpty())
-        assertTrue(styleObserverCalled.isEmpty())
-        assertTrue(formatObserverCalled.isEmpty())
+
+        assertEquals(listOf(Pair<String?, String?>(null,g)),grammarStrObserverCalled)
+        assertEquals(emptyList(), grammarObserverCalled)
+        assertEquals(emptyList(), scopeStrObserverCalled)
+        assertEquals(emptyList(), scopeModelObserverCalled)
+        assertEquals(emptyList(), processorObserverCalled)
+        assertEquals(emptyList(), styleStrObserverCalled)
+        assertEquals(emptyList(), styleObserverCalled)
+        assertEquals(emptyList(), formatterStrObserverCalled)
+        assertEquals(emptyList(), formatterObserverCalled)
     }
 
     @Test
@@ -157,13 +190,18 @@ class test_LanguageDefinitionDefault {
         assertNull(sut.processor)
         assertEquals(
             listOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(32, 33, 1, 1), "Grammar Rule with name 'b' not found", null)
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(32, 33, 1, 1), "GrammarRule 'b' not found in grammar 'Test'", null)
             ), sut.issues
         )
-        assertTrue(grammarObserverCalled.isEmpty())
-        assertTrue(processorObserverCalled.isEmpty())
-        assertTrue(styleObserverCalled.isEmpty())
-        assertTrue(formatObserverCalled.isEmpty())
+        assertEquals(listOf(Pair<String?, String?>(null,g)),grammarStrObserverCalled)
+        assertEquals(emptyList(), grammarObserverCalled)
+        assertEquals(emptyList(), scopeStrObserverCalled)
+        assertEquals(emptyList(), scopeModelObserverCalled)
+        assertEquals(emptyList(), processorObserverCalled)
+        assertEquals(emptyList(), styleStrObserverCalled)
+        assertEquals(emptyList(), styleObserverCalled)
+        assertEquals(emptyList(), formatterStrObserverCalled)
+        assertEquals(emptyList(), formatterObserverCalled)
     }
 
     @Test
@@ -175,10 +213,16 @@ class test_LanguageDefinitionDefault {
         assertNotNull(sut.grammar)
         assertNotNull(sut.processor)
         assertTrue(sut.issues.isEmpty())
+
+        assertEquals(listOf(Pair<String?, String?>(null,g)),grammarStrObserverCalled)
         assertEquals(listOf(Pair<Grammar?, Grammar?>(null, sut.grammar)), grammarObserverCalled)
+        assertEquals(emptyList(), scopeStrObserverCalled)
+        assertEquals(emptyList(), scopeModelObserverCalled)
         assertEquals(listOf(Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(null, sut.processor)), processorObserverCalled)
-        assertTrue(styleObserverCalled.isEmpty())
-        assertTrue(formatObserverCalled.isEmpty())
+        assertEquals(emptyList(), styleStrObserverCalled)
+        assertEquals(emptyList(), styleObserverCalled)
+        assertEquals(emptyList(), formatterStrObserverCalled)
+        assertEquals(emptyList(), formatterObserverCalled)
     }
 
     @Test
@@ -194,10 +238,16 @@ class test_LanguageDefinitionDefault {
         assertNull(sut.grammar)
         assertNull(sut.processor)
         assertTrue(sut.issues.isEmpty())
+
+        assertEquals(listOf(Pair<String?, String?>(g,null)),grammarStrObserverCalled)
         assertEquals(listOf(Pair<Grammar?, Grammar?>(oldGrammar, null)), grammarObserverCalled)
+        assertEquals(emptyList(), scopeStrObserverCalled)
+        assertEquals(emptyList(), scopeModelObserverCalled)
         assertEquals(listOf(Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(oldProc, null)), processorObserverCalled)
-        assertTrue(styleObserverCalled.isEmpty())
-        assertTrue(formatObserverCalled.isEmpty())
+        assertEquals(emptyList(), styleStrObserverCalled)
+        assertEquals(emptyList(), styleObserverCalled)
+        assertEquals(emptyList(), formatterStrObserverCalled)
+        assertEquals(emptyList(), formatterObserverCalled)
     }
 
     @Test
@@ -214,10 +264,16 @@ class test_LanguageDefinitionDefault {
         assertNotNull(sut.grammar)
         assertNotNull(sut.processor)
         assertTrue(sut.issues.isEmpty())
-        assertTrue(grammarObserverCalled.isEmpty())
-        assertTrue(processorObserverCalled.isEmpty())
-        assertTrue(styleObserverCalled.isEmpty())
-        assertTrue(formatObserverCalled.isEmpty())
+
+        assertEquals(emptyList(),grammarStrObserverCalled)
+        assertEquals(emptyList(), grammarObserverCalled)
+        assertEquals(emptyList(), scopeStrObserverCalled)
+        assertEquals(emptyList(), scopeModelObserverCalled)
+        assertEquals(emptyList(), processorObserverCalled)
+        assertEquals(emptyList(), styleStrObserverCalled)
+        assertEquals(emptyList(), styleObserverCalled)
+        assertEquals(emptyList(), formatterStrObserverCalled)
+        assertEquals(emptyList(), formatterObserverCalled)
     }
 
     @Test
@@ -234,15 +290,21 @@ class test_LanguageDefinitionDefault {
         assertNotNull(sut.grammar)
         assertNotNull(sut.processor)
         assertTrue(sut.issues.isEmpty())
+
+        assertEquals(listOf(Pair<String?, String?>(g1,g2)),grammarStrObserverCalled)
         assertEquals(listOf(Pair<Grammar?, Grammar?>(oldGrammar, sut.grammar)), grammarObserverCalled)
+        assertEquals(emptyList(), scopeStrObserverCalled)
+        assertEquals(emptyList(), scopeModelObserverCalled)
         assertEquals(
             listOf(
                 Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(oldProc, null),
                 Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(null, sut.processor)
             ), processorObserverCalled
         )
-        assertTrue(styleObserverCalled.isEmpty())
-        assertTrue(formatObserverCalled.isEmpty())
+        assertEquals(emptyList(), styleStrObserverCalled)
+        assertEquals(emptyList(), styleObserverCalled)
+        assertEquals(emptyList(), formatterStrObserverCalled)
+        assertEquals(emptyList(), formatterObserverCalled)
     }
 
     @Test

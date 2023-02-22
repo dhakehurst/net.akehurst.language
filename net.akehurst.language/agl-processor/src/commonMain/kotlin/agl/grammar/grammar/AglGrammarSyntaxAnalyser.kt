@@ -161,26 +161,9 @@ internal class AglGrammarSyntaxAnalyser(
             emptyList<GrammarReference>()
         } else {
             val extendNameList = children[0].branchNonSkipChildren[0].branchNonSkipChildren.map { it.nonSkipMatchedText }
-            val extendedGrammars = extendNameList.mapNotNull {
+            val extendedGrammars = extendNameList.map {
                 val qn = localNamespace.qualifiedName + "." + it
-                GrammarReferenceDefault(localNamespace, it)
-                /*
-                val def = this.languageRegistry.findWithNamespaceOrNull<Any, Any>(localNamespace.qualifiedName, it)
-                if (null == def) {
-                    _issues.add(
-                        LanguageIssue(
-                            LanguageIssueKind.ERROR,
-                            LanguageProcessorPhase.SYNTAX_ANALYSIS,
-                            target.location,
-                            "Trying to extend but failed to find grammar '$it' as a qualified name or in namespace '${localNamespace.qualifiedName}'",
-                            null
-                        )
-                    )
-                    null
-                } else {
-                    def.grammar
-                }
-                 */
+                GrammarReferenceDefault(localNamespace, it).also { this.locationMap[it] = target.location }
             }
             extendedGrammars
         }
@@ -372,7 +355,7 @@ internal class AglGrammarSyntaxAnalyser(
         //val def = this.languageRegistry.findWithNamespaceOrNull<Any, Any>(thisGrammar.namespace.qualifiedName, embeddedGrammarRef)
         //    ?: error("Trying to embed but failed to find grammar '$embeddedGrammarRef' as a qualified name or in namespace '${thisGrammar.namespace.qualifiedName}'")
         //val embeddedGrammar = def.processor!!.grammar
-        val embeddedGrammarRef = GrammarReferenceDefault(thisGrammar.namespace, embeddedGrammarStr)
+        val embeddedGrammarRef = GrammarReferenceDefault(thisGrammar.namespace, embeddedGrammarStr).also { this.locationMap[it] = target.location }
         return EmbeddedDefault(embeddedStartRuleRef, embeddedGrammarRef).also { this.locationMap[it] = target.location }
     }
 

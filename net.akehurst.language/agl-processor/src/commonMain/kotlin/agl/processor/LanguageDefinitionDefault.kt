@@ -37,10 +37,11 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     override var grammarStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             val res = Agl.grammarFromString<List<Grammar>, GrammarContext>(newValue, aglOptions)
-            this.grammar = if(null==targetGrammarName) {
-                res.asm?.firstOrNull()
-            } else {
-                res.asm?.firstOrNull { it.name == this.targetGrammarName }
+            this._issues.addAll(res.issues)
+            this.grammar = when {
+                res.issues.any { it.kind == LanguageIssueKind.ERROR } -> null
+                null == targetGrammarName ->res.asm?.firstOrNull()
+                else -> res.asm?.firstOrNull { it.name == this.targetGrammarName }
             }
             grammarStrObservers.forEach { it.invoke(oldValue, newValue) }
         }
