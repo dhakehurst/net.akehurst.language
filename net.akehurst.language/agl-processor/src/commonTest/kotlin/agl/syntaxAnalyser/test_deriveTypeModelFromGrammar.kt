@@ -648,7 +648,7 @@ println(actual.asString())
                 propertyStringType("a", false, 0)
                 property(
                     "\$group", UnnamedSuperTypeType(
-                        orderedSetOf(
+                        listOf(
                             TupleType {
                                 PropertyDeclaration(this, "b", StringType, false, 0)
                                 PropertyDeclaration(this, "c", StringType, false, 1)
@@ -688,7 +688,7 @@ println(actual.asString())
             elementType("S") {
                 propertyStringType("a", false, 0)
                 property(
-                    "\$group", UnnamedSuperTypeType(orderedSetOf(
+                    "\$group", UnnamedSuperTypeType(listOf(
                         TupleType {
                             PropertyDeclaration(this, "b", StringType, false, 0)
                             PropertyDeclaration(this, "c", StringType, false, 1)

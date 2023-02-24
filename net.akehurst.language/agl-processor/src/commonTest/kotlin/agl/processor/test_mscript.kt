@@ -116,7 +116,7 @@ grammar Mscript {
     leaf DOUBLE_QUOTE_STRING = "\"(?:[^\"\\]|\\.)*\"" ;
 }
     """.trimIndent()
-        val sut = Agl.processorFromString<AsmSimple, Any>(grammarStr)
+        val sut = Agl.processorFromStringDefault(grammarStr)
     }
 
     @Test

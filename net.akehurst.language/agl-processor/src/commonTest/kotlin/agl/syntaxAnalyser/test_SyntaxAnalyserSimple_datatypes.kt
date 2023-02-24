@@ -83,6 +83,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             grammarStr,
             Agl.configuration {
                 scopeModelResolver { ProcessResultDefault(scopeModel, emptyList()) }
+                typeModelResolver { ProcessResultDefault(typeModel, emptyList()) }
                 syntaxAnalyserResolver {  ProcessResultDefault(syntaxAnalyser, emptyList()) }
             }
         ).also {

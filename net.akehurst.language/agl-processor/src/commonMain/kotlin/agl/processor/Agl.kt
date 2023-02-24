@@ -124,7 +124,7 @@ object Agl {
                 error("Unable to create processor for $grammarDefinitionStr")
             } else {
                 val grammar = if(null==configuration?.targetGrammarName) {
-                    res.asm?.firstOrNull() ?: error("Unable to create processor for $grammarDefinitionStr")
+                    res.asm?.lastOrNull() ?: error("Unable to create processor for $grammarDefinitionStr")
                 } else {
                     res.asm?.firstOrNull{it.name==configuration.targetGrammarName} ?: error("Unable to find target grammar '${configuration.targetGrammarName}' in $grammarDefinitionStr")
                 }

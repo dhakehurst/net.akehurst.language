@@ -16,8 +16,8 @@
 
 package net.akehurst.language.api.typeModel
 
-import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertEquals
 import kotlin.test.assertSame
 import kotlin.test.fail
 

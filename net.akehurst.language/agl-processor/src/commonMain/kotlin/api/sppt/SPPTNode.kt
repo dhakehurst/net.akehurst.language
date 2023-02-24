@@ -123,6 +123,11 @@ interface SPPTNode {
     val isList:Boolean
 
     /**
+     * does the node represent and embedded tree from another parse
+     */
+    val isEmbedded:Boolean
+
+    /**
      *
      *  true if this node is a branch
      */

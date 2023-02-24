@@ -88,6 +88,8 @@ internal class RuntimeParser(
         } else {
             val skipLhsp = gState.rulePositions.map { this.stateSet.firstOf.expectedAt(it, LookaheadSetPart.EOT) }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
             val endOfSkipLookaheadSet = this.stateSet.createLookaheadSet(skipLhsp)
+            //substitute endOfSkipLookaheadSet.EOT with possibleEndOfText
+            endOfSkipLookaheadSet.resolve(eot, rt)
             this.tryParseSkipUntilNone(setOf(endOfSkipLookaheadSet), startPosition, normalArgs) //TODO: think this might allow some wrong things, might be a better way
         }
         val runtimeLookahead = setOf(LookaheadSet.EOT)

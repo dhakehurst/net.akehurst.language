@@ -39,10 +39,13 @@ class test_Dot_SyntaxAnalyser {
     @Test
     fun typeModel() {
         val actual = processor.typeModel
-        val expected = net.akehurst.language.api.typeModel.typeModel("","") {
-            elementType("script") {
-                // script = statementList ;
-                propertyListSeparatedTypeOf("statementList", "line", StringType, false, 0)
+        val expected = net.akehurst.language.api.typeModel.typeModel("net.akehurst.language.example.dot","Dot") {
+            elementType("graph") {
+                // graph = STRICT? type ID? '{' stmt_list '}' ;
+                propertyStringType("STRICT", true, 0)
+                propertyStringType("type", false, 1)
+                propertyStringType("ID", true, 2)
+                propertyListTypeOf("stmt_list", "stmt1",false, 3)
             }
             elementType("statementList") {
                 // statementList = [line / "\R"]* ;
@@ -185,8 +188,8 @@ class test_Dot_SyntaxAnalyser {
 
         val result = processor.process(sentence)
         val actual = result.asm?.rootElements?.firstOrNull()
-        assertNotNull(actual)
         assertEquals(emptyList(), result.issues)
+        assertNotNull(actual)
 
         val expected = asmSimple {
             root("graph") {
@@ -195,17 +198,13 @@ class test_Dot_SyntaxAnalyser {
                 propertyString("ID", null)
                 propertyListOfElement("stmt_list") {
                     element("stmt1") {
-                        propertyElement("stmt") {
-                            propertyUnnamedElement("node_stmt") {
+                        propertyElementExplicitType("stmt","node_stmt") {
                                 propertyElement("node_id") {
-                                    propertyElement("ID") {
-                                        propertyUnnamedString("a")
-                                    }
+                                    propertyString("ID","a")
                                     propertyString("port", null)
                                 }
                                 propertyString("attr_lists", null)
                             }
-                        }
                         propertyUnnamedString(null)
                     }
                 }

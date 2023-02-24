@@ -53,11 +53,7 @@ internal class RuntimeRule(
 
     val isGoal get() = this.rhs is RuntimeRuleRhsGoal
     val isEmptyTerminal get() = this.rhs is RuntimeRuleRhsEmpty
-    val isEmbedded
-        get() = when (this.rhs) {
-            is RuntimeRuleRhsEmbedded -> true
-            else -> false
-        }
+    val isEmbedded get() = this.rhs is RuntimeRuleRhsEmbedded
     val isPattern get() = this.rhs is RuntimeRuleRhsPattern
 
     /**

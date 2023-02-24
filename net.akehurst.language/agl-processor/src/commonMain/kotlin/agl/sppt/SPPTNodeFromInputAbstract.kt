@@ -18,6 +18,7 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsList
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
@@ -54,6 +55,8 @@ import net.akehurst.language.api.sppt.*
     override val isSkip: Boolean get() = runtimeRule.isSkip
 
     override val isList: Boolean get() = this.runtimeRule.rhs is RuntimeRuleRhsList
+
+    override val isEmbedded: Boolean get() = this.runtimeRule.isEmbedded
 
     override val isOptional: Boolean get() = this.runtimeRule.rhs is RuntimeRuleRhsList
             && (this.runtimeRule.rhs as RuntimeRuleRhsList).min==0

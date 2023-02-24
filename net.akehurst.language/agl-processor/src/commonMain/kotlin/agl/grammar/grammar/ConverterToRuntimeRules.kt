@@ -192,7 +192,7 @@ internal class ConverterToRuntimeRules(
 
         is Group -> when (target.choice.alternative.size) {
             0 -> error("Should not happen")
-            1 -> this.createRhs(rule, target.choice.alternative[0], arg)
+   //         1 -> this.createRhs(rule, target.choice.alternative[0], arg)
             else -> {
                 val groupRuleName = this._pseudoRuleNameGenerator.nameForRuleItem(target)// this.createGroupRuleName(arg)
                 this.createRhs(rule, target.choice, groupRuleName)
@@ -201,7 +201,7 @@ internal class ConverterToRuntimeRules(
 
         is Concatenation -> when (target.items.size) {
             0 -> error("Should not happen")
-            1 -> this.createRhs(rule, target.items[0], arg)
+   //         1 -> this.createRhs(rule, target.items[0], arg)
             else -> {
                 val items = target.items.map { this.visitConcatenationItem(it, arg) }
                 RuntimeRuleRhsConcatenation(rule, items)
@@ -285,15 +285,6 @@ internal class ConverterToRuntimeRules(
     private fun visitGroup(target: Group, arg: String): RuntimeRule {
         return when (target.choice.alternative.size) {
             0 -> error("Should not happen")
-            //1 -> {
-            //    val alt = target.choice.alternative[0]
-            //    when(alt.items.size) {
-            //        0 -> error("Should not happen")
-            //         1 ->
-            //            this.visitChoiceAlternative(, arg)
-            //        else ->
-            //    }
-            //}
             else -> {
                 val groupRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)//createGroupRuleName(arg)
                 this.createPseudoRuleForChoice(target.choice, groupRuleName)
@@ -321,10 +312,6 @@ internal class ConverterToRuntimeRules(
         return nrule
     }
 
-    //private fun createRhsForEmbedded() {
-    //    val item = this.visitEmbedded(target, arg)
-    //    RuntimeRuleRhs(RuntimeRuleRhsItemsKind.CONCATENATION, RuntimeRuleChoiceKind.NONE, RuntimeRuleListKind.NONE, -1, 0, arrayOf(item))
-    //}
 
     private fun createRhsForChoice(rule: RuntimeRule, target: Choice, arg: String): RuntimeRuleRhs {
         return when (target.alternative.size) {

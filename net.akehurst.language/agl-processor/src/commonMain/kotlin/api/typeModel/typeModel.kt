@@ -53,7 +53,7 @@ sealed class RuleType {
 }
 
 interface WithSubtypes {
-    val subtypes: OrderedSet<RuleType>
+    val subtypes: List<RuleType>
 }
 
 object StringType : RuleType() {
@@ -80,7 +80,10 @@ object NothingType : RuleType() {
     override fun toString(): String = name
 }
 
-class UnnamedSuperTypeType(override val subtypes: OrderedSet<RuleType>) : RuleType(), WithSubtypes {
+class UnnamedSuperTypeType(
+    // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
+    override val subtypes: List<RuleType>
+) : RuleType(), WithSubtypes {
     companion object {
         const val INSTANCE_NAME = "UnnamedSuperType"
     }
@@ -180,7 +183,8 @@ data class ElementType(
 ) : StructuredRuleType(), WithSubtypes {
 
     val supertypes: Set<ElementType> = mutableSetOf<ElementType>()
-    override val subtypes: MutableOrderedSet<ElementType> = mutableOrderedSetOf<ElementType>()
+    // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
+    override val subtypes: MutableList<ElementType> = mutableListOf<ElementType>()
     override val property = mutableMapOf<String, PropertyDeclaration>()
     private val _propertyIndex = mutableListOf<PropertyDeclaration>()
 
@@ -188,7 +192,7 @@ data class ElementType(
 
     fun addSuperType(type: ElementType) {
         (this.supertypes as MutableSet).add(type)
-        (type.subtypes as MutableOrderedSet).add(this)
+        (type.subtypes as MutableList).add(this)
     }
 
     override fun getPropertyByIndex(i: Int): PropertyDeclaration = _propertyIndex[i]

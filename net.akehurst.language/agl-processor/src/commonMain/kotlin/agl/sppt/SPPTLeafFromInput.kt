@@ -59,6 +59,7 @@ import net.akehurst.language.api.sppt.*
             override val isEmptyMatch: Boolean get() = TODO("not implemented")
             override val isLeaf: Boolean get() = TODO("not implemented")
             override val isList: Boolean get() = TODO("not implemented")
+            override val isEmbedded: Boolean get() = TODO("not implemented")
             override val isOptional: Boolean get() = TODO("not implemented")
             override val isExplicitlyNamed: Boolean get() = TODO("not implemented")
             override val isBranch: Boolean get() = TODO("not implemented")
