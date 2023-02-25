@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
+import net.akehurst.language.agl.runtime.graph.CompleteNodeIndex
 import net.akehurst.language.agl.runtime.graph.TreeData
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.sppt.SPPTBranch
@@ -54,6 +55,32 @@ import net.akehurst.language.api.sppt.SPPTNode
                     }
                 }
                 when {
+                    this.isEmbedded -> when {
+                        null != child.treeData.initialSkip -> {
+                            val td = child.treeData.initialSkip!!
+                            val goalChildren = child.treeData.childrenFor(
+                                child.treeData.root!!.firstRule,
+                                child.treeData.root!!.startPosition,
+                                child.treeData.root!!.nextInputPosition
+                            )
+                            val userGoal = goalChildren.first().second[0]
+                            val startPositionBeforeInitialSkip = td.startPosition ?: userGoal.startPosition
+
+                            val sg = td.completeChildren[td.root]!!.values.first().get(0)
+                            val skipChildren = td.completeChildren[sg]!!.values.first().map {
+                                td.completeChildren[it]!!.values.first().get(0)
+                            }
+                            val nug = CompleteNodeIndex(child.treeData, userGoal.state, startPositionBeforeInitialSkip, userGoal.nextInputPosition, td.nextInputPosition!!, null)
+                            val userGoalChildren = skipChildren + child.treeData.completeChildren[userGoal]!!.values.first()
+                            child.treeData.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
+                            listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, nug.startPosition, nug.nextInputPosition, -1))
+                        }
+                        else -> {
+                            val eolPositions = emptyList<Int>() //TODO calc ?
+                            listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
+                        }
+                    }
+
                     child.isEmbedded -> when {
                         child.hasSkipData -> {
                             val skipData = this._treeData.skipChildrenAfter(child)
@@ -83,13 +110,19 @@ import net.akehurst.language.api.sppt.SPPTNode
                                 }
                             }
                             val eolPositions = emptyList<Int>() //TODO calc ?
-                            listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, child.startPosition, child.nextInputPosition, -1)) + skipNodes
+                            listOf(
+                                SPPTBranchFromTreeData(
+                                    child.treeData,
+                                    this.input,
+                                    rp.rule as RuntimeRule,
+                                    rp.option,
+                                    child.startPosition,
+                                    child.nextInputPosition,
+                                    -1
+                                )
+                            ) + skipNodes
                         }
-
-                        else -> {
-                            val eolPositions = emptyList<Int>() //TODO calc ?
-                            listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
-                        }
+                        else -> listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
                     }
 
                     rp.isTerminal -> when {
