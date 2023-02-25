@@ -67,7 +67,8 @@ internal class FirstOf(
                                             doneRp,
                                             hashMapOf()
                                         )
-                                        result = result.union(f.result)
+                                        val embSkipTerms = rhs.embeddedRuntimeRuleSet.skipTerminals
+                                        result = result.union(f.result).union(LookaheadSetPart.createFromRuntimeRules(embSkipTerms))
                                         if (f.needsFirstOfParentNext) {
                                             needsNext = true
                                         }

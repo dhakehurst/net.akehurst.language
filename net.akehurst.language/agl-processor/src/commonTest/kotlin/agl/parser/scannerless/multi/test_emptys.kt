@@ -64,12 +64,12 @@ internal class test_emptys : test_ScanOnDemandParserAbstract() {
     @Test
     fun a_ass_b() {
         val goal = "TR"
-        val sentence = "a=b"
+        val sentence = "/a=b"
 
         val expected = """
             TR {
-              optST { ST { ID:'a' } }
-              optRE { §empty }
+              optST { §empty }
+              optRE { RE { '/' EX { ASS { ID:'a' '=' ID:'b' } } } }
               optTP { §empty }
             }
         """.trimIndent()

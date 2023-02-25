@@ -86,13 +86,16 @@ internal class RuntimeParser(
         val initialSkipData = if (this.stateSet.isSkip) {
             null
         } else {
-            val skipLhsp = gState.rulePositions.map { this.stateSet.firstOf.expectedAt(it, LookaheadSetPart.EOT) }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
+            //val skipLhsp = gState.rulePositions.map { this.stateSet.firstOf.expectedAt(it, LookaheadSetPart.EOT) }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
+            val skipLhsp = gState.rulePositions.flatMap {
+                possibleEndOfText.map {eot ->
+                    this.stateSet.firstOf.expectedAt(it, eot.part)
+                }
+            }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
             val endOfSkipLookaheadSet = this.stateSet.createLookaheadSet(skipLhsp)
-            //substitute endOfSkipLookaheadSet.EOT with possibleEndOfText
-            endOfSkipLookaheadSet.resolve(eot, rt)
             this.tryParseSkipUntilNone(setOf(endOfSkipLookaheadSet), startPosition, normalArgs) //TODO: think this might allow some wrong things, might be a better way
         }
-        val runtimeLookahead = setOf(LookaheadSet.EOT)
+        val runtimeLookahead = possibleEndOfText//setOf(LookaheadSet.EOT)
         val gn = this.graph.start(gState, startPosition, runtimeLookahead, initialSkipData) //TODO: remove LH
 //        this.addToLastGrown(gn)
     }
