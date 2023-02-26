@@ -18,33 +18,29 @@ package net.akehurst.language.parser.scanondemand.embedded
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
+internal class test_embeddedInnerOptional : test_ScanOnDemandParserAbstract() {
 
     private companion object {
         // two grammars, B embedded in S
         // Bs = B+ ;
         // B = b ;
         val Inner = runtimeRuleSet {
-            pattern("WSi","\\s+",true)
-            multi("Bs",1,-1,"B")
+            literal("US","_",true)
+            multi("optB",0,1,"B")
             concatenation("B") { literal("b") }
         }
 
         // S = a gB c ;
         // gB = Inner::B ;
         val S = runtimeRuleSet {
-            pattern("WSo","\\s+",true)
-            concatenation("COMMENT", true) { pattern("/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/") }
-            concatenation("S") { literal("a"); ref("gB"); literal("c"); }
-            embedded("gB", Inner, Inner.findRuntimeRule("Bs"))
+            literal("DT",".",true)
+            concatenation("S") { literal("a"); ref("I"); literal("c"); }
+            embedded("I", Inner, Inner.findRuntimeRule("optB"))
         }
         val goal = "S"
     }
@@ -83,7 +79,7 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'"))
+                parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'", "'c'",""))
             ), issues
         )
     }
@@ -109,7 +105,7 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               'a'
-              gB { Inner::Bs { B{ 'b' } } }
+              I { Inner::optB { B{ 'b' } } }
               'c'
             }
         """.trimIndent()
@@ -128,14 +124,14 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun abbc() {
+    fun ac() {
         val goal = "S"
-        val sentence = "abbc"
+        val sentence = "ac"
 
         val expected = """
             S {
               'a'
-              gB { Inner::Bs { B{ 'b' } B { 'b' } } }
+              I { Inner::optB { §empty } }
               'c'
             }
         """.trimIndent()
@@ -154,14 +150,17 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun ab_bc() {
+    fun aubuc() {
         val goal = "S"
-        val sentence = "ab bc"
+        val sentence = "a_b_c"
 
         val expected = """
             S {
               'a'
-              gB { Inner::Bs { B{ 'b' WSi:' ' } B { 'b' } } }
+              I { Inner::optB {
+               US:'_'
+               B{ 'b' US:'_' }
+              } }
               'c'
             }
         """.trimIndent()
@@ -180,16 +179,17 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun a_b_bc() {
+    fun adbdc() {
         val goal = "S"
-        val sentence = " a b bc"
+        val sentence = "a.b.c"
 
         val expected = """
             S {
-              WSo : ' '
-              'a'
-              WSo : ' '
-              gB { Inner::Bs { B{ 'b' WSi:' ' } B { 'b' } } }
+              'a' DT:'.'
+              I { Inner::optB {
+               B{ 'b' }
+              } }
+              DT:'.'
               'c'
             }
         """.trimIndent()
@@ -206,104 +206,4 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
             expectedTrees = arrayOf(expected)
         )
     }
-
-    @Test
-    fun a_b_b_c() {
-        val goal = "S"
-        val sentence = " a b b c"
-
-        val expected = """
-            S {
-              WSo : ' '
-              'a'
-              WSo : ' '
-              gB { Inner::Bs { B{ 'b' WSi:' ' } B { 'b' WSi:' ' } } }
-              'c'
-            }
-        """.trimIndent()
-
-        super.test2(
-            rrs = S,
-            embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
-            ),
-            goal = goal,
-            sentence = sentence,
-            expectedNumGSSHeads = 1,
-            printAutomaton = true,
-            expectedTrees = arrayOf(expected)
-        )
-    }
-
-    @Test
-    fun aCb_b_c() {
-        val goal = "S"
-        val sentence = " a/*c*/b b c"
-
-        val expected = """
-            S {
-              WSo : ' '
-              'a'
-              COMMENT { "/\*[^*]*\*+(?:[^/*][^*]*\*+)*/" : '/*c*/' }
-              gB { Inner::Bs { B{ 'b' WSi:' ' } B { 'b' WSi:' ' } } }
-              'c'
-            }
-        """.trimIndent()
-
-        super.test2(
-            rrs = S,
-            embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
-            ),
-            goal = goal,
-            sentence = sentence,
-            expectedNumGSSHeads = 1,
-            printAutomaton = true,
-            expectedTrees = arrayOf(expected)
-        )
-    }
-
-    @Test
-    fun a_bCb_c_fails() {
-        val goal = "S"
-        val sentence = " a b/*c*/b c"
-
-        val (sppt, issues) = super.testFail(S, goal, sentence, expectedNumGSSHeads = 1)
-        assertNull(sppt)
-        assertEquals(
-            listOf(
-                parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'b'","'c'"))
-            ), issues
-        )
-    }
-
-    @Test
-    fun a_b_bCc() {
-        val goal = "S"
-        val sentence = " a b b/*c*/c"
-
-        val expected = """
-            S {
-              WSo : ' '
-              'a'
-              WSo : ' '
-              gB { Inner::Bs { B{ 'b' WSi:' ' } B { 'b' } } }
-              COMMENT { "/\*[^*]*\*+(?:[^/*][^*]*\*+)*/" : '/*c*/' }
-              'c'
-            }
-        """.trimIndent()
-
-        super.test2(
-            rrs = S,
-            embeddedRuntimeRuleSets = mapOf(
-                "Inner" to Inner
-            ),
-            goal = goal,
-            sentence = sentence,
-            expectedNumGSSHeads = 1,
-            printAutomaton = true,
-            expectedTrees = arrayOf(expected)
-        )
-    }
-
 }

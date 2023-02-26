@@ -35,7 +35,19 @@ internal class FirstOf(
             else -> {
                 // this will iterate .next() until end of rule so no need to do it here
                 val res = firstOfRpNotEmpty(rulePosition, mutableMapOf(), hashMapOf<Int,Boolean>())
-                res.endResult(ifReachedEnd)
+                when {
+                    res.needsFirstOfParentNext -> when {
+                        rulePosition.isAtEnd -> res.result.union(ifReachedEnd)
+                        else -> {
+                            val ne = rulePosition.next()
+                                .map { nrp -> this.expectedAt(nrp,ifReachedEnd) }
+                                .fold(LookaheadSetPart.EMPTY) {acc,it -> acc.union(it)}
+                            res.result.union(ne)
+                        }
+                    }
+                    else -> res.result
+                }
+                //res.endResult(ifReachedEnd)
             }
         }
     }
