@@ -15,13 +15,28 @@
  */
 package net.akehurst.language.agl.grammar.style
 
+import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.processor.ProcessResult
+import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.style.AglStyleRule
 
 internal class AglStyleModelDefault(
     override val rules: List<AglStyleRule>
 ) : AglStyleModel {
-
+    companion object {
+        fun fromString(context: SentenceContext<GrammarItem>, aglStyleModelSentence:String): ProcessResult<AglStyleModel> {
+            val proc = Agl.registry.agl.style.processor ?: error("Scopes language not found!")
+            return proc.process(
+                sentence = aglStyleModelSentence,
+                Agl.options {
+                    syntaxAnalysis {
+                        context(context)
+                    }
+                }
+            )
+        }
+    }
 }

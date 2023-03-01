@@ -192,7 +192,7 @@ grammar Mdl {
 
         val expected = processor.spptParser.parse(
             """
-            stringList { DOUBLE_QUOTE_STRING : '"hello"' }
+            stringList { §stringList§multi1 { DOUBLE_QUOTE_STRING : '"hello"' } }
         """.trimIndent()
         )
 
@@ -207,10 +207,10 @@ grammar Mdl {
 
         val expected = processor.spptParser.parse(
             """
-            stringList {
+            stringList { §stringList§multi1 {
                 DOUBLE_QUOTE_STRING : '"hello"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"world"'
-            }
+            } }
         """.trimIndent()
         )
 
@@ -225,11 +225,11 @@ grammar Mdl {
 
         val expected = processor.spptParser.parse(
             """
-            stringList {
+            stringList { §stringList§multi1 {
                 DOUBLE_QUOTE_STRING : '"aa"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"bb"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"cc"'
-            }
+            } }
         """.trimIndent()
         )
 
@@ -259,10 +259,10 @@ grammar Mdl {
 
         val expected = processor.spptParser.parse(
             """
-            value { stringList {
+            value { stringList { §stringList§multi1 {
                 DOUBLE_QUOTE_STRING : '"hello"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"world"'
-            } }
+            } } }
         """.trimIndent()
         )
 
@@ -277,11 +277,11 @@ grammar Mdl {
 
         val expected = processor.spptParser.parse(
             """
-            value { stringList {
+            value { stringList { §stringList§multi1 {
                 DOUBLE_QUOTE_STRING : '"aa"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"bb"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"cc"'
-            } }
+            } } }
         """.trimIndent()
         )
 

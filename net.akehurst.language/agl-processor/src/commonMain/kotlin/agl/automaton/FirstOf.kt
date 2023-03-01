@@ -145,7 +145,8 @@ internal class FirstOf(
                         is RuntimeRuleRhsEmbedded -> {
                             val embSS = rhs.embeddedRuntimeRuleSet.fetchStateSetFor(rhs.embeddedStartRule.tag, AutomatonKind.LOOKAHEAD_1)
                             val f = embSS.firstOf.firstOfNotEmpty(rhs.embeddedStartRule, doneRp, hashMapOf())
-                            result = result.union(f.result)
+                            val embSkipTerms = rhs.embeddedRuntimeRuleSet.skipTerminals
+                            result = result.union(f.result).union(LookaheadSetPart.createFromRuntimeRules(embSkipTerms))
                             if (f.needsFirstOfParentNext) {
                                 needsNext = true
                             }

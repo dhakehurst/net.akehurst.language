@@ -350,7 +350,7 @@ class test_AglGrammar {
         val result1 = p.parse("");
         val expected1 = p.spptParser.parse(
             """
-             a|1 { §empty }
+             a { §a§multi1 { §empty } }
         """
         )
         assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
@@ -360,7 +360,7 @@ class test_AglGrammar {
         val result2 = p.parse("a");
         val expected2 = p.spptParser.parse(
             """
-             a { 'a' }
+             a { §a§multi1 { 'a' } }
         """
         )
         assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
@@ -384,7 +384,7 @@ class test_AglGrammar {
         val result1 = p.parse("");
         val expected1 = p.spptParser.parse(
             """
-             a|1 { §empty }
+             a { §a§multi1 { §empty } }
         """
         )
         assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
@@ -394,7 +394,7 @@ class test_AglGrammar {
         val result2 = p.parse("a");
         val expected2 = p.spptParser.parse(
             """
-             a { 'a' }
+             a { §a§multi1 { 'a' } }
         """
         )
         assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
@@ -404,7 +404,7 @@ class test_AglGrammar {
         val result3 = p.parse("aaa");
         val expected3 = p.spptParser.parse(
             """
-             a { 'a' 'a' 'a' }
+             a { §a§multi1 { 'a' 'a' 'a' } }
         """
         )
         assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
@@ -433,7 +433,7 @@ class test_AglGrammar {
         val result2 = p.parse("a");
         val expected2 = p.spptParser.parse(
             """
-             a { 'a' }
+             a { §a§multi1 { 'a' } }
         """
         )
         assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
@@ -443,7 +443,7 @@ class test_AglGrammar {
         val result3 = p.parse("aaa");
         val expected3 = p.spptParser.parse(
             """
-             a { 'a' 'a' 'a' }
+             a { §a§multi1 { 'a' 'a' 'a' } }
         """
         )
         assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
@@ -487,7 +487,7 @@ class test_AglGrammar {
         val result4 = p.parse("aaaa");
         val expected4 = p.spptParser.parse(
             """
-             a { 'a' 'a' 'a' 'a' }
+             a { §a§multi1 { 'a' 'a' 'a' 'a' } }
         """
         )
         assertNotNull(result4.sppt,result4.issues.joinToString(separator = "\n") { "$it" })
@@ -527,7 +527,7 @@ class test_AglGrammar {
         val result2 = p.parse("aa");
         val expected2 = p.spptParser.parse(
             """
-             a { 'a' 'a' }
+             a { §a§multi1 { 'a' 'a' } }
         """
         )
         assertNotNull(result2.sppt,result2.issues.joinToString(separator = "\n") { "$it" })
@@ -538,7 +538,7 @@ class test_AglGrammar {
         val result3 = p.parse("aaa");
         val expected3 = p.spptParser.parse(
             """
-             a { 'a' 'a' 'a' }
+             a { §a§multi1 { 'a' 'a' 'a' } }
         """
         )
         assertNotNull(result3.sppt,result2.issues.joinToString(separator = "\n") { "$it" })
@@ -573,7 +573,7 @@ class test_AglGrammar {
         val result2 = p.parse("aa");
         val expected2 = p.spptParser.parse(
             """
-             a { 'a' 'a' }
+             a { §a§multi1 { 'a' 'a' } }
         """
         )
         assertNotNull(result2.sppt,result2.issues.joinToString(separator = "\n") { "$it" })
@@ -584,7 +584,7 @@ class test_AglGrammar {
         val result3 = p.parse("aaa");
         val expected3 = p.spptParser.parse(
             """
-             a { 'a' 'a' 'a' }
+             a { §a§multi1 { 'a' 'a' 'a' } }
         """
         )
         assertNotNull(result3.sppt,result2.issues.joinToString(separator = "\n") { "$it" })
@@ -619,7 +619,7 @@ class test_AglGrammar {
         val result2 = p.parse("aa");
         val expected2 = p.spptParser.parse(
             """
-             a { 'a' 'a' }
+             a { §a§multi1 { 'a' 'a' } }
         """
         )
         assertNotNull(result2.sppt,result2.issues.joinToString(separator = "\n") { "$it" })
@@ -630,7 +630,7 @@ class test_AglGrammar {
         val result3 = p.parse("aaa");
         val expected3 = p.spptParser.parse(
             """
-             a { 'a' 'a' 'a' }
+             a { §a§multi1 { 'a' 'a' 'a' } }
         """
         )
         assertNotNull(result3.sppt,result2.issues.joinToString(separator = "\n") { "$it" })
@@ -665,7 +665,7 @@ class test_AglGrammar {
         val result2 = p.parse("aa");
         val expected2 = p.spptParser.parse(
             """
-             a { 'a' 'a' }
+             a { §a§multi1 { 'a' 'a' } }
         """
         )
         assertNotNull(result2.sppt,result2.issues.joinToString(separator = "\n") { "$it" })
@@ -676,7 +676,7 @@ class test_AglGrammar {
         val result3 = p.parse("aaa");
         val expected3 = p.spptParser.parse(
             """
-             a { 'a' 'a' 'a' }
+             a { §a§multi1 { 'a' 'a' 'a' } }
         """
         )
         assertNotNull(result3.sppt,result2.issues.joinToString(separator = "\n") { "$it" })
@@ -729,7 +729,7 @@ class test_AglGrammar {
         val result1 = p.parse("");
         val expected1 = p.spptParser.parse(
             """
-             S|1 {  §empty }
+             S { §S§multi1 {  §empty } }
         """
         )
         assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
@@ -739,7 +739,7 @@ class test_AglGrammar {
         val result2 = p.parse("a");
         val expected2 = p.spptParser.parse(
             """
-             S { a{'a'} }
+             S { §S§multi1 { a{'a'} } }
         """
         )
         assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
@@ -766,7 +766,7 @@ class test_AglGrammar {
         val result1 = p.parse("");
         val expected1 = p.spptParser.parse(
             """
-             S|1 { §empty }
+             S { §S§multi1 { §empty } }
         """
         )
         assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
@@ -776,7 +776,7 @@ class test_AglGrammar {
         val result2 = p.parse("a");
         val expected2 = p.spptParser.parse(
             """
-             S { a{'a'} }
+             S { §S§multi1 { a{'a'} } }
         """
         )
         assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
@@ -786,7 +786,7 @@ class test_AglGrammar {
         val result3 = p.parse("aaa");
         val expected3 = p.spptParser.parse(
             """
-             S { a{'a'} a{'a'} a{'a'} }
+             S { §S§multi1 { a{'a'} a{'a'} a{'a'} } }
         """
         )
         assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
@@ -817,7 +817,7 @@ class test_AglGrammar {
         val result2 = p.parse("a");
         val expected2 = p.spptParser.parse(
             """
-             S {  a{'a'} }
+             S { §S§multi1 { a{'a'} } }
         """
         )
         assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
@@ -827,7 +827,7 @@ class test_AglGrammar {
         val result3 = p.parse("aaa");
         val expected3 = p.spptParser.parse(
             """
-             S {  a{'a'} a{'a'} a{'a'} }
+             S { §S§multi1 { a{'a'} a{'a'} a{'a'} } }
         """
         )
         assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
@@ -864,7 +864,7 @@ class test_AglGrammar {
         val result2 = p.parse("aa");
         val expected2 = p.spptParser.parse(
             """
-             S { a{'a'} a{'a'} }
+             S { §S§multi1 { a{'a'} a{'a'} } }
         """
         )
         assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
@@ -874,7 +874,7 @@ class test_AglGrammar {
         val result4 = p.parse("aaaa");
         val expected4 = p.spptParser.parse(
             """
-             S { a{'a'} a{'a'} a{'a'} a{'a'} }
+             S { §S§multi1 { a{'a'} a{'a'} a{'a'} a{'a'} } }
         """
         )
         assertEquals(expected4.toStringAll, result4.sppt?.toStringAll)
@@ -911,7 +911,7 @@ class test_AglGrammar {
         val result2 = p.parse("aa");
         val expected2 = p.spptParser.parse(
             """
-             S { a{'a'} a{'a'} }
+             S { §S§multi1 { a{'a'} a{'a'} } }
         """
         )
         assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
@@ -921,7 +921,7 @@ class test_AglGrammar {
         val result5 = p.parse("aaaaa");
         val expected5 = p.spptParser.parse(
             """
-             S { a{'a'} a{'a'} a{'a'} a{'a'} a{'a'} }
+             S { §S§multi1 { a{'a'} a{'a'} a{'a'} a{'a'} a{'a'} } }
         """
         )
         assertEquals(expected5.toStringAll, result5.sppt?.toStringAll)
@@ -965,7 +965,7 @@ class test_AglGrammar {
         val result2 = p.parse("aa");
         val expected2 = p.spptParser.parse(
             """
-             S { a{'a'} a{'a'} }
+             S { §S§multi1 { a{'a'} a{'a'} } }
         """
         )
         assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
@@ -975,7 +975,7 @@ class test_AglGrammar {
         val result4 = p.parse("aaaa");
         val expected4 = p.spptParser.parse(
             """
-             S { a{'a'} a{'a'} a{'a'} a{'a'} }
+             S { §S§multi1 { a{'a'} a{'a'} a{'a'} a{'a'} } }
         """
         )
         assertEquals(expected4.toStringAll, result4.sppt?.toStringAll)
@@ -1012,7 +1012,7 @@ class test_AglGrammar {
         val result2 = p.parse("aa");
         val expected2 = p.spptParser.parse(
             """
-             S { a{'a'} a{'a'} }
+             S { §S§multi1 { a{'a'} a{'a'} } }
         """
         )
         assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
@@ -1022,7 +1022,7 @@ class test_AglGrammar {
         val result5 = p.parse("aaaaa");
         val expected5 = p.spptParser.parse(
             """
-             S { a{'a'} a{'a'} a{'a'} a{'a'} a{'a'} }
+             S { §S§multi1 { a{'a'} a{'a'} a{'a'} a{'a'} a{'a'} } }
         """
         )
         assertEquals(expected5.toStringAll, result5.sppt?.toStringAll)
@@ -1054,7 +1054,7 @@ class test_AglGrammar {
         val result0 = p.parse("");
         val expected0 = p.spptParser.parse(
             """
-             S|1 { §empty }
+             S { §S§sepList1 { §empty } }
         """
         )
         assertEquals(expected0.toStringAll, result0.sppt?.toStringAll)
@@ -1064,7 +1064,7 @@ class test_AglGrammar {
         val result1 = p.parse("a");
         val expected1 = p.spptParser.parse(
             """
-             S { a{'a'} }
+             S { §S§sepList1 { a{'a'} } }
         """
         )
         assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
@@ -1095,7 +1095,7 @@ class test_AglGrammar {
         val result0 = p.parse("")
         val expected0 = p.spptParser.parse(
             """
-             S|1 { §empty }
+             S { §S§sepList1 { §empty } }
         """
         )
         assertEquals(expected0.toStringAll, result0.sppt?.toStringAll)
@@ -1105,7 +1105,7 @@ class test_AglGrammar {
         val result1 = p.parse("a")
         val expected1 = p.spptParser.parse(
             """
-             S { a{'a'} }
+             S { §S§sepList1 { a{'a'} } }
         """
         )
         assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
@@ -1115,7 +1115,7 @@ class test_AglGrammar {
         val result3 = p.parse("a,a,a");
         val expected3 = p.spptParser.parse(
             """
-             S { a{'a'} ',' a{'a'} ',' a{'a'} }
+             S { §S§sepList1 { a{'a'} ',' a{'a'} ',' a{'a'} } }
         """
         )
         assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
@@ -1146,7 +1146,7 @@ class test_AglGrammar {
         val result1 = p.parse("a")
         val expected1 = p.spptParser.parse(
             """
-             S { a{'a'} }
+             S { §S§sepList1 { a{'a'} } }
         """
         )
         assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
@@ -1156,7 +1156,7 @@ class test_AglGrammar {
         val result3 = p.parse("a,a,a");
         val expected3 = p.spptParser.parse(
             """
-             S { a{'a'} ',' a{'a'} ',' a{'a'} }
+             S { §S§sepList1 { a{'a'} ',' a{'a'} ',' a{'a'} } }
         """
         )
         assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
@@ -1193,7 +1193,7 @@ class test_AglGrammar {
         val result2 = p.parse("a,a");
         val expected2 = p.spptParser.parse(
             """
-             S { a{'a'} ',' a{'a'}}
+             S { §S§sepList1 { a{'a'} ',' a{'a'} } }
         """
         )
         assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
@@ -1203,7 +1203,7 @@ class test_AglGrammar {
         val result5 = p.parse("a,a,a,a,a");
         val expected5 = p.spptParser.parse(
             """
-             S { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} }
+             S { §S§sepList1 { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} } }
         """
         )
         assertEquals(expected5.toStringAll, result5.sppt?.toStringAll)
@@ -1241,7 +1241,7 @@ class test_AglGrammar {
         val result2 = p.parse("a,a");
         val expected2 = p.spptParser.parse(
             """
-             S { a{'a'} ',' a{'a'}}
+             S { §S§sepList1 { a{'a'} ',' a{'a'} } }
         """
         )
         assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
@@ -1251,7 +1251,7 @@ class test_AglGrammar {
         val result5 = p.parse("a,a,a,a,a");
         val expected5 = p.spptParser.parse(
             """
-             S { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} }
+             S { §S§sepList1 { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} } }
         """
         )
         assertEquals(expected5.toStringAll, result5.sppt?.toStringAll)
@@ -1312,7 +1312,7 @@ class test_AglGrammar {
         val result2 = p.parse("a,a");
         val expected2 = p.spptParser.parse(
             """
-             S { a{'a'} ',' a{'a'}}
+             S { §S§sepList1 { a{'a'} ',' a{'a'} } }
         """
         )
         assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
@@ -1322,7 +1322,7 @@ class test_AglGrammar {
         val result5 = p.parse("a,a,a,a,a");
         val expected5 = p.spptParser.parse(
             """
-             S { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} }
+             S { §S§sepList1 { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} } }
         """
         )
         assertEquals(expected5.toStringAll, result5.sppt?.toStringAll)
@@ -1360,7 +1360,7 @@ class test_AglGrammar {
         val result2 = p.parse("a,a");
         val expected2 = p.spptParser.parse(
             """
-             S { a{'a'} ',' a{'a'}}
+             S { §S§sepList1 { a{'a'} ',' a{'a'} } }
         """
         )
         assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
@@ -1370,7 +1370,7 @@ class test_AglGrammar {
         val result5 = p.parse("a,a,a,a,a");
         val expected5 = p.spptParser.parse(
             """
-             S { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} }
+             S { §S§sepList1 { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} } }
         """
         )
         assertEquals(expected5.toStringAll, result5.sppt?.toStringAll)
@@ -1482,10 +1482,10 @@ class test_AglGrammar {
         val result3 = p.parse("abbb");
         val expected3 = p.spptParser.parse(
             """
-            S {
+            S { §S§group1 {
                 'a'
                 §S§multi1 { b:'b' b:'b' b:'b' }
-            }
+            } }
         """
         )
         assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
@@ -1605,14 +1605,14 @@ class test_AglGrammar {
 
         val grammarStr = """
             namespace test
+            grammar Inner {
+                B = 'b' ;
+            }
             grammar Outer {
                 S = a gB c ;
                 leaf a = 'a' ;
                 leaf c = 'c' ;
                 gB = Inner::B ;
-            }
-            grammar Inner {
-                B = 'b' ;
             }
         """.trimIndent()
 
@@ -1639,15 +1639,15 @@ class test_AglGrammar {
 
         val grammarStr = """
             namespace test
+            grammar Inner {
+                B = 'b' ;
+                C = 'c' ;
+            }
             grammar Outer {
                 S = A gB D ;
                 leaf A = 'a' ;
                 leaf D = 'd' ;
                 gB = Inner::C;
-            }
-            grammar Inner {
-                B = 'b' ;
-                C = 'c' ;
             }
         """.trimIndent()
 

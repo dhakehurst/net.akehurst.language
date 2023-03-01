@@ -17,13 +17,17 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
+import net.akehurst.language.agl.grammar.format.AglFormatterModelDefault
+import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
+import net.akehurst.language.agl.grammar.style.AglStyleModelDefault
 import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
 import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.processor.*
 
@@ -72,7 +76,7 @@ object Agl {
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = null
     ): LanguageProcessor<AsmType, ContextType> {
         val config = configuration ?: configurationDefault()
-        return LanguageProcessorDefault<AsmType, ContextType>(grammar,config)
+        return LanguageProcessorDefault<AsmType, ContextType>(grammar, config)
     }
 
     /**
@@ -89,18 +93,22 @@ object Agl {
      */
     fun processorFromStringDefault(
         grammarDefinitionStr: String,
-        aglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = null
+        scopeModelStr: String? = null,
+        styleModelStr: String? = null,
+        formatterModelStr: String? = null,
+        grammarAglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = null
     ): LanguageProcessor<AsmSimple, ContextSimple> {
         val config = Agl.configuration<AsmSimple, ContextSimple> {
             targetGrammarName(null) //use default
             defaultGoalRuleName(null) //use default
             typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar(p.grammar!!), emptyList()) }
-            scopeModelResolver { p -> ProcessResultDefault(ScopeModelAgl(), emptyList()) }
+            scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromGrammar(p.grammar!!), scopeModelStr ?: "") }
             syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserSimple(p.typeModel, p.scopeModel), emptyList()) }
             semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.scopeModel), emptyList()) }
-            // formatterResolver { null }
+            styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar(p.grammar!!), styleModelStr ?: "") }
+            formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromGrammar(p.grammar!!), formatterModelStr ?: "") }
         }
-        return processorFromString(grammarDefinitionStr, config, aglOptions)
+        return processorFromString(grammarDefinitionStr, config, grammarAglOptions)
     }
 
     /**
@@ -120,13 +128,14 @@ object Agl {
                 grammarDefinitionStr,
                 aglOptions ?: Agl.registry.agl.grammar.processor!!.optionsDefault()
             )
-            if (null==res.asm) {
+            if (null == res.asm) {
                 error("Unable to create processor for $grammarDefinitionStr")
             } else {
-                val grammar = if(null==configuration?.targetGrammarName) {
+                val grammar = if (null == configuration?.targetGrammarName) {
                     res.asm?.lastOrNull() ?: error("Unable to create processor for $grammarDefinitionStr")
                 } else {
-                    res.asm?.firstOrNull{it.name==configuration.targetGrammarName} ?: error("Unable to find target grammar '${configuration.targetGrammarName}' in $grammarDefinitionStr")
+                    res.asm?.firstOrNull { it.name == configuration.targetGrammarName }
+                        ?: error("Unable to find target grammar '${configuration.targetGrammarName}' in $grammarDefinitionStr")
                 }
                 processorFromGrammar(
                     grammar,
@@ -155,11 +164,11 @@ object Agl {
     }
 
     fun <AsmType : Any, ContextType : Any> grammarFromString(sentence: String?, aglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = null): ProcessResult<List<Grammar>> {
-        return if (null==sentence) {
+        return if (null == sentence) {
             ProcessResultDefault(null, emptyList())
         } else {
             val res = Agl.registry.agl.grammar.processor!!.process(sentence, aglOptions)
-            ProcessResultDefault(res.asm?: emptyList(), res.issues)
+            ProcessResultDefault(res.asm ?: emptyList(), res.issues)
         }
     }
 }

@@ -88,7 +88,7 @@ internal class TreeData(
         this.initialSkip = initialSkipData
     }
 
-    fun remove(node: CompleteNodeIndex) {
+    private fun remove(node: CompleteNodeIndex) {
         this._complete.remove(node)
         this._preferred.remove(node.preferred)
         this._skipDataAfter.remove(node)

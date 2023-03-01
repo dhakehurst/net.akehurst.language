@@ -51,6 +51,27 @@ internal object AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst
             return b.grammar.rule
         }
     //}
+    const val grammarStr = """
+        namespace net.akehurst.language.agl
+        grammar AglScopes {
+            declarations = rootIdentifiables scopes references?
+            rootIdentifiables = identifiable*
+            scopes = scope*
+            scope = 'scope' typeReference '{' identifiables '}
+            identifiables = identifiable*
+            identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
+        
+            references = 'references' '{' referenceDefinitions '}'
+            referenceDefinitions = referenceDefinition*
+            referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
+            typeReferences = [typeReferences / '|']+
+        
+            propertyReferenceOrNothing = '§nothing' | propertyReference
+            typeReference = IDENTIFIER     // same as grammar rule name
+            propertyReference = IDENTIFIER // same as grammar rule name
+            leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*"
+        }
+    """
     const val styleStr = """
         'scope' {
           foreground: darkgreen;
@@ -85,30 +106,22 @@ internal object AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst
           font-style: bold;
         }
     """
-
+    const val formatterStr = """
+        @TODO
+        references = when {
+            referenceDefinitions.isEmpty -> "references { }"
+            else -> "
+              references {
+                referenceDefinitions
+              }
+            "
+        }
+        referenceDefinitions = [referenceDefinition / '\n']
+        referenceDefinition { in §typeReference property §propertyReference refers-to §typeReferences }
+    """
     init {
         super.rule.addAll(createRules())
     }
     //TODO: gen this from the ASM
-    override fun toString(): String = """
-        namespace net.akehurst.language.agl
-        grammar AglScopes {
-            declarations = rootIdentifiables scopes references?
-            rootIdentifiables = identifiable*
-            scopes = scope*
-            scope = 'scope' typeReference '{' identifiables '}
-            identifiables = identifiable*
-            identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
-        
-            references = 'references' '{' referenceDefinitions '}'
-            referenceDefinitions = referenceDefinition*
-            referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
-            typeReferences = [typeReferences / '|']+
-        
-            propertyReferenceOrNothing = '§nothing' | propertyReference
-            typeReference = IDENTIFIER     // same as grammar rule name
-            propertyReference = IDENTIFIER // same as grammar rule name
-            leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*"
-        }
-    """.trimIndent()
+    override fun toString(): String = grammarStr.trimIndent()
 }
