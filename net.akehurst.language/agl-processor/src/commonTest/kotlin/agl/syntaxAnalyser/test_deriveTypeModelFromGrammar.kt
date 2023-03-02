@@ -304,7 +304,7 @@ println(actual.asString())
     }
 
     @Test
-    fun multi_literal() {
+    fun list_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -327,7 +327,42 @@ println(actual.asString())
     }
 
     @Test
-    fun slist_literal() {
+    fun list_of_group() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                S = ID (A | B)* ;
+                A = NAME NUMBER ;
+                B = NAME NAME ;
+                leaf ID = "[a-z]" ;
+                leaf NUMBER = "[0-9]+" ;
+                leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+
+        val actual = TypeModelFromGrammar(result.asm!!.last())
+        val expected = typeModel("test", "Test") {
+            elementType("S") {
+                propertyStringType("ID", false, 0)
+                //propertyUnnamedListType()
+            }
+            elementType("A") {
+                propertyStringType("NAME", false, 0)
+                propertyStringType("NUMBER", false, 1)
+            }
+        }
+
+        assertEquals(expected.asString(),actual.asString())
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun sepList_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -354,7 +389,7 @@ println(actual.asString())
     }
 
     @Test
-    fun slist_nonTerm() {
+    fun sepList_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -384,7 +419,7 @@ println(actual.asString())
     }
 
     @Test
-    fun slist_multi_nonTerm() {
+    fun sepList_multi_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {

@@ -84,7 +84,7 @@ class test_Dot_Singles {
                   §startTag§multi3 { §empty }
                   '>'
                 }
-                content { §content§group1 { CHARDATA { "[^<]+" : 'xxxx' } } }
+                content { §content§multi1 { §content§group1 { CHARDATA { "[^<]+" : 'xxxx' } } } }
                 endTag {
                   '</'
                   §endTag§multi1 { §empty }

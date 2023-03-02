@@ -462,7 +462,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test
-    fun multi_empty() {
+    fun list_empty() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -496,7 +496,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test
-    fun multi() {
+    fun list() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -530,7 +530,41 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test
-    fun slist() {
+    fun list_of_group() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                S = ID (NAME | NUMBER)* ;
+                leaf ID = "[a-z]" ;
+                leaf NUMBER = "[0-9]+" ;
+                leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
+            }
+        """.trimIndent()
+
+        val sentence = "a adam 2 charles"
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm, result.issues.joinToString(separator = "\n") { "$it" })
+//TODO        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        val typeModel = TypeModelFromGrammar(result.asm!!.last())
+        val proc = processor(grammarStr,typeModel)
+        val result2 = proc.process(sentence)
+        assertNotNull(result2.asm)
+        assertEquals(emptyList(), result2.issues)
+        val actual = result2.asm!!.rootElements[0]
+
+        val expected = asmSimple() {
+            root("S") {
+                propertyString("ID", "a")
+                propertyListOfString("NAME", listOf("adam", "betty", "charles"))
+            }
+        }.rootElements[0]
+        assertEquals(expected.asString("  "), actual.asString("  "))
+    }
+
+    @Test
+    fun sepList() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -582,7 +616,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test
-    fun slist2() {
+    fun sepList2() {
         val grammarStr = """
             namespace test
             grammar Test {

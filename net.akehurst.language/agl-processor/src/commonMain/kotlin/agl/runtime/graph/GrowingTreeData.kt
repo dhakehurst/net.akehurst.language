@@ -20,14 +20,14 @@ import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 
-internal class TreeData(
+internal class GrowingTreeData(
     val forStateSetNumber: Int
 ) {
 
     val completeChildren: Map<CompleteNodeIndex, Map<List<Int>, List<CompleteNodeIndex>>> get() = this._complete
     val growing: Map<GrowingNodeIndex, List<CompleteNodeIndex>> get() = this._growing
     var root: CompleteNodeIndex? = null; private set
-    var initialSkip: TreeData? = null; private set
+    var initialSkip: GrowingTreeData? = null; private set
 
     // needed when parsing embedded sentences and skip
     val startPosition: Int? get() = root?.startPosition
@@ -43,7 +43,7 @@ internal class TreeData(
     private val _numberOfParents = mutableMapOf<CompleteNodeIndex, Int>()
     private val _preferred = mutableMapOf<PreferredChildIndex, CompleteNodeIndex>()
 
-    private val _skipDataAfter = hashMapOf<CompleteNodeIndex, TreeData>()
+    private val _skipDataAfter = hashMapOf<CompleteNodeIndex, GrowingTreeData>()
 
     fun createGrowingNodeIndex(
         state: ParserState,
@@ -57,41 +57,10 @@ internal class TreeData(
         return GrowingNodeIndex(this, RuntimeState(state, runtimeLookaheadSet), startPosition, nextInputPosition, nextInputPositionAfterSkip, listSize)
     }
 
-    fun childrenFor(runtimeRule: RuntimeRule, startPosition: Int, nextInputPosition: Int): List<Pair<List<Int>, List<CompleteNodeIndex>>> {
-        val keys = this._complete.keys.filter {
-            it.startPosition == startPosition
-                    && it.nextInputPosition == nextInputPosition
-                    && it.runtimeRulesSet.contains(runtimeRule)
-        }
-        return when (keys.size) {
-            0 -> emptyList()
-            1 -> this._complete[keys[0]]!!.entries.map { Pair(it.key, it.value) }
-            else -> if (_preferred.containsKey(keys[0].preferred)) {
-                this._complete[_preferred[keys[0].preferred]]!!.entries.map { Pair(it.key, it.value) }
-            } else {
-                keys.flatMap {
-                    this._complete[it]!!.entries.map { Pair(it.key, it.value) }
-                }
-            }
-        }
-    }
-
-    fun preferred(node: CompleteNodeIndex): CompleteNodeIndex? = this._preferred[node.preferred]
-
-    fun setRoot(root: GrowingNodeIndex) {
-        this.root = root.complete
-    }
-
-    fun start(key: GrowingNodeIndex, initialSkipData: TreeData?) {
+    fun start(key: GrowingNodeIndex, initialSkipData: GrowingTreeData?) {
         val growing = mutableListOf<CompleteNodeIndex>()
         this._growing[key] = growing
         this.initialSkip = initialSkipData
-    }
-
-    private fun remove(node: CompleteNodeIndex) {
-        this._complete.remove(node)
-        this._preferred.remove(node.preferred)
-        this._skipDataAfter.remove(node)
     }
 
     /**
@@ -129,15 +98,6 @@ internal class TreeData(
                     if (1 == n) removeTreeComplete(child)
                 }
             }
-        }
-    }
-
-    fun setEmbeddedChild(parent: GrowingNodeIndex, child: CompleteNodeIndex) {
-        if (parent.runtimeState.isAtEnd) {
-            val completeChildren = listOf(child)
-            this.setCompletedBy(parent, completeChildren, true)  //might it ever not be preferred!
-        } else {
-            error("Internal error: should not happen")
         }
     }
 
@@ -206,7 +166,7 @@ internal class TreeData(
         this._complete[nug] = mutableMapOf(listOf(0) to userGoalChildren.toMutableList())
     }
 
-    fun setSkipDataAfter(leafNodeIndex: CompleteNodeIndex, skipData: TreeData) {
+    fun setSkipDataAfter(leafNodeIndex: CompleteNodeIndex, skipData: GrowingTreeData) {
         _skipDataAfter[leafNodeIndex] = skipData
     }
 
@@ -214,7 +174,7 @@ internal class TreeData(
 
     override fun hashCode(): Int = this.forStateSetNumber
     override fun equals(other: Any?): Boolean = when {
-        other !is TreeData -> false
+        other !is GrowingTreeData -> false
         else -> other.forStateSetNumber == this.forStateSetNumber
     }
 

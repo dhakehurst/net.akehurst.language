@@ -349,13 +349,13 @@ internal class RuntimeParser(
                 //toDropData.addIfNotNull(toProcess.remainingHead)
             }
         }
-        if (grown.not()) {
+        if (grown) {
+            // growingHead must have grown with one of the previous
+        } else {
             //nothing was grown, so drop data for growingHead also
             toDropData.add(nextToProcess.growingNode)
             lastDropped.add(nextToProcess)
             //TODO: maybe also drop other things!
-        } else {
-            // growingHead must have grown with one of the previous
         }
         for (hd in toDropHead) {
             graph.dropHead(hd)
@@ -511,8 +511,7 @@ internal class RuntimeParser(
                             Debug.debug(Debug.IndentDelta.NONE) { "Taking: $toProcess" }
                             Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
                         }
-                        val newHead = this.graph.pushToStackOf(toProcess, transition.to, setOf(LookaheadSet.EMPTY), startPosition, nextInputPosition, skipData)
-                        newHead != null
+                        this.graph.pushToStackOf(toProcess, transition.to, setOf(LookaheadSet.EMPTY), startPosition, nextInputPosition, skipData)
                     } else {
                         false
                     }
@@ -731,8 +730,7 @@ internal class RuntimeParser(
                         Debug.debug(Debug.IndentDelta.NONE) { "Taking: $toProcess" }
                         Debug.debug(Debug.IndentDelta.NONE) { "Taking: $transition" }
                     }
-                    val newHead =
-                        this.graph.pushEmbeddedToStackOf(
+                    this.graph.pushEmbeddedToStackOf(
                             toProcess,
                             transition.to,
                             toProcess.growingNode.runtimeState.runtimeLookaheadSet,
@@ -741,13 +739,6 @@ internal class RuntimeParser(
                             match,
                             skipData
                         )
-                    //TODO: return boolean rather than new head!
-                    return if (newHead == null) {
-                        false
-                    } else {
-                        //this.addToLastGrown(newHead)
-                        true
-                    }
                 } else {
                     //  could not parse embedded
                     this.embeddedLastDropped[transition] = embeddedParser.lastDropped

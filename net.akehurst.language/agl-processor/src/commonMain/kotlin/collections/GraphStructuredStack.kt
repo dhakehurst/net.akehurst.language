@@ -49,47 +49,50 @@ class GraphStructuredStack<E>(previous:MutableMap<E,MutableSet<E>>, count:Mutabl
     }
 
     /**
-     * returns true if added a new head
+     * currentHead becomes the previous for nextHead
+     * currentHead <-- nextHead
+     * will not create new head if nextHead already exists somewhere in the GSS
+     * returns true if created a new head
      */
-    fun push(head: E, next: E): Boolean {
-        var set = _previous[next]
-        val newHead = if (null == set) {
+    fun push(currentHead: E, nextHead: E): Boolean {
+        var set = _previous[nextHead]
+        val createdNewHead = if (null == set) {
             set = hashSetOf()
-            _previous[next] = set
-            _count[next] = 0
+            _previous[nextHead] = set
+            _count[nextHead] = 0
             true
         } else {
             false
         }
-        val added = set.add(head)
+        val added = set.add(currentHead)
         if (added) {
-            val hc = this._count[head]
+            val hc = this._count[currentHead]
             if (null == hc) {
-                _previous[head] = hashSetOf()
-                this._count[head] = 1
+                _previous[currentHead] = hashSetOf()
+                this._count[currentHead] = 1
             } else {
-                this._count[head] = hc + 1
+                this._count[currentHead] = hc + 1
             }
         } else {
             // head is already previous of next
         }
         check() //TODO: remove
-        return newHead
+        return createdNewHead
     }
 
-    fun contains(node: E): Boolean = _previous.containsKey(node)
+    fun contains(head: E): Boolean = _previous.containsKey(head)
 
     fun peek(head: E): Set<E> = _previous[head] ?: emptySet()
 
-    fun pop(node: E): Set<E> {
-        val count = this._count[node]
+    fun pop(head: E): Set<E> {
+        val count = this._count[head]
         return if (null == count) {
             emptySet()
         } else {
             if (count == 0) {
                 // node is a head, so remove it
-                _count.remove(node)
-                val prev = _previous.remove(node)!!
+                _count.remove(head)
+                val prev = _previous.remove(head)!!
                 prev.forEach {
                     val c = this._count[it]!!
                     this._count[it] = c - 1
@@ -97,7 +100,7 @@ class GraphStructuredStack<E>(previous:MutableMap<E,MutableSet<E>>, count:Mutabl
                 check() //TODO: remove
                 prev
             } else {
-                val prev = _previous[node]!!
+                val prev = _previous[head]!!
                 // head is not a head of the GSS, just return the previous nodes
                 // do not deduce from count of prev, because head is not removed
                 check() //TODO: remove
@@ -127,7 +130,7 @@ class GraphStructuredStack<E>(previous:MutableMap<E,MutableSet<E>>, count:Mutabl
     }
 
     fun removeStack(head: E) {
-        var count = this._count[head]
+        val count = this._count[head]
         if (null == count) {
             // do nothing
         } else {
