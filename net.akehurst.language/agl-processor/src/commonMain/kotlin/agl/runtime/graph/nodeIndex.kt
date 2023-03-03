@@ -32,12 +32,12 @@ import net.akehurst.language.agl.sppt.ToStringVisitor
     length/nextInputPosition is necessary because ?
   - size of a list ( only relevant for MULTI and SEPARATED_LIST)
  */
-internal  class GrowingNodeIndex(
-    val treeData: TreeData,
+internal class GrowingNodeIndex(
+    treeData: TreeDataComplete,
     val runtimeState: RuntimeState,
-    val startPosition: Int,
-    val nextInputPosition: Int,
-    val nextInputPositionAfterSkip: Int,
+     startPosition: Int,
+     nextInputPosition: Int,
+     nextInputPositionAfterSkip: Int,
     val numNonSkipChildren: Int //for use with MULTI and SEPARATED_LIST
 ) {
 
@@ -50,38 +50,32 @@ internal  class GrowingNodeIndex(
         // used to augment the GrowingNodeIndex (GSS node identity) for MULTI and SEPARATED_LIST
         // needed because the 'RuleOptionPosition' does not capture the 'position' in the list
         fun listSize(runtimeRule: RuntimeRule, numNonSkipChildren: Int): Int = when (runtimeRule.rhs) {
-                is RuntimeRuleRhsNonTerminal -> numNonSkipChildren
-                is RuntimeRuleRhsTerminal -> 0
-            }
+            is RuntimeRuleRhsNonTerminal -> numNonSkipChildren
+            is RuntimeRuleRhsTerminal -> 0
+        }
     }
 
-    private val _hashCode = arrayOf(runtimeState,startPosition,nextInputPosition,numNonSkipChildren).contentHashCode()
-    //TODO: don't store data twice..also prefer not to create 2 objects!
-    val complete = CompleteNodeIndex(treeData, runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)
+    val complete = treeData.createCompleteNodeIndex(runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)
 
-    val state:ParserState get() = this.runtimeState.state
+    private val _hashCode = arrayOf(runtimeState, startPosition, nextInputPosition, numNonSkipChildren).contentHashCode()
+
+    val startPosition: Int get() = complete.startPosition
+    val nextInputPosition: Int get() = complete.nextInputPosition
+    val nextInputPositionAfterSkip: Int get() = complete.nextInputPositionAfterSkip
+
+    val isComplete: Boolean get() = runtimeState.isAtEnd
+
+    //TODO: don't store data twice..also prefer not to create 2 objects!
+    //val complete = CompleteNodeIndex(treeData.forStateSetNumber, runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)
+
+    val state: ParserState get() = this.runtimeState.state
 
     val isLeaf: Boolean get() = this.runtimeState.state.isLeaf
     val isEmptyMatch: Boolean get() = this.runtimeState.state.isAtEnd && this.startPosition == this.nextInputPosition
 
-    //useful during debug
-    fun toStringTree(input:InputFromString): String {
-        val runtimeRules = runtimeState.state.runtimeRulesSet
-        val nodes = when {
-            runtimeState.state.isLeaf -> runtimeRules.map { rr ->
-                SPPTLeafFromInput(input, rr, this.startPosition, this.nextInputPosition, 0)
-            }
-            else -> runtimeRules.map { rr ->
-                SPPTBranchFromTreeData(treeData, input, rr, 0, this.startPosition, this.nextInputPosition, 0)
-            }
-        }
-        val v = ToStringVisitor("\n", "  ")
-        return nodes.joinToString(separator = "\n") { n -> v.visitNode(n, "  ").joinToString(separator = "\n") }
-    }
+    override fun hashCode(): Int = _hashCode
 
-    override fun hashCode(): Int =_hashCode
-
-    override fun equals(other: Any?): Boolean = when(other) {
+    override fun equals(other: Any?): Boolean = when (other) {
         !is GrowingNodeIndex -> false
         else -> when {
             this.runtimeState != other.runtimeState -> false
@@ -115,20 +109,19 @@ internal  class GrowingNodeIndex(
  *  - nextInputPosition
  */
 internal class CompleteNodeIndex(
-    val treeData: TreeData,
+    val treeData: TreeDataComplete,
     // only RuntimeRules are needed for comparisons, but priority needed in order to resolve priorities, but it should not be part of identity
     val state: ParserState,
     val startPosition: Int,
     val nextInputPosition: Int,
     val nextInputPositionAfterSkip: Int,
-    val gni: GrowingNodeIndex? // the GNI used to create this, TODO: remove it...just for debug
+    val gni: GrowingNodeIndex? // the GNI used to create this, used when dropping
 ) {
 
     val runtimeRulesSet: Set<RuntimeRule> get() = this.state.runtimeRulesSet
     val rulePositions get() = this.state.rulePositions
 
-    private val hashCode_cache by lazy { arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode() }
-    //private val hashCode_cache = arrayOf(treeData, rulePositions, startPosition, nextInputPosition).contentHashCode()
+    private val _hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode()
 
     //TODO: don't store data twice..also prefer not to create 2 objects!
     val preferred by lazy { PreferredChildIndex(runtimeRulesSet, startPosition) }
@@ -142,7 +135,7 @@ internal class CompleteNodeIndex(
     val optionList: List<Int> get() = this.state.priorityList
     val priorityList: List<Int> get() = this.state.priorityList
 
-    override fun hashCode(): Int = this.hashCode_cache
+    override fun hashCode(): Int = this._hashCode_cache
     override fun equals(other: Any?): Boolean = when {
         other !is CompleteNodeIndex -> false
         other.treeData != this.treeData -> false
@@ -155,6 +148,22 @@ internal class CompleteNodeIndex(
 
     override fun toString(): String {
         return "CNI{(${this.treeData.forStateSetNumber}),$startPosition-$nextInputPosition,R=${runtimeRulesSet.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }}}"
+    }
+
+    //useful during debug
+    fun toStringTree(treeData: TreeDataComplete, input: InputFromString): String {
+        val runtimeRules = state.runtimeRulesSet
+        val nodes = when {
+            state.isLeaf -> runtimeRules.map { rr ->
+                SPPTLeafFromInput(input, rr, this.startPosition, this.nextInputPosition, 0)
+            }
+
+            else -> runtimeRules.map { rr ->
+                SPPTBranchFromTreeData(treeData, input, rr, 0, this.startPosition, this.nextInputPosition, 0)
+            }
+        }
+        val v = ToStringVisitor("\n", "  ")
+        return nodes.joinToString(separator = "\n") { n -> v.visitNode(n, "  ").joinToString(separator = "\n") }
     }
 }
 

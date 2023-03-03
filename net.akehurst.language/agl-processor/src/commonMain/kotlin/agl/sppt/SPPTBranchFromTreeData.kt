@@ -19,6 +19,7 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.CompleteNodeIndex
 import net.akehurst.language.agl.runtime.graph.TreeData
+import net.akehurst.language.agl.runtime.graph.TreeDataComplete
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTException
@@ -28,7 +29,7 @@ import net.akehurst.language.api.sppt.SPPTNode
 //TODO: currently this has to be public, because otherwise kotlin does not
 // use the non-mangled names for properties - necessary for tree serialisation
 /*internal */ class SPPTBranchFromTreeData internal constructor(
-    private val _treeData: TreeData,
+    private val _treeData: TreeDataComplete,
     input: InputFromString,
     runtimeRule: RuntimeRule,
     option: Int,
@@ -70,7 +71,7 @@ import net.akehurst.language.api.sppt.SPPTNode
                             val skipChildren = td.completeChildren[sg]!!.values.first().map {
                                 td.completeChildren[it]!!.values.first().get(0)
                             }
-                            val nug = CompleteNodeIndex(child.treeData, userGoal.state, startPositionBeforeInitialSkip, userGoal.nextInputPosition, td.nextInputPosition!!, null)
+                            val nug =child.treeData.createCompleteNodeIndex(userGoal.state, startPositionBeforeInitialSkip, userGoal.nextInputPosition, td.nextInputPosition!!, null)
                             val userGoalChildren = skipChildren + child.treeData.completeChildren[userGoal]!!.values.first()
                             child.treeData.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
                             listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, nug.startPosition, nug.nextInputPosition, -1))

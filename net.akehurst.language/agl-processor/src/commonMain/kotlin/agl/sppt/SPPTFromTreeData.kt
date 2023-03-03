@@ -19,13 +19,14 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.CompleteNodeIndex
 import net.akehurst.language.agl.runtime.graph.TreeData
+import net.akehurst.language.agl.runtime.graph.TreeDataComplete
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 internal class SPPTFromTreeData(
-    private val _treeData: TreeData,
+    private val _treeData: TreeDataComplete,
     private val _input: InputFromString,
     override val seasons: Int,
     override val maxNumHeads: Int
@@ -49,7 +50,7 @@ internal class SPPTFromTreeData(
                 val skipChildren = td.completeChildren[sg]!!.values.first().map {
                     td.completeChildren[it]!!.values.first().get(0)
                 }
-                val nug = CompleteNodeIndex(_treeData, userGoal.state, startPositionBeforeInitialSkip, userGoal.nextInputPosition, td.nextInputPosition!!, null)
+                val nug = _treeData.createCompleteNodeIndex(userGoal.state, startPositionBeforeInitialSkip, userGoal.nextInputPosition, td.nextInputPosition!!, null)
                 val userGoalChildren = skipChildren + _treeData.completeChildren[userGoal]!!.values.first()
                 _treeData.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
                 nug

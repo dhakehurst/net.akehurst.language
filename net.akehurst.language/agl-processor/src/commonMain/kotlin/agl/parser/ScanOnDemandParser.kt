@@ -70,7 +70,7 @@ internal class ScanOnDemandParser(
             }
         }
 
-        val match = rp.graph.treeData
+        val match = rp.graph.treeDataComplete
         return if (match.root != null) {
             //val sppt = SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
             val sppt = SPPTFromTreeData(match, input, seasons, maxNumHeads)
@@ -275,7 +275,7 @@ internal class ScanOnDemandParser(
                 else -> {
                     //FIXME: error option may not be correct, need to find the original
                     val prevPrev = remainingHead
-                        ?: graph.treeData.createGrowingNodeIndex(rp.stateSet.startState, setOf(LookaheadSet.EMPTY), 0, 0, 0, 0)
+                        ?: graph.createGrowingNodeIndex(rp.stateSet.startState, setOf(LookaheadSet.EMPTY), 0, 0, 0, 0)
                     val beforeRuntimeCheck = lg.runtimeState.transitions(prevPrev.runtimeState.state, prev!!.runtimeState.state)
                     if (beforeRuntimeCheck.isNotEmpty()) {
                         val pairs: Set<Pair<Int, Set<RuntimeRule>>> = beforeRuntimeCheck.mapNotNull { tr ->

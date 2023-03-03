@@ -38,7 +38,7 @@ internal class test_ForMatthias {
         """.trimIndent()
     }
 
-    private val p = Agl.processorFromString<Any,Any>(grammarStr)
+    private val p = Agl.processorFromStringDefault(grammarStr)
 
     @Test
     fun conceptDefinition0() {
@@ -46,6 +46,30 @@ internal class test_ForMatthias {
             """
             concept Test {
               properties {
+              }
+            }
+        """.trimIndent(),
+            Agl.parseOptions { goalRuleName(goal) }
+        )
+    }
+
+    @Test
+    fun conceptDefinition0_twice() {
+        p.parse(
+            """
+            concept Test {
+              properties {
+              }
+            }
+        """.trimIndent(),
+            Agl.parseOptions { goalRuleName(goal) }
+        )
+
+        p.parse(
+            """
+            concept Test {
+              properties {
+                 p1 : Int [1]
               }
             }
         """.trimIndent(),

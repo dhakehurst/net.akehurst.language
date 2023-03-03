@@ -25,8 +25,22 @@ import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
-class test_TreeData {
+internal class test_TreeData {
+
+    val graph = ParseGraph(InputFromString(0,""),0)
+
+    @Test
+    fun construct() {
+        assertNull(graph.treeDataComplete.root)
+        assertTrue(graph.treeDataComplete.completeChildren.isEmpty())
+        assertTrue(graph.treeData.growing.isEmpty())
+        assertNull(graph.treeDataComplete.initialSkip)
+        assertNull(graph.treeDataComplete.startPosition)
+        assertNull(graph.treeDataComplete.nextInputPosition)
+    }
 
     @Test
     fun literal_as_root() {
@@ -42,21 +56,21 @@ class test_TreeData {
         val state_Ge = SM.createState(listOf(RulePosition(rule_G, 0, RulePosition.END_OF_RULE)))
         val state_S = SM.createState(listOf(RulePosition(rule_S, 0, RulePosition.END_OF_RULE)))
         val state_a = SM.createState(listOf(RulePosition(rule_a, 0, RulePosition.END_OF_RULE)))
-        val sut = TreeData(0)
+        val sut = graph.treeData
 
         val sentence = "a"
 
         sut.setFirstChild(
-            sut.createGrowingNodeIndex(state_S, setOf(LookaheadSet.ANY), 0, 1, 1, 1),
-            sut.createGrowingNodeIndex(state_a, setOf(LookaheadSet.ANY), 0, 1, 1, 0),
-        false
-        )
-        sut.setFirstChild(
-            sut.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 1, 1, 1),
-            sut.createGrowingNodeIndex(state_S, setOf(LookaheadSet.ANY), 0, 1, 1, 1),
+            graph.createGrowingNodeIndex(state_S, setOf(LookaheadSet.ANY), 0, 1, 1, 1),
+            graph.createGrowingNodeIndex(state_a, setOf(LookaheadSet.ANY), 0, 1, 1, 0),
             false
         )
-        sut.setRoot(sut.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 1, 1, 1))
+        sut.setFirstChild(
+            graph.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 1, 1, 1),
+            graph.createGrowingNodeIndex(state_S, setOf(LookaheadSet.ANY), 0, 1, 1, 1),
+            false
+        )
+        graph.treeDataComplete.setRoot(graph.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 1, 1, 1))
 
         val expected = sppt.addTree(
             """
@@ -64,12 +78,11 @@ class test_TreeData {
         """.trimIndent()
         )
 
-        val actual = SPPTFromTreeData(sut, InputFromString(rrs.terminalRules.size, sentence), -1, -1)
+        val actual = SPPTFromTreeData(graph.treeDataComplete, InputFromString(rrs.terminalRules.size, sentence), -1, -1)
 
         assertEquals(sppt.tree.toStringAll, actual.toStringAll)
         assertEquals(sppt.tree, actual)
     }
-
 
     @Test
     fun concat_of_literals() {
@@ -96,28 +109,28 @@ class test_TreeData {
         val sentence = "abc"
 
         sut.setFirstChild(
-            sut.createGrowingNodeIndex(state_S1, setOf(LookaheadSet.ANY), 0, 1, 1, 1),
-            sut.createGrowingNodeIndex(state_a, setOf(LookaheadSet.ANY), 0, 1, 1, 0),
+            graph.createGrowingNodeIndex(state_S1, setOf(LookaheadSet.ANY), 0, 1, 1, 1),
+            graph.createGrowingNodeIndex(state_a, setOf(LookaheadSet.ANY), 0, 1, 1, 0),
             false
         )
         sut.setInGrowingParentChildAt(
-            sut.createGrowingNodeIndex(state_S1, setOf(LookaheadSet.ANY), 0, 1, 1, 1),
-            sut.createGrowingNodeIndex(state_S2, setOf(LookaheadSet.ANY), 0, 2, 2, 2),
-            sut.createGrowingNodeIndex(state_b, setOf(LookaheadSet.ANY), 1, 2, 2, 0),
+            graph.createGrowingNodeIndex(state_S1, setOf(LookaheadSet.ANY), 0, 1, 1, 1),
+            graph.createGrowingNodeIndex(state_S2, setOf(LookaheadSet.ANY), 0, 2, 2, 2),
+            graph.createGrowingNodeIndex(state_b, setOf(LookaheadSet.ANY), 1, 2, 2, 0),
             false
         )
         sut.setInGrowingParentChildAt(
-            sut.createGrowingNodeIndex(state_S2, setOf(LookaheadSet.ANY), 0, 2, 2, 2),
-            sut.createGrowingNodeIndex(state_S3, setOf(LookaheadSet.ANY), 0, 3, 3, 3),
-            sut.createGrowingNodeIndex(state_c, setOf(LookaheadSet.ANY), 2, 3, 3, 0),
+            graph.createGrowingNodeIndex(state_S2, setOf(LookaheadSet.ANY), 0, 2, 2, 2),
+            graph.createGrowingNodeIndex(state_S3, setOf(LookaheadSet.ANY), 0, 3, 3, 3),
+            graph.createGrowingNodeIndex(state_c, setOf(LookaheadSet.ANY), 2, 3, 3, 0),
             false
         )
         sut.setFirstChild(
-            sut.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 3, 3, 1),
-            sut.createGrowingNodeIndex(state_S3, setOf(LookaheadSet.ANY), 0, 3, 3, 1),
+            graph.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 3, 3, 1),
+            graph.createGrowingNodeIndex(state_S3, setOf(LookaheadSet.ANY), 0, 3, 3, 1),
             false
         )
-        sut.setRoot(sut.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 3, 3, 1))
+        graph.treeDataComplete.setRoot(graph.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 3, 3, 1))
 
         val expected = sppt.addTree(
             """
@@ -125,7 +138,7 @@ class test_TreeData {
         """.trimIndent()
         )
 
-        val actual = SPPTFromTreeData(sut, InputFromString(rrs.terminalRules.size, sentence), -1, -1)
+        val actual = SPPTFromTreeData(graph.treeDataComplete, InputFromString(rrs.terminalRules.size, sentence), -1, -1)
 
         assertEquals(sppt.tree.toStringAll, actual.toStringAll)
         assertEquals(sppt.tree, actual)

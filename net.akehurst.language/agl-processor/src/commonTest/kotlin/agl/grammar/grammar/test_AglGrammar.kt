@@ -29,7 +29,7 @@ class test_AglGrammar {
 
     @BeforeTest
     fun before() {
-        Agl.registry.agl.grammar.processor?.buildFor()
+       //Agl.registry.agl.grammar.processor?.buildFor()
     }
 
     @Test
@@ -699,6 +699,7 @@ class test_AglGrammar {
         """.trimIndent()
 
         val p = Agl.processorFromString<Any,Any>(grammarStr)
+        val p2 = Agl.processorFromString<Any,Any>(grammarStr)
         assertNotNull(p)
 
         val result1 = p.parse("abc");

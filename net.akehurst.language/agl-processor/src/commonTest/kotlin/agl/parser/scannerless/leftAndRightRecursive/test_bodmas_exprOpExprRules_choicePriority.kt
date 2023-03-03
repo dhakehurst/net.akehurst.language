@@ -19,6 +19,7 @@ package net.akehurst.language.parser.scanondemand.choicePriority
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -56,6 +57,8 @@ internal class test_bodmas_exprOpExprRules_choicePriority : test_ScanOnDemandPar
             concatenation("group") { literal("("); ref("expr"); literal(")") }
             choice("bool",RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("true");literal("false") }
             concatenation("var") { pattern("[a-zA-Z]+") }
+        }.also {
+            it.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         }
         val goal = "S"
     }
