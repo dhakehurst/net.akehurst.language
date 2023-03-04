@@ -70,7 +70,7 @@ internal class ScanOnDemandParser(
             }
         }
 
-        val match = rp.graph.treeDataComplete
+        val match = rp.graph.treeData.complete
         return if (match.root != null) {
             //val sppt = SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
             val sppt = SPPTFromTreeData(match, input, seasons, maxNumHeads)

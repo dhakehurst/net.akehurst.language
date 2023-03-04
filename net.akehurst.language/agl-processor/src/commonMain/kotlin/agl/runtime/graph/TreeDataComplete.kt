@@ -24,6 +24,8 @@ internal class TreeDataComplete(
     val forStateSetNumber: Int
 ) {
 
+    // --- used to create SPPT ---
+
     val completeChildren: Map<CompleteNodeIndex, Map<List<Int>, List<CompleteNodeIndex>>> get() = this._complete
     var root: CompleteNodeIndex? = null; private set
     var initialSkip: TreeDataComplete? = null; private set
@@ -32,14 +34,6 @@ internal class TreeDataComplete(
     val startPosition: Int? get() = root?.startPosition
     val nextInputPosition: Int? get() = root?.nextInputPosition
 
-    // index --> map-of-alternatives (optionList,lists-of-children)
-    //maybe optimise because only ambiguous choice nodes have multiple child options
-    private val _complete = mutableMapOf<CompleteNodeIndex, MutableMap<List<Int>, List<CompleteNodeIndex>>>()
-    private val _numberOfParents = mutableMapOf<CompleteNodeIndex, Int>()
-    private val _preferred = mutableMapOf<PreferredChildIndex, CompleteNodeIndex>()
-
-    private val _skipDataAfter = hashMapOf<CompleteNodeIndex, TreeDataComplete>()
-
     fun createCompleteNodeIndex(
         state: ParserState,
         startPosition: Int,
@@ -47,16 +41,11 @@ internal class TreeDataComplete(
         nextInputPositionAfterSkip: Int,
         growingNodeIndex: GrowingNodeIndex?
     ): CompleteNodeIndex {
-        return CompleteNodeIndex(this, state, startPosition, nextInputPosition, nextInputPositionAfterSkip,growingNodeIndex)
+        return CompleteNodeIndex(this, state, startPosition, nextInputPosition, nextInputPositionAfterSkip, growingNodeIndex)
     }
 
-    fun reset() {
-        this.root = null
-        this.initialSkip = null
-        this._complete.clear()
-        this._numberOfParents.clear()
-        this._preferred.clear()
-        this._skipDataAfter.clear()
+    fun setUserGoalChildrenAfterInitialSkip(nug: CompleteNodeIndex, userGoalChildren: List<CompleteNodeIndex>) {
+        this._complete[nug] = mutableMapOf(listOf(0) to userGoalChildren.toMutableList())
     }
 
     fun childrenFor(runtimeRule: RuntimeRule, startPosition: Int, nextInputPosition: Int): List<Pair<List<Int>, List<CompleteNodeIndex>>> {
@@ -78,74 +67,53 @@ internal class TreeDataComplete(
         }
     }
 
+    fun skipChildrenAfter(nodeIndex: CompleteNodeIndex) = this._skipDataAfter[nodeIndex]
+
+    // --- private implementation ---
+
+    // index --> map-of-alternatives (optionList,lists-of-children)
+    //maybe optimise because only ambiguous choice nodes have multiple child options
+    private val _complete = mutableMapOf<CompleteNodeIndex, MutableMap<List<Int>, List<CompleteNodeIndex>>>()
+    private val _preferred = mutableMapOf<PreferredChildIndex, CompleteNodeIndex>()
+    private val _skipDataAfter = hashMapOf<CompleteNodeIndex, TreeDataComplete>()
+
+    // --- used only by TreeData ---
+    fun reset() {
+        this.root = null
+        this.initialSkip = null
+        this._complete.clear()
+        this._preferred.clear()
+        this._skipDataAfter.clear()
+    }
+
     fun preferred(node: CompleteNodeIndex): CompleteNodeIndex? = this._preferred[node.preferred]
 
-    fun setRoot(root: GrowingNodeIndex) {
-        this.root = root.complete
+    fun setRoot(root: CompleteNodeIndex) {
+        this.root = root
     }
 
     fun start(initialSkipData: TreeDataComplete?) {
         this.initialSkip = initialSkipData
     }
 
-    private fun remove(node: CompleteNodeIndex) {
+    fun remove(node: CompleteNodeIndex) {
         this._complete.remove(node)
         this._preferred.remove(node.preferred)
         this._skipDataAfter.remove(node)
     }
 
-    /**
-     * remove the (completed) tree and recursively all its child-nodes - unless they have other parents
-     *
-     */
-    fun removeTree(node: CompleteNodeIndex, hasGrowingParent:(GrowingNodeIndex)->Boolean) {
-        if (hasGrowingParent(node.gni!!)) {
-            // do not remove
-        } else {
-            val n = this._numberOfParents[node] ?: 0
-            if (0 == n) removeTreeComplete(node, hasGrowingParent)
-        }
-    }
-
-    private fun removeTreeComplete(node: CompleteNodeIndex, hasGrowingParent:(GrowingNodeIndex)->Boolean) {
-        val childrenOfRemoved = this._complete[node]
-        this.remove(node)
-        if (node.isEmbedded) {
-            //nothing to remove, children stored in other TreeData
-        } else {
-            childrenOfRemoved?.entries?.forEach { (optionList, children) ->
-                children.forEach { child ->
-                    if (hasGrowingParent(node.gni!!)) {
-                        // do not remove
-                    } else {
-                        val n = this._numberOfParents[child] ?: error("Internal Error: can't remove child with no recorded parents")
-                        this._numberOfParents[child] = n - 1
-                        if (1 == n) removeTreeComplete(child, hasGrowingParent)
-                    }
-                }
-            }
-        }
-    }
-
-    fun setEmbeddedChild(parent: CompleteNodeIndex, child: CompleteNodeIndex) {
+    private fun setEmbeddedChild(parent: CompleteNodeIndex, child: CompleteNodeIndex) {
         val completeChildren = listOf(child)
         this.setCompletedBy(parent, completeChildren, true)  //might it ever not be preferred!
     }
 
     fun setChildren(parent: CompleteNodeIndex, completeChildren: List<CompleteNodeIndex>, isAlternative: Boolean) {
         this.setCompletedBy(parent, completeChildren, isAlternative)
-        completeChildren.forEach { this.incrementParents(it) }
-    }
-
-    fun setUserGoalChildrenAfterInitialSkip(nug: CompleteNodeIndex, userGoalChildren: List<CompleteNodeIndex>) {
-        this._complete[nug] = mutableMapOf(listOf(0) to userGoalChildren.toMutableList())
     }
 
     fun setSkipDataAfter(leafNodeIndex: CompleteNodeIndex, skipData: TreeDataComplete) {
         _skipDataAfter[leafNodeIndex] = skipData
     }
-
-    fun skipChildrenAfter(nodeIndex: CompleteNodeIndex) = this._skipDataAfter[nodeIndex]
 
     private fun setCompletedBy(parent: CompleteNodeIndex, children: List<CompleteNodeIndex>, isAlternative: Boolean) {
         var alternatives = this._complete[parent]
@@ -168,11 +136,6 @@ internal class TreeDataComplete(
             }
             alternatives[parent.optionList] = children
         }
-    }
-
-    private fun incrementParents(child: CompleteNodeIndex) {
-        val n = this._numberOfParents[child] ?: 0
-        this._numberOfParents[child] = n + 1
     }
 
     override fun hashCode(): Int = this.forStateSetNumber

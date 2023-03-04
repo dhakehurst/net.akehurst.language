@@ -34,12 +34,12 @@ internal class test_TreeData {
 
     @Test
     fun construct() {
-        assertNull(graph.treeDataComplete.root)
-        assertTrue(graph.treeDataComplete.completeChildren.isEmpty())
-        assertTrue(graph.treeData.growing.isEmpty())
-        assertNull(graph.treeDataComplete.initialSkip)
-        assertNull(graph.treeDataComplete.startPosition)
-        assertNull(graph.treeDataComplete.nextInputPosition)
+        assertNull(graph.treeData.complete.root)
+        assertTrue(graph.treeData.complete.completeChildren.isEmpty())
+        assertTrue(graph.treeData.growingChildren.isEmpty())
+        assertNull(graph.treeData.complete.initialSkip)
+        assertNull(graph.treeData.complete.startPosition)
+        assertNull(graph.treeData.complete.nextInputPosition)
     }
 
     @Test
@@ -70,7 +70,7 @@ internal class test_TreeData {
             graph.createGrowingNodeIndex(state_S, setOf(LookaheadSet.ANY), 0, 1, 1, 1),
             false
         )
-        graph.treeDataComplete.setRoot(graph.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 1, 1, 1))
+        graph.treeData.complete.setRoot(graph.treeData.complete.createCompleteNodeIndex(state_Ge, 0, 1, 1,null))
 
         val expected = sppt.addTree(
             """
@@ -78,7 +78,7 @@ internal class test_TreeData {
         """.trimIndent()
         )
 
-        val actual = SPPTFromTreeData(graph.treeDataComplete, InputFromString(rrs.terminalRules.size, sentence), -1, -1)
+        val actual = SPPTFromTreeData(graph.treeData.complete, InputFromString(rrs.terminalRules.size, sentence), -1, -1)
 
         assertEquals(sppt.tree.toStringAll, actual.toStringAll)
         assertEquals(sppt.tree, actual)
@@ -130,7 +130,7 @@ internal class test_TreeData {
             graph.createGrowingNodeIndex(state_S3, setOf(LookaheadSet.ANY), 0, 3, 3, 1),
             false
         )
-        graph.treeDataComplete.setRoot(graph.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 3, 3, 1))
+        graph.treeData.complete.setRoot(graph.treeData.complete.createCompleteNodeIndex(state_Ge,0, 3, 3,null))
 
         val expected = sppt.addTree(
             """
@@ -138,7 +138,7 @@ internal class test_TreeData {
         """.trimIndent()
         )
 
-        val actual = SPPTFromTreeData(graph.treeDataComplete, InputFromString(rrs.terminalRules.size, sentence), -1, -1)
+        val actual = SPPTFromTreeData(graph.treeData.complete, InputFromString(rrs.terminalRules.size, sentence), -1, -1)
 
         assertEquals(sppt.tree.toStringAll, actual.toStringAll)
         assertEquals(sppt.tree, actual)

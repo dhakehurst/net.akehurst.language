@@ -153,7 +153,6 @@ internal class ParseGraph(
     }
 
     var treeData = TreeData(stateSetNumber)
-    var treeDataComplete = TreeDataComplete(stateSetNumber)
 
     val goals: Set<GrowingNodeIndex> get() = this._goals
 
@@ -184,7 +183,7 @@ internal class ParseGraph(
         numNonSkipChildren: Int
     ): GrowingNodeIndex {
         val listSize = GrowingNodeIndex.listSize(state.runtimeRules.first(), numNonSkipChildren)
-        return GrowingNodeIndex(this.treeDataComplete, RuntimeState(state, runtimeLookaheadSet), startPosition, nextInputPosition, nextInputPositionAfterSkip, listSize)
+        return GrowingNodeIndex(this.treeData.complete, RuntimeState(state, runtimeLookaheadSet), startPosition, nextInputPosition, nextInputPositionAfterSkip, listSize)
     }
 
     /**
@@ -267,7 +266,6 @@ internal class ParseGraph(
         //TODO: don't want to create new one of these each time we parse skip
         // but currently can't reuse it as it carries the skip data
         this.treeData = TreeData(stateSetNumber)
-        this.treeDataComplete = TreeDataComplete(stateSetNumber)
     }
 
     /**
@@ -307,10 +305,6 @@ internal class ParseGraph(
     }
 
     private fun addNewPreferredTreeData(oldParent: GrowingNodeIndex?, newParent: GrowingNodeIndex, newChild: GrowingNodeIndex) {
-        if (newParent.isComplete) {
-            val children = this.treeData.growing[oldParent]?.let { it + newChild.complete} ?: listOf(newChild.complete)
-            treeDataComplete.setChildren(newParent.complete, children,false)
-        } else {
             if (null == oldParent) {
                 // should not remove existing, because it can be part of newParent sub tree
                 // setting the child will also reset the preferred
@@ -318,14 +312,9 @@ internal class ParseGraph(
             } else {
                 this.treeData.setInGrowingParentChildAt(oldParent, newParent, newChild, false)
             }
-        }
     }
 
     private fun addAlternativeTreeData(existing: CompleteNodeIndex, oldParent: GrowingNodeIndex?, newParent: GrowingNodeIndex, newChild: GrowingNodeIndex) {
-        if (newParent.isComplete) {
-            val children = this.treeData.growing[oldParent]?.let { it + newChild.complete} ?: listOf(newChild.complete)
-            treeDataComplete.setChildren(newParent.complete, children,true)
-        } else {
             if (null == oldParent) {
                 // should not remove existing, because it can be part of newParent
                 // setting the child will also reset the preferred
@@ -333,7 +322,6 @@ internal class ParseGraph(
             } else {
                 this.treeData.setInGrowingParentChildAt(oldParent, newParent, newChild, true)
             }
-        }
     }
 
     /**
@@ -342,7 +330,6 @@ internal class ParseGraph(
     private fun createNewHeadAndDropExisting(existing: CompleteNodeIndex, newHead: GrowingNodeIndex, previous: GrowingNodeIndex) {
         this._gss.pop(existing.gni!!)
         this._growingHeadHeap.remove(existing.gni)
-        //val nn = this.createGrowingNode(newHead)
         this.addGrowingHead(previous, newHead)
     }
 
@@ -350,7 +337,6 @@ internal class ParseGraph(
      * return true if a new head was created
      */
     private fun createNewHeadAndKeepExisting(newHead: GrowingNodeIndex, previous: GrowingNodeIndex) {
-        //val nn = this.createGrowingNode(newHead)
         this.addGrowingHead(previous, newHead)
     }
 
@@ -360,7 +346,6 @@ internal class ParseGraph(
     private fun dropNewHeadAndKeepExisting(existing: CompleteNodeIndex, newHead: GrowingNodeIndex, previous: GrowingNodeIndex) {
         //TODO: probably something to clean up here!
         val i = 0
-
     }
 
     /**
@@ -369,7 +354,6 @@ internal class ParseGraph(
     private fun createNewHeadAndDropExisting(existing: CompleteNodeIndex, newHead: GrowingNodeIndex, previous: Set<GrowingNodeIndex>) {
         this._gss.pop(existing.gni!!)
         this._growingHeadHeap.remove(existing.gni)
-        //val nn = this.createGrowingNode(newHead)
         this.addGrowingHead(previous, newHead)
     }
 
@@ -475,25 +459,9 @@ internal class ParseGraph(
         //val goalGN = this.createGrowingNode(st)
         this._gss.root(st)
         this._growingHeadHeap[st] = st
-        this.treeData.start(st, null)//initialSkipData)
-        this.treeDataComplete.start(initialSkipData)
+        this.treeData.start(st, initialSkipData)
         return st
     }
-
-    /**
-     * return true if a new head was created
-     */
-    /*
-    private fun findOrCreateGrowingLeafOrEmbeddedNode(newHead: GrowingNodeIndex, oldHead: GrowingNodeIndex, previous: GrowingNodeIndex?): Boolean {
-        return if (this._gss.contains(newHead)) {
-            // preserve the relationship to previous, but no need for a new head
-            this._gss.push(currentHead = oldHead, nextHead = newHead)
-            true
-        } else {
-            this.addGrowingHead(oldHead, newHead)
-        }
-    }
-     */
 
     /**
      * return true if grown (always grows)
@@ -515,10 +483,8 @@ internal class ParseGraph(
         val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: nextInputPosition
         val newHead = this.createGrowingNodeIndex(newState, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0)
         if (null != skipData) {
-            //this.treeData.setSkipDataAfter(newHead.complete, skipData)
-            this.treeDataComplete.setSkipDataAfter(newHead.complete, skipData)
+            this.treeData.setSkipDataAfter(newHead.complete, skipData)
         }
-       //  this.findOrCreateGrowingLeafOrEmbeddedNode(newHead, oldHead, previous)
         this.addGrowingHead(oldHead,newHead)
         return true
     }
@@ -545,15 +511,12 @@ internal class ParseGraph(
         val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: nextInputPosition
         val newHead = this.createGrowingNodeIndex(newState, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0)
         if (null != skipData) {
-            //this.treeData.setSkipDataAfter(newHead.complete, skipData)
-            this.treeDataComplete.setSkipDataAfter(newHead.complete, skipData)
+            this.treeData.setSkipDataAfter(newHead.complete, skipData)
         }
         val embGoal = embeddedTreeData.root!!
         val children = embeddedTreeData.childrenFor(embGoal.firstRule, embeddedTreeData.startPosition!!, embeddedTreeData.nextInputPosition!!)
         val child = children.first().second[0]
-//        this.treeData.setEmbeddedChild(newHead, child)
-        this.treeDataComplete.setEmbeddedChild(newHead.complete, child)
-        //return this.findOrCreateGrowingLeafOrEmbeddedNode(newHead, oldHead, previous)
+        this.treeData.setEmbeddedChild(newHead, child)
         this.addGrowingHead(oldHead,newHead)
         return true
     }
@@ -577,9 +540,8 @@ internal class ParseGraph(
         val nextInputPosition = if (childNode.isLeaf) childNode.nextInputPositionAfterSkip else childNode.nextInputPosition
         val parent = this.createGrowingNodeIndex(parentState, parentRuntimeLookaheadSet, childNode.startPosition, nextInputPosition, nextInputPosition, 1)
         val child = childNode
-
         return if (parent.state.isAtEnd) {
-            val existingComplete = this.treeDataComplete.preferred(parent.complete)
+            val existingComplete = this.treeData.preferred(parent.complete)
             if (null != existingComplete) {
                 val shouldDrop = this.mergeDecision(existingComplete, parent)
                 when (shouldDrop) {
@@ -606,7 +568,7 @@ internal class ParseGraph(
                     }
                 }
             } else {
-                val existingGrowing = this.treeData.growing[parent]
+                val existingGrowing = this.treeData.growingChildren[parent]
                 if (null != existingGrowing) {
                     // some other head has already added the first child
                     //TODO: check priority of child and replace or drop this head - or use GrowingChildren graph rather than list!
@@ -643,7 +605,7 @@ internal class ParseGraph(
             // - and heads with higher priority are done first, then when lower head is processed it can be dropped
             //       and we know that a lower one has not already been done
 
-            val existingGrowing = this.treeData.growing[parent]
+            val existingGrowing = this.treeData.growingChildren[parent]
             if (null != existingGrowing) {
                 // some other head has already added the first child
                 val existingFirstChild = existingGrowing[0]
@@ -706,7 +668,7 @@ internal class ParseGraph(
         val child = nextChildNode
 
         return if (newParent.state.isAtEnd) {
-            val existingComplete = this.treeDataComplete.preferred(newParent.complete)
+            val existingComplete = this.treeData.preferred(newParent.complete)
             if (null != existingComplete) {
                 val shouldDrop = this.mergeDecision(existingComplete, newParent)
                 when (shouldDrop) {
@@ -801,15 +763,7 @@ internal class ParseGraph(
         if (b) {
             //still growing
         } else {
-            if (node.isComplete) {
-                if (this.treeData.hasGrowingParent(node)) {
-                    // don;t delete
-                } else {
-                    this.treeDataComplete.removeTree(node.complete) { this.treeData.hasGrowingParent(it) }
-                }
-            } else {
-                this.treeData.removeTree(node)
-            }
+            this.treeData.removeTree(node)
         }
     }
 
@@ -836,7 +790,7 @@ internal class ParseGraph(
 
     fun recordGoal(goal: GrowingNodeIndex) {
         //this.treeData.setRoot(goal)
-        this.treeDataComplete.setRoot(goal)
+        this.treeData.complete.setRoot(goal.complete)
         this._goals.add(goal)
         this.goalMatchedAll = this.input.isEnd(goal.nextInputPosition)
     }

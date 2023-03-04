@@ -151,7 +151,7 @@ internal class CompleteNodeIndex(
     }
 
     //useful during debug
-    fun toStringTree(treeData: TreeDataComplete, input: InputFromString): String {
+    fun toStringTree(input: InputFromString): String {
         val runtimeRules = state.runtimeRulesSet
         val nodes = when {
             state.isLeaf -> runtimeRules.map { rr ->

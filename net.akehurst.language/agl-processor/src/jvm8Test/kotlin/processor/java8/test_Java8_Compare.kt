@@ -71,7 +71,7 @@ class test_Java8_Compare(val data: Data) {
                 }
             )
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
-            //proc.buildFor(forRule)//TODO: use build
+            //proc.buildFor(Agl.parseOptions { goalRuleName(forRule) })//TODO: use build
             println("Built $path")
             return proc
         }

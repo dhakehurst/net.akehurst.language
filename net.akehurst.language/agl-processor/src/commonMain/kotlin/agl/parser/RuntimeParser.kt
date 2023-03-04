@@ -338,7 +338,7 @@ internal class RuntimeParser(
         possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs
     ): Boolean {
         val toDropData = mutableSetOf<GrowingNodeIndex>()
-        val toDropHead = mutableSetOf<GrowingNodeIndex>()
+        //val toDropHead = mutableSetOf<GrowingNodeIndex>()
         var grown = false
         for (toProcess in nextToProcess.triples) {
             val g = this.growWithPrev(toProcess, possibleEndOfText, growArgs)
@@ -358,10 +358,10 @@ internal class RuntimeParser(
             lastDropped.add(nextToProcess)
             //TODO: maybe also drop other things!
         }
-        for (hd in toDropHead) {
-            graph.dropHead(hd)
-            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped Head: $hd" }
-        }
+        //for (hd in toDropHead) {
+        //    graph.dropHead(hd)
+        //    if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped Head: $hd" }
+        //}
         for (dd in toDropData) {
             graph.dropData(dd)
             if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped Data: $dd" }
@@ -667,7 +667,7 @@ internal class RuntimeParser(
         return when {
             skipParser.graph.goals.isEmpty() -> null
             else -> {
-                skipParser.graph.treeDataComplete
+                skipParser.graph.treeData.complete
             }
         }
     }
@@ -715,7 +715,7 @@ internal class RuntimeParser(
                     maxNumHeads = max(maxNumHeads, embeddedParser.graph.numberOfHeads)
                 } while (embeddedParser.graph.canGrow && (embeddedParser.graph.goals.isEmpty() || embeddedParser.graph.goalMatchedAll.not()))
                 //val match = embeddedParser.longestMatch(seasons, maxNumHeads, true) as SPPTBranch?
-                val match = embeddedParser.graph.treeDataComplete
+                val match = embeddedParser.graph.treeData.complete
                 if (match.root != null) {
                     val embeddedS0 = embeddedParser.stateSet.startState
                     val ni = match.nextInputPosition!! // will always have value if root not null
