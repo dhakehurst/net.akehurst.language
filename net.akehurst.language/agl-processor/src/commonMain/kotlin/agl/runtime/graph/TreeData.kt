@@ -40,8 +40,8 @@ internal class TreeData(
      * remove the (completed) tree and recursively all its child-nodes - unless they have other parents
      *
      */
-    fun removeTree(node: GrowingNodeIndex) {
-        if (hasParents(node.complete)) {
+    fun removeTree(node: GrowingNodeIndex, isGrowing:(GrowingNodeIndex)->Boolean) {
+        if (hasParents(node.complete) || isGrowing(node)) {
             // do not remove
         } else {
             if (node.isComplete) {

@@ -64,6 +64,7 @@ internal class GrowingNodeIndex(
     val nextInputPositionAfterSkip: Int get() = complete.nextInputPositionAfterSkip
 
     val isComplete: Boolean get() = runtimeState.isAtEnd
+    val isGoal:Boolean get() = runtimeState.state.isGoal
 
     //TODO: don't store data twice..also prefer not to create 2 objects!
     //val complete = CompleteNodeIndex(treeData.forStateSetNumber, runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)

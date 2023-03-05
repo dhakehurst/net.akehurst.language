@@ -24,12 +24,72 @@ internal class RuntimeTransitionCalculator(
     val stateSet: ParserStateSet
 ) {
 
-    internal fun calcFilteredTransitions(prevPrev: ParserState, previousState: ParserState, sourceState: ParserState): Set<Transition> {
-        val transitions = this.calcTransitions(prevPrev, previousState, sourceState)//, gn.lookaheadStack.peek())
-        return transitions
-    }
+    //internal fun calcFilteredTransitions(prevPrev: ParserState, previousState: ParserState, sourceState: ParserState): Set<Transition> {
+    //    val transitions = this.calcTransitions(prevPrev, previousState, sourceState)//, gn.lookaheadStack.peek())
+    //    return transitions
+    //}
 
     private val __transitions = mutableSetOf<Transition>() // to save time allocating when calcTransitions is called
+
+    fun calTransitionsForGoal(sourceState: ParserState, previousState: ParserState): Set<Transition> {
+        __transitions.clear()
+        val widthInto = this.stateSet.buildCache.widthInto(previousState, sourceState)
+        for (wi in widthInto) {
+            val rr = wi.to.rule as RuntimeRule
+            when {
+                rr.isTerminal -> __transitions.add(this.createWidthOrEmbeddedTransition(sourceState, wi))
+                else -> error("Should never happen")
+            }
+        }
+        return __transitions
+    }
+
+    fun calcTransitionsForComplete(sourceState: ParserState, previousState: ParserState,prevPrev: ParserState): Set<Transition> {
+        __transitions.clear()
+        val heightOrGraftInto = this.stateSet.buildCache.heightOrGraftInto(prevPrev, previousState, sourceState)
+        for (hg in heightOrGraftInto) {
+            when (hg.action) {
+                ParseAction.GOAL -> {
+                    when {
+                        (sourceState.isGoal && this.stateSet.isSkip) -> {
+                            // must be end of skip. TODO: can do something better than this!
+                            val to = sourceState
+                            __transitions.add(Transition(sourceState, to, ParseAction.GOAL, setOf(Lookahead.EMPTY)))
+                        }
+
+                        else -> {
+                            //must pass in hg, because for embedded rules, GOAL does not end with EOT
+                            val ts = this.createGoalTransition3(sourceState, hg)
+                            __transitions.add(ts)//, addLh, parentLh))
+                        }
+                    }
+                }
+
+                ParseAction.HEIGHT -> {
+                    val ts = this.createHeightTransition3(sourceState, hg)
+                    __transitions.add(ts)
+                }
+
+                ParseAction.GRAFT -> {
+                    val ts = this.createGraftTransition3(sourceState, hg)
+                    __transitions.add(ts)
+                }
+
+                else -> error("")
+            }
+        }
+        return __transitions
+    }
+
+    fun calcTransitionsForInComplete(source: ParserState, previous: ParserState): Set<Transition> {
+        __transitions.clear()
+        val widthInto = this.stateSet.buildCache.widthInto(previous, source)
+        for (wi in widthInto) {
+            val ts = this.createWidthOrEmbeddedTransition(source, wi)
+            __transitions.add(ts)
+        }
+        return __transitions
+    }
 
     // must use previousState.rulePosition as starting point for finding
     // lookahead for height/graft, and previousLookahead to use if end up at End of rule
@@ -99,7 +159,7 @@ internal class RuntimeTransitionCalculator(
         return __transitions
     }
 
-    internal fun createWidthTransFor(from:ParserState, widthInto:Set<WidthInfo>): Set<Transition> {
+    internal fun createWidthTransFor(from: ParserState, widthInto: Set<WidthInfo>): Set<Transition> {
         __transitions.clear()
         for (wi in widthInto) {
             val ts = this.createWidthOrEmbeddedTransition(from, wi)

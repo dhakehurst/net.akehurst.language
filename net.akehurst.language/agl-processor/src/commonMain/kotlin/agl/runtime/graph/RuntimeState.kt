@@ -45,7 +45,12 @@ internal class RuntimeState(
         }.toSet()
     }
 
-    fun transitions(prevPrev: ParserState, previousState: ParserState): List<Transition> = this.state.transitions(prevPrev, previousState, this.state)
+    //fun transitions(prevPrev: ParserState, previousState: ParserState): List<Transition> = this.state.transitions(prevPrev, previousState, this.state)
+
+    fun transitionsGoal(previous: ParserState): List<Transition> = this.state.transitionsGoal(previous)
+    fun transitionsInComplete(previous: ParserState): List<Transition> = this.state.transitionsInComplete(previous)
+    fun transitionsComplete(previous: ParserState,prevPrev: ParserState): List<Transition> = this.state.transitionsComplete(previous, prevPrev)
+
 
     private val hashCode_cache = arrayOf(state, runtimeLookaheadSet).contentHashCode()
     override fun hashCode(): Int = this.hashCode_cache
