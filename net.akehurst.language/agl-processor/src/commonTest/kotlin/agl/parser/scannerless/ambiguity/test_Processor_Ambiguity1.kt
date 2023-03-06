@@ -156,7 +156,7 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 3,
+                expectedNumGSSHeads = 2,
                 expectedTrees = arrayOf(expected1)
         )
     }
@@ -239,7 +239,7 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 3, //TODO: can we make this 1 by merging states?
+                expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
                 expectedTrees = arrayOf(expected5)
         )
     }

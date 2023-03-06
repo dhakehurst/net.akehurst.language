@@ -55,7 +55,7 @@ internal class ParserStateSet(
         this.usedRules.filter { it.isNonTerminal }.toSet()
     }
     val firstTerminals: Set<RuntimeRule> by lazy {
-        this.startState.transitions(this.startState, this.startState, this.startState).map {
+        this.startState.transitionsGoal(this.startState).map {
             it.to.firstRule
         }.toSet()
     }

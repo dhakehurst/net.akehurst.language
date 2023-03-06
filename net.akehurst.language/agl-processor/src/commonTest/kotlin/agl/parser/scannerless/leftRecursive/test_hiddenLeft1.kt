@@ -95,7 +95,7 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 3,
+            expectedNumGSSHeads = 2,
             expectedTrees = arrayOf(expected)
         )
     }
@@ -141,7 +141,7 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 3,
+            expectedNumGSSHeads = 2,
             printAutomaton = true,
             expectedTrees = arrayOf(expected)
         )

@@ -22,11 +22,9 @@ import net.akehurst.language.agl.automaton.*
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
-import net.akehurst.language.agl.runtime.graph.TreeData
 import net.akehurst.language.agl.runtime.graph.TreeDataComplete
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
@@ -36,8 +34,8 @@ import net.akehurst.language.collections.lazyMutableMapNonNull
 import kotlin.math.max
 
 internal class RuntimeParser(
-    internal val stateSet: ParserStateSet,
-    private val skipStateSet: ParserStateSet?, // null if this is a skipParser
+    val stateSet: ParserStateSet,
+    val skipStateSet: ParserStateSet?, // null if this is a skipParser
     val userGoalRule: RuntimeRule,
     private val input: InputFromString
 ) {
@@ -62,7 +60,8 @@ internal class RuntimeParser(
     var lastToGrow = listOf<ParseGraph.Companion.ToProcessTriple>()
     val lastDropped = mutableSetOf<ParseGraph.Companion.NextToProcess>()
     val embeddedLastDropped = mutableMapOf<Transition, Set<ParseGraph.Companion.NextToProcess>>()
-    val lastToTryWidthTrans = mutableListOf<ParseGraph.Companion.ToProcessTriple>()
+    val lastToTryWidthTrans = mutableListOf<GrowingNodeIndex>()
+    val failedReasons = mutableListOf<FailedParseReason>()
 
     private var interruptedMessage: String? = null
 
@@ -183,6 +182,7 @@ internal class RuntimeParser(
     }
 
     fun grow3(possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Int {
+        this.failedReasons.clear()
         this.lastToTryWidthTrans.clear()
         this.lastDropped.clear()
         this.lastToGrow = this.graph.peekAllNextToProcess()
@@ -205,7 +205,9 @@ internal class RuntimeParser(
                 //don't do it again
                 doneEmpties.add(head.state)
             } else {
-                growHead(head,possibleEndOfText,growArgs)
+                val grown = growHead(head, possibleEndOfText, growArgs)
+                if (grown.not()) doNoTransitionsTaken(head)
+                steps++
             }
 
             //val toProcess = this.graph.nextToProcess()
@@ -227,7 +229,7 @@ internal class RuntimeParser(
         return steps
     }
 
-    private fun growHead(head: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs):Boolean {
+    private fun growHead(head: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
         return when {
             head.isGoal -> growGoal(head, possibleEndOfText, growArgs)
             head.isComplete -> growComplete(head, possibleEndOfText, growArgs)
@@ -235,22 +237,27 @@ internal class RuntimeParser(
         }
     }
 
-    private fun growGoal(gn: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs):Boolean {
-        var grown = false
-        val transitions = gn.runtimeState.transitionsGoal(stateSet.startState)
-        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
-        for (tr in transitions) {
-            val b = when (tr.action) {
-                ParseAction.WIDTH -> doWidth(gn, tr, possibleEndOfText, growArgs)
-                ParseAction.EMBED -> doEmbedded(gn, tr, possibleEndOfText, growArgs)
-                else -> error("Internal Error: should only have WIDTH or EMBED transitions here")
+    private fun growGoal(gn: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
+        return if (gn.isComplete) {
+            graph.recordGoal(gn)
+            false
+        } else {
+            var grown = false
+            val transitions = gn.runtimeState.transitionsGoal(stateSet.startState)
+            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
+            for (tr in transitions) {
+                val b = when (tr.action) {
+                    ParseAction.WIDTH -> doWidth(gn, tr, possibleEndOfText, growArgs)
+                    ParseAction.EMBED -> doEmbedded(gn, tr, possibleEndOfText, growArgs)
+                    else -> error("Internal Error: should only have WIDTH or EMBED transitions here")
+                }
+                grown = grown || b
             }
-            grown = grown || b
+            grown
         }
-        return grown
     }
 
-    private fun growIncomplete(gn: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs):Boolean {
+    private fun growIncomplete(gn: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
         var grown = false
         val prevSet = this.graph.previousOf(gn)
         for (previous in prevSet) {
@@ -268,19 +275,75 @@ internal class RuntimeParser(
         return grown
     }
 
-    private fun growComplete(gn: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs):Boolean {
+    private fun growComplete(gn: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
         var grown = false
         val prevSet = this.graph.previousOf(gn)
         for (previous in prevSet) {
             val prevPrevSet = this.graph.previousOf(previous)
-            for (prevPrev in prevPrevSet) {
-                val transitions = gn.runtimeState.transitionsComplete(previous.state, prevPrev.state)
-                if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
-                val grouped = transitions.groupBy { it.to.runtimeRulesSet }
-                for (it in grouped) {
-                    when {
-                        1 == it.value.size -> {
-                            val tr = it.value[0]
+            if (prevPrevSet.isEmpty()) {
+                val b = growComplete2(gn, previous, null, possibleEndOfText, growArgs)
+                grown = grown || b
+            } else {
+                for (prevPrev in prevPrevSet) {
+                    val b = growComplete2(gn, previous, prevPrev, possibleEndOfText, growArgs)
+                    grown = grown || b
+                }
+            }
+        }
+        return grown
+    }
+
+    private fun growComplete2(gn: GrowingNodeIndex, previous: GrowingNodeIndex, prevPrev: GrowingNodeIndex?, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
+        var grown = false
+        val transitions = gn.runtimeState.transitionsComplete(previous.state, prevPrev?.state ?: stateSet.startState)
+        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
+        val grouped = transitions.groupBy { it.to.runtimeRulesSet }
+        for (it in grouped) {
+            when {
+                1 == it.value.size -> {
+                    val tr = it.value[0]
+                    val b = when (tr.action) {
+                        ParseAction.HEIGHT -> doHeight(gn, previous, tr, possibleEndOfText, growArgs)
+                        ParseAction.GRAFT -> doGraft(gn, previous, prevPrev, tr, possibleEndOfText, growArgs)
+                        ParseAction.GOAL -> doGoal(gn, previous, tr, possibleEndOfText, growArgs)
+                        else -> error("Internal Error: should only have GOAL, HEIGHT or GRAFT transitions here")
+                    }
+                    grown = grown || b
+                }
+
+                else -> {
+                    val trgs = it.value.filter { it.action == ParseAction.GRAFT }
+                        // if multiple GRAFT trans to same rule, prefer left most target
+                        .sortedWith(Comparator { t1, t2 ->
+                            val p1 = t1.to.rulePositions.first().position
+                            val p2 = t2.to.rulePositions.first().position
+                            when {
+                                p1 == p2 -> 0
+                                RulePosition.END_OF_RULE == p1 -> 1
+                                RulePosition.END_OF_RULE == p2 -> -1
+                                p1 > p2 -> 1
+                                p1 < p2 -> -1
+                                else -> 0// should never happen !
+                            }
+                        })
+                    val trhs = it.value.filter { it.action == ParseAction.HEIGHT }
+                    if (trgs.isNotEmpty() && trhs.isNotEmpty()) {
+                        var doneIt = false
+                        var i = 0
+                        while (doneIt.not() && i < trgs.size) {
+                            val b = doGraft(gn, previous, prevPrev, trgs[i], possibleEndOfText, growArgs)
+                            doneIt = doneIt || b
+                            ++i
+                        }
+                        i = 0
+                        while (doneIt.not() && i < trhs.size) {
+                            val b = doHeight(gn, previous, trhs[i], possibleEndOfText, growArgs)
+                            doneIt = doneIt || b
+                            ++i
+                        }
+                        grown = grown || doneIt
+                    } else {
+                        for (tr in it.value) {
                             val b = when (tr.action) {
                                 ParseAction.HEIGHT -> doHeight(gn, previous, tr, possibleEndOfText, growArgs)
                                 ParseAction.GRAFT -> doGraft(gn, previous, prevPrev, tr, possibleEndOfText, growArgs)
@@ -288,75 +351,33 @@ internal class RuntimeParser(
                             }
                             grown = grown || b
                         }
-
-                        else -> {
-                            val trgs = it.value.filter { it.action == ParseAction.GRAFT }
-                                // if multiple GRAFT trans to same rule, prefer left most target
-                                .sortedWith(Comparator { t1, t2 ->
-                                    val p1 = t1.to.rulePositions.first().position
-                                    val p2 = t2.to.rulePositions.first().position
-                                    when {
-                                        p1 == p2 -> 0
-                                        RulePosition.END_OF_RULE == p1 -> 1
-                                        RulePosition.END_OF_RULE == p2 -> -1
-                                        p1 > p2 -> 1
-                                        p1 < p2 -> -1
-                                        else -> 0// should never happen !
-                                    }
-                                })
-                            val trhs = it.value.filter { it.action == ParseAction.HEIGHT }
-                            if (trgs.isNotEmpty() && trhs.isNotEmpty()) {
-                                var doneIt = false
-                                var i = 0
-                                while (doneIt.not() && i < trgs.size) {
-                                    val b = doGraft(gn, previous, prevPrev, trgs[i], possibleEndOfText, growArgs)
-                                    doneIt = doneIt || b
-                                    ++i
-                                }
-                                i = 0
-                                while (doneIt.not() && i < trhs.size) {
-                                    val b = doHeight(gn, previous, trhs[i], possibleEndOfText, growArgs)
-                                    doneIt = doneIt || b
-                                    ++i
-                                }
-                                grown = grown || doneIt
-                            } else {
-                                for (tr in it.value) {
-                                    val b = when (tr.action) {
-                                        ParseAction.HEIGHT -> doHeight(gn, previous, tr, possibleEndOfText, growArgs)
-                                        ParseAction.GRAFT -> doGraft(gn, previous, prevPrev, tr, possibleEndOfText, growArgs)
-                                        else -> error("Internal Error: should only have HEIGHT or GRAFT transitions here")
-                                    }
-                                    grown = grown || b
-                                }
-                            }
-                        }
                     }
                 }
             }
         }
-
+        return grown
     }
 
-    fun growNonEmptyWidthForError(possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Set<ParseGraph.Companion.NextToProcess> {
-        val lg = mutableSetOf<ParseGraph.Companion.NextToProcess>()
+    fun growNonEmptyWidthForError(possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Set<GrowingNodeIndex> {
+        val lg = mutableSetOf<GrowingNodeIndex>()
         val currentStartPosition = this.graph.nextHeadNextInputPosition
         while (this.graph.hasNextHead && this.graph.nextHeadNextInputPosition <= currentStartPosition) {
             //while ((this.canGrow && this.graph.goals.isEmpty())) {
             //val nextToProcess = this.graph.nextToProcess()
             val head = this.graph.peekNextHead
             checkForTerminationRequest()
-           // val grown = this.growNormal(nextToProcess, possibleEndOfText, growArgs)
+            // val grown = this.growNormal(nextToProcess, possibleEndOfText, growArgs)
             val grown = growHead(head, possibleEndOfText, growArgs)
             if (grown.not()) {
-                lg.add(nextToProcess)
+                lg.add(head)
+                doNoTransitionsTaken(head)
             }
         }
         return lg
     }
 
-    fun growHeightOrGraftForError(possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Set<ParseGraph.Companion.NextToProcess> {
-        val lg = mutableSetOf<ParseGraph.Companion.NextToProcess>()
+    fun growHeightOrGraftForError(possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Set<ParseGraph.Companion.ToProcessTriple> {
+        val lg = mutableSetOf<ParseGraph.Companion.ToProcessTriple>()
         val currentStartPosition = this.graph.nextHeadNextInputPosition
         while (this.graph.hasNextHead && this.graph.nextHeadNextInputPosition <= currentStartPosition) {
             //while ((this.canGrow && this.graph.goals.isEmpty())) {
@@ -366,7 +387,8 @@ internal class RuntimeParser(
             //val grown = this.growNormal(nextToProcess, possibleEndOfText, growArgs)
             val grown = growHead(head, possibleEndOfText, growArgs)
             if (grown.not()) {
-                lg.add(nextToProcess)
+                lg.addAll(this.graph.peekTripleFor(head))
+                doNoTransitionsTaken(head)
             }
         }
         return lg
@@ -558,8 +580,12 @@ internal class RuntimeParser(
 */
     private fun doNoTransitionsTaken(head: GrowingNodeIndex) {
         graph.dropStackWithHead(head)
+        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped stack with Head: $head" }
     }
 
+    /**
+     *  GOAL
+     */
     private fun doGoal(
         head: GrowingNodeIndex, previous: GrowingNodeIndex?,
         transition: Transition, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs
@@ -637,10 +663,11 @@ internal class RuntimeParser(
                         if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head, taking: $transition" }
                         this.graph.pushToStackOf(head, transition.to, setOf(LookaheadSet.EMPTY), startPosition, nextInputPosition, skipData)
                     } else {
+                        recordFailedWidthLH(nextInputPositionAfterSkip, transition, runtimeLhs, possibleEndOfText)
                         false
                     }
                 } else {
-                    recordLastToTryWidthTrans(head)
+                    recordFailedWidthTo(head.nextInputPosition, transition)
                     false
                 }
             }
@@ -701,6 +728,7 @@ internal class RuntimeParser(
                         buildSPPT = growArgs.buildTree
                     )
                 } else {
+                    recordFailedHeightLh(head.nextInputPosition, transition, runtimeLhs, possibleEndOfText)
                     false
                 }
             }
@@ -709,7 +737,7 @@ internal class RuntimeParser(
 
     // Use previous runtimeLookahead
     private fun doGraft(
-        head: GrowingNodeIndex, previous: GrowingNodeIndex?, prevPrev: GrowingNodeIndex,
+        head: GrowingNodeIndex, previous: GrowingNodeIndex?, prevPrev: GrowingNodeIndex?,
         transition: Transition, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs
     ): Boolean {
         return when {
@@ -736,9 +764,11 @@ internal class RuntimeParser(
                             buildSPPT = growArgs.buildTree
                         )
                     } else {
+                        recordFailedGraftLH(head.nextInputPosition, transition, runtimeLhs, possibleEndOfText)
                         false
                     }
                 } else {
+                    recordFailedGraftRTG(head.nextInputPosition, transition, previous.numNonSkipChildren)
                     false
                 }
             }
@@ -861,10 +891,39 @@ internal class RuntimeParser(
                 } else {
                     //  could not parse embedded
                     this.embeddedLastDropped[transition] = embeddedParser.lastDropped
+                    recordFailedEmbedded(head.nextInputPosition, transition, embeddedParser.failedReasons)
                     false
                 }
             }
         }
+    }
+
+    private fun recordLastToTryWidthTrans(head: GrowingNodeIndex) {
+        this.lastToTryWidthTrans.add(head)
+    }
+
+    private fun recordFailedWidthTo(position: Int, transition: Transition) {
+        failedReasons.add(FailedParseReasonWidthTo(position, transition))
+    }
+
+    private fun recordFailedWidthLH(position: Int, transition: Transition, runtimeLhs: Set<LookaheadSet>, possibleEndOfText: Set<LookaheadSet>) {
+        failedReasons.add(FailedParseReasonLookahead(position, transition, runtimeLhs, possibleEndOfText))
+    }
+
+    private fun recordFailedEmbedded(position: Int, transition: Transition, failedEmbeddedReasons: List<FailedParseReason>) {
+        failedReasons.add(FailedParseReasonEmbedded(position, transition, failedEmbeddedReasons))
+    }
+
+    private fun recordFailedHeightLh(position: Int, transition: Transition, runtimeLhs: Set<LookaheadSet>, possibleEndOfText: Set<LookaheadSet>) {
+        failedReasons.add(FailedParseReasonLookahead(position, transition, runtimeLhs, possibleEndOfText))
+    }
+
+    private fun recordFailedGraftRTG(position: Int, transition: Transition, prevNumNonSkipChildren: Int) {
+        failedReasons.add(FailedParseReasonGraftRTG(position, transition, prevNumNonSkipChildren))
+    }
+
+    private fun recordFailedGraftLH(position: Int, transition: Transition, runtimeLhs: Set<LookaheadSet>, possibleEndOfText: Set<LookaheadSet>) {
+        failedReasons.add(FailedParseReasonLookahead(position, transition, runtimeLhs, possibleEndOfText))
     }
 
     /*

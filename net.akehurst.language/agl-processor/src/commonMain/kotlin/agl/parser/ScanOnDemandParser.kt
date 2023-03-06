@@ -24,6 +24,7 @@ import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.RuntimeState
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
 import net.akehurst.language.agl.util.Debug
@@ -48,7 +49,7 @@ internal class ScanOnDemandParser(
 
     override fun parseForGoal(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): ParseResult { //Pair<SharedPackedParseTree?, List<LanguageIssue>> {
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, inputText)
-        val rp = createRuntimeParser(goalRuleName,input,automatonKind)
+        val rp = createRuntimeParser(goalRuleName, input, automatonKind)
         this.runtimeParser = rp
 
         val possibleEndOfText = setOf(LookaheadSet.EOT)
@@ -57,17 +58,14 @@ internal class ScanOnDemandParser(
         var maxNumHeads = rp.graph.numberOfHeads
         var totalWork = maxNumHeads
 
-        val lastToTryWidth = mutableListOf<ParseGraph.Companion.ToProcessTriple>()
+        var lastToTryWidth = emptyList<GrowingNodeIndex>()
         while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
             if (Debug.OUTPUT_RUNTIME) println("$seasons ===================================")
             val steps = rp.grow3(possibleEndOfText, RuntimeParser.normalArgs)
             seasons += steps
             maxNumHeads = max(maxNumHeads, rp.graph.numberOfHeads)
             totalWork += rp.graph.numberOfHeads
-            if (rp.lastToTryWidthTrans.isNotEmpty()) { //FIXME: slows down...maybe use expectedAt on err to calc suggestions
-                lastToTryWidth.clear()
-                lastToTryWidth.addAll(rp.lastToTryWidthTrans)
-            }
+            lastToTryWidth = rp.lastToTryWidthTrans
         }
 
         val match = rp.graph.treeData.complete
@@ -76,14 +74,15 @@ internal class ScanOnDemandParser(
             val sppt = SPPTFromTreeData(match, input, seasons, maxNumHeads)
             ParseResultDefault(sppt, emptyList())
         } else {
-            val nextExpected = this.findNextExpectedAfterError2(rp, lastToTryWidth, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
+            //val nextExpected = this.findNextExpectedAfterError2(rp, lastToTryWidth, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
+            val nextExpected = this.findNextExpectedAfterError3(input, rp.failedReasons, rp.stateSet.automatonKind, rp.skipStateSet?.usedTerminalRules?: emptySet())
             val issue = throwError(input, rp, nextExpected, seasons, maxNumHeads)
             val sppt = null//rp.longestLastGrown?.let{ SharedPackedParseTreeDefault(it, seasons, maxNumHeads) }
             ParseResultDefault(sppt, listOf(issue))
         }
     }
 
-    private fun createRuntimeParser(goalRuleName: String, input: InputFromString, automatonKind: AutomatonKind):RuntimeParser {
+    private fun createRuntimeParser(goalRuleName: String, input: InputFromString, automatonKind: AutomatonKind): RuntimeParser {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val s0 = runtimeRuleSet.fetchStateSetFor(goalRuleName, automatonKind).startState
         val skipStateSet = runtimeRuleSet.skipParserStateSet
@@ -174,26 +173,27 @@ internal class ScanOnDemandParser(
     */
     private fun findNextExpectedAfterError2(
         rp: RuntimeParser,
-        lastToTryWidth: MutableList<ParseGraph.Companion.ToProcessTriple>,
+        lastToTryWidth: List<GrowingNodeIndex>,
         input: InputFromString,
         possibleEndOfText: Set<LookaheadSet>
     ): Pair<InputLocation, Set<RuntimeRule>> {
-        val trips = lastToTryWidth//rp.lastToTryWidthTrans//lastToGrow //rp.lastDropped.flatMap { it.triples }
+        //val trips = lastToTryWidth//rp.lastToTryWidthTrans//lastToGrow //rp.lastDropped.flatMap { it.triples }
+        val trips = lastToTryWidth.flatMap { rp.graph.peekTripleFor(it) }
         // for anything not transitioning to empty do the width then try H or G
         rp.resetGraphToLastGrown(trips)//lastGrown)
-        val lgs1 =rp.growNonEmptyWidthForError(possibleEndOfText, RuntimeParser.Companion.GrowArgs(false, true, false, true))
+        //val lgs1 =rp.growNonEmptyWidthForError(possibleEndOfText, RuntimeParser.Companion.GrowArgs(false, true, false, true))
         val lgs2 = rp.growHeightOrGraftForError(possibleEndOfText, RuntimeParser.Companion.GrowArgs(false, true, true, false))
         val triples = when {
-            lgs2.isNotEmpty() -> lgs2.flatMap { it.triples }.toSet()
-        //    lgs1.isNotEmpty() -> lgs1.flatMap { it.triples }.toSet()
-            else-> trips.toSet()
+            lgs2.isNotEmpty() -> lgs2 //.flatMap { it.triples }.toSet()
+            //    lgs1.isNotEmpty() -> lgs1.flatMap { it.triples }.toSet()
+            else -> trips.toSet()
         }
-        val r = possErrors(triples,rp,input,possibleEndOfText)
+        val r = possErrors(triples, rp, input, possibleEndOfText)
         val errorLocations = r.map { (pos, expected) ->
             Pair(input.locationFor(pos, 0), expected) //FIXME: length maybe not correct
         }
-        return if(errorLocations.isEmpty()) {
-            Pair(InputLocation(0,1,0,0), setOf(RuntimeRuleSet.END_OF_TEXT))
+        return if (errorLocations.isEmpty()) {
+            Pair(InputLocation(0, 1, 0, 0), setOf(RuntimeRuleSet.END_OF_TEXT))
         } else {
             val maxLastLocation = errorLocations.maxBy { it.first.endPosition }
             val fr = errorLocations.filter { it.first.position == maxLastLocation.first.position }
@@ -202,14 +202,19 @@ internal class ScanOnDemandParser(
         }
     }
 
-    private fun possErrors(triples:Set<ParseGraph.Companion.ToProcessTriple>, rp:RuntimeParser, input:InputFromString, possibleEndOfText: Set<LookaheadSet>): Set<Pair<Int, Set<RuntimeRule>>> {
+    private fun possErrors(
+        triples: Set<ParseGraph.Companion.ToProcessTriple>,
+        rp: RuntimeParser,
+        input: InputFromString,
+        possibleEndOfText: Set<LookaheadSet>
+    ): Set<Pair<Int, Set<RuntimeRule>>> {
         val graph = rp.graph
         val r: Set<Pair<Int, Set<RuntimeRule>>> = triples.flatMap { (lg, prev, remainingHead) ->
             when {
                 lg.runtimeState.state.isGoal -> {
                     if (lg.runtimeState.isAtEnd) {
                         val runtimeLookahead = setOf(LookaheadSet.EOT)
-                        val skipData = rp.parseSkipIfAny(lg.nextInputPosition,runtimeLookahead, LookaheadSet.ANY, possibleEndOfText, RuntimeParser.normalArgs)
+                        val skipData = rp.parseSkipIfAny(lg.nextInputPosition, runtimeLookahead, LookaheadSet.ANY, possibleEndOfText, RuntimeParser.normalArgs)
                         val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: lg.nextInputPosition
                         setOf(Pair(nextInputPositionAfterSkip, setOf(RuntimeRuleSet.END_OF_TEXT)))
                     } else {
@@ -259,7 +264,7 @@ internal class ScanOnDemandParser(
                                             val (embeddedParser, embeddedEOT) = rp.createEmbeddedRuntimeParser(possibleEndOfText, lg.runtimeState.runtimeLookaheadSet, tr)
                                             embeddedParser.resetGraphToLastGrown(embLastDropped)
                                             val embLgs = embeddedParser.growHeightOrGraftForError(embeddedEOT, RuntimeParser.normalArgs) //TODO: maybe diff args
-                                            val embTriples = embLgs.flatMap { it.triples }.toSet()
+                                            val embTriples = embLgs //.flatMap { it.triples }.toSet()
                                             possErrors(embTriples, embeddedParser, input, embeddedEOT)
                                         }
                                     }
@@ -286,17 +291,17 @@ internal class ScanOnDemandParser(
                                 ParseAction.GRAFT -> prev.runtimeState.runtimeLookaheadSet
                                 ParseAction.GOAL -> prev.runtimeState.runtimeLookaheadSet
                             }
-                            val runtimeGuardPassed = tr.runtimeGuard.invoke( prev.numNonSkipChildren)
+                            val runtimeGuardPassed = tr.runtimeGuard.invoke(prev.numNonSkipChildren)
                             when (tr.action) {
                                 ParseAction.EMBED -> {
                                     //TODO: find failure in embedded parser!
-                                        rp.resetGraphToLastGrown(listOf(ParseGraph.Companion.ToProcessTriple(lg,prev,prevPrev)))
-                                        val ld = rp.growNonEmptyWidthForError(possibleEndOfText, RuntimeParser.Companion.GrowArgs(false, true, false, true))
-                                        val nip = if (ld.isEmpty()) {
-                                            rp.lastToGrow.maxOf { it.growingNode.nextInputPosition }
-                                        } else {
-                                            ld.maxOf { it.growingNode.nextInputPosition }
-                                        }
+                                    rp.resetGraphToLastGrown(listOf(ParseGraph.Companion.ToProcessTriple(lg, prev, prevPrev)))
+                                    val ld = rp.growNonEmptyWidthForError(possibleEndOfText, RuntimeParser.Companion.GrowArgs(false, true, false, true))
+                                    val nip = if (ld.isEmpty()) {
+                                        rp.lastToGrow.maxOf { it.growingNode.nextInputPosition }
+                                    } else {
+                                        ld.maxOf { it.nextInputPosition }
+                                    }
                                     val embLastDropped = rp.embeddedLastDropped[tr]?.flatMap { it.triples } //TODO: change this to lastGrown
                                     if (null == embLastDropped) {
 
@@ -312,8 +317,11 @@ internal class ScanOnDemandParser(
                                     } else {
                                         val (embeddedParser, embeddedEOT) = rp.createEmbeddedRuntimeParser(possibleEndOfText, lg.runtimeState.runtimeLookaheadSet, tr)
                                         embeddedParser.resetGraphToLastGrown(embLastDropped)
-                                        val embLgs = embeddedParser.growHeightOrGraftForError(embeddedEOT, RuntimeParser.Companion.GrowArgs(false, true, false, true)) //TODO: maybe diff args
-                                        val embTriples = embLgs.flatMap { it.triples }.toSet()
+                                        val embLgs = embeddedParser.growHeightOrGraftForError(
+                                            embeddedEOT,
+                                            RuntimeParser.Companion.GrowArgs(false, true, false, true)
+                                        ) //TODO: maybe diff args
+                                        val embTriples = embLgs //.flatMap { it.triples }.toSet()
                                         possErrors(embTriples, embeddedParser, input, embeddedEOT)
                                     }
                                 }
@@ -337,9 +345,9 @@ internal class ScanOnDemandParser(
                                     ParseAction.EMBED -> lg2.runtimeState.runtimeLookaheadSet
                                     ParseAction.HEIGHT -> prev2.runtimeState.runtimeLookaheadSet
                                     ParseAction.GRAFT -> prev2.runtimeState.runtimeLookaheadSet
-                                    ParseAction.GOAL ->prev2.runtimeState.runtimeLookaheadSet
+                                    ParseAction.GOAL -> prev2.runtimeState.runtimeLookaheadSet
                                 }
-                                val runtimeGuardPassed = tr2.runtimeGuard.invoke( prev2.numNonSkipChildren)
+                                val runtimeGuardPassed = tr2.runtimeGuard.invoke(prev2.numNonSkipChildren)
                                 errorPairs(rp, input, lg, tr2, possibleEndOfText, rtLh, runtimeGuardPassed)
                             }.flatten()
                         }
@@ -351,7 +359,7 @@ internal class ScanOnDemandParser(
     }
 
     private fun errorPairs(
-        rp:RuntimeParser,
+        rp: RuntimeParser,
         input: InputFromString,
         lg: GrowingNodeIndex,
         transition: Transition,
@@ -362,7 +370,7 @@ internal class ScanOnDemandParser(
         return when (transition.action) {
             ParseAction.EMBED -> error("Internal Error: should never happen")
             ParseAction.GOAL -> null
-            ParseAction.WIDTH->{
+            ParseAction.WIDTH -> {
                 // try grab 'to' token, if nothing then that is error else lookahead is error
                 val l = input.findOrTryCreateLeaf(transition.to.firstRule, lg.nextInputPosition)
                 when (l) {
@@ -391,7 +399,8 @@ internal class ScanOnDemandParser(
                     }
                 }
             }
-           else -> when {
+
+            else -> when {
                 runtimeGuardPassed -> {
                     val expected =
                         transition.lookahead.flatMap { lh -> possibleEndOfText.flatMap { eot -> runtimeLookahead.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }.toSet()
@@ -409,6 +418,45 @@ internal class ScanOnDemandParser(
         }
     }
 
+    private fun findNextExpectedAfterError3(input: InputFromString, failedParseReasons: List<FailedParseReason>, automatonKind: AutomatonKind, skipTerms: Set<RuntimeRule>): Pair<InputLocation, Set<RuntimeRule>> {
+        val max = failedParseReasons.maxOf { it.position }
+        val maxReasons = failedParseReasons.filter { it.position==max }
+        val x = maxReasons.map { fr ->
+            when (fr) {
+                is FailedParseReasonWidthTo -> Pair(input.locationFor(fr.position, 0), setOf(fr.transition.to.firstRule))
+                is FailedParseReasonGraftRTG -> Pair(input.locationFor(fr.position, 0), emptySet())
+                is FailedParseReasonLookahead -> {
+                    val expected: Set<RuntimeRule> = fr.possibleEndOfText.flatMap { eot ->
+                        fr.runtimeLhs.flatMap { rt ->
+                            fr.transition.lookahead.flatMap { lh ->
+                                lh.guard.resolve(eot, rt).fullContent
+                            }
+                        }
+                    }.toSet()
+                    Pair(input.locationFor(fr.position, 0), expected)
+                }
+                is FailedParseReasonEmbedded -> {
+                    // Outer skip terms are part of the 'possibleEndOfText' and thus could be in the expected terms
+                    // if these skip terms are not part of the embedded 'normal' terms...remove them
+                    val embeddedRhs = fr.transition.to.runtimeRules.first().rhs as RuntimeRuleRhsEmbedded // should only ever be one
+                    val embeddedSkipTerms = embeddedRhs.embeddedRuntimeRuleSet.skipParserStateSet?.usedTerminalRules?: emptySet()
+                    val x = findNextExpectedAfterError3(input, fr.embededFailedParseReasons, automatonKind, embeddedSkipTerms)
+                    val embeddedRuntimeRuleSet = embeddedRhs.embeddedRuntimeRuleSet
+                    val embeddedTerms = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedRhs.embeddedStartRule.tag, automatonKind).usedTerminalRules
+                    val exp = x.second.minus(skipTerms.minus(embeddedTerms))
+                    Pair(x.first, exp)
+                }
+            }
+        }
+        val y = x.groupBy { it.first.position }
+        val m = y.map {
+            val m = it.value.flatMap { it.second }.toSet()
+            Pair(input.locationFor(it.key, 0), m)
+        }
+        return m.first()
+    }
+
+    /*
     private fun findNextExpected(
         rp: RuntimeParser,
         gns: List<ParseGraph.Companion.ToProcessTriple>,
@@ -476,24 +524,21 @@ internal class ScanOnDemandParser(
         }.toSet()
         return result
     }
-
+*/
     override fun expectedAt(goalRuleName: String, inputText: String, position: Int, automatonKind: AutomatonKind): Set<RuntimeRule> {
         val usedText = inputText.substring(0, position)
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, usedText)
-        val rp = createRuntimeParser(goalRuleName,input,automatonKind)
+        val rp = createRuntimeParser(goalRuleName, input, automatonKind)
         this.runtimeParser = rp
 
         val possibleEndOfText = setOf(LookaheadSet.EOT)
         rp.start(0, possibleEndOfText)
         var seasons = 1
 
-        val lastToTryWidth = mutableListOf<ParseGraph.Companion.ToProcessTriple>()
+        var lastToTryWidth = emptyList<GrowingNodeIndex>()
         while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
             rp.grow3(possibleEndOfText, RuntimeParser.normalArgs) //TODO: maybe no need to build tree!
-            if (rp.lastToTryWidthTrans.isNotEmpty()) {
-                lastToTryWidth.clear()
-                lastToTryWidth.addAll(rp.lastToTryWidthTrans)
-            }
+            lastToTryWidth = rp.lastToTryWidthTrans
             seasons++
         }
         /*
@@ -508,10 +553,11 @@ internal class ScanOnDemandParser(
         }.toSet()
          */
         //val nextExpected = this.findNextExpected(rp, matches, possibleEndOfText)
-       return if (lastToTryWidth.isEmpty()) {
+        return if (rp.failedReasons.isEmpty()) {
             emptySet()
         } else {
-           val nextExpected = this.findNextExpectedAfterError2(rp, lastToTryWidth, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
+            //val nextExpected = this.findNextExpectedAfterError2(rp, lastToTryWidth, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
+            val nextExpected = this.findNextExpectedAfterError3(input, rp.failedReasons, rp.stateSet.automatonKind, rp.stateSet.usedTerminalRules)
             nextExpected.second
         }
     }

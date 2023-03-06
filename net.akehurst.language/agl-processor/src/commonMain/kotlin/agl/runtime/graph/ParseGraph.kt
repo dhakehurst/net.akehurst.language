@@ -107,8 +107,8 @@ internal class ParseGraph(
         // 5) high priority first if same choice point...else !!
         //TODO: how do we ensure lower choices are done first ?
         when {
-            parent.state.firstRule.isEmptyTerminal -> -1
-            child.state.firstRule.isEmptyTerminal -> 1
+            parent.startPosition==child.startPosition && parent.state.firstRule.isEmptyTerminal -> -1
+            parent.startPosition==child.startPosition && child.state.firstRule.isEmptyTerminal -> 1
             // 1) nextInputPosition lower number first
             parent.nextInputPosition < child.nextInputPosition -> 1
             parent.nextInputPosition > child.nextInputPosition -> -1
@@ -174,7 +174,7 @@ internal class ParseGraph(
             }
         }
 
-    val peekNextHead get() = this._growingHeadHeap.extractRoot()!!
+    val peekNextHead get() = this._growingHeadHeap.peekRoot!!
 
     fun createGrowingNodeIndex(
         state: ParserState,
@@ -280,6 +280,7 @@ internal class ParseGraph(
                 this._growingHeadHeap[next] = next
             }
             else -> {
+                this._growingHeadHeap.remove(oldHead)
                 val new = this._gss.push(oldHead, next) // true if this._gss.contains(next)==false
                 if (new) {
                     this._growingHeadHeap[next] = next
@@ -694,7 +695,7 @@ internal class ParseGraph(
         //val oldParent = oldParentNode
         //val child = nextChildNode
         dropGrowingHead(head)
-        dropGrowingHead(previous)
+        //dropGrowingHead(previous) //FIXME: can't drop this here...might still be in use!
 
         return if (newParent.state.isAtEnd) {
             val existingComplete = this.treeData.preferred(newParent.complete)
@@ -846,7 +847,7 @@ internal class ParseGraph(
 
     override fun toString(): String {
         val heads = this._growingHeadHeap.toList()
-        return heads.joinToString(separator = "\n") { h ->
+        return "[${heads.size}] "+ heads.joinToString(separator = "\n") { h ->
             val p = this.prevOfToString(h)
             "${h}$p"
         }

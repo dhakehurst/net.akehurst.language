@@ -835,7 +835,7 @@ class test_AglGrammar_item {
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
-        assertEquals(1, result.sppt!!.maxNumHeads)
+        assertEquals(2, result.sppt!!.maxNumHeads)
     }
 
     @Test
@@ -864,7 +864,7 @@ class test_AglGrammar_item {
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
-        assertEquals(1, result.sppt!!.maxNumHeads)
+        assertEquals(2, result.sppt!!.maxNumHeads)
     }
 
     @Test
@@ -893,7 +893,7 @@ class test_AglGrammar_item {
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
-        assertEquals(1, result.sppt!!.maxNumHeads)
+        assertEquals(2, result.sppt!!.maxNumHeads)
     }
 
     @Test
@@ -1129,6 +1129,6 @@ class test_AglGrammar_item {
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
-        assertEquals(1, result.sppt!!.maxNumHeads)
+        assertEquals(2, result.sppt!!.maxNumHeads)
     }
 }

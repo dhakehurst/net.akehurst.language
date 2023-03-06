@@ -272,7 +272,7 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'b'","'c'"))
+                parseError(InputLocation(4, 5, 1, 1), " a b^/*c*/b c", setOf("'c'"))
             ), issues
         )
     }

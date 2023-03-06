@@ -45,7 +45,11 @@ internal class RuntimeState(
         }.toSet()
     }
 
-    //fun transitions(prevPrev: ParserState, previousState: ParserState): List<Transition> = this.state.transitions(prevPrev, previousState, this.state)
+    fun transitions(prevPrev: ParserState, previousState: ParserState): List<Transition> = when {
+        this.state.isGoal -> this.transitionsGoal(previousState)
+        this.state.isAtEnd -> this.transitionsComplete(previousState, prevPrev)
+        else -> this.transitionsInComplete(previousState)
+    }
 
     fun transitionsGoal(previous: ParserState): List<Transition> = this.state.transitionsGoal(previous)
     fun transitionsInComplete(previous: ParserState): List<Transition> = this.state.transitionsInComplete(previous)

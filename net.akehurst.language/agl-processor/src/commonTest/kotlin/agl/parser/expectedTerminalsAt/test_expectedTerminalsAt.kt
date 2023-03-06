@@ -25,9 +25,9 @@ import kotlin.test.assertNotNull
 
 internal class test_expectedTerminalsAt {
 
-    fun concat_a() : RuntimeRuleSet {
+    fun concat_a(): RuntimeRuleSet {
         return runtimeRuleSet {
-            concatenation("S"){ literal("a") }
+            concatenation("S") { literal("a") }
         }
         //val rrb = RuntimeRuleSetBuilder()
         //val r0 = rrb.literal("a")
@@ -40,15 +40,15 @@ internal class test_expectedTerminalsAt {
         val rs = concat_a()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","",0, AutomatonKind.LOOKAHEAD_1)
+        val actual = sp.expectedTerminalsAt("S", "", 0, AutomatonKind.LOOKAHEAD_1)
         val actStr = actual.map {
-                val rhs = it.rhs
-                when(rhs) {
-                    is RuntimeRuleRhsPattern -> rhs.pattern
-                    is RuntimeRuleRhsLiteral -> rhs.value
-                    else -> it.tag
-                }
+            val rhs = it.rhs
+            when (rhs) {
+                is RuntimeRuleRhsPattern -> rhs.pattern
+                is RuntimeRuleRhsLiteral -> rhs.value
+                else -> it.tag
             }
+        }
 
         assertEquals(1, actual.size)
         assertEquals(true, actual.all { it.isTerminal })
@@ -60,10 +60,10 @@ internal class test_expectedTerminalsAt {
         val rs = concat_a()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","a",0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
+        val actual = sp.expectedTerminalsAt("S", "a", 0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
         val actStr = actual.map {
             val rhs = it.rhs
-            when(rhs) {
+            when (rhs) {
                 is RuntimeRuleRhsPattern -> rhs.pattern
                 is RuntimeRuleRhsLiteral -> rhs.value
                 else -> it.tag
@@ -79,15 +79,15 @@ internal class test_expectedTerminalsAt {
         val rs = concat_a()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","a",1, AutomatonKind.LOOKAHEAD_1)
+        val actual = sp.expectedTerminalsAt("S", "a", 1, AutomatonKind.LOOKAHEAD_1)
 
         assertEquals(true, actual.all { it.isTerminal })
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT), actual)
+        assertEquals(setOf(), actual)
     }
 
-    fun concat_ab() : RuntimeRuleSet {
+    fun concat_ab(): RuntimeRuleSet {
         return runtimeRuleSet {
-            concatenation("S"){ literal("a"); literal("b") }
+            concatenation("S") { literal("a"); literal("b") }
         }
         //val rrb = RuntimeRuleSetBuilder()
         //val a = rrb.literal("a")
@@ -101,10 +101,10 @@ internal class test_expectedTerminalsAt {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","",0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
+        val actual = sp.expectedTerminalsAt("S", "", 0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
         val actStr = actual.map {
             val rhs = it.rhs
-            when(rhs) {
+            when (rhs) {
                 is RuntimeRuleRhsPattern -> rhs.pattern
                 is RuntimeRuleRhsLiteral -> rhs.value
                 else -> it.tag
@@ -113,7 +113,7 @@ internal class test_expectedTerminalsAt {
 
         assertEquals(1, actual.size)
         assertEquals(true, actual.all { it.isTerminal })
-        assertEquals("a",  actStr[0])
+        assertEquals("a", actStr[0])
     }
 
     @Test
@@ -121,10 +121,10 @@ internal class test_expectedTerminalsAt {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","a",0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
+        val actual = sp.expectedTerminalsAt("S", "a", 0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
         val actStr = actual.map {
             val rhs = it.rhs
-            when(rhs) {
+            when (rhs) {
                 is RuntimeRuleRhsPattern -> rhs.pattern
                 is RuntimeRuleRhsLiteral -> rhs.value
                 else -> it.tag
@@ -133,7 +133,7 @@ internal class test_expectedTerminalsAt {
 
         assertEquals(1, actual.size)
         assertEquals(true, actual.all { it.isTerminal })
-        assertEquals("a",  actStr[0])
+        assertEquals("a", actStr[0])
     }
 
     @Test
@@ -141,10 +141,10 @@ internal class test_expectedTerminalsAt {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","a",1, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
+        val actual = sp.expectedTerminalsAt("S", "a", 1, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
         val actStr = actual.map {
             val rhs = it.rhs
-            when(rhs) {
+            when (rhs) {
                 is RuntimeRuleRhsPattern -> rhs.pattern
                 is RuntimeRuleRhsLiteral -> rhs.value
                 else -> it.tag
@@ -153,7 +153,7 @@ internal class test_expectedTerminalsAt {
 
         assertEquals(1, actual.size)
         assertEquals(true, actual.all { it.isTerminal })
-        assertEquals("b",  actStr[0])
+        assertEquals("b", actStr[0])
     }
 
     @Test
@@ -161,10 +161,10 @@ internal class test_expectedTerminalsAt {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","ab",1, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
+        val actual = sp.expectedTerminalsAt("S", "ab", 1, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
         val actStr = actual.map {
             val rhs = it.rhs
-            when(rhs) {
+            when (rhs) {
                 is RuntimeRuleRhsPattern -> rhs.pattern
                 is RuntimeRuleRhsLiteral -> rhs.value
                 else -> it.tag
@@ -173,29 +173,30 @@ internal class test_expectedTerminalsAt {
 
         assertEquals(1, actual.size)
         assertEquals(true, actual.all { it.isTerminal })
-        assertEquals("b",  actStr[0])
+        assertEquals("b", actStr[0])
     }
+
     @Test
     fun concat_ab_ab_2() {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","ab",2, AutomatonKind.LOOKAHEAD_1)
+        val actual = sp.expectedTerminalsAt("S", "ab", 2, AutomatonKind.LOOKAHEAD_1)
         val actStr = actual.map {
             val rhs = it.rhs
-            when(rhs) {
+            when (rhs) {
                 is RuntimeRuleRhsPattern -> rhs.pattern
                 is RuntimeRuleRhsLiteral -> rhs.value
                 else -> it.tag
             }
         }
 
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT), actual)
+        assertEquals(setOf(), actual)
     }
 
-    fun choiceEqual_ab() : RuntimeRuleSet {
+    fun choiceEqual_ab(): RuntimeRuleSet {
         return runtimeRuleSet {
-            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("a")
                 literal("b")
             }
@@ -212,10 +213,10 @@ internal class test_expectedTerminalsAt {
         val rs = choiceEqual_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","",0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
+        val actual = sp.expectedTerminalsAt("S", "", 0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
         val actStr = actual.map {
             val rhs = it.rhs
-            when(rhs) {
+            when (rhs) {
                 is RuntimeRuleRhsPattern -> rhs.pattern
                 is RuntimeRuleRhsLiteral -> rhs.value
                 else -> it.tag
@@ -224,9 +225,9 @@ internal class test_expectedTerminalsAt {
 
         assertEquals(2, actual.size)
         assertEquals(true, actual.all { it.isTerminal })
-        assertEquals("a",  actStr[0])
+        assertEquals("a", actStr[0])
         assertEquals(true, actual.all { it.isTerminal })
-        assertEquals("b",  actStr[1])
+        assertEquals("b", actStr[1])
     }
 
     @Test
@@ -234,17 +235,17 @@ internal class test_expectedTerminalsAt {
         val rs = choiceEqual_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","a",1, AutomatonKind.LOOKAHEAD_1)
+        val actual = sp.expectedTerminalsAt("S", "a", 1, AutomatonKind.LOOKAHEAD_1)
         val actStr = actual.map {
             val rhs = it.rhs
-            when(rhs) {
+            when (rhs) {
                 is RuntimeRuleRhsPattern -> rhs.pattern
                 is RuntimeRuleRhsLiteral -> rhs.value
                 else -> it.tag
             }
         }
 
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT), actual)
+        assertEquals(setOf(), actual)
     }
 
     @Test
@@ -252,16 +253,16 @@ internal class test_expectedTerminalsAt {
         val rs = choiceEqual_ab()
         val sp = ScanOnDemandParser(rs)
 
-        val actual =  sp.expectedTerminalsAt("S","b",1, AutomatonKind.LOOKAHEAD_1)
+        val actual = sp.expectedTerminalsAt("S", "b", 1, AutomatonKind.LOOKAHEAD_1)
         val actStr = actual.map {
             val rhs = it.rhs
-            when(rhs) {
+            when (rhs) {
                 is RuntimeRuleRhsPattern -> rhs.pattern
                 is RuntimeRuleRhsLiteral -> rhs.value
                 else -> it.tag
             }
         }
 
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT), actual)
+        assertEquals(setOf(), actual)
     }
 }

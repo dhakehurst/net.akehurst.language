@@ -38,34 +38,37 @@ class test_a {
         val parser = ScanOnDemandParser(rrs)
 
         val testData = listOf(
-            Data("", 0, listOf("a")),
-            Data(" ", 0, listOf("a")),
-            Data(" ", 1, listOf("a")),
-            Data("a", 0, listOf("a")),
+            Data("", 0, listOf("'a'")),
+            Data(" ", 0, listOf("'a'")),
+            Data(" ", 1, listOf("'a'")),
+            Data("a", 0, listOf("'a'")),
             Data("a", 1, listOf()),
-            Data(" a", 0, listOf("a")),
-            Data(" a", 1, listOf("a")),
+            Data(" a", 0, listOf("'a'")),
+            Data(" a", 1, listOf("'a'")),
             Data(" a", 2, listOf()),
-            Data("a ", 0, listOf("a")),
+            Data("a ", 0, listOf("'a'")),
             Data("a ", 1, listOf()),
             Data("a ", 2, listOf()),
-            Data(" a ", 0, listOf("a")),
-            Data(" a ", 1, listOf("a")),
+            Data(" a ", 0, listOf("'a'")),
+            Data(" a ", 1, listOf("'a'")),
             Data(" a ", 2, listOf()),
             Data(" a ", 3, listOf()),
+            Data("ab", 0, listOf("'a'")),
+            Data("ab", 1, listOf()),
+            Data("ab", 2, listOf()),
         )
     }
 
     @Test
     fun test() {
-        for(data in testData) {
+        for (data in testData) {
             val sentence = data.sentence
             val position = data.position
 
             val result = parser.expectedTerminalsAt(goal, sentence, position, AutomatonKind.LOOKAHEAD_1)
             val actual = result.filter { it.isEmptyTerminal.not() }.map { it.rhs.toString() }
             val expected = data.expected
-            assertEquals(expected, actual,data.toString())
+            assertEquals(expected, actual, data.toString())
         }
     }
 

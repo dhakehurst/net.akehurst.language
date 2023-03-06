@@ -43,21 +43,21 @@ class test_aOpt {
         val EOT = RuntimeRuleSet.END_OF_TEXT
 
         val testData = listOf(
-            Data("", 0, setOf(a, EOT)),
-            Data(" ", 0, setOf(a, EOT)),
-            Data(" ", 1, setOf(a, EOT)),
-            Data("a", 0, setOf(a, EOT)),
-            Data("a", 1, setOf(EOT)),
-            Data(" a", 0, setOf(a, EOT)),
-            Data(" a", 1, setOf(a, EOT)),
-            Data(" a", 2, setOf(EOT)),
-            Data("a ", 0, setOf(a, EOT)),
-            Data("a ", 1, setOf(EOT)),
-            Data("a ", 2, setOf(EOT)),
-            Data(" a ", 0, setOf(a, EOT)),
-            Data(" a ", 1, setOf(a, EOT)),
-            Data(" a ", 2, setOf(EOT)),
-            Data(" a ", 3, setOf(EOT)),
+            Data("", 0, setOf(a)),
+            Data(" ", 0, setOf(a)),
+            Data(" ", 1, setOf(a)),
+            Data("a", 0, setOf(a)),
+            Data("a", 1, setOf()),
+            Data(" a", 0, setOf(a)),
+            Data(" a", 1, setOf(a)),
+            Data(" a", 2, setOf()),
+            Data("a ", 0, setOf(a)),
+            Data("a ", 1, setOf()),
+            Data("a ", 2, setOf()),
+            Data(" a ", 0, setOf(a)),
+            Data(" a ", 1, setOf(a)),
+            Data(" a ", 2, setOf()),
+            Data(" a ", 3, setOf()),
         )
     }
 

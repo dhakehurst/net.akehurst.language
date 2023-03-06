@@ -40,8 +40,7 @@ class test_Multi0N_noConcatAtTopLevel {
 
         val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
-            "a",
-            "<EOT>"
+            "a"
         )
         assertEquals(expected, actual)
     }
@@ -53,8 +52,7 @@ class test_Multi0N_noConcatAtTopLevel {
 
         val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
-            "a",
-            "<EOT>"
+            "a"
         )
         assertEquals(expected, actual)
     }
@@ -90,8 +88,7 @@ class test_Multi0N_noConcatAtTopLevel {
 
         val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
-            "a",
-            "<EOT>"
+            "a"
         )
         assertEquals(expected, actual)
     }

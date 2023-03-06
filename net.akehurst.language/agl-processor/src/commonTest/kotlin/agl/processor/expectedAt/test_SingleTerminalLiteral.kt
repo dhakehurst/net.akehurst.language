@@ -74,7 +74,7 @@ class test_SingleTerminalLiteral {
         val position = 1
         val actual = sut.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
-            "<EOT>"
+
         )
         assertEquals(expected,actual)
     }

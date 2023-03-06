@@ -69,7 +69,7 @@ internal class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 3,
+                expectedNumGSSHeads = 2,
                 expectedTrees = arrayOf(expected)
         )
     }
