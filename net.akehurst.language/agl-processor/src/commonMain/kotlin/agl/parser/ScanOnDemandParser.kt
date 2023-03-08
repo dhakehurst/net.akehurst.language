@@ -18,6 +18,7 @@ package net.akehurst.language.agl.parser
 
 import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.automaton.LookaheadSet
+import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.automaton.Transition
 import net.akehurst.language.agl.processor.ParseResultDefault
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
@@ -75,7 +76,7 @@ internal class ScanOnDemandParser(
             ParseResultDefault(sppt, emptyList())
         } else {
             //val nextExpected = this.findNextExpectedAfterError2(rp, lastToTryWidth, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
-            val nextExpected = this.findNextExpectedAfterError3(input, rp.failedReasons, rp.stateSet.automatonKind, rp.skipStateSet?.usedTerminalRules?: emptySet())
+            val nextExpected = this.findNextExpectedAfterError3(input, rp.failedReasons, rp.stateSet.automatonKind, rp.stateSet)
             val issue = throwError(input, rp, nextExpected, seasons, maxNumHeads)
             val sppt = null//rp.longestLastGrown?.let{ SharedPackedParseTreeDefault(it, seasons, maxNumHeads) }
             ParseResultDefault(sppt, listOf(issue))
@@ -418,7 +419,7 @@ internal class ScanOnDemandParser(
         }
     }
 
-    private fun findNextExpectedAfterError3(input: InputFromString, failedParseReasons: List<FailedParseReason>, automatonKind: AutomatonKind, skipTerms: Set<RuntimeRule>): Pair<InputLocation, Set<RuntimeRule>> {
+    private fun findNextExpectedAfterError3(input: InputFromString, failedParseReasons: List<FailedParseReason>, automatonKind: AutomatonKind, stateSet: ParserStateSet): Pair<InputLocation, Set<RuntimeRule>> {
         val max = failedParseReasons.maxOf { it.position }
         val maxReasons = failedParseReasons.filter { it.position==max }
         val x = maxReasons.map { fr ->
@@ -433,16 +434,20 @@ internal class ScanOnDemandParser(
                             }
                         }
                     }.toSet()
-                    Pair(input.locationFor(fr.position, 0), expected)
+                    val terms = stateSet.usedTerminalRules
+                    val embeddedSkipTerms = stateSet.embeddedRuntimeRuleSet.flatMap { it.skipTerminals }.toSet()
+                    val exp = expected.minus(embeddedSkipTerms.minus(terms))
+                    Pair(input.locationFor(fr.position, 0), exp)
                 }
                 is FailedParseReasonEmbedded -> {
                     // Outer skip terms are part of the 'possibleEndOfText' and thus could be in the expected terms
                     // if these skip terms are not part of the embedded 'normal' terms...remove them
                     val embeddedRhs = fr.transition.to.runtimeRules.first().rhs as RuntimeRuleRhsEmbedded // should only ever be one
-                    val embeddedSkipTerms = embeddedRhs.embeddedRuntimeRuleSet.skipParserStateSet?.usedTerminalRules?: emptySet()
-                    val x = findNextExpectedAfterError3(input, fr.embededFailedParseReasons, automatonKind, embeddedSkipTerms)
+                    val embeddedStateSet = embeddedRhs.embeddedRuntimeRuleSet.fetchStateSetFor(embeddedRhs.embeddedStartRule.tag, automatonKind)
+                    val x = findNextExpectedAfterError3(input, fr.embededFailedParseReasons, automatonKind, embeddedStateSet)
                     val embeddedRuntimeRuleSet = embeddedRhs.embeddedRuntimeRuleSet
                     val embeddedTerms = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedRhs.embeddedStartRule.tag, automatonKind).usedTerminalRules
+                    val skipTerms = runtimeRuleSet.skipParserStateSet?.usedTerminalRules?: emptySet()
                     val exp = x.second.minus(skipTerms.minus(embeddedTerms))
                     Pair(x.first, exp)
                 }
@@ -557,7 +562,7 @@ internal class ScanOnDemandParser(
             emptySet()
         } else {
             //val nextExpected = this.findNextExpectedAfterError2(rp, lastToTryWidth, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
-            val nextExpected = this.findNextExpectedAfterError3(input, rp.failedReasons, rp.stateSet.automatonKind, rp.stateSet.usedTerminalRules)
+            val nextExpected = this.findNextExpectedAfterError3(input, rp.failedReasons, rp.stateSet.automatonKind, rp.stateSet)
             nextExpected.second
         }
     }

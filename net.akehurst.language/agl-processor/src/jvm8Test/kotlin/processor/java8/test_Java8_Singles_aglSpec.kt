@@ -52,7 +52,7 @@ class test_Java8_Singles_aglSpec {
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
                     }
                 }
-            )
+            ).processor!!
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
             //proc.buildFor(forRule) //TODO: use build
             return proc
@@ -84,7 +84,7 @@ class test_Java8_Singles_aglSpec {
             configuration = Agl.configuration {
                 defaultGoalRuleName(goal)
             }
-        )
+        ).processor!!
 
         val sentence = "int"
         val result = p.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
@@ -112,7 +112,7 @@ class test_Java8_Singles_aglSpec {
             }
         """.trimIndent()
         val goal = "UType"
-        val p = Agl.processorFromString(grammarStr, Agl.configuration { defaultGoalRuleName(goal) })
+        val p = Agl.processorFromString(grammarStr, Agl.configuration { defaultGoalRuleName(goal) }).processor!!
 
         val sentence = "int"
         val result = p.parse(sentence, Agl.parseOptions { goalRuleName(goal) })

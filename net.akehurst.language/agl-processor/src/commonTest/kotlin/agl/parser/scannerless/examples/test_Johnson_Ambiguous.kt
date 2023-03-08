@@ -110,20 +110,20 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
         val expected1 = """
             S {
               S1 {
-                S|2 { 'a' }
-                S|2 { 'a' }
-                S|2 { 'a' }
+                S { 'a' }
+                S { 'a' }
+                S { 'a' }
               }
             }
         """.trimIndent()
 
         val expected2 = """
-             S|1 { S2 {
-                S|1 { S2 {
-                    S|2 { 'a' }
-                    S|2 { 'a' }
+             S { S2 {
+                S { S2 {
+                    S { 'a' }
+                    S { 'a' }
                   } }
-                S|2 { 'a' }
+                S { 'a' }
               } }
         """
 
@@ -140,17 +140,54 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
     fun aaaa() {
         val sentence = "aaaa"
 
-        val expected = """
-         S|1 { S2 {
-            S|1 { S2 {
-                S|2 { 'a' }
-                S|2 { 'a' }
+        val expected1 = """
+         S { S2 {
+            S { S2 {
+                S { 'a' }
+                S { 'a' }
               } }
-            S|1 { S2 {
-                S|2 { 'a' }
-                S|2 { 'a' }
+            S { S2 {
+                S { 'a' }
+                S { 'a' }
               } }
           } }
+        """.trimIndent()
+
+        val expected2 = """
+            S { S2 {
+              S { S2 {
+                S { S2 {
+                  S { 'a' }
+                  S { 'a' }
+                } }
+                S { 'a' }
+              } }
+              S { 'a' }
+            } }
+        """.trimIndent()
+
+        val expected3 = """
+            S { S2 {
+              S { S2 {
+                 S { S1 {
+                    S { 'a' }
+                    S { 'a' }
+                    S { 'a' }
+                 } }
+                 S { 'a' }
+              } }
+            } }
+        """.trimIndent()
+
+        val expected4 = """
+            S { S1 {
+              S { S2 {
+                S { 'a' }
+                S { 'a' }
+              } }
+              S { 'a' }
+              S { 'a' }
+            } }
         """.trimIndent()
 
         super.test(
@@ -158,7 +195,7 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+                expectedTrees = arrayOf(expected1, expected2, expected4)
         )
     }
 

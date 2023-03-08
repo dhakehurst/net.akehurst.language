@@ -38,7 +38,7 @@ internal class test_ForMatthias {
         """.trimIndent()
     }
 
-    private val p = Agl.processorFromStringDefault(grammarStr)
+    private val p = Agl.processorFromStringDefault(grammarStr).processor!!
 
     @Test
     fun conceptDefinition0() {

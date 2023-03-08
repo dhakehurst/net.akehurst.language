@@ -33,11 +33,11 @@ class test_StatechartTools_Singles {
         val exprProcessor = Agl.processorFromString<Any, Any>(
             grammarDefinitionStr = grammarStr1,
             aglOptions = Agl.options { semanticAnalysis { option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false) } }
-        )
-        var processor: LanguageProcessor<Any, Any> = Agl.processorFromString(
+        ).processor!!
+        var processor: LanguageProcessor<Any, Any> = Agl.processorFromString<Any, Any>(
             grammarDefinitionStr = grammarStr2,
             aglOptions = Agl.options { semanticAnalysis { option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false) } }
-        )
+        ).processor!!
     }
 
     @Test

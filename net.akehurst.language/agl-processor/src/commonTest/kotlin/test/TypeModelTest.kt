@@ -24,6 +24,7 @@ import kotlin.test.fail
 object TypeModelTest {
 
     fun assertEquals(expected: TypeModel?, actual: TypeModel?) {
+        assertEquals(expected?.asString(),actual?.asString())
         when {
             (expected==null && actual==null) -> Unit // pass
             expected==null -> fail()

@@ -663,7 +663,12 @@ internal class RuntimeParser(
                         if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head, taking: $transition" }
                         this.graph.pushToStackOf(head, transition.to, setOf(LookaheadSet.EMPTY), startPosition, nextInputPosition, skipData)
                     } else {
-                        recordFailedWidthLH(nextInputPositionAfterSkip, transition, runtimeLhs, possibleEndOfText)
+                        val pos = if (null!=skipParser && skipParser.failedReasons.isNotEmpty()) {
+                            skipParser.failedReasons.maxOf { it.position }
+                        } else {
+                            nextInputPositionAfterSkip
+                        }
+                        recordFailedWidthLH(pos, transition, runtimeLhs, possibleEndOfText)
                         false
                     }
                 } else {

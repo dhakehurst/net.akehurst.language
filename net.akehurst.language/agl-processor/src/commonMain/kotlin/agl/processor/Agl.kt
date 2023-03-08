@@ -31,6 +31,11 @@ import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.processor.*
 
+class LanguageProcessorResult<AsmType : Any, ContextType : Any>(
+    val processor: LanguageProcessor<AsmType, ContextType>?,
+    val issues: List<LanguageIssue>
+)
+
 object Agl {
 
     val version: String = BuildConfig.version
@@ -38,8 +43,16 @@ object Agl {
 
     val registry = LanguageRegistryDefault()
 
-    fun <AsmType : Any, ContextType : Any> configurationDefault(): LanguageProcessorConfiguration<AsmType, ContextType> =
-        LanguageProcessorConfigurationDefault()
+    fun configurationDefault(): LanguageProcessorConfiguration<AsmSimple, ContextSimple> = Agl.configuration {
+            targetGrammarName(null) //use default
+            defaultGoalRuleName(null) //use default
+            typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar(p.grammar!!), emptyList()) }
+            scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromGrammar(p.grammar!!), "") }
+            syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserSimple(p.typeModel, p.scopeModel), emptyList()) }
+            semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.scopeModel), emptyList()) }
+            styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar(p.grammar!!), "") }
+            formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromGrammar(p.grammar!!), "") }
+        }
 
     /**
      * build a set of options for a parser
@@ -65,8 +78,8 @@ object Agl {
      * build a configuration for a language processor
      * (does not set the configuration, they must be passed as argument)
      */
-    fun <AsmType : Any, ContextType : Any> configuration(init: LanguageProcessorConfigurationBuilder<AsmType, ContextType>.() -> Unit): LanguageProcessorConfiguration<AsmType, ContextType> {
-        val b = LanguageProcessorConfigurationBuilder<AsmType, ContextType>()
+    fun <AsmType : Any, ContextType : Any> configuration(base:LanguageProcessorConfiguration<AsmType, ContextType>?=null, init: LanguageProcessorConfigurationBuilder<AsmType, ContextType>.() -> Unit): LanguageProcessorConfiguration<AsmType, ContextType> {
+        val b = LanguageProcessorConfigurationBuilder<AsmType, ContextType>(base)
         b.init()
         return b.build()
     }
@@ -75,7 +88,7 @@ object Agl {
         grammar: Grammar,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = null
     ): LanguageProcessor<AsmType, ContextType> {
-        val config = configuration ?: configurationDefault()
+        val config = configuration ?: LanguageProcessorConfigurationDefault()
         return LanguageProcessorDefault<AsmType, ContextType>(grammar, config)
     }
 
@@ -97,8 +110,8 @@ object Agl {
         styleModelStr: String? = null,
         formatterModelStr: String? = null,
         grammarAglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = null
-    ): LanguageProcessor<AsmSimple, ContextSimple> {
-        val config = Agl.configuration<AsmSimple, ContextSimple> {
+    ): LanguageProcessorResult<AsmSimple, ContextSimple> {
+        val config = Agl.configuration {
             targetGrammarName(null) //use default
             defaultGoalRuleName(null) //use default
             typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar(p.grammar!!), emptyList()) }
@@ -122,14 +135,14 @@ object Agl {
         grammarDefinitionStr: String,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = null,
         aglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = null
-    ): LanguageProcessor<AsmType, ContextType> {
+    ): LanguageProcessorResult<AsmType, ContextType> {
         return try {
             val res = Agl.grammarFromString<List<Grammar>, GrammarContext>(
                 grammarDefinitionStr,
                 aglOptions ?: Agl.registry.agl.grammar.processor!!.optionsDefault()
             )
             if (null == res.asm) {
-                error("Unable to create processor for $grammarDefinitionStr")
+                LanguageProcessorResult(null, res.issues)
             } else {
                 val grammar = if (null == configuration?.targetGrammarName) {
                     res.asm?.lastOrNull() ?: error("Unable to create processor for $grammarDefinitionStr")
@@ -137,13 +150,12 @@ object Agl {
                     res.asm?.firstOrNull { it.name == configuration.targetGrammarName }
                         ?: error("Unable to find target grammar '${configuration.targetGrammarName}' in $grammarDefinitionStr")
                 }
-                processorFromGrammar(
+                val proc = processorFromGrammar(
                     grammar,
                     configuration
                 )
+                LanguageProcessorResult(proc, res.issues)
             }
-        } catch (e: LanguageProcessorException) {
-            throw e
         } catch (e: Throwable) {
             throw LanguageProcessorException("Unable to create processor for grammarDefinitionStr: ${e.message}", e)
         }

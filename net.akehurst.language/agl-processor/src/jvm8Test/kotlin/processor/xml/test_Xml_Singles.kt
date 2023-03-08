@@ -33,7 +33,7 @@ class test_Xml_Singles {
         val grammarStr = this::class.java.getResource("/xml/Xml.agl").readText()
         const val goal = "document"
 
-        var processor: LanguageProcessor<Any, Any> = Agl.processorFromString(grammarStr)
+        var processor = Agl.processorFromStringDefault(grammarStr).processor!!
     }
 
     @Test

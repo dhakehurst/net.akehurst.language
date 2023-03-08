@@ -39,7 +39,7 @@ class test_QueryParserValid(val data: Data) {
         var sourceFiles = arrayOf("/vistraq/sampleValidQueries.txt")
 
         fun tgqlprocessor(): LanguageProcessor<Any,Any> {
-            return Agl.processorFromString(grammarStr)
+            return Agl.processorFromString<Any, Any>(grammarStr).processor!!
         }
 
         @JvmStatic

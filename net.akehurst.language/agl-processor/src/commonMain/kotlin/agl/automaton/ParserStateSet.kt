@@ -59,6 +59,13 @@ internal class ParserStateSet(
             it.to.firstRule
         }.toSet()
     }
+    val embeddedRuntimeRuleSet:Set<RuntimeRuleSet> by lazy {
+        val embRules = this.usedRules.filter { it.isEmbedded }.toSet()
+        embRules.map {
+            val rhs = it.rhs as RuntimeRuleRhsEmbedded
+            rhs.embeddedRuntimeRuleSet
+        }.toSet()
+    }
 
     /*
      * A collection of RulePositions identifies a Parser state.

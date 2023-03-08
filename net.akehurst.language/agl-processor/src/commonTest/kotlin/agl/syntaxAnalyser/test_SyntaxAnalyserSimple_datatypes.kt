@@ -91,7 +91,7 @@ class test_SyntaxAnalyserSimple_datatypes {
                 configurationContext = ContextFromGrammar(grammar)
             )
             assertEquals(0, issues.size, issues.joinToString(separator = "\n") { "$it" })
-        }
+        }.processor!!
     }
 
     @Test

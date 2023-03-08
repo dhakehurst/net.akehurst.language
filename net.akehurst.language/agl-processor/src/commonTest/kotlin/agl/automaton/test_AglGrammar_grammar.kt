@@ -64,8 +64,8 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
         val parser = ScanOnDemandParser(rrs)
         parser.parseForGoal(goal, "namespace test grammar Test { S = 'a' ; }", AutomatonKind.LOOKAHEAD_1)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(R_grammarDefinition, AutomatonKind.LOOKAHEAD_1)
-        println(rrs.usedAutomatonToString("S"))
-        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
+        println(rrs.usedAutomatonToString(goal))
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, goal, false) {
 
 
         }

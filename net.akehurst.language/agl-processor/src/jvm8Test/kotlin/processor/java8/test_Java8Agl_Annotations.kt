@@ -45,7 +45,7 @@ class test_Java8Agl_Annotations(val data: Data) {
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }
                 }
-            )
+            ).processor!!
         }
 
         var sourceFiles = arrayOf(

@@ -51,7 +51,7 @@ class test_Java8Agl_Literals(val data: Data) {
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }
                 }
-            )
+            ).processor!!
         }
 
         var sourceFiles = arrayOf("/java8/sentences/literals-valid.txt")

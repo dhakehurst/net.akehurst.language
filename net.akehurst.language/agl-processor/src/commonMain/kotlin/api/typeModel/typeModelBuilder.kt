@@ -65,6 +65,19 @@ class TypeModelBuilder(
         return el
     }
 
+    fun unnamedSuperTypeTypeFor(name: String, subtypes: List<Any>): UnnamedSuperTypeType {
+        val sts = subtypes.map {
+            when (it) {
+                is String -> _model.findType(it)!!
+                is RuleType -> it
+                else -> error("Cannot map to RuleType: $it")
+            }
+        }
+        val x = UnnamedSuperTypeType(sts)
+        _types[name] = x
+        return x
+    }
+
     fun build(): TypeModel {
         return _model
     }
@@ -76,23 +89,29 @@ abstract class StructuredTypeBuilder(
 ) {
     protected abstract val _structuredType: StructuredRuleType
 
-    fun propertyUnnamedAnyType(isNullable: Boolean, childIndex: Int): PropertyDeclaration =
+    fun propertyAnyTypeUnnamed(isNullable: Boolean, childIndex: Int): PropertyDeclaration =
         property(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, AnyType, isNullable, childIndex)
 
-    fun propertyUnnamedStringType(isNullable: Boolean, childIndex: Int): PropertyDeclaration =
+    fun propertyStringTypeUnnamed(isNullable: Boolean, childIndex: Int): PropertyDeclaration =
         property(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, StringType, isNullable, childIndex)
 
     fun propertyStringType(propertyName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
         property(propertyName, StringType, isNullable, childIndex)
 
     // ListSimple
-    fun propertyUnnamedListTypeOf(elementTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
+    fun propertyListTypeUnnamedOf(elementTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
         val elementType = _model.findType(elementTypeName)!!
         return propertyListType(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME, elementType, isNullable, childIndex)
     }
 
-    fun propertyUnnamedListType(elementType: RuleType, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
+    fun propertyListTypeUnnamed(elementType: RuleType, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
         propertyListType(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME, elementType, isNullable, childIndex)
+
+    fun propertyListTypeUnnamedOfUnnamedSuperTypeType(subtypeNames: List<String>, childIndex: Int): PropertyDeclaration {
+        val subtypes = subtypeNames.map { _model.findType(it)!! }
+        val elementType = UnnamedSuperTypeType(subtypes)
+        return propertyListType(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME, elementType, false, childIndex)
+    }
 
     fun propertyListTypeOf(propertyName: String, elementTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
         val elementType = _model.findType(elementTypeName)!!
@@ -121,8 +140,11 @@ abstract class StructuredTypeBuilder(
         property(propertyName, ListSeparatedType(itemType, separatorType), isNullable, childIndex)
 
     // Tuple
-    fun propertyUnnamedTupleType(isNullable: Boolean, childIndex: Int, init: TupleTypeBuilder.() -> Unit): PropertyDeclaration =
-        propertyTupleType(net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar.Companion.UNNAMED_GROUP_PROPERTY_NAME, isNullable, childIndex, init)
+    fun propertyTupleTypeUnnamed(isNullable: Boolean, childIndex: Int, init: TupleTypeBuilder.() -> Unit): PropertyDeclaration =
+        propertyTupleType(TypeModelFromGrammar.UNNAMED_GROUP_PROPERTY_NAME, isNullable, childIndex, init)
+
+    fun propertyListUnnamedOfTupleType(isNullable: Boolean, childIndex: Int, init: TupleTypeBuilder.() -> Unit = {}) =
+        propertyListOfTupleType(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME, isNullable, childIndex, init)
 
     fun propertyListOfTupleType(propertyName: String, isNullable: Boolean, childIndex: Int, init: TupleTypeBuilder.() -> Unit = {}): PropertyDeclaration {
         val b = TupleTypeBuilder(_model)

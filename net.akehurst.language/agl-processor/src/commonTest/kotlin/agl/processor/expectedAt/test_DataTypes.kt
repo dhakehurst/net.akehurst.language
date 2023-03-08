@@ -43,7 +43,7 @@ class test_DataTypes {
             }
         """.trimIndent()
         val goal = "unit"
-        val processor = Agl.processorFromString<Any,Any>(grammarStr)
+        val processor = Agl.processorFromString<Any,Any>(grammarStr).processor!!
 
         val testData = listOf(
             /*

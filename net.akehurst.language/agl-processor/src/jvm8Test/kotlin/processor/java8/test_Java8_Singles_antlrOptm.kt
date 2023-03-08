@@ -52,7 +52,7 @@ class test_Java8_Singles_antlrOptm {
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
                     }
                 }
-            )
+            ).processor!!
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
             //proc.buildFor(forRule) //TODO: use build
             return proc

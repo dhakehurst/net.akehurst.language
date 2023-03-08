@@ -79,7 +79,7 @@ internal class test_embeddedInnerOptional : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'", "'c'",""))
+                parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'", "'c'"))
             ), issues
         )
     }

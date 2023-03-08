@@ -64,7 +64,7 @@ grammar Mdl {
 }
     """.trimIndent()
 
-        val processor = Agl.processorFromStringDefault(grammarStr)
+        val processor = Agl.processorFromStringDefault(grammarStr).processor!!
 
     }
 

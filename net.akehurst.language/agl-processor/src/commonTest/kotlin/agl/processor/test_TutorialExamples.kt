@@ -35,9 +35,9 @@ class test_TutorialExamples {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
             }
         """.trimIndent()
-        val processor = Agl.processorFromString<Any, Any>(grammarStr)
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
 
-        val result = processor.parse("int")
+        val result = pr.processor!!.parse("int")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
         assertEquals(2, result.sppt!!.maxNumHeads)
@@ -60,9 +60,9 @@ class test_TutorialExamples {
                 NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
             }
         """.trimIndent()
-        val processor = Agl.processorFromString<Any, Any>(grammarStr)
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
 
-        val result = processor.parse("xxx")
+        val result = pr.processor!!.parse("xxx")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -87,9 +87,9 @@ class test_TutorialExamples {
                 NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
             }
         """.trimIndent()
-        val processor = Agl.processorFromString<Any, Any>(grammarStr)
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
 
-        val result = processor.parse("boolean")
+        val result = pr.processor!!.parse("boolean")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
         assertEquals(2, result.sppt!!.maxNumHeads)
@@ -114,9 +114,9 @@ class test_TutorialExamples {
                 NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
             }
         """.trimIndent()
-        val processor = Agl.processorFromString<Any, Any>(grammarStr)
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
 
-        val result = processor.parse("int")
+        val result = pr.processor!!.parse("int")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
         assertEquals(2, result.sppt!!.maxNumHeads)

@@ -29,7 +29,7 @@ internal object CollectionsTest {
                 foundOther.add(otherElement)
             }
         }
-        return foundThis.size == foundOther.size && foundThis.size == thisList.size
+        return this.size==other.size && foundThis.size == foundOther.size && foundThis.size == thisList.size
     }
 
     fun <E> List<E>.matches(other: List<E>, matches: (t: E, o: E) -> Boolean): Boolean {

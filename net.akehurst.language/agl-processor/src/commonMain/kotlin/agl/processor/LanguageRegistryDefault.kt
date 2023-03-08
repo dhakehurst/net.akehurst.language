@@ -206,7 +206,7 @@ class LanguageRegistryDefault : GrammarRegistry {
                 grammarStrArg = null,
                 aglOptions = Agl.registry.agl.grammar.processor?.optionsDefault(),
                 buildForDefaultGoal = false,
-                configuration = Agl.configurationDefault()
+                configuration = LanguageProcessorConfigurationDefault()
             )
             registerFromDefinition(placeholder)
         } else {

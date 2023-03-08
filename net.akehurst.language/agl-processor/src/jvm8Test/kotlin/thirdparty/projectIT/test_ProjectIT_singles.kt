@@ -34,7 +34,7 @@ class test_ProjectIT_singles {
 
         private val grammarStr = this::class.java.getResource("/projectIT/PiEditGrammar.agl")?.readText() ?: error("File not found")
 
-        var processor: LanguageProcessor<Any, Any> = Agl.processorFromString(grammarStr)
+        var processor = Agl.processorFromStringDefault(grammarStr).processor!!
 
     }
 

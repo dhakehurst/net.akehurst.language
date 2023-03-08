@@ -49,7 +49,7 @@ class test_Java8_Singles_aglOptm {
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
                     }
                 }
-            )
+            ).processor!!
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
             //proc.buildFor(forRule)//TODO: use build
             return proc
@@ -82,7 +82,7 @@ class test_Java8_Singles_aglOptm {
                 semanticAnalysis {
                     active(false) // switch off for performance
                 }
-            })
+            }).processor!!
 
         val sentence = "int"
         val result = p.parse(sentence, Agl.parseOptions { goalRuleName("Type") })//TODO: use build
@@ -110,7 +110,7 @@ class test_Java8_Singles_aglOptm {
             }
         """.trimIndent()
         val goal = "UType"
-        val p = Agl.processorFromString(grammarStr, Agl.configuration { defaultGoalRuleName(goal) })
+        val p = Agl.processorFromString(grammarStr, Agl.configuration { defaultGoalRuleName(goal) }).processor!!
 
         val sentence = "int"
         val result = p.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
@@ -185,7 +185,7 @@ grammar Expressions {
     ArrayAccess = Expression '[' Expression ']' ;
 }
         """.trimIndent()
-        val p = Agl.processorFromString<Any, Any>(grammarStr)
+        val p = Agl.processorFromString<Any, Any>(grammarStr).processor!!
 
         val sentence = "a[b]"
         val goal = "ArrayAccess"

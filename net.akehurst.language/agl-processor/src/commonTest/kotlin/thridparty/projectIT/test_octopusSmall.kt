@@ -330,7 +330,7 @@ class test_octopusSmall {
             }
         """.trimIndent()
 
-        val processor = Agl.processorFromStringDefault(grammarStr)
+        val processor = Agl.processorFromStringDefault(grammarStr).processor!!
         const val goal = "UmlPart"
     }
 

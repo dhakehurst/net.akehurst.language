@@ -24,7 +24,7 @@ grammar Test {
 }
         """.trimIndent()
 
-        val processor = Agl.processorFromString<Any,Any>(grammarStr)
+        val processor = Agl.processorFromString<Any,Any>(grammarStr).processor!!
     }
 
     @Test

@@ -39,7 +39,7 @@ class test_VistraqQuery_Singles {
 
         fun tgqlprocessor(): LanguageProcessor<Any,Any> {
             //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
-            return Agl.processorFromString(grammarStr) //TODO: use build
+            return Agl.processorFromString<Any, Any>(grammarStr).processor!! //TODO: use build
         }
 
     }

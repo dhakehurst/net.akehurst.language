@@ -57,7 +57,7 @@ grammar Dot  {
 }
         """.trimIndent()
 
-        val proc = Agl.processorFromString<Any,Any>(grammarStr)
+        val proc = Agl.processorFromString<Any,Any>(grammarStr).processor!!
     }
 
     @Test

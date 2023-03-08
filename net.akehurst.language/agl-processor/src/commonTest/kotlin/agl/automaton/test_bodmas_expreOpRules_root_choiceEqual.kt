@@ -66,7 +66,22 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
+            state(G,o0,SR)  // G = . S
+            state(v,o0,ER)  // v .
+            state(R,o0,ER)  // R = 'v' .
+            state(E,o0,ER)  // E = R .
+            state(S,o0,ER)  // S = E .
+            state(rM,o0,p1)  // M = E . 'm' E
+            state(rA,o0,p1)  // E . 'a' E
+            state(G,o0,ER)  // G = S .
 
+            trans(WIDTH) { src(G,o0,SR); tgt(v); lhg(setOf(EOT,m,a)); ctx(G,o0,SR) }
+            trans(GOAL) { src(S); tgt(G); lhg(EOT); ctx(G,o0,SR) }
+            trans(HEIGHT) { src(E); tgt(rA,o0,p1); lhg(setOf(a), setOf(EOT,m,a)); ctx(G,o0,SR) }
+            trans(HEIGHT) { src(R); tgt(E); lhg(setOf(EOT,m,a), setOf(EOT,m,a)); ctx(G,o0,SR) }
+            trans(HEIGHT) { src(E); tgt(rM,o0,p1); lhg(setOf(m), setOf(EOT,m,a)); ctx(G,o0,SR) }
+            trans(HEIGHT) { src(v); tgt(R); lhg(setOf(EOT,m,a), setOf(EOT,m,a)); ctx(G,o0,SR) }
+            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G,o0,SR) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -82,34 +97,30 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
         assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, 0, SOR))   // G = . S
-            val s1 = state(RP(v, 0, EOR))   // v
-            val s2 = state(RP(R, 0, EOR))   // R = v .
-            val s3 = state(RP(E, 0, EOR))   // E = R .
-            val s4 = state(RP(S, 0, EOR))   // S = E .
-            val s5 = state(RP(rA, 0, 1))   // M = E . m E
-            val s6 = state(RP(rM, 0, 1))   // A = E . a E
-            val s7 = state(RP(m, 0, EOR))   // m
-            val s8 = state(RP(rM, 0, 2))   // M = E m . E
-            val s9 = state(RP(rM, 0, EOR))   // M = E m E .
-            val s10 = state(RP(E, 1, EOR))   // E = M .
-            val s11 = state(RP(G, 0, EOR))   // G = S .
+            state(G,o0,SR)  // G = . S
+            state(v,o0,ER)  // v .
+            state(R,o0,ER)  // R = 'v' .
+            state(E,o0,ER)  // E = R .
+            state(S,o0,ER)  // S = E .
+            state(rM,o0,p1)  // M = E . 'm' E
+            state(rA,o0,p1)  // E . 'a' E
+            state(G,o0,ER)  // G = S .
 
-            transition(s0, s6, s7, WIDTH, null) { lhg(setOf(v)) }
-            transition(s0, s0, s1, WIDTH, null) { lhg(setOf(EOT, m, a)) }
-            transition(s0, s8, s1, WIDTH, null) { lhg(setOf(EOT, m, a)) }
-            transition(s0, s4, s11, GOAL, null) { lhg(setOf(EOT)) }
-            transition(setOf(s0, s8), s3, s6, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(EOT)) }
-            transition(s0, s10, s5, HEIGHT, null) { lhg(setOf(a), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(a), setOf(EOT)) }
-            transition(setOf(s0, s8), s2, s3, HEIGHT, null) { lhg(setOf(m), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(EOT), setOf(EOT)) }
-            transition(s0, s9, s10, HEIGHT, null) { lhg(setOf(m), setOf(m)); lhg(setOf(EOT), setOf(EOT));lhg(setOf(a), setOf(a)) }
-            transition(s8, s3, s9, GRAFT, setOf(RP(rM, 0, 2))) { lhg(setOf(EOT)) }
-            transition(setOf(s0, s8), s3, s6, HEIGHT, null) { lhg(setOf(m), setOf(m)); lhg(setOf(m), setOf(a));lhg(setOf(m), setOf(EOT)) }
-            transition(s0, s10, s6, HEIGHT, null) { lhg(setOf(m), setOf(m)); lhg(setOf(m), setOf(a));lhg(setOf(m), setOf(EOT)) }
-            transition(s6, s7, s8, GRAFT, setOf(RP(rM, 0, 2))) { lhg(setOf(v)) }
-            transition(setOf(s0, s8), s1, s2, HEIGHT, null) { lhg(setOf(m), setOf(m)); lhg(setOf(a), setOf(a));lhg(setOf(EOT), setOf(EOT)) }
-            transition(s0, s3, s4, HEIGHT, null) { lhg(setOf(EOT), setOf(EOT)) }
-            transition(s0, s10, s4, HEIGHT, null) { lhg(setOf(EOT), setOf(EOT)) }
+            trans(WIDTH) { src(rM,o0,p1); tgt(m); lhg(v); ctx(G,o0,SR) }
+            trans(WIDTH) { src(G,o0,SR); tgt(v); lhg(setOf(EOT,m,a)); ctx(G,o0,SR) }
+            trans(WIDTH) { src(rM,o0,p2); tgt(v); lhg(setOf(RT,m,a)); ctx(G,o0,SR) }
+            trans(GOAL) { src(S); tgt(G); lhg(EOT); ctx(G,o0,SR) }
+            trans(HEIGHT) { src(E); tgt(rA,o0,p1); lhg(setOf(a), setOf(EOT,m,a)); ctx(G,o0,SR) }
+            trans(HEIGHT) { src(R); tgt(E); lhg(setOf(EOT,m,a), setOf(EOT,m,a)); ctx(G,o0,SR) }
+            trans(HEIGHT) { src(E); tgt(rM,o0,p1); lhg(setOf(m), setOf(EOT,m,a)); ctx(G,o0,SR) }
+            trans(HEIGHT) { src(v); tgt(R); lhg(setOf(EOT,m,a), setOf(EOT,m,a)); ctx(G,o0,SR) }
+            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G,o0,SR) }
+            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G,o0,SR) }
+            trans(GRAFT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G,o0,SR) }
+            trans(GRAFT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G,o0,SR) }
+            trans(HEIGHT) { src(v); tgt(R); lhg(setOf(EOT,m,a), setOf(EOT,m,a)); ctx(G,o0,SR) }
+            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G,o0,SR) }
+            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G,o0,SR) }
         }
 
         AutomatonTest.assertEquals(expected, actual)

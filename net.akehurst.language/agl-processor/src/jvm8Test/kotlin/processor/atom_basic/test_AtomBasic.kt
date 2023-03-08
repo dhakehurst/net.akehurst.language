@@ -46,7 +46,7 @@ class test_AtomBasic(val data: Data) {
 
         private val grammarStr = this::class.java.getResource("/atom-basic/Grammar.agl")?.readText() ?: error("File not found")
 
-        var processor: LanguageProcessor<Any,Any> = Agl.processorFromString(grammarStr)
+        var processor = Agl.processorFromStringDefault(grammarStr).processor!!
         const val validSourceFilesFolderName = "/atom-basic/valid"
         const val inValidSourceFilesFolderName = "/atom-basic/invalid"
 

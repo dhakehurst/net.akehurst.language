@@ -49,7 +49,7 @@ internal class test_ambiguous_nonTerm_0n : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = ""
 
-        val expected = "S|1 { §empty }"
+        val expected = "S { §empty }"
 
         super.test(
             rrs = rrs,

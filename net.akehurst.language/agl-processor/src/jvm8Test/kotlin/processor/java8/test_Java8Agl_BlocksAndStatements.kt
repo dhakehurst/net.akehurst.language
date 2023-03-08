@@ -36,8 +36,11 @@ class test_Java8Agl_BlocksAndStatements(val data: Data) {
 
         private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
 
-        val processor: LanguageProcessor<AsmSimple, Any> by lazy {
-            Agl.processorFromString(grammarStr, Agl.configuration { targetGrammarName("BlocksAndStatements"); defaultGoalRuleName("Block") })
+        val processor by lazy {
+            Agl.processorFromString(
+                grammarStr,
+                Agl.configuration(Agl.configurationDefault()) { targetGrammarName("BlocksAndStatements"); defaultGoalRuleName("Block") }
+            ).processor!!
         }
 
         var sourceFiles = arrayOf(

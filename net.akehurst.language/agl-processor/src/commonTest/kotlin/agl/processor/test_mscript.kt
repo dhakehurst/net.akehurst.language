@@ -15,7 +15,6 @@
  */
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
@@ -116,7 +115,7 @@ grammar Mscript {
     leaf DOUBLE_QUOTE_STRING = "\"(?:[^\"\\]|\\.)*\"" ;
 }
     """.trimIndent()
-        val sut = Agl.processorFromStringDefault(grammarStr)
+        val sut = Agl.processorFromStringDefault(grammarStr).processor!!
     }
 
     @Test
@@ -134,7 +133,7 @@ grammar Mscript {
             elementType("line") {
                 // line = [statement / ';']* ';'? ;
                 propertyListSeparatedTypeOf("statement", "statement", StringType, false, 0)
-                propertyUnnamedStringType(true, 1)
+                propertyStringTypeUnnamed(true, 1)
             }
             elementType("statement") {
                 // statement
@@ -226,7 +225,7 @@ grammar Mscript {
                 // row = expression (','? expression)* ;
                 propertyElementTypeOf("expression", "expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
-                    propertyUnnamedStringType(true, 0)
+                    propertyStringTypeUnnamed(true, 0)
                     propertyElementTypeOf("expression", "expression", false, 1)
                 }
             }

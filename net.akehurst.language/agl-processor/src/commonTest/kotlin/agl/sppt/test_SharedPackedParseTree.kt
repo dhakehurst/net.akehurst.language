@@ -26,7 +26,7 @@ class test_SharedPackedParseTree {
 
     @Test
     fun tokensByLine_a() {
-        val proc = Agl.processorFromString<Any, Any>(
+        val pr = Agl.processorFromString<Any, Any>(
             """
             namespace test
             grammar Test {
@@ -40,7 +40,7 @@ class test_SharedPackedParseTree {
         """.trimIndent()
         )
 
-        val result = proc.parse("a".trimIndent())
+        val result = pr.processor!!.parse("a".trimIndent())
 
         assertNotNull(result.sppt)
         assertEquals(emptyList(), result.issues)
@@ -51,7 +51,7 @@ class test_SharedPackedParseTree {
 
     @Test
     fun tokensByLine_eolx1() {
-        val proc = Agl.processorFromString<Any, Any>(
+        val pr = Agl.processorFromString<Any, Any>(
             """
             namespace test
             grammar Test {
@@ -65,7 +65,7 @@ class test_SharedPackedParseTree {
         """.trimIndent()
         )
 
-        val result = proc.parse(
+        val result = pr.processor!!.parse(
             """
             a + b
             + c
@@ -86,7 +86,7 @@ class test_SharedPackedParseTree {
 
     @Test
     fun tokensByLine_eolx1_indent() {
-        val proc = Agl.processorFromString<Any, Any>(
+        val pr = Agl.processorFromString<Any, Any>(
             """
             namespace test
             grammar Test {
@@ -100,7 +100,7 @@ class test_SharedPackedParseTree {
         """.trimIndent()
         )
 
-        val result = proc.parse(
+        val result = pr.processor!!.parse(
             """
             a + b
               + c
@@ -122,7 +122,7 @@ class test_SharedPackedParseTree {
 
     @Test
     fun tokensByLine_eolx2() {
-        val proc = Agl.processorFromString<Any, Any>(
+        val pr = Agl.processorFromString<Any, Any>(
             """
             namespace test
 
@@ -149,7 +149,7 @@ class XXX {
 }
         """
         val text2 = text.trimStart()
-        val result = proc.parse(text2)
+        val result = pr.processor!!.parse(text2)
 
         assertNotNull(result.sppt)
         assertEquals(emptyList(), result.issues)

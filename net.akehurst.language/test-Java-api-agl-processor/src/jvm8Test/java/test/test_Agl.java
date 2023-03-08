@@ -31,7 +31,7 @@ public class test_Agl {
 
     @Test
     public void processorFromString_noConfig() {
-        LanguageProcessor<Object,Object> proc = Agl.INSTANCE.processorFromString(grammarStr, null, null);
+        LanguageProcessor<Object,Object> proc = Agl.INSTANCE.processorFromString(grammarStr, null, null).getProcessor();
 
         Assert.assertNotNull(proc);
     }
@@ -40,7 +40,7 @@ public class test_Agl {
     public void processorFromString_withConfigDefault() {
         LanguageProcessorConfiguration<Object,Object> config = Agl.INSTANCE.configurationDefault();
 
-        LanguageProcessor<Object,Object> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null);
+        LanguageProcessor<Object,Object> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null).getProcessor();
 
         Assert.assertNotNull(proc);
     }
@@ -52,7 +52,7 @@ public class test_Agl {
             return Unit.INSTANCE;
         }));
 
-        LanguageProcessor<Object,Object> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null);
+        LanguageProcessor<Object,Object> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null).getProcessor();
 
         Assert.assertNotNull(proc);
     }

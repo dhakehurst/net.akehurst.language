@@ -94,7 +94,7 @@ class test_MetaTyperLanguage {
                         
             }
         """.trimIndent()
-        val processor = Agl.processorFromStringDefault(grammarStr)
+        val processor = Agl.processorFromStringDefault(grammarStr).processor!!
         const val goal = "PiTyperDef"
     }
 

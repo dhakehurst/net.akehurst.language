@@ -55,7 +55,7 @@ class test_Java8_Singles_antlrSpec {
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
                     }
                 }
-            )
+            ).processor!!
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
             //proc.buildFor(Agl.parseOptions { goalRuleName(forRule) })
             return proc
@@ -77,7 +77,7 @@ class test_Java8_Singles_antlrSpec {
 
         val grammarStr = this::class.java.getResource(grammarFile).readText()
         val goal = "unannType"
-        val p = Agl.processorFromString(grammarStr, Agl.configuration { defaultGoalRuleName(goal) })
+        val p = Agl.processorFromString(grammarStr, Agl.configuration { defaultGoalRuleName(goal) }).processor!!
 
         val sentence = "int"
         val result = p.parse(sentence, Agl.parseOptions { goalRuleName(goal) })

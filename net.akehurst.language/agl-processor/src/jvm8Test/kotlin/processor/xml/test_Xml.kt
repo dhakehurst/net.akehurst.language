@@ -40,7 +40,7 @@ class test_Xml(val data: Data) {
         val grammarStr = this::class.java.getResource("/xml/Xml.agl").readText()
         const val goal = "document"
 
-        var processor: LanguageProcessor<Any, Any> = Agl.processorFromString(grammarStr)
+        var processor = Agl.processorFromStringDefault(grammarStr).processor!!
 
         val validDir = "/xml/valid"
         var invalidDir = "/xml/invalid"

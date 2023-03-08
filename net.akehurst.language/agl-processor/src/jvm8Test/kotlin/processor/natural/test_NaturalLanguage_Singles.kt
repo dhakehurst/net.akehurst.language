@@ -26,14 +26,12 @@ class test_NaturalLanguage_Singles {
     companion object {
 
         private val grammarStr = this::class.java.getResource("/natural/English.agl").readText()
-        var processor: LanguageProcessor<Any,Any> = tgqlprocessor()
+        var processor = processor()
 
         var sourceFiles = arrayOf("/natural/english-sentences-valid.txt")
 
-        fun tgqlprocessor(): LanguageProcessor<Any,Any> {
-            //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
-            return Agl.processorFromString(grammarStr)
-        }
+        fun processor() =  Agl.processorFromStringDefault(grammarStr).processor!!
+
     }
 
     @Test

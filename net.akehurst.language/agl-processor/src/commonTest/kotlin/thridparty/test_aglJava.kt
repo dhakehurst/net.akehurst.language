@@ -486,7 +486,7 @@ grammar Packages extends Interfaces {
 
     @Test
     fun parse_blocks_empty() {
-        val processor = Agl.processorFromString(grammarStr, Agl.configuration { targetGrammarName("BlocksAndStatements"); defaultGoalRuleName("Block") })
+        val processor = Agl.processorFromString(grammarStr, Agl.configuration { targetGrammarName("BlocksAndStatements"); defaultGoalRuleName("Block") }).processor!!
         val goal = "Block"
         val sentence = """
         {}
@@ -498,7 +498,7 @@ grammar Packages extends Interfaces {
 
     @Test
     fun process_blocks_empty() {
-        val processor = Agl.processorFromString(grammarStr, Agl.configuration { targetGrammarName("BlocksAndStatements"); defaultGoalRuleName("Block") })
+        val processor = Agl.processorFromString(grammarStr, Agl.configuration { targetGrammarName("BlocksAndStatements"); defaultGoalRuleName("Block") }).processor!!
         val goal = "Block"
         val sentence = """
         {}

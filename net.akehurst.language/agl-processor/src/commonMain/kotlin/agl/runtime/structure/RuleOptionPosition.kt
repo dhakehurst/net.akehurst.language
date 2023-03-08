@@ -100,25 +100,30 @@ internal class RulePosition(
                 }
             }
         }
+        val pos = when (position) {
+            0 -> "SR"
+            -1 -> "ER"
+            else -> position.toString()
+        }
         val p = when(rhs) {
-            is RuntimeRuleRhsTerminal -> position
+            is RuntimeRuleRhsTerminal -> pos
             is RuntimeRuleRhsNonTerminal -> when(rhs) {
-                is RuntimeRuleRhsGoal -> position
-                is RuntimeRuleRhsConcatenation -> position
-                is RuntimeRuleRhsChoice -> position
+                is RuntimeRuleRhsGoal -> pos
+                is RuntimeRuleRhsConcatenation -> pos
+                is RuntimeRuleRhsChoice -> pos
                 is RuntimeRuleRhsList -> when (rhs) {
                     is RuntimeRuleRhsListSimple -> when (position) {
                         START_OF_RULE -> "BR"
                         POSITION_MULIT_ITEM -> "MI"
                         END_OF_RULE -> "ER"
-                        else -> position
+                        else -> pos
                     }
                     is RuntimeRuleRhsListSeparated ->when (position) {
                         START_OF_RULE -> "BR"
                         POSITION_SLIST_SEPARATOR -> "LS"
                         POSITION_SLIST_ITEM -> "LI"
                         END_OF_RULE -> "ER"
-                        else -> position
+                        else -> pos
                     }
                 }
             }

@@ -105,8 +105,7 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                // WS is a possible EOT for the Inner grammar, thus it is a possible next expected
-                parseError(InputLocation(2, 3, 1, 1), "s{^", setOf("ID","'/'","'#'","'}'","WS"))
+                parseError(InputLocation(2, 3, 1, 1), "s{^", setOf("ID","'/'","'#'","'}'"))
             ), issues
         )
     }

@@ -175,7 +175,7 @@ class test_parserBasicProperties {
             }
         """.trimIndent()
 
-        val processor = Agl.processorFromStringDefault(grammarStr)
+        val processor = Agl.processorFromStringDefault(grammarStr).processor!!
 
     }
 

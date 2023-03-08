@@ -60,26 +60,17 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            val s0 = state(RP(G, 0, SOR))                                // G = . S
-            val s1 = state(RP(a, 0, EOR))                                // a .
-            val s2 = state(RP(ABCZ, 0, 1), RP(ABC, 0, 1))    // ABCZ = a . b c z , ABC = a . b c
-            val s3 = state(RP(b, 0, EOR))                                // b .
-            val s4 = state(RP(ABCZ, 0, 2), RP(ABC, 0, 2))    // ABCZ = a b . c z , ABC = a b . c
-            val s5 = state(RP(c, 0, EOR))                                // c .
-            val s6 = state(RP(ABC, 0, EOR))                                // ABC = a b c .
-            val s7 = state(RP(ABCZ, 0, 3))                          // ABCZ = a b c . z
-            val s8 = state(RP(S, 1, EOR))                                // S = ABC .
-            val s9 = state(RP(G, 0, EOR))                                // G = S .
+            state(RP(G, o0, SOR))                       // G = . S
+            state(RP(a, o0, EOR))                       // a .
+            state(RP(ABCZ, o0, p1), RP(ABC, o0, p1))    // ABCZ = a . b c z , ABC = a . b c
+            state(RP(b, o0, EOR))                       // b .
+            state(RP(ABCZ, o0, p2), RP(ABC, o0, p2))    // ABCZ = a b . c z , ABC = a b . c
+            state(RP(c, o0, EOR))                       // c .
+            state(RP(ABC, o0, EOR))                     // ABC = a b c .
+            state(RP(ABCZ, o0, p3))                     // ABCZ = a b c . z
+            state(RP(S, o1, EOR))                       // S = ABC .
+            state(RP(G, o0, EOR))                       // G = S .
 
-            transition(s0, s0, s1, WIDTH, setOf(b), emptySet(), null)
-            transition(s0, s1, s2, HEIGHT, setOf(b), setOf(setOf(EOT)), setOf(RP(ABCZ, 0, 0), RP(ABC, 0, 0)))
-            transition(s0, s2, s3, WIDTH, setOf(c), setOf(), null)
-            transition(s2, s3, s4, GRAFT, setOf(c), setOf(setOf(EOT)), setOf(RP(ABCZ, 0, 1), RP(ABC, 0, 1)))
-            transition(s0, s4, s5, WIDTH, setOf(EOT, z), setOf(), null)
-            transition(s4, s5, s6, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(ABC, 0, 2)))
-            transition(s4, s5, s7, GRAFT, setOf(z), setOf(setOf(EOT)), setOf(RP(ABCZ, 0, 2)))
-            transition(s0, s6, s8, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(S, 1, SOR)))
-            transition(s0, s8, s9, GRAFT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(G, 0, SOR)))
 
         }
 
@@ -130,7 +121,7 @@ internal class test_abcz_OR_abc : test_AutomatonAbstract() {
     fun stateInfo() {
         val bc = BuildCacheLC1(SM)
 
-        val actual = bc.stateInfo2()
+        val actual = bc.stateInfo()
     }
 
     @Test

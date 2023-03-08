@@ -17,7 +17,6 @@ package net.akehurst.language.processor.dot
 
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.processor.test_mscript
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
@@ -33,7 +32,7 @@ class test_Dot_SyntaxAnalyser {
 
     companion object {
         private val grammarStr = this::class.java.getResource("/dot/Dot.agl").readText()
-        var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr)
+        var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
     }
 
     @Test
@@ -54,7 +53,7 @@ class test_Dot_SyntaxAnalyser {
             elementType("line") {
                 // line = [statement / ';']* ';'? ;
                 propertyListSeparatedTypeOf("statement", "statement", StringType, false, 0)
-                propertyUnnamedStringType(true, 1)
+                propertyStringTypeUnnamed(true, 1)
             }
             elementType("statement") {
                 // statement
@@ -146,7 +145,7 @@ class test_Dot_SyntaxAnalyser {
                 // row = expression (','? expression)* ;
                 propertyElementTypeOf("expression", "expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
-                    propertyUnnamedStringType(true, 0)
+                    propertyStringTypeUnnamed(true, 0)
                     propertyElementTypeOf("expression", "expression", false, 1)
                 }
             }

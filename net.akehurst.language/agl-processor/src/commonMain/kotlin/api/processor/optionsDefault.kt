@@ -26,7 +26,7 @@ internal class LanguageProcessorConfigurationDefault<AsmType : Any, ContextType 
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null,
     override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null,
     override var formatterResolver: FormatterResolver<AsmType, ContextType>? = null,
-    override val styleResolver: StyleResolver<AsmType, ContextType>? = null
+    override var styleResolver: StyleResolver<AsmType, ContextType>? = null
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
 
 internal class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
@@ -55,7 +55,9 @@ internal class SemanticAnalysisOptionsDefault<AsmType : Any, ContextType : Any>(
 annotation class LanguageProcessorConfigurationDslMarker
 
 @LanguageProcessorConfigurationDslMarker
-class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any> {
+class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
+    val base:LanguageProcessorConfiguration<AsmType,ContextType>?
+) {
 
     private var _targetGrammarName: String? = null
     private var _defaultGoalRuleName: String? = null
@@ -99,16 +101,31 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any> {
     }
 
     fun build(): LanguageProcessorConfiguration<AsmType, ContextType> {
-        return LanguageProcessorConfigurationDefault<AsmType, ContextType>(
-            _targetGrammarName,
-            _defaultGoalRuleName,
-            _typeModelResolver,
-            _scopeModelResolver,
-            _syntaxAnalyserResolver,
-            _semanticAnalyserResolver,
-            _formatterResolver,
-            _styleResolver
-        )
+        return when(base) {
+            null -> LanguageProcessorConfigurationDefault<AsmType, ContextType>(
+                _targetGrammarName,
+                _defaultGoalRuleName,
+                _typeModelResolver,
+                _scopeModelResolver,
+                _syntaxAnalyserResolver,
+                _semanticAnalyserResolver,
+                _formatterResolver,
+                _styleResolver
+            )
+            is LanguageProcessorConfigurationDefault<AsmType, ContextType> -> {
+                _targetGrammarName?.let{ base.targetGrammarName = it }
+                _defaultGoalRuleName?.let{ base.defaultGoalRuleName = it }
+                _typeModelResolver?.let{ base.typeModelResolver = it }
+                _scopeModelResolver?.let{ base.scopeModelResolver = it }
+                _syntaxAnalyserResolver?.let{ base.syntaxAnalyserResolver = it }
+                _semanticAnalyserResolver?.let{ base.semanticAnalyserResolver = it }
+                _formatterResolver?.let{ base.formatterResolver = it }
+                _styleResolver?.let{ base.styleResolver = it }
+
+                base
+            }
+            else -> error("Cannot override LanguageProcessorConfiguration of type ${base::class.qualifiedName}")
+        }
     }
 }
 

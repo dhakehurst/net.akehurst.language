@@ -69,7 +69,7 @@ class test_Java8_Compare(val data: Data) {
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
                     }
                 }
-            )
+            ).processor!!
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
             //proc.buildFor(Agl.parseOptions { goalRuleName(forRule) })//TODO: use build
             println("Built $path")

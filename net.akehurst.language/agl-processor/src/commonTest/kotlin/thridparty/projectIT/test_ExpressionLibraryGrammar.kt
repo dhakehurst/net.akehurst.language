@@ -46,7 +46,7 @@ class test_ExpressionLibraryGrammar {
         }
         """.trimIndent()
 
-        val processor = Agl.processorFromString<Any,Any>(grammarStr)
+        val processor = Agl.processorFromString<Any,Any>(grammarStr).processor!!
         const val goal = "LibUnit"
     }
 

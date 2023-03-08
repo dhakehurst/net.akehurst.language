@@ -33,14 +33,11 @@ class test_NaturalLanguage(val data: Data) {
     companion object {
 
         private val grammarStr = this::class.java.getResource("/natural/English.agl").readText()
-        var processor: LanguageProcessor<Any,Any> = processor()
+        var processor = processor()
 
         var sourceFiles = arrayOf("/natural/english-sentences-valid.txt")
 
-        fun processor(): LanguageProcessor<Any,Any> {
-            //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
-            return Agl.processorFromString(grammarStr)
-        }
+        fun processor() = Agl.processorFromStringDefault(grammarStr).processor!!
 
         @JvmStatic
         @Parameters(name = "{0}")
