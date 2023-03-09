@@ -191,15 +191,15 @@ class test_Dot_SyntaxAnalyser {
         assertNotNull(actual)
 
         val expected = asmSimple {
-            root("graph") {
-                propertyString("STRICT", null)
+            root("Graph") {
+                propertyString("strict", null)
                 propertyString("type", "graph")
-                propertyString("ID", null)
+                propertyString("id", null)
                 propertyListOfElement("stmt_list") {
-                    element("stmt1") {
-                        propertyElementExplicitType("stmt","node_stmt") {
-                                propertyElement("node_id") {
-                                    propertyString("ID","a")
+                    element("Stmt1") {
+                        propertyElementExplicitType("stmt","Node_stmt") {
+                                propertyElementExplicitType("node_id", "Node_id") {
+                                    propertyString("id","a")
                                     propertyString("port", null)
                                 }
                                 propertyString("attr_lists", null)

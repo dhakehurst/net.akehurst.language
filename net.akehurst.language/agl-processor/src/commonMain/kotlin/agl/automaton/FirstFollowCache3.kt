@@ -66,7 +66,7 @@ internal class FirstFollowCache3 {
     // target states for WIDTH transition, rulePosition should NOT be atEnd
     //fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, nextContext:Set<RulePosition>, nextContextFollow: FollowDeferred): Set<FirstTerminalInfo> {
     fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, parentFollow: LookaheadSetPart): Set<FirstTerminalInfo> {
-        check(context.isAtEnd.not()) { "firstTerminal($context,$rulePosition)" }
+        if (Debug.CHECK) check(context.isAtEnd.not()) { "firstTerminal($context,$rulePosition)" }
         return  if (this._firstTerminal.containsKey(context) && this._firstTerminal[context].containsKey(rulePosition)) {
             this._firstTerminal[context][rulePosition]
         } else {

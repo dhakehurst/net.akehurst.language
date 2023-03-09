@@ -134,7 +134,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual : test_ScanOnDemandP
     }
 
     @Test
-    fun v_add_v_mul_c() {
+    fun v_add_v_mul_v() {
         val sentence = "v+v*v"
 
         val expected = """

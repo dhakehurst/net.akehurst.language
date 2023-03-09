@@ -122,44 +122,44 @@ grammar Mscript {
     fun mscript_typeModel() {
         val actual = sut.typeModel
         val expected = typeModel("com.yakindu.modelviewer.parser", "Mscript") {
-            elementType("script") {
+            elementType("Script") {
                 // script = statementList ;
                 propertyListSeparatedTypeOf("statementList", "line", StringType, false, 0)
             }
-            elementType("statementList") {
+            elementType("StatementList") {
                 // statementList = [line / "\R"]* ;
                 propertyListSeparatedTypeOf("line", "line", StringType, false, 0)
             }
-            elementType("line") {
+            elementType("Line") {
                 // line = [statement / ';']* ';'? ;
                 propertyListSeparatedTypeOf("statement", "statement", StringType, false, 0)
                 propertyStringTypeUnnamed(true, 1)
             }
-            elementType("statement") {
+            elementType("Statement") {
                 // statement
                 //   = conditional
                 //   | assignment
                 //   | expressionStatement
                 //   //TODO: others
                 //   ;
-                subTypes("conditional", "assignment", "expressionStatement")
+                subTypes("Conditional", "Assignment", "ExpressionStatement")
             }
-            elementType("conditional") {
+            elementType("Conditional") {
                 // conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
                 propertyElementTypeOf("expression", "expression", false, 1)
                 propertyListSeparatedTypeOf("statementList", "line", StringType, false, 3)
                 propertyListSeparatedTypeOf("statementList2", "line", StringType, false, 5)
             }
-            elementType("assignment") {
+            elementType("Assignment") {
                 // assignment = rootVariable '=' expression ;
                 propertyElementTypeOf("rootVariable", "rootVariable", false, 0)
                 propertyElementTypeOf("expression", "expression", false, 2)
             }
-            elementType("expressionStatement") {
+            elementType("ExpressionStatement") {
                 // expressionStatement = expression ;
                 propertyElementTypeOf("expression", "expression", false, 0)
             }
-            elementType("expression") {
+            elementType("Expression") {
                 // expression
                 //   = rootVariable
                 //   | literalExpression
@@ -169,42 +169,42 @@ grammar Mscript {
                 //   | infixExpression
                 //   | groupExpression
                 //   ;
-                subTypes("rootVariable", "literalExpression", "matrix", "functionCallOrIndex", "prefixExpression", "infixExpression", "groupExpression")
+                subTypes("RootVariable", "LiteralExpression", "Matrix", "FunctionCallOrIndex", "PrefixExpression", "InfixExpression", "GroupExpression")
             }
-            elementType("groupExpression") {
+            elementType("GroupExpression") {
                 // groupExpression = '(' expression ')' ;
                 //superType("expression")
                 propertyElementTypeOf("expression", "expression", false, 1)
             }
-            elementType("functionCallOrIndex") {
+            elementType("FunctionCallOrIndex") {
                 // functionCall = NAME '(' argumentList ')' ;
                 //superType("expression")
-                propertyStringType("NAME", false, 0)
+                propertyStringType("name", false, 0)
                 propertyListSeparatedTypeOf("argumentList", "argument", StringType, false, 2)
             }
-            elementType("argumentList") {
+            elementType("ArgumentList") {
                 // argumentList = [ argument / ',' ]* ;
                 propertyListSeparatedTypeOf("argument", "argument", StringType, false, 0)
             }
-            elementType("argument") {
+            elementType("Argument") {
                 // argument = expression | colonOperator ;
-                subTypes("expression", "colonOperator")
+                subTypes("Expression", "ColonOperator")
             }
-            elementType("prefixExpression") {
+            elementType("PrefixExpression") {
                 // prefixExpression = prefixOperator expression ;
                 propertyStringType("prefixOperator", false, 0)
                 propertyElementTypeOf("expression", "expression", false, 1)
             }
-            stringTypeFor("prefixOperator")
+            stringTypeFor("PrefixOperator")
             //elementType("prefixOperator") {
             // prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
-            elementType("infixExpression") {
+            elementType("InfixExpression") {
                 // infixExpression =  [ expression / infixOperator ]2+ ;
                 propertyListSeparatedTypeOf("expression", "expression", StringType, false, 0)
             }
-            stringTypeFor("infixOperator")
+            stringTypeFor("InfixOperator")
             //elementType("infixOperator") {
             // infixOperator
             //        = '.*' | '*' | './' | '/' | '.\\' | '\\' | '+' | '-'    // arithmetic
@@ -214,25 +214,25 @@ grammar Mscript {
             //        ;
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
-            elementType("colonOperator") {
-                propertyStringType("COLON", false, 0)
+            elementType("ColonOperator") {
+                propertyStringType("colon", false, 0)
             }
-            elementType("matrix") {
+            elementType("Matrix") {
                 // matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
                 propertyListSeparatedTypeOf("row", "row", StringType, false, 1)
             }
-            elementType("row") {
+            elementType("Row") {
                 // row = expression (','? expression)* ;
-                propertyElementTypeOf("expression", "expression", false, 0)
+                propertyElementTypeOf("expression", "Expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
                     propertyStringTypeUnnamed(true, 0)
-                    propertyElementTypeOf("expression", "expression", false, 1)
+                    propertyElementTypeOf("expression", "Expression", false, 1)
                 }
             }
-            elementType("literalExpression") {
+            elementType("LiteralExpression") {
                 propertyStringType("literalValue", false, 0)
             }
-            stringTypeFor("literalValue")
+            stringTypeFor("LiteralValue")
             //elementType("literalValue") {
             //    literal
             //      = BOOLEAN
@@ -242,11 +242,11 @@ grammar Mscript {
             //      ;
             //    propertyUnnamedPrimitiveType(PrimitiveType.ANY, false, 0)
             //}
-            elementType("rootVariable") {
+            elementType("RootVariable") {
                 // rootVariable = NAME ;
-                propertyStringType("NAME", false, 0)
+                propertyStringType("name", false, 0)
             }
-            stringTypeFor("number")
+            stringTypeFor("Number")
             //elementType("number") {
             // number = INTEGER | REAL ;
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
@@ -780,21 +780,21 @@ grammar Mscript {
         val result = sut.process(text, Agl.options { parse { goalRuleName("script") } })
 
         val expected = asmSimple {
-            root("script") {
+            root("Script") {
                 propertyListOfElement("statementList") {
-                    element("line") {
+                    element("Line") {
                         propertyListOfElement("statement") {
-                            element("expressionStatement") {
-                                propertyElementExplicitType("expression", "functionCallOrIndex") {
-                                    propertyString("NAME", "disp")
+                            element("ExpressionStatement") {
+                                propertyElementExplicitType("expression", "FunctionCallOrIndex") {
+                                    propertyString("name", "disp")
                                     propertyListOfElement("argumentList") {
-                                        element("functionCallOrIndex") {
-                                            propertyString("NAME", "get_param")
+                                        element("FunctionCallOrIndex") {
+                                            propertyString("name", "get_param")
                                             propertyListOfElement("argumentList") {
-                                                element("rootVariable") {
-                                                    propertyString("NAME", "gcbh")
+                                                element("RootVariable") {
+                                                    propertyString("name", "gcbh")
                                                 }
-                                                element("literalExpression") {
+                                                element("LiteralExpression") {
                                                     propertyString("literalValue","'xxx'")
                                                 }
                                             }

@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.api.runtime.*
+import net.akehurst.language.agl.util.Debug
 
 internal fun runtimeRuleSet(init: RuntimeRuleSetBuilder2.() -> Unit): RuntimeRuleSet {
     val b = RuntimeRuleSetBuilder2()
@@ -170,7 +171,7 @@ internal class RuntimeRuleConcatenationBuilder(
 
     override fun empty() {
         itemRefs.add(RuntimeRuleRef(RuntimeRuleSet.EMPTY.tag))
-        check(1 == itemRefs.size) { "'empty' must be the only item in a rhs" }
+        /* only used in testing no need to - if (Debug.CHECK) */ check(1 == itemRefs.size) { "'empty' must be the only item in a rhs" }
     }
 
     override fun literal(value: String) {

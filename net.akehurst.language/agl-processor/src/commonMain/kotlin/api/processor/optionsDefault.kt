@@ -124,7 +124,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
 
                 base
             }
-            else -> error("Cannot override LanguageProcessorConfiguration of type ${base::class.qualifiedName}")
+            else -> error("Cannot override LanguageProcessorConfiguration of type ${base::class.simpleName}")
         }
     }
 }

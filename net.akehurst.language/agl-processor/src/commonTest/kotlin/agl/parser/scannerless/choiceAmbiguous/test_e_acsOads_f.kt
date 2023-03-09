@@ -36,8 +36,8 @@ internal class test_e_acsOads_f : test_ScanOnDemandParserAbstract() {
         val rrs = runtimeRuleSet {
             concatenation("S") { literal("e"); ref("ambig"); literal("f")  }
             choice("ambig", RuntimeRuleChoiceKind.AMBIGUOUS) {
-                ref("acs")
                 ref("ads")
+                ref("acs")
             }
             choice("acs", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a"); ref("acs1") }
             concatenation("acs1") { ref("acs"); literal("c"); literal("a") }
@@ -125,7 +125,7 @@ internal class test_e_acsOads_f : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val expected2 = """
-            S { 'e' ambig|1 { ads { 'a' } } 'f' }
+            S { 'e' ambig { ads { 'a' } } 'f' }
         """.trimIndent()
 
         super.test(

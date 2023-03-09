@@ -205,8 +205,7 @@ internal class RuntimeParser(
                 //don't do it again
                 doneEmpties.add(head.state)
             } else {
-                val grown = growHead(head, possibleEndOfText, growArgs)
-                if (grown.not()) doNoTransitionsTaken(head)
+                growHead(head, possibleEndOfText, growArgs)
                 steps++
             }
 
@@ -237,78 +236,131 @@ internal class RuntimeParser(
         }
     }
 
-    private fun growGoal(gn: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
-        return if (gn.isComplete) {
-            graph.recordGoal(gn)
+    private fun growGoal(head: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
+        return if (head.isComplete) {
+            graph.recordGoal(head)
+            graph.dropGrowingHead(head)
+            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
             false
         } else {
             var grown = false
-            val transitions = gn.runtimeState.transitionsGoal(stateSet.startState)
+            val transitions = head.runtimeState.transitionsGoal(stateSet.startState)
             if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
             for (tr in transitions) {
                 val b = when (tr.action) {
-                    ParseAction.WIDTH -> doWidth(gn, tr, possibleEndOfText, growArgs)
-                    ParseAction.EMBED -> doEmbedded(gn, tr, possibleEndOfText, growArgs)
+                    ParseAction.WIDTH -> doWidth(head, tr, possibleEndOfText, growArgs)
+                    ParseAction.EMBED -> doEmbedded(head, tr, possibleEndOfText, growArgs)
                     else -> error("Internal Error: should only have WIDTH or EMBED transitions here")
                 }
                 grown = grown || b
             }
+            if (grown.not()) doNoTransitionsTaken(head)
             grown
         }
     }
 
-    private fun growIncomplete(gn: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
+    private fun growIncomplete(head: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
         var grown = false
-        val prevSet = this.graph.previousOf(gn)
+        val prevSet = this.graph.previousOf(head)
         for (previous in prevSet) {
-            val transitions = gn.runtimeState.transitionsInComplete(previous.state)
+            val transitions = head.runtimeState.transitionsInComplete(previous.state)
             if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
             for (tr in transitions) {
                 val b = when (tr.action) {
-                    ParseAction.WIDTH -> doWidth(gn, tr, possibleEndOfText, growArgs)
-                    ParseAction.EMBED -> doEmbedded(gn, tr, possibleEndOfText, growArgs)
+                    ParseAction.WIDTH -> doWidth(head, tr, possibleEndOfText, growArgs)
+                    ParseAction.EMBED -> doEmbedded(head, tr, possibleEndOfText, growArgs)
                     else -> error("Internal Error: should only have WIDTH or EMBED transitions here")
                 }
                 grown = grown || b
             }
         }
+        if (grown.not()) doNoTransitionsTaken(head)
         return grown
     }
 
-    private fun growComplete(gn: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
-        var grown = false
-        val prevSet = this.graph.previousOf(gn)
+    private fun growComplete(head: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
+        var grownHeight = false
+        var grownGraft = false
+        val prevSet = this.graph.previousOf(head)
+        val dropPrevs = mutableListOf<GrowingNodeIndex>()
         for (previous in prevSet) {
             val prevPrevSet = this.graph.previousOf(previous)
             if (prevPrevSet.isEmpty()) {
-                val b = growComplete2(gn, previous, null, possibleEndOfText, growArgs)
-                grown = grown || b
+                val (h, g) = growComplete2(head, previous, null, possibleEndOfText, growArgs)
+                grownHeight = grownHeight || h
+                grownGraft = grownGraft || g
             } else {
                 for (prevPrev in prevPrevSet) {
-                    val b = growComplete2(gn, previous, prevPrev, possibleEndOfText, growArgs)
-                    grown = grown || b
+                    val (h, g) = growComplete2(head, previous, prevPrev, possibleEndOfText, growArgs)
+                    grownHeight = grownHeight || h
+                    grownGraft = grownGraft || g
+                }
+            }
+            if (grownGraft.not()) dropPrevs.add(previous)
+        }
+
+        when {
+            grownHeight.not() && grownGraft.not() -> doNoTransitionsTaken(head)
+            grownHeight && grownGraft.not() -> {
+                graph.dropGrowingHead(head)
+                if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
+            }
+            grownHeight.not() && grownGraft -> {
+                graph.dropGrowingHead(head)
+                if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
+                dropPrevs.forEach {
+                    graph.dropGrowingHead(it)
+                    if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $it" }
+                }
+            }
+
+            grownHeight && grownGraft -> {
+                graph.dropGrowingHead(head)
+                if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
+                dropPrevs.forEach {
+                    graph.dropGrowingHead(it)
+                    if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $it" }
                 }
             }
         }
-        return grown
+
+        return grownHeight || grownGraft
     }
 
-    private fun growComplete2(gn: GrowingNodeIndex, previous: GrowingNodeIndex, prevPrev: GrowingNodeIndex?, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
-        var grown = false
-        val transitions = gn.runtimeState.transitionsComplete(previous.state, prevPrev?.state ?: stateSet.startState)
+    private fun growComplete2(
+        head: GrowingNodeIndex,
+        previous: GrowingNodeIndex,
+        prevPrev: GrowingNodeIndex?,
+        possibleEndOfText: Set<LookaheadSet>,
+        growArgs: GrowArgs
+    ): Pair<Boolean, Boolean> {
+        var grownHeight = false
+        var grownGraft = false
+        val transitions = head.runtimeState.transitionsComplete(previous.state, prevPrev?.state ?: stateSet.startState)
         if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
         val grouped = transitions.groupBy { it.to.runtimeRulesSet }
         for (it in grouped) {
             when {
                 1 == it.value.size -> {
                     val tr = it.value[0]
-                    val b = when (tr.action) {
-                        ParseAction.HEIGHT -> doHeight(gn, previous, tr, possibleEndOfText, growArgs)
-                        ParseAction.GRAFT -> doGraft(gn, previous, prevPrev, tr, possibleEndOfText, growArgs)
-                        ParseAction.GOAL -> doGoal(gn, previous, tr, possibleEndOfText, growArgs)
+                    when (tr.action) {
+                        ParseAction.HEIGHT -> {
+                            val b = doHeight(head, previous, tr, possibleEndOfText, growArgs)
+                            grownHeight = grownHeight || b
+                        }
+
+                        ParseAction.GRAFT -> {
+                            val b = doGraft(head, previous, prevPrev, tr, possibleEndOfText, growArgs)
+                            grownGraft = grownGraft || b
+                        }
+
+                        ParseAction.GOAL -> {
+                            val b = doGoal(head, previous, tr, possibleEndOfText, growArgs)
+                            grownGraft = grownGraft || b
+                        }
+
                         else -> error("Internal Error: should only have GOAL, HEIGHT or GRAFT transitions here")
                     }
-                    grown = grown || b
                 }
 
                 else -> {
@@ -331,31 +383,47 @@ internal class RuntimeParser(
                         var doneIt = false
                         var i = 0
                         while (doneIt.not() && i < trgs.size) {
-                            val b = doGraft(gn, previous, prevPrev, trgs[i], possibleEndOfText, growArgs)
+                            val b = doGraft(head, previous, prevPrev, trgs[i], possibleEndOfText, growArgs)
+                            grownGraft = grownGraft || b
                             doneIt = doneIt || b
                             ++i
                         }
                         i = 0
                         while (doneIt.not() && i < trhs.size) {
-                            val b = doHeight(gn, previous, trhs[i], possibleEndOfText, growArgs)
+                            val b = doHeight(head, previous, trhs[i], possibleEndOfText, growArgs)
+                            grownHeight = grownHeight || b
                             doneIt = doneIt || b
                             ++i
                         }
-                        grown = grown || doneIt
                     } else {
                         for (tr in it.value) {
-                            val b = when (tr.action) {
-                                ParseAction.HEIGHT -> doHeight(gn, previous, tr, possibleEndOfText, growArgs)
-                                ParseAction.GRAFT -> doGraft(gn, previous, prevPrev, tr, possibleEndOfText, growArgs)
+                            when (tr.action) {
+                                ParseAction.HEIGHT -> {
+                                    val b = doHeight(head, previous, tr, possibleEndOfText, growArgs)
+                                    grownHeight = grownHeight || b
+                                }
+
+                                ParseAction.GRAFT -> {
+                                    val b = doGraft(head, previous, prevPrev, tr, possibleEndOfText, growArgs)
+                                    grownGraft = grownGraft || b
+                                }
+
                                 else -> error("Internal Error: should only have HEIGHT or GRAFT transitions here")
                             }
-                            grown = grown || b
                         }
                     }
                 }
             }
         }
-        return grown
+
+        //when {
+        //    grownHeight.not() && grownGraft.not() -> doNoTransitionsTaken(head)
+        //    grownHeight && grownGraft.not() -> graph.dropGrowingHead(head)
+        //     grownHeight.not() && grownGraft -> {graph.dropGrowingHead(head); graph.dropGrowingHead(previous)}
+        //     grownHeight && grownGraft -> {graph.dropGrowingHead(head); graph.dropGrowingHead(previous);}
+        // }
+
+        return Pair(grownHeight, grownGraft)
     }
 
     fun growNonEmptyWidthForError(possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Set<GrowingNodeIndex> {
@@ -663,7 +731,7 @@ internal class RuntimeParser(
                         if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head, taking: $transition" }
                         this.graph.pushToStackOf(head, transition.to, setOf(LookaheadSet.EMPTY), startPosition, nextInputPosition, skipData)
                     } else {
-                        val pos = if (null!=skipParser && skipParser.failedReasons.isNotEmpty()) {
+                        val pos = if (null != skipParser && skipParser.failedReasons.isNotEmpty()) {
                             skipParser.failedReasons.maxOf { it.position }
                         } else {
                             nextInputPositionAfterSkip

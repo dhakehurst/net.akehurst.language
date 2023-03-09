@@ -9,13 +9,13 @@ internal object Debug {
     const val OUTPUT_SM_BUILD = false
     const val OUTPUT_RUNTIME_BUILD = false
     const val OUTPUT_RUNTIME = false
-    //const val OUTPUT_RUNTIME = true
+    const val OUTPUT_TREE_DATA = false
 
-    val indentDeltaStr = "  "
-    var currentIndent = ""
+    private const val indentDeltaStr = "  "
+    private var currentIndent = ""
 
     fun debug(indentDelta:IndentDelta,lazyMessage:()->String) {
-        if (OUTPUT_SM_BUILD || OUTPUT_RUNTIME || OUTPUT_RUNTIME_BUILD) {
+        if (OUTPUT_SM_BUILD || OUTPUT_RUNTIME || OUTPUT_RUNTIME_BUILD || OUTPUT_TREE_DATA) {
             when(indentDelta){
                 IndentDelta.DEC_BEFORE -> currentIndent = currentIndent.substring(indentDeltaStr.length)
                 IndentDelta.INC_BEFORE -> currentIndent += indentDeltaStr

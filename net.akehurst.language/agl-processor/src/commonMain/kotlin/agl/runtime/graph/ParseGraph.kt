@@ -315,7 +315,7 @@ internal class ParseGraph(
         }
     }
 
-    private fun dropGrowingHead(head:GrowingNodeIndex) {
+     fun dropGrowingHead(head:GrowingNodeIndex) {
         this._gss.pop(head)
         this._growingHeadHeap.remove(head)
     }
@@ -560,7 +560,7 @@ internal class ParseGraph(
        // } else {
         //    this._gss.push(toProcess.remainingHead, previous)
         //}
-        this.dropGrowingHead(head)
+        //this.dropGrowingHead(head)
         val nextInputPosition = if (head.isLeaf) head.nextInputPositionAfterSkip else head.nextInputPosition
         val parent = this.createGrowingNodeIndex(parentState, parentRuntimeLookaheadSet, head.startPosition, nextInputPosition, nextInputPosition, 1)
         //val child = childNode
@@ -694,7 +694,7 @@ internal class ParseGraph(
         )
         //val oldParent = oldParentNode
         //val child = nextChildNode
-        dropGrowingHead(head)
+        //dropGrowingHead(head)
         //dropGrowingHead(previous) //FIXME: can't drop this here...might still be in use!
 
         return if (newParent.state.isAtEnd) {
@@ -732,7 +732,7 @@ internal class ParseGraph(
                     val newPriority = head.state.priorityList[0]
                     when {
                         newPriority > existingPriority -> {
-                            if (buildSPPT) addNewPreferredTreeData(null, newParent, head)
+                            if (buildSPPT) addNewPreferredTreeData(previous, newParent, head)
                             createNewHeadAndDropExisting(existingChild, newParent, prevPrev)
                             true
                         }
@@ -760,7 +760,7 @@ internal class ParseGraph(
                 val newPriority = head.state.priorityList[0]
                 when {
                     newPriority > existingPriority -> {
-                        if (buildSPPT) addNewPreferredTreeData(null, newParent, head)
+                        if (buildSPPT) addNewPreferredTreeData(previous, newParent, head)
                         createNewHeadAndDropExisting(existingChild, newParent, prevPrev)
                         true
                     }

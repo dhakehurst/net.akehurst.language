@@ -69,7 +69,7 @@ internal class ConverterToRuntimeRules(
                 it.setRhs(RuntimeRuleRhsLiteral(it, value))
             }
         }
-        check(this.runtimeRules.containsKey(newRule.tag).not()) { "Already got rule with tag '$name'" }
+        if (Debug.CHECK) check(this.runtimeRules.containsKey(newRule.tag).not()) { "Already got rule with tag '$name'" }
 //TODO: warn in analyser        check(this.terminalRules.containsKey(value).not()) { "Already got terminal rule with value '$value'" }
         runtimeRules[newRule.tag] = newRule
         terminalRules[value] = newRule

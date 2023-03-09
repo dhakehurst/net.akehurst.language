@@ -19,6 +19,7 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.regex.regexMatcher
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.regex.RegexMatcher
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.MutableStack
@@ -256,7 +257,7 @@ internal class SPPTParserDefault(
                 }
                 scanner.hasNext(CHILDREN_END) -> {
                     scanner.next(CHILDREN_END)
-                    check(nodeNamesStack.isEmpty.not()) { "Error parsing tree at position line:${scanner.line},column:${scanner.column}" }
+                    /* only used in testing no need to - if (Debug.CHECK) */ check(nodeNamesStack.isEmpty.not()) { "Error parsing tree at position line:${scanner.line},column:${scanner.column}" }
                     val lastNodeStart = nodeNamesStack.pop()
 
                     val children = childrenStack.pop()
