@@ -148,7 +148,7 @@ internal class CompleteNodeIndex(
     }
 
     override fun toString(): String {
-        return "CNI{(${this.treeData.forStateSetNumber}),$startPosition-$nextInputPosition,R=${runtimeRulesSet.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }}}"
+        return "CNI{(${this.treeData.forStateSetNumber}),$startPosition-$nextInputPosition,R=${runtimeRulesSet.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }}|${optionList}}"
     }
 
     //useful during debug

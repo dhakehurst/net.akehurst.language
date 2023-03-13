@@ -204,10 +204,10 @@ internal class test_da_sList_root_choicePriority : test_ScanOnDemandParserAbstra
         val sentence = "v+v/v/v+v+v"
 
         val expected = """
-         S { expr|2 { add {
+         S { expr { add {
               expr { root { var { 'v' } } }
               '+'
-              expr|1 { div {
+              expr { div {
                   expr { root { var { 'v' } } }
                   '/'
                   expr { root { var { 'v' } } }

@@ -138,10 +138,10 @@ class test_SyntaxAnalyserSimple_datatypes {
         assertEquals(emptyList(), result.issues)
 
         val expected = asmSimple {
-            root("unit") {
+            root("Unit") {
                 propertyListOfElement("declaration") {
-                    element("datatype") {
-                        propertyString("ID", "A")
+                    element("Datatype") {
+                        propertyString("id", "A")
                         propertyListOfElement("property") {}
                     }
                 }
@@ -250,17 +250,17 @@ class test_SyntaxAnalyserSimple_datatypes {
         assertEquals(emptyList(), result.issues)
 
         val expected = asmSimple(scopeModel, ContextSimple()) {
-            root("unit") {
+            root("Unit") {
                 propertyListOfElement("declaration") {
-                    element("primitive") {
-                        propertyString("ID", "String")
+                    element("Primitive") {
+                        propertyString("id", "String")
                     }
-                    element("datatype") {
-                        propertyString("ID", "A")
+                    element("Datatype") {
+                        propertyString("id", "A")
                         propertyListOfElement("property") {
-                            element("property") {
-                                propertyString("ID", "a")
-                                propertyElement("typeReference") {
+                            element("Property") {
+                                propertyString("id", "a")
+                                propertyElementExplicitType("typeReference","YypeReference") {
                                     reference("type", "String")
                                     propertyString("typeArguments", null)
                                 }

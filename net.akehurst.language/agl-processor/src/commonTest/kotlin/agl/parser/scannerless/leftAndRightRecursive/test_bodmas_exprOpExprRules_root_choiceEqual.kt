@@ -19,6 +19,7 @@ package net.akehurst.language.parser.scanondemand.choiceEqual
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.parser.scanondemand.choicePriority.test_da_sList_root_choicePriority
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -269,5 +270,28 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual : test_ScanOnDemandP
         )
     }
 
+    @Test
+    fun v_add_v_div_v_div_v_add_v_add_v() {
+        val sentence = "v+v*v*v+v+v"
 
+        val expected = """
+         S { expr { add {
+              expr { root {  'v' } }
+              '+'
+              expr { mul {
+                  expr { root { 'v' } } 
+                  '*'
+                  expr { root { 'v' } } 
+                  '*'
+                  expr { root {  'v' } } 
+                } }
+              '+'
+              expr { root { 'v' } }
+              '+'
+              expr { root { 'v' } }
+            } } }
+        """.trimIndent()
+
+        super.test(rrs, goal, sentence, 1, expected)
+    }
 }
