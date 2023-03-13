@@ -44,7 +44,7 @@ internal class test_leftRecursive : test_ScanOnDemandParserAbstract() {
         val sentence = "a"
 
         val expected = """
-            S|1 { 'a' }
+            S { 'a' }
         """.trimIndent()
 
         super.test(
@@ -62,7 +62,10 @@ internal class test_leftRecursive : test_ScanOnDemandParserAbstract() {
         val sentence = "aa"
 
         val expected = """
-            S|1 { 'a' }
+            S { P {
+              S { 'a' }
+              S { 'a' }
+            } }
         """.trimIndent()
 
         assertFailsWith<ParserTerminatedException> {
@@ -82,7 +85,11 @@ internal class test_leftRecursive : test_ScanOnDemandParserAbstract() {
         val sentence = "aaa"
 
         val expected = """
-            S|1 { 'a' }
+            S { P {
+              S { 'a' }
+              S { 'a' }
+              S { 'a' }
+            } }
         """.trimIndent()
 
         assertFailsWith<ParserTerminatedException> {

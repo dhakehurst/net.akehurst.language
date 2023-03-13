@@ -26,14 +26,16 @@ import kotlin.test.assertNull
 
 internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
 
-    // S = ab_c > a_bc;
+    // S = C
+    // C = ab_c > a_bc;
     // ab_c = ab 'c'
     // a_bc = 'a' bc
     // ab = 'a' 'b'
     // bc = 'b' 'c'
     private companion object {
         val rrs = runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            concatenation("S") { ref("C") }
+            choice("C", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
                 ref("ab_c")
                 ref("a_bc")
             }
@@ -106,10 +108,10 @@ internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
         val sentence = "abc"
 
         val expected = """
-         S|1 { a_bc {
+         S { C { a_bc {
             'a'
             bc { 'b' 'c' }
-          } }
+          } } }
         """.trimIndent()
 
         super.test(

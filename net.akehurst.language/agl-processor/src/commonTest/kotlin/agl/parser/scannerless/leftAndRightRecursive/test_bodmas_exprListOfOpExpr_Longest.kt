@@ -103,15 +103,15 @@ internal class test_bodmas_exprListOfOpExpr_Longest : test_ScanOnDemandParserAbs
         val sentence = "v+v+v"
 
         val expected = """
-         S { E|1 { I {
+         S { E { I {
               E { var { 'v' } }
               I1 {
                 I2 {
-                  op|2 { '+' }
+                  op { '+' }
                   E { var {  'v' } }
                 }
                 I2 {
-                  op|2 { '+' }
+                  op { '+' }
                   E { var { 'v' } }
                 }
               }

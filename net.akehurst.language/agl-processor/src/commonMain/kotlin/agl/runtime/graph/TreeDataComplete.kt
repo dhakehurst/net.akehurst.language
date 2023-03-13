@@ -19,6 +19,7 @@ package net.akehurst.language.agl.runtime.graph
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.util.Debug
 
 internal class TreeDataComplete(
     val forStateSetNumber: Int
@@ -39,9 +40,10 @@ internal class TreeDataComplete(
         startPosition: Int,
         nextInputPosition: Int,
         nextInputPositionAfterSkip: Int,
-        growingNodeIndex: GrowingNodeIndex?
+        growingNodeIndex: GrowingNodeIndex?,
+        childrenPriorities:List<List<Int>>?
     ): CompleteNodeIndex {
-        return CompleteNodeIndex(this, state, startPosition, nextInputPosition, nextInputPositionAfterSkip, growingNodeIndex)
+        return CompleteNodeIndex(this, state, startPosition, nextInputPosition, nextInputPositionAfterSkip, growingNodeIndex,childrenPriorities)
     }
 
     fun setUserGoalChildrenAfterInitialSkip(nug: CompleteNodeIndex, userGoalChildren: List<CompleteNodeIndex>) {
@@ -57,11 +59,15 @@ internal class TreeDataComplete(
         return when (keys.size) {
             0 -> emptyList()
             1 -> this._complete[keys[0]]!!.entries.map { Pair(it.key, it.value) }
-            else -> if (_preferred.containsKey(keys[0].preferred)) {
-                this._complete[_preferred[keys[0].preferred]]!!.entries.map { Pair(it.key, it.value) }
-            } else {
-                keys.flatMap {
-                    this._complete[it]!!.entries.map { Pair(it.key, it.value) }
+            else -> {
+                val preferred = keys[0].preferred
+                if (Debug.CHECK) check( keys.all { it.preferred == preferred } )
+                if (_preferred.containsKey(preferred)) {
+                    this._complete[_preferred[preferred]]!!.entries.map { Pair(it.key, it.value) }
+                } else {
+                    keys.flatMap {
+                        this._complete[it]!!.entries.map { Pair(it.key, it.value) }
+                    }
                 }
             }
         }

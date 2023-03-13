@@ -71,7 +71,7 @@ import net.akehurst.language.api.sppt.SPPTNode
                             val skipChildren = td.completeChildren[sg]!!.values.first().map {
                                 td.completeChildren[it]!!.values.first().get(0)
                             }
-                            val nug =child.treeData.createCompleteNodeIndex(userGoal.state, startPositionBeforeInitialSkip, userGoal.nextInputPosition, td.nextInputPosition!!, null)
+                            val nug =child.treeData.createCompleteNodeIndex(userGoal.state, startPositionBeforeInitialSkip, userGoal.nextInputPosition, td.nextInputPosition!!, null, null)
                             val userGoalChildren = skipChildren + child.treeData.completeChildren[userGoal]!!.values.first()
                             child.treeData.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
                             listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, nug.startPosition, nug.nextInputPosition, -1))

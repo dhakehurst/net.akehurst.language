@@ -24,28 +24,22 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
+internal class test_TELE_VC : test_ScanOnDemandParserAbstract() {
 
-    // S =  expr ;
-    // ifthenelse = 'if' expr 'then' expr 'else' expr ;
-    // ifthen = 'if' expr 'then' expr ;
-    // expr = var < conditional ;
-    // conditional = ifthenelse | ifthen;
-    // var = W | X | Y | Z ;
+    // S = E ;
+    // E = v | C         // expr = var | conditional
+    // C = t E | t E s E     // conditional = ifThenExpr | ifThenExprElseExpr
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("S") { ref("expr") }
-            choice("expr", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
-                ref("VAR")
-                ref("conditional")
+            concatenation("S") { ref("E") }
+            choice("E", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+                literal("v")
+                ref("C")
             }
-            choice("conditional", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                ref("ifthenelse")
-                ref("ifthen")
+            choice("C", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { literal("t"); ref("E") }
+                concatenation { literal("t"); ref("E"); literal("s"); ref("E") }
             }
-            concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
-            concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
-            pattern("VAR","U|V|W|X|Y|Z")
         }
         val goal = "S"
     }
@@ -57,59 +51,16 @@ internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
         assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("VAR","'if'"))
+            parseError(InputLocation(0,1,1,1),"^",setOf("'v'","'t'"))
         ),issues)
     }
 
     @Test
-    fun ifthenelse() {
-        val sentence = "ifWthenXelseY"
+    fun tvsv() { // if then v else v
+        val sentence = "tvsv"
 
         val expected = """
-            S {
-              expr|1 {
-                conditional {
-                    ifthenelse {
-                      'if'
-                      expr { VAR:'W' }
-                      'then'
-                      expr { VAR:'X' }
-                      'else'
-                      expr { VAR:'Y' }
-                    }
-                }
-              }
-            }
-        """.trimIndent()
-
-        //NOTE: season 35, long expression is dropped in favour of the shorter one!
-
-        super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
-        )
-    }
-
-    @Test
-    fun ifthen() {
-        val sentence = "ifWthenX"
-
-        val expected = """
-            S {
-              expr {
-                conditional {
-                    ifthen {
-                      'if'
-                      expr { VAR:'W' }
-                      'then'
-                      expr { VAR:'X' }
-                    }
-                }
-              }
-            }
+            S { E { C { 't' E { 'v' } 's' E { 'v' }  } } }
         """.trimIndent()
 
         super.test(
@@ -122,33 +73,11 @@ internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun ifthenelseifthen() {
-        val sentence = "ifWthenXelseifYthenZ"
+    fun tv() { // if then v
+        val sentence = "tv"
 
         val expected = """
-            S {
-              expr {
-                conditional {
-                    ifthenelse {
-                      'if'
-                      expr { VAR:'W' }
-                      'then'
-                      expr { VAR:'X' }
-                      'else'
-                      expr {
-                        conditional {
-                            ifthen {
-                              'if'
-                              expr { VAR:'Y' }
-                              'then'
-                              expr { VAR:'Z' }
-                            }
-                        }
-                      }
-                    }
-                }
-              }
-            }
+            S { E { C { 't' E { 'v' } } } }
         """.trimIndent()
 
         super.test(
@@ -161,33 +90,44 @@ internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun ifthenifthenelse() {
-        val sentence = "ifWthenifXthenYelseZ"
+    fun tvstv() {  // if then v else if then v
+        val sentence = "tvstv"
 
         val expected = """
-            S {
-              expr {
-                conditional {
-                    ifthen {
-                      'if'
-                      expr { VAR:'W' }
-                      'then'
-                      expr {
-                        conditional {
-                            ifthenelse {
-                              'if'
-                              expr { VAR:'X' }
-                              'then'
-                              expr { VAR:'Y' }
-                              'else'
-                              expr { VAR:'Z' }
-                            }
-                        }
-                      }
-                    }
-                }
-              }
-            }
+            S { E { C {
+              't'
+              E { 'v' }
+              's'
+              E { C {
+                't'
+                E { 'v' }
+              } }
+            } } }
+        """.trimIndent()
+
+        super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun ttvsv() {  // if then if then v else v
+        val sentence = "ttvsv"
+
+        val expected = """
+            S { E { C {
+              't'
+              E { C {
+                't'
+                E { 'v' }
+                's'
+                E { 'v' }
+              } }
+            } } }
         """.trimIndent()
 
         super.test(

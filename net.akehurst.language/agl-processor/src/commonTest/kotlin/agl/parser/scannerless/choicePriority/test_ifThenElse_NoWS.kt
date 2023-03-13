@@ -160,17 +160,17 @@ internal class test_ifThenElse_NoWS : test_ScanOnDemandParserAbstract() {
         val sentence = "ifWthenifXthenYelseZ"
 
         val expected = """
-         S { expr|1 { conditional { ifthen {
+         S { expr { conditional { ifthen {
                 'if'
                 expr { var { 'W' } }
                 'then'
-                expr|1 { conditional|1 { ifthenelse {
+                expr { conditional { ifthenelse {
                     'if'
-                    expr { var|1 { 'X' } }
+                    expr { var { 'X' } }
                     'then'
-                    expr { var|2 { 'Y' } }
+                    expr { var { 'Y' } }
                     'else'
-                    expr { var|3 { 'Z' } }                    
+                    expr { var { 'Z' } }                    
                 } } }
         } } } }
         """.trimIndent()

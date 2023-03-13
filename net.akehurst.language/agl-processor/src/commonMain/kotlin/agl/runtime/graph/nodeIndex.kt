@@ -38,7 +38,8 @@ internal class GrowingNodeIndex(
      startPosition: Int,
      nextInputPosition: Int,
      nextInputPositionAfterSkip: Int,
-    val numNonSkipChildren: Int //for use with MULTI and SEPARATED_LIST
+    val numNonSkipChildren: Int, //for use with MULTI and SEPARATED_LIST
+    val childrenPriorities:List<List<Int>>?
 ) {
 
     companion object {
@@ -55,7 +56,7 @@ internal class GrowingNodeIndex(
         }
     }
 
-    val complete = treeData.createCompleteNodeIndex(runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)
+    val complete = treeData.createCompleteNodeIndex(runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this,childrenPriorities)
 
     private val _hashCode = arrayOf(runtimeState, startPosition, nextInputPosition, numNonSkipChildren).contentHashCode()
 
@@ -116,13 +117,14 @@ internal class CompleteNodeIndex(
     val startPosition: Int,
     val nextInputPosition: Int,
     val nextInputPositionAfterSkip: Int,
-    val gni: GrowingNodeIndex? // the GNI used to create this, used when dropping
+    val gni: GrowingNodeIndex?, // the GNI used to create this, used when dropping
+    val childrenPriorities:List<List<Int>>?
 ) {
 
     val runtimeRulesSet: Set<RuntimeRule> get() = this.state.runtimeRulesSet
     val rulePositions get() = this.state.rulePositions
 
-    private val _hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode()
+    private val _hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition, childrenPriorities).contentHashCode()
 
     //TODO: don't store data twice..also prefer not to create 2 objects!
     val preferred by lazy { PreferredChildIndex(runtimeRulesSet, startPosition) }
@@ -144,11 +146,12 @@ internal class CompleteNodeIndex(
         other.nextInputPosition != this.nextInputPosition -> false
         //other.rulePositions != this.rulePositions -> false
         other.runtimeRulesSet != this.runtimeRulesSet -> false
+        other.childrenPriorities != this.childrenPriorities -> false
         else -> true
     }
 
     override fun toString(): String {
-        return "CNI{(${this.treeData.forStateSetNumber}),$startPosition-$nextInputPosition,R=${runtimeRulesSet.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }}|${optionList}}"
+        return "CNI{(${this.treeData.forStateSetNumber}),$startPosition-$nextInputPosition,R=${runtimeRulesSet.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }}|${optionList}-${childrenPriorities}}"
     }
 
     //useful during debug

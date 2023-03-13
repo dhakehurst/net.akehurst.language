@@ -281,7 +281,7 @@ internal class ScanOnDemandParser(
                 else -> {
                     //FIXME: error option may not be correct, need to find the original
                     val prevPrev = remainingHead
-                        ?: graph.createGrowingNodeIndex(rp.stateSet.startState, setOf(LookaheadSet.EMPTY), 0, 0, 0, 0)
+                        ?: graph.createGrowingNodeIndex(rp.stateSet.startState, setOf(LookaheadSet.EMPTY), 0, 0, 0, 0, null)
                     val beforeRuntimeCheck = lg.runtimeState.transitions(prevPrev.runtimeState.state, prev!!.runtimeState.state)
                     if (beforeRuntimeCheck.isNotEmpty()) {
                         val pairs: Set<Pair<Int, Set<RuntimeRule>>> = beforeRuntimeCheck.mapNotNull { tr ->

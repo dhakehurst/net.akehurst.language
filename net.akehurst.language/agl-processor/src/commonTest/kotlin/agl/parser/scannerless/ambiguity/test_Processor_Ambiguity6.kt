@@ -165,19 +165,23 @@ internal class test_Processor_Ambiguity6 : test_ScanOnDemandParserAbstract() {
         val sentence = "a=vo(b)"
 
         val expected = """
-            Ex { Pr { Ev {
-              'vo'
-              '('
-              Fc { Rt { ID : 'a' } }
-              ')'
-            } } }
+            Ex { As {
+              Ex { Pr { Fc { Rt { ID : 'a' } } } }
+              '='
+              Ex { Pr { Ev {
+                'vo'
+                '('
+                Fc { Rt { ID : 'b' } }
+                ')'
+              } } }
+            } }
         """.trimIndent()
 
         val actual = super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 1,
+            expectedNumGSSHeads = 2,
             expectedTrees = arrayOf(expected)
         ) ?: error("error")
 

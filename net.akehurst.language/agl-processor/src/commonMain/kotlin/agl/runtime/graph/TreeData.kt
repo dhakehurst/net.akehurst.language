@@ -78,52 +78,52 @@ internal class TreeData(
         }
     }
 
-    fun setFirstChild(parent: GrowingNodeIndex, child: GrowingNodeIndex, isAlternative: Boolean) {
-        if (parent.runtimeState.isAtEnd) {
-            val completeChildren = listOf(child.complete)
-            this.complete.setChildren(parent.complete, completeChildren, isAlternative)
-        } else {
-            var growing = this._growingChildren[parent]
-            if (null == growing) {
-                growing = mutableListOf(child.complete)
-                this.setGrowingChildren(parent, growing)
-            } else {
-                // replacing first child
-                growing = mutableListOf(child.complete)
-                this.setGrowingChildren(parent, growing)
-            }
-        }
-        this.incrementParents(child.complete)
+    fun setFirstChildForComplete(parent: CompleteNodeIndex, child: CompleteNodeIndex, isAlternative: Boolean) {
+        val completeChildren = listOf(child)
+        this.complete.setChildren(parent, completeChildren, isAlternative)
+        this.incrementParents(child)
     }
 
-    /**
-     * if this completes the parent, record complete parent
-     */
-    fun setInGrowingParentChildAt(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, nextChild: GrowingNodeIndex, isAlternative: Boolean) {
+    fun setFirstChildForGrowing(parent: GrowingNodeIndex, child: CompleteNodeIndex) {
+        var growing = this._growingChildren[parent]
+        if (null == growing) {
+            growing = mutableListOf(child)
+            this.setGrowingChildren(parent, growing)
+        } else {
+            // replacing first child
+            growing = mutableListOf(child)
+            this.setGrowingChildren(parent, growing)
+        }
+        this.incrementParents(child)
+    }
+
+    fun setInCompleteParentChildAt(oldParent: GrowingNodeIndex, newParent: CompleteNodeIndex, nextChild: CompleteNodeIndex, isAlternative: Boolean) {
+        val nextChildIndex = oldParent.numNonSkipChildren
+        val children = this._growingChildren[oldParent]!! //should never be null //TODO: remove it
+        //clone children so the other can keep growing if need be
+        //TODO: performance don't want to copy
+        val cpy = children.toMutableList()
+        when {
+            cpy.size > nextChildIndex -> cpy[nextChildIndex] = nextChild
+            cpy.size == nextChildIndex -> cpy.add(nextChild)
+            else -> error("Internal error: should never happen")
+        }
+        this.complete.setChildren(newParent, cpy, isAlternative)
+        cpy.forEach {   this.incrementParents(it) }
+    }
+
+    fun setInGrowingParentChildAt(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, nextChild: CompleteNodeIndex) {
         val nextChildIndex = newParent.numNonSkipChildren - 1
         val children = this._growingChildren[oldParent]!! //should never be null //TODO: remove it
-        if (newParent.runtimeState.isAtEnd) {
-            //clone children so the other can keep growing if need be
-            //TODO: performance don't want to copy
-            val cpy = children.toMutableList()
-            when {
-                cpy.size > nextChildIndex -> cpy[nextChildIndex] = nextChild.complete
-                cpy.size == nextChildIndex -> cpy.add(nextChild.complete)
-                else -> error("Internal error: should never happen")
-            }
-            this.complete.setChildren(newParent.complete, cpy, isAlternative)
-            cpy.forEach {   this.incrementParents(it) }
-        } else {
-            //TODO: performance don't want to copy
-            val cpy = children.toMutableList()
-            when {
-                cpy.size > nextChildIndex -> cpy[nextChildIndex] = nextChild.complete
-                cpy.size == nextChildIndex -> cpy.add(nextChild.complete)
-                else -> error("Internal error: should never happen")
-            }
-            this.setGrowingChildren(newParent, cpy)
-            cpy.forEach {   this.incrementParents(it) }
+        //TODO: performance don't want to copy
+        val cpy = children.toMutableList()
+        when {
+            cpy.size > nextChildIndex -> cpy[nextChildIndex] = nextChild
+            cpy.size == nextChildIndex -> cpy.add(nextChild)
+            else -> error("Internal error: should never happen")
         }
+        this.setGrowingChildren(newParent, cpy)
+        cpy.forEach {   this.incrementParents(it) }
     }
 
     fun inGrowingParentChildAt(parent: GrowingNodeIndex, childIndex: Int): CompleteNodeIndex? {

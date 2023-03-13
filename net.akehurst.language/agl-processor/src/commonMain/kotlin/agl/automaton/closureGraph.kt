@@ -178,7 +178,6 @@ internal class ClosureGraph(
         ) : ClosureItem {
 
             private var _resolveDownCalled = false
-            protected var _resolveUpCalled = false
 
             final override val follow: LookaheadSetPart = follow(rulePosition, parentFollow)
 
@@ -194,7 +193,6 @@ internal class ClosureGraph(
             }
 
             override fun resolveDown() {
-                if (Debug.CHECK) check(_resolveUpCalled) { "resolveUp() must be called first" }
                 if (_resolveDownCalled) {
                     // do nothing, terminate recursion
                     // this.downInfo already set to empty
@@ -279,19 +277,8 @@ internal class ClosureGraph(
                 }
             }
 
-            //val _id = arrayOf(rulePosition, upInfo.context, upInfo.nextContextFollow, upInfo.nextNotAtEndFollow)
             val _id = arrayOf(rulePosition, context, follow, parentFollow)
             override fun hashCode(): Int = _id.contentHashCode()
-            /*
-            override fun equals(other: Any?): Boolean = when {
-                other !is ClosureItem -> false
-                this.rulePosition != other.rulePosition -> false
-                this.upInfo.context != other.upInfo.context -> false
-                this.upInfo.nextContextFollow != other.upInfo.nextContextFollow -> false
-                this.upInfo.nextNotAtEndFollow != other.upInfo.nextNotAtEndFollow -> false
-                else -> true
-            }
-             */
             override fun equals(other: Any?): Boolean = when {
                 other !is ClosureItem -> false
                 this.rulePosition != other.rulePosition -> false
@@ -323,23 +310,6 @@ internal class ClosureGraph(
             context: RulePosition,
             parentFollow: LookaheadSetPart
         ) : ClosureItemAbstractGraph(graph, rulePosition, context, parentFollow), ClosureItemChild {
-
-            companion object {
-                /*
-                fun resolveUpInfo(rulePosition: RulePosition, parent: ClosureItem): RulePositionUpInfo {
-                    val gpInfo = parent.upInfo
-                    val atStart = parent.rulePosition.isAtStart
-                    val childContext = when {
-                        atStart -> parent.context
-                        else -> parent.rulePosition
-                    }
-                    val childParentParentNextNotAtEndFollow = parent.nextContextFirstOf
-                    val childParentNextNotAtEndFollow = gpInfo.nextContextFirstOf
-                    val childNextNotAtEndFollow = nextNotAtEndFollow(rulePosition, childParentNextNotAtEndFollow)
-                    return RulePositionUpInfo(childContext, childNextNotAtEndFollow, childParentNextNotAtEndFollow, childParentParentNextNotAtEndFollow)
-                }
-                 */
-            }
 
             override val isRoot: Boolean = false
 

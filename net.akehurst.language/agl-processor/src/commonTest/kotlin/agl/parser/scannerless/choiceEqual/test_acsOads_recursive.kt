@@ -26,14 +26,16 @@ import kotlin.test.assertNull
 
 internal class test_acsOads_recursive : test_ScanOnDemandParserAbstract() {
 
-    // S = acs | ads
+    // S = C
+    // C = acs | ads
     // acs = 'a' | acs1
     // acs1 = acs 'c' 'a'
     // ads = 'a' | ads1
     // ads1 = ads 'd' 'a'
     private companion object {
         val rrs = runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            concatenation("S") { ref("C") }
+            choice("C", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("acs")
                 ref("ads")
             }
@@ -61,15 +63,15 @@ internal class test_acsOads_recursive : test_ScanOnDemandParserAbstract() {
         val sentence = "aca"
 
         val expected = """
-            S {
-                acs|1 {
+            S { C {
+                acs {
                     acs1 {
                         acs { 'a' }
                         'c'
                         'a'
                     }
                 }
-            }
+            } }
         """.trimIndent()
 
         super.test(
@@ -86,15 +88,15 @@ internal class test_acsOads_recursive : test_ScanOnDemandParserAbstract() {
         val sentence = "ada"
 
         val expected = """
-            S|1 {
-                ads|1 {
+            S { C {
+                ads {
                     ads1 {
                         ads { 'a' }
                         'd'
                         'a'
                     }
                 }
-            }
+            } }
         """.trimIndent()
 
         super.test(
@@ -111,9 +113,7 @@ internal class test_acsOads_recursive : test_ScanOnDemandParserAbstract() {
         val sentence = "a"
 
         val expected = """
-            S|1 {
-                ads { 'a' }
-            }
+            S { C { ads { 'a' } } }
         """.trimIndent()
 
         super.test(
