@@ -26,7 +26,7 @@ internal class test_bodmas_exprOpRuleExpr_Longest : test_ScanOnDemandParserAbstr
     // S = E
     // E = var | I | '(' E ')'
     // I = E op E ;
-    // op = '/' | 'M' | '+' | '-'
+    // op = '/' | '*' | '+' | '-'
     // var = "[a-z]+"
     private companion object {
         val rrs = runtimeRuleSet {
@@ -39,7 +39,7 @@ internal class test_bodmas_exprOpRuleExpr_Longest : test_ScanOnDemandParserAbstr
             concatenation("I") { ref("E"); ref("op"); ref("E") }
             choice("op", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("/")
-                literal("M")
+                literal("*")
                 literal("+")
                 literal("-")
             }
@@ -65,9 +65,9 @@ internal class test_bodmas_exprOpRuleExpr_Longest : test_ScanOnDemandParserAbstr
         val sentence = "a+b"
 
         val expected = """
-            S { E|1 { I {
+            S { E { I {
               E { var { "[a-z]+":'a' } }
-              op|2 { '+' }
+              op { '+' }
               E { var { "[a-z]+":'b' } }
             } } }
         """.trimIndent()
@@ -79,39 +79,37 @@ internal class test_bodmas_exprOpRuleExpr_Longest : test_ScanOnDemandParserAbstr
     fun vavav() {
         val sentence = "v+v+v"
 
-        //think this should be excluded because of priority I < 'a'
-        val expected1 = """
-            S { E|1 { I {
-                E|1 { I {
+        val expected = """
+            S { E { I {
+                E { I {
                     E { var { "[a-z]+":'v' } }
-                    op|2 { '+' }
+                    op { '+' }
                     E { var { "[a-z]+":'v' } }
                   } }
-                op|2 { '+' }
+                op { '+' }
                 E { var { "[a-z]+":'v' } }
             } } }
         """.trimIndent()
 
-        super.test(rrs, goal, sentence, 1, expected1)
+        super.test(rrs, goal, sentence, 1, expected)
     }
-
 
     @Test
     fun vavavav() {
         val sentence = "v+v+v+v"
 
         val expected = """
- S { E|1 { I {
-      E|1 { I {
-          E|1 { I {
+ S { E { I {
+      E { I {
+          E { I {
               E { var { "[a-z]+" : 'v' } }
-              op|2 { '+' }
+              op { '+' }
               E { var { "[a-z]+" : 'v' } }
             } }
-          op|2 { '+' }
+          op { '+' }
           E { var { "[a-z]+" : 'v' } }
         } }
-      op|2 { '+' }
+      op { '+' }
       E { var { "[a-z]+" : 'v' } }
     } } }
         """.trimIndent()
@@ -120,4 +118,22 @@ internal class test_bodmas_exprOpRuleExpr_Longest : test_ScanOnDemandParserAbstr
         super.test(rrs, goal, sentence, 1, expected)
     }
 
+    @Test
+    fun vavmv() {
+        val sentence = "v+v*v"
+
+        val expected = """
+            S { E { I {
+                E { var { "[a-z]+":'v' } }
+                op { '+' }
+                E { I {
+                    E { var { "[a-z]+":'v' } }
+                    op { '*' }
+                    E { var { "[a-z]+":'v' } }
+                  } }
+            } } }
+        """.trimIndent()
+
+        super.test(rrs, goal, sentence, 1, expected)
+    }
 }

@@ -61,7 +61,7 @@ class test_VistraqQuery_Singles {
         assertNull(result.sppt)
         assertEquals(
             listOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^0", setOf("\"[0-9]+[.][0-9]+\""))
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^0", setOf("REAL"))
             ), result.issues
         )
     }
@@ -74,7 +74,7 @@ class test_VistraqQuery_Singles {
         assertNull(result.sppt)
         assertEquals(
             listOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^.0", setOf("\"[0-9]+[.][0-9]+\""))
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^.0", setOf("REAL"))
             ), result.issues
         )
 
@@ -227,7 +227,7 @@ class test_VistraqQuery_Singles {
         """.trimIndent()
         val goal = "expression"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt)
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
         val resultStr = result.sppt!!.asString
         assertEquals(queryStr, resultStr)

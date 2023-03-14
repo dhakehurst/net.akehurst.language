@@ -86,7 +86,7 @@ internal class test_java_NavigableExpression : test_ScanOnDemandParserAbstract()
 
     @Test
     fun MethodInvocation_Postfix() {
-        rrs.buildFor("NavigableExpression",AutomatonKind.LOOKAHEAD_1)
+//        rrs.buildFor("NavigableExpression",AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("NavigableExpression"))
         val goal = "NavigableExpression"
         val sentence = "f(i++)"

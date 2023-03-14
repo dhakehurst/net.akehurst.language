@@ -124,6 +124,7 @@ internal class CompleteNodeIndex(
     val runtimeRulesSet: Set<RuntimeRule> get() = this.state.runtimeRulesSet
     val rulePositions get() = this.state.rulePositions
 
+    //private val _hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode()
     private val _hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition, childrenPriorities).contentHashCode()
 
     //TODO: don't store data twice..also prefer not to create 2 objects!
@@ -146,7 +147,7 @@ internal class CompleteNodeIndex(
         other.nextInputPosition != this.nextInputPosition -> false
         //other.rulePositions != this.rulePositions -> false
         other.runtimeRulesSet != this.runtimeRulesSet -> false
-        other.childrenPriorities != this.childrenPriorities -> false
+        //other.childrenPriorities != this.childrenPriorities -> false
         else -> true
     }
 

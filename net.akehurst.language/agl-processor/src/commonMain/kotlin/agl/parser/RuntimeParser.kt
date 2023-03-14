@@ -23,6 +23,7 @@ import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.TreeDataComplete
+import net.akehurst.language.agl.runtime.structure.PrecedenceRules
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
@@ -305,6 +306,7 @@ internal class RuntimeParser(
                 graph.dropGrowingHead(head)
                 if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
             }
+
             grownHeight.not() && grownGraft -> {
                 graph.dropGrowingHead(head)
                 if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
@@ -327,6 +329,17 @@ internal class RuntimeParser(
         return grownHeight || grownGraft
     }
 
+    private fun matchedLookahead(position: Int, lookahead: Set<Lookahead>, possibleEndOfText: Set<LookaheadSet>, runtimeLhs: Set<LookaheadSet>) =
+        lookahead.flatMap { lh -> //TODO: should always be only one I think!!
+            possibleEndOfText.flatMap { eot ->
+                runtimeLhs.map { rt ->
+                    val lookingAt = this.graph.isLookingAt(lh.guard, eot, rt, position)
+                    val resolved = lh.guard.resolve(eot,rt)
+                    Pair(lookingAt, resolved)
+                }
+            }
+        }
+
     private fun growComplete2(
         head: GrowingNodeIndex,
         previous: GrowingNodeIndex,
@@ -337,8 +350,14 @@ internal class RuntimeParser(
         var grownHeight = false
         var grownGraft = false
         val transitions = head.runtimeState.transitionsComplete(previous.state, prevPrev?.state ?: stateSet.startState)
-        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
-        val grouped = transitions.groupBy { it.to.runtimeRulesSet }
+        val transWithValidLookahead = transitions.map {
+            val lh = matchedLookahead(head.nextInputPositionAfterSkip, it.lookahead, possibleEndOfText, previous.runtimeState.runtimeLookaheadSet)
+            Pair(it,lh)
+        }.filter { it.second.any { it.first } }
+        val trans2 = resolvePrecedence(transWithValidLookahead, head)
+        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${trans2.joinToString(separator = "\n") { "  $it" }}" }
+        //val grouped = transitions.groupBy { it.to.runtimeRulesSet }
+        val grouped = trans2.groupBy { it.to.runtimeRulesSet }
         for (it in grouped) {
             when {
                 1 == it.value.size -> {
@@ -424,6 +443,35 @@ internal class RuntimeParser(
         // }
 
         return Pair(grownHeight, grownGraft)
+    }
+
+    private fun resolvePrecedence(transitions: List<Pair<Transition, List<Pair<Boolean, LookaheadSetPart>>>>, head: GrowingNodeIndex): List<Transition> {
+        val precRules = this.stateSet.precedenceRulesFor(head.state)
+        return when {
+            null == precRules -> transitions.map { it.first }
+            1 >= transitions.size -> transitions.map { it.first }
+            else -> {
+                val precedence = transitions.map { (tr,lh) ->
+                    val lhf = lh.map{it.second}.fold(LookaheadSetPart.EMPTY) {acc,it-> acc.union(it) }
+                    val prec = precRules.precedenceFor(tr.to.runtimeRulesSet, lhf)
+                    Pair(tr, prec)
+                }
+                val max = precedence.mapNotNull { it.second?.precedence }.maxOrNull() ?: 0
+                val maxPrec = precedence.filter { null == it.second || max == it.second?.precedence }
+                val byTarget = maxPrec.groupBy { Pair(it.first.to.runtimeRules, it.second?.associativity) }
+                val assoc = byTarget.flatMap {
+                    when(it.key.second) {
+                        null -> it.value
+                        PrecedenceRules.Associativity.LEFT -> it.value.filter { it.first.action==ParseAction.GRAFT }
+                        PrecedenceRules.Associativity.RIGHT -> it.value.filter { it.first.action==ParseAction.HEIGHT }
+                    }
+                }
+                when(assoc.size) {
+                    0 -> maxPrec.map { it.first }
+                    else -> assoc.map { it.first }
+                }
+            }
+        }
     }
 
     fun growNonEmptyWidthForError(possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Set<GrowingNodeIndex> {
@@ -818,13 +866,7 @@ internal class RuntimeParser(
             else -> {
                 if (transition.runtimeGuard.invoke(previous!!.numNonSkipChildren)) {
                     val runtimeLhs = previous.runtimeState.runtimeLookaheadSet
-                    val lhWithMatch = transition.lookahead.filter { lh -> //TODO: should always be only one I think!!
-                        possibleEndOfText.any { eot ->
-                            runtimeLhs.any { rt ->
-                                this.graph.isLookingAt(lh.guard, eot, rt, head.nextInputPositionAfterSkip)
-                            }
-                        }
-                    }
+                    val lhWithMatch = matchedLookahead(head.nextInputPositionAfterSkip, transition.lookahead, possibleEndOfText, runtimeLhs)
                     val hasLh = lhWithMatch.isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {
                     if (growArgs.noLookahead || hasLh) {
                         if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head, taking: $transition" }

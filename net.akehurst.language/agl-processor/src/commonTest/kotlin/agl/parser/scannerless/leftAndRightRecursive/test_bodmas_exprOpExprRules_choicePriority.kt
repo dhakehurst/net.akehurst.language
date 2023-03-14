@@ -20,6 +20,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.AutomatonKind
+import net.akehurst.language.parser.scanondemand.choiceEqual.test_bodmas_exprOpExprRules_root_choiceEqual
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -154,7 +155,7 @@ internal class test_bodmas_exprOpExprRules_choicePriority : test_ScanOnDemandPar
         )
     }
 
-    //@Test
+    @Test
     fun Og_a_Cg() {
         val sentence = "(a)"
 
@@ -316,9 +317,9 @@ internal class test_bodmas_exprOpExprRules_choicePriority : test_ScanOnDemandPar
 
         val expected = """
             S {
-             expr|5 {
+             expr {
               add {
-                expr|4 {
+                expr {
                   mul {
                     expr { var { "[a-zA-Z]+" : 'a' } }
                     '*'
@@ -346,23 +347,23 @@ internal class test_bodmas_exprOpExprRules_choicePriority : test_ScanOnDemandPar
         val sentence = "a+b+c+c+d"
 
         val expected = """
- S { expr|5 { add {
-      expr|5 { add {
-          expr|5 { add {
-              expr|5 { add {
-                  expr { var { "[a-zA-Z]+" : 'a' } }
+         S { expr { add {
+              expr { add {
+                  expr { add {
+                      expr { add {
+                          expr { var { "[a-zA-Z]+" : 'a' } }
+                          '+'
+                          expr { var { "[a-zA-Z]+" : 'b' } }
+                        } }
+                      '+'
+                      expr { var { "[a-zA-Z]+" : 'c' } }
+                    } }
                   '+'
-                  expr { var { "[a-zA-Z]+" : 'b' } }
+                  expr { var { "[a-zA-Z]+" : 'c' } }
                 } }
               '+'
-              expr { var { "[a-zA-Z]+" : 'c' } }
-            } }
-          '+'
-          expr { var { "[a-zA-Z]+" : 'c' } }
-        } }
-      '+'
-      expr { var { "[a-zA-Z]+" : 'd' } }
-    } } }
+              expr { var { "[a-zA-Z]+" : 'd' } }
+            } } }
         """.trimIndent()
 
         super.test(
@@ -379,27 +380,27 @@ internal class test_bodmas_exprOpExprRules_choicePriority : test_ScanOnDemandPar
         val sentence = "a+b+c+d+e+f"
 
         val expected = """
- S { expr|5 { add {
-      expr|5 { add {
-          expr|5 { add {
-              expr|5 { add {
-                  expr|5 { add {
-                      expr { var { "[a-zA-Z]+" : 'a' } }
+         S { expr { add {
+              expr { add {
+                  expr { add {
+                      expr { add {
+                          expr { add {
+                              expr { var { "[a-zA-Z]+" : 'a' } }
+                              '+'
+                              expr { var { "[a-zA-Z]+" : 'b' } }
+                            } }
+                          '+'
+                          expr { var { "[a-zA-Z]+" : 'c' } }
+                        } }
                       '+'
-                      expr { var { "[a-zA-Z]+" : 'b' } }
+                      expr { var { "[a-zA-Z]+" : 'd' } }
                     } }
                   '+'
-                  expr { var { "[a-zA-Z]+" : 'c' } }
+                  expr { var { "[a-zA-Z]+" : 'e' } }
                 } }
               '+'
-              expr { var { "[a-zA-Z]+" : 'd' } }
-            } }
-          '+'
-          expr { var { "[a-zA-Z]+" : 'e' } }
-        } }
-      '+'
-      expr { var { "[a-zA-Z]+" : 'f' } }
-    } } }
+              expr { var { "[a-zA-Z]+" : 'f' } }
+            } } }
         """.trimIndent()
 
         super.test(
@@ -411,16 +412,53 @@ internal class test_bodmas_exprOpExprRules_choicePriority : test_ScanOnDemandPar
         )
     }
 
-    //@Test
+    @Test
+    fun a_add_b_div_c_mul_d_add_e_sub_f() {
+        val sentence = "a+b/c*d+e-f"
+
+        val expected = """
+            S { expr { sub {
+              expr { add {
+                expr { add {
+                  expr { var { "[a-zA-Z]+" : 'a' } }
+                  '+'
+                  expr { mul {
+                    expr { div {
+                      expr { var { "[a-zA-Z]+" : 'b' } }
+                      '/'
+                      expr { var { "[a-zA-Z]+" : 'c' } }
+                    } }
+                    '*'
+                    expr { var { "[a-zA-Z]+" : 'd' } }
+                  } }
+                } }
+                '+'
+                expr { var { "[a-zA-Z]+" : 'e' } }
+              } }
+              '-'
+              expr { var { "[a-zA-Z]+" : 'f' } }
+            } } }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
     fun Og_a_add_b_Cg_mul_c() {
         val sentence = "(a+b)*c"
 
         val expected = """
-            S { expr|4 { mul {
-              expr|2 {
+            S { expr { mul {
+              expr {
                 group {
                   '('
-                    expr|5 {
+                    expr {
                       add {
                         expr { var { "[a-zA-Z]+" : 'a' } }
                         '+'

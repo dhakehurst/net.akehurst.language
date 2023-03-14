@@ -26,7 +26,8 @@ import net.akehurst.language.collections.lazyMutableMapNonNull
 
 internal class RuntimeRuleSet(
     val number: Int,
-    val runtimeRules: List<RuntimeRule>
+    val runtimeRules: List<RuntimeRule>,
+    val precedenceRules: List<PrecedenceRules>
 ) : RuleSet {
 
     companion object {
@@ -73,7 +74,7 @@ internal class RuntimeRuleSet(
     val goalRuleFor = lazyMutableMapNonNull<RuntimeRule, RuntimeRule> {
         val ug = it //this.findRuntimeRule(it)
         val gr = RuntimeRule(this.number, GOAL_RULE_NUMBER, GOAL_TAG, false)
-        gr.setRhs(RuntimeRuleRhsGoal(gr,ug))
+        gr.setRhs(RuntimeRuleRhsGoal(gr, ug))
         gr
     }
 
@@ -128,13 +129,13 @@ internal class RuntimeRuleSet(
         } else {
             val skipChoiceRule = RuntimeRule(this.number, SKIP_CHOICE_RULE_NUMBER, SKIP_CHOICE_RULE_TAG, false).also {
                 val options = skipRules.mapIndexed { index, skpRl ->
-                    RuntimeRuleRhsConcatenation(it,listOf(skpRl))
+                    RuntimeRuleRhsConcatenation(it, listOf(skpRl))
                 }
-                val rhs = RuntimeRuleRhsChoice(it,RuntimeRuleChoiceKind.LONGEST_PRIORITY, options)
+                val rhs = RuntimeRuleRhsChoice(it, RuntimeRuleChoiceKind.LONGEST_PRIORITY, options)
                 it.setRhs(rhs)
             }
             val skipMultiRule = RuntimeRule(this.number, SKIP_RULE_NUMBER, SKIP_RULE_TAG, false)
-                .also { it.setRhs(RuntimeRuleRhsListSimple(it,1, -1, skipChoiceRule)) }
+                .also { it.setRhs(RuntimeRuleRhsListSimple(it, 1, -1, skipChoiceRule)) }
 
             //TODO: how to set AutomatonKind here!
             val ss = ParserStateSet(nextStateSetNumber++, this, skipMultiRule, true, AutomatonKind.LOOKAHEAD_1, false)
@@ -280,7 +281,7 @@ internal class RuntimeRuleSet(
         return ss.build()
     }
 
-    internal fun addGeneratedBuildFor(userGoalRuleName: String, automaton:Automaton) {
+    internal fun addGeneratedBuildFor(userGoalRuleName: String, automaton: Automaton) {
         this.states_cache[userGoalRuleName] = automaton as ParserStateSet
     }
 
@@ -312,6 +313,11 @@ internal class RuntimeRuleSet(
             ?: throw ParserException("Terminal RuntimeRule ${tag} not found")
         return this.runtimeRules[number]
     }
+
+    fun precedenceRulesFor(precedenceContext: RuntimeRule): PrecedenceRules? =
+        this.precedenceRules.firstOrNull {
+            it.contextRule == precedenceContext
+        }
 
     /*
     // used when calculating lookahead ?
@@ -393,7 +399,16 @@ internal class RuntimeRuleSet(
             cr.setRhs(it.rhs.clone(clonedRules))
         }
         val rules = clonedRules.values.toList()
-        val clone = RuntimeRuleSet(cloneNumber,rules)
+        val clonedPrecedenceRules = this.precedenceRules.map {
+            val clonedCtx = clonedRules[it.contextRule.tag]!!
+            val clonedPrecRules = it.rules.map { pr ->
+                val cTgt = clonedRules[pr.target.tag]!!
+                val cOp = clonedRules[pr.operator.tag]!!
+                PrecedenceRules.PrecedenceRule(pr.precedence, cTgt, cOp, pr.associativity)
+            }
+            PrecedenceRules(clonedCtx, clonedPrecRules)
+        }
+        val clone = RuntimeRuleSet(cloneNumber, rules, clonedPrecedenceRules)
         return clone
     }
 

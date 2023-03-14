@@ -451,6 +451,18 @@ internal class ParseGraph(
         return true
     }
 
+    private fun useExistingCompleteParentFirstChild(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, child: CompleteNodeIndex, previous: GrowingNodeIndex): Boolean {
+        //this.treeData.setFirstChildForComplete(oldParent.complete, child, false)
+        this.addGrowingHead(previous, oldParent)
+        return true
+    }
+
+    private fun useExistingCompleteParentLastChild(oldParent: GrowingNodeIndex, newParent: GrowingNodeIndex, child: CompleteNodeIndex, previous: GrowingNodeIndex?): Boolean {
+        //this.treeData.setInCompleteParentChildAt(oldParent, oldParent.complete, child, false)
+        this.addGrowingHead(previous, oldParent)
+        return true
+    }
+
     /*
         private fun preferNewChildInGrowingParent(growingParent: GrowingNodeIndex, existingChild: CompleteNodeIndex, newChild: CompleteNodeIndex, previous: GrowingNodeIndex): Boolean {
             addNewPreferredTreeData(null, growingParent, newChild)
@@ -555,18 +567,18 @@ internal class ParseGraph(
                     RuntimeRuleChoiceKind.NONE -> error("should never happen")
                     RuntimeRuleChoiceKind.LONGEST_PRIORITY -> mergeDecisionOnLength(existingParent, newParent) {
                         mergeDecisionOnPriority(existingParent, newParent) {
-                            mergeDecisionOnChildrenPriority(existingParent, newParent) {
+                            //mergeDecisionOnChildrenPriority(existingParent, newParent) {
                                 MergeOptions.UNDECIDABLE
-                            }
+                            //}
                         }
                     }
 
                     RuntimeRuleChoiceKind.PRIORITY_LONGEST -> mergeDecisionOnPriority(existingParent, newParent) {
-                        mergeDecisionOnChildrenPriority(existingParent, newParent) {
+                        //mergeDecisionOnChildrenPriority(existingParent, newParent) {
                             mergeDecisionOnLength(existingParent, newParent) {
                                 MergeOptions.UNDECIDABLE
                             }
-                        }
+                        //}
                     }
 
                     RuntimeRuleChoiceKind.AMBIGUOUS -> MergeOptions.KEEP_BOTH_AS_ALTERNATIVES
@@ -687,9 +699,7 @@ internal class ParseGraph(
                     MergeOptions.PREFER_EXISTING -> preferExistingCompleteParentFirstChild(existingComplete, parent, child, previous)
                     MergeOptions.KEEP_BOTH_AS_ALTERNATIVES -> keepBothCompleteParentsFirstChild(existingComplete, parent, child, previous)
                     MergeOptions.UNDECIDABLE -> {
-                        keepBothCompleteParentsFirstChild(existingComplete, parent, child, previous)
-                        //createNewHeadAndKeepExisting(parent, previous)
-                        //true
+                        useExistingCompleteParentFirstChild(existingComplete.gni!!, parent, child, previous)
                     }
                 }
             } else {
@@ -806,7 +816,7 @@ internal class ParseGraph(
                     MergeOptions.PREFER_EXISTING -> preferExistingCompleteParentLastChild(previous, newParent, child, prevPrev)
                     MergeOptions.KEEP_BOTH_AS_ALTERNATIVES -> keepBothCompleteParentsLastChild(previous, newParent, child, prevPrev)
                     MergeOptions.UNDECIDABLE -> {
-                        keepBothCompleteParentsLastChild(previous, newParent, child, prevPrev)
+                        useExistingCompleteParentLastChild(existingComplete.gni!!, newParent, child, prevPrev)
                         //createNewHeadAndKeepExisting(newParent, prevPrev)
                         //true
                     }

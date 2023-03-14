@@ -69,7 +69,7 @@ internal class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         val sentence = "a"
 
         val expected = """
-            S|2 { 'a' }
+            S { 'a' }
         """.trimIndent()
 
         super.test(
@@ -86,10 +86,10 @@ internal class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         val sentence = "aa"
 
         val expected = """
-            S|1 {
+            S {
               S2 {
-                S|2 { 'a' }
-                S|2 { 'a' }
+                S { 'a' }
+                S { 'a' }
               }
             }
         """.trimIndent()
@@ -110,9 +110,9 @@ internal class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               S3 {
-                S|2 { 'a' }
-                S|2 { 'a' }
-                S|2 { 'a' }
+                S { 'a' }
+                S { 'a' }
+                S { 'a' }
               }
             }
         """.trimIndent()

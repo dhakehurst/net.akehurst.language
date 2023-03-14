@@ -104,7 +104,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDema
         val sentence = "true"
 
         val expected = """
-              expr { root|1 {
+              expr { root {
                 bool { 'true' }
               } }
         """.trimIndent()
@@ -124,7 +124,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDema
 
         val expected = """
             S {
-              expr { root|1 {
+              expr { root {
                 bool { 'true' }
               } }
             }
@@ -166,7 +166,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDema
 
         val expected = """
             S {
-              expr|1 {
+              expr {
                 group {
                   '('
                   expr { root { var : 'a' } }
@@ -192,7 +192,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDema
 
         val expected = """
             S {
-              expr|2 {
+              expr {
                 div {
                   expr { root { var : 'a' WS : ' ' } }
                   '/' WS : ' '
@@ -218,7 +218,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDema
 
         val expected = """
             S {
-              expr|3 {
+              expr {
                 mul {
                   expr { root { var : 'a' WS : ' ' } }
                   '*' WS : ' '
@@ -244,7 +244,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDema
 
         val expected = """
             S {
-              expr|4 {
+              expr {
                 add {
                   expr { root { var : 'a' WS : ' ' } }
                   '+' WS : ' '
@@ -270,7 +270,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDema
 
         val expected = """
             S {
-              expr|5 {
+              expr {
                 sub {
                   expr { root { var : 'a' WS : ' ' } }
                   '-' WS : ' '
@@ -296,11 +296,11 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDema
 
         val expected = """
             S {
-             expr|4 {
+             expr {
               add {
                 expr { root { var : 'a' } }
                 '+'
-                expr|3 {
+                expr {
                   mul {
                     expr { root { var : 'b' } }
                     '*'
@@ -327,9 +327,9 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDema
 
         val expected = """
             S {
-             expr|4 {
+             expr {
               add {
-                expr|3 {
+                expr {
                   mul {
                     expr { root { var : 'a' } }
                     '*'
@@ -357,23 +357,23 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDema
         val sentence = "a+b+c+c+d"
 
         val expected = """
- S { expr|4 { add {
-      expr|4 { add {
-          expr|4 { add {
-              expr|4 { add {
-                  expr { root { var : 'a' } }
+         S { expr { add {
+              expr { add {
+                  expr { add {
+                      expr { add {
+                          expr { root { var : 'a' } }
+                          '+'
+                          expr { root { var : 'b' } }
+                        } }
+                      '+'
+                      expr { root { var : 'c' } }
+                    } }
                   '+'
-                  expr { root { var : 'b' } }
+                  expr { root { var : 'c' } }
                 } }
               '+'
-              expr { root { var : 'c' } }
-            } }
-          '+'
-          expr { root { var : 'c' } }
-        } }
-      '+'
-      expr { root { var : 'd' } }
-    } } }
+              expr { root { var : 'd' } }
+            } } }
         """.trimIndent()
 
         super.test(
@@ -390,12 +390,12 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDema
         val sentence = "a+b+c+c+d+e+f"
 
         val expected = """
-         S { expr|4 { add {
-              expr|4 { add {
-                  expr|4 { add {
-                      expr|4 { add {
-                          expr|4 { add {
-                              expr|4 { add {
+         S { expr { add {
+              expr { add {
+                  expr { add {
+                      expr { add {
+                          expr { add {
+                              expr { add {
                                   expr { root { var : 'a' } }
                                   '+'
                                   expr { root { var : 'b' } }
@@ -427,14 +427,88 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDema
     }
 
     @Test
+    fun a_add_b_div_c_div_d_add_e_add_f() {
+        val sentence = "a+b/c/d+e+f"
+
+        val expected = """
+            S { expr { add {
+              expr { add {
+                expr { add {
+                  expr { root { var : 'a' } }
+                  '+'
+                  expr { div {
+                    expr { div {
+                      expr { root { var : 'b' } }
+                      '/'
+                      expr { root { var : 'c' } }
+                    } }
+                    '/'
+                    expr { root { var : 'd' } }
+                  } }
+                } }
+                '+'
+                expr { root { var : 'e' } }
+              } }
+              '+'
+              expr { root { var : 'f' } }
+            } } }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun a_add_b_div_c_mul_d_add_e_sub_f() {
+        val sentence = "a+b/c*d+e-f"
+
+        val expected = """
+            S { expr { sub {
+              expr { add {
+                expr { add {
+                  expr { root { var : 'a' } }
+                  '+'
+                  expr { mul {
+                    expr { div {
+                      expr { root { var : 'b' } }
+                      '/'
+                      expr { root { var : 'c' } }
+                    } }
+                    '*'
+                    expr { root { var : 'd' } }
+                  } }
+                } }
+                '+'
+                expr { root { var : 'e' } }
+              } }
+              '-'
+              expr { root { var : 'f' } }
+            } } }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
     fun Og_a_add_b_Cg_mul_c() {
         val sentence = "(a+b)*c"
 
         val expected = """
-         S { expr|3 { mul {
-              expr|1 { group {
+         S { expr { mul {
+              expr { group {
                   '('
-                  expr|4 { add {
+                  expr { add {
                       expr { root { var : 'a' } }
                       '+'
                       expr { root { var : 'b' } }

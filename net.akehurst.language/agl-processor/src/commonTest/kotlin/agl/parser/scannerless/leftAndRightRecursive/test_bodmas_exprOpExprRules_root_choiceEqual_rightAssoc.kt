@@ -25,7 +25,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_bodmas_exprOpExprRules_root_choiceEqual : test_ScanOnDemandParserAbstract() {
+internal class test_bodmas_exprOpExprRules_root_choiceEqual_rightAssoc : test_ScanOnDemandParserAbstract() {
 
     // S =  expr ;
     // expr = root | mul | add ;
@@ -34,8 +34,8 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual : test_ScanOnDemandP
     // add = expr '+' expr ;
     //
     // precedence
-    // add left
-    // mul left
+    // add right
+    // mul right
 
     private companion object {
         val rrs = runtimeRuleSet {
@@ -48,10 +48,10 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual : test_ScanOnDemandP
             concatenation("root") { literal("v") }
             concatenation("mul") { ref("expr"); literal("*"); ref("expr") }
             concatenation("add") { ref("expr"); literal("+"); ref("expr") }
-            //precedenceFor("expr") {
-            //    left("add", "'+'")
-            //    left("mul", "'*'")
-            //}
+            precedenceFor("expr") {
+                right("add", "'+'")
+                right("mul", "'*'")
+            }
         }
 
         const val goal = "S"
@@ -96,7 +96,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual : test_ScanOnDemandP
 
         val expected = """
             S {
-              expr|4 {
+              expr {
                 add {
                   expr { root { 'v' } }
                   '+'
@@ -122,7 +122,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual : test_ScanOnDemandP
 
         val expected = """
             S {
-              expr|5 {
+              expr {
                 mul {
                   expr { root { 'v' } }
                   '*'
@@ -148,11 +148,11 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual : test_ScanOnDemandP
 
         val expected = """
             S {
-             expr|4 {
+             expr {
               add {
                 expr { root { 'v' } }
                 '+'
-                expr|3 {
+                expr {
                   mul {
                     expr { root { 'v' } }
                     '*'
@@ -209,22 +209,22 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual : test_ScanOnDemandP
         val sentence = "v+v+v+v+v"
 
         val expected = """
-         S { expr|4 { add {
-              expr|4 { add {
-                  expr|4 { add {
-                      expr|4 { add {
+         S { expr { add {
+              expr { root { 'v' } }
+              '+'
+              expr { add {
+                  expr { root { 'v' } }
+                  '+'
+                  expr { add {
+                      expr { root { 'v' } }
+                      '+'
+                      expr { add {
                           expr { root { 'v' } }
                           '+'
                           expr { root { 'v' } }
                         } }
-                      '+'
-                      expr { root { 'v' } }
                     } }
-                  '+'
-                  expr { root { 'v' } }
                 } }
-              '+'
-              expr { root { 'v' } }
             } } }
         """.trimIndent()
 
@@ -242,30 +242,30 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual : test_ScanOnDemandP
         val sentence = "v+v+v+v+v+v+v"
 
         val expected = """
-         S { expr|4 { add {
-              expr|4 { add {
-                  expr|4 { add {
-                      expr|4 { add {
-                          expr|4 { add {
-                              expr|4 { add {
+         S { expr { add {
+              expr { root { 'v' } }
+              '+'
+              expr { add {
+                  expr { root { 'v' } }
+                  '+'
+                  expr { add {
+                      expr { root { 'v' } }
+                      '+'
+                      expr { add {
+                          expr { root { 'v' } }
+                          '+'
+                          expr { add {
+                              expr { root { 'v' } }
+                              '+'
+                              expr { add {
                                   expr { root { 'v' } }
                                   '+'
                                   expr { root { 'v' } }
                                 } }
-                              '+'
-                              expr { root { 'v' } }
                             } }
-                          '+'
-                          expr { root { 'v' } }
                         } }
-                      '+'
-                      expr { root { 'v' } }
                     } }
-                  '+'
-                  expr { root { 'v' } }
                 } }
-              '+'
-              expr { root { 'v' } }
             } } }
         """.trimIndent()
 
@@ -284,25 +284,25 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual : test_ScanOnDemandP
 
         val expected = """
             S { expr { add {
+              expr { root { 'v' } }
+              '+'
               expr { add {
-                expr { add {
+                expr { mul {
                   expr { root { 'v' } }
-                  '+'
+                  '*'
                   expr { mul {
-                    expr { mul {
-                      expr { root { 'v' } }
-                      '*'
-                      expr { root { 'v' } }
-                    } }
+                    expr { root { 'v' } }
                     '*'
                     expr { root { 'v' } }
                   } }
                 } }
                 '+'
-                expr { root { 'v' } }
+                expr { add {
+                  expr { root { 'v' } }
+                  '+'
+                  expr { root { 'v' } }
+                } }
               } }
-              '+'
-              expr { root { 'v' } }
             } } }
         """.trimIndent()
 

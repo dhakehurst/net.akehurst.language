@@ -68,7 +68,7 @@ internal class test_leftRecursive : test_ScanOnDemandParserAbstract() {
             } }
         """.trimIndent()
 
-        assertFailsWith<ParserTerminatedException> {
+//        assertFailsWith<ParserTerminatedException> {
             super.test(
                 rrs = rrs,
                 goal = goal,
@@ -76,7 +76,7 @@ internal class test_leftRecursive : test_ScanOnDemandParserAbstract() {
                 expectedNumGSSHeads = 1,
                 expectedTrees = arrayOf(expected)
             )
-        }
+//        }
     }
 
     @Test
@@ -92,7 +92,7 @@ internal class test_leftRecursive : test_ScanOnDemandParserAbstract() {
             } }
         """.trimIndent()
 
-        assertFailsWith<ParserTerminatedException> {
+//        assertFailsWith<ParserTerminatedException> {
             super.test(
                 rrs = rrs,
                 goal = goal,
@@ -100,6 +100,6 @@ internal class test_leftRecursive : test_ScanOnDemandParserAbstract() {
                 expectedNumGSSHeads = 1,
                 expectedTrees = arrayOf(expected)
             )
-        }
+ //       }
     }
 }

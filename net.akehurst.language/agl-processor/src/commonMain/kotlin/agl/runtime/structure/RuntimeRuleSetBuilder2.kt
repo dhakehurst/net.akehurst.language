@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.api.runtime.*
-import net.akehurst.language.agl.util.Debug
 
 internal fun runtimeRuleSet(init: RuntimeRuleSetBuilder2.() -> Unit): RuntimeRuleSet {
     val b = RuntimeRuleSetBuilder2()
@@ -41,6 +40,7 @@ internal class RuntimeRuleSetBuilder2 : RuleSetBuilder {
 
     private val ruleSetNumber = RuntimeRuleSet.nextRuntimeRuleSetNumber++
     private val _ruleBuilders = mutableMapOf<String, RuntimeRuleBuilder>()
+    private val _precedenceRuleBuilders = mutableListOf<PrecedenceRuleBuilder>()
 
     internal fun build(): RuntimeRuleSet {
         val ruleMap = this._ruleBuilders.values.mapIndexedNotNull { ruleNumber, rb ->
@@ -51,7 +51,10 @@ internal class RuntimeRuleSetBuilder2 : RuleSetBuilder {
             rb.buildRhs(ruleMap)
             rb.rule!!
         }
-        return RuntimeRuleSet(ruleSetNumber, rules)
+        val precRules = _precedenceRuleBuilders.map {
+            it.build(ruleMap)
+        }
+        return RuntimeRuleSet(ruleSetNumber, rules,precRules)
     }
 
     private fun _rule(
@@ -137,6 +140,12 @@ internal class RuntimeRuleSetBuilder2 : RuleSetBuilder {
         }
         this._ruleBuilders[ruleName] = rb
     }
+
+    fun precedenceFor(precedenceContextRuleName:String, init:PrecedenceRuleBuilder.()->Unit) {
+        val b = PrecedenceRuleBuilder(precedenceContextRuleName)
+        b.init()
+        this._precedenceRuleBuilders.add(b)
+    }
 }
 
 @RuntimeRuleSetDslMarker
@@ -197,6 +206,7 @@ internal class RuntimeRuleConcatenationBuilder(
     }
 }
 
+@RuntimeRuleSetDslMarker
 internal class RuntimeRuleChoiceBuilder(
     val rrsb: RuntimeRuleSetBuilder2,
 ) : ChoiceBuilder {
@@ -217,5 +227,37 @@ internal class RuntimeRuleChoiceBuilder(
         val b = RuntimeRuleConcatenationBuilder(rrsb)
         b.init()
         choices.add(b)
+    }
+}
+
+@RuntimeRuleSetDslMarker
+internal class PrecedenceRuleBuilder(
+    val contextRuleName:String
+) {
+
+    private val _rules = mutableListOf<Triple<String, String, PrecedenceRules.Associativity>>()
+
+    /**
+     * indicate that @param ruleName is left-associative
+     */
+    fun left(ruleName:String, operatorRuleName:String) {
+        _rules.add(Triple(ruleName, operatorRuleName,PrecedenceRules.Associativity.LEFT))
+    }
+
+    /**
+     * indicate that @param ruleName is right-associative
+     */
+    fun right(ruleName:String, operatorRuleName:String) {
+        _rules.add(Triple(ruleName, operatorRuleName, PrecedenceRules.Associativity.RIGHT))
+    }
+
+    fun build(ruleMap: Map<String, RuntimeRule>):PrecedenceRules {
+        val contextRule = ruleMap[contextRuleName] ?: error("Cannot find rule named '$contextRuleName' as a context rule for precedence definitions")
+        val rules = _rules.mapIndexed { idx, it ->
+            val r = ruleMap[it.first] ?: error("Cannot find rule named '${it.first}' for target rule in precedence definitions")
+            val op = ruleMap[it.second] ?: error("Cannot find rule named '${it.second}' for operator in precedence definitions")
+            PrecedenceRules.PrecedenceRule(idx, r, op, it.third)
+        }
+        return PrecedenceRules(contextRule, rules)
     }
 }

@@ -41,7 +41,7 @@ internal class test_bodmas_sList_root_choiceEqual : test_ScanOnDemandParserAbstr
         val rrs = runtimeRuleSet {
             concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { ref("expr") }
-            choice("expr",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("root")
                 ref("group")
                 ref("div")
@@ -49,21 +49,30 @@ internal class test_bodmas_sList_root_choiceEqual : test_ScanOnDemandParserAbstr
                 ref("add")
                 ref("sub")
             }
-            choice("root",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("root", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
                 ref("var")
                 ref("bool")
             }
-            sList("div",2,-1,"expr","'/'")
-            sList("mul",2,-1,"expr","'*'")
-            sList("add",2,-1,"expr","'+'")
-            sList("sub",2,-1,"expr","'-'")
+            sList("div", 2, -1, "expr", "'/'")
+            sList("mul", 2, -1, "expr", "'*'")
+            sList("add", 2, -1, "expr", "'+'")
+            sList("sub", 2, -1, "expr", "'-'")
             concatenation("group") { literal("("); ref("expr"); literal(")") }
-            choice("bool",RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("true");literal("false") }
+            choice("bool", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("true")
+                literal("false")
+            }
             concatenation("var") { pattern("[a-zA-Z]+") }
-            literal("'/'","/")
-            literal("'*'","*")
-            literal("'+'","+")
-            literal("'-'","-")
+            literal("'/'", "/")
+            literal("'*'", "*")
+            literal("'+'", "+")
+            literal("'-'", "-")
+            precedenceFor("expr") {
+                left("sub", "'-'")
+                left("add", "'+'")
+                left("mul", "'*'")
+                left("div", "'/'")
+            }
         }
         val goal = "S"
     }
@@ -72,11 +81,13 @@ internal class test_bodmas_sList_root_choiceEqual : test_ScanOnDemandParserAbstr
     fun empty_fails() {
         val sentence = ""
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("\"[a-zA-Z]+\"","'true'","'false'","'('"))
-        ),issues)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("\"[a-zA-Z]+\"", "'true'", "'false'", "'('"))
+            ), issues
+        )
     }
 
     @Test

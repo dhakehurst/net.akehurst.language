@@ -29,7 +29,7 @@ internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
     // S =  expr ;
     // ifthenelse = 'if' expr 'then' expr 'else' expr ;
     // ifthen = 'if' expr 'then' expr ;
-    // expr = var < conditional ;
+    // expr = var | conditional ;
     // conditional = ifthenelse | ifthen;
     // var = W | X | Y | Z ;
     private companion object {

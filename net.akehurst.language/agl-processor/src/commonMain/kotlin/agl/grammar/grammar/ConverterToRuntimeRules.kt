@@ -35,7 +35,8 @@ internal class ConverterToRuntimeRules(
     val runtimeRuleSet: RuntimeRuleSet by lazy {
         this.visitGrammar(grammar, "")
         val rules = this.runtimeRules.values.toList()
-        RuntimeRuleSet(_ruleSetNumber, rules)
+        val precRules = emptyList<PrecedenceRules>() // TODO
+        RuntimeRuleSet(_ruleSetNumber, rules, precRules)
     }
 
     fun originalRuleItemFor(runtimeRuleSetNumber: Int, runtimeRuleNumber: Int): RuleItem = this.originalRuleItem[Pair(runtimeRuleSetNumber, runtimeRuleNumber)]

@@ -32,13 +32,13 @@ internal class test_TELE_VC : test_ScanOnDemandParserAbstract() {
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("E") }
-            choice("E", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("v")
                 ref("C")
             }
-            choice("C", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                concatenation { literal("t"); ref("E") }
+            choice("C", RuntimeRuleChoiceKind.AMBIGUOUS) {
                 concatenation { literal("t"); ref("E"); literal("s"); ref("E") }
+                concatenation { literal("t"); ref("E") }
             }
         }
         val goal = "S"
@@ -140,8 +140,8 @@ internal class test_TELE_VC : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun ifthenifthenifthenelse() {
-        val sentence = "ifUthenifWthenifXthenYelseZ"
+    fun tttvsv() {
+        val sentence = "tttvsv"
 
         val expected = """
             S {
