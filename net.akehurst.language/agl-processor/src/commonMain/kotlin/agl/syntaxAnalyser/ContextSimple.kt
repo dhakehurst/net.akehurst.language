@@ -36,7 +36,7 @@ fun ScopeModelAgl.createReferenceLocalToScope(scope: ScopeSimple<AsmElementPath>
     return when (prop) {
         null -> null
         ScopeModelAgl.IDENTIFY_BY_NOTHING -> ""
-        else -> element.getPropertyAsString(prop)
+        else -> element.getPropertyAsStringOrNull(prop)
     }
 }
 

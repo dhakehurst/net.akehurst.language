@@ -82,6 +82,7 @@ internal class RuntimeRule(
         }
 
     val isChoice get() = this.rhs is RuntimeRuleRhsChoice
+    val isList get() = this.rhs is RuntimeRuleRhsList
 
     @Deprecated("use 'rhs is'")
     val kind

@@ -222,7 +222,7 @@ data class PropertyDeclaration(
 }
 
 fun TypeModel.asString(): String {
-    val typesSorted = this.types.entries.sortedBy { it.value.name }
+    val typesSorted = this.types.entries.sortedBy { it.key }
     val types = typesSorted.joinToString(separator = "\n") { it.key + "->" + it.value.asString(this) }
     val s= """
     typemodel '$namespace.$name' {

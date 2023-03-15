@@ -71,7 +71,7 @@ class test_StatechartTools(val data: Data) {
     data class Data(val file: String, val ruleName: String, val text: String)
 
     @Test
-    fun test() {
+    fun parse() {
         val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName(data.ruleName) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
@@ -79,4 +79,10 @@ class test_StatechartTools(val data: Data) {
         assertEquals(this.data.text, resultStr)
     }
 
+    @Test
+    fun process() {
+        val result = processor.process(this.data.text, Agl.options { parse { goalRuleName(data.ruleName) } })
+        assertNotNull(result.asm, result.issues.joinToString(separator = "\n") { "$it" })
+        assertEquals(emptyList(), result.issues)
+    }
 }

@@ -17,6 +17,8 @@ package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
@@ -29,14 +31,24 @@ class test_StatechartTools_Singles {
         private val grammarStr1 = this::class.java.getResource("/statechart-tools/Expressions.agl")?.readText() ?: error("File not found")
         private val grammarStr2 = this::class.java.getResource("/statechart-tools/SText.agl")?.readText() ?: error("File not found")
 
+        private val formatterStr= """
+           AssignmentExpression -> "§expression §assignmentOperator §expression2"
+           FeatureCall -> "§elementReferenceExpression"
+           ElementReferenceExpression -> "§id"
+           PrimitiveValueExpression -> "§literal"
+           
+
+        """.replace("§","\$")
+
         // must create processor for 'Expressions' so that SText can extend it
-        val exprProcessor = Agl.processorFromString<Any, Any>(
+        val exprProcessor = Agl.processorFromStringDefault(
             grammarDefinitionStr = grammarStr1,
-            aglOptions = Agl.options { semanticAnalysis { option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false) } }
+            grammarAglOptions = Agl.options { semanticAnalysis { option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false) } }
         ).processor!!
-        var processor: LanguageProcessor<Any, Any> = Agl.processorFromString<Any, Any>(
+        var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(
             grammarDefinitionStr = grammarStr2,
-            aglOptions = Agl.options { semanticAnalysis { option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false) } }
+            formatterModelStr = formatterStr,
+            grammarAglOptions = Agl.options { semanticAnalysis { option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false) } }
         ).processor!!
     }
 
@@ -44,11 +56,11 @@ class test_StatechartTools_Singles {
     fun ConditionalExpression_integer() {
         val goal = "Expression"
         val sentence = "integer"
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
+        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
 
-        val resultStr = result.sppt!!.asString
+        val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)
     }
 
@@ -56,11 +68,11 @@ class test_StatechartTools_Singles {
     fun ConditionalExpression_97() {
         val goal = "Expression"
         val sentence = "97"
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
+        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
 
-        val resultStr = result.sppt!!.asString
+        val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)
     }
 
@@ -68,11 +80,11 @@ class test_StatechartTools_Singles {
     fun AssignmentExpression_integer_AS_97() {
         val goal = "Expression"
         val sentence = "integer = 97"
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
+        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
 
-        val resultStr = result.sppt!!.asString
+        val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)
     }
 
@@ -80,11 +92,11 @@ class test_StatechartTools_Singles {
     fun ReactionEffect_integer_AS_97() {
         val goal = "ReactionEffect"
         val sentence = "integer = 97"
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
+        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
 
-        val resultStr = result.sppt!!.asString
+        val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)
     }
 
@@ -92,11 +104,11 @@ class test_StatechartTools_Singles {
     fun ScopeDeclaration_integer_AS_97() {
         val goal = "ScopeDeclaration"
         val sentence = "var MyVar : integer = 97"
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
+        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
 
-        val resultStr = result.sppt!!.asString
+        val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)
     }
 

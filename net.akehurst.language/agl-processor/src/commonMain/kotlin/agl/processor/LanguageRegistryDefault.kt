@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.agl.grammar.format.AglFormatSemanticAnalyser
 import net.akehurst.language.agl.agl.grammar.scopes.AglScopesSemanticAnalyser
 import net.akehurst.language.agl.agl.grammar.style.AglStyleSemanticAnalyser
 import net.akehurst.language.agl.grammar.format.AglFormatGrammar
@@ -119,8 +120,8 @@ class LanguageRegistryDefault : GrammarRegistry {
                     defaultGoalRuleName(AglFormatGrammar.goalRuleName)
                     typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(AglFormatGrammar), emptyList()) }
                     scopeModelResolver { ProcessResultDefault(ScopeModelAgl(), emptyList()) }
-                    syntaxAnalyserResolver { ProcessResultDefault(AglFormatSyntaxAnalyser(), emptyList()) }
-                    semanticAnalyserResolver { ProcessResultDefault(null, emptyList()) }
+                    syntaxAnalyserResolver { ProcessResultDefault(AglFormatSyntaxAnalyser(it.typeModel, it.scopeModel), emptyList()) }
+                    semanticAnalyserResolver { ProcessResultDefault(AglFormatSemanticAnalyser(), emptyList()) }
                     formatterResolver { ProcessResultDefault(null, emptyList()) }
                     styleResolver {
                         Agl.fromString(

@@ -16,8 +16,7 @@
 
 package net.akehurst.language.api.asm
 
-import net.akehurst.language.collections.MutableStack
-import net.akehurst.language.collections.mutableStackOf
+import net.akehurst.language.api.typeModel.PropertyDeclaration
 
 data class AsmElementPath(val value: String) {
     companion object {
@@ -27,7 +26,7 @@ data class AsmElementPath(val value: String) {
     operator fun plus(segment: String) = if (this == ROOT) AsmElementPath("/$segment") else AsmElementPath("$value/$segment")
 }
 
-class AsmSimple {
+open class AsmSimple {
     private var _nextElementId = 0
 
     val rootElements: List<AsmElementSimple> = mutableListOf()
@@ -60,11 +59,18 @@ class AsmElementSimple(
 
     fun hasProperty(name: String): Boolean = properties.containsKey(name)
 
-    fun getProperty(name: String): Any? = properties[name]
-    fun getPropertyAsString(name: String): String? = properties[name]?.value as String?
-    fun getPropertyAsAsmElement(name: String): AsmElementSimple? = properties[name]?.value as AsmElementSimple?
-    fun getPropertyAsReference(name: String): AsmElementReference? = properties[name]?.value as AsmElementReference?
-    fun getPropertyAsList(name: String): List<Any> = properties[name]?.value as List<Any>
+    fun getPropertyOrNull(name: String): Any? = properties[name]?.value
+    fun getPropertyAsStringOrNull(name: String): String? = getPropertyOrNull(name) as String?
+    fun getPropertyAsAsmElementOrNull(name: String): AsmElementSimple? = getPropertyOrNull(name) as AsmElementSimple?
+    fun getPropertyAsReferenceOrNull(name: String): AsmElementReference? = getPropertyOrNull(name) as AsmElementReference?
+    fun getPropertyAsListOrNull(name: String): List<Any>? = getPropertyOrNull(name) as List<Any>?
+
+    fun getProperty(name: String): Any = properties[name]?.value ?: error("Cannot find property '$name' in element type '$typeName' with path '$asmPath' ")
+    fun getPropertyAsString(name: String): String = getProperty(name) as String
+    fun getPropertyAsAsmElement(name: String): AsmElementSimple = getProperty(name) as AsmElementSimple
+    fun getPropertyAsReference(name: String): AsmElementReference = getProperty(name) as AsmElementReference
+    fun getPropertyAsList(name: String): List<Any> = getProperty(name) as List<Any>
+    fun getPropertyAsListOfElement(name: String): List<AsmElementSimple> = getProperty(name) as List<AsmElementSimple>
 
     fun setPropertyAsString(name: String, value: String?) = setProperty(name, value, false)
     fun setPropertyAsListOfString(name: String, value: List<String>?) = setProperty(name, value, false)
@@ -72,9 +78,18 @@ class AsmElementSimple(
     fun setProperty(name: String, value: Any?, isReference: Boolean) {
         if (isReference) {
             val ref = AsmElementReference(value as String, null)
-            _properties[name] = AsmElementProperty(name, ref, true)
+            _properties[name] = AsmElementProperty(name, null, ref, true)
         } else {
-            _properties[name] = AsmElementProperty(name, value, false)
+            _properties[name] = AsmElementProperty(name, null, value, false)
+        }
+    }
+
+    fun setPropertyFromDeclaration(declaration: PropertyDeclaration, value: Any?, isReference: Boolean) {
+        if (isReference) {
+            val ref = AsmElementReference(value as String, null)
+            _properties[declaration.name] = AsmElementProperty(declaration.name, declaration, ref, true)
+        } else {
+            _properties[declaration.name] = AsmElementProperty(declaration.name, declaration, value, false)
         }
     }
 
@@ -130,10 +145,16 @@ class AsmElementSimple(
 class AsmElementReference(
     val reference: String,
     var value: AsmElementSimple?
-)
+) {
+    override fun toString(): String {
+        val resolved = if (null == value) "<unresolved> " else ""
+        return "$resolved&$reference"
+    }
+}
 
 class AsmElementProperty(
     val name: String,
+    val declaration: PropertyDeclaration?,
     val value: Any?,
     val isReference: Boolean
 ) {
@@ -233,7 +254,17 @@ fun AsmSimple.traverseDepthFirst(callback: AsmSimpleTreeWalker) {
         when (element) {
             is AsmElementSimple -> {
                 callback.beforeElement(element)
-                for (prop in element.properties.values) {
+                val props = element.properties.values.sortedWith { a, b ->
+                    val aDecl = a.declaration
+                    val bDecl = b.declaration
+                    when {
+                        aDecl == null || bDecl == null -> 0
+                        aDecl.childIndex > bDecl.childIndex -> 1
+                        aDecl.childIndex < bDecl.childIndex -> -1
+                        else -> 0
+                    }
+                }
+                for (prop in props) {
                     callback.property(prop)
                     val pv = prop.value
                     traverse(pv)

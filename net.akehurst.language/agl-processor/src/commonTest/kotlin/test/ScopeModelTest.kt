@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.formater
+package net.akehurst.language.api.scopes
 
-import net.akehurst.language.api.asm.AsmSimple
-import net.akehurst.language.api.processor.FormatResult
-import net.akehurst.language.api.processor.Formatter
+import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 
-class FormatterSimple : Formatter<AsmSimple> {
+object ScopeModelTest {
 
-    override fun format(asm: AsmSimple): FormatResult {
-        TODO("not implemented")
+    fun assertEqual(expected: ScopeModelAgl, actual: ScopeModelAgl) {
+
     }
 
 }

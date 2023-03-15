@@ -16,36 +16,44 @@
 
 package net.akehurst.language.agl.collections
 
+import net.akehurst.language.agl.util.Debug
+
 class GraphStructuredStack<E>(previous:MutableMap<E,MutableSet<E>>, count:MutableMap<E,Int>) {
     constructor(): this(hashMapOf<E, MutableSet<E>>(), hashMapOf<E, Int>()) //no need to preserve insertion order
-
-    companion object {
-        const val DO_CHECK = false
-    }
 
     private val _previous = previous
     private val _count = count
 
     val roots:List<E> get() = this._count.entries.filter { it.value==0 }.map { it.key }
 
+    val isEmpty:Boolean get() = _previous.isEmpty() && _count.isEmpty()
+
     fun clear() {
         this._previous.clear()
     }
 
-    fun root(head: E) {
+    fun root(head: E):Boolean {
         //_previous[head] = hashSetOf()
         //_count[head] = 0
 
-        //TODO: should we need this? or should above be sufficient
-        val hc = this._count[head]
-        if (null == hc) {
+        var set = _previous[head]
+        val createdNewHead = if (null == set) {
             _previous[head] = hashSetOf()
             this._count[head] = 0
+            true
         } else {
-            this._count[head] = hc + 1
+            false
         }
-
-        check() //TODO: remove
+        //TODO: should we need this? or should above be sufficient
+       // val hc = this._count[head]
+       // if (null == hc) {
+       //     _previous[head] = hashSetOf()
+       //     this._count[head] = 0
+       // } else {
+       //     this._count[head] = hc + 1
+       // }
+        if (Debug.CHECK) check()
+        return createdNewHead
     }
 
     /**
@@ -76,7 +84,7 @@ class GraphStructuredStack<E>(previous:MutableMap<E,MutableSet<E>>, count:Mutabl
         } else {
             // head is already previous of next
         }
-        check() //TODO: remove
+        if (Debug.CHECK) check()
         return createdNewHead
     }
 
@@ -97,20 +105,19 @@ class GraphStructuredStack<E>(previous:MutableMap<E,MutableSet<E>>, count:Mutabl
                     val c = this._count[it]!!
                     this._count[it] = c - 1
                 }
-                check() //TODO: remove
+                if (Debug.CHECK) check()
                 prev
             } else {
                 val prev = _previous[head]!!.toMutableSet()
                 // head is not a head of the GSS, just return the previous nodes
                 // do not deduce from count of prev, because head is not removed
-                check() //TODO: remove
+                if (Debug.CHECK) check()
                 prev
             }
         }
     }
 
-    fun check() {
-        if (DO_CHECK) {
+    private fun check() {
             val next = mutableMapOf<E, MutableSet<E>>()
             this._previous.keys.forEach { next[it] = mutableSetOf() }
             val heads = this._count.entries.filter { it.value == 0 }.map { it.key }
@@ -126,7 +133,6 @@ class GraphStructuredStack<E>(previous:MutableMap<E,MutableSet<E>>, count:Mutabl
             if (next.any { (k, v) -> this._count[k] != v.size }) {
                 error("GSS is broken")
             }
-        }
     }
 
     fun removeStack(head: E) {

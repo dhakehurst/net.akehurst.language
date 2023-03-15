@@ -53,9 +53,9 @@ Annotation = '@' QID ('(' (Expression (',' Expression)*)? ')')?;
 
 Parameter = ID ('...')? ':' TypeSpecifier;
 
-LocalReaction = ReactionTrigger ('/' ReactionEffect);
+LocalReaction = ReactionTrigger ('/' ReactionEffectList);
 
-TransitionReaction = StextTrigger? ('/' ReactionEffect)? ('#' TransitionProperty*)?;
+TransitionReaction = StextTrigger? ('/' ReactionEffectList)? ('#' TransitionProperty*)?;
 
 StextTrigger = ReactionTrigger | DefaultTrigger;
 
@@ -64,8 +64,8 @@ ReactionTrigger = ((EventSpec ("," EventSpec)* ('['Guard ']')?) | ('[' Guard ']'
 DefaultTrigger = ('default' | 'else');
 
 Guard = Expression;
-
-ReactionEffect = (Expression | EventRaisingExpression) ( ';' (Expression | EventRaisingExpression))*;
+ReactionEffectList = [ReactionEffect / ';']+ ;
+ReactionEffect = Expression | EventRaisingExpression ;
 
 TransitionProperty  = EntryPointSpec | ExitPointSpec;
 

@@ -193,7 +193,7 @@ internal class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
     }
 
     @ExperimentalTime
-    @Test
+    //@Test
     fun time() {
         val parser = ScanOnDemandParser(rrs)
         val times = mutableListOf<Duration>()

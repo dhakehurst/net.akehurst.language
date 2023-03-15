@@ -28,9 +28,9 @@ internal object AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst
         const val goalRuleName = "declarations"
         private fun createRules(): List<GrammarRule> {
             val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglStyle");
-            b.skip("WHITESPACE").concatenation(b.terminalPattern("\\s+"));
-            b.skip("MULTI_LINE_COMMENT").concatenation(b.terminalPattern("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"));
-            b.skip("SINGLE_LINE_COMMENT").concatenation(b.terminalPattern("//[^\\n\\r]*"));
+            b.skip("WHITESPACE",true).concatenation(b.terminalPattern("\\s+"));
+            b.skip("MULTI_LINE_COMMENT",true).concatenation(b.terminalPattern("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"));
+            b.skip("SINGLE_LINE_COMMENT",true).concatenation(b.terminalPattern("//[^\\n\\r]*"));
 
             b.rule("declarations").concatenation(b.nonTerminal("rootIdentifiables"), b.nonTerminal("scopes"),b.nonTerminal("referencesOpt"))
             b.rule("rootIdentifiables").multi(0, -1, b.nonTerminal("identifiable"))
@@ -54,6 +54,11 @@ internal object AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst
     const val grammarStr = """
         namespace net.akehurst.language.agl
         grammar AglScopes {
+        
+            skip WHITESPACE = "\s+" ;
+            skip MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
+            skip SINGLE_LINE_COMMENT = "//[\n\r]*?" ;
+
             declarations = rootIdentifiables scopes references?
             rootIdentifiables = identifiable*
             scopes = scope*
@@ -108,7 +113,7 @@ internal object AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst
     """
     const val formatterStr = """
         @TODO
-        references = when {
+        References -> when {
             referenceDefinitions.isEmpty -> "references { }"
             else -> "
               references {
@@ -116,8 +121,8 @@ internal object AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst
               }
             "
         }
-        referenceDefinitions = [referenceDefinition / '\n']
-        referenceDefinition { in §typeReference property §propertyReference refers-to §typeReferences }
+        ReferenceDefinitions -> [referenceDefinition / '\n']
+        ReferenceDefinition -> "in §typeReference property §propertyReference refers-to §typeReferences"
     """
     init {
         super.rule.addAll(createRules())

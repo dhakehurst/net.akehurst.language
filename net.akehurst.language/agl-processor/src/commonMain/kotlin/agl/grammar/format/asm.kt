@@ -16,20 +16,22 @@
 package net.akehurst.language.agl.grammar.format
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.asm.AsmElementSimple
+import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.formatter.AglFormatExpression
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.formatter.AglFormatterRule
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.api.processor.SentenceContext
-import net.akehurst.language.api.style.AglStyleModel
 
 class AglFormatterModelDefault(
-    override val rules: List<AglFormatterRule>
-) : AglFormatterModel {
+    val asm: AsmSimple?
+) : AsmSimple(), AglFormatterModel {
 
     companion object {
-        fun fromString(context: SentenceContext<GrammarItem>, aglFormatterModelSentence:String): ProcessResult<AglFormatterModel> {
-            val proc = Agl.registry.agl.formatter.processor ?: error("Scopes language not found!")
+        fun fromString(context: SentenceContext<GrammarItem>, aglFormatterModelSentence: String): ProcessResult<AglFormatterModel> {
+            val proc = Agl.registry.agl.formatter.processor ?: error("Formatter language not found!")
             return proc.process(
                 sentence = aglFormatterModelSentence,
                 Agl.options {
@@ -40,5 +42,44 @@ class AglFormatterModelDefault(
             )
         }
     }
+
+    override val defaultWhiteSpace: String
+        get() = " "
+
+    override val rules: Map<String, AglFormatterRule> by lazy {
+        when (asm) {
+            null -> emptyMap()
+            else -> asm.rootElements[0].getPropertyAsList("ruleList").associate {
+                when (it) {
+                    is AsmElementSimple -> {
+                        val rule = AglFormatterRuleDefault(this,it)
+                        Pair(rule.forTypeName, rule)
+                    }
+
+                    else -> error("Cannot map '$it' to an AglFormatterRule")
+                }
+            }
+        }
+    }
+
+}
+
+class AglFormatterRuleDefault(
+    override val model: AglFormatterModel,
+    val asm: AsmElementSimple
+) : AglFormatterRule {
+    override val forTypeName: String
+        get() = asm.getPropertyAsAsmElement("typeReference").getPropertyAsString("identifier")
+
+    override val formatExpression: AglFormatExpression
+        get() {
+            val fmAsm = asm.getPropertyAsAsmElement("formatExpression")
+            return AglFormatExpressionDefault(fmAsm)
+        }
+}
+
+class AglFormatExpressionDefault(
+    val asm: AsmElementSimple
+) : AglFormatExpression {
 
 }

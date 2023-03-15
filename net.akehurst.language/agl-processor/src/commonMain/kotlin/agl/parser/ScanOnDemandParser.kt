@@ -40,6 +40,8 @@ internal class ScanOnDemandParser(
     // cached only so it can be interrupted
     private var runtimeParser: RuntimeParser? = null
 
+    val runtimeDataIsEmpty: Boolean get() = runtimeParser?.graph?.isEmpty ?: true
+
     override fun interrupt(message: String) {
         this.runtimeParser?.interrupt(message)
     }
@@ -419,9 +421,14 @@ internal class ScanOnDemandParser(
         }
     }
 
-    private fun findNextExpectedAfterError3(input: InputFromString, failedParseReasons: List<FailedParseReason>, automatonKind: AutomatonKind, stateSet: ParserStateSet): Pair<InputLocation, Set<RuntimeRule>> {
+    private fun findNextExpectedAfterError3(
+        input: InputFromString,
+        failedParseReasons: List<FailedParseReason>,
+        automatonKind: AutomatonKind,
+        stateSet: ParserStateSet
+    ): Pair<InputLocation, Set<RuntimeRule>> {
         val max = failedParseReasons.maxOf { it.position }
-        val maxReasons = failedParseReasons.filter { it.position==max }
+        val maxReasons = failedParseReasons.filter { it.position == max }
         val x = maxReasons.map { fr ->
             when (fr) {
                 is FailedParseReasonWidthTo -> Pair(input.locationFor(fr.position, 0), setOf(fr.transition.to.firstRule))
@@ -439,6 +446,7 @@ internal class ScanOnDemandParser(
                     val exp = expected.minus(embeddedSkipTerms.minus(terms))
                     Pair(input.locationFor(fr.position, 0), exp)
                 }
+
                 is FailedParseReasonEmbedded -> {
                     // Outer skip terms are part of the 'possibleEndOfText' and thus could be in the expected terms
                     // if these skip terms are not part of the embedded 'normal' terms...remove them
@@ -447,7 +455,7 @@ internal class ScanOnDemandParser(
                     val x = findNextExpectedAfterError3(input, fr.embededFailedParseReasons, automatonKind, embeddedStateSet)
                     val embeddedRuntimeRuleSet = embeddedRhs.embeddedRuntimeRuleSet
                     val embeddedTerms = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedRhs.embeddedStartRule.tag, automatonKind).usedTerminalRules
-                    val skipTerms = runtimeRuleSet.skipParserStateSet?.usedTerminalRules?: emptySet()
+                    val skipTerms = runtimeRuleSet.skipParserStateSet?.usedTerminalRules ?: emptySet()
                     val exp = x.second.minus(skipTerms.minus(embeddedTerms))
                     Pair(x.first, exp)
                 }

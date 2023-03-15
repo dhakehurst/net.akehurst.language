@@ -187,7 +187,7 @@ internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehur
         grammar AglGrammar {
             skip WHITESPACE = "\s+" ;
             skip MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
-            skip SINGLE_LINE_COMMENT = "//.*?${'$'}" ;
+            skip SINGLE_LINE_COMMENT = "//[\n\r]*?" ;
     
             grammarDefinition = namespace definitions ;
             namespace = 'namespace' qualifiedName ;

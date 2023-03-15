@@ -48,6 +48,10 @@ internal class test_da_sList_root_choicePriority : test_ScanOnDemandParserAbstra
             concatenation("var") { literal("v") }
             literal("'/'", "/")
             literal("'+'", "+")
+            precedenceFor("expr") {
+                left("add","'+'")
+                left("div","'/'")
+            }
         }
         val goal = "S"
     }

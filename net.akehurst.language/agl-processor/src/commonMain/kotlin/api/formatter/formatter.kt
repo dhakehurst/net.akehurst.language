@@ -17,9 +17,22 @@
 package net.akehurst.language.api.formatter
 
 interface AglFormatterModel {
-    val rules:List<AglFormatterRule>
+
+    val defaultWhiteSpace:String
+
+    /**
+     * all format rules indexed by the type name that the rule applies to
+     */
+     val rules:Map<String,AglFormatterRule>
+
 }
 
 interface AglFormatterRule {
+    val model:AglFormatterModel
+    val forTypeName : String
+    val formatExpression:AglFormatExpression
+}
+
+interface AglFormatExpression {
 
 }

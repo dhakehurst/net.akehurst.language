@@ -302,7 +302,7 @@ internal class test_bodmas_sList_root_choiceEqual : test_ScanOnDemandParserAbstr
         val sentence = "a+b+c+d"
 
         val expected = """
-             S { expr|4 { add {
+             S { expr { add {
                   expr { root { var { "[a-zA-Z]+" : 'a' } } }
                   '+'
                   expr { root { var { "[a-zA-Z]+" : 'b' } } }

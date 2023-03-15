@@ -68,13 +68,13 @@ class test_SyntaxAnalyserSimple_datatypes {
         }
         val scopeModel = ScopeModelAgl.fromString(
             ContextFromGrammar(grammar), """
-                    identify unit by §nothing
-                    scope unit {
-                        identify primitive by ID
-                        identify datatype by ID
+                    identify Unit by §nothing
+                    scope Unit {
+                        identify Primitive by id
+                        identify Datatype by id
                     }
                     references {
-                        in typeReference property type refers-to primitive|datatype
+                        in TypeReference property type refers-to Primitive|Datatype
                     }
                 """.trimIndent()
         ).asm!!
@@ -97,30 +97,37 @@ class test_SyntaxAnalyserSimple_datatypes {
     @Test
     fun typeModel() {
         val actual = processor.typeModel
-        val expected = typeModel("", "") {
-            elementType("unit") {
-                propertyListTypeOf("declaration", "declaration", false, 0)
+        val expected = typeModel("test", "Test") {
+            //unit = declaration* ;
+            elementType("Unit") {
+                propertyListTypeOf("declaration", "Declaration", false, 0)
             }
-            elementType("declaration") {
-                subTypes("datatype", "primitive")
+            // declaration = datatype | primitive ;
+            elementType("Declaration") {
+                subTypes("Datatype", "Primitive")
             }
-            elementType("primitive") {
-                propertyStringType("ID", false, 1)
+            // primitive = 'primitive' ID ;
+            elementType("Primitive") {
+                propertyStringType("id", false, 1)
             }
-            elementType("datatype") {
-                propertyStringType("ID", false, 1)
-                propertyListTypeOf("property", "property", false, 3)
+            // datatype = 'datatype' ID '{' property* '}' ;
+            elementType("Datatype") {
+                propertyStringType("id", false, 1)
+                propertyListTypeOf("property", "Property", false, 3)
             }
-            elementType("property") {
-                propertyStringType("ID", false, 0)
-                propertyElementTypeOf("typeReference", "typeReference", false, 2)
+            // property = ID ':' typeReference ;
+            elementType("Property") {
+                propertyStringType("id", false, 0)
+                propertyElementTypeOf("typeReference", "TypeReference", false, 2)
             }
-            elementType("typeReference") {
+            // typeReference = type typeArguments? ;
+            elementType("TypeReference") {
                 propertyStringType("type", false, 0)
-                propertyElementTypeOf("typeArguments", "typeArguments", true, 1)
+                propertyElementTypeOf("typeArguments", "TypeArguments", true, 1)
             }
-            elementType("typeArguments") {
-                propertyListSeparatedTypeOf("typeReference", "typeReference", StringType, false, 1)
+            // typeArguments = '<' [typeReference / ',']+ '>' ;
+            elementType("TypeArguments") {
+                propertyListSeparatedTypeOf("typeReference", "TypeReference", StringType, false, 1)
             }
         }
 
@@ -163,14 +170,14 @@ class test_SyntaxAnalyserSimple_datatypes {
         assertEquals(emptyList(), result.issues)
 
         val expected = asmSimple {
-            root("unit") {
+            root("Unit") {
                 propertyListOfElement("declaration") {
-                    element("datatype") {
-                        propertyString("ID", "A")
+                    element("Datatype") {
+                        propertyString("id", "A")
                         propertyListOfElement("property") {}
                     }
-                    element("datatype") {
-                        propertyString("ID", "B")
+                    element("Datatype") {
+                        propertyString("id", "B")
                         propertyListOfElement("property") {}
                     }
                 }
@@ -199,14 +206,14 @@ class test_SyntaxAnalyserSimple_datatypes {
         assertNotNull(result.asm)
 
         val expected = asmSimple {
-            root("unit") {
+            root("Unit") {
                 propertyListOfElement("declaration") {
-                    element("datatype") {
-                        propertyString("ID", "A")
+                    element("Datatype") {
+                        propertyString("id", "A")
                         propertyListOfElement("property") {
-                            element("property") {
-                                propertyString("ID", "a")
-                                propertyElement("typeReference") {
+                            element("Property") {
+                                propertyString("id", "a")
+                                propertyElementExplicitType("typeReference", "TypeReference") {
                                     reference("type", "String")
                                     propertyString("typeArguments", null)
                                 }
@@ -221,7 +228,7 @@ class test_SyntaxAnalyserSimple_datatypes {
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(21, 9, 2, 7),
-                "Cannot find 'String' as reference for 'typeReference.type'"
+                "Cannot find 'String' as reference for 'TypeReference.type'"
             )
         )
 
@@ -260,7 +267,7 @@ class test_SyntaxAnalyserSimple_datatypes {
                         propertyListOfElement("property") {
                             element("Property") {
                                 propertyString("id", "a")
-                                propertyElementExplicitType("typeReference","YypeReference") {
+                                propertyElementExplicitType("typeReference","TypeReference") {
                                     reference("type", "String")
                                     propertyString("typeArguments", null)
                                 }

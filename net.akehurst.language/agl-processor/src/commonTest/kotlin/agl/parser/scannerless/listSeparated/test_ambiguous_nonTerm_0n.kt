@@ -25,8 +25,8 @@ internal class test_ambiguous_nonTerm_0n : test_ScanOnDemandParserAbstract() {
 
     // S = [ambig / sep ]*
     // ambig = a1 | a2
-    // a1 = 'a'
-    // a2 = 'a' 'b'?
+    // a1 = 'a' 'b'?
+    // a2 = 'a'
     // sep = ','?
     private companion object {
         val rrs = runtimeRuleSet {
@@ -35,8 +35,8 @@ internal class test_ambiguous_nonTerm_0n : test_ScanOnDemandParserAbstract() {
                 ref("a1")
                 ref("a2")
             }
-            concatenation("a1") { literal("a") }
-            concatenation("a2") { literal("a"); ref("optB") }
+            concatenation("a1") { literal("a"); ref("optB") }
+            concatenation("a2") { literal("a") }
             multi("optB", 0, 1, "'b'")
             literal("'b'", "b")
             multi("sep", 0, 1, "','")
@@ -93,7 +93,7 @@ internal class test_ambiguous_nonTerm_0n : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 1,
+            expectedNumGSSHeads = 2,
             expectedTrees = arrayOf(expected)
         )
     }
@@ -121,18 +121,26 @@ internal class test_ambiguous_nonTerm_0n : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun acaa_fails() {
+    fun acaa() {
         val goal = "S"
         val sentence = "a,aa"
 
-        val expected = "S {'a' sep {','} 'a' sep|1 {§empty} 'a'}"
+        val expected = """
+            S {
+              ambig { a2 { 'a' } }
+              sep { ',' }
+              ambig { a2 { 'a' } }
+              sep { §empty }
+              ambig { a2 { 'a' } }
+            }
+        """
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -141,14 +149,22 @@ internal class test_ambiguous_nonTerm_0n : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a,a,a"
 
-        val expected = "S {'a' sep {','} 'a' sep {','} 'a'}"
+        val expected = """
+            S {
+              ambig { a2 { 'a' } }
+              sep { ',' }
+              ambig { a2 { 'a' } }
+              sep { ',' }
+              ambig { a2 { 'a' } }
+            }
+        """
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -157,14 +173,14 @@ internal class test_ambiguous_nonTerm_0n : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a" + ",a".repeat(99)
 
-        val expected = "S {'a'" + " sep {','} 'a'".repeat(99) + "}"
+        val expected = "S { ambig { a2 { 'a' } }" + " sep {','} ambig { a2 { 'a' } }".repeat(99) + "}"
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 

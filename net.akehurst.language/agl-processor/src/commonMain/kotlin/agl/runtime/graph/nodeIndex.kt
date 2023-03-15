@@ -22,6 +22,7 @@ import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.sppt.SPPTBranchFromTreeData
 import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.agl.sppt.ToStringVisitor
+import net.akehurst.language.agl.util.Debug
 
 
 /*
@@ -35,11 +36,11 @@ import net.akehurst.language.agl.sppt.ToStringVisitor
 internal class GrowingNodeIndex(
     treeData: TreeDataComplete,
     val runtimeState: RuntimeState,
-     startPosition: Int,
-     nextInputPosition: Int,
-     nextInputPositionAfterSkip: Int,
+    val startPosition: Int,
+    val nextInputPosition: Int,
+    val nextInputPositionAfterSkip: Int,
     val numNonSkipChildren: Int, //for use with MULTI and SEPARATED_LIST
-    val childrenPriorities:List<List<Int>>?
+    val childrenPriorities: List<List<Int>>?
 ) {
 
     companion object {
@@ -56,19 +57,18 @@ internal class GrowingNodeIndex(
         }
     }
 
-    val complete = treeData.createCompleteNodeIndex(runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this,childrenPriorities)
+    val complete by lazy {
+        treeData.createCompleteNodeIndex(runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this, childrenPriorities)
+    }
 
     private val _hashCode = arrayOf(runtimeState, startPosition, nextInputPosition, numNonSkipChildren).contentHashCode()
 
-    val startPosition: Int get() = complete.startPosition
-    val nextInputPosition: Int get() = complete.nextInputPosition
-    val nextInputPositionAfterSkip: Int get() = complete.nextInputPositionAfterSkip
+    //val startPosition: Int get() = complete.startPosition
+    //val nextInputPosition: Int get() = complete.nextInputPosition
+    //val nextInputPositionAfterSkip: Int get() = complete.nextInputPositionAfterSkip
 
     val isComplete: Boolean get() = runtimeState.isAtEnd
-    val isGoal:Boolean get() = runtimeState.state.isGoal
-
-    //TODO: don't store data twice..also prefer not to create 2 objects!
-    //val complete = CompleteNodeIndex(treeData.forStateSetNumber, runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)
+    val isGoal: Boolean get() = runtimeState.state.isGoal
 
     val state: ParserState get() = this.runtimeState.state
 
@@ -118,8 +118,12 @@ internal class CompleteNodeIndex(
     val nextInputPosition: Int,
     val nextInputPositionAfterSkip: Int,
     val gni: GrowingNodeIndex?, // the GNI used to create this, used when dropping
-    val childrenPriorities:List<List<Int>>?
+    val childrenPriorities: List<List<Int>>?
 ) {
+
+    init {
+        if (Debug.CHECK) check(state.rulePositions.all { it.isAtEnd })
+    }
 
     val runtimeRulesSet: Set<RuntimeRule> get() = this.state.runtimeRulesSet
     val rulePositions get() = this.state.rulePositions
@@ -134,6 +138,7 @@ internal class CompleteNodeIndex(
     val firstRule: RuntimeRule by lazy { this.state.rulePositions[0].rule as RuntimeRule }
     val isLeaf: Boolean get() = firstRule.isTerminal //should only be one if true
     val isEmbedded: Boolean get() = firstRule.isEmbedded //should only be one if true
+    val isEmptyMatch: Boolean get() = this.startPosition == this.nextInputPosition
     val hasSkipData: Boolean get() = this.nextInputPosition != nextInputPositionAfterSkip
 
     val optionList: List<Int> get() = this.state.priorityList
@@ -152,7 +157,13 @@ internal class CompleteNodeIndex(
     }
 
     override fun toString(): String {
-        return "CNI{(${this.treeData.forStateSetNumber}),$startPosition-$nextInputPosition,R=${runtimeRulesSet.joinToString(prefix = "[", postfix = "]", separator = ",") { it.tag }}|${optionList}-${childrenPriorities}}"
+        return "CNI{(${this.treeData.forStateSetNumber}),$startPosition-$nextInputPosition,R=${
+            runtimeRulesSet.joinToString(
+                prefix = "[",
+                postfix = "]",
+                separator = ","
+            ) { it.tag }
+        }|${optionList}-${childrenPriorities}}"
     }
 
     //useful during debug

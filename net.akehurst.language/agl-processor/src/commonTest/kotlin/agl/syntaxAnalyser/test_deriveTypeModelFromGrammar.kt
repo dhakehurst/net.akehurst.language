@@ -303,18 +303,14 @@ println(actual.asString())
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
-            unnamedSuperTypeTypeFor("S", listOf("A", "B", "C"))
-
+            val B = unnamedSuperTypeTypeFor("B", listOf(StringType, "D"))
+            unnamedSuperTypeTypeFor("S", listOf("A", B, "C"))
             elementType("A") {
                 propertyStringType("a", false, 0)
                 propertyStringType("x", false, 1)
             }
-
-            unnamedSuperTypeTypeFor("B", listOf(StringType, "D"))
-
             elementType("C") {
                 propertyStringType("c", false, 0)
-                propertyStringType("x", false, 1)
             }
             elementType("D") {
                 propertyStringType("d", false, 0)

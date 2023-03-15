@@ -87,7 +87,7 @@ class test_NaturalLanguage(val data: Data) {
             }
         }
         val result = processor.parse(this.data.sentence, Agl.parseOptions { goalRuleName(data.goal) })
-        assertNotNull(result.sppt)
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(emptyList(), result.issues)
 
         val resultStr = result.sppt!!.asString

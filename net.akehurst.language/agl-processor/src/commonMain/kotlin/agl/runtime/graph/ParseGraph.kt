@@ -176,6 +176,8 @@ internal class ParseGraph(
 
     val peekNextHead get() = this._growingHeadHeap.peekRoot!!
 
+    val isEmpty:Boolean get() = _gss.isEmpty && _growingHeadHeap.isEmpty()
+
     fun createGrowingNodeIndex(
         state: ParserState,
         runtimeLookaheadSet: Set<LookaheadSet>,
@@ -771,9 +773,23 @@ internal class ParseGraph(
                         }
              */
             //addAlternativeTreeData(null, parent, head)
-            this.treeData.setFirstChildForGrowing(parent, child)
-            createNewHeadAndKeepExisting(parent, previous)
-            true
+            val existingGrowing = this.treeData.growingChildren[parent]
+            if (null == existingGrowing) { // not already growing
+                this.treeData.setFirstChildForGrowing(parent, child)
+                //createNewHeadAndKeepExisting(parent, previous)
+                this.addGrowingHead(previous, parent)
+                true
+            } else {
+                when {
+                    child.isEmptyMatch -> false
+                    else -> {
+                        // replace existing ! TODO: or check prio pf child as before?
+                        this.treeData.setFirstChildForGrowing(parent, child)
+                        createNewHeadAndKeepExisting(parent, previous)
+                        true
+                    }
+                }
+            }
         }
     }
 
@@ -885,9 +901,23 @@ internal class ParseGraph(
                 true
             }
              */
-            if (buildSPPT) this.treeData.setInGrowingParentChildAt(previous, newParent, child) //addAlternativeTreeData(previous, newParent, head)
-            createNewHeadAndKeepExisting(newParent, prevPrev)
-            true
+            val existingGrowing = this.treeData.growingChildren[newParent]
+            if (null == existingGrowing) { // not already growing
+                if (buildSPPT) this.treeData.setInGrowingParentChildAt(previous, newParent, child) //addAlternativeTreeData(previous, newParent, head)
+                //createNewHeadAndKeepExisting(newParent, prevPrev)
+                this.addGrowingHead(prevPrev, newParent)
+                true
+            } else {
+                when {
+                    newParent.isEmptyMatch -> false
+                    else -> {
+                        // replace existing ! TODO: or check prio pf child as before?
+                        if (buildSPPT) this.treeData.setInGrowingParentChildAt(previous, newParent, child)
+                        this.addGrowingHead(prevPrev, newParent)
+                        true
+                    }
+                }
+            }
         }
     }
 

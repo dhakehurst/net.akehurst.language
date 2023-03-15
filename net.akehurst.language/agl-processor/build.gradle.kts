@@ -2,6 +2,8 @@ plugins {
 
 }
 
+
+
 kotlin {
     js("js") {
         binaries.library()
@@ -28,6 +30,14 @@ exportPublic {
         "net.akehurst.language.agl.syntaxAnalyser.**",
         "net.akehurst.language.agl.sppt.**",
     ))
+}
+
+tasks.forEach {
+    if (it.name.startsWith("publish")) {
+        it.doFirst {
+            check(file("src/commonMain/kotlin/util/debug.kt").readText().contains("const val CHECK = false")) { "To publish, must set Debug.CHECK = false" }
+        }
+    }
 }
 
 /*

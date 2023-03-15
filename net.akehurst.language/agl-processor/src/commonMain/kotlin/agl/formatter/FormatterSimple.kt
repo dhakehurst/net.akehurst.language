@@ -16,16 +16,77 @@
 
 package net.akehurst.language.agl.formatter
 
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.agl.formatter.FormatterSimple.Companion.execute
+import net.akehurst.language.agl.formatter.FormatterSimple.Companion.format
+import net.akehurst.language.agl.grammar.format.AglFormatExpressionDefault
+import net.akehurst.language.agl.processor.FormatResultDefault
+import net.akehurst.language.api.asm.*
+import net.akehurst.language.api.formatter.AglFormatExpression
 import net.akehurst.language.api.formatter.AglFormatterModel
+import net.akehurst.language.api.formatter.AglFormatterRule
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
 
 class FormatterSimple<AsmType>(
     val model: AglFormatterModel?
-)  : Formatter<AsmType> {
+) : Formatter<AsmType> {
+
+    companion object {
+        fun AsmElementSimple.format(model:AglFormatterModel?):String {
+            val formatRule = model?.rules?.get(this.typeName)
+            return when (formatRule) {
+                null -> when {
+                    1 == this.properties.size -> {
+                        val prop = this.properties.values.first().value
+                        when(prop) {
+                            is String -> prop
+                            else -> ""
+                        }
+                    }
+                    else -> ""
+                }
+                else -> (formatRule.formatExpression as AglFormatExpressionDefault).execute(model,this)
+            }
+        }
+
+        fun AglFormatExpressionDefault.execute(model:AglFormatterModel?, el: AsmElementSimple): String {
+            return when (this.asm.typeName) {
+                "LiteralString" -> el.getPropertyAsString("literal_string")
+                "TemplateString" -> {
+                    val templateContentList = this.asm.getPropertyAsListOfElement("templateContentList")
+                    templateContentList.joinToString(separator = model?.defaultWhiteSpace?:"") {
+                        when (it.typeName) {
+                            "Text" -> it.getPropertyAsString("raw_text")
+                            "TemplateExpressionSimple" -> {
+                                val id = it.getPropertyAsString("dollar_identifier").substringAfter("\$")
+                                val pv = el.getProperty(id)
+                                when(pv) {
+                                    is String -> pv
+                                    is AsmElementSimple -> pv.format(model)
+                                    else -> error("property ${pv} not handled")
+                                }
+                            }
+
+                            "TemplateExpressionEmbedded" -> TODO()
+                            else -> error("Element type ${el.typeName} not handled")
+                        }
+                    }
+                }
+
+                "WhenExpression" -> TODO()
+                else -> error("Element type ${el.typeName} not handled")
+            }
+        }
+    }
 
     override fun format(asm: AsmType): FormatResult {
-        TODO("not implemented")
+        val sb = StringBuilder()
+
+        for(root in (asm as AsmSimple).rootElements) {
+            val str = root.format(model)
+            sb.append(str)
+        }
+
+        return FormatResultDefault(sb.toString(), emptyList())
     }
 }

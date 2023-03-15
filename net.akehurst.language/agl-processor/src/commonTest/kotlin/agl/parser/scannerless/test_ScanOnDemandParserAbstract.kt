@@ -29,6 +29,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 import test.assertEqualsWarning
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean=false) {
     fun test(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int,vararg expectedTrees: String): SharedPackedParseTree? {
@@ -68,6 +69,7 @@ internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean=false)
         assertEquals(expected, result.sppt)
         //FIXME: add back this assert
         assertEqualsWarning(expectedNumGSSHeads, result.sppt!!.maxNumHeads, "Too many heads on GSS")
+        assertTrue(parser.runtimeDataIsEmpty)
         return result.sppt
     }
 

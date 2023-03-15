@@ -67,7 +67,7 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
         val sentence = "a"
 
         val expected = """
-            S|1 { 'a' }
+            S { 'a' }
         """.trimIndent()
 
         super.test(

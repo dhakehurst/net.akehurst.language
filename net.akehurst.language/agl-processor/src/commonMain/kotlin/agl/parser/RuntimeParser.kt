@@ -280,34 +280,38 @@ internal class RuntimeParser(
     }
 
     private fun growComplete(head: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
-        var grownHeight = false
-        var grownGraft = false
+        var headGrownHeight = false
+        var headGrownGraft = false
         val prevSet = this.graph.previousOf(head)
         val dropPrevs = mutableListOf<GrowingNodeIndex>()
         for (previous in prevSet) {
+            var prevGrownHeight = false
+            var prevGrownGraft = false
             val prevPrevSet = this.graph.previousOf(previous)
             if (prevPrevSet.isEmpty()) {
                 val (h, g) = growComplete2(head, previous, null, possibleEndOfText, growArgs)
-                grownHeight = grownHeight || h
-                grownGraft = grownGraft || g
+                prevGrownHeight = prevGrownHeight || h
+                prevGrownGraft = prevGrownGraft || g
             } else {
                 for (prevPrev in prevPrevSet) {
                     val (h, g) = growComplete2(head, previous, prevPrev, possibleEndOfText, growArgs)
-                    grownHeight = grownHeight || h
-                    grownGraft = grownGraft || g
+                    prevGrownHeight = prevGrownHeight || h
+                    prevGrownGraft = prevGrownGraft || g
                 }
             }
-            if (grownGraft.not()) dropPrevs.add(previous)
+            if (prevGrownHeight.not()) dropPrevs.add(previous)
+            headGrownHeight = headGrownHeight || prevGrownHeight
+            headGrownGraft = headGrownGraft || prevGrownGraft
         }
 
         when {
-            grownHeight.not() && grownGraft.not() -> doNoTransitionsTaken(head)
-            grownHeight && grownGraft.not() -> {
+            headGrownHeight.not() && headGrownGraft.not() -> doNoTransitionsTaken(head)
+            headGrownHeight && headGrownGraft.not() -> {
                 graph.dropGrowingHead(head)
                 if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
             }
 
-            grownHeight.not() && grownGraft -> {
+            headGrownHeight.not() && headGrownGraft -> {
                 graph.dropGrowingHead(head)
                 if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
                 dropPrevs.forEach {
@@ -316,7 +320,7 @@ internal class RuntimeParser(
                 }
             }
 
-            grownHeight && grownGraft -> {
+            headGrownHeight && headGrownGraft -> {
                 graph.dropGrowingHead(head)
                 if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
                 dropPrevs.forEach {
@@ -326,7 +330,7 @@ internal class RuntimeParser(
             }
         }
 
-        return grownHeight || grownGraft
+        return headGrownHeight || headGrownGraft
     }
 
     private fun matchedLookahead(position: Int, lookahead: Set<Lookahead>, possibleEndOfText: Set<LookaheadSet>, runtimeLhs: Set<LookaheadSet>) =
@@ -334,7 +338,7 @@ internal class RuntimeParser(
             possibleEndOfText.flatMap { eot ->
                 runtimeLhs.map { rt ->
                     val lookingAt = this.graph.isLookingAt(lh.guard, eot, rt, position)
-                    val resolved = lh.guard.resolve(eot,rt)
+                    val resolved = lh.guard.resolve(eot, rt)
                     Pair(lookingAt, resolved)
                 }
             }
@@ -350,10 +354,13 @@ internal class RuntimeParser(
         var grownHeight = false
         var grownGraft = false
         val transitions = head.runtimeState.transitionsComplete(previous.state, prevPrev?.state ?: stateSet.startState)
-        val transWithValidLookahead = transitions.map {
-            val lh = matchedLookahead(head.nextInputPositionAfterSkip, it.lookahead, possibleEndOfText, previous.runtimeState.runtimeLookaheadSet)
-            Pair(it,lh)
-        }.filter { it.second.any { it.first } }
+        val transWithValidLookahead = when {
+            growArgs.noLookahead -> transitions.map { Pair(it, emptyList()) }
+            else -> transitions.map {
+                val lh = matchedLookahead(head.nextInputPositionAfterSkip, it.lookahead, possibleEndOfText, previous.runtimeState.runtimeLookaheadSet)
+                Pair(it, lh)
+            }.filter { it.second.any { it.first } }
+        }
         val trans2 = resolvePrecedence(transWithValidLookahead, head)
         if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${trans2.joinToString(separator = "\n") { "  $it" }}" }
         //val grouped = transitions.groupBy { it.to.runtimeRulesSet }
@@ -451,8 +458,8 @@ internal class RuntimeParser(
             null == precRules -> transitions.map { it.first }
             1 >= transitions.size -> transitions.map { it.first }
             else -> {
-                val precedence = transitions.map { (tr,lh) ->
-                    val lhf = lh.map{it.second}.fold(LookaheadSetPart.EMPTY) {acc,it-> acc.union(it) }
+                val precedence = transitions.map { (tr, lh) ->
+                    val lhf = lh.map { it.second }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                     val prec = precRules.precedenceFor(tr.to.runtimeRulesSet, lhf)
                     Pair(tr, prec)
                 }
@@ -460,13 +467,25 @@ internal class RuntimeParser(
                 val maxPrec = precedence.filter { null == it.second || max == it.second?.precedence }
                 val byTarget = maxPrec.groupBy { Pair(it.first.to.runtimeRules, it.second?.associativity) }
                 val assoc = byTarget.flatMap {
-                    when(it.key.second) {
+                    when (it.key.second) {
                         null -> it.value
-                        PrecedenceRules.Associativity.LEFT -> it.value.filter { it.first.action==ParseAction.GRAFT }
-                        PrecedenceRules.Associativity.RIGHT -> it.value.filter { it.first.action==ParseAction.HEIGHT }
+                        PrecedenceRules.Associativity.LEFT -> when {
+                            it.key.first[0].isList -> {
+                                val grafts = it.value.filter { it.first.action == ParseAction.GRAFT }
+                                val left = grafts.filter { it.first.to.rulePositions[0].isAtEnd.not() }
+                                when (left.isEmpty()) {
+                                    true -> grafts
+                                    false -> left
+                                }
+                            }
+
+                            else -> it.value.filter { it.first.action == ParseAction.GRAFT }
+                        }
+
+                        PrecedenceRules.Associativity.RIGHT -> it.value.filter { it.first.action == ParseAction.HEIGHT }
                     }
                 }
-                when(assoc.size) {
+                when (assoc.size) {
                     0 -> maxPrec.map { it.first }
                     else -> assoc.map { it.first }
                 }

@@ -442,8 +442,7 @@ class test_SyntaxAnalyserSimple {
                         propertyElementExplicitType("expr", "Mul") {
                             propertyListOfString("expr", listOf("v","w"))
                         }
-                        propertyUnnamedListOfElement() {
-                        }
+                        propertyUnnamedListOfElement {  }
                     }
                 }
             }
@@ -453,10 +452,8 @@ class test_SyntaxAnalyserSimple {
                 root("S") {
                     propertyElementExplicitType("exprList", "ExprList") {
                         propertyString("expr", "v")
-                        propertyUnnamedListOfElement() {
-                            tuple() {
-                                propertyString("expr", "w")
-                            }
+                        propertyUnnamedListOfElement {
+                            tuple { propertyString("expr", "w")   }
                         }
                     }
                 }
@@ -467,7 +464,9 @@ class test_SyntaxAnalyserSimple {
                 root("S") {
                     propertyElementExplicitType("exprList", "ExprList") {
                         propertyString("expr", "v")
-                        propertyUnnamedListOfElement() {
+                        propertyUnnamedListOfElement {
+                            tuple { propertyString("expr", "w") }
+                            tuple {  propertyString("expr", "x")  }
                         }
                     }
                 }

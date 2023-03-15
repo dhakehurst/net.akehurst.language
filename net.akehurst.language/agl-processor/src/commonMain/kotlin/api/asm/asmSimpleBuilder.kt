@@ -132,7 +132,7 @@ class AsmElementSimpleBuilder(
         } else {
             val scopeFor = es.forTypeName
             val referablePropertyName = _scopeModel.getReferablePropertyNameFor(scopeFor, _element.typeName)
-            val referableName = referablePropertyName?.let { _element.getPropertyAsString(it) }
+            val referableName = referablePropertyName?.let { _element.getPropertyAsStringOrNull(it) }
             if (null != referableName) {
                 es.addToScope(referableName, _element.typeName, _element.asmPath)
             }

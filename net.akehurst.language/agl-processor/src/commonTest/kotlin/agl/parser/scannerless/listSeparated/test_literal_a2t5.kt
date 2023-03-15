@@ -136,7 +136,7 @@ internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
     fun a6_fails() {
         val sentence = "abababababa"
 
-        println(rrs.fullAutomatonToString(goal,AutomatonKind.LOOKAHEAD_1))
+        //println(rrs.fullAutomatonToString(goal,AutomatonKind.LOOKAHEAD_1))
 
         val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
         assertNull(sppt)
