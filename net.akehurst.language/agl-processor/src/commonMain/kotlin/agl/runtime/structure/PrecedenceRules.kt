@@ -23,12 +23,12 @@ internal class PrecedenceRules(
     val rules:List<PrecedenceRule>
 ) {
 
-    enum class Associativity { LEFT, RIGHT }
+    enum class Associativity { NONE, LEFT, RIGHT }
 
     data class PrecedenceRule(
         val precedence:Int,
         val target: RuntimeRule,
-        val operator: RuntimeRule,
+        val operator: RuntimeRule?,
         val associativity: Associativity
     )
 

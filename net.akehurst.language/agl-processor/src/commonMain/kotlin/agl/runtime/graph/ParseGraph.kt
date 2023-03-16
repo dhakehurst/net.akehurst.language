@@ -569,18 +569,18 @@ internal class ParseGraph(
                     RuntimeRuleChoiceKind.NONE -> error("should never happen")
                     RuntimeRuleChoiceKind.LONGEST_PRIORITY -> mergeDecisionOnLength(existingParent, newParent) {
                         mergeDecisionOnPriority(existingParent, newParent) {
-                            //mergeDecisionOnChildrenPriority(existingParent, newParent) {
+                            mergeDecisionOnChildrenPriority(existingParent, newParent) {
                                 MergeOptions.UNDECIDABLE
-                            //}
+                            }
                         }
                     }
 
                     RuntimeRuleChoiceKind.PRIORITY_LONGEST -> mergeDecisionOnPriority(existingParent, newParent) {
-                        //mergeDecisionOnChildrenPriority(existingParent, newParent) {
+                        mergeDecisionOnChildrenPriority(existingParent, newParent) {
                             mergeDecisionOnLength(existingParent, newParent) {
                                 MergeOptions.UNDECIDABLE
                             }
-                        //}
+                        }
                     }
 
                     RuntimeRuleChoiceKind.AMBIGUOUS -> MergeOptions.KEEP_BOTH_AS_ALTERNATIVES

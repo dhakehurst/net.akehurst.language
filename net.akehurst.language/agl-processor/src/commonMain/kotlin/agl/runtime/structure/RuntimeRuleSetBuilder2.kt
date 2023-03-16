@@ -235,7 +235,14 @@ internal class PrecedenceRuleBuilder(
     val contextRuleName:String
 ) {
 
-    private val _rules = mutableListOf<Triple<String, String, PrecedenceRules.Associativity>>()
+    private val _rules = mutableListOf<Triple<String, String?, PrecedenceRules.Associativity>>()
+
+    /**
+     * indicate that @param ruleName is left-associative
+     */
+    fun none(ruleName:String) {
+        _rules.add(Triple(ruleName, null,PrecedenceRules.Associativity.NONE))
+    }
 
     /**
      * indicate that @param ruleName is left-associative
@@ -255,7 +262,7 @@ internal class PrecedenceRuleBuilder(
         val contextRule = ruleMap[contextRuleName] ?: error("Cannot find rule named '$contextRuleName' as a context rule for precedence definitions")
         val rules = _rules.mapIndexed { idx, it ->
             val r = ruleMap[it.first] ?: error("Cannot find rule named '${it.first}' for target rule in precedence definitions")
-            val op = ruleMap[it.second] ?: error("Cannot find rule named '${it.second}' for operator in precedence definitions")
+            val op = it.second?.let{ ruleMap[it] ?: error("Cannot find rule named '${it}' for operator in precedence definitions") } ?: null
             PrecedenceRules.PrecedenceRule(idx, r, op, it.third)
         }
         return PrecedenceRules(contextRule, rules)

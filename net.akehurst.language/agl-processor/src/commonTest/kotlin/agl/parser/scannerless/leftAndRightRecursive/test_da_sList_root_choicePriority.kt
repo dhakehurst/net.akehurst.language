@@ -48,10 +48,10 @@ internal class test_da_sList_root_choicePriority : test_ScanOnDemandParserAbstra
             concatenation("var") { literal("v") }
             literal("'/'", "/")
             literal("'+'", "+")
-            precedenceFor("expr") {
-                left("add","'+'")
-                left("div","'/'")
-            }
+            //precedenceFor("expr") {
+            //    left("add","'+'")
+            //    left("div","'/'")
+            //}
         }
         val goal = "S"
     }
@@ -273,5 +273,33 @@ internal class test_da_sList_root_choicePriority : test_ScanOnDemandParserAbstra
 
         super.test(rrs, goal, sentence, 1, expected)
     }
+
+    @Test
+    fun v_add_v_add_v_div_v_div_v_add_v() {
+        val sentence = "v+v+v+v/v/v+v"
+
+        val expected = """
+            S { expr { add {
+              expr { root { var { 'v' } } }
+              '+'
+              expr { root { var { 'v' } } }
+              '+'
+              expr { root { var { 'v' } } }
+              '+'
+              expr { div {
+                expr { root { var { 'v' } } }
+                '/'
+                expr { root { var { 'v' } } }
+                '/'
+                expr { root { var { 'v' } } }
+              } }
+              '+'
+              expr { root { var { 'v' } } }
+            } } }
+        """.trimIndent()
+
+        super.test(rrs, goal, sentence, 1, expected)
+    }
+
 
 }

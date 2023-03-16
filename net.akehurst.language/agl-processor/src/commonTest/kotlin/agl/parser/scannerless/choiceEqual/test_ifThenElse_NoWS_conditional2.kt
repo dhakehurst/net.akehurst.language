@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2020 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,28 +24,29 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
+internal class test_ifThenElse_NoWS_conditional2 : test_ScanOnDemandParserAbstract() {
 
     // S =  expr ;
-    // ifthenelse = 'if' expr 'then' expr 'else' expr ;
-    // ifthen = 'if' expr 'then' expr ;
     // expr = var | conditional ;
-    // conditional = ifthenelse | ifthen;
+    // conditional = 'if' expr 'then' expr 'else' expr  | 'if' expr 'then' expr ;
     // var = W | X | Y | Z ;
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("expr") }
             choice("expr", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
-                ref("VAR")
+                ref("var")
                 ref("conditional")
             }
             choice("conditional", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                ref("ifthenelse")
-                ref("ifthen")
+                concatenation { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
+                concatenation { literal("if"); ref("expr"); literal("then"); ref("expr") }
             }
-            concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
-            concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
+            concatenation("var") { ref("VAR") }
             pattern("VAR","U|V|W|X|Y|Z")
+            //precedenceFor("conditional") {
+            //    right("ifthen", "'then'")
+            //    right("ifthenelse", "'else'")
+            //}
         }
         val goal = "S"
     }
@@ -67,16 +68,14 @@ internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr|1 {
+              expr {
                 conditional {
-                    ifthenelse {
                       'if'
                       expr { VAR:'W' }
                       'then'
                       expr { VAR:'X' }
                       'else'
                       expr { VAR:'Y' }
-                    }
                 }
               }
             }
@@ -101,12 +100,10 @@ internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
             S {
               expr {
                 conditional {
-                    ifthen {
                       'if'
-                      expr { VAR:'W' }
+                      expr { var { VAR : 'W' } }
                       'then'
-                      expr { VAR:'X' }
-                    }
+                      expr { var { VAR : 'X' } }
                 }
               }
             }
@@ -129,7 +126,6 @@ internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
             S {
               expr {
                 conditional {
-                    ifthenelse {
                       'if'
                       expr { VAR:'W' }
                       'then'
@@ -137,15 +133,12 @@ internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
                       'else'
                       expr {
                         conditional {
-                            ifthen {
                               'if'
                               expr { VAR:'Y' }
                               'then'
                               expr { VAR:'Z' }
-                            }
                         }
                       }
-                    }
                 }
               }
             }
@@ -168,23 +161,19 @@ internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
             S {
               expr {
                 conditional {
-                    ifthen {
                       'if'
-                      expr { VAR:'W' }
+                      expr { var { VAR : 'W' } }
                       'then'
                       expr {
                         conditional {
-                            ifthenelse {
                               'if'
-                              expr { VAR:'X' }
+                              expr { var { VAR : 'X' } }
                               'then'
-                              expr { VAR:'Y' }
+                              expr { var { VAR : 'Y' } }
                               'else'
-                              expr { VAR:'Z' }
-                            }
+                              expr { var { VAR : 'Z' } }
                         }
                       }
-                    }
                 }
               }
             }
@@ -207,32 +196,26 @@ internal class test_ifThenElse_Simple : test_ScanOnDemandParserAbstract() {
             S {
               expr {
                 conditional {
-                  ifthen {
                     'if'
                     expr { VAR:'W' }
                     'then'
                     expr {
                       conditional {
-                        ifthen {
                           'if'
                           expr { VAR:'W' }
                           'then'
                           expr {
                             conditional {
-                                ifthenelse {
                                   'if'
                                   expr { VAR:'X' }
                                   'then'
                                   expr { VAR:'Y' }
                                   'else'
                                   expr { VAR:'Z' }
-                                }
                             }
                           }
-                        }
                       }
                     }
-                  }
                 }
               }
             }

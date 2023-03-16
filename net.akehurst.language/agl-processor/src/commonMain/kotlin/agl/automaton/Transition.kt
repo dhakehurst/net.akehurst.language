@@ -18,6 +18,7 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsList
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSimple
@@ -25,7 +26,8 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSimple
 //internal typealias RuntimeGuard = Transition.(GrowingNodeIndex, ParserState?) -> Boolean
 
 internal interface RuntimeGuard {
-    fun invoke(numNonSkipChildren: Int): Boolean
+    fun execute(numNonSkipChildren: Int): Boolean
+    fun expectedWhenFailed(numNonSkipChildren: Int): Set<RuntimeRule>
 }
 
 internal class Transition(
@@ -38,21 +40,32 @@ internal class Transition(
     companion object {
 
         class ToEndMultiGraftRuntimeGuard(val trans: Transition) : RuntimeGuard {
-            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsList
+            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsListSimple
             val min = rhs.min
             val max = rhs.max
 
-            override fun invoke(numNonSkipChildren: Int): Boolean = this.min <= numNonSkipChildren + 1 && (-1 == max || numNonSkipChildren + 1 <= max)
+            override fun execute(numNonSkipChildren: Int): Boolean = this.min <= numNonSkipChildren + 1 && (-1 == max || numNonSkipChildren + 1 <= max)
+
+            override fun expectedWhenFailed(numNonSkipChildren: Int): Set<RuntimeRule> = when {
+                    this.min > numNonSkipChildren -> setOf(rhs.repeatedRhsItem)
+                    (-1 != max && max < numNonSkipChildren + 1) -> trans.lookahead.map { it.guard }.fold(LookaheadSetPart.EMPTY){acc,it->acc.union(it.part)}.fullContent
+                    else -> emptySet()
+                }
 
             override fun toString(): String = "ToEndMulti{$min <= n}"
         }
 
         class ToItemMultiGraftRuntimeGuard(val trans: Transition) : RuntimeGuard {
-            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsList
+            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsListSimple
             val min = rhs.min
             val max = rhs.max
 
-            override fun invoke(numNonSkipChildren: Int): Boolean = -1 == max || numNonSkipChildren + 1 < max
+            override fun execute(numNonSkipChildren: Int): Boolean = -1 == max || numNonSkipChildren + 1 < max
+            override fun expectedWhenFailed(numNonSkipChildren: Int): Set<RuntimeRule> =when {
+                    (-1 == max || numNonSkipChildren + 1 < max) -> emptySet()
+                    else -> emptySet()
+                }
+
 
             override fun toString(): String = "ToItemMulti{n <= $max}"
         }
@@ -62,7 +75,13 @@ internal class Transition(
             val min = rhs.min
             val max = rhs.max
 
-            override fun invoke(numNonSkipChildren: Int): Boolean = this.min <= (numNonSkipChildren / 2) + 1 && (-1 == max || (numNonSkipChildren / 2) + 1 <= max)
+            override fun execute(numNonSkipChildren: Int): Boolean = this.min <= (numNonSkipChildren / 2) + 1 && (-1 == max || (numNonSkipChildren / 2) + 1 <= max)
+
+            override fun expectedWhenFailed(numNonSkipChildren: Int): Set<RuntimeRule> =when {
+                    this.min <= (numNonSkipChildren / 2) + 1 -> emptySet()
+                    (-1 == max || (numNonSkipChildren / 2) + 1 <= max) -> emptySet()
+                    else -> emptySet()
+                }
 
             override fun toString(): String = "ToEndSList{$min <= n}"
         }
@@ -72,7 +91,13 @@ internal class Transition(
             val min = rhs.min
             val max = rhs.max
 
-            override fun invoke(numNonSkipChildren: Int): Boolean = -1 == max || (numNonSkipChildren / 2) + 1 < max
+            override fun execute(numNonSkipChildren: Int): Boolean = -1 == max || (numNonSkipChildren / 2) + 1 < max
+
+            override fun expectedWhenFailed(numNonSkipChildren: Int): Set<RuntimeRule> =when {
+                    -1 == max || (numNonSkipChildren / 2) + 1 < max -> emptySet()
+                    else -> emptySet()
+                }
+
 
             override fun toString(): String = "ToItemSList{n <= $max}"
         }
@@ -82,13 +107,19 @@ internal class Transition(
             val min = rhs.min
             val max = rhs.max
 
-            override fun invoke(numNonSkipChildren: Int): Boolean = -1 == max || (numNonSkipChildren / 2) + 1 < max
+            override fun execute(numNonSkipChildren: Int): Boolean = -1 == max || (numNonSkipChildren / 2) + 1 < max
+
+            override fun expectedWhenFailed(numNonSkipChildren: Int): Set<RuntimeRule> = when {
+                    -1 == max || (numNonSkipChildren / 2) + 1 < max -> emptySet()
+                    else -> emptySet()
+                }
 
             override fun toString(): String = "ToSeparatorSList{n <= $max}"
         }
 
         object DefaultRuntimeGuard : RuntimeGuard {
-            override fun invoke(numNonSkipChildren: Int): Boolean = true
+            override fun execute(numNonSkipChildren: Int): Boolean = true
+            override fun expectedWhenFailed(numNonSkipChildren: Int): Set<RuntimeRule> = error("Internal Error: should never happen")
             override fun toString(): String = "DefaultRuntimeGuard{true}"
         }
 

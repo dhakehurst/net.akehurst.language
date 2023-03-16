@@ -24,24 +24,18 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_TELE_VC : test_ScanOnDemandParserAbstract() {
+internal class test_TELE_Exp : test_ScanOnDemandParserAbstract() {
 
     // S = E ;
-    // E = V | C             // expr = var | conditional
-    // C = t E | t E s E     // conditional = ifThenExpr | ifThenExprElseExpr
-    // V = v
+    // E = v | t E | t E s E      // expr = var | ifThenExpr | ifThenExprElseExpr
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("E") }
             choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                ref("V")
-                ref("C")
-            }
-            choice("C", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { literal("v") }
                 concatenation { literal("t"); ref("E"); literal("s"); ref("E") }
                 concatenation { literal("t"); ref("E") }
             }
-            concatenation("V") { literal("v") }
         }
         val goal = "S"
     }
@@ -62,7 +56,7 @@ internal class test_TELE_VC : test_ScanOnDemandParserAbstract() {
         val sentence = "tvsv"
 
         val expected = """
-            S { E { C { 't' E { V { 'v' } } 's' E { V { 'v' } }  } } }
+            S { E { 't' E { 'v' } 's' E { 'v' }  } }
         """.trimIndent()
 
         super.test(
@@ -79,7 +73,7 @@ internal class test_TELE_VC : test_ScanOnDemandParserAbstract() {
         val sentence = "tv"
 
         val expected = """
-            S { E { C { 't' E { V { 'v' } } } } }
+            S { E { 't' E { 'v' } } }
         """.trimIndent()
 
         super.test(
@@ -96,15 +90,15 @@ internal class test_TELE_VC : test_ScanOnDemandParserAbstract() {
         val sentence = "tvstv"
 
         val expected = """
-            S { E { C {
+            S { E {
               't'
-              E { V { 'v' } }
+              E { 'v' }
               's'
-              E { C {
+              E {
                 't'
-                E { V { 'v' } }
-              } }
-            } } }
+                E { 'v' }
+              }
+            } }
         """.trimIndent()
 
         super.test(
@@ -121,15 +115,15 @@ internal class test_TELE_VC : test_ScanOnDemandParserAbstract() {
         val sentence = "ttvsv"
 
         val expected = """
-            S { E { C {
+            S { E {
               't'
-              E { C {
+              E {
                 't'
-                E { V { 'v' } }
+                E { 'v' }
                 's'
-                E { V { 'v' } }
-              } }
-            } } }
+                E { 'v' }
+              }
+            } }
         """.trimIndent()
 
         super.test(
@@ -146,18 +140,18 @@ internal class test_TELE_VC : test_ScanOnDemandParserAbstract() {
         val sentence = "tttvsv"
 
         val expected = """
-            S { E { C {
+            S { E {
               't'
-              E { C {
+              E {
                   't'
-                  E { C {
+                  E {
                     't'
-                    E { V { 'v' } }
+                    E { 'v' }
                     's'
-                    E { V { 'v' } }
-                  } }
-              } }
-            } } }
+                    E { 'v' }
+                  }
+              }
+            } }
         """.trimIndent()
 
         super.test(

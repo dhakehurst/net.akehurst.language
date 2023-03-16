@@ -211,5 +211,54 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
         )
     }
 
+    @Test
+    fun ifthenifthenifthenelse() {
+        val goal = "S"
+        val sentence = "if x then if a then if b then c else d"
+
+        val expected = """
+            S {
+              expr {
+                conditional {
+                  ifThen {
+                    'if' WS:' '
+                      expr { var : 'a' WS:' ' }
+                      'then' WS:' '
+                      expr {
+                        conditional {
+                            ifThen {
+                              'if' WS:' '
+                              expr { var : 'a' WS:' ' }
+                              'then' WS:' '
+                              expr {
+                                conditional {
+                                    ifThenElse {
+                                      'if' WS:' '
+                                      expr { var : 'b' WS:' ' }
+                                      'then' WS:' '
+                                      expr { var  : 'c' WS:' ' }
+                                      'else' WS:' '
+                                      expr { var : 'd' }
+                                    }
+                                }
+                              }
+                            }
+                        }
+                      }
+
+                  }
+                }
+              }
+            }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
 
 }

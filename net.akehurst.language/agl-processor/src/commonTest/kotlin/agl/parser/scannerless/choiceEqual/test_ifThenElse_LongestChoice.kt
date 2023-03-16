@@ -205,5 +205,68 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
         )
     }
 
+    @Test
+    fun ifthenifthenifthenelse() {
+        val sentence = "if x then if a then if b then c else d"
+
+        val expected1 = """
+            S {
+              expr {
+                ifthen {
+                  'if' WS { "\s+" : ' ' }
+                  expr { var { "[a-zA-Z]+" : 'x' WS { "\s+" : ' ' } } }
+                  'then' WS { "\s+" : ' ' }
+                  expr {
+                      ifthen {
+                          'if' WS { "\s+" : ' ' }
+                          expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
+                          'then' WS { "\s+" : ' ' }
+                          expr {
+                            ifthenelse {
+                              'if' WS { "\s+" : ' ' }
+                              expr { var { "[a-zA-Z]+" : 'b' WS { "\s+" : ' ' } } }
+                              'then' WS { "\s+" : ' ' }
+                              expr { var { "[a-zA-Z]+" : 'c' WS { "\s+" : ' ' } } }
+                              'else' WS { "\s+" : ' ' }
+                              expr { var { "[a-zA-Z]+" : 'd' } }
+                            }
+                          }
+                      }
+                  }
+                }
+              }
+            }
+        """.trimIndent()
+
+        val expected2 = """
+            S {
+              expr {
+                ifthenelse {
+                  'if' WS { "\s+" : ' ' }
+                  expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
+                  'then' WS { "\s+" : ' ' }
+                  expr {
+                    ifthen {
+                      'if' WS { "\s+" : ' ' }
+                      expr { var { "[a-zA-Z]+" : 'b' WS { "\s+" : ' ' } } }
+                      'then' WS { "\s+" : ' ' }
+                      expr { var { "[a-zA-Z]+" : 'c' WS { "\s+" : ' ' } } }
+                    }
+                  }
+                  'else' WS { "\s+" : ' ' }
+                  expr { var { "[a-zA-Z]+" : 'd' } }
+                }
+              }
+            }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected1)
+        )
+    }
 
 }

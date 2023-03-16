@@ -283,7 +283,7 @@ internal class RuntimeParser(
         var headGrownHeight = false
         var headGrownGraft = false
         val prevSet = this.graph.previousOf(head)
-        val dropPrevs = mutableListOf<GrowingNodeIndex>()
+        val dropPrevs = mutableMapOf<GrowingNodeIndex, Boolean>()
         for (previous in prevSet) {
             var prevGrownHeight = false
             var prevGrownGraft = false
@@ -299,7 +299,13 @@ internal class RuntimeParser(
                     prevGrownGraft = prevGrownGraft || g
                 }
             }
-            if (prevGrownHeight.not()) dropPrevs.add(previous)
+            if (prevGrownHeight.not()) {
+                //have to drop previous after dropping head, so record here for later drop
+                // only drop previous if we did not grow with HEIGHT - HEIGHT keeps same previous
+                // true indicate drop whole stack - i.e. not GRAFT or HEIGHT
+                // false just drop the previous - GRAFT was done
+                dropPrevs[previous]=prevGrownGraft
+            }
             headGrownHeight = headGrownHeight || prevGrownHeight
             headGrownGraft = headGrownGraft || prevGrownGraft
         }
@@ -314,19 +320,20 @@ internal class RuntimeParser(
             headGrownHeight.not() && headGrownGraft -> {
                 graph.dropGrowingHead(head)
                 if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
-                dropPrevs.forEach {
-                    graph.dropGrowingHead(it)
-                    if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $it" }
-                }
             }
 
             headGrownHeight && headGrownGraft -> {
                 graph.dropGrowingHead(head)
                 if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
-                dropPrevs.forEach {
-                    graph.dropGrowingHead(it)
-                    if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $it" }
-                }
+            }
+        }
+
+        dropPrevs.forEach {
+            if (it.value) {
+                graph.dropGrowingHead(it.key)
+                if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $it" }
+            } else {
+                doNoTransitionsTaken(it.key)
             }
         }
 
@@ -360,6 +367,14 @@ internal class RuntimeParser(
                 val lh = matchedLookahead(head.nextInputPositionAfterSkip, it.lookahead, possibleEndOfText, previous.runtimeState.runtimeLookaheadSet)
                 Pair(it, lh)
             }.filter { it.second.any { it.first } }
+        }
+        transitions.minus(transWithValidLookahead.map { it.first }).forEach {
+            when(it.action) {
+                ParseAction.HEIGHT -> recordFailedHeightLh(head.nextInputPositionAfterSkip, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
+                ParseAction.GRAFT -> recordFailedGraftLH(head.nextInputPositionAfterSkip, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
+                ParseAction.GOAL -> recordFailedGraftLH(head.nextInputPositionAfterSkip, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
+                else-> error("Internal Erorr: should never happen")
+            }
         }
         val trans2 = resolvePrecedence(transWithValidLookahead, head)
         if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${trans2.joinToString(separator = "\n") { "  $it" }}" }
@@ -434,7 +449,12 @@ internal class RuntimeParser(
                                     grownGraft = grownGraft || b
                                 }
 
-                                else -> error("Internal Error: should only have HEIGHT or GRAFT transitions here")
+                                ParseAction.GOAL -> {
+                                    val b = doGoal(head, previous, tr, possibleEndOfText, growArgs)
+                                    grownGraft = grownGraft || b
+                                }
+
+                                else -> error("Internal Error: should only have HEIGHT or GRAFT or GOAL transitions here")
                             }
                         }
                     }
@@ -469,6 +489,7 @@ internal class RuntimeParser(
                 val assoc = byTarget.flatMap {
                     when (it.key.second) {
                         null -> it.value
+                        PrecedenceRules.Associativity.NONE -> it.value
                         PrecedenceRules.Associativity.LEFT -> when {
                             it.key.first[0].isList -> {
                                 val grafts = it.value.filter { it.first.action == ParseAction.GRAFT }
@@ -482,7 +503,18 @@ internal class RuntimeParser(
                             else -> it.value.filter { it.first.action == ParseAction.GRAFT }
                         }
 
-                        PrecedenceRules.Associativity.RIGHT -> it.value.filter { it.first.action == ParseAction.HEIGHT }
+                        PrecedenceRules.Associativity.RIGHT -> when {
+                            it.key.first[0].isList -> {
+                                val heights = it.value.filter { it.first.action == ParseAction.HEIGHT }
+                                val right = heights.filter { it.first.to.rulePositions[0].isAtEnd.not() }
+                                when (right.isEmpty()) {
+                                    true -> heights
+                                    false -> right
+                                }
+                            }
+
+                            else -> it.value.filter { it.first.action == ParseAction.HEIGHT }
+                        }
                     }
                 }
                 when (assoc.size) {
@@ -729,7 +761,7 @@ internal class RuntimeParser(
             growArgs.nonEmptyWidthOnly -> false
             // heightGraftOnly includes goal so do it
             else -> {
-                if (transition.runtimeGuard.invoke(previous!!.numNonSkipChildren)) {
+                if (transition.runtimeGuard.execute(previous!!.numNonSkipChildren)) {
                     val runtimeLhs = head.runtimeState.runtimeLookaheadSet //FIXME: Use previous runtimeLookahead ?
                     val lhWithMatch = transition.lookahead.filter { lh -> //TODO: should always be only one I think!!
                         possibleEndOfText.any { eot ->
@@ -883,7 +915,7 @@ internal class RuntimeParser(
         return when {
             growArgs.nonEmptyWidthOnly -> false
             else -> {
-                if (transition.runtimeGuard.invoke(previous!!.numNonSkipChildren)) {
+                if (transition.runtimeGuard.execute(previous!!.numNonSkipChildren)) {
                     val runtimeLhs = previous.runtimeState.runtimeLookaheadSet
                     val lhWithMatch = matchedLookahead(head.nextInputPositionAfterSkip, transition.lookahead, possibleEndOfText, runtimeLhs)
                     val hasLh = lhWithMatch.isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {

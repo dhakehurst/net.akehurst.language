@@ -70,10 +70,10 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               oP { P {
-                  oA|1 { §empty }
+                  oA { §empty }
                   'p'
                 } }
-              oT|1 { §empty }
+              oT { §empty }
             }
         """
 
@@ -92,9 +92,9 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              oP|1 { §empty }
+              oP { §empty }
               oT { T {
-                  oA|1 { §empty }
+                  oA { §empty }
                   't'
                 } }
             }
@@ -117,11 +117,11 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             S {
               oP { P {
                   oA { A { 'a'  'n'
-                      oG|1 { §empty }
+                      oG { §empty }
                     } }
                   'p'
                 } }
-              oT|1 { §empty }
+              oT { §empty }
             }
         """
 
@@ -134,14 +134,13 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
         )
     }
 
-
     @Test
     fun ansant() {
         val sentence = "ansant"
 
         val expected = """
             S {
-              oP|1 { §empty }
+              oP { §empty }
               oT { T {
                   oA { A {
                       'a'
@@ -151,7 +150,7 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
                           oA { A {
                               'a'
                               'n'
-                              oG|1 { §empty }
+                              oG { §empty }
                             } }
                         } }
                     } }
@@ -175,7 +174,7 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              oP|1 { §empty }
+              oP { §empty }
               oT { T {
                   oA { A {
                       'a'
@@ -190,7 +189,7 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
                                   oA { A {
                                       'a'
                                       'n'
-                                      oG|1 { §empty }
+                                      oG { §empty }
                                     } }
                                 } }
                             } }

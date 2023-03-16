@@ -24,11 +24,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-internal class test_TELE_VC : test_ScanOnDemandParserAbstract() {
+internal class test_IETELE_VC : test_ScanOnDemandParserAbstract() {
 
     // S = E ;
-    // E = V | C             // expr = var | conditional
-    // C = t E | t E s E     // conditional = ifThenExpr | ifThenExprElseExpr
+    // E = V | C                   // expr = var | conditional
+    // C = i E t E | i E t E s E   // conditional = ifThenExpr | ifThenExprElseExpr
     // V = v
     private companion object {
         val rrs = runtimeRuleSet {
@@ -38,8 +38,8 @@ internal class test_TELE_VC : test_ScanOnDemandParserAbstract() {
                 ref("C")
             }
             choice("C", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                concatenation { literal("t"); ref("E"); literal("s"); ref("E") }
-                concatenation { literal("t"); ref("E") }
+                concatenation { literal("i"); ref("E"); literal("t"); ref("E"); literal("s"); ref("E") }
+                concatenation { literal("i"); ref("E"); literal("t"); ref("E") }
             }
             concatenation("V") { literal("v") }
         }
@@ -52,109 +52,109 @@ internal class test_TELE_VC : test_ScanOnDemandParserAbstract() {
 
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("'v'","'t'"))
-        ),issues)
-    }
-
-    @Test
-    fun tvsv() { // if then v else v
-        val sentence = "tvsv"
-
-        val expected = """
-            S { E { C { 't' E { V { 'v' } } 's' E { V { 'v' } }  } } }
-        """.trimIndent()
-
-        super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'v'", "'i'"))
+            ), issues
         )
     }
 
     @Test
-    fun tv() { // if then v
-        val sentence = "tv"
+    fun ivtvsv() { // if then v else v
+        val sentence = "ivtvsv"
 
         val expected = """
-            S { E { C { 't' E { V { 'v' } } } } }
+            S { E { C { 'i' E { V { 'v' } } 't' E { V { 'v' } } 's' E { V { 'v' } }  } } }
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
-    fun tvstv() {  // if then v else if then v
-        val sentence = "tvstv"
+    fun ivtv() { // if then v
+        val sentence = "ivtv"
+
+        val expected = """
+            S { E { C { 'i' E { V { 'v' } } 't' E { V { 'v' } } } } }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun ivtvstv() {  // if then v else if then v
+        val sentence = "ivtvsivtv"
 
         val expected = """
             S { E { C {
-              't'
-              E { V { 'v' } }
+              'i' E { V { 'v' } }
+              't' E { V { 'v' } }
               's'
               E { C {
-                't'
-                E { V { 'v' } }
+                'i' E { V { 'v' } }
+                't' E { V { 'v' } }
               } }
             } } }
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
-    fun ttvsv() {  // if then if then v else v
-        val sentence = "ttvsv"
+    fun ivtivtvsv() {  // if then if then v else v
+        val sentence = "ivtivtvsv"
 
         val expected = """
             S { E { C {
-              't'
-              E { C {
-                't'
-                E { V { 'v' } }
-                's'
-                E { V { 'v' } }
+              'i' E { V { 'v' } }
+              't' E { C {
+                'i' E { V { 'v' } }
+                't' E { V { 'v' } }
+                's' E { V { 'v' } }
               } }
             } } }
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun tttvsv() {
-        val sentence = "tttvsv"
+        val sentence = "ivtivtivtvsv"
 
         val expected = """
             S { E { C {
-              't'
-              E { C {
-                  't'
-                  E { C {
-                    't'
-                    E { V { 'v' } }
-                    's'
-                    E { V { 'v' } }
+              'i' E { V { 'v' } }
+              't' E { C {
+                  'i' E { V { 'v' } }
+                  't' E { C {
+                    'i' E { V { 'v' } }
+                    't' E { V { 'v' } }
+                    's' E { V { 'v' } }
                   } }
               } }
             } } }

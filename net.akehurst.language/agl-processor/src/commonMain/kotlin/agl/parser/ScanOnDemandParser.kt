@@ -294,7 +294,7 @@ internal class ScanOnDemandParser(
                                 ParseAction.GRAFT -> prev.runtimeState.runtimeLookaheadSet
                                 ParseAction.GOAL -> prev.runtimeState.runtimeLookaheadSet
                             }
-                            val runtimeGuardPassed = tr.runtimeGuard.invoke(prev.numNonSkipChildren)
+                            val runtimeGuardPassed = tr.runtimeGuard.execute(prev.numNonSkipChildren)
                             when (tr.action) {
                                 ParseAction.EMBED -> {
                                     //TODO: find failure in embedded parser!
@@ -350,7 +350,7 @@ internal class ScanOnDemandParser(
                                     ParseAction.GRAFT -> prev2.runtimeState.runtimeLookaheadSet
                                     ParseAction.GOAL -> prev2.runtimeState.runtimeLookaheadSet
                                 }
-                                val runtimeGuardPassed = tr2.runtimeGuard.invoke(prev2.numNonSkipChildren)
+                                val runtimeGuardPassed = tr2.runtimeGuard.execute(prev2.numNonSkipChildren)
                                 errorPairs(rp, input, lg, tr2, possibleEndOfText, rtLh, runtimeGuardPassed)
                             }.flatten()
                         }
@@ -432,7 +432,10 @@ internal class ScanOnDemandParser(
         val x = maxReasons.map { fr ->
             when (fr) {
                 is FailedParseReasonWidthTo -> Pair(input.locationFor(fr.position, 0), setOf(fr.transition.to.firstRule))
-                is FailedParseReasonGraftRTG -> Pair(input.locationFor(fr.position, 0), emptySet())
+                is FailedParseReasonGraftRTG -> {
+                    val exp = fr.transition.runtimeGuard.expectedWhenFailed(fr.prevNumNonSkipChildren)
+                    Pair(input.locationFor(fr.position, 0), exp)
+                }
                 is FailedParseReasonLookahead -> {
                     val expected: Set<RuntimeRule> = fr.possibleEndOfText.flatMap { eot ->
                         fr.runtimeLhs.flatMap { rt ->
