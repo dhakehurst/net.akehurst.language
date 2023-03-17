@@ -71,11 +71,11 @@ internal class test_ifThenElse_NoWS_conditional2 : test_ScanOnDemandParserAbstra
               expr {
                 conditional {
                       'if'
-                      expr { VAR:'W' }
+                      expr { var { VAR : 'W' } }
                       'then'
-                      expr { VAR:'X' }
+                      expr { var { VAR : 'X' } }
                       'else'
-                      expr { VAR:'Y' }
+                      expr { var { VAR : 'Y' } }
                 }
               }
             }
@@ -127,16 +127,16 @@ internal class test_ifThenElse_NoWS_conditional2 : test_ScanOnDemandParserAbstra
               expr {
                 conditional {
                       'if'
-                      expr { VAR:'W' }
+                      expr { var { VAR : 'W' } }
                       'then'
-                      expr { VAR:'X' }
+                      expr { var { VAR : 'X' } }
                       'else'
                       expr {
                         conditional {
                               'if'
-                              expr { VAR:'Y' }
+                              expr { var { VAR : 'Y' } }
                               'then'
-                              expr { VAR:'Z' }
+                              expr { var { VAR : 'Z' } }
                         }
                       }
                 }
@@ -197,21 +197,21 @@ internal class test_ifThenElse_NoWS_conditional2 : test_ScanOnDemandParserAbstra
               expr {
                 conditional {
                     'if'
-                    expr { VAR:'W' }
+                    expr { var { VAR : 'W' } }
                     'then'
                     expr {
                       conditional {
                           'if'
-                          expr { VAR:'W' }
+                          expr { var { VAR : 'W' } }
                           'then'
                           expr {
                             conditional {
                                   'if'
-                                  expr { VAR:'X' }
+                                  expr { var { VAR : 'X' } }
                                   'then'
-                                  expr { VAR:'Y' }
+                                  expr { var { VAR : 'Y' } }
                                   'else'
-                                  expr { VAR:'Z' }
+                                  expr { var { VAR : 'Z' } }
                             }
                           }
                       }

@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.automaton
+package net.akehurst.language.agl.automaton.concatenation
 
+import net.akehurst.language.agl.automaton.AutomatonTest
+import net.akehurst.language.agl.automaton.automaton
+import net.akehurst.language.agl.automaton.test_AutomatonAbstract
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhs
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -209,4 +211,5 @@ internal class test_concat_of_optional_nonTerm : test_AutomatonAbstract() {
 
         AutomatonTest.assertEquals(expected, actual)
     }
+
 }

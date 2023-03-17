@@ -250,14 +250,14 @@ internal class test_bodmas_sList_root_choiceEqual : test_ScanOnDemandParserAbstr
     @Test
     fun a_add_b_mul_c() {
         val sentence = "a+b*c"
-//TODO("transition from s7 are weird !")
+
         val expected = """
             S {
-             expr|4 {
+             expr {
               add {
                 expr { root { var { "[a-zA-Z]+" : 'a' } } }
                 '+'
-                expr|3 {
+                expr {
                   mul {
                     expr { root { var { "[a-zA-Z]+" : 'b' } } }
                     '*'

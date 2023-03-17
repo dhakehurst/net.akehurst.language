@@ -164,9 +164,9 @@ internal data class TransInfo(
     val lookahead: Set<LookaheadInfoPart>
 )
 internal data class StateInfo(
-    val rulePositions: List<RulePosition>,
-    val possibleTrans:Set<TransInfo>
+    val rulePositions: Set<RulePosition>
 ) {
+    var possibleTrans:Set<TransInfo> = emptySet()
     val possiblePrev: Set<Set<RulePosition>> get() = possibleTrans.flatMap { it.prev }.toSet()
 }
 

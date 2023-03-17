@@ -214,16 +214,16 @@ internal class ParserStateSet(
         val stateInfos = this.buildCache.stateInfo()
         for (si in stateInfos) {
             if (si.rulePositions != this.startState.rulePositions) {
-                if (Debug.CHECK) check(this._statesByRulePosition.contains(si.rulePositions).not()) { "State already created for $si.rulePositions" }
-                val state = this.fetchCompatibleOrCreateState(si.rulePositions)
+                if (Debug.CHECK) check(this._statesByRulePosition.any{it.key.toSet()==si.rulePositions}.not()) { "State already created for $si.rulePositions" }
+                val state = this.fetchCompatibleOrCreateState(si.rulePositions.toList())
             }
         }
         for (si in stateInfos) {
-            val state = this.fetchState(si.rulePositions)!!
+            val state = this.fetchState(si.rulePositions.toList())!!
             for (ti in si.possibleTrans) {
-                val previousStates = ti.prev.map { p -> this.fetchState(p.toList()) ?: error("Internal error, state not created for $p") }
+                val previousStates = ti.prev.map { p -> this.fetchCompatibleState(p.toList()) ?: error("Internal error, state not created for $p") }
                 val action = ti.action
-                val to = this.fetchState(ti.to.toList()) ?: error("Internal error, state not created for ${ti.to}")
+                val to = this.fetchCompatibleState(ti.to.toList()) ?: error("Internal error, state not created for ${ti.to}")
                 val lhs = ti.lookahead.map { Lookahead(it.guard.lhs(this), it.up.lhs(this)) }.toSet()
                 state.outTransitions.createTransition(previousStates.toSet(), state, action, to, lhs)
             }

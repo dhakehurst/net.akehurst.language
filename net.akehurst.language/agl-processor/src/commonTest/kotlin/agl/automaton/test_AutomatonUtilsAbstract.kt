@@ -29,6 +29,8 @@ internal abstract class test_AutomatonUtilsAbstract {
         const val p1 = 1
         const val p2 = 2
         const val p3 = 3
+        const val p4 = 4
+        const val p5 = 5
         val EOT = RuntimeRuleSet.END_OF_TEXT
         val EMPTY = RuntimeRuleSet.EMPTY
         val RT = RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD

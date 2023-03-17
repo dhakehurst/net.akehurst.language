@@ -35,6 +35,9 @@ internal class test_expessions_simple : test_ScanOnDemandParserAbstract() {
                 ref("I")
             }
             concatenation("I") { ref("E"); literal("o"); ref("E")  }
+            precedenceFor("E") {
+                left("E","'o'")
+            }
         }
         val goal = "S"
     }
@@ -62,7 +65,7 @@ internal class test_expessions_simple : test_ScanOnDemandParserAbstract() {
         val sentence = "aoa"
 
         val expected = """
-            S { E|1 { I { E{'a'} 'o' E{'a'} } }}
+            S { E { I { E{'a'} 'o' E{'a'} } }}
         """.trimIndent()
 
         super.test(
@@ -79,8 +82,8 @@ internal class test_expessions_simple : test_ScanOnDemandParserAbstract() {
         val sentence = "aoaoa"
 
         val expected = """
-            S { E|1 { I {
-                E|1 { I {
+            S { E { I {
+                E { I {
                     E { 'a' }
                     'o'
                     E { 'a' }
@@ -104,9 +107,9 @@ internal class test_expessions_simple : test_ScanOnDemandParserAbstract() {
         val sentence = "aoaoaoa"
 
         val expected = """
-             S { E|1 { I {
-                  E|1 { I {
-                      E|1 { I {
+             S { E { I {
+                  E { I {
+                      E { I {
                           E { 'a' }
                           'o'
                           E { 'a' }

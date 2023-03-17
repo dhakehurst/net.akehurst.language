@@ -58,6 +58,7 @@ internal class AutomatonBuilderDefault(
         }
     }
 
+    internal fun state(rule: Rule) = state(rule, 0, RulePosition.END_OF_RULE)
     internal fun state(rule: Rule, option: Int, position: Int) = result.createState(listOf(RulePosition(rule as RuntimeRule, option, position)))
 
     internal fun state(vararg rulePositions: RulePosition) = result.createState(rulePositions.toList())
@@ -171,15 +172,14 @@ internal class TransitionBuilderDefault internal constructor(
         _context = states
     }
 
+    fun ctx(runtimeRule: RuntimeRule, option: Int, position: Int) =ctx(RulePosition(runtimeRule, option, position))
     fun ctx(vararg rulePositions: RulePosition) {
         val states = rulePositions.map { this.stateSet.fetchState(listOf(it)) ?: error("State for $it not defined") }.toSet()
         this.ctx(states)
     }
-
-    fun ctx(runtimeRule: RuntimeRule, option: Int, position: Int) {
-        val rp = RulePosition(runtimeRule, option, position)
-        val state = this.stateSet.fetchState(listOf(rp)) ?: error("State for $rp not defined")
-        this.ctx(setOf(state))
+    fun ctx(vararg rulePositions: Set<RulePosition>) {
+        val states = rulePositions.map { this.stateSet.fetchState(it.toList()) ?: error("State for $it not defined") }.toSet()
+        this.ctx(states)
     }
 
     fun src(runtimeRule: RuntimeRule) {
@@ -187,21 +187,21 @@ internal class TransitionBuilderDefault internal constructor(
         src(runtimeRule, 0, RulePosition.END_OF_RULE)
     }
 
-    fun src(runtimeRule: RuntimeRule, option: Int, position: Int) {
-        val rp = RulePosition(runtimeRule, option, position)
-        val state = this.stateSet.fetchState(listOf(rp)) ?: error("State for $rp not defined")
+    fun src(runtimeRule: RuntimeRule, option: Int, position: Int) = src(setOf(RulePosition(runtimeRule, option, position)))
+    fun src(rulePositions: Set<RulePosition>) {
+        val state = this.stateSet.fetchState(rulePositions.toList()) ?: error("State for $rulePositions not defined")
         this.src(state)
-    }
-
-    fun tgt(runtimeRule: RuntimeRule) = tgt(runtimeRule, 0, RulePosition.END_OF_RULE)
-    fun tgt(runtimeRule: RuntimeRule, option: Int, position: Int) {
-        val rp = RulePosition(runtimeRule, option, position)
-        val state = this.stateSet.fetchState(listOf(rp)) ?: error("State for $rp not defined")
-        this.tgt(state)
     }
 
     fun src(state: ParserState) {
         _src = state
+    }
+
+    fun tgt(runtimeRule: RuntimeRule) = tgt(runtimeRule, 0, RulePosition.END_OF_RULE)
+    fun tgt(runtimeRule: RuntimeRule, option: Int, position: Int) = tgt(setOf(RulePosition(runtimeRule, option, position)))
+    fun tgt(rulePositions: Set<RulePosition>) {
+        val state = this.stateSet.fetchState(rulePositions.toList()) ?: error("State for $rulePositions not defined")
+        this.tgt(state)
     }
 
     fun tgt(state: ParserState) {

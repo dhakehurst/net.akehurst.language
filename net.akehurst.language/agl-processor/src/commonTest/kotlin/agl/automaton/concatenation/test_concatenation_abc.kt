@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.automaton
+package net.akehurst.language.agl.automaton.concatenation
 
+import net.akehurst.language.agl.automaton.AutomatonTest
+import net.akehurst.language.agl.automaton.automaton
+import net.akehurst.language.agl.automaton.test_AutomatonAbstract
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
@@ -63,9 +66,9 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
             trans(WIDTH) { src(S, o0, p1); tgt(b); lhg(c); ctx(G, o0, SOR) }
             trans(WIDTH) { src(S, o0, p2); tgt(c); lhg(RT); ctx(G, o0, SOR) }
             trans(GOAL) { src(S); tgt(G); lhg(EOT); ctx(G, o0, SOR) }
-            trans(GRAFT) { src(c); tgt(S); lhg(RT); gpg(S,o0,p2); ctx(S, o0, p2) }
-            trans(HEIGHT) { src(a); tgt(S,o0,p1); lhg(setOf(b), setOf(EOT)); ctx(G, o0, SOR) }
-            trans(GRAFT) { src(b); tgt(S,o0,p2); lhg(c); gpg(S,o0,p1); ctx(S, o0, p1) }
+            trans(GRAFT) { src(c); tgt(S); lhg(RT); gpg(S, o0, p2); ctx(S, o0, p2) }
+            trans(HEIGHT) { src(a); tgt(S, o0, p1); lhg(setOf(b), setOf(EOT)); ctx(G, o0, SOR) }
+            trans(GRAFT) { src(b); tgt(S, o0, p2); lhg(c); gpg(S, o0, p1); ctx(S, o0, p1) }
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -95,9 +98,9 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
             trans(WIDTH) { ctx(G, o0, SOR); src(S, o0, p1); tgt(b); lhg(c) }
             trans(WIDTH) { ctx(G, o0, SOR); src(S, o0, p2); tgt(c); lhg(EOT) }
             trans(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(EOT) }
-            trans(GRAFT) { ctx(S, o0, p2); src(c); tgt(S); lhg(EOT); gpg(S,o0,p2) }
-            trans(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(S,o0,p1); lhg(setOf(b), setOf(EOT)) }
-            trans(GRAFT) { ctx(S, o0, p1); src(b); tgt(S,o0,p2); lhg(c); gpg(S,o0,p1) }
+            trans(GRAFT) { ctx(S, o0, p2); src(c); tgt(S); lhg(EOT); gpg(S, o0, p2) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(S, o0, p1); lhg(setOf(b), setOf(EOT)) }
+            trans(GRAFT) { ctx(S, o0, p1); src(b); tgt(S, o0, p2); lhg(c); gpg(S, o0, p1) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -128,8 +131,10 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
         println("--No Build--")
         println(rrs_noBuild.usedAutomatonToString("S"))
 
-        AutomatonTest.assertMatches(automaton_preBuild, automaton_noBuild, AutomatonTest.MatchConfiguration(
-            in_actual_substitue_lookahead_RT_with = setOf(EOT)
-        ))
+        AutomatonTest.assertMatches(
+            automaton_preBuild, automaton_noBuild, AutomatonTest.MatchConfiguration(
+                in_actual_substitue_lookahead_RT_with = setOf(EOT)
+            )
+        )
     }
 }
