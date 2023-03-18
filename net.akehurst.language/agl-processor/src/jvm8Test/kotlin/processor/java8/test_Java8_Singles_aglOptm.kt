@@ -74,13 +74,14 @@ class test_Java8_Singles_aglOptm {
         val goal = "Type"
         val p = Agl.processorFromString(
             grammarDefinitionStr = grammarStr,
-            configuration = Agl.configuration {
+            configuration = Agl.configuration() {
                 targetGrammarName("Types")
                 defaultGoalRuleName(goal)
             },
             aglOptions = Agl.options {
                 semanticAnalysis {
-                    active(false) // switch off for performance
+                    // switch off ambiguity analysis for performance
+                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
                 }
             }).processor!!
 

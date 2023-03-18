@@ -210,15 +210,6 @@ internal class RuntimeParser(
                 steps++
             }
 
-            //val toProcess = this.graph.nextToProcess()
-            //if (toProcess.growingNode.isEmptyMatch && doneEmpties.contains(toProcess.growingNode.state)) {
-            //    //don't do it again
-            //    doneEmpties.add(toProcess.growingNode.state)
-            //} else {
-            //    this.growNode(toProcess, possibleEndOfText, growArgs)
-            //    steps++
-            //}
-
             val progStep = progressSteps[head] //FIXME: maybe slow - is there a better way?
             if (progStep > 1000) { //FIXME: make part of config
                 this.interrupt(Message.PARSER_WONT_STOP) //TODO: include why - which node/rule

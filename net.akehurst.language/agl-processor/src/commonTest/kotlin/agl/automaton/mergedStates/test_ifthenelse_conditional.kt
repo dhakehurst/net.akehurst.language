@@ -113,7 +113,7 @@ internal class test_ifthenelse_conditional : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val sentences = setOf("X","ifXthenY", "ifXthenYelseZ", "ifXthenifYthenZelseW","ifXthenYelseifZthenW")
+        val sentences = setOf("ifXthenY", "ifXthenYelseZ", "ifXthenifYthenZelseW","ifXthenYelseifZthenW","X",)
         sentences.forEach {
             val parser = ScanOnDemandParser(rrs)
             val result = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)

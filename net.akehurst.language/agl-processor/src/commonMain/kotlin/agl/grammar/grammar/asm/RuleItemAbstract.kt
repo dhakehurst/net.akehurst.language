@@ -23,7 +23,7 @@ abstract class RuleItemAbstract : RuleItem {
 	protected var _owningRule : GrammarRule? = null
 
 	override val owningRule: GrammarRule get() {
-		return this._owningRule ?: throw GrammarRuleNotFoundException("Internal Error: owningRule must be set")
+		return this._owningRule ?: error("Internal Error: owningRule must be set")
 	}
 	
 	var index: List<Int>? = null

@@ -60,7 +60,7 @@ abstract class GrammarAbstract(
         this.rule.forEach { rule ->
             if (rule.isOverride) {
                 val overridden = rules.find { it.name == rule.name }
-                    ?: throw GrammarRuleNotFoundException("GrammarRule ${rule.name} is marked as override, but there is no super rule with that name to override.")
+                    ?: error("GrammarRule ${rule.name} is marked as override, but there is no super rule with that name to override.")
                 rules.remove(overridden)
                 rules.add(rule)
             } else {
@@ -98,7 +98,7 @@ abstract class GrammarAbstract(
         val all = this.allResolvedRule.filter { it.name == ruleName }
         return when {
             all.isEmpty() -> null//throw GrammarRuleNotFoundException("NonTerminal GrammarRule '${ruleName}' not found in grammar '${this.name}'")
-            all.size > 1 -> throw GrammarRuleNotFoundException("More than one rule named '${ruleName}' in grammar '${this.name}', have you remembered the 'override' modifier")
+            all.size > 1 -> error("More than one rule named '${ruleName}' in grammar '${this.name}', have you remembered the 'override' modifier")
             else -> all.first()
         }
     }
@@ -108,8 +108,8 @@ abstract class GrammarAbstract(
     override fun findTerminalRule(terminalPattern: String): Terminal {
         val all = this.allResolvedTerminal.filter { it.value == terminalPattern }
         when {
-            all.isEmpty() -> throw GrammarRuleNotFoundException("$terminalPattern in Grammar(${this.name}).findTerminalRule")
-            all.size > 1 -> throw GrammarRuleNotFoundException("More than one rule named $terminalPattern in Grammar(${this.name}).findTerminalRule")
+            all.isEmpty() -> error("$terminalPattern in Grammar(${this.name}).findTerminalRule")
+            all.size > 1 -> error("More than one rule named $terminalPattern in Grammar(${this.name}).findTerminalRule")
         }
         return all.first()
     }
