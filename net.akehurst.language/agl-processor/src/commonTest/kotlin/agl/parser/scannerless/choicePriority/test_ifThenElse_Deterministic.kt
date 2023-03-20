@@ -74,8 +74,8 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr|1 {
-                conditional|1 {
+              expr {
+                conditional {
                     ifThenElse {
                       'if' WS : ' ' 
                       expr { var : 'a' WS  : ' '  }

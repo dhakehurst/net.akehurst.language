@@ -16,13 +16,16 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.runtime.structure.RulePosition
+
 internal interface BuildCache {
     fun switchCacheOn()
     fun clearAndOff()
 
     fun stateInfo(): Set<StateInfo>
+    fun mergedStateInfoFor(rulePositions: List<RulePosition>): StateInfo
     fun widthInto(prevState:ParserState, fromState: ParserState): Set<WidthInfo>
-    fun heightOrGraftInto(prevPrev: ParserState, prevState: ParserState, fromState: ParserState) : Set<HeightGraftInfo>
+    fun heightOrGraftInto(prevPrev: ParserState, prevState: ParserState, fromState: ParserState) : Set<TransInfo>
 
     //fun expectedAt(rulePosition: RulePosition, ifReachedEnd: LookaheadSetPart): LookaheadSetPart
 

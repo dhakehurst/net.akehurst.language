@@ -39,26 +39,16 @@ internal class ParserStateSet(
     internal val runtimeTransitionCalculator = RuntimeTransitionCalculator(this)
 
     var preBuilt = preBuilt; private set
-    internal val buildCache: BuildCache = when (automatonKind) {
+    internal val buildCache: BuildCache by lazy {when (automatonKind) {
         AutomatonKind.LOOKAHEAD_NONE -> TODO() //BuildCacheLC0(this)
         AutomatonKind.LOOKAHEAD_SIMPLE -> TODO()
         AutomatonKind.LOOKAHEAD_1 -> BuildCacheLC1(this)
-    }
+    }}
 
-    val usedRules: Set<RuntimeRule> by lazy {
-        calcUsedRules(this.startState.runtimeRules.first())
-    }
-    val usedTerminalRules: Set<RuntimeRule> by lazy {
-        this.usedRules.filter { it.isTerminal }.toSet()
-    }
-    val usedNonTerminalRules: Set<RuntimeRule> by lazy {
-        this.usedRules.filter { it.isNonTerminal }.toSet()
-    }
-    val firstTerminals: Set<RuntimeRule> by lazy {
-        this.startState.transitionsGoal(this.startState).map {
-            it.to.firstRule
-        }.toSet()
-    }
+    val usedRules: Set<RuntimeRule> by lazy { calcUsedRules(this.startState.runtimeRules.first()) }
+    val usedTerminalRules: Set<RuntimeRule> by lazy { this.usedRules.filter { it.isTerminal }.toSet() }
+    val usedNonTerminalRules: Set<RuntimeRule> by lazy { this.usedRules.filter { it.isNonTerminal }.toSet() }
+    val firstTerminals: Set<RuntimeRule> by lazy { this.startState.transitionsGoal(this.startState).map { it.to.firstRule }.toSet() }
     val embeddedRuntimeRuleSet: Set<RuntimeRuleSet> by lazy {
         val embRules = this.usedRules.filter { it.isEmbedded }.toSet()
         embRules.map {
@@ -137,7 +127,8 @@ internal class ParserStateSet(
         return if (null != existing) {
             existing
         } else {
-            val state = ParserState(StateNumber(this.nextStateNumber++), rulePositions, this)
+            val si = this.buildCache.mergedStateInfoFor(rulePositions)
+            val state = ParserState(StateNumber(this.nextStateNumber++), si.rulePositions.toList(), this)
             this._statesByRulePosition[rulePositions] = state
             this._states.add(state.number.value, state)
             state
@@ -214,7 +205,7 @@ internal class ParserStateSet(
         val stateInfos = this.buildCache.stateInfo()
         for (si in stateInfos) {
             if (si.rulePositions != this.startState.rulePositions) {
-                if (Debug.CHECK) check(this._statesByRulePosition.any{it.key.toSet()==si.rulePositions}.not()) { "State already created for $si.rulePositions" }
+                if (Debug.CHECK) check(this._statesByRulePosition.any { it.key.toSet() == si.rulePositions }.not()) { "State already created for $si.rulePositions" }
                 val state = this.fetchCompatibleOrCreateState(si.rulePositions.toList())
             }
         }

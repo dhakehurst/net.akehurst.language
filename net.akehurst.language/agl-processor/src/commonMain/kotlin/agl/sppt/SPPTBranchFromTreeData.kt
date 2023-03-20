@@ -50,9 +50,8 @@ import net.akehurst.language.api.sppt.SPPTNode
                 val rp = when (child.rulePositions.size) {
                     1 -> child.rulePositions[0]
                     else -> {
-                        TODO()
-                        //    val possChild = this.runtimeRule.rulePositionsAt[childIndx].first { prioList.contains(it.option) }
-                        //    child.rulePositions.first { it.rule == possChild.item }
+                        val possChild = this.runtimeRule.rulePositions.filter { it.position==childIndx}.first { prioList.contains(it.option) }
+                        child.rulePositions.first { possChild.items.contains(it.rule)  }
                     }
                 }
                 when {
