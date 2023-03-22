@@ -36,7 +36,7 @@ internal class test_expessions_simple : test_ScanOnDemandParserAbstract() {
             }
             concatenation("I") { ref("E"); literal("o"); ref("E")  }
             precedenceFor("E") {
-                left("E","'o'")
+                left("E",setOf("'o'"))
             }
         }
         val goal = "S"

@@ -19,6 +19,7 @@ package net.akehurst.language.parser.scanondemand.choiceEqual
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -46,10 +47,12 @@ internal class test_ifThenElse_NoWS_conditional : test_ScanOnDemandParserAbstrac
             concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
             concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
             pattern("VAR","U|V|W|X|Y|Z")
-            //precedenceFor("conditional") {
-            //    right("ifthen", "'then'")
-            //    right("ifthenelse", "'else'")
-            //}
+            precedenceFor("expr") {
+                right("ifthen", setOf("'then'"))
+                right("ifthenelse", setOf("'then'","'else'"))
+            }
+        }.also {
+            it.buildFor("S",AutomatonKind.LOOKAHEAD_1)
         }
         val goal = "S"
     }

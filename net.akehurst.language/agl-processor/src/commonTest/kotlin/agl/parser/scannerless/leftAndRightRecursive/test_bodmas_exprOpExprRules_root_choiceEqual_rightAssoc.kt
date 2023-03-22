@@ -49,8 +49,8 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_rightAssoc : test_Sc
             concatenation("mul") { ref("expr"); literal("*"); ref("expr") }
             concatenation("add") { ref("expr"); literal("+"); ref("expr") }
             precedenceFor("expr") {
-                right("add", "'+'")
-                right("mul", "'*'")
+                right("add", setOf("'+'"))
+                right("mul", setOf("'*'"))
             }
         }
 

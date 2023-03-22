@@ -19,6 +19,8 @@ package net.akehurst.language.agl.automaton
 import net.akehurst.language.agl.agl.automaton.FirstOf
 import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.api.runtime.Rule
+import net.akehurst.language.agl.automaton.BuildCacheLC1.Companion.canMergeState
+import net.akehurst.language.agl.automaton.BuildCacheLC1.Companion.cannotMergeState
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.collections.lazyMutableMapNonNull
@@ -211,8 +213,8 @@ internal class BuildCacheLC1(
                 return mergedTis
             }
 
-        val RulePosition.canMergeState: Boolean get() = this.isAtEnd.not() && this.next().all { it.isAtEnd.not() }
-        val RulePosition.cannotMergeState: Boolean get() = this.isAtEnd || this.next().any { it.isAtEnd }
+        val RulePosition.canMergeState: Boolean get() = this.isAtEnd.not()// && this.next().all { it.isAtEnd.not() }
+        val RulePosition.cannotMergeState: Boolean get() = this.isAtEnd //|| this.next().any { it.isAtEnd }
 
     }
 
@@ -811,26 +813,15 @@ internal class BuildCacheLC1(
         return mergedStateInfos
     }
 
-    private fun calcStateInfos(): Set<StateInfo> {
-        val stateRps = this._allRulePositionsForStates
-        val stateRpsCanMerge = stateRps.filter { it.canMergeState }
-        val stateRpsNotToMerge = stateRps.filter { it.cannotMergeState }
+    private fun mergeStates(rulePositions: Iterable<RulePosition>): Set<StateInfo> {
+        val stateRpBefore = rulePositions.flatMap { s ->  s.next().map { n -> Pair(n,s) } }.toSet()
+        val before = lazyMutableMapNonNull<RulePosition,MutableSet<RulePosition>> { mutableSetOf<RulePosition>() }
+        stateRpBefore.forEach { before[it.first].add(it.second) }
+
+        val stateRpsCanMerge = rulePositions.filter { it.canMergeState }
+        val stateRpsNotToMerge = rulePositions.filter { it.cannotMergeState }
         val groupedStateRpsNotAtEnd = stateRpsCanMerge.groupBy { srcRp ->
-            val contexts = firstFollowCache.possibleContextsFor(srcRp)
-            val fol = contexts.flatMap { ctx ->
-                val parentFollow = when {
-                    srcRp.isGoal -> LookaheadSetPart.EOT
-                    else -> {
-                        val ctxCtxs = this.firstFollowCache.possibleContextsFor(ctx)
-                        val x = ctxCtxs.flatMap { cc ->
-                            this.firstFollowCache.parentInContext(cc, ctx, srcRp.rule)
-                        }.toSet()
-                        x.map { it.firstOf }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
-                    }
-                }
-                this.firstFollowCache.firstTerminalInContext(ctx, srcRp, parentFollow)
-            }.toSet()
-            Pair(srcRp.items, fol)
+            Pair(before[srcRp].flatMap { it.items }, srcRp.items)
         }
         val mergedSateInfoNotAtEnd = groupedStateRpsNotAtEnd.flatMap { me ->
             when {
@@ -840,6 +831,12 @@ internal class BuildCacheLC1(
         }
         val stateInfoAtEnd = stateRpsNotToMerge.map { StateInfo(setOf(it)) }
         return mergedSateInfoNotAtEnd.toSet() + stateInfoAtEnd.toSet()
+    }
+
+    private fun calcStateInfos(): Set<StateInfo> {
+        val stateRps = this._allRulePositionsForStates
+        val merged = mergeStates(stateRps)
+        return merged
     }
 
     private fun calcTransInfoForComplete(srcRp: RulePosition): Set<TransInfo> {
@@ -1171,24 +1168,7 @@ internal class BuildCacheLC1(
 
         val rpsNotMerge = rps.filter { it.cannotMergeState }
         val rpsCanMerge = rps.filter { it.canMergeState }
-        val groupedStateRpsNotAtEnd = rpsCanMerge.groupBy { srcRp ->
-            val contexts = firstFollowCache.possibleContextsFor(srcRp)
-            val fol = contexts.flatMap { ctx ->
-                val parentFollow = when {
-                    srcRp.isGoal -> LookaheadSetPart.EOT
-                    else -> {
-                        val ctxCtxs = this.firstFollowCache.possibleContextsFor(ctx)
-                        val x = ctxCtxs.flatMap { cc ->
-                            this.firstFollowCache.parentInContext(cc, ctx, srcRp.rule)
-                        }.toSet()
-                        x.map { it.firstOf }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
-                    }
-                }
-                this.firstFollowCache.firstTerminalInContext(ctx, srcRp, parentFollow)
-            }.toSet()
-            Pair(srcRp.items, fol)
-        }
-        val mergedSateInfoNotAtEnd = groupedStateRpsNotAtEnd.flatMap { me -> listOf(StateInfo(me.value.toSet())) }
+        val mergedSateInfoNotAtEnd = mergeStates(rps)
         mergedSateInfoNotAtEnd.forEach { si ->
             si.rulePositions.forEach {
                 this._mergedStates[it] = si

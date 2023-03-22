@@ -127,10 +127,21 @@ internal class ParserStateSet(
         return if (null != existing) {
             existing
         } else {
-            val si = this.buildCache.mergedStateInfoFor(rulePositions)
-            val state = ParserState(StateNumber(this.nextStateNumber++), si.rulePositions.toList(), this)
+            val state = ParserState(StateNumber(this.nextStateNumber++), rulePositions.toList(), this)
             this._statesByRulePosition[rulePositions] = state
             this._states.add(state.number.value, state)
+            state
+        }
+    }
+
+    internal fun createMergedState(rulePositions: List<RulePosition>): ParserState {
+        if (Debug.CHECK) check(this._statesByRulePosition.contains(rulePositions).not()) { "State already created for $rulePositions" }
+        val existing = this._statesByRulePosition[rulePositions]
+        return if (null != existing) {
+            existing
+        } else {
+            val si = this.buildCache.mergedStateInfoFor(rulePositions)
+            val state = createState(si.rulePositions.toList())
             state
         }
     }
@@ -138,8 +149,8 @@ internal class ParserStateSet(
     internal fun fetchState(rulePositions: List<RulePosition>): ParserState? =
         this.allBuiltStates.firstOrNull { it.rulePositions.toSet() == rulePositions.toSet() }
 
-    internal fun fetchOrCreateState(rulePositions: List<RulePosition>): ParserState =
-        fetchState(rulePositions) ?: this.createState(rulePositions)
+    internal fun fetchOrCreateMergedState(rulePositions: List<RulePosition>): ParserState =
+        fetchState(rulePositions) ?: this.createMergedState(rulePositions)
 
     internal fun fetchCompatibleState(rulePositions: List<RulePosition>): ParserState? {
         val existing = this.allBuiltStates.firstOrNull {
@@ -149,7 +160,7 @@ internal class ParserStateSet(
     }
 
     internal fun fetchCompatibleOrCreateState(rulePositions: List<RulePosition>): ParserState =
-        fetchCompatibleState(rulePositions) ?: this.createState(rulePositions)
+        fetchCompatibleState(rulePositions) ?: this.createMergedState(rulePositions)
 
     internal fun createLookaheadSet(includeRT: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet {
         return when {

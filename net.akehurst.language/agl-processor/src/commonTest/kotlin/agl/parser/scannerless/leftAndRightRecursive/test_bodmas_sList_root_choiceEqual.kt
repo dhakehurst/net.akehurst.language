@@ -68,10 +68,10 @@ internal class test_bodmas_sList_root_choiceEqual : test_ScanOnDemandParserAbstr
             literal("'+'", "+")
             literal("'-'", "-")
             precedenceFor("expr") {
-                left("sub", "'-'")
-                left("add", "'+'")
-                left("mul", "'*'")
-                left("div", "'/'")
+                left("sub", setOf("'-'"))
+                left("add", setOf("'+'"))
+                left("mul", setOf("'*'"))
+                left("div", setOf("'/'"))
             }
         }
         val goal = "S"

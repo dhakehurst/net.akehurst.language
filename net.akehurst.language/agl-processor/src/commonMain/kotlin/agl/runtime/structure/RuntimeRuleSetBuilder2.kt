@@ -235,35 +235,35 @@ internal class PrecedenceRuleBuilder(
     val contextRuleName:String
 ) {
 
-    private val _rules = mutableListOf<Triple<String, String?, PrecedenceRules.Associativity>>()
+    private val _rules = mutableListOf<Triple<String, Set<String>, PrecedenceRules.Associativity>>()
 
     /**
      * indicate that @param ruleName is left-associative
      */
     fun none(ruleName:String) {
-        _rules.add(Triple(ruleName, null,PrecedenceRules.Associativity.NONE))
+        _rules.add(Triple(ruleName, emptySet(),PrecedenceRules.Associativity.NONE))
     }
 
     /**
      * indicate that @param ruleName is left-associative
      */
-    fun left(ruleName:String, operatorRuleName:String) {
-        _rules.add(Triple(ruleName, operatorRuleName,PrecedenceRules.Associativity.LEFT))
+    fun left(ruleName:String, operatorRuleNames:Set<String>) {
+        _rules.add(Triple(ruleName, operatorRuleNames,PrecedenceRules.Associativity.LEFT))
     }
 
     /**
      * indicate that @param ruleName is right-associative
      */
-    fun right(ruleName:String, operatorRuleName:String) {
-        _rules.add(Triple(ruleName, operatorRuleName, PrecedenceRules.Associativity.RIGHT))
+    fun right(ruleName:String, operatorRuleNames:Set<String>) {
+        _rules.add(Triple(ruleName, operatorRuleNames, PrecedenceRules.Associativity.RIGHT))
     }
 
     fun build(ruleMap: Map<String, RuntimeRule>):PrecedenceRules {
         val contextRule = ruleMap[contextRuleName] ?: error("Cannot find rule named '$contextRuleName' as a context rule for precedence definitions")
         val rules = _rules.mapIndexed { idx, it ->
             val r = ruleMap[it.first] ?: error("Cannot find rule named '${it.first}' for target rule in precedence definitions")
-            val op = it.second?.let{ ruleMap[it] ?: error("Cannot find rule named '${it}' for operator in precedence definitions") } ?: null
-            PrecedenceRules.PrecedenceRule(idx, r, op, it.third)
+            val ops = it.second.map{ ruleMap[it] ?: error("Cannot find rule named '${it}' for operator in precedence definitions") }
+            PrecedenceRules.PrecedenceRule(idx, r, ops.toSet(), it.third)
         }
         return PrecedenceRules(contextRule, rules)
     }

@@ -20,22 +20,22 @@ import net.akehurst.language.agl.automaton.LookaheadSetPart
 
 internal class PrecedenceRules(
     val contextRule: RuntimeRule,
-    val rules:List<PrecedenceRule>
+    val rules: List<PrecedenceRule>
 ) {
 
     enum class Associativity { NONE, LEFT, RIGHT }
 
     data class PrecedenceRule(
-        val precedence:Int,
+        val precedence: Int,
         val target: RuntimeRule,
-        val operator: RuntimeRule?,
+        val operators: Set<RuntimeRule>,
         val associativity: Associativity
     )
 
-    fun precedenceFor(to: Set<RuntimeRule>, lh: LookaheadSetPart): PrecedenceRule? {
-        val r = rules.filter {
-            to.contains(it.target) && lh.fullContent.contains(it.operator)
-        }.firstOrNull() //FIXME - what if more than one ?
-        return r//?.let { rules.indexOf(it) }
+    fun precedenceFor(to: Set<RuntimeRule>, lh: LookaheadSetPart): List<PrecedenceRule> {
+        val r = rules.filter { pr ->
+            to.contains(pr.target) && pr.operators.any { lh.fullContent.contains(it) }
+        }
+        return r
     }
 }

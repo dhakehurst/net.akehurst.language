@@ -469,17 +469,16 @@ internal class RuntimeParser(
             null == precRules -> transitions.map { it.first }
             1 >= transitions.size -> transitions.map { it.first }
             else -> {
-                val precedence = transitions.map { (tr, lh) ->
+                val precedence = transitions.flatMap { (tr, lh) ->
                     val lhf = lh.map { it.second }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                     val prec = precRules.precedenceFor(tr.to.runtimeRulesSet, lhf)
-                    Pair(tr, prec)
+                    prec.map { Pair(tr,it) }
                 }
-                val max = precedence.mapNotNull { it.second?.precedence }.maxOrNull() ?: 0
-                val maxPrec = precedence.filter { null == it.second || max == it.second?.precedence }
-                val byTarget = maxPrec.groupBy { Pair(it.first.to.runtimeRules, it.second?.associativity) }
+                val max = precedence.mapNotNull { it.second.precedence }.maxOrNull() ?: 0
+                val maxPrec = precedence.filter { max == it.second.precedence }
+                val byTarget = maxPrec.groupBy { Pair(it.first.to.runtimeRules, it.second.associativity) }
                 val assoc = byTarget.flatMap {
                     when (it.key.second) {
-                        null -> it.value
                         PrecedenceRules.Associativity.NONE -> it.value
                         PrecedenceRules.Associativity.LEFT -> when {
                             it.key.first[0].isList -> {
