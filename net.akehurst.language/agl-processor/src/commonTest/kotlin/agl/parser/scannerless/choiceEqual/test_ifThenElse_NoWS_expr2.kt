@@ -38,6 +38,10 @@ internal class test_ifThenElse_NoWS_expr2 : test_ScanOnDemandParserAbstract() {
                 concatenation { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
             }
             pattern("VAR", "U|V|W|X|Y|Z")
+            precedenceFor("expr") {
+                rightOption("expr", 1, setOf("'then'"))
+                rightOption("expr", 2, setOf("'then'", "'else'"))
+            }
         }
         val goal = "S"
     }
@@ -177,7 +181,7 @@ internal class test_ifThenElse_NoWS_expr2 : test_ScanOnDemandParserAbstract() {
             S {
               expr {
                 'if'
-                expr { VAR:'W' }
+                expr { VAR:'U' }
                 'then'
                 expr {
                   'if'

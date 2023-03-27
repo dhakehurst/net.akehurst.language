@@ -111,9 +111,9 @@ internal class FirstFollowCache3 {
         }
     }
 
-    fun processAllClosures(context: RulePosition, rulePosition: RulePosition, parentFollow: LookaheadSetPart, parentParentNextFollow: LookaheadSetPart) {
+    fun processAllClosures(context: RulePosition, rulePosition: RulePosition, parentExpectedAt: LookaheadSetPart) {
         this.clear()
-        val graph = ClosureGraph(context, rulePosition, parentFollow)
+        val graph = ClosureGraph(context, rulePosition, parentExpectedAt)
         calcAllClosure(graph)
     }
 

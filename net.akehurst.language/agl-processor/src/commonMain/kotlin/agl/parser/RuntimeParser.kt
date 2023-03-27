@@ -20,6 +20,7 @@ import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.api.messages.Message
 import net.akehurst.language.agl.automaton.*
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
+import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.TreeDataComplete
@@ -31,6 +32,7 @@ import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParserTerminatedException
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import kotlin.math.max
 
@@ -38,7 +40,8 @@ internal class RuntimeParser(
     val stateSet: ParserStateSet,
     val skipStateSet: ParserStateSet?, // null if this is a skipParser
     val userGoalRule: RuntimeRule,
-    private val input: InputFromString
+    private val input: InputFromString,
+    private val _issues:IssueHolder
 ) {
     companion object {
         val defaultStartLocation = InputLocation(0, 0, 1, 0)
@@ -71,7 +74,7 @@ internal class RuntimeParser(
     // must use a different instance of Input, so it can be reset, reset clears cached leaves. //TODO: check this
     private val skipParser = skipStateSet?.let {
         if (this.stateSet.preBuilt) this.skipStateSet.build()
-        RuntimeParser(it, null, skipStateSet.userGoalRule, InputFromString(skipStateSet.usedTerminalRules.size, this.input.text))
+        RuntimeParser(it, null, skipStateSet.userGoalRule, InputFromString(skipStateSet.usedTerminalRules.size, this.input.text),_issues)
     }
 
     fun reset() {
@@ -370,6 +373,14 @@ internal class RuntimeParser(
         val trans2 = resolvePrecedence(transWithValidLookahead, head)
         if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${trans2.joinToString(separator = "\n") { "  $it" }}" }
         //val grouped = transitions.groupBy { it.to.runtimeRulesSet }
+        if (trans2.size > 1) {
+            val ambigStr = trans2.map { tr->
+                val lh = transWithValidLookahead.first { tr == it.first }.second.flatMap { it.second.fullContent }
+                "${tr.from.firstRule.tag} into ${tr.to.runtimeRules.map { it.tag }} on ${lh.map { it.tag }}"
+            }
+            val loc = input.locationFor(head.nextInputPositionAfterSkip, 1)
+            _issues.warn(loc, "Ambiguity in parse: $ambigStr")
+        }
         val grouped = trans2.groupBy { it.to.runtimeRulesSet }
         for (it in grouped) {
             when {
@@ -453,13 +464,6 @@ internal class RuntimeParser(
             }
         }
 
-        //when {
-        //    grownHeight.not() && grownGraft.not() -> doNoTransitionsTaken(head)
-        //    grownHeight && grownGraft.not() -> graph.dropGrowingHead(head)
-        //     grownHeight.not() && grownGraft -> {graph.dropGrowingHead(head); graph.dropGrowingHead(previous)}
-        //     grownHeight && grownGraft -> {graph.dropGrowingHead(head); graph.dropGrowingHead(previous);}
-        // }
-
         return Pair(grownHeight, grownGraft)
     }
 
@@ -471,10 +475,10 @@ internal class RuntimeParser(
             else -> {
                 val precedence = transitions.flatMap { (tr, lh) ->
                     val lhf = lh.map { it.second }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
-                    val prec = precRules.precedenceFor(tr.to.runtimeRulesSet, lhf)
+                    val prec = precRules.precedenceFor(tr.to.rulePositions, lhf)
                     prec.map { Pair(tr,it) }
                 }
-                val max = precedence.mapNotNull { it.second.precedence }.maxOrNull() ?: 0
+                val max = precedence.map { it.second.precedence }.maxOrNull() ?: 0
                 val maxPrec = precedence.filter { max == it.second.precedence }
                 val byTarget = maxPrec.groupBy { Pair(it.first.to.runtimeRules, it.second.associativity) }
                 val assoc = byTarget.flatMap {
@@ -989,7 +993,7 @@ internal class RuntimeParser(
         val embeddedStartRule = embeddedRhs.embeddedStartRule
         val embeddedS0 = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedStartRule.tag, this.stateSet.automatonKind).startState
         val embeddedSkipStateSet = embeddedRuntimeRuleSet.skipParserStateSet
-        val embeddedParser = RuntimeParser(embeddedS0.stateSet, embeddedSkipStateSet, embeddedStartRule, this.input)
+        val embeddedParser = RuntimeParser(embeddedS0.stateSet, embeddedSkipStateSet, embeddedStartRule, this.input,_issues)
         val skipTerms = this.skipStateSet?.firstTerminals ?: emptySet()
         val endingLookahead = transition.lookahead.first().guard //should ony ever be one
         val embeddedPossibleEOT = endingLookahead.unionContent(embeddedS0.stateSet, skipTerms)

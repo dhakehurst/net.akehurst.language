@@ -37,6 +37,10 @@ internal class test_ifThenElse_NoWS : test_ScanOnDemandParserAbstract() {
                 literal("Y")
                 literal("Z")
             }
+            precedenceFor("expr") {
+                right("ifthen", setOf("'then'"))
+                right("ifthenelse", setOf("'then'","'else'"))
+            }
         }
         val goal="S"
     }

@@ -54,7 +54,7 @@ internal class RuntimeRuleSetBuilder2 : RuleSetBuilder {
         val precRules = _precedenceRuleBuilders.map {
             it.build(ruleMap)
         }
-        return RuntimeRuleSet(ruleSetNumber, rules,precRules)
+        return RuntimeRuleSet(ruleSetNumber, rules, precRules)
     }
 
     private fun _rule(
@@ -69,9 +69,9 @@ internal class RuntimeRuleSetBuilder2 : RuleSetBuilder {
         this._ruleBuilders[name] = rb
     }
 
-    fun literal(value: String, isSkip: Boolean = false) = literal(null,value,isSkip)
+    fun literal(value: String, isSkip: Boolean = false) = literal(null, value, isSkip)
     fun literal(name: String?, value: String, isSkip: Boolean = false) {
-        val tag = name?: "'$value'"
+        val tag = name ?: "'$value'"
         if (this._ruleBuilders.containsKey(tag)) {
             //do nothing
         } else {
@@ -82,9 +82,9 @@ internal class RuntimeRuleSetBuilder2 : RuleSetBuilder {
         }
     }
 
-    fun pattern(value: String, isSkip: Boolean = false) = pattern(null,value,isSkip)
+    fun pattern(value: String, isSkip: Boolean = false) = pattern(null, value, isSkip)
     fun pattern(name: String?, pattern: String, isSkip: Boolean = false) {
-        val tag = name?: "\"$pattern\""
+        val tag = name ?: "\"$pattern\""
         if (this._ruleBuilders.containsKey(tag)) {
             //do nothing
         } else {
@@ -141,7 +141,7 @@ internal class RuntimeRuleSetBuilder2 : RuleSetBuilder {
         this._ruleBuilders[ruleName] = rb
     }
 
-    fun precedenceFor(precedenceContextRuleName:String, init:PrecedenceRuleBuilder.()->Unit) {
+    fun precedenceFor(precedenceContextRuleName: String, init: PrecedenceRuleBuilder.() -> Unit) {
         val b = PrecedenceRuleBuilder(precedenceContextRuleName)
         b.init()
         this._precedenceRuleBuilders.add(b)
@@ -151,7 +151,7 @@ internal class RuntimeRuleSetBuilder2 : RuleSetBuilder {
 @RuntimeRuleSetDslMarker
 internal class RuntimeRuleBuilder(
     val ruleSetNumber: Int,
-    val name:String?,
+    val name: String?,
     val tag: String,
     val isSkip: Boolean,
     val rhsBuilder: (rule: RuntimeRule, ruleMap: Map<String, RuntimeRule>) -> RuntimeRuleRhs
@@ -232,38 +232,46 @@ internal class RuntimeRuleChoiceBuilder(
 
 @RuntimeRuleSetDslMarker
 internal class PrecedenceRuleBuilder(
-    val contextRuleName:String
+    val contextRuleName: String
 ) {
 
-    private val _rules = mutableListOf<Triple<String, Set<String>, PrecedenceRules.Associativity>>()
+    data class Quad<out A, out B, out C, out D>(val first: A, val second: B, val third: C, val fourth: D)
+
+    private val _rules = mutableListOf<Quad<String, Int, Set<String>, PrecedenceRules.Associativity>>()
 
     /**
      * indicate that @param ruleName is left-associative
      */
-    fun none(ruleName:String) {
-        _rules.add(Triple(ruleName, emptySet(),PrecedenceRules.Associativity.NONE))
+    fun none(ruleName: String) {
+        _rules.add(Quad(ruleName, 0, emptySet(), PrecedenceRules.Associativity.NONE))
     }
 
     /**
      * indicate that @param ruleName is left-associative
      */
-    fun left(ruleName:String, operatorRuleNames:Set<String>) {
-        _rules.add(Triple(ruleName, operatorRuleNames,PrecedenceRules.Associativity.LEFT))
+    fun left(ruleName: String, operatorRuleNames: Set<String>) {
+        _rules.add(Quad(ruleName, 0, operatorRuleNames, PrecedenceRules.Associativity.LEFT))
     }
-
+    fun leftOption(ruleName: String, option:Int, operatorRuleNames: Set<String>) {
+        _rules.add(Quad(ruleName, option, operatorRuleNames, PrecedenceRules.Associativity.LEFT))
+    }
     /**
      * indicate that @param ruleName is right-associative
      */
-    fun right(ruleName:String, operatorRuleNames:Set<String>) {
-        _rules.add(Triple(ruleName, operatorRuleNames, PrecedenceRules.Associativity.RIGHT))
+    fun right(ruleName: String, operatorRuleNames: Set<String>) {
+        _rules.add(Quad(ruleName, 0, operatorRuleNames, PrecedenceRules.Associativity.RIGHT))
     }
 
-    fun build(ruleMap: Map<String, RuntimeRule>):PrecedenceRules {
+    fun rightOption(ruleName: String, option:Int, operatorRuleNames: Set<String>) {
+        _rules.add(Quad(ruleName, option, operatorRuleNames, PrecedenceRules.Associativity.RIGHT))
+    }
+
+    fun build(ruleMap: Map<String, RuntimeRule>): PrecedenceRules {
         val contextRule = ruleMap[contextRuleName] ?: error("Cannot find rule named '$contextRuleName' as a context rule for precedence definitions")
         val rules = _rules.mapIndexed { idx, it ->
             val r = ruleMap[it.first] ?: error("Cannot find rule named '${it.first}' for target rule in precedence definitions")
-            val ops = it.second.map{ ruleMap[it] ?: error("Cannot find rule named '${it}' for operator in precedence definitions") }
-            PrecedenceRules.PrecedenceRule(idx, r, ops.toSet(), it.third)
+            val ops = it.third.map { ruleMap[it] ?: error("Cannot find rule named '${it}' for operator in precedence definitions") }
+            PrecedenceRules.PrecedenceRule(idx, r, it.second, ops.toSet(), it.fourth)
         }
         return PrecedenceRules(contextRule, rules)
     }

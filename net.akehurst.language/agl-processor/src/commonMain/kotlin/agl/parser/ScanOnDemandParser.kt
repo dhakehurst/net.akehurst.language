@@ -20,6 +20,7 @@ import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.automaton.Transition
+import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ParseResultDefault
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
@@ -39,6 +40,8 @@ internal class ScanOnDemandParser(
 
     // cached only so it can be interrupted
     private var runtimeParser: RuntimeParser? = null
+
+    private val _issues = IssueHolder(LanguageProcessorPhase.PARSE)
 
     val runtimeDataIsEmpty: Boolean get() = runtimeParser?.graph?.isEmpty ?: true
 
@@ -75,13 +78,13 @@ internal class ScanOnDemandParser(
         return if (match.root != null) {
             //val sppt = SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
             val sppt = SPPTFromTreeData(match, input, seasons, maxNumHeads)
-            ParseResultDefault(sppt, emptyList())
+            ParseResultDefault(sppt, this._issues.issues)
         } else {
             //val nextExpected = this.findNextExpectedAfterError2(rp, lastToTryWidth, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
             val nextExpected = this.findNextExpectedAfterError3(input, rp.failedReasons, rp.stateSet.automatonKind, rp.stateSet)
-            val issue = throwError(input, rp, nextExpected, seasons, maxNumHeads)
+           addParseIssue(input, rp, nextExpected, seasons, maxNumHeads)
             val sppt = null//rp.longestLastGrown?.let{ SharedPackedParseTreeDefault(it, seasons, maxNumHeads) }
-            ParseResultDefault(sppt, listOf(issue))
+            ParseResultDefault(sppt, this._issues.issues)
         }
     }
 
@@ -89,16 +92,16 @@ internal class ScanOnDemandParser(
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val s0 = runtimeRuleSet.fetchStateSetFor(goalRuleName, automatonKind).startState
         val skipStateSet = runtimeRuleSet.skipParserStateSet
-        return RuntimeParser(s0.stateSet, skipStateSet, goalRule, input)
+        return RuntimeParser(s0.stateSet, skipStateSet, goalRule, input,_issues)
     }
 
-    private fun throwError(
+    private fun addParseIssue(
         input: InputFromString,
         rp: RuntimeParser,
         nextExpected: Pair<InputLocation, Set<RuntimeRule>>,
         seasons: Int,
         maxNumHeads: Int
-    ): LanguageIssue {
+    ) {
         val lastLocation = nextExpected.first
         val exp = nextExpected.second
         val expected = exp.map { it.tag }.toSet()
@@ -107,7 +110,8 @@ internal class ScanOnDemandParser(
         val location = input.locationFor(errorPos, errorLength)//InputLocation(errorPos, errorColumn, errorLine, errorLength)
 
         val contextInText = rp.graph.input.contextInText(location.position)
-        return LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, location, contextInText, expected)
+        this._issues.error(location, contextInText, expected)
+        //return LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, location, contextInText, expected)
     }
 
     /*

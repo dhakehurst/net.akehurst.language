@@ -62,6 +62,11 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
             }
             concatenation("P1") { literal("a"); ref("P") }
             concatenation("P2") { ref("P"); literal("a") }
+            //precedenceFor("'a'") {
+            //    left("P1", setOf("'a'"))
+            //    left("P", setOf("'b'"))
+            //    left("Q", setOf("'c'"))
+            //}
         }
         val goal = "S"
     }
@@ -187,16 +192,16 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
 
         val expected = """
          S { S1 {
-            P|1 { P2 {
-                P|1 { P2 {
-                    P|1 { P2 {
-                        P|1 { P2 {
-                            P|1 { P2 {
-                                P|1 { P2 {
-                                    P|1 { P2 {
-                                        P|1 { P2 {
-                                            P|1 { P2 {
-                                                P|2 { 'a' }
+            P { P2 {
+                P { P2 {
+                    P { P2 {
+                        P { P2 {
+                            P { P2 {
+                                P { P2 {
+                                    P { P2 {
+                                        P { P2 {
+                                            P { P2 {
+                                                P { 'a' }
                                                 'a'
                                               } }
                                             'a'
@@ -219,12 +224,12 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -232,7 +237,7 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
     fun a50b() {
         val sentence = "a".repeat(50) + "b"
 
-        val expected = "S { S1 {" + "P|1 { P2 {".repeat(49) + "P|2 {'a'}" + "'a' } }".repeat(49) + "'b'} }"
+        val expected = "S { S1 {" + "P { P2 {".repeat(49) + "P {'a'}" + "'a' } }".repeat(49) + "'b'} }"
 
         super.test(
             rrs = rrs,

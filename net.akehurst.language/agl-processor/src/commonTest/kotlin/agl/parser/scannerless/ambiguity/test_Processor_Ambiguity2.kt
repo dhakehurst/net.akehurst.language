@@ -39,6 +39,9 @@ internal class test_Processor_Ambiguity2 : test_ScanOnDemandParserAbstract() {
                 ref("S1")
             }
             concatenation("S1") { ref("S"); ref("S") }
+            precedenceFor("S") {
+                left("S1", setOf("'a'"))
+            }
         }
         val goal = "S"
     }
@@ -101,9 +104,9 @@ internal class test_Processor_Ambiguity2 : test_ScanOnDemandParserAbstract() {
         val sentence = "aaa"
 
         val expected = """
-            S|1 {
+            S {
               S1 {
-                S|1 {
+                S {
                   S1 {
                     S { 'a' }
                     S { 'a' }

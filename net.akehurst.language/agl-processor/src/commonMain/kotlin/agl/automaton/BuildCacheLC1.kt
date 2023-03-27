@@ -16,11 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.agl.automaton.FirstOf
 import net.akehurst.language.agl.api.automaton.ParseAction
-import net.akehurst.language.agl.api.runtime.Rule
-import net.akehurst.language.agl.automaton.BuildCacheLC1.Companion.canMergeState
-import net.akehurst.language.agl.automaton.BuildCacheLC1.Companion.cannotMergeState
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.collections.lazyMutableMapNonNull
@@ -667,7 +663,7 @@ internal class BuildCacheLC1(
         val context = rulePosition
         val parentNextFollow = LookaheadSetPart.EOT
         val parentParentNextFollow = LookaheadSetPart.EOT
-        firstFollowCache.processAllClosures(context, rulePosition, parentNextFollow, parentParentNextFollow)
+        firstFollowCache.processAllClosures(context, rulePosition, parentNextFollow)
         val stateInfo = mutableMapOf<RulePosition, StateInfo>()
         val transInfoBySrc = mutableMapOf<RulePosition, Set<TransInfo>>()
         for (srcRp in stateRps) {
@@ -685,10 +681,10 @@ internal class BuildCacheLC1(
                                     else -> ParseAction.GRAFT
                                 }
                                 val tgt = parentNext.rulePosition
-                                val follow = parentNext.firstOf
+                                val follow = parentNext.expectedAt
                                 val grd = follow
                                 val up = when (action) {
-                                    ParseAction.HEIGHT -> parentNext.parentFollow
+                                    ParseAction.HEIGHT -> parentNext.parentExpectedAt
                                     ParseAction.EMBED,
                                     ParseAction.WIDTH,
                                     ParseAction.GRAFT,
@@ -711,7 +707,7 @@ internal class BuildCacheLC1(
                                 val x = ctxCtxs.flatMap { cc ->
                                     this.firstFollowCache.parentInContext(cc, ctx, srcRp.rule)
                                 }.toSet()
-                                x.map { it.firstOf }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+                                x.map { it.expectedAt }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                             }
                         }
                         val ftis = this.firstFollowCache.firstTerminalInContext(ctx, srcRp, parentFollow) //emptySet(),  parentFollow)
@@ -721,7 +717,7 @@ internal class BuildCacheLC1(
                                 else -> ParseAction.WIDTH
                             }
                             val trp = firstTermInfo.terminalRule.asTerminalRulePosition
-                            val lhs = firstTermInfo.follow
+                            val lhs = firstTermInfo.parentExpectedAt
                             TransInfo(setOf(setOf(ctx)), action, setOf(trp), setOf(LookaheadInfoPart(lhs, LookaheadSetPart.EMPTY)))
                             //WidthInfo(action, trp, lhs)
                         }
@@ -792,8 +788,7 @@ internal class BuildCacheLC1(
         val startRulePosition = this.stateSet.startRulePosition
         val context = startRulePosition
         val parentNextFollow = LookaheadSetPart.EOT
-        val parentParentNextFollow = LookaheadSetPart.EOT
-        firstFollowCache.processAllClosures(context, startRulePosition, parentNextFollow, parentParentNextFollow)
+        firstFollowCache.processAllClosures(context, startRulePosition, parentNextFollow)
 
         val mergedStateInfos = calcStateInfos()
         for (stateInfo in mergedStateInfos) {
@@ -820,17 +815,17 @@ internal class BuildCacheLC1(
 
         val stateRpsCanMerge = rulePositions.filter { it.canMergeState }
         val stateRpsNotToMerge = rulePositions.filter { it.cannotMergeState }
-        val groupedStateRpsNotAtEnd = stateRpsCanMerge.groupBy { srcRp ->
+        val groupedStateRpsCanMerge = stateRpsCanMerge.groupBy { srcRp ->
             Pair(before[srcRp].flatMap { it.items }, srcRp.items)
         }
-        val mergedSateInfoNotAtEnd = groupedStateRpsNotAtEnd.flatMap { me ->
+        val mergedSateInfoCanMerge = groupedStateRpsCanMerge.flatMap { me ->
             when {
                 //me.key.second.isEmpty() -> me.value.map { StateInfo(setOf(it)) }
                 else -> listOf(StateInfo(me.value.toSet()))
             }
         }
-        val stateInfoAtEnd = stateRpsNotToMerge.map { StateInfo(setOf(it)) }
-        return mergedSateInfoNotAtEnd.toSet() + stateInfoAtEnd.toSet()
+        val stateInfoNotMerged = stateRpsNotToMerge.map { StateInfo(setOf(it)) }
+        return mergedSateInfoCanMerge.toSet() + stateInfoNotMerged.toSet()
     }
 
     private fun calcStateInfos(): Set<StateInfo> {
@@ -855,10 +850,10 @@ internal class BuildCacheLC1(
                         else -> ParseAction.GRAFT
                     }
                     val tgt = parentNext.rulePosition
-                    val follow = parentNext.firstOf
+                    val follow = parentNext.expectedAt
                     val grd = follow
                     val up = when (action) {
-                        ParseAction.HEIGHT -> parentNext.parentFollow
+                        ParseAction.HEIGHT -> parentNext.parentExpectedAt
                         ParseAction.EMBED,
                         ParseAction.WIDTH,
                         ParseAction.GRAFT,
@@ -887,7 +882,7 @@ internal class BuildCacheLC1(
                     val x = ctxCtxs.flatMap { cc ->
                         this.firstFollowCache.parentInContext(cc, ctx, srcRp.rule)
                     }.toSet()
-                    x.map { it.firstOf }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+                    x.map { it.expectedAt }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                 }
             }
             val ftis = this.firstFollowCache.firstTerminalInContext(ctx, srcRp, parentFollow) //emptySet(),  parentFollow)
@@ -897,7 +892,7 @@ internal class BuildCacheLC1(
                     else -> ParseAction.WIDTH
                 }
                 val trp = firstTermInfo.terminalRule.asTerminalRulePosition
-                val lhs = firstTermInfo.follow
+                val lhs = firstTermInfo.parentExpectedAt
                 TransInfo(setOf(setOf(ctx)), action, setOf(trp), setOf(LookaheadInfoPart(lhs, LookaheadSetPart.EMPTY)))
             }
             transInfo.addAll(wis.toSet())
@@ -1090,7 +1085,7 @@ internal class BuildCacheLC1(
                 else -> ParseAction.WIDTH
             }
             val rp = firstTermInfo.terminalRule.asTerminalRulePosition
-            val lhs = firstTermInfo.follow
+            val lhs = firstTermInfo.parentExpectedAt
             WidthInfo(action, rp, lhs)
         }
         val wisMerged = wis.groupBy { Pair(it.to, it.action) }
@@ -1156,8 +1151,8 @@ internal class BuildCacheLC1(
                         else -> ParseAction.GRAFT
                     }
                     val tgt = parentNext.rulePosition
-                    val grd = parentNext.firstOf
-                    val up = parentNext.parentFollow
+                    val grd = parentNext.expectedAt
+                    val up = parentNext.parentExpectedAt
                     rps.add(tgt)
                     TransInfo(setOf(setOf(context)), action, setOf(tgt), setOf(LookaheadInfoPart(grd, up)))
                     //HeightGraftInfo(action, listOf(tgt), setOf(LookaheadInfoPart(grd, up)))
@@ -1166,15 +1161,14 @@ internal class BuildCacheLC1(
         }.toSet()
         val merged = mergeTransInfo(hgInfo, emptySet())
 
-        val rpsNotMerge = rps.filter { it.cannotMergeState }
-        val rpsCanMerge = rps.filter { it.canMergeState }
+        //val rpsNotMerge = rps.filter { it.cannotMergeState }
         val mergedSateInfoNotAtEnd = mergeStates(rps)
         mergedSateInfoNotAtEnd.forEach { si ->
             si.rulePositions.forEach {
                 this._mergedStates[it] = si
             }
         }
-        rpsNotMerge.forEach { this._mergedStates[it] = StateInfo(setOf(it)) }
+        //rpsNotMerge.forEach { this._mergedStates[it] = StateInfo(setOf(it)) }
         return merged
     }
 

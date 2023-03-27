@@ -404,7 +404,7 @@ internal class RuntimeRuleSet(
             val clonedPrecRules = it.rules.map { pr ->
                 val cTgt = clonedRules[pr.target.tag]!!
                 val cOp = pr.operators.map{clonedRules[it.tag]!!}.toSet()
-                PrecedenceRules.PrecedenceRule(pr.precedence, cTgt, cOp, pr.associativity)
+                PrecedenceRules.PrecedenceRule(pr.precedence, cTgt, pr.option, cOp, pr.associativity)
             }
             PrecedenceRules(clonedCtx, clonedPrecRules)
         }

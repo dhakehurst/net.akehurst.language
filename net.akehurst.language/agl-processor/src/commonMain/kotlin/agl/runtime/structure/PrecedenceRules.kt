@@ -28,13 +28,15 @@ internal class PrecedenceRules(
     data class PrecedenceRule(
         val precedence: Int,
         val target: RuntimeRule,
+        val option: Int,
         val operators: Set<RuntimeRule>,
         val associativity: Associativity
     )
 
-    fun precedenceFor(to: Set<RuntimeRule>, lh: LookaheadSetPart): List<PrecedenceRule> {
+    fun precedenceFor(to: List<RulePosition>, lh: LookaheadSetPart): List<PrecedenceRule> {
         val r = rules.filter { pr ->
-            to.contains(pr.target) && pr.operators.any { lh.fullContent.contains(it) }
+            val rpMatch = to.any { it.rule == pr.target && it.option == pr.option }
+            rpMatch && pr.operators.any { lh.fullContent.contains(it) }
         }
         return r
     }
