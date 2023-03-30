@@ -61,7 +61,7 @@ internal class test_literal : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^b", setOf("'a'"))
-        ),issues)
+        ),issues.error)
     }
 
 }

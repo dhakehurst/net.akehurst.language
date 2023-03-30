@@ -57,7 +57,7 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-            ), issues
+            ), issues.error
         )
     }
 

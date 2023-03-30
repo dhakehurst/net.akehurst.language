@@ -47,7 +47,7 @@ internal class test_RuntimeParser_parse_multi : test_ScanOnDemandParserAbstract(
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -58,7 +58,7 @@ internal class test_RuntimeParser_parse_multi : test_ScanOnDemandParserAbstract(
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"a^",setOf("'b'","'a'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test

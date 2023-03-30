@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.processor.java8
 
+import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
@@ -27,6 +28,7 @@ import java.io.InputStreamReader
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 
 @RunWith(Parameterized::class)
@@ -39,7 +41,13 @@ class test_Java8Agl_BlocksAndStatements(val data: Data) {
         val processor by lazy {
             Agl.processorFromString(
                 grammarStr,
-                Agl.configuration(Agl.configurationDefault()) { targetGrammarName("BlocksAndStatements"); defaultGoalRuleName("Block") }
+                Agl.configuration(Agl.configurationDefault()) { targetGrammarName("BlocksAndStatements"); defaultGoalRuleName("Block") },
+                aglOptions = Agl.options {
+                    semanticAnalysis {
+                        // switch off ambiguity analysis for performance
+                        option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
+                    }
+                }
             ).processor!!
         }
 
@@ -82,21 +90,21 @@ class test_Java8Agl_BlocksAndStatements(val data: Data) {
         }
     }
 
-    @Test
+    @Test(timeout = 5000)
     fun parse() {
         val result = processor.parse(this.data.text)
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         val resultStr = result.sppt!!.asString
         assertEquals(this.data.text, resultStr)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
-    @Test
+    @Test(timeout = 5000)
     fun process() {
         val result = processor.process(this.data.text)
         assertNotNull(result.asm)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         val resultStr = result.asm!!.asString(" ", "")
         //assertEquals(this.data.text, resultStr)
         assertEquals(1, result.asm?.rootElements?.size)

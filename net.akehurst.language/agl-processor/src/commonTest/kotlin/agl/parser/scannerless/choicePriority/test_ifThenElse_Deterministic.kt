@@ -64,7 +64,7 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^", setOf("var","'if'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test

@@ -48,8 +48,7 @@ internal class test_nonTerms : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test
@@ -61,8 +60,7 @@ internal class test_nonTerms : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1,2,1,1),"a^",setOf("'b'"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test
@@ -74,8 +72,7 @@ internal class test_nonTerms : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(2,3,1,1),"ab^",setOf("'c'"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test
@@ -108,8 +105,7 @@ internal class test_nonTerms : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(3,4,1,1),"abc^d",setOf("<EOT>"))
-            ), issues
-        )
+            ), issues.error)
     }
 
 }

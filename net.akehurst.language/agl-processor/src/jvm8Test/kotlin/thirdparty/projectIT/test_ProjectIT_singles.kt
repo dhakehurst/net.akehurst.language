@@ -26,6 +26,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 
 class test_ProjectIT_singles {
@@ -53,7 +54,7 @@ class test_ProjectIT_singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         checkSPPT(
             "expression { constant { string : '\"hello\"' } }",
             result.sppt!!
@@ -68,7 +69,7 @@ class test_ProjectIT_singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         checkSPPT(
             "expression { constant { number : '12345' } }",
             result.sppt!!
@@ -83,7 +84,7 @@ class test_ProjectIT_singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         checkSPPT(
             "expression { navigationExpression { var : 'variable' } }",
             result.sppt!!
@@ -98,7 +99,7 @@ class test_ProjectIT_singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         checkSPPT(
             """
                 expression { instanceExpression {
@@ -119,7 +120,7 @@ class test_ProjectIT_singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         checkSPPT(
             """
                 expression { functionExpression {
@@ -147,7 +148,7 @@ class test_ProjectIT_singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         checkSPPT(
             """
                 expression { navigationExpression {
@@ -172,7 +173,7 @@ class test_ProjectIT_singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         checkSPPT(
             """
                 expression { listExpression {
@@ -209,7 +210,7 @@ class test_ProjectIT_singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         checkSPPT(
             """
                 expression { tableExpression {
@@ -236,7 +237,7 @@ class test_ProjectIT_singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         checkSPPT(
             "templateText { Template::text { textItem { literal : 'Insurance Product' } } }",
             result.sppt!!
@@ -254,10 +255,10 @@ class test_ProjectIT_singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
 
         assertEquals(
-            listOf(
+            setOf(
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(20, 1, 2, 1), "^]", setOf("<EOT>"))
             ),
-            result.issues
+            result.issues.all
         )
     }
 
@@ -270,10 +271,10 @@ class test_ProjectIT_singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertEquals(
-            listOf(
+            setOf(
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(20, 1, 2, 1), "^]", setOf("<EOT>"))
             ),
-            result.issues
+            result.issues.all
         )
     }
 
@@ -287,7 +288,7 @@ class test_ProjectIT_singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         checkSPPT(
             """
                 projection {
@@ -313,7 +314,7 @@ class test_ProjectIT_singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         checkSPPT(
             """
             projection {
@@ -346,7 +347,7 @@ class test_ProjectIT_singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         checkSPPT(
             """
             projection {
@@ -384,7 +385,7 @@ class test_ProjectIT_singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         checkSPPT(
             """
             projection {
@@ -427,7 +428,7 @@ class test_ProjectIT_singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         checkSPPT(
             """
             projection {

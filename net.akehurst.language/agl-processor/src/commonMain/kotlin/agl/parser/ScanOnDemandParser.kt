@@ -54,6 +54,7 @@ internal class ScanOnDemandParser(
     }
 
     override fun parseForGoal(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): ParseResult { //Pair<SharedPackedParseTree?, List<LanguageIssue>> {
+        _issues.clear()
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, inputText)
         val rp = createRuntimeParser(goalRuleName, input, automatonKind)
         this.runtimeParser = rp
@@ -78,13 +79,13 @@ internal class ScanOnDemandParser(
         return if (match.root != null) {
             //val sppt = SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
             val sppt = SPPTFromTreeData(match, input, seasons, maxNumHeads)
-            ParseResultDefault(sppt, this._issues.issues)
+            ParseResultDefault(sppt, this._issues)
         } else {
             //val nextExpected = this.findNextExpectedAfterError2(rp, lastToTryWidth, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
             val nextExpected = this.findNextExpectedAfterError3(input, rp.failedReasons, rp.stateSet.automatonKind, rp.stateSet)
            addParseIssue(input, rp, nextExpected, seasons, maxNumHeads)
             val sppt = null//rp.longestLastGrown?.let{ SharedPackedParseTreeDefault(it, seasons, maxNumHeads) }
-            ParseResultDefault(sppt, this._issues.issues)
+            ParseResultDefault(sppt, this._issues)
         }
     }
 

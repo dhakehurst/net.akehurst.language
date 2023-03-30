@@ -26,6 +26,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @RunWith(Parameterized::class)
 class test_Java8_Compare(val data: Data) {
@@ -144,7 +145,7 @@ class test_Java8_Compare(val data: Data) {
         val grammarRule = if (toUpper) this.data.grammarRule.capitalize() else this.data.grammarRule
         val result = proc.parse(queryStr, Agl.parseOptions { goalRuleName(grammarRule) })
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         val resultStr = clean(result.sppt!!.asString)
         assertEquals(queryStr, resultStr)
     }

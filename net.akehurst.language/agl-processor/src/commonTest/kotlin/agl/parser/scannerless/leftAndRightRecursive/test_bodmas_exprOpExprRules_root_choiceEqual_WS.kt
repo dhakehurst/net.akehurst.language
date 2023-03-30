@@ -63,6 +63,12 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDema
                 literal("false")
             }
             pattern("var","[a-zA-Z]+")
+            preferenceFor("expr") {
+                left("sub", setOf("'-'"))
+                left("add", setOf("'+'"))
+                left("mul", setOf("'*'"))
+                left("div", setOf("'/'"))
+            }
         }
 
         const val goal = "S"
@@ -76,7 +82,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDema
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("var","'true'","'false'","'('"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test

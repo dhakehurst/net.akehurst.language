@@ -4,6 +4,7 @@ import net.akehurst.language.agl.processor.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class test_aglJava {
 
@@ -493,7 +494,7 @@ grammar Packages extends Interfaces {
         """.trimIndent()
         val result =  processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -505,6 +506,6 @@ grammar Packages extends Interfaces {
         """.trimIndent()
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
         assertNotNull(result.asm)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
     }
 }

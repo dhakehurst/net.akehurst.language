@@ -21,6 +21,7 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class test_SText_tokensByLine {
 
@@ -259,7 +260,7 @@ FQN = ID ('.' ID)*;
     fun t1() {
         val result = processor.parse("after 10 s / raise ABC.intEvent", Agl.parseOptions { goalRuleName("StateScope") })
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+        assertTrue(result.issues.isEmpty())
         val actual = result.sppt!!.tokensByLine(0)
 
         assertEquals("after", actual[0].matchedText)

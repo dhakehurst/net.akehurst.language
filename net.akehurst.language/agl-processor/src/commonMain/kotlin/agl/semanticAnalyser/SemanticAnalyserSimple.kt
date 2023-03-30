@@ -59,7 +59,7 @@ class SemanticAnalyserSimple(
             _scopeModel?.resolveReferencesElement(_issues, it, locationMap, context?.rootScope)
         }
 
-        return SemanticAnalysisResultDefault(this._issues.issues)
+        return SemanticAnalysisResultDefault(this._issues)
     }
 
     private fun buildScope(asm: AsmSimple, rootScope: ScopeSimple<AsmElementPath>?) {

@@ -40,6 +40,10 @@ internal class test_acsOads_sList : test_ScanOnDemandParserAbstract() {
             literal("'a'", "a")
             literal("'c'", "c")
             literal("'d'", "d")
+            preferenceFor("'a'") {
+                left("acs", setOf("<EOT>"))
+                left("ads", setOf("<EOT>"))
+            }
         }
         val goal = "S"
     }
@@ -52,7 +56,7 @@ internal class test_acsOads_sList : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -79,7 +83,7 @@ internal class test_acsOads_sList : test_ScanOnDemandParserAbstract() {
         val sentence = "ada"
 
         val expected = """
-            S|1 {
+            S {
                 ads { 'a' 'd' 'a' }
             }
         """.trimIndent()
@@ -98,7 +102,7 @@ internal class test_acsOads_sList : test_ScanOnDemandParserAbstract() {
         val sentence = "a"
 
         val expected = """
-            S|1 {
+            S {
                 ads { 'a' }
             }
         """.trimIndent()

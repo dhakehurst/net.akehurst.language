@@ -21,10 +21,7 @@ import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import test.assertEqualsWarning
 import kotlin.test.assertEquals
@@ -60,8 +57,8 @@ internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean=false)
         if(build)parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
         val result = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
         if(printAutomaton) println(rrs.usedAutomatonToString(goal))
+        assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
-        assertEquals(emptyList(), result.issues)
         val sppt = SPPTParserDefault(rrs, embeddedRuntimeRuleSets)
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
@@ -73,7 +70,7 @@ internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean=false)
         return result.sppt
     }
 
-    fun testFail(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int): Pair<SharedPackedParseTree?,List<LanguageIssue>> {
+    fun testFail(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int): Pair<SharedPackedParseTree?,IssueCollection> {
         val parser = ScanOnDemandParser(rrs as RuntimeRuleSet)
         if(build)parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
         val p = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)

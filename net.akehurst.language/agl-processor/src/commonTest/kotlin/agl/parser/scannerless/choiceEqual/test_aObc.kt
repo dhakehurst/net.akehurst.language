@@ -53,7 +53,7 @@ internal class test_aObc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("'a'","'b'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -63,12 +63,12 @@ internal class test_aObc : test_ScanOnDemandParserAbstract() {
         val expected = """
             S { a { 'a' } }
         """
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -80,7 +80,7 @@ internal class test_aObc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"a^b",setOf("<EOT>"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -91,7 +91,7 @@ internal class test_aObc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"a^bc",setOf("<EOT>"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -101,12 +101,12 @@ internal class test_aObc : test_ScanOnDemandParserAbstract() {
         val expected = """
             S|1 { bc { b { 'b' } c { 'c' } } }
         """
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -118,7 +118,7 @@ internal class test_aObc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"b^",setOf("'c'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -129,7 +129,7 @@ internal class test_aObc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^c",setOf("'a'","'b'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -140,7 +140,7 @@ internal class test_aObc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^d",setOf("'a'","'b'"))
-        ),issues)
+        ),issues.error)
     }
 
 

@@ -261,7 +261,7 @@ grammar Expressions {
                     "0b01^2",
                     setOf("'.'", "ASSIGNMENT_OPERATOR", "'::'", "'?'", "INFIX_OPERATOR", "POSTFIX_OPERATOR", "'['", "<EOT>")
                 )
-            ), result.issues
+            ), result.issues.error
         )
 
     }

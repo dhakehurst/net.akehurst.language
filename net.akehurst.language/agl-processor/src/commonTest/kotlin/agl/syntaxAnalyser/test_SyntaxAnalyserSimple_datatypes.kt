@@ -19,6 +19,7 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.api.asm.AsmSimple
@@ -82,9 +83,9 @@ class test_SyntaxAnalyserSimple_datatypes {
         val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
             grammarStr,
             Agl.configuration {
-                scopeModelResolver { ProcessResultDefault(scopeModel, emptyList()) }
-                typeModelResolver { ProcessResultDefault(typeModel, emptyList()) }
-                syntaxAnalyserResolver {  ProcessResultDefault(syntaxAnalyser, emptyList()) }
+                scopeModelResolver { ProcessResultDefault(scopeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
+                typeModelResolver { ProcessResultDefault(typeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
+                syntaxAnalyserResolver {  ProcessResultDefault(syntaxAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) }
             }
         ).also {
             val issues = syntaxAnalyser.configure(
@@ -142,7 +143,7 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val result = processor.process(sentence)
         assertNotNull(result.asm)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
 
         val expected = asmSimple {
             root("Unit") {
@@ -167,7 +168,7 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val result = processor.process(sentence)
         assertNotNull(result.asm)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
 
         val expected = asmSimple {
             root("Unit") {
@@ -233,7 +234,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         )
 
         assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
-        assertEquals(expItems, result.issues)
+        assertEquals(expItems, result.issues.error)
     }
 
     @Test
@@ -254,7 +255,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         )
         assertNotNull(result.asm)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
 
         val expected = asmSimple(scopeModel, ContextSimple()) {
             root("Unit") {

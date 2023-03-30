@@ -190,37 +190,36 @@ internal class FirstFollowCache3 {
 
         if (graph.root.rulePosition.isGoal && graph.root.rulePosition.isAtEnd) {
             return
-        } //TODO: else
-
-        val todoList = mutableQueueOf<ClosureItem>()
-        todoList.enqueue(graph.root)
-        while (todoList.isNotEmpty) {
-            val cls = todoList.dequeue()
-            for (item in cls.rulePosition.items) {
-                when {
-                    item.isTerminal -> graph.addChild(cls,item.asTerminalRulePosition)
-                    item.isNonTerminal -> {
-                        val childRps = item.rulePositions
-                        for (childRp in childRps) {
-                            val child = graph.addChild(cls,childRp)
-                            if (null == child) {
-                                // don't follow down the closure
-                                //val short = child.shortString
-                            } else {
-                                todoList.enqueue(child)
-                                //println("todo: ${childCls.shortString}")
+        }else {
+            val todoList = mutableQueueOf<ClosureItem>()
+            todoList.enqueue(graph.root)
+            while (todoList.isNotEmpty) {
+                val cls = todoList.dequeue()
+                for (item in cls.rulePosition.items) {
+                    when {
+                        item.isTerminal -> graph.addChild(cls, item.asTerminalRulePosition)
+                        item.isNonTerminal -> {
+                            val childRps = item.rulePositions
+                            for (childRp in childRps) {
+                                val child = graph.addChild(cls, childRp)
+                                if (null == child) {
+                                    // don't follow down the closure
+                                    //val short = child.shortString
+                                } else {
+                                    todoList.enqueue(child)
+                                    //println("todo: ${childCls.shortString}")
+                                }
                             }
                         }
-                    }
 
-                    else -> error("Internal Error: should never happen")
+                        else -> error("Internal Error: should never happen")
+                    }
                 }
             }
+            graph.resolveAllChildParentInfo()
+
+            this.cacheStuff(graph)
         }
-        graph.resolveAllChildParentInfo()
-
-        this.cacheStuff(graph)
-
         if (Debug.OUTPUT_SM_BUILD) debug(Debug.IndentDelta.DEC_BEFORE) { "FINISH calcFirstTermClosure: ${graph.root}" }
     }
 

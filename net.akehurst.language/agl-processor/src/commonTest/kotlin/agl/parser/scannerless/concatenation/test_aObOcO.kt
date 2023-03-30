@@ -70,8 +70,7 @@ internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0,1,1,1),"^d", setOf("'a'","'b'","'c'","<EOT>"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test
@@ -125,8 +124,7 @@ internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1,2,1,1),"b^a", setOf("'c'","<EOT>"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test
@@ -180,8 +178,7 @@ internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1,2,1,1),"a^dc", setOf("'b'","'c'","<EOT>"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test
@@ -193,8 +190,7 @@ internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(2,3,1,1),"ab^d", setOf("'c'","<EOT>"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test
@@ -206,8 +202,7 @@ internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(3,4,1,1),"abc^d", setOf("<EOT>"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test
@@ -282,7 +277,6 @@ internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1,2,1,1),"c^b", setOf("<EOT>"))
-            ), issues
-        )
+            ), issues.error)
     }
 }

@@ -41,6 +41,10 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
             concatenation("acs1") { ref("acs"); literal("c"); literal("a") }
             choice("ads", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a"); ref("ads1") }
             concatenation("ads1") { ref("ads"); literal("d"); literal("a") }
+            preferenceFor("'a'") {
+                left("acs", setOf("<EOT>"))
+                left("ads", setOf("<EOT>"))
+            }
         }
         val goal = "S"
     }
@@ -53,7 +57,7 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^", setOf("'a'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -62,7 +66,7 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-                acs|1 {
+                acs {
                     acs1 {
                         acs { 'a' }
                         'c'
@@ -86,8 +90,8 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
         val sentence = "ada"
 
         val expected = """
-            S|1 {
-                ads|1 {
+            S {
+                ads {
                     ads1 {
                         ads { 'a' }
                         'd'
@@ -111,7 +115,7 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
         val sentence = "a"
 
         val expected = """
-            S|1 { ads { 'a' } }
+            S { ads { 'a' } }
         """.trimIndent()
 
         super.test(

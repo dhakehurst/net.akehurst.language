@@ -28,6 +28,7 @@ import java.io.InputStreamReader
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 
 @RunWith(Parameterized::class)
@@ -79,7 +80,7 @@ class test_ProjectIT(val data: Data) {
         if(data.valid) {
             val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName("projectionGroup") })
             assertNotNull(result.sppt, "$data\n"+result.issues.joinToString(separator = "\n") { "$it" })
-            assertEquals(emptyList(), result.issues)
+            assertTrue(result.issues.isEmpty())
             val resultStr = result.sppt!!.asString
             assertEquals(this.data.text, resultStr)
             println(result.sppt!!.toStringAll)

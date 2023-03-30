@@ -73,7 +73,7 @@ class test_Xml(val data: Data) {
 
         if (data.valid) {
             assertNotNull(result.sppt,result.issues.joinToString(separator = "\n") { "$it" })
-            assertEquals(emptyList(), result.issues)
+            assertTrue(result.issues.isEmpty())
             val resultStr = result.sppt!!.asString
             assertEquals(this.data.text, resultStr)
         } else {
@@ -88,7 +88,7 @@ class test_Xml(val data: Data) {
 
         if (data.valid) {
             assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
-            assertEquals(emptyList(), result.issues)
+            assertTrue(result.issues.isEmpty())
         } else {
             assertNull(result.asm)
             assertTrue(result.issues.isNotEmpty())

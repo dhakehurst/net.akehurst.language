@@ -25,6 +25,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 
 @RunWith(Parameterized::class)
@@ -74,7 +75,7 @@ class test_StatechartTools(val data: Data) {
     fun parse() {
         val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName(data.ruleName) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         val resultStr = result.sppt!!.asString
         assertEquals(this.data.text, resultStr)
     }
@@ -83,6 +84,6 @@ class test_StatechartTools(val data: Data) {
     fun process() {
         val result = processor.process(this.data.text, Agl.options { parse { goalRuleName(data.ruleName) } })
         assertNotNull(result.asm, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
     }
 }

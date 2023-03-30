@@ -37,7 +37,7 @@ internal class test_ifThenElse_NoWS : test_ScanOnDemandParserAbstract() {
                 literal("Y")
                 literal("Z")
             }
-            precedenceFor("expr") {
+            preferenceFor("expr") {
                 right("ifthen", setOf("'then'"))
                 right("ifthenelse", setOf("'then'","'else'"))
             }
@@ -53,7 +53,7 @@ internal class test_ifThenElse_NoWS : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^", setOf("'W'","'X'","'Y'","'Z'","'if'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test

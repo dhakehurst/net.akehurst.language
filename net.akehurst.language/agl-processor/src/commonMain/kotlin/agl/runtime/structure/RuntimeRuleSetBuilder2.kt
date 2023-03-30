@@ -43,10 +43,13 @@ internal class RuntimeRuleSetBuilder2 : RuleSetBuilder {
     private val _precedenceRuleBuilders = mutableListOf<PrecedenceRuleBuilder>()
 
     internal fun build(): RuntimeRuleSet {
-        val ruleMap = this._ruleBuilders.values.mapIndexedNotNull { ruleNumber, rb ->
+        val ruleMap = this._ruleBuilders.values.mapIndexed { ruleNumber, rb ->
             val rr = rb.buildRule(ruleNumber)
             Pair(rb.tag, rr)
-        }.associate { it }
+        }
+            .plus(Pair("<EMPTY>",RuntimeRuleSet.EMPTY))
+            .plus(Pair("<EOT>",RuntimeRuleSet.END_OF_TEXT))
+            .associate { it }
         val rules = this._ruleBuilders.values.map { rb ->
             rb.buildRhs(ruleMap)
             rb.rule!!
@@ -141,7 +144,7 @@ internal class RuntimeRuleSetBuilder2 : RuleSetBuilder {
         this._ruleBuilders[ruleName] = rb
     }
 
-    fun precedenceFor(precedenceContextRuleName: String, init: PrecedenceRuleBuilder.() -> Unit) {
+    fun preferenceFor(precedenceContextRuleName: String, init: PrecedenceRuleBuilder.() -> Unit) {
         val b = PrecedenceRuleBuilder(precedenceContextRuleName)
         b.init()
         this._precedenceRuleBuilders.add(b)

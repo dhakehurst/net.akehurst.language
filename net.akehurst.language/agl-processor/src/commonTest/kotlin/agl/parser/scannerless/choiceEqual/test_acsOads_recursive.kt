@@ -43,6 +43,10 @@ internal class test_acsOads_recursive : test_ScanOnDemandParserAbstract() {
             concatenation("acs1") { ref("acs"); literal("c"); literal("a") }
             choice("ads", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a"); ref("ads1") }
             concatenation("ads1") { ref("ads"); literal("d"); literal("a") }
+            preferenceFor("'a'") {
+                left("acs", setOf("<EOT>"))
+                left("ads", setOf("<EOT>"))
+            }
         }
         val goal = "S"
     }
@@ -55,7 +59,7 @@ internal class test_acsOads_recursive : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test

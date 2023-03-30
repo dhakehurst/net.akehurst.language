@@ -47,7 +47,7 @@ import net.akehurst.language.api.typeModel.TypeModel
 internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : Any>(
 ) : LanguageProcessor<AsmType, ContextType> {
 
-    override val issues = mutableListOf<LanguageIssue>()
+    override val issues = IssueHolder(LanguageProcessorPhase.ALL)
 
     protected abstract val _runtimeRuleSet: RuntimeRuleSet
     protected abstract val mapToGrammar: (Int, Int) -> RuleItem
@@ -205,7 +205,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val fResult = if (null != formatter) {
             this.formatter!!.format(asm)
         } else {
-            FormatResultDefault(asm.toString(), emptyList())
+            FormatResultDefault(asm.toString(), IssueHolder(LanguageProcessorPhase.FORMATTER))
         }
         return fResult
     }
@@ -231,7 +231,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 }
             }
         }
-        return ExpectedAtResultDefault(items, emptyList())
+        return ExpectedAtResultDefault(items,  IssueHolder(LanguageProcessorPhase.ALL))
     }
 
     /*

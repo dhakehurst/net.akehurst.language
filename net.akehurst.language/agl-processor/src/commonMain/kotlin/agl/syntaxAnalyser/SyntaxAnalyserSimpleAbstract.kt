@@ -100,7 +100,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple,C:SentenceContext<*>>(
         }
         _asm?.addRoot(rootEl)
 
-        return SyntaxAnalysisResultDefault(_asm as A?, _issues.issues, locationMap)
+        return SyntaxAnalysisResultDefault(_asm as A?, _issues, locationMap)
     }
 
     private fun createValue(target: SPPTNode, path: AsmElementPath): Any? {

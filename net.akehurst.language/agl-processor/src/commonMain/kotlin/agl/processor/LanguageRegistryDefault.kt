@@ -66,11 +66,11 @@ class LanguageRegistryDefault : GrammarRegistry {
                 configuration = Agl.configuration {
                     targetGrammarName(AglGrammarGrammar.name)
                     defaultGoalRuleName(AglGrammarGrammar.goalRuleName)
-                    typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(AglGrammarGrammar), emptyList()) }
-                    scopeModelResolver { ProcessResultDefault(ScopeModelAgl(), emptyList()) }
-                    syntaxAnalyserResolver { ProcessResultDefault(AglGrammarSyntaxAnalyser(), emptyList()) }
-                    semanticAnalyserResolver { ProcessResultDefault(AglGrammarSemanticAnalyser(this@LanguageRegistryDefault), emptyList()) }
-                    formatterResolver { ProcessResultDefault(null, emptyList()) }
+                    typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(AglGrammarGrammar), IssueHolder(LanguageProcessorPhase.ALL)) }
+                    scopeModelResolver { ProcessResultDefault(ScopeModelAgl(), IssueHolder(LanguageProcessorPhase.ALL)) }
+                    syntaxAnalyserResolver { ProcessResultDefault(AglGrammarSyntaxAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
+                    semanticAnalyserResolver { ProcessResultDefault(AglGrammarSemanticAnalyser(this@LanguageRegistryDefault), IssueHolder(LanguageProcessorPhase.ALL)) }
+                    formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                     styleResolver {
                         Agl.fromString(
                             Agl.registry.agl.style.processor!!,
@@ -90,11 +90,11 @@ class LanguageRegistryDefault : GrammarRegistry {
                 configuration = Agl.configuration {
                     targetGrammarName(AglScopesGrammar.name)
                     defaultGoalRuleName(AglScopesGrammar.goalRuleName)
-                    typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(AglScopesGrammar), emptyList()) }
-                    scopeModelResolver { ProcessResultDefault(ScopeModelAgl(), emptyList()) }
-                    syntaxAnalyserResolver { ProcessResultDefault(AglScopesSyntaxAnalyser(), emptyList()) }
-                    semanticAnalyserResolver { ProcessResultDefault(AglScopesSemanticAnalyser(), emptyList()) }
-                    formatterResolver { ProcessResultDefault(null, emptyList()) }
+                    typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(AglScopesGrammar), IssueHolder(LanguageProcessorPhase.ALL)) }
+                    scopeModelResolver { ProcessResultDefault(ScopeModelAgl(), IssueHolder(LanguageProcessorPhase.ALL)) }
+                    syntaxAnalyserResolver { ProcessResultDefault(AglScopesSyntaxAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
+                    semanticAnalyserResolver { ProcessResultDefault(AglScopesSemanticAnalyser(),IssueHolder(LanguageProcessorPhase.ALL)) }
+                    formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                     styleResolver {
                         Agl.fromString(
                             Agl.registry.agl.style.processor!!,
@@ -118,11 +118,11 @@ class LanguageRegistryDefault : GrammarRegistry {
                 configuration = Agl.configuration {
                     targetGrammarName(AglFormatGrammar.name)
                     defaultGoalRuleName(AglFormatGrammar.goalRuleName)
-                    typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(AglFormatGrammar), emptyList()) }
-                    scopeModelResolver { ProcessResultDefault(ScopeModelAgl(), emptyList()) }
-                    syntaxAnalyserResolver { ProcessResultDefault(AglFormatSyntaxAnalyser(it.typeModel, it.scopeModel), emptyList()) }
-                    semanticAnalyserResolver { ProcessResultDefault(AglFormatSemanticAnalyser(), emptyList()) }
-                    formatterResolver { ProcessResultDefault(null, emptyList()) }
+                    typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(AglFormatGrammar),IssueHolder(LanguageProcessorPhase.ALL)) }
+                    scopeModelResolver { ProcessResultDefault(ScopeModelAgl(), IssueHolder(LanguageProcessorPhase.ALL)) }
+                    syntaxAnalyserResolver { ProcessResultDefault(AglFormatSyntaxAnalyser(it.typeModel, it.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+                    semanticAnalyserResolver { ProcessResultDefault(AglFormatSemanticAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
+                    formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                     styleResolver {
                         Agl.fromString(
                             Agl.registry.agl.style.processor!!,
@@ -142,10 +142,10 @@ class LanguageRegistryDefault : GrammarRegistry {
                 configuration = Agl.configuration {
                     targetGrammarName(AglStyleGrammar.name)
                     defaultGoalRuleName(AglStyleGrammar.goalRuleName)
-                    typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(it.grammar!!), emptyList()) }
-                    scopeModelResolver { ProcessResultDefault(ScopeModelAgl(), emptyList()) }
-                    syntaxAnalyserResolver { ProcessResultDefault(AglStyleSyntaxAnalyser(), emptyList()) }
-                    semanticAnalyserResolver { ProcessResultDefault(AglStyleSemanticAnalyser(), emptyList()) }
+                    typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+                    scopeModelResolver { ProcessResultDefault(ScopeModelAgl(), IssueHolder(LanguageProcessorPhase.ALL)) }
+                    syntaxAnalyserResolver { ProcessResultDefault(AglStyleSyntaxAnalyser(),IssueHolder(LanguageProcessorPhase.ALL)) }
+                    semanticAnalyserResolver { ProcessResultDefault(AglStyleSemanticAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
                     //formatterResolver {  }
                     styleResolver {
                         Agl.fromString(

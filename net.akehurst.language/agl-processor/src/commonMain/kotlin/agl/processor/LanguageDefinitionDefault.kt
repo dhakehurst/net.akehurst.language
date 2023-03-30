@@ -39,7 +39,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
             val res = Agl.grammarFromString<List<Grammar>, GrammarContext>(newValue, aglOptions)
             this._issues.addAll(res.issues)
             this.grammar = when {
-                res.issues.any { it.kind == LanguageIssueKind.ERROR } -> null
+                res.issues.error.isNotEmpty() -> null
                 null == targetGrammarName ->res.asm?.firstOrNull()
                 else -> res.asm?.firstOrNull { it.name == this.targetGrammarName }
             }
@@ -57,7 +57,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         if (oldValue != newValue) {
             super._scopeModelResolver = {
                 if (null == newValue) {
-                    ProcessResultDefault(null, emptyList())
+                    ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
                 } else {
                     Agl.registry.agl.scopes.processor!!.process(newValue)
                 }
@@ -82,7 +82,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         if (oldValue != newValue) {
             super._styleResolver = {
                 if (null == newValue) {
-                    ProcessResultDefault(null, emptyList())
+                    ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
                 } else {
                     Agl.registry.agl.style.processor!!.process(newValue)
                 }

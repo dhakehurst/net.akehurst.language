@@ -38,6 +38,11 @@ internal class test_n_P_Im : test_ScanOnDemandParserAbstract() {
             sList("I",2,-1,"S","'o'")
             literal("'o'","o")
             concatenation("P") { ref("S"); literal("p"); literal("a") }
+            //preferenceFor("S") {
+            //    left("I", setOf())
+            //    left("I", setOf())
+            //    left("I", setOf())
+            //}
         }
 
         val goal = "S"
@@ -99,7 +104,7 @@ internal class test_n_P_Im : test_ScanOnDemandParserAbstract() {
         val sentence = "aoaoa"
 
         val expected = """
-            S|2 { I { S{'a'} 'o' S{'a'} 'o' S{'a'} } }
+            S { I { S{'a'} 'o' S{'a'} 'o' S{'a'} } }
         """.trimIndent()
 
         super.test(
@@ -116,7 +121,7 @@ internal class test_n_P_Im : test_ScanOnDemandParserAbstract() {
         val sentence = "aoaoaoaoa"
 
         val expected = """
-            S|2 { I { S{'a'} 'o' S{'a'} 'o' S{'a'} 'o' S{'a'} 'o' S{'a'} } }
+            S { I { S{'a'} 'o' S{'a'} 'o' S{'a'} 'o' S{'a'} 'o' S{'a'} } }
         """.trimIndent()
 
         super.test(
@@ -133,8 +138,8 @@ internal class test_n_P_Im : test_ScanOnDemandParserAbstract() {
         val sentence = "apaoa"
 
         val expected = """
-             S|2 { I {
-                S|1 { P {
+             S { I {
+                S { P {
                     S { 'a' }
                     'p'
                     'a'
@@ -158,10 +163,10 @@ internal class test_n_P_Im : test_ScanOnDemandParserAbstract() {
         val sentence = "aoapa"
 
         val expected = """
-             S|2 { I {
+             S { I {
                   S { 'a' }
                   'o'
-                  S|1 { P {
+                  S { P {
                     S { 'a' }
                     'p'
                     'a'
@@ -183,20 +188,20 @@ internal class test_n_P_Im : test_ScanOnDemandParserAbstract() {
         val sentence = "apaoapaoapa"
 
         val expected = """
-             S|2 { I {
-                S|1 { P {
+             S { I {
+                S { P {
                     S { 'a' }
                     'p'
                     'a'
                   } }
                 'o'
-                S|1 { P {
+                S { P {
                     S { 'a' }
                     'p'
                     'a'
                   } }
                 'o'
-                S|1 { P {
+                S { P {
                     S { 'a' }
                     'p'
                     'a'
@@ -218,26 +223,26 @@ internal class test_n_P_Im : test_ScanOnDemandParserAbstract() {
         val sentence = "apaoapaoapaoapa"
 
         val expected = """
-         S|2 { I {
-            S|1 { P {
+         S { I {
+            S { P {
                 S { 'a' }
                 'p'
                 'a'
               } }
             'o'
-            S|1 { P {
+            S { P {
                 S { 'a' }
                 'p'
                 'a'
               } }
             'o'
-            S|1 { P {
+            S { P {
                 S { 'a' }
                 'p'
                 'a'
               } }
             'o'
-            S|1 { P {
+            S { P {
                 S { 'a' }
                 'p'
                 'a'

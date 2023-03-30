@@ -21,10 +21,12 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.typeModel.StringType
 import net.akehurst.language.api.typeModel.TypeModelTest
 import net.akehurst.language.api.typeModel.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class test_AglScopes {
 
@@ -33,32 +35,69 @@ class test_AglScopes {
     }
 
     @Test
-    fun scopes_typeModel() {
+    fun typeModel() {
         val actual = aglProc.typeModel
-        val expected = typeModel("net.akehurst.language.agl","AglScopes") {
-            elementType("declarations") {
-                propertyListTypeOf("rootIdentifiables","identifiable",false,0)
-                propertyListTypeOf("scopes","scope",false,1)
-                propertyListTypeOf("references","references",true,2)
+        val expected = typeModel("net.akehurst.language.agl", "AglScopes") {
+            // declarations = rootIdentifiables scopes references?
+            elementType("Declarations") {
+                propertyListTypeOf("rootIdentifiables", "Identifiable", false, 0)
+                propertyListTypeOf("scopes", "Scope", false, 1)
+                propertyListTypeOf("references", "Reference", true, 2)
             }
-            elementType("rootIdentifiables") {
-                propertyListTypeOf("identifiable","identifiable",false,0)
+            // rootIdentifiables = identifiable*
+            elementType("RootIdentifiables") {
+                propertyListTypeOf("identifiable", "Identifiable", false, 0)
             }
-            elementType("scopes") {
-                propertyListTypeOf("scope","scope",false,0)
+            // scopes = scope*
+            elementType("Scopes") {
+                propertyListTypeOf("scope", "scope", false, 0)
             }
-            elementType("scope") {
-                propertyElementTypeOf("typeReference","typeReference",false,0)
-                propertyListTypeOf("identifiables","identifiable",false,1)
+            // scope = 'scope' typeReference '{' identifiables '}
+            elementType("Scope") {
+                propertyElementTypeOf("typeReference", "typeReference", false, 0)
+                propertyListTypeOf("identifiables", "identifiable", false, 1)
             }
-            elementType("identifiables") {
-                propertyListTypeOf("identifiable","identifiable",false,0)
+            // identifiables = identifiable*
+            elementType("Identifiables") {
+                propertyListTypeOf("identifiable", "identifiable", false, 0)
             }
-            elementType("identifiable") {
-                propertyElementTypeOf("typeReference","typeReference",false,0)
-                propertyStringType("propertyReferenceOrNothing",false,1)
+            // identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
+            elementType("Identifiable") {
+                propertyElementTypeOf("typeReference", "typeReference", false, 0)
+                propertyStringType("propertyReferenceOrNothing", false, 1)
             }
-            //TODO
+            // references = 'references' '{' referenceDefinitions '}'
+            elementType("References") {
+                propertyListTypeOf("referenceDefinitions", "ReferenceDefinition", false, 1)
+            }
+            // referenceDefinitions = referenceDefinition*
+            elementType("ReferenceDefinitions") {
+                propertyListTypeOf("referenceDefinition", "ReferenceDefinition", false, 0)
+            }
+            // referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
+            elementType("ReferenceDefinition") {
+                propertyElementTypeOf("typeReference", "TypeReference", false, 0)
+                propertyElementTypeOf("propertyReference", "PropertyReference", false, 1)
+                propertyListTypeOf("typeReferences", "TypeReference", false, 2)
+            }
+            // typeReferences = [typeReferences / '|']+
+            elementType("Identifiables") {
+                propertyListSeparatedTypeOf("typeReferences", "TypeReference", StringType, false, 0)
+            }
+            // propertyReferenceOrNothing = '§nothing' | propertyReference
+            elementType("PropertyReferenceOrNothing") {
+
+            }
+            // typeReference = IDENTIFIER     // same as grammar rule name
+            elementType("TypeReference") {
+                propertyStringType("identifier",false, 0)
+            }
+            // propertyReference = IDENTIFIER // same as grammar rule name
+            elementType("PropertyReference") {
+                propertyStringType("identifier",false, 0)
+            }
+            // leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*"
+
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -78,7 +117,7 @@ class test_AglScopes {
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, result.asm?.references)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -98,7 +137,7 @@ class test_AglScopes {
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, result.asm?.references)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -124,13 +163,13 @@ class test_AglScopes {
         )
 
         val expected = ScopeModelAgl().apply {
-            scopes["rule1"]=(ScopeDefinition("rule1"))
+            scopes["rule1"] = (ScopeDefinition("rule1"))
         }
 
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, result.asm?.references)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -156,16 +195,16 @@ class test_AglScopes {
         )
 
         val expected = ScopeModelAgl().apply {
-            scopes["ruleX"]=(ScopeDefinition("ruleX"))
+            scopes["ruleX"] = (ScopeDefinition("ruleX"))
         }
 
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, result.asm?.references)
         assertEquals(
-            listOf(
+            setOf(
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(6, 7, 1, 6), "GrammarRule 'ruleX' not found for scope")
-            ), result.issues
+            ), result.issues.all
         )
     }
 
@@ -196,7 +235,7 @@ class test_AglScopes {
         )
 
         val expected = ScopeModelAgl().apply {
-            scopes["rule1"]=(ScopeDefinition("rule1").apply {
+            scopes["rule1"] = (ScopeDefinition("rule1").apply {
                 identifiables.add(Identifiable("rule2", "rule3"))
             })
         }
@@ -204,7 +243,7 @@ class test_AglScopes {
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, result.asm?.references)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -234,7 +273,7 @@ class test_AglScopes {
         )
 
         val expected = ScopeModelAgl().apply {
-            scopes["rule1"]=(ScopeDefinition("rule1").apply {
+            scopes["rule1"] = (ScopeDefinition("rule1").apply {
                 identifiables.add(Identifiable("ruleX", "rule3"))
             })
         }
@@ -251,7 +290,7 @@ class test_AglScopes {
                     "In scope for 'rule1' GrammarRule 'ruleX' not found as identifiable type"
                 )
             ),
-            result.issues
+            result.issues.error
         )
     }
 
@@ -282,7 +321,7 @@ class test_AglScopes {
         )
 
         val expected = ScopeModelAgl().apply {
-            scopes["rule1"]=(ScopeDefinition("rule1").apply {
+            scopes["rule1"] = (ScopeDefinition("rule1").apply {
                 identifiables.add(Identifiable("rule2", "ruleX"))
             })
         }
@@ -298,7 +337,7 @@ class test_AglScopes {
                     InputLocation(36, 23, 2, 6),
                     "In scope for 'rule1' GrammarRule 'ruleX' not found for identifying property of 'rule2'"
                 )
-            ), result.issues
+            ), result.issues.error
         )
     }
 
@@ -335,7 +374,7 @@ class test_AglScopes {
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, result.asm?.references)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -374,10 +413,25 @@ class test_AglScopes {
         assertEquals(
             listOf(
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(20, 8, 2, 6), "Referring type GrammarRule 'ruleX' not found"),
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(35, 23, 2, 6), "For reference in 'ruleX' referring property GrammarRule 'ruleY' not found"),
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(51, 39, 2, 5), "For reference in 'ruleX' referred to type GrammarRule 'ruleZ' not found"),
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, InputLocation(57, 45, 2, 6), "For reference in 'ruleX' referred to type GrammarRule 'ruleW' not found")
-            ), result.issues
+                LanguageIssue(
+                    LanguageIssueKind.ERROR,
+                    LanguageProcessorPhase.SYNTAX_ANALYSIS,
+                    InputLocation(35, 23, 2, 6),
+                    "For reference in 'ruleX' referring property GrammarRule 'ruleY' not found"
+                ),
+                LanguageIssue(
+                    LanguageIssueKind.ERROR,
+                    LanguageProcessorPhase.SYNTAX_ANALYSIS,
+                    InputLocation(51, 39, 2, 5),
+                    "For reference in 'ruleX' referred to type GrammarRule 'ruleZ' not found"
+                ),
+                LanguageIssue(
+                    LanguageIssueKind.ERROR,
+                    LanguageProcessorPhase.SYNTAX_ANALYSIS,
+                    InputLocation(57, 45, 2, 6),
+                    "For reference in 'ruleX' referred to type GrammarRule 'ruleW' not found"
+                )
+            ), result.issues.error
         )
     }
 
@@ -398,7 +452,7 @@ class test_AglScopes {
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, result.asm?.references)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
     }
 
     //TODO more checks + check rules (types/properties) exist in context of grammar

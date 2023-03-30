@@ -43,9 +43,9 @@ internal class test_ifThenElse_NoWS_conditional2 : test_ScanOnDemandParserAbstra
             }
             concatenation("var") { ref("VAR") }
             pattern("VAR","U|V|W|X|Y|Z")
-            //precedenceFor("conditional") {
-            //    right("ifthen", "'then'")
-            //    right("ifthenelse", "'else'")
+            //preferenceFor("expr") {
+            //    rightOption("conditional", 0, setOf("'then'"))
+            //    rightOption("conditional", 1,  setOf("'then'","'else'"))
             //}
         }
         val goal = "S"
@@ -59,7 +59,7 @@ internal class test_ifThenElse_NoWS_conditional2 : test_ScanOnDemandParserAbstra
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("VAR","'if'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test

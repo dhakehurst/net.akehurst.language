@@ -48,10 +48,10 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual : test_ScanOnDemandP
             concatenation("root") { literal("v") }
             concatenation("mul") { ref("expr"); literal("*"); ref("expr") }
             concatenation("add") { ref("expr"); literal("+"); ref("expr") }
-            //precedenceFor("expr") {
-            //    left("add", "'+'")
-            //    left("mul", "'*'")
-            //}
+            preferenceFor("expr") {
+                left("add", setOf("'+'"))
+                left("mul",  setOf("'*'"))
+            }
         }
 
         const val goal = "S"
@@ -66,8 +66,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual : test_ScanOnDemandP
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'v'"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test

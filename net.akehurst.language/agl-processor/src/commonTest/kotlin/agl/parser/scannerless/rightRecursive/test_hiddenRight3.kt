@@ -75,7 +75,7 @@ internal class test_hiddenRight3 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test

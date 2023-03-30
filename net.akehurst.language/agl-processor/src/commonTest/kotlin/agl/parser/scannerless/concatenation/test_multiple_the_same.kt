@@ -56,8 +56,7 @@ internal class test_multiple_the_same : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0,1,1,1),"^", setOf("X"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test

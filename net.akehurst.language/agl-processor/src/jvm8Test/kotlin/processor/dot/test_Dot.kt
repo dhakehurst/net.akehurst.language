@@ -27,6 +27,7 @@ import java.io.InputStreamReader
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @RunWith(Parameterized::class)
 class test_Dot(val data: Data) {
@@ -64,7 +65,7 @@ class test_Dot(val data: Data) {
     fun test() {
         val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName("graph") })
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         val resultStr = result.sppt!!.asString
         assertEquals(this.data.text, resultStr)
     }

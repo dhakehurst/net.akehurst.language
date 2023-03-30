@@ -42,7 +42,7 @@ internal class test_ifThenElse_NoWS_expr : test_ScanOnDemandParserAbstract() {
             concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
             concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
             pattern("VAR", "U|V|W|X|Y|Z")
-            precedenceFor("expr") {
+            preferenceFor("expr") {
                 right("ifthen", setOf("'then'"))
                 right("ifthenelse", setOf("'then'","'else'"))
             }
@@ -59,8 +59,7 @@ internal class test_ifThenElse_NoWS_expr : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("VAR", "'if'"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test

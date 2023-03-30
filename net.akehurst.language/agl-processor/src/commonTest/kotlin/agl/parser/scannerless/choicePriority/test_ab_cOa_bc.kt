@@ -43,6 +43,10 @@ internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
             concatenation("a_bc") { literal("a"); ref("bc") }
             concatenation("ab") { literal("a"); literal("b") }
             concatenation("bc") { literal("b"); literal("c") }
+            preferenceFor("'a'") {
+                left("ab", setOf("'b'"))
+                left("a_bc", setOf("'b'"))
+            }
         }
         val goal = "S"
     }
@@ -56,7 +60,7 @@ internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^", setOf("'a'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -67,7 +71,7 @@ internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"a^", setOf("'b'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -78,7 +82,7 @@ internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^b", setOf("'a'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -89,7 +93,7 @@ internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^c", setOf("'a'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -100,7 +104,7 @@ internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(2,3,1,1),"ab^", setOf("'c'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test

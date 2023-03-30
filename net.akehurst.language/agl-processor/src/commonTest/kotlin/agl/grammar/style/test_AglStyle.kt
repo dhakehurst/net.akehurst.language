@@ -85,9 +85,9 @@ class test_AglStyle {
 
         assertNotNull(result.asm)
         assertEquals(1, result.asm?.rules?.size)
-        assertEquals(listOf(
+        assertEquals(setOf(
             LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(0,1,1,7),"GrammarRule 'xxx' not found for style rule", null)
-        ), result.issues)
+        ), result.issues.all)
     }
 
     @Test

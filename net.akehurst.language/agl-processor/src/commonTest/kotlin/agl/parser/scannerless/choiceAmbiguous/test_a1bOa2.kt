@@ -37,6 +37,10 @@ internal class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
             concatenation("S1") { literal("a"); ref("bOpt") }
             multi("bOpt", 0, 1, "'b'")
             literal("'b'", "b")
+            preferenceFor("'a'") {
+                left("S1", setOf("<EOT>"))
+                leftOption("S", 1, setOf("<EOT>"))
+            }
         }
 
         // S = S1 || a
@@ -63,7 +67,7 @@ internal class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
-            ), issues
+            ), issues.error
         )
     }
 
@@ -72,7 +76,7 @@ internal class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
         val sentence = "a"
 
         val expected = """
-            S|1 {
+            S {
               'a'
             }
         """.trimIndent()
@@ -120,7 +124,7 @@ internal class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
-            ), issues
+            ), issues.error
         )
     }
 

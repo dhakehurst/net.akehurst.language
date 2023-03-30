@@ -41,6 +41,10 @@ internal class test_ambiguous_nonTerm_0n : test_ScanOnDemandParserAbstract() {
             literal("'b'", "b")
             multi("sep", 0, 1, "','")
             literal("','", ",")
+            preferenceFor("'a'") {
+                left("a1", setOf("<EOT>", "','", "'a'", "<EOT>", "','", "'a'"))
+                left("a2", setOf("<EOT>", "','", "'a'", "<EOT>", "','", "'a'"))
+            }
         }
     }
 
@@ -77,7 +81,7 @@ internal class test_ambiguous_nonTerm_0n : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun aa_fails() {
+    fun aa() {
         val goal = "S"
         val sentence = "aa"
 
@@ -93,7 +97,7 @@ internal class test_ambiguous_nonTerm_0n : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2,
+            expectedNumGSSHeads = 1,
             expectedTrees = arrayOf(expected)
         )
     }
@@ -139,7 +143,7 @@ internal class test_ambiguous_nonTerm_0n : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2,
+            expectedNumGSSHeads = 1,
             expectedTrees = arrayOf(expected)
         )
     }

@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.grammar.grammar.asm.*
+import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.LanguageDefinitionFromAsm
 import net.akehurst.language.agl.processor.LanguageRegistryDefault
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
@@ -39,7 +40,7 @@ internal class AglGrammarSyntaxAnalyser(
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
 
-    private val _issues = mutableListOf<LanguageIssue>()
+    private val _issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
     init {
         this.register("grammarDefinition", this::grammarDefinition as BranchHandler<List<Grammar>>)

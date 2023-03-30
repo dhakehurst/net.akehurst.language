@@ -56,7 +56,7 @@ internal class test_empty : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^a",setOf("<EOT>"))
-        ),issues)
+        ),issues.error)
     }
 
 }

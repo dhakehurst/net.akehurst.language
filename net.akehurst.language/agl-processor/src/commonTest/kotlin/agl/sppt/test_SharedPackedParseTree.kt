@@ -20,6 +20,7 @@ import net.akehurst.language.agl.processor.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 
 class test_SharedPackedParseTree {
@@ -43,7 +44,7 @@ class test_SharedPackedParseTree {
         val result = pr.processor!!.parse("a".trimIndent())
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         val actual = result.sppt!!.tokensByLine(0)
 
         assertEquals("a", actual[0].matchedText)
@@ -73,7 +74,7 @@ class test_SharedPackedParseTree {
         )
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         val actual = listOf(
             result.sppt!!.tokensByLine(0),
             result.sppt!!.tokensByLine(1)
@@ -108,7 +109,7 @@ class test_SharedPackedParseTree {
         )
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         val actual = listOf(
             result.sppt!!.tokensByLine(0),
             result.sppt!!.tokensByLine(1)
@@ -152,7 +153,7 @@ class XXX {
         val result = pr.processor!!.parse(text2)
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         val actual = listOf(
             result.sppt!!.tokensByLine(0),
             result.sppt!!.tokensByLine(1),

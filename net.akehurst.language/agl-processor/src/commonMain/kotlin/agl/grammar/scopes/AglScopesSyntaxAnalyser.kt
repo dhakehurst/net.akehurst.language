@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.agl.grammar.scopes
 
+import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SyntaxAnalyser
@@ -34,7 +35,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl, SentenceContext<Gr
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
 
-    private val issues = mutableListOf<LanguageIssue>()
+    private val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
     override fun clear() {
         this.locationMap.clear()
@@ -56,7 +57,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl, SentenceContext<Gr
                 } else {
                     if (context.rootScope.isMissing(scope.scopeFor, "GrammarRule")) {
                         val loc = this.locationMap[PropertyValue(scope, "typeReference")]
-                        issues.raise(loc, "GrammarRule '${scope.scopeFor}' not found for scope")
+                        issues.error(loc, "GrammarRule '${scope.scopeFor}' not found for scope")
                     } else {
                         //OK
                     }
@@ -66,7 +67,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl, SentenceContext<Gr
                     when {
                         context.rootScope.isMissing(identifiable.typeName, "GrammarRule") -> {
                             val loc = this.locationMap[PropertyValue(identifiable, "typeReference")]
-                            issues.raise(loc, "$msgStart '${identifiable.typeName}' not found as identifiable type")
+                            issues.error(loc, "$msgStart '${identifiable.typeName}' not found as identifiable type")
                         }
                         ScopeModelAgl.IDENTIFY_BY_NOTHING == identifiable.propertyName -> {
                             //OK
@@ -76,7 +77,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl, SentenceContext<Gr
                             //TODO: check this in context of typeName GrammarRule
                             if (context.rootScope.isMissing(identifiable.propertyName, "GrammarRule")) {
                                 val loc = this.locationMap[PropertyValue(identifiable, "propertyName")]
-                                issues.raise(
+                                issues.error(
                                     loc,
                                     "$msgStart '${identifiable.propertyName}' not found for identifying property of '${identifiable.typeName}'"
                                 )
@@ -91,26 +92,22 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl, SentenceContext<Gr
             asm.references.forEach { ref ->
                 if (context.rootScope.isMissing(ref.inTypeName, "GrammarRule")) {
                     val loc = this.locationMap[PropertyValue(ref, "in")]
-                    issues.raise(loc, "Referring type GrammarRule '${ref.inTypeName}' not found")
+                    issues.error(loc, "Referring type GrammarRule '${ref.inTypeName}' not found")
                 }
                 if (context.rootScope.isMissing(ref.referringPropertyName, "GrammarRule")) {
                     val loc = this.locationMap[PropertyValue(ref, "propertyReference")]
-                    issues.raise(loc, "For reference in '${ref.inTypeName}' referring property GrammarRule '${ref.referringPropertyName}' not found")
+                    issues.error(loc, "For reference in '${ref.inTypeName}' referring property GrammarRule '${ref.referringPropertyName}' not found")
                 }
                 ref.refersToTypeName.forEachIndexed { i, n ->
                     if (context.rootScope.isMissing(n, "GrammarRule")) {
                         val loc = this.locationMap[PropertyValue(ref, "typeReferences[$i]")]
-                        issues.raise(loc, "For reference in '${ref.inTypeName}' referred to type GrammarRule '$n' not found")
+                        issues.error(loc, "For reference in '${ref.inTypeName}' referred to type GrammarRule '$n' not found")
                     }
                 }
             }
         }
 
         return SyntaxAnalysisResultDefault(asm, issues,locationMap)
-    }
-
-    private fun MutableList<LanguageIssue>.raise(location: InputLocation?, message: String) {
-        this.add(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, location, message))
     }
 
     // declarations = rootIdentifiables scopes referencesOpt

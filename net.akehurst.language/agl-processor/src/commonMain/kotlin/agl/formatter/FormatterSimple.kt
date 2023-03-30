@@ -20,12 +20,14 @@ import net.akehurst.language.agl.formatter.FormatterSimple.Companion.execute
 import net.akehurst.language.agl.formatter.FormatterSimple.Companion.format
 import net.akehurst.language.agl.grammar.format.AglFormatExpressionDefault
 import net.akehurst.language.agl.processor.FormatResultDefault
+import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.formatter.AglFormatExpression
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.formatter.AglFormatterRule
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 
 class FormatterSimple<AsmType>(
     val model: AglFormatterModel?
@@ -87,6 +89,6 @@ class FormatterSimple<AsmType>(
             sb.append(str)
         }
 
-        return FormatResultDefault(sb.toString(), emptyList())
+        return FormatResultDefault(sb.toString(), IssueHolder(LanguageProcessorPhase.FORMATTER))
     }
 }

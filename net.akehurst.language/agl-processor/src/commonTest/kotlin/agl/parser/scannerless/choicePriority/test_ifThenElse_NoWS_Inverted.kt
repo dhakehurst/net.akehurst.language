@@ -37,6 +37,10 @@ internal class test_ifThenElse_NoWS_Inverted : test_ScanOnDemandParserAbstract()
                 literal("Y")
                 literal("Z")
             }
+            preferenceFor("expr") {
+                right("ifthen", setOf("'then'"))
+                right("ifthenelse", setOf("'then'","'else'"))
+            }
         }
         val goal = "S"
     }
@@ -50,7 +54,7 @@ internal class test_ifThenElse_NoWS_Inverted : test_ScanOnDemandParserAbstract()
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^", setOf("'W'","'X'","'Y'","'Z'","'if'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -59,15 +63,15 @@ internal class test_ifThenElse_NoWS_Inverted : test_ScanOnDemandParserAbstract()
 
         val expected = """
             S {
-              expr|1 {
+              expr {
                 conditional {
                     ifthenelse {
                       'if'
                       expr { var { 'W' } }
                       'then'
-                      expr { var|1 { 'X' } }
+                      expr { var { 'X' } }
                       'else'
-                      expr { var|2 { 'Y' } }
+                      expr { var { 'Y' } }
                     }
                 }
               }
@@ -93,13 +97,13 @@ internal class test_ifThenElse_NoWS_Inverted : test_ScanOnDemandParserAbstract()
 
         val expected = """
             S {
-              expr|1 {
-                conditional|1 {
+              expr {
+                conditional {
                     ifthen {
                       'if'
                       expr { var { 'W' } }
                       'then'
-                      expr { var|1 { 'X' } }
+                      expr { var { 'X' } }
                     }
                 }
               }
@@ -121,21 +125,21 @@ internal class test_ifThenElse_NoWS_Inverted : test_ScanOnDemandParserAbstract()
 
         val expected = """
             S {
-              expr|1 {
+              expr {
                 conditional {
                     ifthenelse {
                       'if'
                       expr { var { 'W' } }
                       'then'
-                      expr { var|1 { 'X' } }
+                      expr { var { 'X' } }
                       'else'
-                      expr|1 {
-                        conditional|1 {
+                      expr {
+                        conditional {
                             ifthen {
                               'if'
-                              expr { var|2 { 'Y'} }
+                              expr { var { 'Y'} }
                               'then'
-                              expr { var|3 { 'Z' } }
+                              expr { var { 'Z' } }
                             }
                         }
                       }
@@ -159,18 +163,18 @@ internal class test_ifThenElse_NoWS_Inverted : test_ScanOnDemandParserAbstract()
         val sentence = "ifWthenifXthenYelseZ"
 
         val expected = """
-         S { expr|1 { conditional { ifthenelse {
+         S { expr { conditional { ifthenelse {
                 'if'
                 expr { var { 'W' } }
                 'then'
-                expr|1 { conditional|1 { ifthen {
+                expr { conditional { ifthen {
                       'if'
-                      expr { var|1 { 'X' } }
+                      expr { var { 'X' } }
                       'then'
-                      expr { var|2 { 'Y' } }
+                      expr { var { 'Y' } }
                     } } }
                 'else'
-                expr { var|3 { 'Z' } }
+                expr { var { 'Z' } }
               } } } }
         """.trimIndent()
 

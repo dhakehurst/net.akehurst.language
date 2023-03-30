@@ -64,7 +64,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
         set(value) {
             val oldValue = this.processor?.scopeModel
             if (oldValue != value) {
-                _scopeModelResolver = { ProcessResultDefault(value, emptyList()) }
+                _scopeModelResolver = { ProcessResultDefault(value, IssueHolder(LanguageProcessorPhase.ALL)) }
                 scopeModelObservers.forEach { it(oldValue, value) }
             }
         }
@@ -95,7 +95,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
 
     override val processor: LanguageProcessor<AsmType, ContextType>? get() = this._processor_cache.value
 
-    override val issues: List<LanguageIssue> get() = _issues
+    override val issues: IssueCollection get() = _issues
 
     abstract override var styleStr: String?
 
@@ -104,7 +104,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
         set(value) {
             val oldValue = _style
             if (oldValue != value) {
-                _styleResolver = { ProcessResultDefault(value, emptyList()) }
+                _styleResolver = { ProcessResultDefault(value, IssueHolder(LanguageProcessorPhase.ALL)) }
                 styleObservers.forEach { it(oldValue, value) }
             }
         }
@@ -151,7 +151,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     //    res?.asm
     //}.apply { this.resetAction = { old -> grammarObservers.forEach { it(old, null) } } }
 
-    protected var _issues = mutableListOf<LanguageIssue>()
+    protected var _issues = IssueHolder(LanguageProcessorPhase.ALL)
     protected val _style: AglStyleModel? = null
 
     protected var _scopeModelResolver: ScopeModelResolver<AsmType, ContextType>? by Delegates.observable(configuration.scopeModelResolver) { _, oldValue, newValue ->

@@ -56,7 +56,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     var styleStr: String?
     var style: AglStyleModel?
 
-    val issues : List<LanguageIssue>
+    val issues : IssueCollection
 
     val processorObservers: MutableList<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>
     val grammarStrObservers : MutableList<(String?, String?) -> Unit>

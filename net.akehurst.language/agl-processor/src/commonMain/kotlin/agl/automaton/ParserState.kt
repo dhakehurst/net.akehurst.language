@@ -121,7 +121,7 @@ internal class ParserState(
         return trans
     }
 
-    fun transitionsComplete(previous: ParserState,prevPrev: ParserState): List<Transition> {
+    fun transitionsComplete(previous: ParserState, prevPrev: ParserState): List<Transition> {
         val cache: List<Transition>? = this.outTransitions.findTransitionByPrevious(previous)
         val trans = if (null == cache) {
             if (Debug.CHECK) check(this.stateSet.preBuilt.not()) { "Transitions not built for $this -previous-> $previous" }

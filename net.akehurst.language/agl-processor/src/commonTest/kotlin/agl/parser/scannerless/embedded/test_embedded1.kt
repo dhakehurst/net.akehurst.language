@@ -61,8 +61,7 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test
@@ -74,8 +73,7 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'b'"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test
@@ -108,8 +106,7 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test
@@ -121,8 +118,7 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^d", setOf("'a'"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test
@@ -134,8 +130,7 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test
@@ -147,8 +142,7 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'c'"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test

@@ -72,8 +72,7 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0,1,1,1),"^a",setOf("'d'","'b'"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test
@@ -85,8 +84,7 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1,2,1,1),"d^",setOf("'a'","'c'"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test

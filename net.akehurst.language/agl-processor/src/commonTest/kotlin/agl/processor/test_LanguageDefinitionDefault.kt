@@ -95,12 +95,12 @@ class test_LanguageDefinitionDefault {
             Agl.configuration {
                 targetGrammarName(null)
                 defaultGoalRuleName(null)
-                typeModelResolver {  ProcessResultDefault(TypeModelFromGrammar(it.grammar!!), emptyList()) }
-                scopeModelResolver { ProcessResultDefault(null, emptyList()) }
-                syntaxAnalyserResolver { ProcessResultDefault(null, emptyList()) }
-                semanticAnalyserResolver {  ProcessResultDefault(null, emptyList()) }
-                formatterResolver {  ProcessResultDefault(null, emptyList()) }
-                styleResolver {  ProcessResultDefault(null, emptyList()) }
+                typeModelResolver {  ProcessResultDefault(TypeModelFromGrammar(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+                scopeModelResolver { ProcessResultDefault(null,IssueHolder(LanguageProcessorPhase.ALL)) }
+                syntaxAnalyserResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
+                semanticAnalyserResolver {  ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
+                formatterResolver {  ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
+                styleResolver {  ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
             }
         )
 
@@ -136,9 +136,9 @@ class test_LanguageDefinitionDefault {
         assertNull(sut.grammar)
         assertNull(sut.processor)
         assertEquals(
-            listOf(
+            setOf(
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^xxxxx", setOf("'namespace'"))
-            ), sut.issues
+            ), sut.issues.all
         )
         assertEquals(listOf(Pair<String?, String?>(null,g)),grammarStrObserverCalled)
         assertEquals(emptyList(), grammarObserverCalled)
@@ -159,7 +159,7 @@ class test_LanguageDefinitionDefault {
         assertNull(sut.grammar) // should be a grammar...though it is invalid
         assertNull(sut.processor)
         assertEquals(
-            listOf(
+            setOf(
                 LanguageIssue(
                     LanguageIssueKind.ERROR,
                     LanguageProcessorPhase.SEMANTIC_ANALYSIS,
@@ -167,7 +167,7 @@ class test_LanguageDefinitionDefault {
                     "Grammar 'XX' not found",
                     null
                 )
-            ), sut.issues
+            ), sut.issues.all
         )
 
         assertEquals(listOf(Pair<String?, String?>(null,g)),grammarStrObserverCalled)
@@ -189,9 +189,9 @@ class test_LanguageDefinitionDefault {
         assertNull(sut.grammar)
         assertNull(sut.processor)
         assertEquals(
-            listOf(
+            setOf(
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(32, 33, 1, 1), "GrammarRule 'b' not found in grammar 'Test'", null)
-            ), sut.issues
+            ), sut.issues.all
         )
         assertEquals(listOf(Pair<String?, String?>(null,g)),grammarStrObserverCalled)
         assertEquals(emptyList(), grammarObserverCalled)

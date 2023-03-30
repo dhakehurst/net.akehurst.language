@@ -42,6 +42,10 @@ internal class test_IETELE_VC : test_ScanOnDemandParserAbstract() {
                 concatenation { literal("i"); ref("E"); literal("t"); ref("E") }
             }
             concatenation("V") { literal("v") }
+            preferenceFor("E") {
+                rightOption("C",0, setOf("'t'"))
+                rightOption("C",1, setOf("'t'","'s'"))
+            }
         }
         val goal = "S"
     }
@@ -55,7 +59,7 @@ internal class test_IETELE_VC : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'v'", "'i'"))
-            ), issues
+            ), issues.error
         )
     }
 

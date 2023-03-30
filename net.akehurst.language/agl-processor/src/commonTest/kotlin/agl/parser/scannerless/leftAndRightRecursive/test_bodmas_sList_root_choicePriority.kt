@@ -64,6 +64,12 @@ internal class test_bodmas_sList_root_choicePriority : test_ScanOnDemandParserAb
             literal("'*'", "*")
             literal("'+'", "+")
             literal("'-'", "-")
+            preferenceFor("expr") {
+                left("sub", setOf("'-'"))
+                left("add", setOf("'+'"))
+                left("mul", setOf("'*'"))
+                left("div", setOf("'/'"))
+            }
         }
         val goal = "S"
     }
@@ -77,8 +83,7 @@ internal class test_bodmas_sList_root_choicePriority : test_ScanOnDemandParserAb
         assertEquals(
             listOf(
                 parseError(InputLocation(0,1,1,1),"^", setOf("\"[a-zA-Z]+\"","'true'","'false'","'('"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test

@@ -55,10 +55,10 @@ class AsmSimpleBuilder(
                 _scopeModel.resolveReferencesElement(issues, el, emptyMap(), _context?.rootScope)
             }
         }
-        if (issues.issues.isEmpty()) {
+        if (issues.all.isEmpty()) {
             return _asm
         } else {
-            error("Issues building asm:\n${issues.issues.joinToString(separator = "\n") { "$it" }}")
+            error("Issues building asm:\n${issues.all.joinToString(separator = "\n") { "$it" }}")
         }
     }
 }

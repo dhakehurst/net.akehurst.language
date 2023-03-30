@@ -16,6 +16,7 @@
 package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
+import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SyntaxAnalyser
@@ -39,7 +40,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<AglStyleModel, SentenceCo
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
 
-    private val _issues = mutableListOf<LanguageIssue>()
+    private val _issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
     override fun clear() {
         locationMap.clear()
@@ -65,12 +66,12 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<AglStyleModel, SentenceCo
                         ) {
                             val loc = this.locationMap[rule]
                             if (sel.startsWith("'") && sel.endsWith("'")) {
-                                _issues.raise(loc, "Terminal Literal ${sel} not found for style rule")
+                                _issues.error(loc, "Terminal Literal ${sel} not found for style rule")
                             } else if (sel.startsWith("\"") && sel.endsWith("\"")) {
-                                _issues.raise(loc, "Terminal Pattern ${sel} not found for style rule")
+                                _issues.error(loc, "Terminal Pattern ${sel} not found for style rule")
 
                             } else {
-                                _issues.raise(loc, "GrammarRule '${sel}' not found for style rule")
+                                _issues.error(loc, "GrammarRule '${sel}' not found for style rule")
                             }
                         } else {
                             //no issues
@@ -81,10 +82,6 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<AglStyleModel, SentenceCo
         }
 
         return SyntaxAnalysisResultDefault(AglStyleModelDefault(rules), _issues,locationMap)
-    }
-
-    private fun MutableList<LanguageIssue>.raise(location: InputLocation?, message: String) {
-        this.add(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SYNTAX_ANALYSIS, location, message))
     }
 
     // rules : rule* ;

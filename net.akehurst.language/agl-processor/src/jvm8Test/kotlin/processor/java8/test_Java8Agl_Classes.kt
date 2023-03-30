@@ -32,6 +32,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 
 @RunWith(Parameterized::class)
@@ -98,7 +99,7 @@ class test_Java8Agl_Classes(val data: Data) {
         val p = processor
         val result = p.parse(this.data.text)
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         val resultStr = result.sppt!!.asString
         assertEquals(this.data.text, resultStr)
         assertEquals(1, result.sppt!!.maxNumHeads)

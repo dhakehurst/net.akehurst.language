@@ -20,6 +20,7 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class test_NaturalLanguage_Singles {
 
@@ -41,7 +42,7 @@ class test_NaturalLanguage_Singles {
 
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         val resultStr = result.sppt!!.asString
         assertEquals(sentence, resultStr)
     }

@@ -60,7 +60,7 @@ internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -75,7 +75,7 @@ internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^b",setOf("'a'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -90,7 +90,7 @@ internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"a^",setOf("'b'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -105,7 +105,7 @@ internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(2,3,1,1),"ab^c",setOf("<EOT>"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -121,7 +121,7 @@ internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(8,9,1,1),"a   b   ^c",setOf("<EOT>"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -141,7 +141,7 @@ internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(4,1,3,1),"^c",setOf("<EOT>"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -158,7 +158,7 @@ internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^", setOf("'a'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -175,7 +175,7 @@ internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^", setOf("'a'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -192,7 +192,7 @@ internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"a^",setOf("'a'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -209,6 +209,6 @@ internal class test_ErrorLocation : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(5,6,1,1),"aaaaa^a",setOf("<EOT>"))
-        ),issues)
+        ),issues.error)
     }
 }

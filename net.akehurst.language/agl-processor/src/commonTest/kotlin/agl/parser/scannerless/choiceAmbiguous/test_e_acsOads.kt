@@ -55,7 +55,7 @@ internal class test_e_acsOads : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("'e'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test

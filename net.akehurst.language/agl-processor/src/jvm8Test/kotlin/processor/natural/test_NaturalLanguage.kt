@@ -25,6 +25,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 
 @RunWith(Parameterized::class)
@@ -88,7 +89,7 @@ class test_NaturalLanguage(val data: Data) {
         }
         val result = processor.parse(this.data.sentence, Agl.parseOptions { goalRuleName(data.goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
 
         val resultStr = result.sppt!!.asString
         assertEquals(this.data.sentence, resultStr)

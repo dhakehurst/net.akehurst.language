@@ -20,32 +20,37 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
+class LanguageProcessorResult<AsmType : Any, ContextType : Any>(
+    val processor: LanguageProcessor<AsmType, ContextType>?,
+    val issues: IssueCollection
+)
+
 data class ParseResultDefault(
     override  val sppt:SharedPackedParseTree?,
-    override  val issues:List<LanguageIssue>
+    override  val issues:IssueCollection
 ) : ParseResult
 
 data class SyntaxAnalysisResultDefault<AsmType : Any>(
     override  val asm:AsmType?,
-    override   val issues:List<LanguageIssue>,
+    override   val issues:IssueCollection,
     override   val locationMap:Map<Any, InputLocation>
 ) : SyntaxAnalysisResult<AsmType>
 
 data class SemanticAnalysisResultDefault(
-    override    val issues:List<LanguageIssue>
+    override    val issues:IssueCollection
 ) : SemanticAnalysisResult
 
 data class  ProcessResultDefault<AsmType: Any>(
     override  val asm:AsmType?,
-    override  val issues:List<LanguageIssue>
+    override  val issues:IssueCollection
 ) : ProcessResult<AsmType>
 
 data class FormatResultDefault(
     override  val sentence:String?,
-    override  val issues:List<LanguageIssue>
+    override  val issues:IssueCollection
 ) : FormatResult
 
 data class ExpectedAtResultDefault(
     override  val items:List<CompletionItem>,
-    override val issues:List<LanguageIssue>
+    override val issues:IssueCollection
 ) : ExpectedAtResult

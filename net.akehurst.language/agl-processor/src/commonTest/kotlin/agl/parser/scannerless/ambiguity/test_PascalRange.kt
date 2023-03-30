@@ -55,7 +55,7 @@ internal class test_PascalRange : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0,1,1,1),"^",setOf("\"[0-9]+\"","\"([0-9]+[.][0-9]*)|([.][0-9]+)\""))
-            ), issues
+            ), issues.error
         )
     }
 

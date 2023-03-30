@@ -58,6 +58,10 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             concatenation("A") { literal("a"); literal("n"); ref("oG") }
             multi("oG",0,1,"G")
             concatenation("G") { literal("s"); ref("oA")}
+            preferenceFor("<EMPTY>") {
+                leftOption("oA", 1, setOf("'t'"))
+                leftOption("oP", 1, setOf("'t'"))
+            }
         }
 
         val goal = "S"

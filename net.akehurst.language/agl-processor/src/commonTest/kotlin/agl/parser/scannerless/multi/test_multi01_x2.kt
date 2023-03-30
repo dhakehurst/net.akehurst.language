@@ -49,7 +49,7 @@ internal class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^", setOf("'a'","'b'","V"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test

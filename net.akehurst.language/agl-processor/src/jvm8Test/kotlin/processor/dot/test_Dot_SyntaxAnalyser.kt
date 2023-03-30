@@ -27,6 +27,7 @@ import net.akehurst.language.api.typeModel.asString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class test_Dot_SyntaxAnalyser {
 
@@ -187,7 +188,7 @@ class test_Dot_SyntaxAnalyser {
 
         val result = processor.process(sentence)
         val actual = result.asm?.rootElements?.firstOrNull()
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         assertNotNull(actual)
 
         val expected = asmSimple {
@@ -224,7 +225,7 @@ class test_Dot_SyntaxAnalyser {
         val result = processor.process(sentence)
         val actual = result.asm?.rootElements?.firstOrNull()
         assertNotNull(actual)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -285,7 +286,7 @@ digraph g {
         val result = processor.process(sentence)
         val actual = result.asm?.rootElements?.firstOrNull()
         assertNotNull(actual)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
     }
 
 }

@@ -67,7 +67,7 @@ internal class test_bodmas_sList_root_choiceEqual : test_ScanOnDemandParserAbstr
             literal("'*'", "*")
             literal("'+'", "+")
             literal("'-'", "-")
-            precedenceFor("expr") {
+            preferenceFor("expr") {
                 left("sub", setOf("'-'"))
                 left("add", setOf("'+'"))
                 left("mul", setOf("'*'"))
@@ -86,8 +86,7 @@ internal class test_bodmas_sList_root_choiceEqual : test_ScanOnDemandParserAbstr
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("\"[a-zA-Z]+\"", "'true'", "'false'", "'('"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test

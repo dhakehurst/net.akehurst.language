@@ -56,7 +56,7 @@ internal class test_aObcLiteral : test_ScanOnDemandParserAbstract() {
             LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^",setOf("'a'","'b'"))
         )
         assertEquals(null, sppt)
-        assertEquals(expIssues, issues)
+        assertEquals(expIssues, issues.error)
     }
 
     @Test
@@ -82,7 +82,7 @@ internal class test_aObcLiteral : test_ScanOnDemandParserAbstract() {
             LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(1,2,1,1),"a^b", setOf("<EOT>"))
         )
         assertEquals(null, sppt)
-        assertEquals(expIssues, issues)
+        assertEquals(expIssues, issues.error)
     }
 
     @Test
@@ -95,7 +95,7 @@ internal class test_aObcLiteral : test_ScanOnDemandParserAbstract() {
             LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(1,2,1,1),"a^bc",setOf("<EOT>"))
         )
         assertEquals(null, sppt)
-        assertEquals(expIssues, issues)
+        assertEquals(expIssues, issues.error)
     }
 
     @Test

@@ -25,10 +25,7 @@ import net.akehurst.language.api.typeModel.StringType
 import net.akehurst.language.api.typeModel.TypeModelTest
 import net.akehurst.language.api.typeModel.asString
 import net.akehurst.language.api.typeModel.typeModel
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.*
 
 class test_mscript {
     private companion object {
@@ -263,7 +260,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
 
     }
 
@@ -279,7 +276,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
 
     }
 
@@ -290,7 +287,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("rootVariable") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("rootVariable", result.sppt!!.root.name)
     }
 
@@ -301,7 +298,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("expression", result.sppt!!.root.name)
     }
 
@@ -312,7 +309,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("BOOLEAN") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("BOOLEAN", result.sppt!!.root.name)
     }
 
@@ -323,7 +320,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("expression", result.sppt!!.root.name)
     }
 
@@ -334,7 +331,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("REAL", result.sppt!!.root.name)
     }
 
@@ -345,7 +342,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("REAL", result.sppt!!.root.name)
     }
 
@@ -356,7 +353,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("REAL", result.sppt!!.root.name)
     }
 
@@ -367,7 +364,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("REAL", result.sppt!!.root.name)
     }
 
@@ -385,7 +382,7 @@ grammar Mscript {
             )
         )
         assertNull(result.sppt)
-        assertEquals(expIssues, result.issues)
+        assertEquals(expIssues, result.issues.error)
 
     }
 
@@ -395,7 +392,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("INTEGER") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("INTEGER", result.sppt!!.root.name)
     }
 
@@ -405,7 +402,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("SINGLE_QUOTE_STRING") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.root.name)
     }
 
@@ -415,7 +412,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("SINGLE_QUOTE_STRING") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.root.name)
     }
 
@@ -426,7 +423,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("SINGLE_QUOTE_STRING") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.root.name)
     }
 
@@ -437,7 +434,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("matrix", result.sppt!!.root.name)
     }
 
@@ -448,7 +445,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("matrix", result.sppt!!.root.name)
     }
 
@@ -459,7 +456,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("matrix", result.sppt!!.root.name)
     }
 
@@ -470,7 +467,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("row") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("row", result.sppt!!.root.name)
     }
 
@@ -481,7 +478,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("matrix", result.sppt!!.root.name)
     }
 
@@ -492,7 +489,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("matrix", result.sppt!!.root.name)
     }
 
@@ -503,7 +500,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("matrix", result.sppt!!.root.name)
     }
 
@@ -513,7 +510,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals("matrix", result.sppt!!.root.name)
     }
 
@@ -524,7 +521,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("argumentList") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
@@ -534,7 +531,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
@@ -544,7 +541,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
@@ -554,7 +551,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
@@ -564,7 +561,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
@@ -574,7 +571,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
@@ -584,7 +581,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
@@ -594,7 +591,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
@@ -604,7 +601,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
@@ -617,7 +614,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
@@ -627,7 +624,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
@@ -637,7 +634,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
@@ -647,7 +644,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
@@ -657,7 +654,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
@@ -667,7 +664,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
@@ -678,7 +675,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
 
     }
 
@@ -688,7 +685,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
 
     }
 
@@ -699,7 +696,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("functionCallOrIndex") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
 
     }
 
@@ -710,7 +707,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("statement") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
 
     }
 
@@ -721,7 +718,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("line") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
 
     }
 
@@ -732,7 +729,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("statementList") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
 
     }
 
@@ -743,7 +740,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
 
     }
 
@@ -758,7 +755,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
 
     }
 
@@ -769,7 +766,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
 
     }
 
@@ -810,7 +807,7 @@ grammar Mscript {
         }
 
         assertNotNull(result.asm)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.error.isEmpty())
         assertEquals(expected.asString(" "), result.asm?.asString(" "))
     }
 

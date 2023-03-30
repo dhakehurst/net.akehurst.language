@@ -65,19 +65,18 @@ class AglGrammarSemanticAnalyser(
 
         asm.forEach { languageRegistry.register(it) }
 
-        val issues = checkGrammar(asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
+        checkGrammar(asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
         return SemanticAnalysisResultDefault(issues)
     }
 
-    private fun checkGrammar(grammarList: List<Grammar>, automatonKind: AutomatonKind): List<LanguageIssue> {
+    private fun checkGrammar(grammarList: List<Grammar>, automatonKind: AutomatonKind) {
         grammarList.forEach { grammar ->
             this.checkExtendsExist(grammar.extends)
             this.checkNonTerminalReferencesExist(grammar)
-            if (issues.issues.isEmpty() && _analyseAmbiguities) {
+            if (issues.error.isEmpty() && _analyseAmbiguities) {
                 this.checkForAmbiguities(grammar, automatonKind)
             }
         }
-        return this.issues.issues
     }
 
     private fun checkExtendsExist(refs: List<GrammarReference>) {

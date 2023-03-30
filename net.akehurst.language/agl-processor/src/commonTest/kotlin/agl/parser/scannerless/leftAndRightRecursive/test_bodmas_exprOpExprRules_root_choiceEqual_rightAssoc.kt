@@ -19,7 +19,6 @@ package net.akehurst.language.parser.scanondemand.choiceEqual
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.parser.scanondemand.choicePriority.test_da_sList_root_choicePriority
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -48,7 +47,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_rightAssoc : test_Sc
             concatenation("root") { literal("v") }
             concatenation("mul") { ref("expr"); literal("*"); ref("expr") }
             concatenation("add") { ref("expr"); literal("+"); ref("expr") }
-            precedenceFor("expr") {
+            preferenceFor("expr") {
                 right("add", setOf("'+'"))
                 right("mul", setOf("'*'"))
             }
@@ -66,8 +65,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_rightAssoc : test_Sc
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'v'"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test

@@ -42,7 +42,7 @@ internal class test_bodmas_exprOpExprRules_choicePriority : test_ScanOnDemandPar
         val rrs = runtimeRuleSet {
             concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { ref("expr") }
-            choice("expr",RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            choice("expr", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
                 ref("var")
                 ref("bool")
                 ref("group")
@@ -56,10 +56,16 @@ internal class test_bodmas_exprOpExprRules_choicePriority : test_ScanOnDemandPar
             concatenation("add") { ref("expr"); literal("+"); ref("expr") }
             concatenation("sub") { ref("expr"); literal("-"); ref("expr") }
             concatenation("group") { literal("("); ref("expr"); literal(")") }
-            choice("bool",RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("true");literal("false") }
+            choice("bool", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("true");literal("false") }
             concatenation("var") { pattern("[a-zA-Z]+") }
+            preferenceFor("expr") {
+                left("sub", setOf("'-'"))
+                left("add", setOf("'+'"))
+                left("mul", setOf("'*'"))
+                left("div", setOf("'/'"))
+            }
         }.also {
-            it.buildFor("S", AutomatonKind.LOOKAHEAD_1)
+            // it.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         }
         val goal = "S"
     }
@@ -68,11 +74,12 @@ internal class test_bodmas_exprOpExprRules_choicePriority : test_ScanOnDemandPar
     fun empty_fails() {
         val sentence = ""
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^", setOf("\"[a-zA-Z]+\"","'true'","'false'","'('"))
-        ),issues)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("\"[a-zA-Z]+\"", "'true'", "'false'", "'('"))
+            ), issues.error)
     }
 
     @Test

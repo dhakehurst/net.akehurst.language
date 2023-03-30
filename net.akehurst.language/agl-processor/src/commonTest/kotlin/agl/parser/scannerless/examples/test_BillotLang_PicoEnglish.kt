@@ -65,7 +65,7 @@ internal class test_BillotLang_PicoEnglish : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("'n'","'d'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test

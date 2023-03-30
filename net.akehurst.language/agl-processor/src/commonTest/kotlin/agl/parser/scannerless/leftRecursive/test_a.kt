@@ -48,8 +48,7 @@ internal class  test_a : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test

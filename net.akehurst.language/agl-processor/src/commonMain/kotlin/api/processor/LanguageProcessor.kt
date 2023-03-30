@@ -36,7 +36,7 @@ import net.akehurst.language.api.typeModel.TypeModel
  */
 interface LanguageProcessor<AsmType : Any, ContextType : Any> {
 
-    val issues:List<LanguageIssue>
+    val issues:IssueCollection
 
     val grammar: Grammar?
 

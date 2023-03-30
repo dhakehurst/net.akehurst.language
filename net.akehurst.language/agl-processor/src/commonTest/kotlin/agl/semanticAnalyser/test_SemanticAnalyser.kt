@@ -1,5 +1,6 @@
 package agl.semanticAnalyser
 
+import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.grammar.GrammarItem
@@ -19,12 +20,13 @@ class test_SemanticAnalyser {
         }
 
         override fun analyse(asm: Any, locationMap: Map<Any, InputLocation>?, context: Any?, options: Map<String, Any>): SemanticAnalysisResult {
-            val issues =  when (asm) {
-                "error" -> listOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE,null,"error"))
-                "warning" -> listOf(LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.PARSE,null,"error"))
+            val ih = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+            when (asm) {
+                "error" -> ih.error(null,"error")
+                "warning" -> ih.warn(null,"warning")
                 else -> throw RuntimeException("Test Error")
             }
-            return SemanticAnalysisResultDefault(issues)
+            return SemanticAnalysisResultDefault(ih)
         }
     }
 

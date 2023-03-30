@@ -47,12 +47,12 @@ internal class test_ifThenElse_NoWS_conditional : test_ScanOnDemandParserAbstrac
             concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
             concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
             pattern("VAR","U|V|W|X|Y|Z")
-            precedenceFor("expr") {
+            preferenceFor("expr") {
                 right("ifthen", setOf("'then'"))
                 right("ifthenelse", setOf("'then'","'else'"))
             }
         }.also {
-            it.buildFor("S",AutomatonKind.LOOKAHEAD_1)
+            //it.buildFor("S",AutomatonKind.LOOKAHEAD_1)
         }
         val goal = "S"
     }
@@ -65,7 +65,7 @@ internal class test_ifThenElse_NoWS_conditional : test_ScanOnDemandParserAbstrac
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("VAR","'if'"))
-        ),issues)
+        ),issues.error)
     }
 
     @Test
@@ -216,7 +216,7 @@ internal class test_ifThenElse_NoWS_conditional : test_ScanOnDemandParserAbstrac
                 conditional {
                   ifthen {
                     'if'
-                    expr { VAR:'W' }
+                    expr { VAR:'U' }
                     'then'
                     expr {
                       conditional {

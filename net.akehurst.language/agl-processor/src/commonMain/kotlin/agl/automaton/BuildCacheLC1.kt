@@ -239,8 +239,6 @@ internal class BuildCacheLC1(
         _cacheOff = true
     }
 
-
-
     override fun mergedStateInfoFor(rulePositions: List<RulePosition>): StateInfo {
         val sis = rulePositions.mapNotNull { _mergedStates[it] }.toSet()
         if (Debug.CHECK) check(1==sis.size)

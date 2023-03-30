@@ -15,16 +15,19 @@
  */
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.grammar.format.test_AglFormat
+import net.akehurst.language.api.typeModel.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 
 class test_mdlFile {
 
     private companion object {
         val grammarStr = """
-namespace com.yakindu.modelviewer.parser
+namespace test
 
 grammar Mdl {
 
@@ -69,6 +72,31 @@ grammar Mdl {
     }
 
     @Test
+    fun typeModel() {
+        val actual = processor.typeModel
+        val expected = net.akehurst.language.api.typeModel.typeModel("test", "Mdl") {
+            //file = section+ ;
+            elementType("File") {
+                propertyListTypeOf("section","Section",false,0)
+            }
+            //section = IDENTIFIER '{' content* '}' ;
+
+            //content = section | parameter ;
+
+            //parameter = IDENTIFIER value ;
+
+            //value = stringList | matrix | identifier | literal ;
+            //identifier = IDENTIFIER ;
+            //matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
+            //row = [literal / ',']+ | literal+ ;
+
+            //stringList = DOUBLE_QUOTE_STRING+ ;
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test
     fun literal_BOOLEAN() {
         val result = processor.parse("on",  Agl.parseOptions { goalRuleName("literal") })
 
@@ -79,7 +107,7 @@ grammar Mdl {
         )
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+        assertTrue(result.issues.isEmpty())
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -88,12 +116,12 @@ grammar Mdl {
         val result = processor.parse("1",  Agl.parseOptions { goalRuleName("literal") })
         val expected = processor.spptParser.parse(
             """
-            literal|1 { INTEGER : '1' }
+            literal { INTEGER : '1' }
         """.trimIndent()
         )
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+        assertTrue(result.issues.isEmpty())
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -102,12 +130,12 @@ grammar Mdl {
         val result = processor.parse("3.14",  Agl.parseOptions { goalRuleName("literal") })
         val expected = processor.spptParser.parse(
             """
-            literal|2 { REAL : '3.14' }
+            literal { REAL : '3.14' }
         """.trimIndent()
         )
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+        assertTrue(result.issues.isEmpty())
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -117,12 +145,12 @@ grammar Mdl {
 
         val expected = processor.spptParser.parse(
             """
-            literal|2 { REAL : '.14' }
+            literal { REAL : '.14' }
         """.trimIndent()
         )
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+        assertTrue(result.issues.isEmpty())
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -132,12 +160,12 @@ grammar Mdl {
 
         val expected = processor.spptParser.parse(
             """
-            literal|2 { REAL : '3.14e-05' }
+            literal { REAL : '3.14e-05' }
         """.trimIndent()
         )
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+        assertTrue(result.issues.isEmpty())
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -147,12 +175,12 @@ grammar Mdl {
 
         val expected = processor.spptParser.parse(
             """
-            literal|2 { REAL : '3.0e5' }
+            literal { REAL : '3.0e5' }
         """.trimIndent()
         )
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+        assertTrue(result.issues.isEmpty())
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -162,12 +190,12 @@ grammar Mdl {
 
         val expected = processor.spptParser.parse(
             """
-            literal|2 { REAL : '.3e5' }
+            literal { REAL : '.3e5' }
         """.trimIndent()
         )
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+        assertTrue(result.issues.isEmpty())
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -177,12 +205,12 @@ grammar Mdl {
 
         val expected = processor.spptParser.parse(
             """
-            literal|2 { REAL : '1e-05' }
+            literal { REAL : '1e-05' }
         """.trimIndent()
         )
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+        assertTrue(result.issues.isEmpty())
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -197,7 +225,7 @@ grammar Mdl {
         )
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+        assertTrue(result.issues.isEmpty())
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -215,7 +243,7 @@ grammar Mdl {
         )
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+        assertTrue(result.issues.isEmpty())
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -233,8 +261,8 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -244,12 +272,12 @@ grammar Mdl {
 
         val expected = processor.spptParser.parse(
             """
-             value|1 { literal|3 { DOUBLE_QUOTE_STRING : '"hello"' } }
+             value { literal { DOUBLE_QUOTE_STRING : '"hello"' } }
         """.trimIndent()
         )
 
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -266,8 +294,8 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -285,8 +313,8 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -312,8 +340,8 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -337,8 +365,8 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -360,8 +388,8 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -380,7 +408,7 @@ grammar Mdl {
         )
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+        assertTrue(result.issues.isEmpty())
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -410,8 +438,8 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -448,8 +476,8 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -492,8 +520,8 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -534,8 +562,9 @@ grammar Mdl {
         """.trimIndent()
         )
 
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
         //FIXME: fails because priorities should create BOOLEAN rather than IDENTIFIER - but doesn't
 
@@ -557,7 +586,7 @@ grammar Mdl {
         )
 
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         //assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
         assertEquals("section", result.sppt!!.root.name)
         //TODO

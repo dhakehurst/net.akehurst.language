@@ -26,6 +26,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 
 @RunWith(Parameterized::class)
@@ -84,7 +85,7 @@ class test_QueryParserValid(val data: Data) {
         val goal = "query"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         val resultStr = result.sppt!!.asString
         Assert.assertEquals(queryStr, resultStr)
     }

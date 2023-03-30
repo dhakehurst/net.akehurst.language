@@ -24,6 +24,7 @@ import net.akehurst.language.api.typeModel.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class test_AglFormat {
 
@@ -34,7 +35,7 @@ class test_AglFormat {
     private fun test(sentence:String, expected:AglFormatterModel) {
         val result = aglProc.process(sentence)
         assertNotNull(result.asm, result.issues.joinToString(separator = "\n") { "$it" })
-        assertEquals(emptyList(), result.issues)
+        assertTrue(result.issues.isEmpty())
         FormatModelTest.assertEqual(expected, result.asm)
     }
 

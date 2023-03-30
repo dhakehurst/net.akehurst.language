@@ -49,7 +49,7 @@ class test_SyntaxAnalyserSimple {
         fun test(proc: LanguageProcessor<AsmSimple, ContextSimple>, data: TestData) {
             val result = proc.process(data.sentence)
             assertNotNull(result.asm)
-            assertEquals(emptyList(), result.issues)
+            assertTrue(result.issues.isEmpty())
             val actual = result.asm!!.rootElements[0]
 
             assertEquals(data.expected.asString("  "), actual.asString("  "))

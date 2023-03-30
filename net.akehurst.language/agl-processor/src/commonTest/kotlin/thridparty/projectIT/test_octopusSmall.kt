@@ -4,6 +4,7 @@ import net.akehurst.language.agl.processor.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class test_octopusSmall {
 
@@ -416,9 +417,9 @@ class test_octopusSmall {
             
             <endpackage>
         """.trimIndent()
-        val result =  processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt,result.issues.joinToString(separator = "\n"){it.toString()})
-        assertEquals(emptyList(),result.issues)
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -447,9 +448,9 @@ class test_octopusSmall {
             + Wagon.pred[0..1] <-> + Wagon.succ[0..1];
             <endpackage> 
         """.trimIndent()
-        val result =  processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -481,9 +482,9 @@ class test_octopusSmall {
              + Artist.artist [0..*]    <->  + Clip.clips [0..*]   ;
             <endpackage>
         """.trimIndent()
-        val result =  processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -521,8 +522,8 @@ class test_octopusSmall {
              + Dvd.dvd [0..*]    <->  + catalog::Clip.clips [1..*]   ;
             <endpackage>
         """.trimIndent()
-        val result =  processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertEquals(emptyList(),result.issues)
+        assertTrue(result.issues.isEmpty())
     }
 }

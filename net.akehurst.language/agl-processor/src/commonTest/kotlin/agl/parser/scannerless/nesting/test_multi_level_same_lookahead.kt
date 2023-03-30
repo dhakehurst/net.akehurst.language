@@ -51,6 +51,10 @@ internal class test_multi_level_same_lookahead : test_ScanOnDemandParserAbstract
             literal("'u'", "u")
             literal("'v'", "v")
             concatenation("Q") { literal("q") }
+            preferenceFor("Q") {
+                left("U", setOf("'a'"))
+                left("V", setOf("'a'"))
+            }
         }
     }
 

@@ -48,10 +48,10 @@ internal class test_da_sList_root_choicePriority : test_ScanOnDemandParserAbstra
             concatenation("var") { literal("v") }
             literal("'/'", "/")
             literal("'+'", "+")
-            //precedenceFor("expr") {
-            //    left("add","'+'")
-            //    left("div","'/'")
-            //}
+            preferenceFor("expr") {
+                left("add", setOf("'+'"))
+                left("div", setOf("'/'"))
+            }
         }
         val goal = "S"
     }
@@ -65,8 +65,7 @@ internal class test_da_sList_root_choicePriority : test_ScanOnDemandParserAbstra
         assertEquals(
             listOf(
                 parseError(InputLocation(0,1,1,1),"^", setOf("'v'"))
-            ), issues
-        )
+            ), issues.error)
     }
 
     @Test

@@ -4,11 +4,12 @@ import net.akehurst.language.agl.processor.Agl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class test_MetaTyperLanguage {
 
     private companion object {
-        val grammarStr ="""
+        val grammarStr = """
             namespace MetaTyperLanguage
             grammar MetaTyperGrammar {
                             
@@ -215,8 +216,8 @@ UnitOfMeasurement {
 //    }
 //}
         """.trimIndent()
-        val result =  processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt,result.issues.joinToString(separator = "\n"){it.toString()})
-        assertEquals(emptyList(),result.issues)
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
+        assertTrue(result.issues.isEmpty())
     }
 }

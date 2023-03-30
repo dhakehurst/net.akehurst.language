@@ -44,7 +44,7 @@ internal class RuntimeTransitionCalculator(
         return __transitions
     }
 
-    fun calcTransitionsForComplete(sourceState: ParserState, previousState: ParserState,prevPrev: ParserState): Set<Transition> {
+    fun calcTransitionsForComplete(sourceState: ParserState, previousState: ParserState, prevPrev: ParserState): Set<Transition> {
         __transitions.clear()
         val heightOrGraftInto = this.stateSet.buildCache.heightOrGraftInto(prevPrev, previousState, sourceState)
         for (hg in heightOrGraftInto) {
