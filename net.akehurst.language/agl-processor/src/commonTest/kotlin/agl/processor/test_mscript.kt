@@ -36,7 +36,7 @@ grammar Mscript {
 
     // end-of-line ('\n') is not whitespace as it marks end of a line in a statementList
     skip leaf WHITESPACE = "[ \t\x0B\f]+" ;
-    skip leafLINE_CONTINUATION =  "[.][.][.](?:.*)\R" ;
+    skip leafLINE_CONTINUATION =  "[.][.][.](?:.*)[\r\n]" ;
     skip leaf COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
          leaf MULTI_LINE_COMMENT = "%[{](?:.|\n)*?%[}]" ;
          leaf SINGLE_LINE_COMMENT = "(?:%[^{].+${'$'})|(?:%${'$'})" ;

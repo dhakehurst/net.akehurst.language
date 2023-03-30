@@ -15,7 +15,10 @@
  */
 package net.akehurst.language.comparisons.agl
 
+import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SharedPackedParseTree
@@ -46,12 +49,20 @@ class Java8_compare_Test_antlrOptm(val file: FileData) {
             return f
         }
 
-        fun createAndBuildProcessor(aglFile: String): LanguageProcessor {
+        fun createAndBuildProcessor(aglFile: String): LanguageProcessor<AsmSimple, ContextSimple> {
             val bytes = Java8_compare_Test_antlrOptm::class.java.getResourceAsStream(aglFile).readBytes()
             val javaGrammarStr = String(bytes)
-            val proc = Agl.processorFromString(javaGrammarStr)
+            val res = Agl.processorFromString<AsmSimple, ContextSimple>(
+                grammarDefinitionStr = javaGrammarStr,
+                aglOptions = Agl.options {
+                    semanticAnalysis {
+                        // switch off ambiguity analysis for performance
+                        option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
+                    }
+                }
+            )
             // no need to build because, sentence is parsed twice in the test
-            return proc
+            return res.processor!!
         }
 
         val optmAntlrJava8Processor = createAndBuildProcessor("/agl/Java8AntlrOptm.agl")
@@ -60,11 +71,11 @@ class Java8_compare_Test_antlrOptm(val file: FileData) {
 
         fun parseWithJava8OptmAntlr(file: FileData): SharedPackedParseTree? {
             return try {
-                optmAntlrJava8Processor.parseForGoal("compilationUnit", input!!)
+                optmAntlrJava8Processor.parse( input!!,Agl.parseOptions { goalRuleName("compilationUnit") })
                 TimeLogger(col, file).use { timer ->
-                    val tree = optmAntlrJava8Processor.parseForGoal("compilationUnit", input!!)
+                    val res = optmAntlrJava8Processor.parse(input!!,Agl.parseOptions { goalRuleName("compilationUnit") })
                     timer.success()
-                    tree
+                    res.sppt
                 }
             } catch (e: ParseFailedException) {
                 println("Error: ${e.message}")

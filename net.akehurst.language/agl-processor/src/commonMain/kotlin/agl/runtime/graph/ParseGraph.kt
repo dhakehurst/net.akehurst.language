@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.LookaheadSet
+import net.akehurst.language.agl.automaton.LookaheadSetPart
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.collections.BinaryHeap
 import net.akehurst.language.agl.collections.GraphStructuredStack
@@ -956,7 +957,26 @@ internal class ParseGraph(
             }
         }
     }
-
+    /**
+     * eotLookahead && runtimeLookahead must not include RT
+     */
+    fun isLookingAt(lookaheadGuard: LookaheadSetPart, eotLookahead: LookaheadSetPart, runtimeLookahead: LookaheadSetPart, nextInputPosition: Int): Boolean {
+        return when {
+            lookaheadGuard.matchANY -> true
+            runtimeLookahead.includesRT -> error("Runtime lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
+            eotLookahead.includesRT -> error("EOT lookahead must be real lookahead values") //TODO: could remove this for speed, it should never happen
+            else -> {
+                val rtResolved = runtimeLookahead.resolve(eotLookahead, runtimeLookahead)
+                val lhs = lookaheadGuard.resolve(eotLookahead, rtResolved)
+                when {
+                    lhs.matchANY -> true
+                    lhs.includesEOT && this.input.isEnd(nextInputPosition) -> true
+                    lhs.content.isEmpty() -> false
+                    else -> lhs.content.any { this.input.isLookingAt(nextInputPosition, it) }
+                }
+            }
+        }
+    }
     /**
      * GOAL
      */

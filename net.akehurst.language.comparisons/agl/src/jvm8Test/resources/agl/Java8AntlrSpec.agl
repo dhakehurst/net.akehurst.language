@@ -1345,10 +1345,10 @@ castExpression
 // §3.10.1 Integer Literals
 leaf
 IntegerLiteral
-	=	DecimalIntegerLiteral
-	|	HexIntegerLiteral
-	|	OctalIntegerLiteral
-	|	BinaryIntegerLiteral
+	= HexIntegerLiteral
+	| OctalIntegerLiteral
+	| BinaryIntegerLiteral
+	| DecimalIntegerLiteral
 	;
 
 leaf
