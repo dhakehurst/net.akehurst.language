@@ -753,4 +753,13 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
+
+    @Test
+    fun withNoWhitespace() {
+        val sentence="classclass{voidvoid(){}}"
+        val result = proc.parse(sentence)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+    }
 }
