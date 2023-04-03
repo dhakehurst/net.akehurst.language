@@ -18,23 +18,23 @@ package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.automaton.LookaheadSetPart
 
-internal class PrecedenceRules(
+internal class RuntimePreferenceRule(
     val contextRule: RuntimeRule,
-    val rules: List<PrecedenceRule>
+    val options: List<RuntimePreferenceOption>
 ) {
 
-    enum class Associativity { NONE, LEFT, RIGHT }
+    enum class Assoc { NONE, LEFT, RIGHT }
 
-    data class PrecedenceRule(
+    data class RuntimePreferenceOption(
         val precedence: Int,
         val target: RuntimeRule,
         val option: Int,
         val operators: Set<RuntimeRule>,
-        val associativity: Associativity
+        val associativity: Assoc
     )
 
-    fun precedenceFor(to: List<RulePosition>, lh: LookaheadSetPart): List<PrecedenceRule> {
-        val r = rules.filter { pr ->
+    fun precedenceFor(to: List<RulePosition>, lh: LookaheadSetPart): List<RuntimePreferenceOption> {
+        val r = options.filter { pr ->
             val rpMatch = to.any { it.rule == pr.target && it.option == pr.option }
             rpMatch && pr.operators.any { lh.fullContent.contains(it) }
         }
