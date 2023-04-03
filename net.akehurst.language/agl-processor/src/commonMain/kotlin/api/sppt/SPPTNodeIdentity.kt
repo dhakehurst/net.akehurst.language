@@ -18,11 +18,10 @@ package net.akehurst.language.api.sppt
 
 /**
  *
- * The identity of a node in a Shared Packed Parse Forest is composed from:
+ * The identity of a node in a Shared Packed Parse Forest is composed of:
  * <ul>
- * <li>a unique rule number,
+ * <li>a unique rule number (+ the rule-set the rule belongs to),
  * <li>a starting position indicating the index of a position in the input text of the parse at which this node starts,
- * <li>the length (number of characters) of the input text that is matched by this node
  * </ul>
  *
  * If a grammar is ambiguous, a parse result may contain multiple nodes with the same identity but with different children. An SPPF combines these nodes (to
@@ -32,7 +31,12 @@ package net.akehurst.language.api.sppt
 interface SPPTNodeIdentity {
 
 	/**
-	 *  the number of the runtime rule used to create the node
+	 *  the number of the runtime-rule-set used to create the node
+	 */
+	val runtimeRuleSetNumber: Int
+
+	/**
+	 *  the number of the runtime-rule used to create the node
 	 */
 	val runtimeRuleNumber: Int
 
@@ -40,10 +44,5 @@ interface SPPTNodeIdentity {
 	 *  the start position of the text matched by the node
 	 */
 	val startPosition: Int
-
-	/**
-	 * the length of the text matched by the node
-	 */
-	//val matchedTextLength: Int
 
 }

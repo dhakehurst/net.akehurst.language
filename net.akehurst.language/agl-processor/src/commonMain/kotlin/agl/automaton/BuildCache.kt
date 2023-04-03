@@ -16,19 +16,20 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
 import net.akehurst.language.agl.runtime.structure.RulePosition
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
 
 internal interface BuildCache {
-    fun on()
-    fun buildCaches()
+    fun switchCacheOn()
     fun clearAndOff()
 
     fun stateInfo(): Set<StateInfo>
-    fun widthInto(fromStateRulePositions: List<RulePosition>): Set<WidthInfo>
-    fun heightGraftInto(prevStateRulePositions:List<RulePosition>, fromStateRuntimeRules: List<RuntimeRule>) : Set<HeightGraftInfo>
+    fun mergedStateInfoFor(rulePositions: List<RulePosition>): StateInfo
+    fun widthInto(prevState:ParserState, fromState: ParserState): Set<WidthInfo>
+    fun heightOrGraftInto(prevPrev: ParserState, prevState: ParserState, fromState: ParserState) : Set<TransInfo>
 
-    fun firstOf(rulePosition: RulePosition, ifReachedEnd: LookaheadSet): Set<RuntimeRule>
+    //fun expectedAt(rulePosition: RulePosition, ifReachedEnd: LookaheadSetPart): LookaheadSetPart
 
+    // exposed on interface so we can test them
+    //fun firstTerminal(prev: RuntimeState, fromState: RuntimeState): List<RuntimeRule>
+    //fun followAtEndInContext(prev: RuntimeState, runtimeRule: RuntimeRule): List<RuntimeRule>
 }

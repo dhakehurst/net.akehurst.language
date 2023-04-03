@@ -16,8 +16,6 @@
 
 package net.akehurst.language.collections
 
-import kotlin.math.abs
-
 /**
  * If there are multiple values that contribute to a key,
  * it should be faster to use the keys separately, rather than create a separate 'key' object

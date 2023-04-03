@@ -37,7 +37,7 @@ internal class test_group_choice : test_ScanOnDemandParserAbstract() {
      */
     private companion object {
         val rrs = runtimeRuleSet {
-            skip("W") { pattern("\\s+") }
+            concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { ref("rules") }
             multi("rules",0,-1,"normalRule")
             concatenation("normalRule") { ref("ID"); literal("="); ref("choice"); literal(";")}
@@ -54,12 +54,12 @@ internal class test_group_choice : test_ScanOnDemandParserAbstract() {
             concatenation("group") { literal("("); ref("choice"); literal(")") }
             pattern("ID","[a-zA-Z]+")
         }
+        val goal = "S"
     }
 
     @Test
     fun rEQaSEMI() {
         val sentence = "r=a;"
-        val goal = "S"
 
         val expected = """
          S { rules { normalRule {
@@ -70,19 +70,39 @@ internal class test_group_choice : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 2,
-                expectedTrees = *arrayOf(expected)
+                expectedNumGSSHeads = 1,
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
-    fun bac() {
+    fun choice_bac() {
+        val sentence = "(a)"
+
+        val expected = """
+              choice|1 { longestChoice { concatItem|1 { group {
+                      '('
+                      choice|1 { longestChoice { concatItem { ID : 'a' } } }
+                      ')'
+                    } } } }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = "choice",
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun rule_bac() {
         val sentence = "r=(a);"
-        val goal = "S"
 
         val expected = """
          S { rules { normalRule {
@@ -97,18 +117,18 @@ internal class test_group_choice : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
+
     @Test
     fun bbacc() {
         val sentence = "r=((a));"
-        val goal = "S"
 
         val expected = """
  S { rules { normalRule {
@@ -127,12 +147,12 @@ internal class test_group_choice : test_ScanOnDemandParserAbstract() {
     } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 

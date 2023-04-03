@@ -1,24 +1,25 @@
 namespace net.akehurst.language.xml
 
 grammar Xml {
+	skip leaf WS = "\s" ;
 
-	skip COMMENT = "<!-- [.]* -->" ;
-	
-	file = element? ;
-	
+	document = prolog? comment* element ;
+	prolog = '<?xml' attribute* '?>' ;
+    comment = '<!--' COMMENT_CONTENT '-->' ;
 	element = elementEmpty | elementContent ;
-	elementEmpty = '<' WS? NAME WS? attribute* '/>' ;
+	elementEmpty = '<' NAME attribute* '/>' ;
     elementContent = startTag content endTag ;
-	startTag = '<' WS? NAME WS? attribute* '>' ;
-	endTag = '</' WS? NAME WS? '>' ;
+	startTag = '<'  NAME attribute*  '>' ;
+	endTag = '</'  NAME  '>' ;
 
-	content = (CHARDATA | element)* ;
+	content = (CHARDATA | element | comment)* ;
 
-	attribute = NAME WS? '=' WS? string WS? ;
-	string = DOUBLE_QUOTE_STRING | SINGLE_QUOTE_STRING ;
-	WS = "\s" ;
-	CHARDATA = "[^<]+" ;
-	NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
-	DOUBLE_QUOTE_STRING = "[\"][^\"]*[\"]" ;
-	SINGLE_QUOTE_STRING = "['][^']*[']" ;
+	attribute = NAME '=' VALUE ;
+
+	leaf VALUE = DOUBLE_QUOTE_STRING | SINGLE_QUOTE_STRING ;
+	leaf COMMENT_CONTENT = "(.|[\n])*?(?=-->)" ;
+	leaf CHARDATA = "[^<]+" ;
+	leaf NAME = "[a-zA-Z_:][a-zA-Z0-9_.:-]*" ;
+	leaf DOUBLE_QUOTE_STRING = "[\"][^\"]*[\"]" ;
+	leaf SINGLE_QUOTE_STRING = "['][^']*[']" ;
 }

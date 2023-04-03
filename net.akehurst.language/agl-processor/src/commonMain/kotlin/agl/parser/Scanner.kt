@@ -1,8 +1,6 @@
 package net.akehurst.language.agl.agl.parser
 
 import net.akehurst.language.agl.parser.InputFromString
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.api.sppt.SPPTLeaf
@@ -12,16 +10,14 @@ internal class Scanner(
 ) {
 
     fun scan(inputText: String, includeSkipRules: Boolean): List<SPPTLeaf> {
-        val undefined = RuntimeRule(-1, -5, "undefined", "", RuntimeRuleKind.TERMINAL, false, true)
+        val undefined = RuntimeRuleSet.UNDEFINED_RULE
         //TODO: improve this algorithm...it is not efficient I think, also doesn't work!
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, inputText)
         var terminals = if (includeSkipRules) this.runtimeRuleSet.terminalRules else this.runtimeRuleSet.nonSkipTerminals
-        var result = mutableListOf<SPPTLeaf>()
+        val result = mutableListOf<SPPTLeaf>()
 
         //eliminate tokens that are empty matches
-        terminals = terminals.filter {
-            it.value.isNotEmpty()
-        }.toTypedArray()
+        terminals = terminals.filter { it.isEmptyTerminal.not() }
 
         var startPosition = 0
         var nextInputPosition = 0
@@ -54,6 +50,7 @@ internal class Scanner(
                     //TODO: collate unscanned, rather than make a separate token for each char
                     val text = inputText[nextInputPosition].toString()
                     nextInputPosition += text.length
+                    val eolPositions = emptyList<Int>()//TODO calulat
                     val unscanned = SPPTLeafFromInput(input, undefined, startPosition, nextInputPosition, 0)
                     //unscanned.eolPositions = input.eolPositions(text)
                     result.add(unscanned)

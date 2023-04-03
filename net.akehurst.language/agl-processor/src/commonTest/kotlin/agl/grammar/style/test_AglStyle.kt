@@ -1,13 +1,46 @@
 package net.akehurst.language.agl.grammar.style
 
+import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.style.AglStyleRule
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 
 class test_AglStyle {
+
+    private companion object {
+        val aglProc = Agl.registry.agl.style.processor!!
+        val testGrammar = Agl.registry.agl.grammar.processor?.process("""
+            namespace test
+            
+            grammar Test {
+                skip WS = "\s+" ;
+            
+                unit = declaration* ;
+                declaration = datatype | primitive ;
+                primitive = 'primitive' ID ;
+                datatype = 'datatype' ID '{' property* '}' ;
+                property = ID ':' typeReference ;
+                typeReference = type typeArguments? ;
+                typeArguments = '<' [typeReference / ',']+ '>' ;
+            
+                leaf ID = "[A-Za-z_][A-Za-z0-9_]*" ;
+                leaf type = ID;
+            
+                // not marked as leaf so can use to test patterns
+                COMMENT = "\"(\\?.)*\"" ;
+                INT = "[0-9]+" ;
+            }
+        """.trimIndent())?.asm?.first()!!
+    }
+
+    private fun process(sentence:String) =aglProc.process(sentence, Agl.options { syntaxAnalysis { context(ContextFromGrammar(testGrammar)) } })
+
 
     @Test
     fun single_line_comment() {
@@ -16,10 +49,12 @@ class test_AglStyle {
             // single line comment
         """.trimIndent()
 
-        val p = Agl.registry.agl.style.processor!!.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
+        val result = process(text)
 
-        assertNotNull(p)
-        assertEquals(0, p.size)
+        assertNotNull(result.asm)
+        assertEquals(0, result.asm?.rules?.size)
+
+        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
 
     @Test
@@ -32,62 +67,83 @@ class test_AglStyle {
             */
         """.trimIndent()
 
-        val p = Agl.registry.agl.style.processor!!.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
+        val result = process(text)
 
-        assertNotNull(p)
-        assertEquals(0, p.size)
+        assertNotNull(result.asm)
+        assertEquals(0, result.asm?.rules?.size)
+        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
+    }
+
+    @Test
+    fun selector_notFound() {
+
+        val text = """
+            xxx { }
+        """.trimIndent()
+
+        val result = process(text)
+
+        assertNotNull(result.asm)
+        assertEquals(1, result.asm?.rules?.size)
+        assertEquals(setOf(
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(0,1,1,7),"GrammarRule 'xxx' not found for style rule", null)
+        ), result.issues.all)
     }
 
     @Test
     fun emptyRule() {
 
         val text = """
-            selector { }
+            declaration { }
         """.trimIndent()
 
-        val actual = Agl.registry.agl.style.processor!!.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
+        val result = process(text)
 
-        assertNotNull(actual)
-        assertEquals(1, actual.size)
+        assertNotNull(result.asm)
+        assertEquals(1, result.asm?.rules?.size)
+        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
 
     @Test
-    fun oneRule() {
+    fun oneLeafRule() {
 
         val text = """
-            class {
+            ID {
                 -fx-fill: green;
                 -fx-font-weight: bold;
             }
         """.trimIndent()
 
-        val actual = Agl.registry.agl.style.processor!!.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
+        val result =process(text)
 
-        assertNotNull(actual)
-        assertEquals(1, actual.size)
-        assertEquals("class", actual[0].selector)
-        assertEquals(2, actual[0].styles.size)
+        assertNotNull(result.asm)
+        assertEquals(1, result.asm?.rules?.size)
+        assertEquals("ID", result.asm!!.rules[0].selector.first())
+        assertEquals(2, result.asm!!.rules[0].styles.size)
+        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
 
     @Test
-    fun multiRules() {
+    fun multiLeafRules() {
 
         val text = """
-            class {
+            ID {
                 -fx-fill: green;
                 -fx-font-weight: bold;
             }
-            "[a-z]" {
+            "[0-9]+" {
                 -fx-fill: green;
                 -fx-font-weight: bold;
             }
         """.trimIndent()
 
-        val actual = Agl.registry.agl.style.processor!!.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
+        val result = process(text)
 
-        assertNotNull(actual)
-        assertEquals(2, actual.size)
+        assertNotNull(result.asm)
+        assertEquals(2, result.asm?.rules?.size)
+        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
+
     @Test
     fun regexWithQuotes() {
         val text = """
@@ -97,10 +153,25 @@ class test_AglStyle {
             }
         """.trimIndent()
 
-        val actual = Agl.registry.agl.style.processor!!.processForGoal<List<AglStyleRule>>(List::class,"rules", text)
+        val result = process(text)
 
-        assertNotNull(actual)
-        assertEquals(1, actual.size)
+        assertNotNull(result.asm)
+        assertEquals(1, result.asm?.rules?.size)
+        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
 
+    @Test
+    fun selectorAndComposition() {
+
+        val text = """
+            property,typeReference,typeArguments { }
+        """.trimIndent()
+
+        val result = process(text)
+
+        assertNotNull(result.asm)
+        assertEquals(1, result.asm?.rules?.size)
+        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
+    }
+    //TODO more tests
 }

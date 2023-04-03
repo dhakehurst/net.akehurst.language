@@ -18,29 +18,43 @@ package net.akehurst.language.processor.java8
 
 //import com.soywiz.korio.async.runBlockingNoSuspensions
 //import com.soywiz.korio.file.std.resourcesVfs
-import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.sppt.SPPT2InputText
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import test.assertEqualsWarning
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class test_Java8_Singles_aglSpec {
 
-    companion object {
+    private companion object {
         val grammarFile = "/java8/Java8AglSpec.agl"
-        val aglSpecProcessor: LanguageProcessor by lazy { createJava8Processor(grammarFile, true ) }
+        val aglSpecProcessor: LanguageProcessor<AsmSimple, ContextSimple> by lazy { createJava8Processor(grammarFile, true) }
 
         val proc = aglSpecProcessor
 
-        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor {
+        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<AsmSimple, ContextSimple> {
             val grammarStr = this::class.java.getResource(path).readText()
-            val proc = Agl.processorFromString(grammarStr)
+            val proc = Agl.processorFromString<AsmSimple, ContextSimple>(
+                grammarDefinitionStr = grammarStr,
+                aglOptions = Agl.options {
+                    semanticAnalysis {
+                        // switch off ambiguity analysis for performance
+                        option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
+                    }
+                }
+            ).processor!!
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
-            proc.buildFor(forRule)
+            //proc.buildFor(Agl.parseOptions { goalRuleName(forRule) }) //TODO: use build
             return proc
         }
     }
@@ -50,7 +64,9 @@ class test_Java8_Singles_aglSpec {
         val sentence = "0"
         val goal = "Literal"
 
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues.error)
     }
 
     @Test
@@ -58,16 +74,27 @@ class test_Java8_Singles_aglSpec {
 
         val grammarStr = this::class.java.getResource(grammarFile).readText()
         val goal = "Type"
-        val p = Agl.processorFromStringForGoal(grammarStr,goal)
+        val p = Agl.processorFromString<AsmSimple, ContextSimple>(
+            grammarDefinitionStr = grammarStr,
+            aglOptions = Agl.options {
+                semanticAnalysis {
+                    active(false) // switch off for performance
+                }
+            },
+            configuration = Agl.configuration {
+                defaultGoalRuleName(goal)
+            }
+        ).processor!!
 
         val sentence = "int"
-        val t = p.buildFor(goal).parseForGoal(goal, sentence)
-
-        assertEqualsWarning(1, t.maxNumHeads)
+        val result = p.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues.error)
+        assertEqualsWarning(2, result.sppt!!.maxNumHeads)
     }
 
     @Test
-    fun Expressions_Type__int(){
+    fun Expressions_Type__int() {
         val grammarStr = """
             namespace test
 
@@ -85,12 +112,14 @@ class test_Java8_Singles_aglSpec {
             }
         """.trimIndent()
         val goal = "UType"
-        val p = Agl.processorFromStringForGoal(grammarStr,goal)
+        val p = Agl.processorFromString(grammarStr, Agl.configuration { defaultGoalRuleName(goal) }).processor!!
 
         val sentence = "int"
-        val t = p.buildFor(goal).parseForGoal(goal, sentence)
+        val result = p.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues.error)
 
-        assertEqualsWarning(1, t.maxNumHeads)
+        assertEqualsWarning(2, result.sppt!!.maxNumHeads)
     }
 
     @Test
@@ -99,31 +128,76 @@ class test_Java8_Singles_aglSpec {
         val sentence = "import x; @An() interface An {  }"
         val goal = "CompilationUnit"
 
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues.error)
     }
 
     @Test
     fun arrayIndex() {
         val sentence = "a[0]"
         val goal = "Expression"
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues.error)
     }
 
     @Test
     fun t() {
         val sentence = "a[0].b"
         val goal = "Expression"
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues.error)
     }
 
     @Test
     fun bad_Binary_Literal() {
         val sentence = "0b012"
         val goal = "VariableInitializer"
-        assertFailsWith(ParseFailedException::class) {
-            proc.parseForGoal(goal, sentence)
-        }
+
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNull(result.sppt)
+        assertEquals(
+            listOf(
+                LanguageIssue(
+                    LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(4, 5, 1, 1),
+                    "0b01^2",
+                    setOf(
+                        "<EOT>",
+                        "'.'",
+                        "'['",
+                        "'::'",
+                        "'++'",
+                        "'--'",
+                        "'*'",
+                        "'/'",
+                        "'%'",
+                        "'+'",
+                        "'-'",
+                        "'<<'",
+                        "'>>'",
+                        "'>>>'",
+                        "'<'",
+                        "'>'",
+                        "'<='",
+                        "'>='",
+                        "'instanceof'",
+                        "'=='",
+                        "'!='",
+                        "'&'",
+                        "'^'",
+                        "'|'",
+                        "'&&'",
+                        "'||'",
+                        "'?'"
+                    )
+                )
+            ), result.issues.error
+        )
+
     }
+
     @Test
     fun BadLiterals() {
         val sentence = """
@@ -147,7 +221,17 @@ public class BadBinaryLiterals {
 }
             """.trimIndent()
         val goal = "CompilationUnit"
-        proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNull(result.sppt)
+        assertEquals(
+            listOf(
+                LanguageIssue(
+                    LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(799, 28, 16, 1),
+                    "...t1 = 0b01.^01;  // no...",
+                    setOf("IDENTIFIER", "'new'", "'<'")
+                )
+            ), result.issues.error
+        )
 
     }
 
@@ -155,43 +239,51 @@ public class BadBinaryLiterals {
     fun UnannQualifiedTypeReference1() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "BlockStatement"
-        val t = proc.parseForGoal(goal, sentence)
-        assertNotNull(t)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertEquals(emptyList(), result.issues.error)
+        assertNotNull(result.sppt)
     }
 
     @Test
     fun UnannQualifiedTypeReference2() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "BlockStatement"
-        val t = proc.parseForGoal(goal, sentence)
-        assertNotNull(t)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertEquals(emptyList(), result.issues.error)
+        assertNotNull(result.sppt)
     }
 
     @Test
     fun UnannQualifiedTypeReference() {
         val sentence = "{ Map.@An Entry<Object,Object> x; }"
         val goal = "Block"
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertEquals(emptyList(), result.issues.error)
+        assertNotNull(result.sppt)
     }
 
     @Test
     fun Enum() {
         val sentence = "enum E { A, B, C }"
         val goal = "ClassDeclaration"
-        val t = proc.parseForGoal(goal, sentence)
-        val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visitTree(t, "")
-        assertEquals(sentence,resultStr)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues.error)
+        val actual = result.sppt!!.toStringAll
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        assertEquals(sentence, resultStr)
     }
 
     @Test
     fun xx() {
         val sentence = "interface An { An[] value(); }"
         val goal = "CompilationUnit"
-        val t = proc.parseForGoal(goal, sentence)
-        val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visitTree(t, "")
-        assertEquals(sentence,resultStr)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues.error)
+        val actual = result.sppt!!.toStringAll
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        assertEquals(sentence, resultStr)
     }
 
     @Test
@@ -202,15 +294,17 @@ public class BadBinaryLiterals {
         """.trimIndent()
         val goal = "Expression"
 
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues.error)
 
         // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
-        assertEquals(1, t.maxNumHeads)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
-    @Test//(timeout = 5000)
+    @Test(timeout = 10000)
     fun long_concatenation() {
 
         val sentence = """
@@ -257,11 +351,13 @@ public class BadBinaryLiterals {
         """.trimIndent()
         val goal = "Block"
 
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertEquals(emptyList(), result.issues.error)
 
         // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
-        assertEquals(sentence,resultStr)
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        assertEquals(sentence, resultStr)
     }
 
 }

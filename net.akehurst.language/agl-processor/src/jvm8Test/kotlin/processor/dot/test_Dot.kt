@@ -16,15 +16,18 @@
 package net.akehurst.language.agl.processor.dot
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
-import org.junit.Assert
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.util.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @RunWith(Parameterized::class)
 class test_Dot(val data: Data) {
@@ -32,7 +35,7 @@ class test_Dot(val data: Data) {
     companion object {
 
         private val grammarStr = this::class.java.getResource("/dot/Dot.agl")?.readText() ?: error("File not found")
-        var processor: LanguageProcessor = Agl.processorFromString(grammarStr).buildFor("graph") //TODO: use build
+        var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
 
         val validDirectory = "/dot/valid/"
         var validFiles = this::class.java.getResourceAsStream(validDirectory).use { if (null == it) emptyList<String>() else BufferedReader(InputStreamReader(it)).readLines() }
@@ -60,10 +63,11 @@ class test_Dot(val data: Data) {
 
     @Test
     fun test() {
-        val result = processor.parseForGoal("graph", this.data.text)
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
-        Assert.assertEquals(this.data.text, resultStr)
+        val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName("graph") })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        val resultStr = result.sppt!!.asString
+        assertEquals(this.data.text, resultStr)
     }
 
 }

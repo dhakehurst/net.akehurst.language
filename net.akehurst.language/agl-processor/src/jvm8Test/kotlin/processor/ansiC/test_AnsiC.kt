@@ -15,33 +15,28 @@
  */
 package net.akehurst.language.agl.processor.dot
 
-//import com.soywiz.korio.async.runBlockingNoSuspensions
-//import com.soywiz.korio.file.std.resourcesVfs
-//import java.io.BufferedReader
-//import java.io.InputStreamReader
-import java.util.ArrayList
-
-import org.junit.Assert
-import org.junit.Test
+import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
-
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.processor.sql.test_SQLValid
 import java.io.BufferedReader
 import java.io.InputStreamReader
-
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @RunWith(Parameterized::class)
-class test_AnsiC(val data:Data) {
+class test_AnsiC(val data: Data) {
 
     companion object {
 
         private val grammarStr = this::class.java.getResource("/ansiC/ansiC.agl").readText()
-        val processor : LanguageProcessor by lazy {
-            Agl.processorFromString(grammarStr)
+        val processor: LanguageProcessor<AsmSimple, ContextSimple> by lazy {
+            Agl.processorFromStringDefault(grammarStr).processor!!
         }
         var sourceFiles = arrayOf("/ansiC/expression-valid.txt")
 
@@ -82,10 +77,11 @@ class test_AnsiC(val data:Data) {
 
     @Test
     fun test() {
-        val result = processor.parseForGoal("expression", this.data.text)
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
-        Assert.assertEquals(this.data.text, resultStr)
+        val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName("expression") })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
+        val resultStr = result.sppt!!.asString
+        assertEquals(this.data.text, resultStr)
     }
 
 }

@@ -15,51 +15,36 @@
  */
 package net.akehurst.language.agl.processor.natural
 
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.util.ArrayList
-
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
-import org.junit.runners.Parameterized.Parameters
-
-import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.processor.LanguageProcessor
+import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.fail
+import kotlin.test.assertTrue
 
-class test_NaturalLanguage_Singles{
+class test_NaturalLanguage_Singles {
 
     companion object {
 
         private val grammarStr = this::class.java.getResource("/natural/English.agl").readText()
-        var processor: LanguageProcessor = tgqlprocessor()
+        var processor = processor()
 
         var sourceFiles = arrayOf("/natural/english-sentences-valid.txt")
 
-        fun tgqlprocessor() : LanguageProcessor {
-            //val grammarStr = ClassLoader.getSystemClassLoader().getResource("vistraq/Query.ogl").readText()
-            return Agl.processorFromString(grammarStr)
-         }
+        fun processor() =  Agl.processorFromStringDefault(grammarStr).processor!!
+
     }
 
     @Test
     fun subject() {
         val goal = "subject"
         val sentence = "my name"
-        try {
-            val result = processor.parseForGoal(goal, sentence)
-            assertNotNull(result)
-            val resultStr = result.asString
-            assertEquals(sentence, resultStr)
-        } catch (e:ParseFailedException) {
-            println("${e.message} at ${e.location}")
-            println("expecting one of: ${e.expected}")
-            fail(e.message)
-        }
+
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
+        val resultStr = result.sppt!!.asString
+        assertEquals(sentence, resultStr)
     }
 
 }

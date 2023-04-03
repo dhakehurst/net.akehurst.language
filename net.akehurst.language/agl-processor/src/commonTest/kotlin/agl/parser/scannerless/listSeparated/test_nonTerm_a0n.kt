@@ -17,19 +17,22 @@
 package net.akehurst.language.parser.scanondemand.listSeparated
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 internal class test_nonTerm_a0n : test_ScanOnDemandParserAbstract() {
 
-    // S = [a / sep ]*
+    // S = [a / ',' ]*
     // a = 'a'
-    // sep = ','?
     private companion object {
         val rrs = runtimeRuleSet {
-            sList("S", 0, -1, "'a'", "sep")
-            literal("'a'", "a")
-            multi("sep", 0, 1, "','")
+            sList("S", 0, -1, "a", "','")
+            concatenation("a") { literal("a") }
             literal("','", ",")
         }
     }
@@ -41,12 +44,12 @@ internal class test_nonTerm_a0n : test_ScanOnDemandParserAbstract() {
 
         val expected = "S|1 { §empty }"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -55,14 +58,14 @@ internal class test_nonTerm_a0n : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a"
 
-        val expected = "S { 'a' }"
+        val expected = "S { a { 'a' } }"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -71,15 +74,15 @@ internal class test_nonTerm_a0n : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "aa"
 
-        val expected = "S {'a' sep|1 {§empty} 'a'}"
-
-        val actual = super.test(
+        val (sppt,issues) = super.testFail(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedNumGSSHeads = 1
         )
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(1,2,1,1),"a^a", setOf("<EOT>","','"))
+        ),issues.error)
     }
 
     @Test
@@ -87,14 +90,14 @@ internal class test_nonTerm_a0n : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a,a"
 
-        val expected = "S {'a' sep {','} 'a'}"
+        val expected = "S {a{'a'} ',' a{'a'}}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -103,15 +106,15 @@ internal class test_nonTerm_a0n : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a,aa"
 
-        val expected = "S {'a' sep {','} 'a' sep|1 {§empty} 'a'}"
-
-        val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+        val (sppt,issues) = super.testFail(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1
         )
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(3,4,1,1),"a,a^a", setOf("<EOT>","','"))
+        ),issues.error)
     }
 
     @Test
@@ -119,14 +122,14 @@ internal class test_nonTerm_a0n : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a,a,a"
 
-        val expected = "S {'a' sep {','} 'a' sep {','} 'a'}"
+        val expected = "S {a{'a'} ',' a{'a'} ',' a{'a'}}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -135,14 +138,14 @@ internal class test_nonTerm_a0n : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "a"+",a".repeat(99)
 
-        val expected = "S {'a'"+" sep {','} 'a'".repeat(99)+"}"
+        val expected = "S {a{'a'}"+" ',' a{'a'}".repeat(99)+"}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 

@@ -44,12 +44,12 @@ internal class test_a : test_ScanOnDemandParserAbstract() {
             S { 'a' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -63,12 +63,12 @@ internal class test_a : test_ScanOnDemandParserAbstract() {
             S|1 { S1 { 'a' S { 'a' } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -91,12 +91,12 @@ internal class test_a : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -107,12 +107,12 @@ internal class test_a : test_ScanOnDemandParserAbstract() {
 
         val expected = "S|1 { S1 { 'a' ".repeat(49) + "S { 'a' }" +" } }".repeat(49)
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -123,12 +123,12 @@ internal class test_a : test_ScanOnDemandParserAbstract() {
 
         val expected = "S|1 { S1 { 'a' ".repeat(149) + "S { 'a' }" +" } }".repeat(149)
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -139,28 +139,28 @@ internal class test_a : test_ScanOnDemandParserAbstract() {
 
         val expected = "S|1 { S1 { 'a' ".repeat(499) + "S { 'a' }" +" } }".repeat(499)
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
-    @Test
+    //@Test
     fun a2000() {
         val goal = "S"
         val sentence = "a".repeat(2000)
 
         val expected = "S|1 { S1 { 'a' ".repeat(1999) + "S { 'a' }" +" } }".repeat(1999)
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 

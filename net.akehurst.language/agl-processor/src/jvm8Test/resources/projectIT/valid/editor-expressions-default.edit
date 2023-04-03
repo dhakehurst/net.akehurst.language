@@ -1,0 +1,42 @@
+editor default
+
+////////////////////////////////////////////////////////////////
+//       Expressions to be able to calculate with Euros       //
+////////////////////////////////////////////////////////////////
+EuroLiteral {
+    [EUR ${euros},${cents}] // TODO make third level projection where EUR is the euro symbol
+}
+NumberLiteral {
+    [${self.value}]
+}
+PercentageLiteral {
+    [${self.value}%]
+}
+FunctionCallExpression {
+    [${funcDefinition} ( ${args horizontal separator[,] } )]
+}
+InsurancePartRef {
+    [${self.part}]
+}
+RiskAdjustmentRef {
+    [riskAdjustment]
+}
+ParameterRef {
+    [${self.parameter}[?.${self.attribute}]]
+}
+RiskRef {
+    [statisticalRisk]
+}
+PayoutRef {
+    [maximumPayOut]
+}
+GenericLiteral {
+    // Set{ 12, 14, 16, 18 }
+    [${kind}{ ${content horizontal separator[,]} }]
+}
+TypeRef {
+    [${self.type}]
+}
+GenericTypeDecl {
+    [${kind}< ${baseType} >]
+}

@@ -35,6 +35,9 @@ internal class test_expessions_simple : test_ScanOnDemandParserAbstract() {
                 ref("I")
             }
             concatenation("I") { ref("E"); literal("o"); ref("E")  }
+            preferenceFor("E") {
+                left("I",setOf("'o'"))
+            }
         }
         val goal = "S"
     }
@@ -48,12 +51,12 @@ internal class test_expessions_simple : test_ScanOnDemandParserAbstract() {
             S { E {'a'} }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -62,15 +65,15 @@ internal class test_expessions_simple : test_ScanOnDemandParserAbstract() {
         val sentence = "aoa"
 
         val expected = """
-            S { E|1 { I { E{'a'} 'o' E{'a'} } }}
+            S { E { I { E{'a'} 'o' E{'a'} } }}
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -79,8 +82,8 @@ internal class test_expessions_simple : test_ScanOnDemandParserAbstract() {
         val sentence = "aoaoa"
 
         val expected = """
-            S { E|1 { I {
-                E|1 { I {
+            S { E { I {
+                E { I {
                     E { 'a' }
                     'o'
                     E { 'a' }
@@ -90,12 +93,12 @@ internal class test_expessions_simple : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -104,9 +107,9 @@ internal class test_expessions_simple : test_ScanOnDemandParserAbstract() {
         val sentence = "aoaoaoa"
 
         val expected = """
-             S { E|1 { I {
-                  E|1 { I {
-                      E|1 { I {
+             S { E { I {
+                  E { I {
+                      E { I {
                           E { 'a' }
                           'o'
                           E { 'a' }
@@ -120,12 +123,12 @@ internal class test_expessions_simple : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 

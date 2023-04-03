@@ -35,8 +35,12 @@ interface SPPTNode {
     val name: String
 
     /**
-     *
-     *  the rule number from the runtime grammar that caused this node to be constructed, derived from identity
+     *  the runtime-rule-set number from the runtime grammar that caused this node to be constructed
+     */
+    val runtimeRuleSetNumber: Int
+
+    /**
+     *  the runtime-rule number from the runtime grammar that caused this node to be constructed
      */
     val runtimeRuleNumber: Int
 
@@ -107,6 +111,21 @@ interface SPPTNode {
      *  true if this node is a Leaf
      */
     val isLeaf: Boolean
+
+    /**
+     * does the node represent an optional item (i.e. '?')
+     */
+    val isOptional:Boolean
+
+    /**
+     * does the node represent a List
+     */
+    val isList:Boolean
+
+    /**
+     * does the node represent and embedded tree from another parse
+     */
+    val isEmbedded:Boolean
 
     /**
      *

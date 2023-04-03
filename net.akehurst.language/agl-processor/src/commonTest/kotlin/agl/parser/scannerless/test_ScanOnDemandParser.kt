@@ -17,18 +17,19 @@
 package net.akehurst.language.parser.scanondemand
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 internal class test_ScanOnDemandParser {
 
     @Test
     fun construct() {
-        val rrb = RuntimeRuleSetBuilder()
-        val sp = ScanOnDemandParser(rrb.ruleSet())
+        val rrs = runtimeRuleSet {
+        }
+        val sp = ScanOnDemandParser(rrs)
 
         assertNotNull(sp)
     }
@@ -46,16 +47,16 @@ internal class test_ScanOnDemandParser {
 
     @Test
     fun parse() {
-        val rrb = RuntimeRuleSetBuilder()
-        val r0 = rrb.literal("a")
-        val r1 = rrb.rule("a").concatenation(r0)
-        val sp = ScanOnDemandParser(rrb.ruleSet())
+        val rrs = runtimeRuleSet {
+            concatenation("S") { literal("a") }
+        }
+        val sp = ScanOnDemandParser(rrs)
 
-        val actual = sp.parseForGoal("a","a", AutomatonKind.LOOKAHEAD_1)
+        val result = sp.parseForGoal("S", "a", AutomatonKind.LOOKAHEAD_1)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertNotNull(actual)
-
-        println( actual.toStringAll )
     }
 
 

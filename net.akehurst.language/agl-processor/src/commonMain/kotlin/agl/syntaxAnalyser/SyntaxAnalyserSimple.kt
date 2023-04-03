@@ -16,139 +16,38 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
+import net.akehurst.language.agl.collections.mutableListSeparated
+import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.api.analyser.ScopeModel
+import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.asm.*
+import net.akehurst.language.api.grammar.Choice
+import net.akehurst.language.api.grammar.GrammarItem
+import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.sppt.*
-import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
-import net.akehurst.language.api.syntaxAnalyser.AsmSimple
-import net.akehurst.language.api.syntaxAnalyser.AsmSimpleBuilder
-import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.sppt.SPPTBranch
+import net.akehurst.language.api.sppt.SPPTLeaf
+import net.akehurst.language.api.sppt.SPPTNode
+import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.typeModel.*
 
+/**
+ * TypeName <=> RuleName
+ *
+ * @param scopeDefinition TypeNameDefiningScope -> Map<TypeNameDefiningSomethingReferencable, referencableProperty>
+ * @param references ReferencingTypeName, referencingPropertyName  -> ??
+ */
+class SyntaxAnalyserSimple(
+    typeModel: TypeModel?,
+    scopeModel: ScopeModel?
+) : SyntaxAnalyserSimpleAbstract<AsmSimple, ContextSimple>(typeModel, scopeModel) {
 
-class SyntaxAnalyserSimple : SyntaxAnalyser {
-
-    private var _asm:AsmSimple? =null
-
-    override val locationMap = mutableMapOf<Any, InputLocation>()
-
-    override fun clear() {
-        locationMap.clear()
-    }
-
-    override fun <T> transform(sppt: SharedPackedParseTree): T {
-        _asm = AsmSimple()
-        val value = this.createValue(sppt.root)
-        _asm?.addRoot(value as AsmElementSimple)
-        return _asm as T
-    }
-
-    private fun createValue(target: SPPTNode): Any? {
-        return when (target) {
-            is SPPTLeaf -> createValueFromLeaf(target)
-            is SPPTBranch -> createValueFromBranch(target)
-            else -> error("should never happen!")
-        }
-    }
-
-    private fun createValueFromLeaf(target: SPPTLeaf): Any? {
-        val leaf = target //as SPPTLeafDefault
-        val value = when {
-            leaf.isEmptyLeaf -> null
-            else -> leaf.nonSkipMatchedText
-        }
-        return value
-    }
-
-    private fun createValueFromBranch(target: SPPTBranch): Any? {
-        val br = target as SPPTBranchFromInputAndGrownChildren //SPPTBranchDefault //TODO: make write thing available on interface
-        return when (br.runtimeRule.kind) {
-            RuntimeRuleKind.TERMINAL -> error("should never happen!")
-            RuntimeRuleKind.NON_TERMINAL -> when (br.runtimeRule.rhs.itemsKind) {
-                RuntimeRuleRhsItemsKind.EMPTY -> TODO()
-                RuntimeRuleRhsItemsKind.CHOICE -> {
-                    val v = this.createValue(br.children[0])
-                    v
-                }
-                RuntimeRuleRhsItemsKind.CONCATENATION -> {
-                    val count = mutableMapOf<String, Int>()
-                    var el = _asm!!.createNonRootElement(br.name)// AsmElementSimple(br.name)
-                    br.runtimeRule.rhs.items.forEachIndexed { index, rr ->
-                        //TODO: leave out unnamed literals
-                        val name = createPropertyName(rr)
-                        val value = this.createValue(br.nonSkipChildren[index])
-                        if (el.hasProperty(name)) {
-                            val i = count[name] ?: 2
-                            count[name] = i + 1
-                            val nname = name + i
-                            el.setProperty(nname, value)
-                        } else {
-                            el.setProperty(name, value)
-                        }
-                    }
-                    if (br.runtimeRule.rhs.items.size == 1) {
-                        if (br != br.tree?.root &&
-                            br.runtimeRule.rhs.items[0].kind == RuntimeRuleKind.NON_TERMINAL
-                            && br.runtimeRule.rhs.items[0].rhs.itemsKind == RuntimeRuleRhsItemsKind.LIST
-                        ) {
-                            el.properties[0].value
-                        } else {
-                            el
-                        }
-                    } else {
-                        el
-                    }
-                }
-                RuntimeRuleRhsItemsKind.LIST -> when (br.runtimeRule.rhs.listKind) {
-                    RuntimeRuleListKind.MULTI -> {
-                        val name = br.runtimeRule.rhs.items[RuntimeRuleItem.MULTI__ITEM].tag
-                        val list = br.nonSkipChildren.mapNotNull { this.createValue(it) }
-                        val value = if (br.runtimeRule.rhs.multiMax == 1) {
-                            if (list.isEmpty()) null else list[0]
-                        } else {
-                            list
-                        }
-                        if (br == br.tree?.root) {
-                            val el = _asm!!.createNonRootElement(br.name)
-                            el.setProperty(name, value)
-                            el
-                        } else {
-                            value
-                        }
-                    }
-                    RuntimeRuleListKind.SEPARATED_LIST -> {
-                        val name = br.runtimeRule.rhs.items[RuntimeRuleItem.SLIST__ITEM].tag
-                        val list = br.nonSkipChildren.mapNotNull { this.createValue(it) }
-                        if (br.runtimeRule.rhs.multiMax == 1) {
-                            val value = if (list.isEmpty()) null else list[0]
-                            value
-                        } else {
-                            list
-                        }
-                    }
-                    else -> TODO()
-                }
-            }
-            RuntimeRuleKind.GOAL -> this.createValue(br.children[0])
-            RuntimeRuleKind.EMBEDDED -> TODO()
-        }
-    }
-
-    private fun createPropertyName(runtimeRule: RuntimeRule): String {
-        //TODO: think we have to determine if rr is a pseudo rule or not here!
-        return when (runtimeRule.kind) {
-            RuntimeRuleKind.TERMINAL -> runtimeRule.tag
-            RuntimeRuleKind.NON_TERMINAL -> when (runtimeRule.rhs.itemsKind) {
-                RuntimeRuleRhsItemsKind.LIST -> when (runtimeRule.rhs.listKind) {
-                    RuntimeRuleListKind.MULTI -> createPropertyName(runtimeRule.rhs.items[RuntimeRuleItem.MULTI__ITEM])
-                    RuntimeRuleListKind.SEPARATED_LIST -> runtimeRule.tag
-                    else -> TODO()
-                }
-                else -> runtimeRule.tag
-            }
-            RuntimeRuleKind.EMBEDDED -> runtimeRule.tag
-            RuntimeRuleKind.GOAL -> runtimeRule.tag
-        }
+    companion object {
+        private const val ns = "net.akehurst.language.agl.syntaxAnalyser"
+        const val CONFIGURATION_KEY_AGL_SCOPE_MODEL = "$ns.scope.model"
     }
 
 }

@@ -16,8 +16,6 @@
 
 package net.akehurst.language.api.regex
 
-import net.akehurst.language.agl.regex.CharacterMatcher
-
 
 interface RegexMatcher {
 

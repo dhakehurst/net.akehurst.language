@@ -19,12 +19,11 @@ package net.akehurst.language.agl.parser
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.grammar.GrammarRuleNotFoundException
 import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.api.sppt.SPPTLeaf
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.processor.ParseResult
 
 internal interface Parser {
 
-    fun interrupt(message:String)
+    fun interrupt(message: String)
 
     /**
      * It is not necessary to call this method, but doing so will speed up future calls to parse as it will build the internal caches for the parser,
@@ -41,7 +40,7 @@ internal interface Parser {
      * @throws ParseTreeException
      * @throws GrammarRuleNotFoundException
      */
-    fun parseForGoal(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): SharedPackedParseTree
+    fun parseForGoal(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): ParseResult //Pair<SharedPackedParseTree?, List<LanguageIssue>>
 
     /**
      * list of non-terminal or terminal runtime rules expected at the position

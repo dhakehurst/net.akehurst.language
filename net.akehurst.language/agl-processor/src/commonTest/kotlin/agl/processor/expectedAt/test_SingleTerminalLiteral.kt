@@ -30,11 +30,11 @@ class test_SingleTerminalLiteral {
                 S = 'a' ;
             }
         """.trimIndent()
-        val sut = Agl.processorFromString(grammarStr)
+        val pr = Agl.processorFromString<Any,Any>(grammarStr)
 
         val sentence = ""
         val position = 0
-        val actual = sut.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = pr.processor!!.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
                 "a"
         )
@@ -49,11 +49,11 @@ class test_SingleTerminalLiteral {
                 S = 'a' ;
             }
         """.trimIndent()
-        val sut = Agl.processorFromString(grammarStr)
+        val pr = Agl.processorFromStringDefault(grammarStr)
 
         val sentence = "a"
         val position = 0
-        val actual = sut.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = pr.processor!!.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
                 "a"
         )
@@ -68,12 +68,13 @@ class test_SingleTerminalLiteral {
                 S = 'a' ;
             }
         """.trimIndent()
-        val sut = Agl.processorFromString(grammarStr)
+        val pr = Agl.processorFromString<Any,Any>(grammarStr)
 
         val sentence = "a"
         val position = 1
-        val actual = sut.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = pr.processor!!.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
+
         )
         assertEquals(expected,actual)
     }

@@ -16,13 +16,12 @@
 
 package net.akehurst.language.parser.scanondemand.listSeparated
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_literal_a0n : test_ScanOnDemandParserAbstract() {
 
@@ -44,12 +43,12 @@ internal class test_literal_a0n : test_ScanOnDemandParserAbstract() {
 
         val expected = "S|1 { §empty }"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -59,12 +58,12 @@ internal class test_literal_a0n : test_ScanOnDemandParserAbstract() {
 
         val expected = "S { 'a' }"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = Companion.goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -72,13 +71,11 @@ internal class test_literal_a0n : test_ScanOnDemandParserAbstract() {
     fun aa_fails() {
         val sentence = "aa"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(2, e.location.column)
-        assertEquals(setOf("','", RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(1,2,1,1),"a^a",setOf("','","<EOT>"))
+        ),issues.error)
     }
 
     @Test
@@ -87,12 +84,12 @@ internal class test_literal_a0n : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a' ',' 'a'}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -100,13 +97,11 @@ internal class test_literal_a0n : test_ScanOnDemandParserAbstract() {
     fun acaa_fails() {
         val sentence = "a,aa"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(4, e.location.column)
-        assertEquals(setOf("','", RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(3,4,1,1),"a,a^a",setOf("','","<EOT>"))
+        ),issues.error)
     }
 
     @Test
@@ -115,12 +110,12 @@ internal class test_literal_a0n : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a' ',' 'a' ',' 'a'}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -130,12 +125,12 @@ internal class test_literal_a0n : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a'"+" ',' 'a'".repeat(99)+"}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 

@@ -18,11 +18,11 @@ package net.akehurst.language.parser.scanondemand.examples
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_BillotLang_UBDA : test_ScanOnDemandParserAbstract() {
     /**
@@ -32,44 +32,46 @@ internal class test_BillotLang_UBDA : test_ScanOnDemandParserAbstract() {
      * A = 'a' | A1 ;
      * A1 = A A ;
      */
-    private val rrs = runtimeRuleSet {
-        choice("A", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a"); ref("A1") }
-        concatenation("A1") { ref("A"); ref("A"); }
+    private companion object {
+        val rrs = runtimeRuleSet {
+            choice("A", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a"); ref("A1") }
+            concatenation("A1") { ref("A"); ref("A"); }
+        }
+
+        val goal = "A"
     }
 
     @Test
     fun empty_fails() {
-        val goal = "A"
         val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+            ), issues.error)
     }
 
     @Test
     fun a() {
-        val goal = "A"
         val sentence = "a"
 
         val expected = """
             A { 'a' }
         """.trimIndent()
 
-        val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun aa() {
-        val goal = "A"
         val sentence = "aa"
 
         val expected = """
@@ -81,18 +83,17 @@ internal class test_BillotLang_UBDA : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun aaa() {
-        val goal = "A"
         val sentence = "aaa"
 
         val expected = """
@@ -105,18 +106,17 @@ internal class test_BillotLang_UBDA : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun aaaa() {
-        val goal = "A"
         val sentence = "aaaa"
 
         val expected = """
@@ -132,18 +132,17 @@ internal class test_BillotLang_UBDA : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun a10() {
-        val goal = "A"
         val sentence = "a".repeat(10)
 
         val expected = """
@@ -156,12 +155,12 @@ internal class test_BillotLang_UBDA : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 }

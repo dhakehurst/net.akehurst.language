@@ -18,6 +18,7 @@ package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.api.processor.CompletionItemKind
 
 class CompletionProvider(
         val targetGrammar:Grammar
@@ -31,6 +32,7 @@ class CompletionProvider(
 
     // uses null to indicate that there is an empty item
     fun getItems(item: RuleItem, desiredDepth: Int, done: Set<RuleItem>): List<CompletionItem?> {
+        //TODO: use scope to add real items to this list - maybe in a subclass
         return when {
             done.contains(item) -> emptyList()
             else -> when (item) {
@@ -46,13 +48,13 @@ class CompletionProvider(
                     items
                 }
                 is Terminal -> when {
-                    item.owningRule.isLeaf -> listOf(CompletionItem(item.owningRule, item.owningRule.name))  //TODO: generate text/example from regEx
-                    item.isPattern -> listOf(CompletionItem(item.owningRule, item.name)) //TODO: generate text/example from regEx
-                    else -> listOf(CompletionItem(item.owningRule, item.value))
+                    item.owningRule.isLeaf -> listOf(CompletionItem(CompletionItemKind.LITERAL,item.owningRule.name, item.owningRule.name))  //TODO: generate text/example from regEx
+                    item.isPattern -> listOf(CompletionItem(CompletionItemKind.PATTERN,item.owningRule.name, item.value)) //TODO: generate text/example from regEx
+                    else -> listOf(CompletionItem(CompletionItemKind.LITERAL,item.owningRule.name, item.value))
                 }
                 is NonTerminal -> {
                     //TODO: handle overridden vs embedded rules!
-                    getItems(item.referencedRule.rhs, desiredDepth - 1, done + item)
+                    getItems(item.referencedRule(this.targetGrammar).rhs, desiredDepth - 1, done + item)
                 }
                 is SeparatedList -> {
                     val items = getItems(item.item, desiredDepth, done + item)

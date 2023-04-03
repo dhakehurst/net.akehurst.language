@@ -16,116 +16,94 @@
 
 package net.akehurst.language.parser.scanondemand.multi
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_multi_3_5_literal : test_ScanOnDemandParserAbstract() {
 
     // S = 'a'3..5
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r0 = b.literal("a")
-        val r1 = b.rule("S").multi(3, 5, r0)
-        return b
+    private companion object {
+        val rrs = runtimeRuleSet {
+            multi("S",3,5,"'a'")
+            literal("'a'","a")
+        }
+        val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val rrb = S()
-        val goal = "S"
         val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
-        assertEquals(setOf("'a'"), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+        ),issues.error)
     }
 
     @Test
     fun a_fails() {
-        val rrb = S()
-        val goal = "S"
         val sentence = "a"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(2, e.location.column)
-        assertEquals(setOf("'a'"), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(1,2,1,1),"a^",setOf("'a'"))
+        ),issues.error)
     }
 
     @Test
     fun aa_fails() {
-        val rrb = S()
-        val goal = "S"
         val sentence = "aa"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(3, e.location.column)
-        assertEquals(setOf("'a'"), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(2,3,1,1),"aa^",setOf("'a'"))
+        ),issues.error)
     }
 
     @Test
     fun aaa() {
-        val rrb = S()
-        val goal = "S"
         val sentence = "aaa"
 
         val expected = """
             S { 'a' 'a' 'a' }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun a4() {
-        val rrb = S()
-        val goal = "S"
         val sentence = "a".repeat(4)
 
         val expected = "S { "+"'a' ".repeat(4)+" }"
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun a5() {
-        val rrb = S()
-        val goal = "S"
         val sentence = "a".repeat(5)
 
         val expected = "S { "+"'a' ".repeat(5)+" }"
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun a6_fails() {
-        val rrb = S()
-        val goal = "S"
         val sentence = "a".repeat(6)
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(6, e.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
+        val (sppt,issues)=super.testFail(rrs, Companion.goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(5,6,1,1),"aaaaa^a",setOf("<EOT>"))
+        ),issues.error)
     }
 }

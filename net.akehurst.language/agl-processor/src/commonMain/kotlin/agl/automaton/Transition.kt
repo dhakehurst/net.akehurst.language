@@ -16,58 +16,171 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.runtime.graph.GrowingNode
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
+import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.runtime.structure.RulePosition
-import net.akehurst.language.collections.Stack
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsList
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSimple
+
+//internal typealias RuntimeGuard = Transition.(GrowingNodeIndex, ParserState?) -> Boolean
+
+internal interface RuntimeGuard {
+    fun execute(numNonSkipChildren: Int): Boolean
+    fun expectedWhenFailed(numNonSkipChildren: Int): Set<RuntimeRule>
+}
 
 internal class Transition(
-        val from: ParserState,
-        val to: ParserState,
-        val action: ParseAction,
-        val lookaheadGuard: LookaheadSet,
-        val upLookahead: LookaheadSet,
-        val prevGuard: List<RulePosition>?,
-        val runtimeGuard: Transition.(current:GrowingNode, previous:List<RulePosition>?)->Boolean
+    val from: ParserState,
+    val to: ParserState,
+    val action: ParseAction,
+    val lookahead: Set<Lookahead>
 ) {
 
-    internal  enum class ParseAction {
-        HEIGHT, // reduce first
-        GRAFT,  // reduce other
-        WIDTH,  // shift
-        GOAL,    // goal
-        EMBED,
-//        GRAFT_OR_HEIGHT // try graft if fails do height -- reduces ambiguity on recursive rules
+    companion object {
+
+        class ToEndMultiGraftRuntimeGuard(val trans: Transition) : RuntimeGuard {
+            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsListSimple
+            val min = rhs.min
+            val max = rhs.max
+
+            override fun execute(numNonSkipChildren: Int): Boolean = this.min <= numNonSkipChildren + 1 && (-1 == max || numNonSkipChildren + 1 <= max)
+
+            override fun expectedWhenFailed(numNonSkipChildren: Int): Set<RuntimeRule> = when {
+                    this.min > numNonSkipChildren -> setOf(rhs.repeatedRhsItem)
+                    (-1 != max && max < numNonSkipChildren + 1) -> trans.lookahead.map { it.guard }.fold(LookaheadSetPart.EMPTY){acc,it->acc.union(it.part)}.fullContent
+                    else -> emptySet()
+                }
+
+            override fun toString(): String = "ToEndMulti{$min <= n}"
+        }
+
+        class ToItemMultiGraftRuntimeGuard(val trans: Transition) : RuntimeGuard {
+            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsListSimple
+            val min = rhs.min
+            val max = rhs.max
+
+            override fun execute(numNonSkipChildren: Int): Boolean = -1 == max || numNonSkipChildren + 1 < max
+            override fun expectedWhenFailed(numNonSkipChildren: Int): Set<RuntimeRule> =when {
+                    (-1 == max || numNonSkipChildren + 1 < max) -> emptySet()
+                    else -> emptySet()
+                }
+
+
+            override fun toString(): String = "ToItemMulti{n <= $max}"
+        }
+
+        class ToEndSListGraftRuntimeGuard(val trans: Transition) : RuntimeGuard {
+            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsList
+            val min = rhs.min
+            val max = rhs.max
+
+            override fun execute(numNonSkipChildren: Int): Boolean = this.min <= (numNonSkipChildren / 2) + 1 && (-1 == max || (numNonSkipChildren / 2) + 1 <= max)
+
+            override fun expectedWhenFailed(numNonSkipChildren: Int): Set<RuntimeRule> =when {
+                    this.min <= (numNonSkipChildren / 2) + 1 -> emptySet()
+                    (-1 == max || (numNonSkipChildren / 2) + 1 <= max) -> emptySet()
+                    else -> emptySet()
+                }
+
+            override fun toString(): String = "ToEndSList{$min <= n}"
+        }
+
+        class ToItemSListGraftRuntimeGuard(val trans: Transition) : RuntimeGuard {
+            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsList
+            val min = rhs.min
+            val max = rhs.max
+
+            override fun execute(numNonSkipChildren: Int): Boolean = -1 == max || (numNonSkipChildren / 2) + 1 < max
+
+            override fun expectedWhenFailed(numNonSkipChildren: Int): Set<RuntimeRule> =when {
+                    -1 == max || (numNonSkipChildren / 2) + 1 < max -> emptySet()
+                    else -> emptySet()
+                }
+
+
+            override fun toString(): String = "ToItemSList{n <= $max}"
+        }
+
+        class ToSeparatorSListGraftRuntimeGuard(val trans: Transition) : RuntimeGuard {
+            val rhs = trans.to.firstRule.rhs as RuntimeRuleRhsList
+            val min = rhs.min
+            val max = rhs.max
+
+            override fun execute(numNonSkipChildren: Int): Boolean = -1 == max || (numNonSkipChildren / 2) + 1 < max
+
+            override fun expectedWhenFailed(numNonSkipChildren: Int): Set<RuntimeRule> = when {
+                    -1 == max || (numNonSkipChildren / 2) + 1 < max -> emptySet()
+                    else -> emptySet()
+                }
+
+            override fun toString(): String = "ToSeparatorSList{n <= $max}"
+        }
+
+        object DefaultRuntimeGuard : RuntimeGuard {
+            override fun execute(numNonSkipChildren: Int): Boolean = true
+            override fun expectedWhenFailed(numNonSkipChildren: Int): Set<RuntimeRule> = error("Internal Error: should never happen")
+            override fun toString(): String = "DefaultRuntimeGuard{true}"
+        }
+
+        fun runtimeGuardFor(trans: Transition): RuntimeGuard {
+            val target = trans.to.firstRule
+            val targetRp = trans.to.rulePositions[0]
+            val tgtRhs = target.rhs
+            return when (trans.action) {
+                ParseAction.GRAFT -> when (tgtRhs) {
+                    is RuntimeRuleRhsListSimple -> when {
+                        targetRp.isAtEnd -> ToEndMultiGraftRuntimeGuard(trans)
+                        targetRp.position == RulePosition.POSITION_MULIT_ITEM -> ToItemMultiGraftRuntimeGuard(trans)
+                        else -> TODO()
+                    }
+
+                    is RuntimeRuleRhsListSeparated -> when {
+                        targetRp.isAtEnd -> ToEndSListGraftRuntimeGuard(trans)
+                        targetRp.position == RulePosition.POSITION_SLIST_ITEM -> ToItemSListGraftRuntimeGuard(trans)
+                        targetRp.position == RulePosition.POSITION_SLIST_SEPARATOR -> ToSeparatorSListGraftRuntimeGuard(trans)
+                        else -> TODO()
+                    }
+
+                    else -> DefaultRuntimeGuard
+                }
+
+                else -> DefaultRuntimeGuard
+            }
+        }
     }
 
-    private val hashCode_cache:Int by lazy {
-        arrayListOf(from, to, action, lookaheadGuard,upLookahead, prevGuard).hashCode()
+    val context by lazy {
+        this.from.outTransitions.previousFor(this).toSet()
     }
 
+    val runtimeGuard: RuntimeGuard = runtimeGuardFor(this)
 
-    override fun hashCode(): Int {
-        return this.hashCode_cache
+    private val hashCode_cache: Int by lazy {
+        arrayListOf(from, to, action, lookahead).hashCode()
     }
+
+    override fun hashCode(): Int = this.hashCode_cache
 
     override fun equals(other: Any?): Boolean {
-        when(other) {
+        when (other) {
             is Transition -> {
-                if (this.from!=other.from) return false
-                if (this.to!=other.to) return false
-                if (this.action!=other.action) return false
-                if (this.lookaheadGuard!=other.lookaheadGuard) return false
-                if (this.upLookahead!=other.upLookahead) return false
-                if (this.prevGuard!=other.prevGuard) return false
+                if (this.from != other.from) return false
+                if (this.to != other.to) return false
+                if (this.action != other.action) return false
+                if (this.lookahead != other.lookahead) return false
+//                if (this.graftPrevGuard != other.graftPrevGuard) return false
                 return true
             }
+
             else -> return false
         }
     }
 
     override fun toString(): String {
-        //val lh = " "+this.lookaheadGuard.number.toString()+":"+this.lookaheadGuard.content.map { it.tag }
-        val lh = lookaheadGuard.content.joinToString(separator = ",") {it.tag}
-        val ulh = upLookahead.content.joinToString(separator = ","){it.tag}
-        return "Transition { $from -- $action [$lh|$ulh] --> $to }"
+        val ctx = this.context.joinToString { it.rulePositions.toString() }
+        val lhsStr = this.lookahead.joinToString(separator = "|") { "[${it.guard.fullContent.joinToString { it.tag }}](${it.up.fullContent.joinToString { it.tag }})" }
+        return "Transition: $from -- $action${lhsStr} --> $to {$ctx}"
+        //return "Transition[$ctx] { $from -- $action${lhsStr} --> $to }${graftPrevGuard?:"[]"}"
     }
 }

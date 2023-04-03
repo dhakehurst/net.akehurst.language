@@ -17,19 +17,18 @@
 package net.akehurst.language.parser.scanondemand.concatenation
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
     /*
         S = a? b? c?;
      */
-    companion object {
-
-        private val rrs = runtimeRuleSet {
+    private companion object {
+        val rrs = runtimeRuleSet {
             concatenation("S") { ref("aOpt"); ref("bOpt"); ref("cOpt") }
             multi("aOpt", 0, 1, "'a'")
             multi("bOpt", 0, 1, "'b'")
@@ -38,11 +37,11 @@ internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
             literal("'b'", "b")
             literal("'c'", "c")
         }
+        val goal = "S"
     }
 
     @Test
     fun empty() {
-        val goal = "S"
         val sentence = ""
 
         val expected = """
@@ -53,30 +52,29 @@ internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun d_fails() {
-        val goal = "S"
         val sentence = "d"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0,1,1,1),"^d", setOf("'a'","'b'","'c'","<EOT>"))
+            ), issues.error)
     }
 
     @Test
     fun a() {
-        val goal = "S"
         val sentence = "a"
 
         val expected = """
@@ -87,18 +85,17 @@ internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun ab() {
-        val goal = "S"
         val sentence = "ab"
 
         val expected = """
@@ -109,30 +106,29 @@ internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun ba_fails() {
-        val goal = "S"
         val sentence = "ba"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(2, ex.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1,2,1,1),"b^a", setOf("'c'","<EOT>"))
+            ), issues.error)
     }
 
     @Test
     fun ac() {
-        val goal = "S"
         val sentence = "ac"
 
         val expected = """
@@ -143,18 +139,17 @@ internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun abc() {
-        val goal = "S"
         val sentence = "abc"
 
         val expected = """
@@ -165,54 +160,53 @@ internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun adc_fails() {
-        val goal = "S"
         val sentence = "adc"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(2, ex.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1,2,1,1),"a^dc", setOf("'b'","'c'","<EOT>"))
+            ), issues.error)
     }
 
     @Test
     fun abd_fails() {
-        val goal = "S"
         val sentence = "abd"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(3, ex.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(2,3,1,1),"ab^d", setOf("'c'","<EOT>"))
+            ), issues.error)
     }
 
     @Test
     fun abcd_fails() {
-        val goal = "S"
         val sentence = "abcd"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(4, ex.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(3,4,1,1),"abc^d", setOf("<EOT>"))
+            ), issues.error)
     }
 
     @Test
     fun b() {
-        val goal = "S"
         val sentence = "b"
 
         val expected = """
@@ -223,18 +217,17 @@ internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun bc() {
-        val goal = "S"
         val sentence = "bc"
 
         val expected = """
@@ -245,18 +238,17 @@ internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun c() {
-        val goal = "S"
         val sentence = "c"
 
         val expected = """
@@ -267,24 +259,24 @@ internal class test_aObOcO : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun cb_fails() {
-        val goal = "S"
         val sentence = "cb"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(2, ex.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1,2,1,1),"c^b", setOf("<EOT>"))
+            ), issues.error)
     }
 }

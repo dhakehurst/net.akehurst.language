@@ -17,139 +17,158 @@
 package net.akehurst.language.parser.scanondemand.embedded
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
 
     private companion object {
+        // one grammar
+        //S = a B c
+        //B = b
         val Sn = runtimeRuleSet {
-            concatenation("S") { literal("a"); ref("B"); literal("a"); }
+            concatenation("S") { literal("a"); ref("B"); literal("c"); }
             concatenation("B") { literal("b") }
         }
 
+        // two grammars, B embedded in S
         // B = b ;
         val B = runtimeRuleSet {
             concatenation("B") { literal("b") }
         }
-        // S = a gB a ;
-        // gB = grammar B.B ;
+
+        // S = a gB c ;
+        // gB = B::B ;
         val S = runtimeRuleSet {
-            concatenation("S") { literal("a"); ref("gB"); literal("a"); }
+            concatenation("S") { literal("a"); ref("gB"); literal("c"); }
             embedded("gB", B, B.findRuntimeRule("B"))
         }
+        val goal = "S"
+    }
+
+    @Test
+    fun Sn_empty_fails() {
+        val sentence = ""
+
+        val (sppt, issues) = super.testFail(Sn, goal, sentence, expectedNumGSSHeads = 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), issues.error)
     }
 
     @Test
     fun Sn_a_fails() {
-        val goal = "S"
         val sentence = "a"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(Sn, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(2, ex.location.column)
-        assertEquals(setOf("'b'"), ex.expected)
+        val (sppt, issues) = super.testFail(Sn, goal, sentence, expectedNumGSSHeads = 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'b'"))
+            ), issues.error)
     }
 
     @Test
-    fun Sn_aba() {
-        val goal = "S"
-        val sentence = "aba"
+    fun Sn_abc() {
+        val sentence = "abc"
 
         val expected = """
             S {
               'a'
               B { 'b' }
-              'a'
+              'c'
             }
         """.trimIndent()
 
-        val actual = super.test(
-                rrs = Sn,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+        super.test(
+            rrs = Sn,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
-    fun empty_fails() {
-        val goal = "S"
+    fun S_empty_fails() {
         val sentence = ""
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(S, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
-        assertEquals(setOf("'a'"), ex.expected)
+        val (sppt, issues) = super.testFail(S, goal, sentence, expectedNumGSSHeads = 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), issues.error)
     }
 
     @Test
-    fun d_fails() {
-        val goal = "S"
+    fun S_d_fails() {
         val sentence = "d"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(S, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
-        assertEquals(setOf("'a'"), ex.expected)
+        val (sppt, issues) = super.testFail(S, Companion.goal, sentence, expectedNumGSSHeads = 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^d", setOf("'a'"))
+            ), issues.error)
     }
 
     @Test
-    fun a_fails() {
-        val goal = "S"
+    fun S_a_fails() {
         val sentence = "a"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(S, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(2, ex.location.column)
-        assertEquals(setOf("'b'"), ex.expected)
+        val (sppt, issues) = super.testFail(S, goal, sentence, expectedNumGSSHeads = 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'"))
+            ), issues.error)
     }
 
     @Test
-    fun ab_fails() {
-        val goal = "S"
+    fun S_ab_fails() {
         val sentence = "ab"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(S, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(2, ex.location.column)
-        assertEquals(setOf("'a'"), ex.expected)
+        val (sppt, issues) = super.testFail(S, goal, sentence, expectedNumGSSHeads = 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'c'"))
+            ), issues.error)
     }
 
     @Test
-    fun aba() {
+    fun abc() {
         val goal = "S"
-        val sentence = "aba"
+        val sentence = "abc"
 
         //TODO("how should we express embedded rules in the following string ?")
         val expected = """
             S {
               'a'
-              gb { B.B { 'b' } }
-              'a'
+              gB { B::B { 'b' } }
+              'c'
             }
         """.trimIndent()
 
-        val actual = super.test(
-                rrs = S,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+        super.test2(
+            rrs = S,
+            embeddedRuntimeRuleSets = mapOf(
+                "B" to B
+            ),
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            printAutomaton = true,
+            expectedTrees = arrayOf(expected)
         )
     }
 }

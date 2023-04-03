@@ -25,11 +25,6 @@ class test_TutorialExamples {
 
 
     @Test
-    fun example1() {
-
-    }
-
-    @Test
     fun example3_int_as_userDefinedType() {
         val grammarStr = """
             namespace test
@@ -40,13 +35,16 @@ class test_TutorialExamples {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
             }
         """.trimIndent()
-        val processor = Agl.processorFromString(grammarStr)
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
 
-        val sppt = processor.parse("int")
-        val actual = sppt.toStringAll.trim()
-        assertNotNull(sppt)
+        val result = pr.processor!!.parse("int")
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(2, result.sppt!!.maxNumHeads)
 
-        val expected = "typeReference|1 { userDefinedType { NAME : 'int' } }"
+        val actual = result.sppt!!.toStringAll.trim()
+
+        val expected = "typeReference { userDefinedType { NAME : 'int' } }"
 
         assertEquals(expected, actual)
     }
@@ -62,11 +60,14 @@ class test_TutorialExamples {
                 NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
             }
         """.trimIndent()
-        val processor = Agl.processorFromString(grammarStr)
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
 
-        val sppt = processor.parse("xxx")
-        val actual = sppt.toStringAll.trim()
-        assertNotNull(sppt)
+        val result = pr.processor!!.parse("xxx")
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+
+        val actual = result.sppt!!.toStringAll.trim()
 
         val expected = """
                 typeReference { userDefinedType { NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xxx' } } }
@@ -86,14 +87,17 @@ class test_TutorialExamples {
                 NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
             }
         """.trimIndent()
-        val processor = Agl.processorFromString(grammarStr)
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
 
-        val sppt = processor.parse("boolean")
-        val actual = sppt.toStringAll.trim()
-        assertNotNull(sppt)
+        val result = pr.processor!!.parse("boolean")
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(2, result.sppt!!.maxNumHeads)
+
+        val actual = result.sppt!!.toStringAll.trim()
 
         val expected = """
-                typeReference|1 { builtInType|1 { 'boolean' } }
+                typeReference { builtInType { 'boolean' } }
         """.trimIndent()
 
         assertEquals(expected, actual)
@@ -110,14 +114,17 @@ class test_TutorialExamples {
                 NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
             }
         """.trimIndent()
-        val processor = Agl.processorFromString(grammarStr)
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
 
-        val sppt = processor.parse("int")
-        val actual = sppt.toStringAll.trim()
-        assertNotNull(sppt)
+        val result = pr.processor!!.parse("int")
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(2, result.sppt!!.maxNumHeads)
+
+        val actual = result.sppt!!.toStringAll.trim()
 
         val expected = """
-                typeReference|1 { builtInType { 'int' } }
+                typeReference { builtInType { 'int' } }
         """.trimIndent()
 
         assertEquals(expected, actual)

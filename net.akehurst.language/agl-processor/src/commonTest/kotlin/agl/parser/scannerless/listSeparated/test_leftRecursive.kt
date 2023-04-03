@@ -18,11 +18,13 @@ package net.akehurst.language.parser.scanondemand.listSeparated
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.parser.ParserTerminatedException
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_leftRecursive  : test_ScanOnDemandParserAbstract() {
 
@@ -45,36 +47,34 @@ internal class test_leftRecursive  : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun empty_fails() {
-        val inputText = ""
+        val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            test(rrs, goal, inputText,1)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
-        assertEquals(setOf("'a'"), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+        ),issues.error)
     }
 
     @Test
     fun a() {
-        TODO("does not stop")
         val sentence = "a"
 
         val expected = "S { E { 'a' } }"
 
-        val actual = super.test(
+        assertFailsWith<ParserTerminatedException> {
+            super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
-        )
+                expectedTrees = arrayOf(expected)
+            )
+        }
     }
 
     @Test
     fun aca() {
-        TODO("does not stop")
         val sentence = "a,a"
 
         val expected = """
@@ -85,18 +85,19 @@ internal class test_leftRecursive  : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        assertFailsWith<ParserTerminatedException> {
+            super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
-        )
+                expectedTrees = arrayOf(expected)
+            )
+        }
     }
 
     @Test
     fun acaca() {
-        TODO("does not stop")
         val sentence = "a,a,a"
 
         val expected = """
@@ -107,12 +108,14 @@ internal class test_leftRecursive  : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        assertFailsWith<ParserTerminatedException> {
+            super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
-        )
+                expectedTrees = arrayOf(expected)
+            )
+        }
     }
 }

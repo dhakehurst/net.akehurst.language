@@ -18,11 +18,11 @@ package net.akehurst.language.parser.scanondemand.leftRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
 
@@ -46,41 +46,40 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
             }
             concatenation("Be") { empty() }
         }
+        val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val goal = "S"
         val sentence = ""
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence, 1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'b'", "'a'"))
+            ), issues.error)
     }
 
     @Test
     fun a() {
-        val goal = "S"
         val sentence = "a"
 
         val expected = """
-            S|1 { 'a' }
+            S { 'a' }
         """.trimIndent()
 
-        val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 2,//TODO can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun bac() {
-        val goal = "S"
         val sentence = "bac"
 
         val expected = """
@@ -91,18 +90,17 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 3,//TODO can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun ac() {
-        val goal = "S"
         val sentence = "ac"
 
         val expected = """
@@ -113,18 +111,17 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 2,//TODO can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun bacc() {
-        val goal = "S"
         val sentence = "bacc"
 
         val expected = """
@@ -139,12 +136,14 @@ internal class test_hiddenLeft1 : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,
+            printAutomaton = true,
+            expectedTrees = arrayOf(expected)
         )
+
     }
 }

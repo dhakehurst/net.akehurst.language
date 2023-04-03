@@ -16,525 +16,1159 @@
 
 package net.akehurst.language.agl.parser
 
-import net.akehurst.language.agl.automaton.ParserState
-import net.akehurst.language.agl.automaton.ParserStateSet
-import net.akehurst.language.agl.automaton.Transition
-import net.akehurst.language.agl.runtime.graph.GrowingNode
+import net.akehurst.language.agl.api.automaton.ParseAction
+import net.akehurst.language.agl.api.messages.Message
+import net.akehurst.language.agl.automaton.*
+import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
+import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
-import net.akehurst.language.agl.runtime.graph.PreviousInfo
-import net.akehurst.language.agl.runtime.structure.LookaheadSet
+import net.akehurst.language.agl.runtime.graph.TreeDataComplete
+import net.akehurst.language.agl.runtime.structure.PrecedenceRules
+import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
+import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.agl.util.debug
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.parser.ParserInterruptedException
-import net.akehurst.language.api.sppt.SPPTBranch
-import net.akehurst.language.api.sppt.SPPTNode
+import net.akehurst.language.api.parser.ParserTerminatedException
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.collections.lazyMutableMapNonNull
 import kotlin.math.max
 
 internal class RuntimeParser(
-    internal val stateSet: ParserStateSet,
-    private val skipStateSet: ParserStateSet?, // null if this is a skipParser
-    goalRule: RuntimeRule,
-    //possibleEndOfText_: LookaheadSet,
-    private val input: InputFromString
+    val stateSet: ParserStateSet,
+    val skipStateSet: ParserStateSet?, // null if this is a skipParser
+    val userGoalRule: RuntimeRule,
+    private val input: InputFromString,
+    private val _issues: IssueHolder
 ) {
     companion object {
         val defaultStartLocation = InputLocation(0, 0, 1, 0)
+
+        data class GrowArgs(
+            val buildTree: Boolean,
+            val noLookahead: Boolean,
+            val heightGraftOnly: Boolean,
+            val nonEmptyWidthOnly: Boolean
+        )
+
+        val normalArgs = GrowArgs(true, false, false, false)
     }
 
-    val graph = ParseGraph(goalRule, input, this.stateSet.usedTerminalRules.size, this.stateSet.usedNonTerminalRules.size)
+    val graph = ParseGraph(input, this.stateSet.number)
 
-    //var possibleEndOfText = possibleEndOfText_; private set
+    //var lastGrown: Set<ParseGraph.Companion.ToProcessTriple> = mutableSetOf()
+    val canGrow: Boolean get() = this.graph.canGrow
 
-    //needs to be public so that expectedAt can use it
-    val lastGrown: Collection<GrowingNode>
-        get() {
-            return setOf<GrowingNode>().union(this.graph.growing.values).union(this.toGrow)
-        }
-    val lastGrownLinked: Collection<GrowingNode>
-        get() {
-            this.toGrow.forEach { gn ->
-                this.toGrowPrevious[gn]!!.forEach {
-                    gn.addPrevious(it)
-                }
-            }
-            return this.toGrow
-        }
-    val longestLastGrown: SPPTNode?
-        get() {
-            //TODO: handle the fact that we can parse next token, but if the lookahead is wrong then it fails
+    var lastToGrow = listOf<ParseGraph.Companion.ToProcessTriple>()
+    val lastDropped = mutableSetOf<ParseGraph.Companion.NextToProcess>()
+    val embeddedLastDropped = mutableMapOf<Transition, Set<ParseGraph.Companion.NextToProcess>>()
+    val lastToTryWidthTrans = mutableListOf<GrowingNodeIndex>()
+    val failedReasons = mutableListOf<FailedParseReason>()
 
-            //val llg = this.graph.longestCompleteNodeFromStart
-            //return llg
-            val llg = this.lastGrown.maxWithOrNull(Comparator { a, b -> a.nextInputPosition.compareTo(b.nextInputPosition) })
-
-            return if (null == llg) {
-                return null
-            } else if (llg.isLeaf) {
-                val leaf = this.graph.input.findOrTryCreateLeaf(llg.terminalRule, llg.startPosition)!!
-                if (null == llg.skipNodes) {
-                    leaf
-                } else {
-                    val children = listOf(leaf) + llg.skipNodes!!
-                    val firstChild = children.first()
-                    val lastChild = children.last()
-                    val length = (lastChild.nextInputPosition - firstChild.startPosition)
-                    //val location = InputLocation(firstChild.location.position, firstChild.location.column, firstChild.location.line, length)
-                    TODO()
-                    //val branch = SPPTBranchFromInput(llg.runtimeRule, llg.currentState.rulePosition.option, location, llg.skipNodes.last().nextInputPosition, llg.priority)
-                    //branch.childrenAlternatives.add(children)
-                    //branch
-                }
-            } else {
-                //try grow width
-                /*
-                val rps = llg.currentState
-                val transitions: Set<Transition> = rps.transitions(this.runtimeRuleSet, llg.previous.values.first().node.currentState.rulePosition)
-                val transition = transitions.firstOrNull { it -> it.action==Transition.ParseAction.WIDTH }
-                if (null!=transition) {
-                    val l = this.graph.findOrTryCreateLeaf(transition.to.runtimeRule, llg.nextInputPosition, llg.location)
-                }
-
-                 */
-                //TODO()
-                //val cn = SPPTBranchDefault(llg.runtimeRule, llg.currentState.rulePosition.option, llg.location, llg.nextInputPosition, llg.priority)
-                val fst = llg.currentState.rulePositions.first()
-                val cn = SPPTBranchFromInputAndGrownChildren(this.input, fst.runtimeRule, fst.option, llg.startPosition, llg.nextInputPosition, fst.priority)
-                cn.grownChildrenAlternatives[fst.option] = llg.children
-                cn
-            }
-        }
-
-    val canGrow: Boolean
-        get() {
-            return this.graph.canGrow
-        }
-
-
-    // copy of graph growing head for each iteration, cached to that we can find best match in case of error
-    private var toGrow: List<GrowingNode> = listOf()
-    internal var toGrowPrevious = mutableMapOf<GrowingNode, Collection<PreviousInfo>>()
     private var interruptedMessage: String? = null
 
+    private val _skip_cache = mutableMapOf<Pair<Int, Set<LookaheadSet>>, TreeDataComplete?>()
 
-    fun reset() {//possibleEndOfText: LookaheadSet) {
-        this.graph.reset()
-        //this.possibleEndOfText = possibleEndOfText
+    // must use a different instance of Input, so it can be reset, reset clears cached leaves. //TODO: check this
+    private val skipParser = skipStateSet?.let {
+        if (this.stateSet.preBuilt) this.skipStateSet.build()
+        RuntimeParser(it, null, skipStateSet.userGoalRule, InputFromString(skipStateSet.usedTerminalRules.size, this.input.text), _issues)
     }
 
-    fun start(startPosition: Int, possibleEndOfText: LookaheadSet) {
+    fun reset() {
+        this.graph.reset()
+    }
+
+    fun buildSkipParser() {
+        skipParser?.stateSet?.build()
+    }
+
+    fun start(startPosition: Int, possibleEndOfText: Set<LookaheadSet>) {
         val gState = stateSet.startState
-        this.graph.start(gState, startPosition, possibleEndOfText) //TODO: remove LH
-        if (this.stateSet.isSkip) {
+        val initialSkipData = if (this.stateSet.isSkip) {
+            null
         } else {
-            this.tryGrowInitialSkip(true) //TODO: think this might allow some wrong things, might be a better way
+            //val skipLhsp = gState.rulePositions.map { this.stateSet.firstOf.expectedAt(it, LookaheadSetPart.EOT) }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
+            val skipLhsp = gState.rulePositions.flatMap {
+                possibleEndOfText.map { eot ->
+                    this.stateSet.firstOf.expectedAt(it, eot.part)
+                }
+            }.fold(LookaheadSetPart.EMPTY) { acc, e -> acc.union(e) }
+            val endOfSkipLookaheadSet = this.stateSet.createLookaheadSet(skipLhsp)
+            this.tryParseSkipUntilNone(setOf(endOfSkipLookaheadSet), startPosition, normalArgs) //TODO: think this might allow some wrong things, might be a better way
         }
+        val runtimeLookahead = possibleEndOfText//setOf(LookaheadSet.EOT)
+        val gn = this.graph.start(gState, startPosition, runtimeLookahead, initialSkipData) //TODO: remove LH
+//        this.addToLastGrown(gn)
     }
 
     fun interrupt(message: String) {
         this.interruptedMessage = message
     }
 
-    fun checkInterrupt() {
+    fun checkForTerminationRequest() {
         val m = this.interruptedMessage
         if (null == m) {
             //do nothing
         } else {
-            throw ParserInterruptedException(m)
+            throw ParserTerminatedException(m)
         }
     }
 
-    fun resetGraphToLastGrown() {
-        for (gn in this.lastGrownLinked) {
-            val gnindex = GrowingNode.indexFromGrowingChildren(gn.currentState, gn.lookahead, gn.children)//, gn.nextInputPosition, gn.priority)
-            this.graph.growingHead[gnindex] = gn
+    fun resetGraphToLastGrown(lastGrown: List<ParseGraph.Companion.ToProcessTriple>) {
+
+        for (trip in lastGrown) {
+            this.graph.pushback(trip)
         }
+
+        /*
+        this.graph._gss = this._lastGss
+        for (r in this.graph._gss.roots) {
+            this.graph._growingHeadHeap[r] = GrowingNode(this.graph, r)
+        }
+        */
+
+        // this.graph.replaceHeads(this.lastGrown)
+        //val maxLastGrown = this.lastGrown.maxOf { it.nextInputPosition }
+        //this.lastGrown.filter { it.nextInputPosition==maxLastGrown }.forEach { gn ->
+        //     val prv = this.grownInLastPassPrevious[gn]!!
+        //     if (prv.isEmpty()) {
+        //         this.graph._gss.root(gn.index)
+        //         this.graph._growingHeadHeap[gn.index] = gn
+        //     } else {
+        //         prv.forEach { prev ->
+        //             this.graph.addGrowingHead(prev, gn)
+        //         }
+        //     }
+        // }
     }
 
-    //to find error locations
-    fun tryGrowWidthOnce() {
-        this.toGrow = this.graph.growingHead.values.toList() //Note: this should be a copy of the list of values
-        this.toGrowPrevious.clear()
-        this.graph.growingHead.clear()
-        // try grow width
-        for (gn in this.toGrow) {
-            checkInterrupt()
-            val previous = this.graph.pop(gn)
-            this.toGrowPrevious[gn] = previous
-            this.growWidthOnly(gn, previous)
-        }
-    }
+    var debugCount = 0
+    fun debugOutput() {
+        fun GrowingNodeIndex.asString() = "(s${runtimeState.state.number.value},${startPosition}-${nextInputPosition}{${numNonSkipChildren}}${
+            runtimeState.state.rulePositions.joinToString()
+        }${
+            runtimeState.runtimeLookaheadSet.joinToString(
+                prefix = "[",
+                postfix = "]",
+                separator = "|"
+            ) { it.toString() }
+        })"
 
-    fun tryGrowHeightOrGraft(): Set<GrowingNode> {
-        val poss = mutableSetOf<GrowingNode>()
-        // try height or graft
-        while ((this.canGrow && this.graph.goals.isEmpty())) {
-            this.toGrow = this.graph.growingHead.values.toList() //Note: this should be a copy of the list of values
-            this.toGrowPrevious.clear()
-            this.graph.growingHead.clear()
-            // try grow height or graft
-            for (gn in this.toGrow) {
-                checkInterrupt()
-                val previous = this.graph.pop(gn)
-                this.toGrowPrevious[gn] = previous
-                this.growHeightOrGraftOnly(gn, previous)
-            }
-            poss.addAll(this.lastGrownLinked)
-        }
-        return poss
-    }
-
-
-    internal fun growWidthOnly(gn: GrowingNode, previous: Collection<PreviousInfo>) {
-        when (gn.runtimeRules.first().kind) { //FIXME
-            RuntimeRuleKind.GOAL -> {
-                val transitions = gn.currentState.transitions(null)
-                    .filter { tr -> tr.to.runtimeRules.any { it.isEmptyRule }.not() }
-                for (it in transitions) {
-                    when (it.action) {
-                        Transition.ParseAction.WIDTH -> doWidth(gn, emptySet(), it, true)
+        fun GrowingNodeIndex.chains(): List<List<GrowingNodeIndex>> {
+            val prevs = this@RuntimeParser.graph.previousOf(this)
+            return when {
+                prevs.isEmpty() -> listOf(listOf(this))
+                else -> prevs.flatMap { prev ->
+                    val chains = prev.chains()
+                    val r: List<List<GrowingNodeIndex>> = chains.map { chain ->
+                        listOf(this) + chain
                     }
+                    r
                 }
             }
+        }
+        if (true) {
+            if (Debug.OUTPUT_RUNTIME) debug(Debug.IndentDelta.NONE) { "--- ${debugCount++} --------------------------------------------------------" }
+            this.graph._growingHeadHeap.forEach {
+                val chains = it.chains()
+                chains.forEach { chain ->
+                    val str = chain.joinToString(separator = "-->") {
+                        it.asString()
+                    }
+                    if (Debug.OUTPUT_RUNTIME) debug(Debug.IndentDelta.NONE) { str }
+                }
+            }
+            if (Debug.OUTPUT_RUNTIME) debug(Debug.IndentDelta.NONE) { "" }
+        }
+    }
+
+    fun grow3(possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Int {
+        this.failedReasons.clear()
+        this.lastToTryWidthTrans.clear()
+        this.lastDropped.clear()
+        this.lastToGrow = this.graph.peekAllNextToProcess()
+
+        var steps = 0
+        val progressSteps = lazyMutableMapNonNull<GrowingNodeIndex, Int> { 0 }
+        val doneEmpties = mutableSetOf<ParserState>()
+
+        val currentNextInputPosition = this.graph.nextHeadNextInputPosition
+        while (this.graph.hasNextHead && this.graph.nextHeadNextInputPosition <= currentNextInputPosition) {
+            checkForTerminationRequest()
+            val graph = this.graph //TODO: remove..for debug only
+            if (Debug.OUTPUT_RUNTIME) {
+                println("$steps --------------------------------------")
+                println(graph)
+            }
+
+            val head = this.graph.peekNextHead
+            if (head.isEmptyMatch && doneEmpties.contains(head.state)) {
+                //don't do it again
+                doneEmpties.add(head.state)
+            } else {
+                growHead(head, possibleEndOfText, growArgs)
+                steps++
+            }
+
+            val progStep = progressSteps[head] //FIXME: maybe slow - is there a better way?
+            if (progStep > 1000) { //FIXME: make part of config
+                this.interrupt(Message.PARSER_WONT_STOP) //TODO: include why - which node/rule
+            } else {
+                progressSteps[head] = progStep + 1
+            }
+        }
+        return steps
+    }
+
+    private fun growHead(head: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
+        return when {
+            head.isGoal -> growGoal(head, possibleEndOfText, growArgs)
+            head.isComplete -> growComplete(head, possibleEndOfText, growArgs)
+            else -> growIncomplete(head, possibleEndOfText, growArgs)
+        }
+    }
+
+    private fun growGoal(head: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
+        return if (head.isComplete) {
+            graph.recordGoal(head)
+            graph.dropGrowingHead(head)
+            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
+            false
+        } else {
+            var grown = false
+            val transitions = head.runtimeState.transitionsGoal(stateSet.startState)
+            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
+            for (tr in transitions) {
+                val b = when (tr.action) {
+                    ParseAction.WIDTH -> doWidth(head, tr, possibleEndOfText, growArgs)
+                    ParseAction.EMBED -> doEmbedded(head, tr, possibleEndOfText, growArgs)
+                    else -> error("Internal Error: should only have WIDTH or EMBED transitions here")
+                }
+                grown = grown || b
+            }
+            if (grown.not()) doNoTransitionsTaken(head)
+            grown
+        }
+    }
+
+    private fun growIncomplete(head: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
+        var grown = false
+        val prevSet = this.graph.previousOf(head)
+        for (previous in prevSet) {
+            val transitions = head.runtimeState.transitionsInComplete(previous.state)
+            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
+            for (tr in transitions) {
+                val b = when (tr.action) {
+                    ParseAction.WIDTH -> doWidth(head, tr, possibleEndOfText, growArgs)
+                    ParseAction.EMBED -> doEmbedded(head, tr, possibleEndOfText, growArgs)
+                    else -> error("Internal Error: should only have WIDTH or EMBED transitions here")
+                }
+                grown = grown || b
+            }
+        }
+        if (grown.not()) doNoTransitionsTaken(head)
+        return grown
+    }
+
+    private fun growComplete(head: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
+        var headGrownHeight = false
+        var headGrownGraft = false
+        val prevSet = this.graph.previousOf(head)
+        val dropPrevs = mutableMapOf<GrowingNodeIndex, Boolean>()
+        for (previous in prevSet) {
+            var prevGrownHeight = false
+            var prevGrownGraft = false
+            val prevPrevSet = this.graph.previousOf(previous)
+            if (prevPrevSet.isEmpty()) {
+                val (h, g) = growComplete2(head, previous, null, possibleEndOfText, growArgs)
+                prevGrownHeight = prevGrownHeight || h
+                prevGrownGraft = prevGrownGraft || g
+            } else {
+                for (prevPrev in prevPrevSet) {
+                    val (h, g) = growComplete2(head, previous, prevPrev, possibleEndOfText, growArgs)
+                    prevGrownHeight = prevGrownHeight || h
+                    prevGrownGraft = prevGrownGraft || g
+                }
+            }
+            if (prevGrownHeight.not()) {
+                //have to drop previous after dropping head, so record here for later drop
+                // only drop previous if we did not grow with HEIGHT - HEIGHT keeps same previous
+                // true indicate drop whole stack - i.e. not GRAFT or HEIGHT
+                // false just drop the previous - GRAFT was done
+                dropPrevs[previous] = prevGrownGraft
+            }
+            headGrownHeight = headGrownHeight || prevGrownHeight
+            headGrownGraft = headGrownGraft || prevGrownGraft
+        }
+
+        when {
+            headGrownHeight.not() && headGrownGraft.not() -> doNoTransitionsTaken(head)
+            headGrownHeight && headGrownGraft.not() -> {
+                graph.dropGrowingHead(head)
+                if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
+            }
+
+            headGrownHeight.not() && headGrownGraft -> {
+                graph.dropGrowingHead(head)
+                if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
+            }
+
+            headGrownHeight && headGrownGraft -> {
+                graph.dropGrowingHead(head)
+                if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
+            }
+        }
+
+        dropPrevs.forEach {
+            if (it.value) {
+                graph.dropGrowingHead(it.key)
+                if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $it" }
+            } else {
+                doNoTransitionsTaken(it.key)
+            }
+        }
+
+        return headGrownHeight || headGrownGraft
+    }
+
+    private fun matchedLookahead(position: Int, lookahead: Set<Lookahead>, possibleEndOfText: Set<LookaheadSet>, runtimeLhs: Set<LookaheadSet>) =
+        when {
+//            possibleEndOfText.size > 1 -> TODO()
+//            runtimeLhs.size > 1 -> TODO()
             else -> {
-                for (prev in previous) {
-                    val transitions = gn.currentState.transitions(prev.node.currentState)
-                        .filter { it.to.runtimeRules.any { it.isEmptyRule }.not() }
-                    for (it in transitions) {
-                        when (it.action) {
-                            Transition.ParseAction.WIDTH -> doWidth(gn, setOf(prev), it, true)
-                        }
-                    }
+                val lh:LookaheadSetPart = lookahead.map { it.guard.part }.fold(LookaheadSetPart.EMPTY){acc,it->acc.union(it)}
+                val eot = possibleEndOfText.map { it.part }.fold(LookaheadSetPart.EMPTY){acc,it->acc.union(it)}
+                val rt:LookaheadSetPart = runtimeLhs.map { it.part }.fold(LookaheadSetPart.EMPTY){acc,it->acc.union(it)}
+                //possibleEndOfText.flatMap { eot ->
+                //    runtimeLhs.map { rt ->
+                        val lookingAt:Boolean = this.graph.isLookingAt(lh, eot, rt, position)
+                        val resolved = lh.resolve(eot, rt)
+                        Pair(lookingAt, resolved)
+               //     }
+               // }
+            }
+        }
+
+    private fun growComplete2(
+        head: GrowingNodeIndex,
+        previous: GrowingNodeIndex,
+        prevPrev: GrowingNodeIndex?,
+        possibleEndOfText: Set<LookaheadSet>,
+        growArgs: GrowArgs
+    ): Pair<Boolean, Boolean> {
+        var grownHeight = false
+        var grownGraft = false
+        val transitions = head.runtimeState.transitionsComplete(previous.state, prevPrev?.state ?: stateSet.startState)
+        val transWithValidLookahead = when {
+            growArgs.noLookahead -> transitions.map { Pair(it, LookaheadSetPart.ANY) }
+            else -> transitions.mapNotNull {
+                val lh = matchedLookahead(head.nextInputPositionAfterSkip, it.lookahead, possibleEndOfText, previous.runtimeState.runtimeLookaheadSet)
+                when {
+                    lh.first -> Pair(it,lh.second)
+                    else -> null
                 }
             }
         }
-    }
-
-    internal fun growHeightOrGraftOnly(gn: GrowingNode, previous: Collection<PreviousInfo>) {
-        //should never be a GOAL
-        //val didSkipNode = this.tryGrowWidthWithSkipRules(gn, previous)
-        //if (didSkipNode) {
-        //    return
-        //} else {
-
-        for (prev in previous) {
-            //if (gn.isSkipGrowth) {
-            //    this.growSkip(gn, prev)
-            //} else {
-            //val rps = gn.currentState
-            //val transitions: Set<Transition> = rps.transitions(this.runtimeRuleSet, prev.node.currentState)
-            val transitions = gn.currentState.transitions(prev.node.currentState)
-            for (transition in transitions) {
-                when (transition.action) {
-                    Transition.ParseAction.HEIGHT -> doHeight(gn, prev, transition, true)
-                    Transition.ParseAction.GRAFT -> {
-                        if (transition.runtimeGuard(transition, prev.node, prev.node.currentState.rulePositions)) {
-                            doGraft(gn, prev, transition, true)
-                        }
-                    }
-    //                Transition.ParseAction.GRAFT_OR_HEIGHT -> TODO()
-                }
-            }
-            //}
-        }
-        //}
-
-    }
-
-    fun tryGrowInitialSkip(noLookahead: Boolean) {
-        this.toGrow = this.graph.growingHead.values.toList() //Note: this should be a copy of the list of values
-        this.toGrowPrevious.clear()
-        this.graph.growingHead.clear()
-        for (gn in this.toGrow) {
-            checkInterrupt()
-            val skipLhc = gn.currentState.rulePositions.flatMap { this.stateSet.buildCache.firstOf(it, LookaheadSet.EOT) }.toSet()
-            val skipLh = this.stateSet.createLookaheadSet(skipLhc)
-            val skipNodes = this.tryParseSkipUntilNone(skipLh, gn.startPosition, noLookahead)
-            gn.children.appendSkipIfNotEmpty(skipNodes) //ok because gn.children should be empty
-            val gi = GrowingNode.indexFromGrowingChildren(gn.currentState, gn.lookahead, gn.children)
-            this.graph.addGrowingHead(gi, gn)
-        }
-    }
-
-    fun grow(noLookahead: Boolean) {
-        this.toGrow = this.graph.growingHead.values.toList() //Note: this should be a copy of the list of values
-        this.toGrowPrevious.clear()
-        this.graph.growingHead.clear()
-        for (gn in this.toGrow) {
-            checkInterrupt()
-            val previous = this.graph.pop(gn)
-            this.toGrowPrevious[gn] = previous
-            this.growNode(gn, previous, noLookahead)
-        }
-    }
-
-    internal fun growNode(gn: GrowingNode, previous: Collection<PreviousInfo>, noLookahead: Boolean) {
-        when (gn.runtimeRules.first().kind) {//FIXME
-            RuntimeRuleKind.GOAL -> this.growGoalNode(gn, noLookahead)
-            RuntimeRuleKind.TERMINAL -> this.growNormal(gn, previous, noLookahead)
-            RuntimeRuleKind.NON_TERMINAL -> this.growNormal(gn, previous, noLookahead)
-            RuntimeRuleKind.EMBEDDED -> this.growNormal(gn, previous, noLookahead)
-        }
-    }
-
-    private fun growGoalNode(gn: GrowingNode, noLookahead: Boolean) {
-        //no previous, so gn must be the Goal node
-        val transitions = gn.currentState.transitions(null)
-        for (it in transitions) {
+        transitions.minus(transWithValidLookahead.map { it.first }).forEach {
             when (it.action) {
-                Transition.ParseAction.WIDTH -> doWidth(gn, emptySet(), it, noLookahead)
-                Transition.ParseAction.HEIGHT -> error("Should never happen")
-                Transition.ParseAction.GRAFT -> error("Should never happen")
-      //          Transition.ParseAction.GRAFT_OR_HEIGHT -> error("Should never happen")
-                Transition.ParseAction.GOAL -> doGoal(gn)
-                Transition.ParseAction.EMBED -> TODO()
+                ParseAction.HEIGHT -> recordFailedHeightLh(head.nextInputPositionAfterSkip, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
+                ParseAction.GRAFT -> recordFailedGraftLH(head.nextInputPositionAfterSkip, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
+                ParseAction.GOAL -> recordFailedGraftLH(head.nextInputPositionAfterSkip, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
+                else -> error("Internal Erorr: should never happen")
             }
         }
-    }
-
-    private fun growNormal(gn: GrowingNode, previous: Collection<PreviousInfo>, noLookahead: Boolean) {
-        for (prev in previous) {
-            this.growWithPrev(gn, prev, noLookahead)
+        //val vlhg = transWithValidLookahead.groupBy { it.first.to }
+        //val ss = mutableMapOf<LookaheadSetPart, List<Pair<Transition,LookaheadSetPart>>>()
+        //for (tgtGrp in vlhg) {
+        //    for (x in tgtGrp.value) {
+        //        for(x2 in ss.keys) {
+        //            if (x2.fullContent.containsAll(x.second.fullContent)) {
+        //            }
+        //        }
+        //    }
+        //}
+        val trans2 = resolvePrecedence(transWithValidLookahead, head)
+        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${trans2.joinToString(separator = "\n") { "  $it" }}" }
+        //val grouped = transitions.groupBy { it.to.runtimeRulesSet }
+        if (trans2.size > 1) {
+            val ambigStr = trans2.map { tr ->
+                val lh = transWithValidLookahead.first { tr == it.first }.second.fullContent//flatMap { it.second.fullContent }
+                "${tr.from.firstRule.tag} into ${tr.to.rulePositions.map { "(${it.rule.tag},${it.option})" }} on ${lh.map { it.tag }}"
+            }
+            val loc = input.locationFor(head.nextInputPositionAfterSkip, 1)
+            _issues.warn(loc, "Ambiguity in parse: $ambigStr")
         }
-    }
-
-    private fun growWithPrev(gn: GrowingNode, previous: PreviousInfo, noLookahead: Boolean) {
-        val transitions = gn.currentState.transitions(previous.node.currentState)
-        val grouped = transitions.groupBy { it.to.runtimeRules }
+        val grouped = trans2.groupBy { it.to.runtimeRulesSet }
         for (it in grouped) {
             when {
                 1 == it.value.size -> {
                     val tr = it.value[0]
                     when (tr.action) {
-                        Transition.ParseAction.WIDTH -> doWidth(gn, setOf(previous), tr, noLookahead)
-                        Transition.ParseAction.HEIGHT -> doHeight(gn, previous, tr, noLookahead)
-                        Transition.ParseAction.GRAFT -> doGraft(gn, previous, tr, noLookahead)
- //                       Transition.ParseAction.GRAFT_OR_HEIGHT -> error("Should never happen")
-                        Transition.ParseAction.GOAL -> error("Should never happen")
-                        Transition.ParseAction.EMBED -> doEmbedded(gn, setOf(previous), tr, noLookahead)
+                        ParseAction.HEIGHT -> {
+                            val b = doHeight(head, previous, tr, possibleEndOfText, growArgs)
+                            grownHeight = grownHeight || b
+                        }
+
+                        ParseAction.GRAFT -> {
+                            val b = doGraft(head, previous, prevPrev, tr, possibleEndOfText, growArgs)
+                            grownGraft = grownGraft || b
+                        }
+
+                        ParseAction.GOAL -> {
+                            val b = doGoal(head, previous, tr, possibleEndOfText, growArgs)
+                            grownGraft = grownGraft || b
+                        }
+
+                        else -> error("Internal Error: should only have GOAL, HEIGHT or GRAFT transitions here")
                     }
                 }
+
                 else -> {
-                    val trgs = it.value.filter { it.action == Transition.ParseAction.GRAFT }
-                    val trhs = it.value.filter { it.action == Transition.ParseAction.HEIGHT }
+                    val trgs = it.value.filter { it.action == ParseAction.GRAFT }
+                        // if multiple GRAFT trans to same rule, prefer left most target
+                        .sortedWith(Comparator { t1, t2 ->
+                            val p1 = t1.to.rulePositions.first().position
+                            val p2 = t2.to.rulePositions.first().position
+                            when {
+                                p1 == p2 -> 0
+                                RulePosition.END_OF_RULE == p1 -> 1
+                                RulePosition.END_OF_RULE == p2 -> -1
+                                p1 > p2 -> 1
+                                p1 < p2 -> -1
+                                else -> 0// should never happen !
+                            }
+                        })
+                    val trhs = it.value.filter { it.action == ParseAction.HEIGHT }
                     if (trgs.isNotEmpty() && trhs.isNotEmpty()) {
                         var doneIt = false
                         var i = 0
                         while (doneIt.not() && i < trgs.size) {
-                            doneIt = doGraft(gn, previous, trgs[i], noLookahead)
+                            val b = doGraft(head, previous, prevPrev, trgs[i], possibleEndOfText, growArgs)
+                            grownGraft = grownGraft || b
+                            doneIt = doneIt || b
                             ++i
                         }
                         i = 0
                         while (doneIt.not() && i < trhs.size) {
-                            doneIt = doHeight(gn, previous, trhs[i], noLookahead)
+                            val b = doHeight(head, previous, trhs[i], possibleEndOfText, growArgs)
+                            grownHeight = grownHeight || b
+                            doneIt = doneIt || b
                             ++i
                         }
                     } else {
                         for (tr in it.value) {
                             when (tr.action) {
-                                Transition.ParseAction.WIDTH -> doWidth(gn, setOf(previous), tr, noLookahead)
-                                Transition.ParseAction.HEIGHT -> doHeight(gn, previous, tr, noLookahead)
-                                Transition.ParseAction.GRAFT -> doGraft(gn, previous, tr, noLookahead)
-  //                              Transition.ParseAction.GRAFT_OR_HEIGHT -> error("Should never happen")
-                                Transition.ParseAction.GOAL -> error("Should never happen")
-                                Transition.ParseAction.EMBED -> doEmbedded(gn, setOf(previous), tr, noLookahead)
+                                ParseAction.HEIGHT -> {
+                                    val b = doHeight(head, previous, tr, possibleEndOfText, growArgs)
+                                    grownHeight = grownHeight || b
+                                }
+
+                                ParseAction.GRAFT -> {
+                                    val b = doGraft(head, previous, prevPrev, tr, possibleEndOfText, growArgs)
+                                    grownGraft = grownGraft || b
+                                }
+
+                                ParseAction.GOAL -> {
+                                    val b = doGoal(head, previous, tr, possibleEndOfText, growArgs)
+                                    grownGraft = grownGraft || b
+                                }
+
+                                else -> error("Internal Error: should only have HEIGHT or GRAFT or GOAL transitions here")
                             }
                         }
                     }
                 }
             }
         }
+
+        return Pair(grownHeight, grownGraft)
     }
 
-    private fun doGoal(gn: GrowingNode) {
-        //val complete = this.graph.findCompleteNode(gn.currentState.rulePositions.first(), gn.startPosition, gn.nextInputPosition) ?: error("Should never be null")
-        this.graph.recordGoal(gn.asCompletedNodes.first())//TODO: what about not first?
-    }
-
-    private fun doWidth(curGn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition, noLookahead: Boolean) {
-        val l = this.graph.input.findOrTryCreateLeaf(transition.to.terminalRule, curGn.nextInputPosition)
-        if (null != l) {
-//TODO: skip gets parsed multiple times
-            //val skipLh = transition.lookaheadGuard.createWithParent(curGn.lookahead)
-            val skipLh = this.stateSet.createWithParent(transition.lookaheadGuard, curGn.lookahead)
-            val skipNodes = this.tryParseSkipUntilNone(skipLh, l.nextInputPosition, noLookahead)//, lh) //TODO: does the result get reused?
-            val nextInput = skipNodes.lastOrNull()?.nextInputPosition ?: l.nextInputPosition
-            //val lastLocation = skipNodes.lastOrNull()?.location ?: l.location
-
-            val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, curGn.lookahead, nextInput)
-
-            if (noLookahead || hasLh) {// || lh.isEmpty()) { //transition.lookaheadGuard.content.isEmpty()) { //TODO: check the empty condition it should match when shifting EOT
-                val lhs = curGn.lookahead//transition.lookaheadGuard.createWithParent(curGn.lookahead)
-                this.graph.pushToStackOf(transition.to, lhs, l, curGn, previousSet, skipNodes)
-            }
-        }
-    }
-
-    private fun doHeight(curGn: GrowingNode, previous: PreviousInfo, transition: Transition, noLookahead: Boolean): Boolean {
-        var doneIt = false
-        val prevNode = previous.node
-        val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, prevNode.lookahead, curGn.nextInputPosition)
-        if (noLookahead || hasLh) {// || lh.isEmpty()) {
-            //val firstChildAlts = curGn.currentState.rulePositions.map {
-            //    this.graph.findCompleteNode(it, curGn.startPosition, curGn.nextInputPosition) ?: error("Should never be null")
-            //}
-            val firstChildAlts = curGn.asCompletedNodes
-            //val lhs = transition.upLookahead.createWithParent(prevNode.lookahead)
-            val lhs = this.stateSet.createWithParent(transition.upLookahead, prevNode.lookahead)
-            this.graph.createWithFirstChild(transition.to, lhs, firstChildAlts, setOf(previous), curGn.skipNodes)
-            doneIt = true
-        }
-        return doneIt
-    }
-
-    private fun doGraft(curGn: GrowingNode, previous: PreviousInfo, transition: Transition, noLookahead: Boolean): Boolean {
-        var doneIt = false
-        val prevNode = previous.node
-        if (transition.runtimeGuard(transition, prevNode, prevNode.currentState.rulePositions)) {
-            val hasLh = this.graph.isLookingAt(transition.lookaheadGuard, prevNode.lookahead, curGn.nextInputPosition)
-            if (noLookahead || hasLh) {
-                //val nextChildAlts = curGn.currentState.rulePositions.map {
-                //    this.graph.findCompleteNode(it, curGn.startPosition, curGn.nextInputPosition) ?: error("Should never be null")
-                //}
-                val nextChildAlts = curGn.asCompletedNodes
-                //val lhs = transition.upLookahead.createWithParent(prevNode.lookahead)
-                val lhs = this.stateSet.createWithParent(transition.upLookahead, prevNode.lookahead)
-                this.graph.growNextChild(transition.to, lhs, prevNode, nextChildAlts, curGn.skipNodes)
-                doneIt = true
-            }
-        }
-        return doneIt
-    }
-
-    private fun doGraftOrHeight(curGn: GrowingNode, previous: PreviousInfo, trg: Transition, trh: Transition, noLookahead: Boolean) {
-        val prevNode = previous.node
-        var notDoneGraft = true
-        if (trg.runtimeGuard(trg, prevNode, prevNode.currentState.rulePositions)) {
-            val hasLh = this.graph.isLookingAt(trg.lookaheadGuard, prevNode.lookahead, curGn.nextInputPosition)
-            if (noLookahead || hasLh) {
-                //val nextChildAlts = curGn.currentState.rulePositions.map {
-                //    this.graph.findCompleteNode(it, curGn.startPosition, curGn.nextInputPosition) ?: error("Should never be null")
-                //}
-                val nextChildAlts = curGn.asCompletedNodes
-                //val lhs = trg.upLookahead.createWithParent(previous.node.lookahead)
-                val lhs = this.stateSet.createWithParent(trg.upLookahead, prevNode.lookahead)
-                this.graph.growNextChild(trg.to, lhs, previous.node, nextChildAlts, curGn.skipNodes)
-                notDoneGraft = false
-            }
-        }
-        if (notDoneGraft) { // then try height
-            val hasLh = this.graph.isLookingAt(trh.lookaheadGuard, prevNode.lookahead, curGn.nextInputPosition)
-            if (noLookahead || hasLh) {
-                //val firstChildAlts = curGn.currentState.rulePositions.map {
-                //    this.graph.findCompleteNode(it, curGn.startPosition, curGn.nextInputPosition) ?: error("Should never be null")
-                //}
-                val firstChildAlts = curGn.asCompletedNodes
-                //val lhs = trh.upLookahead.createWithParent(prevNode.lookahead)
-                val lhs = this.stateSet.createWithParent(trh.upLookahead, prevNode.lookahead)
-                this.graph.createWithFirstChild(trh.to, lhs, firstChildAlts, setOf(previous), curGn.skipNodes)
-            }
-        }
-    }
-
-    private fun tryParseSkipUntilNone(lookaheadSet: LookaheadSet, startPosition: Int, noLookahead: Boolean): List<SPPTNode> {
+    private fun resolvePrecedence(transitions: List<Pair<Transition, LookaheadSetPart>>, head: GrowingNodeIndex): List<Transition> {
         return when {
-            null == skipParser -> emptyList<SPPTNode>()
+            2 > transitions.size -> transitions.map { it.first }
             else -> {
-                val skipNode = tryParseSkip(lookaheadSet, startPosition, noLookahead)
-                when (skipNode) {
-                    null -> emptyList<SPPTNode>()
-                    else -> skipNode.asBranch.children[0].asBranch.children.flatMap { it.asBranch.children }
+                val precRules = this.stateSet.precedenceRulesFor(head.state)
+                when {
+                    null == precRules -> {
+                        //if no explicit preference, prefer GRAFT over HEIGHT for same rule
+                        val toGrp = transitions.groupBy { it.first.to.runtimeRulesSet }
+                        toGrp.flatMap {
+                            val actGrp = it.value.groupBy { it.first.action }
+                            when {
+                                2 > actGrp.size -> it.value.map { it.first }
+                                else -> {
+                                    val grafts = actGrp[ParseAction.GRAFT]!!
+                                    // if multiple GRAFT trans to same rule, prefer left most target
+                                    grafts.sortedWith(Comparator { t1, t2 ->
+                                        val p1 = t1.first.to.rulePositions.first().position
+                                        val p2 = t2.first.to.rulePositions.first().position
+                                        when {
+                                            p1 == p2 -> 0
+                                            RulePosition.END_OF_RULE == p1 -> 1
+                                            RulePosition.END_OF_RULE == p2 -> -1
+                                            p1 > p2 -> 1
+                                            p1 < p2 -> -1
+                                            else -> 0// should never happen !
+                                        }
+                                    })
+                                    listOf(grafts.last().first)
+                                }
+                            }
+                        }
+                    }
+                    2 > transitions.size -> transitions.map { it.first }
+                    else -> {
+                        val precedence = transitions.flatMap { (tr, lh) ->
+                            val lhf = lh//.map { it.second }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+                            val prec = precRules.precedenceFor(tr.to.rulePositions, lhf)
+                            prec.map { Pair(tr, it) }
+                        }
+                        val max = precedence.map { it.second.precedence }.maxOrNull() ?: 0
+                        val maxPrec = precedence.filter { max == it.second.precedence }
+                        val byTarget = maxPrec.groupBy { Pair(it.first.to.runtimeRules, it.second.associativity) }
+                        val assoc = byTarget.flatMap {
+                            when (it.key.second) {
+                                PrecedenceRules.Associativity.NONE -> it.value
+                                PrecedenceRules.Associativity.LEFT -> when {
+                                    it.key.first[0].isList -> {
+                                        val grafts = it.value.filter { it.first.action == ParseAction.GRAFT }
+                                        val left = grafts.filter { it.first.to.rulePositions[0].isAtEnd.not() }
+                                        when (left.isEmpty()) {
+                                            true -> grafts
+                                            false -> left
+                                        }
+                                    }
+
+                                    else -> it.value.filter { it.first.action == ParseAction.GRAFT }
+                                }
+
+                                PrecedenceRules.Associativity.RIGHT -> when {
+                                    it.key.first[0].isList -> {
+                                        val heights = it.value.filter { it.first.action == ParseAction.HEIGHT }
+                                        val right = heights.filter { it.first.to.rulePositions[0].isAtEnd.not() }
+                                        when (right.isEmpty()) {
+                                            true -> heights
+                                            false -> right
+                                        }
+                                    }
+
+                                    else -> it.value.filter { it.first.action == ParseAction.HEIGHT }
+                                }
+                            }
+                        }
+                        when (assoc.size) {
+                            0 -> maxPrec.map { it.first }
+                            else -> assoc.map { it.first }
+                        }
+                    }
                 }
             }
         }
     }
 
-    // must use a different instance of Input, so it can be reset, reset clears cached leaves. //TODO: check this
-    private val skipParser = skipStateSet?.let { RuntimeParser(it, null, skipStateSet.userGoalRule, InputFromString(skipStateSet.usedTerminalRules.size, this.input.text)) }
+    fun growNonEmptyWidthForError(possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Set<GrowingNodeIndex> {
+        val lg = mutableSetOf<GrowingNodeIndex>()
+        val currentStartPosition = this.graph.nextHeadNextInputPosition
+        while (this.graph.hasNextHead && this.graph.nextHeadNextInputPosition <= currentStartPosition) {
+            //while ((this.canGrow && this.graph.goals.isEmpty())) {
+            //val nextToProcess = this.graph.nextToProcess()
+            val head = this.graph.peekNextHead
+            checkForTerminationRequest()
+            // val grown = this.growNormal(nextToProcess, possibleEndOfText, growArgs)
+            val grown = growHead(head, possibleEndOfText, growArgs)
+            if (grown.not()) {
+                lg.add(head)
+                doNoTransitionsTaken(head)
+            }
+        }
+        return lg
+    }
 
-    private fun tryParseSkip(lookaheadSet: LookaheadSet, startPosition: Int, noLookahead: Boolean): SPPTNode? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
-        skipParser!!.reset()//lookaheadSet)
-        //val startLocation = InputLocation(startPosition, lastLocation.column, lastLocation.line, 0) //TODO: compute correct line and column
-        skipParser.start(startPosition, lookaheadSet)
-        var seasons = 1
-        var maxNumHeads = skipParser.graph.growingHead.size
-        do {
-            skipParser.grow(noLookahead)
-            seasons++
-            maxNumHeads = max(maxNumHeads, skipParser.graph.growingHead.size)
-        } while (skipParser.graph.canGrow && (skipParser.graph.goals.isEmpty() || skipParser.graph.goalMatchedAll.not()))
-        //val match = skipGraph.longestMatch(seasons, maxNumHeads)
-        //TODO: get longest skip match
+    fun growHeightOrGraftForError(possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Set<ParseGraph.Companion.ToProcessTriple> {
+        val lg = mutableSetOf<ParseGraph.Companion.ToProcessTriple>()
+        val currentStartPosition = this.graph.nextHeadNextInputPosition
+        while (this.graph.hasNextHead && this.graph.nextHeadNextInputPosition <= currentStartPosition) {
+            //while ((this.canGrow && this.graph.goals.isEmpty())) {
+            //val nextToProcess = this.graph.nextToProcess()
+            val head = this.graph.peekNextHead
+            checkForTerminationRequest()
+            //val grown = this.growNormal(nextToProcess, possibleEndOfText, growArgs)
+            val grown = growHead(head, possibleEndOfText, growArgs)
+            if (grown.not()) {
+                lg.addAll(this.graph.peekTripleFor(head))
+                doNoTransitionsTaken(head)
+            }
+        }
+        return lg
+    }
+
+    /*
+    /*
+        private fun useGoal(lt: SPPTNode): SPPTNode {
+            //FIXME: use GrowingChildren
+            // need to re-write top of the tree so that any initial skip nodes come under the userGoal node
+            val goal = lt as SPPTBranchFromInputAndGrownChildren
+
+            val goalRpId = setOf(RuleOption(this.userGoalRule, 0))
+            val goalFirstChildren = goal.grownChildrenAlternatives.values.first()
+            val userGoalNode = if (goalFirstChildren.hasSkipAtStart) {
+                //has skip at start
+                val skipNodes = goalFirstChildren.firstChild(this.stateSet.startState.rulePositionIdentity)!!.children
+                val ugn = goalFirstChildren.firstNonSkipChild(goalRpId)!!.children[0] as SPPTBranchFromInputAndGrownChildren
+                val startPosition = skipNodes[0].startPosition
+                val nugn = SPPTBranchFromInputAndGrownChildren(this.input, ugn.runtimeRule, ugn.option, startPosition, ugn.nextInputPosition, ugn.priority)
+                ugn.grownChildrenAlternatives.values.forEach {
+                    val nc = GrowingChildren().appendSkipIfNotEmpty(emptySet(), skipNodes)
+                    //nc._firstChild!!.nextChild = it.firstChild
+                    //nc._lastChild = it.lastChild
+                    nc.concatenate(it)
+                    nugn.grownChildrenAlternatives[ugn.option] = nc
+                }
+                nugn
+            } else {
+
+                goalFirstChildren.firstChild(goalRpId)!!.children[0]
+            }
+            return userGoalNode
+        }
+    */
+    private fun growNode(toProcess: ParseGraph.Companion.NextToProcess, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs) {
+        val rr = toProcess.growingNode.state.firstRule//FIXME: is there only one?
+        when {
+            rr.isGoal -> when {
+                toProcess.growingNode.state.isAtEnd -> graph.recordGoal(toProcess.growingNode)
+                else -> this.growGoalNode(toProcess, possibleEndOfText, growArgs)
+            }
+
+            else -> this.growNormal(toProcess, possibleEndOfText, growArgs)
+        }
+    }
+
+    private fun growGoalNode(
+        nextToProcess: ParseGraph.Companion.NextToProcess, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs
+    ) {
+        //no previous, so gn must be the Goal node
+        val toProcess = ParseGraph.Companion.ToProcessTriple(nextToProcess.growingNode, null, null)
+        val transitions = toProcess.growingNode.runtimeState.transitions(stateSet.startState, stateSet.startState)
+        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
+        var grown = false
+        for (it in transitions) {
+            val g = when (it.action) {
+                ParseAction.GOAL -> error("Should never happen")
+                ParseAction.WIDTH -> doWidth(toProcess, it, possibleEndOfText, growArgs)
+                ParseAction.HEIGHT -> error("Should never happen")
+                ParseAction.GRAFT -> error("Should never happen")
+                ParseAction.EMBED -> doEmbedded(toProcess, it, possibleEndOfText, growArgs)
+            }
+            grown = grown || g
+        }
+        if (grown) {
+            // must have grown
+        } else {
+            lastDropped.add(nextToProcess)
+            val hd = toProcess.remainingHead
+            val dd = nextToProcess.growingNode
+            hd?.let { graph.dropHead(hd) }
+            graph.dropData(dd)
+            if (Debug.OUTPUT_RUNTIME) {
+                Debug.debug(Debug.IndentDelta.NONE) { "Dropped Head: $hd" }
+                Debug.debug(Debug.IndentDelta.NONE) { "Dropped Data: $dd" }
+            }
+        }
+    }
+
+    private fun growNormal(
+        nextToProcess: ParseGraph.Companion.NextToProcess,
+        possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs
+    ): Boolean {
+        val toDropData = mutableSetOf<GrowingNodeIndex>()
+        //val toDropHead = mutableSetOf<GrowingNodeIndex>()
+        var grown = false
+        for (toProcess in nextToProcess.triples) {
+            val g = this.growWithPrev(toProcess, possibleEndOfText, growArgs)
+            if (g) {
+                grown = true
+            } else {
+                //toDropHead.addIfNotNull(toProcess.remainingHead)
+                //toDropData.addIfNotNull(toProcess.previous)
+                //toDropData.addIfNotNull(toProcess.remainingHead)
+            }
+        }
+        if (grown) {
+            // growingHead must have grown with one of the previous
+        } else {
+            //nothing was grown, so drop data for growingHead also
+            toDropData.add(nextToProcess.growingNode)
+            lastDropped.add(nextToProcess)
+            //TODO: maybe also drop other things!
+        }
+        //for (hd in toDropHead) {
+        //    graph.dropHead(hd)
+        //    if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped Head: $hd" }
+        //}
+        for (dd in toDropData) {
+            graph.dropData(dd)
+            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped Data: $dd" }
+        }
+        return grown
+    }
+
+    private fun growWithPrev(
+        toProcess: ParseGraph.Companion.ToProcessTriple, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs
+    ): Boolean {
+        var grown = false
+        val prevPrev = toProcess.remainingHead?.runtimeState?.state ?: stateSet.startState
+        val prev = toProcess.previous?.runtimeState?.state ?: stateSet.startState
+        val transitions = toProcess.growingNode.runtimeState.transitions(prevPrev, prev)
+        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
+        //TODO: do we need to do something here? due to filtered out trans from the list
+        val grouped = transitions.groupBy { it.to.runtimeRulesSet }
+        for (it in grouped) {
+            when {
+                1 == it.value.size -> {
+                    val tr = it.value[0]
+                    val b = doAction(tr, toProcess, possibleEndOfText, growArgs)
+                    grown = grown || b
+                }
+
+                else -> {
+                    val trgs = it.value.filter { it.action == ParseAction.GRAFT }
+                        // if multiple GRAFT trans to same rule, prefer left most target
+                        .sortedWith(Comparator { t1, t2 ->
+                            val p1 = t1.to.rulePositions.first().position
+                            val p2 = t2.to.rulePositions.first().position
+                            when {
+                                p1 == p2 -> 0
+                                RulePosition.END_OF_RULE == p1 -> 1
+                                RulePosition.END_OF_RULE == p2 -> -1
+                                p1 > p2 -> 1
+                                p1 < p2 -> -1
+                                else -> 0// should never happen !
+                            }
+                        })
+                    val trhs = it.value.filter { it.action == ParseAction.HEIGHT }
+                    if (trgs.isNotEmpty() && trhs.isNotEmpty()) {
+                        var doneIt = false
+                        var i = 0
+                        while (doneIt.not() && i < trgs.size) {
+                            val b = doGraft(toProcess, trgs[i], possibleEndOfText, growArgs)
+                            doneIt = doneIt || b
+                            ++i
+                        }
+                        i = 0
+                        while (doneIt.not() && i < trhs.size) {
+                            val b = doHeight(toProcess, trhs[i], possibleEndOfText, growArgs)
+                            doneIt = doneIt || b
+                            ++i
+                        }
+                        grown = grown || doneIt
+                    } else {
+                        for (tr in it.value) {
+                            val b = doAction(tr, toProcess, possibleEndOfText, growArgs)
+                            grown = grown || b
+                        }
+                    }
+                }
+            }
+        }
+        return grown
+    }
+
+    private fun doAction(
+        tr: Transition, toProcess: ParseGraph.Companion.ToProcessTriple, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs
+    ): Boolean {
+        return when (tr.action) {
+            ParseAction.WIDTH -> doWidth(toProcess, tr, possibleEndOfText, growArgs)
+            ParseAction.EMBED -> doEmbedded(toProcess, tr, possibleEndOfText, growArgs)
+            ParseAction.HEIGHT -> doHeight(toProcess, tr, possibleEndOfText, growArgs)
+            ParseAction.GRAFT -> doGraft(toProcess, tr, possibleEndOfText, growArgs)
+            ParseAction.GOAL -> doGoal(toProcess, tr, possibleEndOfText, growArgs)
+        }
+    }
+*/
+    private fun doNoTransitionsTaken(head: GrowingNodeIndex) {
+        graph.dropStackWithHead(head)
+        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped stack with Head: $head" }
+    }
+
+    /**
+     *  GOAL
+     */
+    private fun doGoal(
+        head: GrowingNodeIndex, previous: GrowingNodeIndex?,
+        transition: Transition, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs
+    ): Boolean {
         return when {
-            //null == match -> curGn
+            growArgs.nonEmptyWidthOnly -> false
+            // heightGraftOnly includes goal so do it
+            else -> {
+                if (transition.runtimeGuard.execute(previous!!.numNonSkipChildren)) {
+                    val runtimeLhs = head.runtimeState.runtimeLookaheadSet //FIXME: Use previous runtimeLookahead ?
+                    val lhWithMatch = transition.lookahead.filter { lh -> //TODO: should always be only one I think!!
+                        possibleEndOfText.any { eot ->
+                            runtimeLhs.any { rt ->
+                                this.graph.isLookingAt(lh.guard, eot, rt, head.nextInputPositionAfterSkip)
+                            }
+                        }
+                    }
+                    val hasLh = lhWithMatch.isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {
+                    if (growArgs.noLookahead || hasLh) {
+                        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head, taking: $transition" }
+                        this.graph.growNextChild(
+                            head = head,
+                            previous = previous,
+                            prevPrev = null,
+                            newParentState = transition.to,
+                            newParentRuntimeLookaheadSet = runtimeLhs,
+                            buildSPPT = growArgs.buildTree
+                        )
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            }
+        }
+    }
+
+    /**
+     * WIDTH
+     * consumes input if
+     *  - 'to' can be consumed from input &
+     *  - lookahead matches
+     *  will consume skip after 'to' is consumed,
+     *  check for lookahead after consuming skip
+     * return true is grown
+     */
+    private fun doWidth(
+        head: GrowingNodeIndex, transition: Transition, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs
+    ): Boolean {
+        // Use current/growing runtimeLookahead
+        return when {
+            growArgs.heightGraftOnly -> false
+            growArgs.nonEmptyWidthOnly && transition.to.firstRule.isEmptyTerminal -> false
+            else -> {
+                val l = this.graph.input.findOrTryCreateLeaf(transition.to.firstRule, head.nextInputPosition)
+                if (null != l) {
+                    val lh = transition.lookahead.map { it.guard }.reduce { acc, e -> acc.union(this.stateSet, e) } //TODO:reduce to 1 in SM
+                    val runtimeLhs = head.runtimeState.runtimeLookaheadSet
+
+                    val skipData = parseSkipIfAny(l.nextInputPosition, runtimeLhs, lh, possibleEndOfText, growArgs)
+                    val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: l.nextInputPosition
+
+                    val hasLh = possibleEndOfText.any { eot ->
+                        runtimeLhs.any { rt ->
+                            this.graph.isLookingAt(lh, eot, rt, nextInputPositionAfterSkip)
+                        }
+                    }
+                    if (transition.to.firstRule.isEmptyTerminal.not()) {
+                        recordLastToTryWidthTrans(head)
+                    }
+                    if (growArgs.noLookahead || hasLh) {
+                        val startPosition = l.startPosition
+                        val nextInputPosition = l.nextInputPosition
+                        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head, taking: $transition" }
+                        this.graph.pushToStackOf(head, transition.to, setOf(LookaheadSet.EMPTY), startPosition, nextInputPosition, skipData)
+                    } else {
+                        val pos = if (null != skipParser && skipParser.failedReasons.isNotEmpty()) {
+                            skipParser.failedReasons.maxOf { it.position }
+                        } else {
+                            nextInputPositionAfterSkip
+                        }
+                        recordFailedWidthLH(pos, transition, runtimeLhs, possibleEndOfText)
+                        false
+                    }
+                } else {
+                    recordFailedWidthTo(head.nextInputPosition, transition)
+                    false
+                }
+            }
+        }
+    }
+
+    // Use previous runtimeLookahead
+    private fun doHeight(
+        head: GrowingNodeIndex, previous: GrowingNodeIndex?, transition: Transition, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs
+    ): Boolean {
+        return when {
+            growArgs.nonEmptyWidthOnly -> false
+            else -> {
+                val runtimeLhs = previous!!.runtimeState.runtimeLookaheadSet
+                val lhWithMatch = transition.lookahead.flatMap { lh ->
+                    possibleEndOfText.flatMap { eot ->
+                        runtimeLhs.mapNotNull { rt ->
+                            val b = this.graph.isLookingAt(lh.guard, eot, rt, head.nextInputPositionAfterSkip) //TODO: if(transition.lookaheadGuard.includesUP) {
+                            if (b) Triple(eot, rt, lh.up) else null
+                        }
+                    }
+                }
+                val hasLh = lhWithMatch.isNotEmpty()
+                return if (growArgs.noLookahead || hasLh) { //TODO: don't resolve EOT
+                    val newRuntimeLhs = if (growArgs.noLookahead) {
+                        transition.lookahead.flatMap { lh ->
+                            val up = lh.up
+                            possibleEndOfText.flatMap { eot ->
+                                runtimeLhs.map { rt ->
+                                    if (up.includesRT || up.includesEOT) {
+                                        //this.stateSet.createWithParent(up, rt)
+                                        this.stateSet.createLookaheadSet(up.resolve(eot, rt))
+                                    } else {
+                                        up
+                                    }
+                                }
+                            }
+                        }.toSet()
+                    } else {
+                        lhWithMatch.map { t ->
+                            val eot = t.first
+                            val rt = t.second
+                            val up = t.third
+                            if (up.includesRT || up.includesEOT) {
+                                //this.stateSet.createWithParent(up, rt)
+                                this.stateSet.createLookaheadSet(up.resolve(eot, rt))
+                            } else {
+                                up
+                            }
+                        }.toSet()
+                    }
+                    if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head, taking: $transition" }
+                    this.graph.createWithFirstChild(
+                        head = head,
+                        previous = previous,
+                        parentState = transition.to,
+                        parentRuntimeLookaheadSet = newRuntimeLhs,
+                        buildSPPT = growArgs.buildTree
+                    )
+                } else {
+                    recordFailedHeightLh(head.nextInputPosition, transition, runtimeLhs, possibleEndOfText)
+                    false
+                }
+            }
+        }
+    }
+
+    // Use previous runtimeLookahead
+    private fun doGraft(
+        head: GrowingNodeIndex, previous: GrowingNodeIndex?, prevPrev: GrowingNodeIndex?,
+        transition: Transition, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs
+    ): Boolean {
+        return when {
+            growArgs.nonEmptyWidthOnly -> false
+            else -> {
+                if (transition.runtimeGuard.execute(previous!!.numNonSkipChildren)) {
+                    val runtimeLhs = previous.runtimeState.runtimeLookaheadSet
+                    val lhWithMatch = matchedLookahead(head.nextInputPositionAfterSkip, transition.lookahead, possibleEndOfText, runtimeLhs)
+                    val hasLh = lhWithMatch.first//isNotEmpty()//TODO: if(transition.lookaheadGuard.includesUP) {
+                    if (growArgs.noLookahead || hasLh) {
+                        if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head, taking: $transition" }
+                        this.graph.growNextChild(
+                            head = head,
+                            previous = previous,
+                            prevPrev = prevPrev,
+                            newParentState = transition.to,
+                            newParentRuntimeLookaheadSet = runtimeLhs,
+                            buildSPPT = growArgs.buildTree
+                        )
+                    } else {
+                        recordFailedGraftLH(head.nextInputPosition, transition, runtimeLhs, possibleEndOfText)
+                        false
+                    }
+                } else {
+                    recordFailedGraftRTG(head.nextInputPosition, transition, previous.numNonSkipChildren)
+                    false
+                }
+            }
+        }
+    }
+
+    fun parseSkipIfAny(atPosition: Int, runtimeLhs: Set<LookaheadSet>, lh: LookaheadSet, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): TreeDataComplete? {
+
+        return if (null == skipParser) {
+            //this is a skipParser, so no skipData
+            null
+        } else {
+            val skipLh = if (lh.includesEOT || lh.includesRT) {
+                //possibleEndOfText.map { eot -> this.stateSet.createWithParent(lh, eot) }.toSet()
+                runtimeLhs.flatMap { rt -> possibleEndOfText.map { eot -> this.stateSet.createLookaheadSet(lh.resolve(eot, rt)) } }.toSet()
+            } else {
+                setOf(lh)
+            }
+            this.tryParseSkipUntilNone(skipLh, atPosition, growArgs)
+        }
+    }
+
+    private fun tryParseSkipUntilNone(possibleEndOfSkip: Set<LookaheadSet>, startPosition: Int, growArgs: GrowArgs): TreeDataComplete? {
+        val key = Pair(startPosition, possibleEndOfSkip)
+        return if (_skip_cache.containsKey(key)) {
+            // can cache null as a valid result
+            _skip_cache[key]
+        } else {
+            val skipData = when (skipParser) { //TODO: raise test to outer level
+                null -> null
+                else -> tryParseSkip(possibleEndOfSkip, startPosition, growArgs)
+            }
+            _skip_cache[key] = skipData
+            skipData
+        }
+    }
+
+    private fun tryParseSkip(possibleEndOfSkip: Set<LookaheadSet>, startPosition: Int, growArgs: GrowArgs): TreeDataComplete? {//, lh:Set<RuntimeRule>): List<SPPTNode> {
+        if (Debug.OUTPUT_RUNTIME) println("*** Start skip Parser")
+        skipParser!!.reset()
+        skipParser.start(startPosition, possibleEndOfSkip)
+        do {
+            skipParser.grow3(possibleEndOfSkip, growArgs)
+        } while (skipParser.graph.canGrow && (skipParser.graph.goals.isEmpty() || skipParser.graph.goalMatchedAll.not()))
+        //TODO: get longest skip match
+        if (Debug.OUTPUT_RUNTIME) println("*** End skip Parser")
+        return when {
             skipParser.graph.goals.isEmpty() -> null
             else -> {
-                val match = skipParser.graph.goals.sortedBy { it.matchedTextLength }.last()
-                val skipNode = match
-                skipNode
+                skipParser.graph.treeData.complete
             }
         }
     }
 
-    private fun doEmbedded(curGn: GrowingNode, previousSet: Set<PreviousInfo>, transition: Transition, noLookahead: Boolean) {
-        val embeddedRule = transition.to.runtimeRules.first() // should only ever be one
-        val endingLookahead = transition.lookaheadGuard.content
-        val embeddedRuntimeRuleSet = embeddedRule.embeddedRuntimeRuleSet ?: error("Should never be null")
-        val embeddedStartRule = embeddedRule.embeddedStartRule ?: error("Should never be null")
-        val embeddedS0 = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedStartRule, this.stateSet.automatonKind).startState
+    internal fun createEmbeddedRuntimeParser(
+        possibleEndOfText: Set<LookaheadSet>,
+        runtimeLookaheadSet: Set<LookaheadSet>,
+        transition: Transition
+    ): Pair<RuntimeParser, Set<LookaheadSet>> {
+        val embeddedRhs = transition.to.runtimeRules.first().rhs as RuntimeRuleRhsEmbedded // should only ever be one
+        val embeddedRuntimeRuleSet = embeddedRhs.embeddedRuntimeRuleSet
+        val embeddedStartRule = embeddedRhs.embeddedStartRule
+        val embeddedS0 = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedStartRule.tag, this.stateSet.automatonKind).startState
         val embeddedSkipStateSet = embeddedRuntimeRuleSet.skipParserStateSet
-        val embeddedParser = RuntimeParser(embeddedS0.stateSet, embeddedSkipStateSet, embeddedStartRule, this.input)
-        val startPosition = curGn.nextInputPosition
-        //val startLocation = InputLocation(startPosition, gn.lastLocation.column, gn.lastLocation.line, 0) //TODO: compute correct line and column
-        val embeddedPossibleEOT = embeddedS0.stateSet.createLookaheadSet(
-            transition.lookaheadGuard.content.union(
-                this.skipStateSet?.runtimeRuleSet?.firstTerminals?.flatMap { it }?.toSet() ?: emptySet()
-            )
-        )
-
-        embeddedParser.start(startPosition, embeddedPossibleEOT)
-        var seasons = 1
-        var maxNumHeads = embeddedParser.graph.growingHead.size
-        do {
-            embeddedParser.grow(false)
-            seasons++
-            maxNumHeads = max(maxNumHeads, embeddedParser.graph.growingHead.size)
-        } while (embeddedParser.graph.canGrow && (embeddedParser.graph.goals.isEmpty() || embeddedParser.graph.goalMatchedAll.not()))
-        val match = embeddedParser.graph.longestMatch(seasons, maxNumHeads, true) as SPPTBranch?
-        if (match != null) {
-            //TODO: parse skipNodes
-            val skipLh = this.stateSet.createWithParent(transition.lookaheadGuard, curGn.lookahead)
-            val skipNodes = this.tryParseSkipUntilNone(skipLh, match.nextInputPosition, noLookahead)//, lh) //TODO: does the result get reused?
-            val nextInput = skipNodes.lastOrNull()?.nextInputPosition ?: match.nextInputPosition
-
-            this.graph.pushToStackOf(transition.to, curGn.lookahead, match, curGn, previousSet, skipNodes)
-            //SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
-        } else {
-            // do nothing, could not parse embedded
-        }
-    }
-
-    internal fun transitionsFrom(state: ParserState, previous: Set<ParserState>?): Set<Transition> {
-        return when (state.runtimeRules.first().kind) {//FIXME
-            RuntimeRuleKind.GOAL -> state.transitions(null)
-            RuntimeRuleKind.TERMINAL -> previous!!.flatMap { prevState -> state.transitions(prevState) }
-            RuntimeRuleKind.NON_TERMINAL -> previous!!.flatMap { prevState -> state.transitions(prevState) }
-            RuntimeRuleKind.EMBEDDED -> previous!!.flatMap { prevState -> state.transitions(prevState) }
+        val embeddedParser = RuntimeParser(embeddedS0.stateSet, embeddedSkipStateSet, embeddedStartRule, this.input, _issues)
+        val skipTerms = this.skipStateSet?.firstTerminals ?: emptySet()
+        val endingLookahead = transition.lookahead.first().guard //should ony ever be one
+        val embeddedPossibleEOT = endingLookahead.unionContent(embeddedS0.stateSet, skipTerms)
+        // Embedded text could end with this.skipTerms or lh from transition
+        val embeddedEOT = runtimeLookaheadSet.flatMap { rt ->
+            possibleEndOfText.map { eot ->
+                embeddedPossibleEOT.resolve(eot, rt).lhs(embeddedS0.stateSet)
+            }
         }.toSet()
+        return Pair(embeddedParser, embeddedEOT)
     }
 
-    internal fun transitionsEndingInNonEmptyFrom(state: ParserState, previous: Set<ParserState>?): Set<Transition> {
-        val tr = transitionsFrom(state, previous)
-        val neTr = tr.flatMap {
-            val toState = it.to
-            if (toState.runtimeRules.any { it.isEmptyRule }) {
-                val prev = setOf(it.from)
-                transitionsEndingInNonEmptyFrom(toState, prev)
-            } else {
-                listOf(it)
+    // Use current/growing runtimeLookahead
+    internal fun doEmbedded(
+        head: GrowingNodeIndex, transition: Transition, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs
+    ): Boolean {
+        return when {
+            growArgs.heightGraftOnly -> false
+            //TODO: what about an empty embedded ?
+            else -> {
+                val (embeddedParser, embeddedEOT) = createEmbeddedRuntimeParser(possibleEndOfText, head.runtimeState.runtimeLookaheadSet, transition)
+                val endingLookahead = transition.lookahead.first().guard //should ony ever be one
+                val startPosition = head.nextInputPosition
+                embeddedParser.start(startPosition, embeddedEOT)
+                var seasons = 1
+                var maxNumHeads = embeddedParser.graph.numberOfHeads
+                do {
+                    embeddedParser.grow3(embeddedEOT, growArgs)
+                    seasons++
+                    maxNumHeads = max(maxNumHeads, embeddedParser.graph.numberOfHeads)
+                } while (embeddedParser.graph.canGrow && (embeddedParser.graph.goals.isEmpty() || embeddedParser.graph.goalMatchedAll.not()))
+                //val match = embeddedParser.longestMatch(seasons, maxNumHeads, true) as SPPTBranch?
+                val match = embeddedParser.graph.treeData.complete
+                if (match.root != null) {
+                    val embeddedS0 = embeddedParser.stateSet.startState
+                    val ni = match.nextInputPosition!! // will always have value if root not null
+                    //TODO: parse skipNodes
+                    val skipLh = head.runtimeState.runtimeLookaheadSet.flatMap { rt ->
+                        possibleEndOfText.map { eot ->
+                            endingLookahead.resolve(eot, rt).lhs(embeddedS0.stateSet)
+                        }
+                    }.toSet()
+                    val skipData = this.tryParseSkipUntilNone(skipLh, ni, growArgs)//, lh) //TODO: does the result get reused?
+                    //val nextInput = skipData?.nextInputPosition ?: ni
+                    if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head, taking: $transition" }
+                    this.graph.pushEmbeddedToStackOf(
+                        head,
+                        transition.to,
+                        head.runtimeState.runtimeLookaheadSet,
+                        startPosition,
+                        ni,
+                        match,
+                        skipData
+                    )
+                } else {
+                    //  could not parse embedded
+                    this.embeddedLastDropped[transition] = embeddedParser.lastDropped
+                    recordFailedEmbedded(head.nextInputPosition, transition, embeddedParser.failedReasons)
+                    false
+                }
             }
         }
-        return neTr.toSet()
     }
+
+    private fun recordLastToTryWidthTrans(head: GrowingNodeIndex) {
+        this.lastToTryWidthTrans.add(head)
+    }
+
+    private fun recordFailedWidthTo(position: Int, transition: Transition) {
+        failedReasons.add(FailedParseReasonWidthTo(position, transition))
+    }
+
+    private fun recordFailedWidthLH(position: Int, transition: Transition, runtimeLhs: Set<LookaheadSet>, possibleEndOfText: Set<LookaheadSet>) {
+        failedReasons.add(FailedParseReasonLookahead(position, transition, runtimeLhs, possibleEndOfText))
+    }
+
+    private fun recordFailedEmbedded(position: Int, transition: Transition, failedEmbeddedReasons: List<FailedParseReason>) {
+        failedReasons.add(FailedParseReasonEmbedded(position, transition, failedEmbeddedReasons))
+    }
+
+    private fun recordFailedHeightLh(position: Int, transition: Transition, runtimeLhs: Set<LookaheadSet>, possibleEndOfText: Set<LookaheadSet>) {
+        failedReasons.add(FailedParseReasonLookahead(position, transition, runtimeLhs, possibleEndOfText))
+    }
+
+    private fun recordFailedGraftRTG(position: Int, transition: Transition, prevNumNonSkipChildren: Int) {
+        failedReasons.add(FailedParseReasonGraftRTG(position, transition, prevNumNonSkipChildren))
+    }
+
+    private fun recordFailedGraftLH(position: Int, transition: Transition, runtimeLhs: Set<LookaheadSet>, possibleEndOfText: Set<LookaheadSet>) {
+        failedReasons.add(FailedParseReasonLookahead(position, transition, runtimeLhs, possibleEndOfText))
+    }
+
+    /*
+    private fun growNormalHeightOrGraftOnly(nextToProcess: ParseGraph.Companion.NextToProcess, possibleEndOfText: Set<LookaheadSet>, noLookahead: Boolean): Boolean {
+        val toDropData = mutableSetOf<GrowingNodeIndex>()
+        val toDropHead = mutableSetOf<GrowingNodeIndex>()
+        var grown = false
+        for (toProcess in nextToProcess.triples) {
+            val g = this.growWithPrev(toProcess, possibleEndOfText, noLookahead, false)
+            if (g) {
+                grown = true
+            } else {
+                //toDropHead.addIfNotNull(toProcess.remainingHead)
+                //toDropData.addIfNotNull(toProcess.previous)
+                //toDropData.addIfNotNull(toProcess.remainingHead)
+            }
+        }
+        if (grown.not()) {
+            //nothing was grown, so drop data for growingHead also
+            toDropData.add(nextToProcess.growingNode)
+            //TODO: maybe also drop other things!
+
+        } else {
+            // growingHead must have grown with one of the previous
+        }
+        for (hd in toDropHead) {
+            graph.dropHead(hd)
+            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped Head: $hd" }
+        }
+        for (dd in toDropData) {
+            graph.dropData(dd)
+            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped Data: $dd" }
+        }
+        return grown
+    }
+*/
 }

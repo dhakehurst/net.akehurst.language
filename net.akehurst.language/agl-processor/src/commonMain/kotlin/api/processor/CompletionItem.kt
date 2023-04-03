@@ -16,10 +16,15 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.grammar.Rule
+enum class CompletionItemKind {
+	LITERAL,
+	PATTERN,
+	SEGMENT
+}
 
 data class CompletionItem(
-	val rule:Rule,
+	val kind: CompletionItemKind,
+	val ruleName:String,
 	val text: String
 ){
 }

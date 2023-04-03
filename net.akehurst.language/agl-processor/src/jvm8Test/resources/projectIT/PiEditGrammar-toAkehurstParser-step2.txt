@@ -1,0 +1,136 @@
+namespace ProjectIt
+
+grammar BasicStuff {
+
+	classifierReference = var
+
+	langExpression = functionExpression
+				   | instanceExpression
+				   | expression                
+				   | numberliteral    
+
+	instanceExpression = var ':' var
+
+	expression = var dotExpression
+				| var
+
+	dotExpression = '.' var dotExpression?  
+
+	functionExpression = var "(" ( langExpression ("," langExpression )* )?	")" dotExpression?
+
+	WHITESPACE_SKIPPED  		= (([ \t\n\r]) | (SingleLineComment) | (MultiLineComment) )*
+	var 						= varLetter identifierChar*
+	string              		= (char)*
+	varLetter           		= [a-zA-Z]
+	identifierChar      		= [a-zA-Z0-9_$] // any char but not /.,!?@~%^&*-=+(){}"':;<>?[]\/
+	anyChar             		= [*a-zA-Z0-9' /\-[\]\|+<>=#$_.,!?@~%^&*-=+(){}:;<>?]
+	number              		= [0-9]
+	numberliteral       		= number+
+	char
+	  = unescaped
+	  / escape
+		(
+			'"'
+		  / "\\"
+		  / "/"
+		  / "|"
+		  / "["
+		  / "]"
+		  / "{"
+		  / "}"
+		  / "$"
+		  / "b" 
+		  / "f" 
+		  / "n" 
+		  / "r" 
+		  / "t" 
+		  / "u" $(HEXDIG HEXDIG HEXDIG HEXDIG)
+		)
+
+	escape
+	  = "\\"
+
+	unescaped
+	  = [^\0-\x1F\x22\x5C]
+}
+
+
+grammar TextWithoutSpecialChars {
+	// This rule parses text until one of the special starter chars or string is encountered.
+	textBut  = anyCharBut+
+
+	// SPECIALS !!!
+	// Note that these chars can still be escaped, through the 'char' rule in the BasicStuff grammar
+	// The following are excluded:
+	// PROP_START     			= "${"
+	// PROJECTION_BEGIN        	= "["
+	// PROJECTION_END          	= "]"
+	// PROJECTION_SEPARATOR    	= "|"
+	anyCharBut = !("${" | newline | "[" | "|" | "]") char
+
+	newline     = "\r"? "\n"
+}
+
+grammar PropertyProjection {
+	leaf PROP_START      = "${"
+	leaf PROP_END        = "}"	
+	leaf listDirection 	 = ("horizontal" | "vertical")
+	leaf listInfoType 	 = ("separator" | "terminator" | "initiator")
+
+	property_projection = singleProperty  	/* example: ${self.address} */
+		| listProperty						/* example: ${self.parameters horizontal separator[,]} */
+		| booleanProperty					/* example: ${self.isCompany [COMPANY | PERSON]} */
+
+	singleProperty = PROP_START WHITESPACE_SKIPPED
+							 "self."? var (":" var )? WHITESPACE_SKIPPED
+						  PROP_END
+
+	listProperty = PROP_START WHITESPACE_SKIPPED
+							 "self."? var (":" var )? WHITESPACE_SKIPPED listInfo? WHITESPACE_SKIPPED
+						  PROP_END
+
+	booleanProperty = PROP_START WHITESPACE_SKIPPED
+							 "self."? var (":" var )? WHITESPACE_SKIPPED keywordDecl? WHITESPACE_SKIPPED
+						  PROP_END
+						  
+	keywordDecl = PROJECTION_BEGIN textBut (PROJECTION_SEPARATOR textBut )? PROJECTION_END
+	
+	listInfo =  listDirection? (listInfoType "[" textBut "]" )? WHITESPACE_SKIPPED
+
+}
+
+grammar Projection {
+	leaf PROJECTION_BEGIN        = "["
+	leaf PROJECTION_END          = "]"
+	leaf PROJECTION_SEPARATOR    = "|"
+	leaf WHITESPACE_RELEVANT = [ \t]+
+
+	classifierProjection =
+				classifierReference "{"
+					projection
+				"}"
+
+	/* everything between PROJECTION_BEGIN and PROJECTION_END is whitespace sensitive */
+	projection = PROJECTION_BEGIN lineWithOptional* PROJECTION_END
+
+	lineWithOptional = (WHITESPACE_RELEVANT | textItem | optionalProjection | property_projection | superProjection | newline )+
+
+	lineWithOutOptional = (WHITESPACE_RELEVANT | textItem | property_projection | superProjection | newline )+
+
+	textItem = anyCharBut+ /* this rule should parse all chars until one of the special chars is encountered (see SPECIALS) */
+
+	optionalProjection = PROJECTION_BEGIN "?" lineWithOutOptional* PROJECTION_END
+
+	superProjection = PROJECTION_BEGIN "=>" WHITESPACE_RELEVANT classifierReference (":" var )? WHITESPACE_RELEVANT PROJECTION_END
+
+}
+
+grammar EditorDefinition {
+	Editor_Definition = projectionGroup
+
+	projectionGroup = WHITESPACE_SKIPPED "editor" WHITESPACE_SKIPPED var WHITESPACE_SKIPPED ("precedence" WHITESPACE_SKIPPED numberliteral WHITESPACE_SKIPPED )?
+			classifierProjection* WHITESPACE_SKIPPED
+}
+
+
+

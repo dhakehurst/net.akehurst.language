@@ -18,12 +18,12 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.GrowingChildren
-import net.akehurst.language.agl.runtime.graph.GrowingNode
 import net.akehurst.language.agl.runtime.structure.RuleOptionId
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.sppt.SPPTNodeFromInputAbstract
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.sppt.*
+import net.akehurst.language.api.sppt.SPPTBranch
+import net.akehurst.language.api.sppt.SPPTException
+import net.akehurst.language.api.sppt.SPPTLeaf
+import net.akehurst.language.api.sppt.SPPTNode
 
 //TODO: currently this has to be public, because otherwise kotlin does not
 // use the non-mangled names for properties
@@ -38,7 +38,6 @@ import net.akehurst.language.api.sppt.*
 
     // option -> children
     internal var grownChildrenAlternatives = mutableMapOf<Int, GrowingChildren>()
-
 
     // --- SPPTBranch ---
 
@@ -133,13 +132,11 @@ import net.akehurst.language.api.sppt.*
         var r = ""
         r += this.startPosition.toString() + ","
         r += this.nextInputPosition
-        r += ":" + tag + "(" + this.runtimeRule.number + ")"
+        r += ":" + tag + "(" + this.runtimeRule.ruleNumber + ")"
         return r
     }
 
-    override fun hashCode(): Int {
-        return this.identity.hashCode()
-    }
+    override fun hashCode(): Int = (((this.runtimeRuleSetNumber*31)+this.runtimeRuleNumber)*31)+this.startPosition
 
     override fun equals(other: Any?): Boolean {
         if (other !is SPPTBranch) {

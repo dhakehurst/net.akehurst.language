@@ -18,9 +18,10 @@ package net.akehurst.language.parser.scanondemand.multi
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.parser.ParserTerminatedException
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
-import kotlin.test.fail
+import kotlin.test.assertFailsWith
 
 internal class test_leftRecursive : test_ScanOnDemandParserAbstract() {
 
@@ -39,28 +40,66 @@ internal class test_leftRecursive : test_ScanOnDemandParserAbstract() {
 
     @Test
     fun a() {
-        fail("this does not terminate if we parse until !canGrow, ok it parse until first goal found!")
         val goal = "S"
         val sentence = "a"
 
         val expected = """
-            S|1 { 'a' }
+            S { 'a' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
-
     @Test
-    fun t() {
-        TODO()
-        fail("TODO")
+    fun aa() {
+        val goal = "S"
+        val sentence = "aa"
+
+        val expected = """
+            S { P {
+              S { 'a' }
+              S { 'a' }
+            } }
+        """.trimIndent()
+
+//        assertFailsWith<ParserTerminatedException> {
+            super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = arrayOf(expected)
+            )
+//        }
     }
 
+    @Test
+    fun aaa() {
+        val goal = "S"
+        val sentence = "aaa"
+
+        val expected = """
+            S { P {
+              S { 'a' }
+              S { 'a' }
+              S { 'a' }
+            } }
+        """.trimIndent()
+
+//        assertFailsWith<ParserTerminatedException> {
+            super.test(
+                rrs = rrs,
+                goal = goal,
+                sentence = sentence,
+                expectedNumGSSHeads = 1,
+                expectedTrees = arrayOf(expected)
+            )
+ //       }
+    }
 }

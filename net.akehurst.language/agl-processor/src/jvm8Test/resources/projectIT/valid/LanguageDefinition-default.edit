@@ -1,0 +1,83 @@
+editor default
+
+Attribute {
+    [ ${name} : ${declaredType} ]
+}
+Entity {
+    [
+        entity ${name} [? base ${baseEntity}] {
+            ${construc}
+            list of references: ${listOfReferences}
+            ${attributes }
+            ${methods vertical }
+        }
+    ]
+}
+ExampleUnit {
+        [
+        unit ${name} {
+            ${entities vertical }
+        unit level methods:
+            ${methods vertical}
+        }
+        ]
+}
+Method {
+    [
+        method ${name} ( ${parameters} ): ${declaredType} {
+            ${body}
+        }
+    ]
+}
+Parameter {
+     [${name} : ${declaredType}]
+}
+MethodCallExpression {
+    [CALL ${methodDefinition} ( ${args horizontal separator[,] } )]
+}
+SumExpression {
+    [sum from ${variable} = ${from} to ${to} of ${body}]
+}
+GroupedExpression {
+    [( ${inner} )]
+}
+LoopVariableRef {
+    [ ${variable} ]
+}
+LoopVariable {
+    [ ${name} ]
+}
+NumberLiteralExpression {
+    [${value}]
+}
+StringLiteralExpression {
+    ['${value}']
+}
+BooleanLiteralExpression {
+    [ ${value} ]
+}
+AttributeRef {
+    [ ${attribute} ]
+}
+ParameterRef {
+    [ ${parameter} [? . ${appliedfeature}] ]
+}
+IfExpression {
+        [
+        if (${condition}) then
+            ${whenTrue}
+        else
+            ${whenFalse}
+        endif
+        ]
+}
+AbsExpression {
+    [ \| ${expr} \| ]
+}
+
+//IfExpression {
+//        [
+//        ${ condition } ? ${ whenTrue } : ${whenFalse}
+//        ]
+//    trigger = "if"
+//}

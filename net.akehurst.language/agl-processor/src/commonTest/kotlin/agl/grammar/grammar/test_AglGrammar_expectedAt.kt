@@ -18,6 +18,7 @@ package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.api.processor.CompletionItemKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -27,78 +28,78 @@ class test_AglGrammar_expectedAt {
     fun empty() {
 
         val sentence = ""
-        val actual = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 0, 1)
+        val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, 0, 1)
 
         val expected = listOf<CompletionItem>(
-                CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("namespace"), "namespace")
+            CompletionItem(CompletionItemKind.LITERAL,"'namespace'", "namespace")
         )
 
-        assertEquals(expected, actual)
+        assertEquals(expected, result.items)
     }
 
     @Test
     fun WS() {
 
         val sentence = " "
-        val actual = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 0, 1)
+        val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, 0, 1)
 
         val expected = listOf<CompletionItem>(
-                CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("namespace"), "namespace")
+            CompletionItem(CompletionItemKind.LITERAL,"'namespace'", "namespace")
         )
 
-        assertEquals(expected, actual)
+        assertEquals(expected, result.items)
     }
 
     @Test
     fun namespace() {
 
         val sentence = "namespace"
-        val actual = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 9, 1)
+        val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, 9, 1)
 
         val expected = listOf<CompletionItem>(
-                CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("IDENTIFIER"), "IDENTIFIER")
+            CompletionItem(CompletionItemKind.PATTERN,"IDENTIFIER", "[a-zA-Z_][a-zA-Z_0-9-]*")
         )
 
-        assertEquals(expected, actual)
+        assertEquals(expected, result.items)
     }
 
     @Test
     fun namespace_WS() {
 
         val sentence = "namespace "
-        val actual = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 10, 1)
+        val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, 10, 1)
 
         val expected = listOf<CompletionItem>(
-                CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("IDENTIFIER"), "IDENTIFIER")
+            CompletionItem(CompletionItemKind.PATTERN,"IDENTIFIER", "[a-zA-Z_][a-zA-Z_0-9-]*")
         )
 
-        assertEquals(expected, actual)
+        assertEquals(expected, result.items)
     }
 
     @Test
     fun namespace_WS_n() {
 
         val sentence = "namespace n"
-        val actual = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, 11, 1)
+        val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, 11, 1)
 
         val expected = listOf<CompletionItem>(
-                CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("qualifiedName"), "."),
-                CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("grammar"), "grammar")
+            CompletionItem(CompletionItemKind.LITERAL,"'.'", "."),
+            CompletionItem(CompletionItemKind.LITERAL,"'grammar'", "grammar")
         )
 
-        assertEquals(expected, actual)
+        assertEquals(expected, result.items)
     }
 
     @Test
     fun namespace_WS_n_grammar() {
 
         val sentence = "namespace n grammar"
-        val actual = Agl.registry.agl.grammar.processor!!.expectedAt(sentence, sentence.length, 1)
+        val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, sentence.length, 1)
 
         val expected = listOf<CompletionItem>(
-                CompletionItem(Agl.registry.agl.grammar.processor!!.grammar.findAllRule("IDENTIFIER"), "IDENTIFIER")
+            CompletionItem(CompletionItemKind.PATTERN,"IDENTIFIER", "[a-zA-Z_][a-zA-Z_0-9-]*")
         )
 
-        assertEquals(expected, actual)
+        assertEquals(expected, result.items)
     }
 }

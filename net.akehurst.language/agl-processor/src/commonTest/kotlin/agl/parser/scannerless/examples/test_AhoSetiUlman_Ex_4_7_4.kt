@@ -17,12 +17,12 @@
 package net.akehurst.language.parser.scanondemand.examples
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_AhoSetiUlman_Ex_4_7_4 : test_ScanOnDemandParserAbstract() {
 
@@ -37,99 +37,87 @@ internal class test_AhoSetiUlman_Ex_4_7_4 : test_ScanOnDemandParserAbstract() {
     // S3 = d c ;
     // S4 = b d a ;
     // A = d ;
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_a = b.literal("a")
-        val r_b = b.literal("b")
-        val r_c = b.literal("c")
-        val r_d = b.literal("d")
-        val r_A = b.rule("A").concatenation(r_d)
-        val r_S1 = b.rule("S1").concatenation(r_A, r_a)
-        val r_S2 = b.rule("S2").concatenation(r_b, r_A, r_c)
-        val r_S3 = b.rule("S3").concatenation(r_d, r_c)
-        val r_S4 = b.rule("S4").concatenation(r_b, r_d, r_a)
-        val r_S = b.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_S1, r_S2, r_S3, r_S4)
-        return b
+    private companion object {
+        val rrs = runtimeRuleSet {
+            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("S1")
+                ref("S2")
+                ref("S3")
+                ref("S4")
+            }
+            concatenation("S1") { ref("A"); literal("a") }
+            concatenation("S2") { literal("b"); ref("A"); literal("c") }
+            concatenation("S3") { literal("d"); literal("c") }
+            concatenation("S4") { literal("b"); literal("d"); literal("a") }
+            concatenation("A") { literal("d") }
+        }
+        val goal = "S"
     }
 
     @Test
     fun a_fails() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
-        }
-        assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(1, ex.location.column, "column is wrong")
-        assertEquals(setOf("'b'", "'d'"), ex.expected)
+        val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^a",setOf("'d'","'b'"))
+        ),issues.error)
     }
 
     @Test
     fun d_fails() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "d"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
-        }
-        assertEquals(1, ex.location.line, "line is wrong")
-        assertEquals(2, ex.location.column, "column is wrong")
-        assertEquals(setOf("'c'", "'a'"), ex.expected)
+        val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(1,2,1,1),"d^",setOf("'a'","'c'"))
+        ),issues.error)
     }
 
     @Test
     fun da() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "da"
 
         val expected = """
             S { S1 { A { 'd' } 'a' } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun bdc() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "bdc"
 
         val expected = """
             S|1 { S2 { 'b' A { 'd' } 'c' } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun dc() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "dc"
 
         val expected = """
             S|2 { S3 { 'd' 'c' } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun bda() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "bda"
 
         val expected = """
             S|3 { S4 { 'b' 'd' 'a' } }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
 }

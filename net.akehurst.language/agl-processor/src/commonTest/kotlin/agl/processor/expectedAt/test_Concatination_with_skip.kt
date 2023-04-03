@@ -30,7 +30,7 @@ class test_Concatination_with_skip {
                 S = 'a' 'b' 'c' 'd' ;
             }
         """.trimIndent()
-        val processor = Agl.processorFromString(grammarStr)
+        val processor = Agl.processorFromString<Any,Any>(grammarStr).processor!!
     }
 
     @Test
@@ -38,7 +38,7 @@ class test_Concatination_with_skip {
         val sentence = ""
         val position = 0
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
                 "a"
         )
@@ -50,7 +50,7 @@ class test_Concatination_with_skip {
         val sentence = " "
         val position = 0
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
@@ -62,7 +62,7 @@ class test_Concatination_with_skip {
         val sentence = " "
         val position = 1
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
@@ -74,7 +74,7 @@ class test_Concatination_with_skip {
         val sentence = "a"
         val position = 0
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
                 "a"
         )
@@ -86,7 +86,7 @@ class test_Concatination_with_skip {
         val sentence = " a"
         val position = 0
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
@@ -97,7 +97,7 @@ class test_Concatination_with_skip {
         val sentence = " a"
         val position = 1
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
@@ -109,7 +109,7 @@ class test_Concatination_with_skip {
         val sentence = " a"
         val position = 2
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "a"
         )
@@ -120,7 +120,7 @@ class test_Concatination_with_skip {
         val sentence = "a"
         val position = 1
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
                 "b"
         )
@@ -132,7 +132,7 @@ class test_Concatination_with_skip {
         val sentence = "ab"
         val position = 1
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
                 "b"
         )
@@ -144,7 +144,7 @@ class test_Concatination_with_skip {
         val sentence = "ab"
         val position = 2
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
             "c"
         )

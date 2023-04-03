@@ -54,12 +54,13 @@ internal class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
                 } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+            printAutomaton = true,
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -75,12 +76,12 @@ internal class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
                 } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -103,12 +104,12 @@ internal class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
         }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 }

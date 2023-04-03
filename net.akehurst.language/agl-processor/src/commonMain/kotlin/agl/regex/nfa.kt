@@ -16,8 +16,6 @@
 
 package net.akehurst.language.agl.regex
 
-import kotlin.properties.Delegates
-
 internal class State(
         val number: Int,
         val isSplit: Boolean
@@ -51,7 +49,7 @@ internal class CharacterMatcher(
         val max:Char = '\u0000',
         val options: Array<CharacterMatcher> = arrayOf(CharacterMatcher.EMPTY)
 ) {
-    companion object {
+    internal companion object {
         val EMPTY = CharacterMatcher(MatcherKind.EMPTY)
         val ANY = CharacterMatcher(MatcherKind.ANY)
         val END_OF_LINE_OR_INPUT = CharacterMatcher(MatcherKind.END_OF_LINE_OR_INPUT)
@@ -110,6 +108,7 @@ class CharacterRange(
     override fun toString(): String = "[$min-$max]"
 }
 */
+
 internal fun addNextStates(nextStates: MutableList<State>, next: State?): Boolean {
     //TODO: don't add duplicate states
     return if (null == next) {

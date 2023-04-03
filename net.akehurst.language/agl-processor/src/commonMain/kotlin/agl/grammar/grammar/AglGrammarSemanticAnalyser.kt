@@ -16,113 +16,180 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
+import net.akehurst.language.agl.api.automaton.ParseAction
+import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
+import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserException
-import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserItem
-import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserItemKind
+import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.processor.GrammarRegistry
 
 
-internal class AglGrammarSemanticAnalyser(
-) : SemanticAnalyser {
+class AglGrammarSemanticAnalyser(
+    val languageRegistry: GrammarRegistry
+) : SemanticAnalyser<List<Grammar>, GrammarContext> {
 
-    private val items = mutableListOf<SemanticAnalyserItem>()
+    companion object {
+        private const val ns = "net.akehurst.language.agl.grammar.grammar"
+        const val OPTIONS_KEY_AMBIGUITY_ANALYSIS = "$ns.ambiguity.analysis"
+    }
+
+    private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+    private var _locationMap: Map<*, InputLocation>? = null
+    private var _analyseAmbiguities = true
+
+    private fun issueWarn(item: Any, message: String, data: Any?) {
+        val location = this._locationMap?.get(item)
+        issues.warn(location, message, data)
+    }
+
+    private fun issueError(item: Any, message: String, data: Any?) {
+        val location = this._locationMap?.get(item)
+        issues.error(location, message, data)
+    }
 
     override fun clear() {
-        this.items.clear()
+        this.issues.clear()
+        _locationMap = null
     }
 
-    override fun <T> analyse(asm: T, locationMap: Map<Any, InputLocation>): List<SemanticAnalyserItem> {
-        return when (asm) {
-            is List<*> -> checkGrammar(asm as List<Grammar>, locationMap, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified Kind ?
-            else -> throw SemanticAnalyserException("This SemanticAnalyser is for an ASM of type List<Grammar>", null)
-        }
+    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
+        //TODO
+        return emptyList()
     }
 
-    private fun checkGrammar(grammarList: List<Grammar>, locationMap: Map<Any, InputLocation>, automatonKind:AutomatonKind): List<SemanticAnalyserItem> {
+    override fun analyse(asm: List<Grammar>, locationMap: Map<Any, InputLocation>?, context: GrammarContext?, options:Map<String,Any>): SemanticAnalysisResult {
+        this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
+        this._analyseAmbiguities = options[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? ?: true
+
+        asm.forEach { languageRegistry.register(it) }
+
+        checkGrammar(asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
+        return SemanticAnalysisResultDefault(issues)
+    }
+
+    private fun checkGrammar(grammarList: List<Grammar>, automatonKind: AutomatonKind) {
         grammarList.forEach { grammar ->
-            this.checkNonTerminalReferencesExist(grammar, locationMap)
-            if (items.isEmpty()) {
-                this.checkForAmbiguities(grammar, locationMap,automatonKind)
+            this.checkExtendsExist(grammar.extends)
+            this.checkNonTerminalReferencesExist(grammar)
+            if (issues.error.isEmpty() && _analyseAmbiguities) {
+                this.checkForAmbiguities(grammar, automatonKind)
             }
         }
-        return this.items
     }
 
-    private fun checkNonTerminalReferencesExist(grammar: Grammar, locationMap: Map<Any, InputLocation>) {
+    private fun checkExtendsExist(refs: List<GrammarReference>) {
+        for (it in refs) {
+            checkGrammarExists(it)
+        }
+    }
+
+    private fun checkGrammarExists(ref: GrammarReference) {
+        val g = languageRegistry.findGrammarOrNull(ref.localNamespace, ref.nameOrQName)
+        if (null == g) {
+            this.issueError(ref, "Grammar '${ref.nameOrQName}' not found", null)
+        } else {
+            ref.resolveAs(g)
+        }
+    }
+
+    private fun checkNonTerminalReferencesExist(grammar: Grammar) {
         grammar.rule.forEach {
             val rhs = it.rhs
-            this.checkRuleItem(grammar, locationMap, rhs)
+            this.checkRuleItem(grammar, rhs)
         }
     }
 
-    private fun checkRuleItem(grammar: Grammar, locationMap: Map<Any, InputLocation>, rhs: RuleItem) {
+    private fun checkRuleItem(grammar: Grammar, rhs: RuleItem) {
         when (rhs) {
-            is EmptyRule -> {
-            }
-            is Terminal -> {
-            }
+            is EmptyRule -> Unit
+            is Terminal -> Unit
+            is Embedded -> checkGrammarExists(rhs.embeddedGrammarReference)
             is NonTerminal -> {
-                try {
-                    rhs.referencedRule //will throw 'GrammarRuleNotFoundException' if rule not found
-                } catch (e: GrammarRuleNotFoundException) {
-                    val item = SemanticAnalyserItem(SemanticAnalyserItemKind.ERROR, locationMap[rhs], e.message!!)
-                    this.items.add(item)
+                val all = grammar.findAllNonTerminalRule(rhs.name)
+                when {
+                    all.isEmpty() -> issueError(rhs, "GrammarRule '${rhs.name}' not found in grammar '${grammar.name}'", null)
+                    all.size > 1 -> issueError(rhs, "More than one rule named '${rhs.name}' in grammar '${grammar.name}', have you remembered the 'override' modifier", null)
+                    else -> Unit //resolved
                 }
             }
+
             is Concatenation -> {
-                rhs.items.forEach { checkRuleItem(grammar, locationMap, it) }
+                rhs.items.forEach { checkRuleItem(grammar, it) }
             }
+
             is Choice -> {
-                rhs.alternative.forEach { checkRuleItem(grammar, locationMap, it) }
+                rhs.alternative.forEach { checkRuleItem(grammar, it) }
             }
+
             is Group -> {
-                rhs.choice.alternative.forEach { checkRuleItem(grammar, locationMap, it) }
+                rhs.choice.alternative.forEach { checkRuleItem(grammar, it) }
             }
+
             is SimpleList -> {
-                checkRuleItem(grammar, locationMap, rhs.item)
+                checkRuleItem(grammar, rhs.item)
             }
+
             is SeparatedList -> {
-                checkRuleItem(grammar, locationMap, rhs.item)
-                checkRuleItem(grammar, locationMap, rhs.separator)
+                checkRuleItem(grammar, rhs.item)
+                checkRuleItem(grammar, rhs.separator)
             }
         }
     }
 
-    private fun checkForAmbiguities(grammar: Grammar, locationMap: Map<Any, InputLocation>, automatonKind: AutomatonKind) {
-        val itemsSet = mutableSetOf<SemanticAnalyserItem>()
+    private fun checkForAmbiguities(grammar: Grammar, automatonKind: AutomatonKind) {
+        val itemsSet = mutableSetOf<LanguageIssue>()
         //TODO: find a way to reuse RuntimeRuleSet rather than re compute here
         val conv = ConverterToRuntimeRules(grammar)
         val rrs = conv.runtimeRuleSet
         //TODO: pass in goalRuleName
         val goalRuleName = grammar.rule.first { it.isSkip.not() }.name
-        val automaton = rrs.automatonFor(goalRuleName,automatonKind)
+        //TODO: optionally do this...as it builds the automaton..we don't always want to build it!
+        // and if built want to  reuse the build
+        val automaton = rrs.automatonFor(goalRuleName, automatonKind)
 
-        automaton.states.values.forEach {state ->
+        automaton.allBuiltStates.forEach { state ->
             val trans = state.outTransitions.allBuiltTransitions
             if (trans.size > 1) {
                 trans.forEach { tr1 ->
-                    trans.forEach {tr2 ->
+                    val same = trans.filter { tr2 ->
+                        when (tr2.action) {
+                            ParseAction.WIDTH,
+                            ParseAction.EMBED -> tr1.lookahead == tr2.lookahead && tr1.to == tr2.to && tr1.context.intersect(tr2.context).isNotEmpty()
+
+                            ParseAction.GOAL,
+                            ParseAction.HEIGHT,
+                            ParseAction.GRAFT -> tr1.lookahead == tr2.lookahead && tr1.context.intersect(tr2.context).isNotEmpty()
+                        }
+                    }
+                    same.forEach { tr2 ->
                         //TODO: should we compare actions here? prob not
-                        if (tr1 !== tr2 && tr1.action==tr2.action) {
-                            val lhi = tr1.lookaheadGuard.content.intersect(tr2.lookaheadGuard.content)
-                            if (lhi.isNotEmpty() || (tr1.lookaheadGuard.content.isEmpty() && tr2.lookaheadGuard.content.isEmpty())) {
-                                val ori1 = conv.originalRuleItemFor(tr1.to.runtimeRules.first()) //FIXME
-                                val ori2 = conv.originalRuleItemFor(tr2.to.runtimeRules.first()) //FIXME
-                                val or1 = ori1.owningRule
-                                val or2 = ori2.owningRule
-                                val lhStr = lhi.map { it.tag }
-                                val msg = "Ambiguity on $lhStr between ${or1.name} and ${or2.name}"
-                                itemsSet.add(SemanticAnalyserItem(SemanticAnalyserItemKind.WARNING, locationMap[ori1], msg))
-                                itemsSet.add(SemanticAnalyserItem(SemanticAnalyserItemKind.WARNING, locationMap[ori2], msg))
+                        if (tr1 !== tr2) {
+                            when {
+                                //(tr1.action == Transition.ParseAction.WIDTH && tr2.action == Transition.ParseAction.WIDTH && tr1.to != tr2.to) -> Unit // no error
+                                else -> {
+                                    val lhg1 = tr1.lookahead.map { it.guard.part }.reduce{ acc,it -> acc.intersect(it) }
+                                    val lhg2 = tr2.lookahead.map { it.guard.part }.reduce{ acc,it -> acc.intersect(it) }
+                                    val lhi = lhg1.intersect(lhg2)
+                                    if (lhi.isNotEmpty) {
+                                        val ori1 = conv.originalRuleItemFor(tr1.to.runtimeRules.first().runtimeRuleSetNumber, tr1.to.runtimeRules.first().ruleNumber) //FIXME
+                                        val ori2 = conv.originalRuleItemFor(tr2.to.runtimeRules.first().runtimeRuleSetNumber, tr2.to.runtimeRules.first().ruleNumber) //FIXME
+                                        val or1 = ori1.owningRule
+                                        val or2 = ori2.owningRule
+                                        val lhStr = lhi.fullContent.map { it.tag }
+                                        val msg = "Ambiguity on $lhStr with ${or2.name}"
+                                        issueWarn(ori1, msg, null)
+                                        //issueWarn(ori2, msg, null)
+                                    }
+                                }
                             }
                         }
                     }
                 }
+            } else {
+                //nothing to check
             }
         }
-        items.addAll(itemsSet)
     }
 }

@@ -18,22 +18,24 @@ package net.akehurst.language.parser.scanondemand.choicePriority
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
 
-    // S = ab_c > a_bc;
+    // S = C
+    // C = ab_c > a_bc;
     // ab_c = ab 'c'
     // a_bc = 'a' bc
     // ab = 'a' 'b'
     // bc = 'b' 'c'
     private companion object {
         val rrs = runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
+            concatenation("S") { ref("C") }
+            choice("C", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
                 ref("ab_c")
                 ref("a_bc")
             }
@@ -41,92 +43,87 @@ internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
             concatenation("a_bc") { literal("a"); ref("bc") }
             concatenation("ab") { literal("a"); literal("b") }
             concatenation("bc") { literal("b"); literal("c") }
+            preferenceFor("'a'") {
+                left("ab", setOf("'b'"))
+                left("a_bc", setOf("'b'"))
+            }
         }
+        val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val goal = "S"
+
         val sentence = ""
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
-        assertEquals(setOf("'a'"), ex.expected)
+        val (sppt,issues) = super.testFail(rrs,goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^", setOf("'a'"))
+        ),issues.error)
     }
 
     @Test
     fun a_fails() {
-        val goal = "S"
         val sentence = "a"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(2, ex.location.column)
-        assertEquals(setOf("'b'"), ex.expected)
+        val (sppt,issues) = super.testFail(rrs,goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(1,2,1,1),"a^", setOf("'b'"))
+        ),issues.error)
     }
 
     @Test
     fun b_fails() {
-        val goal = "S"
-        val sentence = "a"
+        val sentence = "b"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(2, ex.location.column)
-        assertEquals(setOf("'b'"), ex.expected)
+        val (sppt,issues) = super.testFail(rrs,goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^b", setOf("'a'"))
+        ),issues.error)
     }
 
     @Test
     fun c_fails() {
-        val goal = "S"
-        val sentence = "a"
+        val sentence = "c"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(2, ex.location.column)
-        assertEquals(setOf("'b'"), ex.expected)
+        val (sppt,issues) = super.testFail(rrs,goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^c", setOf("'a'"))
+        ),issues.error)
     }
 
     @Test
     fun ab_fails() {
-        val goal = "S"
         val sentence = "ab"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(3, ex.location.column)
-        assertEquals(setOf("'c'"), ex.expected)
+        val (sppt,issues) = super.testFail(rrs,goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(2,3,1,1),"ab^", setOf("'c'"))
+        ),issues.error)
     }
 
     @Test
     fun abc() {
-        val goal = "S"
         val sentence = "abc"
 
         val expected = """
-         S|1 { a_bc {
+         S { C { a_bc {
             'a'
             bc { 'b' 'c' }
-          } }
+          } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 2, //TODO: can this be 1 ?
-                expectedTrees = *arrayOf(expected)
+                expectedNumGSSHeads = 1,
+                expectedTrees = arrayOf(expected)
         )
     }
 

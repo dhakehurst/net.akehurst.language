@@ -28,12 +28,12 @@ internal class RegexMatcherImpl(
         val nfa: List<State>
 ) : RegexMatcher {
 
-    companion object {
+    internal companion object {
         val MATCH_STATE = State(-1, false)
         val ERROR_STATE = State(-2, false)
     }
 
-    val startStates:Array<State>
+    private val startStates:Array<State>
 
     init {
         val ns = mutableListOf<State>()

@@ -16,7 +16,7 @@
 
 package net.akehurst.language.parser.scanondemand.whitespace
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
@@ -26,18 +26,18 @@ internal class test_multi_a_dot : test_ScanOnDemandParserAbstract() {
     // S = ad* ;
     // ad = a '.' ;
     // a = 'a' ;
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_WS = b.rule("WS").skip(true).concatenation(b.pattern("\\s+"))
-        val r_a = b.rule("a").concatenation(b.literal("a"))
-        val r_ad = b.rule("ad").concatenation(r_a, b.literal("."))
-        b.rule("S").multi(0,-1,r_ad)
-        return b
+    private companion object {
+        val rrs = runtimeRuleSet {
+            concatenation("WS", true) { pattern("\\s+") }
+            multi("S",0,-1,"ad")
+            concatenation("ad") { ref("a");literal(".") }
+            concatenation("a") { literal("a") }
+        }
+        val goal = "S"
     }
+
     @Test
     fun a() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a."
 
         val expected = """
@@ -49,13 +49,11 @@ internal class test_multi_a_dot : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun aaa() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a.a.a."
 
         val expected = """
@@ -66,13 +64,11 @@ internal class test_multi_a_dot : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun asDot_as_aWS() {
-        val rrb = this.S()
-        val goal = "S"
         val sentence = "a. "
 
         val expected = """
@@ -81,7 +77,7 @@ internal class test_multi_a_dot : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        super.test(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
 }

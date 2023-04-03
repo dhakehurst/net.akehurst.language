@@ -18,54 +18,82 @@ package net.akehurst.language.processor.java8
 
 //import com.soywiz.korio.async.runBlockingNoSuspensions
 //import com.soywiz.korio.file.std.resourcesVfs
+import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.sppt.SPPT2InputText
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessor
-import test.assertEqualsWarning
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class test_Java8_Singles_aglOptm {
 
     companion object {
         val grammarFile = "/java8/Java8AglOptm.agl"
-        val proc: LanguageProcessor by lazy { createJava8Processor(grammarFile, true) }
+        val proc: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor(grammarFile, true)
 
-        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor {
-            val grammarStr = this::class.java.getResource(path).readText()
-            val proc = Agl.processorFromString(grammarStr)
+        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<AsmSimple, ContextSimple> {
+            val grammarStr = this::class.java.getResource(path)?.readText() ?: error("file not found '$path'")
+            val proc = Agl.processorFromString<AsmSimple, ContextSimple>(
+                grammarDefinitionStr = grammarStr,
+                aglOptions = Agl.options {
+                    semanticAnalysis {
+                        // switch off ambiguity analysis for performance
+                        option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
+                    }
+                }
+            ).processor!!
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
             //proc.buildFor(forRule)//TODO: use build
             return proc
         }
     }
 
-    @Test
-    fun literal() {
+    @Test(timeout = 5000)
+    fun Literal__0() {
         val sentence = "0"
         val goal = "Literal"
 
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
-    @Test
+    @Test(timeout = 5000)
     fun Types_Type__int() {
 
         val grammarStr = this::class.java.getResource(grammarFile).readText()
-        val goal = "Types.Type"
-        val p = Agl.processorFromStringForGoal(grammarStr, goal)
+        val goal = "Type"
+        val p = Agl.processorFromString(
+            grammarDefinitionStr = grammarStr,
+            configuration = Agl.configuration() {
+                targetGrammarName("Types")
+                defaultGoalRuleName(goal)
+            },
+            aglOptions = Agl.options {
+                semanticAnalysis {
+                    // switch off ambiguity analysis for performance
+                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
+                }
+            }).processor!!
 
         val sentence = "int"
-        val t = p.buildFor(goal).parseForGoal(goal, sentence)//TODO: use build
-
-        assertEquals(1, t.maxNumHeads)
+        val result = p.parse(sentence, Agl.parseOptions { goalRuleName("Type") })//TODO: use build
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
-    @Test
-    fun Expressions_Type__int() {
+    @Test(timeout = 5000)
+    fun UType__int() {
         val grammarStr = """
             namespace test
 
@@ -83,71 +111,163 @@ class test_Java8_Singles_aglOptm {
             }
         """.trimIndent()
         val goal = "UType"
-        val p = Agl.processorFromStringForGoal(grammarStr, goal)
+        val p = Agl.processorFromString(grammarStr, Agl.configuration { defaultGoalRuleName(goal) }).processor!!
 
         val sentence = "int"
-        //val t = p.buildFor(goal).parse(goal, sentence)//TODO: use build
-        val t = p.parseForGoal(goal, sentence)//TODO: use build
-
-        assertEqualsWarning(1, t.maxNumHeads)
+        val result = p.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
-    @Test
-    fun t1() {
+    @Test(timeout = 5000)
+    fun CompilationUnit__import_annotation_interface() {
         //val sentence = "import x; @An() interface An {  }"
         val sentence = "import x; @An() interface An {  }"
         val goal = "CompilationUnit"
 
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
-    @Test
-    fun arrayIndex() {
+    @Test(timeout = 5000)
+    fun Expression_arrayIndex() {
         val sentence = "a[0]"
         val goal = "Expression"
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
-    @Test
-    fun t() {
+    @Test(timeout = 5000)
+    fun ArrayAccess__arrayIndex() {
+        val sentence = "a[0]"
+        val goal = "ArrayAccess"
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+    }
+
+    @Test(timeout = 5000)
+    fun subgrammar__ArrayAccess__arrayIndex() {
+        val grammarStr = """
+            namespace test
+
+grammar Expressions {
+
+    leaf IDENTIFIER = "[A-Za-z]+" ;
+
+    Expression = Primary Nav? ;
+    Nav = '.' IDENTIFIER ;
+
+    Primary
+      = IDENTIFIER
+      | MethodReference
+      | ArrayAccess
+      | ClassInstanceCreationExpression
+      ;
+
+    MethodReference
+      = ArrayType '::' IDENTIFIER
+      | Primary '::' IDENTIFIER
+      ;
+
+    ArrayType = QualifiedTypeReference '[' ']' ;
+    QualifiedTypeReference = UnannTypeReference ;
+    UnannTypeReference = IDENTIFIER TypeArguments? ;
+    TypeArguments = '<'  '>' ;
+    
+    ClassInstanceCreationExpression  = Primary '.'  'new' ;
+
+    ArrayAccess = Expression '[' Expression ']' ;
+}
+        """.trimIndent()
+        val p = Agl.processorFromString<Any, Any>(grammarStr).processor!!
+
+        val sentence = "a[b]"
+        val goal = "ArrayAccess"
+        val result = p.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+    }
+
+    @Test(timeout = 5000)
+    fun Expression__arrayIndex_navigationToField() {
         val sentence = "a[0].b"
         val goal = "Expression"
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
-    @Test
-    fun FieldDeclaration() {
+    @Test(timeout = 5000)
+    fun FieldDeclaration__int_valid_eq_0b0() {
         val sentence = "int valid = 0b0;"
         val goal = "FieldDeclaration"
         //proc.parse(goal, sentence)
-        proc.buildFor(goal).parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
-    @Test
-    fun TypeDeclaration_FieldDeclaration() {
+    @Test(timeout = 5000)
+    fun TypeDeclaration__class_fieldDeclaration() {
         val sentence = "class A { int valid = 0b0; }"
         val goal = "TypeDeclaration"
-        proc.buildFor(goal).parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
-    @Test
-    fun CompilationUnit_FieldDeclaration() {
+    @Test(timeout = 5000)
+    fun ClassBody__fieldDeclaration() {
+        val sentence = "{ int valid = 0b0; }"
+        val goal = "ClassBody"
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+    }
+
+    @Test(timeout = 5000)
+    fun CompilationUnit__fieldDeclaration() {
         val sentence = "class A { int valid = 0b0; }"
         val goal = "CompilationUnit"
-        proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
-    @Test
-    fun bad_Binary_Literal() {
+    @Test(timeout = 5000)
+    fun VariableInitializer__badBinaryLiteral() {
         val sentence = "0b012"
         val goal = "VariableInitializer"
-        assertFailsWith(ParseFailedException::class) {
-            proc.parseForGoal(goal, sentence)
-        }
+
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNull(result.sppt)
+        assertEquals(
+            listOf(
+                LanguageIssue(
+                    LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(4, 5, 1, 1),
+                    "0b01^2",
+                    setOf("'.'", "ASSIGNMENT_OPERATOR", "'::'", "'?'", "INFIX_OPERATOR", "POSTFIX_OPERATOR", "'['", "<EOT>")
+                )
+            ), result.issues.error
+        )
+
     }
 
-    @Test
-    fun BadLiterals() {
+    @Test(timeout = 5000)
+    fun CompilationUnit__badLiterals() {
         val sentence = """
 /*
  * @test /nodynamiccopyright/
@@ -169,141 +289,186 @@ public class BadBinaryLiterals {
 }
             """.trimIndent()
         val goal = "CompilationUnit"
-        proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
     }
 
-    @Test
-    fun UnannQualifiedTypeReference1() {
+    @Test(timeout = 5000)
+    fun BlockStatement__UnannQualifiedTypeReference1() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "BlockStatement"
-        val t = proc.parseForGoal(goal, sentence)
-        assertNotNull(t)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
-    @Test
-    fun UnannQualifiedTypeReference2() {
+    @Test(timeout = 5000)
+    fun BlockStatement__UnannQualifiedTypeReference2() {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "BlockStatement"
-        val t = proc.parseForGoal(goal, sentence)
-        assertNotNull(t)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
-    @Test
-    fun UnannQualifiedTypeReference() {
+    @Test(timeout = 5000)
+    fun Block__UnannQualifiedTypeReference() {
         val sentence = "{ Map.@An Entry<Object,Object> x; }"
         val goal = "Block"
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
-    @Test
-    fun Enum() {
+    @Test(timeout = 5000)
+    fun ClassDeclaration__enumDecl() {
         val sentence = "enum E { A, B, C }"
         val goal = "ClassDeclaration"
-        val t = proc.parseForGoal(goal, sentence)
-        val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test
-    fun xx() {
+    @Test(timeout = 5000)
+    fun CompilationUnit__interfaceDecl() {
         val sentence = "interface An { An[] value(); }"
         val goal = "CompilationUnit"
-        val t = proc.parseForGoal(goal, sentence)
-        //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test
-    fun class_with_constructor() {
+    @Test(timeout = 5000)
+    fun CompilationUnit__class_with_constructor() {
         val sentence = "class B {  B() {  } }"
         val goal = "CompilationUnit"
-        val t = proc.parseForGoal(goal, sentence)
-        //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test
-    fun FormalParameterList_FormalParameter() {
+    @Test(timeout = 5000)
+    fun FormalParameterList__A_a() {
         val sentence = "A a"
         val goal = "FormalParameterList"
-        val t = proc.parseForGoal(goal, sentence)
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test
-    fun FormalParameterList_ReceiverParameter() {
+    @Test(timeout = 5000)
+    fun FormalParameterList__A_this() {
         val sentence = "A this"
         val goal = "FormalParameterList"
-        val t = proc.parseForGoal(goal, sentence)
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test
-    fun FormalParameterList_VarargsParameter() {
+    @Test(timeout = 5000)
+    fun FormalParameterList__varargsParameter() {
         val sentence = "A... this"
         val goal = "FormalParameterList"
-        val t = proc.parseForGoal(goal, sentence)
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test
-    fun FormalParameterList_2() {
+    @Test(timeout = 5000)
+    fun FormalParameterList__2parameters() {
         val sentence = "A a, B b"
         val goal = "FormalParameterList"
-        val t = proc.parseForGoal(goal, sentence)
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test
-    fun FormalParameterList_3() {
+    @Test(timeout = 5000)
+    fun FormalParameterList__3parameters() {
         val sentence = "A a, B b, C c"
         val goal = "FormalParameterList"
-        val t = proc.parseForGoal(goal, sentence)
-        //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test
-    fun ConstructorDeclaration() {
+    @Test(timeout = 5000)
+    fun ConstructorDeclaration__head_body() {
         val sentence = "B() {  }"
         val goal = "ConstructorDeclaration"
-        val t = proc.parseForGoal(goal, sentence)
-        //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test
-    fun ConstructorDeclarator() {
+    @Test(timeout = 5000)
+    fun ConstructorDeclarator__head() {
         val sentence = "B()"
         val goal = "ConstructorDeclarator"
-        val t = proc.parseForGoal(goal, sentence)
-        //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test
-    fun ConstructorBody() {
+    @Test(timeout = 5000)
+    fun ConstructorBody__body() {
         val sentence = "{  }"
         val goal = "ConstructorBody"
-        val t = proc.parseForGoal(goal, sentence)
-        //val actual = t.toStringAll
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test//(timeout = 5000)
-    fun long_concatenation() {
+    @Test(timeout = 5000)//(timeout = 10000)
+    fun Block__long_concatenation() {
 
         val sentence = """
           {
@@ -349,15 +514,17 @@ public class BadBinaryLiterals {
         """.trimIndent()
         val goal = "Block"
 
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test
-    fun fromStdLib_CharBufferSpliterator() {
+    @Test(timeout = 5000)
+    fun CompilationUnit__fromStdLib_CharBufferSpliterator() {
 
         val sentence = """
 /*
@@ -459,114 +626,140 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         """.trimIndent()
         val goal = "CompilationUnit"
 
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test
-    fun fromStdLib_CharBufferSpliterator_1() {
+    @Test(timeout = 5000)
+    fun Navigations__fromStdLib_CharBufferSpliterator_1() {
 
         val sentence = """
             action.accept(cb.getUnchecked(i++))
         """.trimIndent()
         val goal = "Navigations"
 
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test
-    fun fromStdLib_CharBufferSpliterator_2() {
+    @Test(timeout = 5000)
+    fun MethodInvocation__fromStdLib_CharBufferSpliterator_2() {
 
         val sentence = """
             accept(cb.getUnchecked(i++))
         """.trimIndent()
         val goal = "MethodInvocation"
 
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test
-    fun fromStdLib_CharBufferSpliterator_3() {
+    @Test(timeout = 5000)
+    fun Navigations__fromStdLib_CharBufferSpliterator_3() {
 
         val sentence = """
             cb.getUnchecked(i++)
         """.trimIndent()
         val goal = "Navigations"
 
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
-    @Test
-    fun fromStdLib_CharBufferSpliterator_3b() {
+
+    @Test(timeout = 5000)
+    fun Navigations__fromStdLib_CharBufferSpliterator_3b() {
 
         val sentence = """
             cb.getUnchecked(i)
         """.trimIndent()
         val goal = "Navigations"
 
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test
-    fun fromStdLib_CharBufferSpliterator_4() {
+    @Test(timeout = 5000)
+    fun NavigableExpression__fromStdLib_CharBufferSpliterator_4() {
 
         val sentence = """
             getUnchecked(i++)
         """.trimIndent()
         val goal = "NavigableExpression"
 
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test
-    fun fromStdLib_CharBufferSpliterator_4b() {
+    @Test(timeout = 5000)
+    fun NavigableExpression__fromStdLib_CharBufferSpliterator_4b() {
 
         val sentence = """
             getUnchecked(i)
         """.trimIndent()
         val goal = "NavigableExpression"
 
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
     }
 
-    @Test
-    fun fromStdLib_CharBufferSpliterator_5() {
+    @Test(timeout = 5000)
+    fun GenericMethodInvocation__fromStdLib_CharBufferSpliterator_5() {
 
         val sentence = """
             getUnchecked(i++)
         """.trimIndent()
         val goal = "GenericMethodInvocation"
 
-        val t = proc.parseForGoal(goal, sentence)
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
 
-        // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(t, "")
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
+    }
+
+    @Test
+    fun withNoWhitespace() {
+        val sentence="classclass{voidvoid(){}}"
+        val result = proc.parse(sentence)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 }

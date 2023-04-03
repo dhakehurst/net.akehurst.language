@@ -16,13 +16,13 @@
 
 package net.akehurst.language.parser.scanondemand.listSeparated
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
 
@@ -36,46 +36,40 @@ internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
             literal("'b'","b")
         }
 
-        val goal = "S"
+        const val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val inputText = ""
+        val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            test(rrs, goal, inputText,1)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
-        assertEquals(setOf("'a'"), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+        ),issues.error)
     }
 
     @Test
     fun a_fails() {
-        val inputText = "a"
+        val sentence = "a"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            test(rrs, goal, inputText,1)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(2, e.location.column)
-        assertEquals(setOf("'b'"), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(1,2,1,1),"a^",setOf("'b'"))
+        ),issues.error)
     }
 
     @Test
     fun ab_fails() {
-        val inputText = "ab"
+        val sentence = "ab"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            test(rrs, goal, inputText,1)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(3, e.location.column)
-        assertEquals(setOf("'a'"), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(2,3,1,1),"ab^",setOf("'a'"))
+        ),issues.error)
     }
 
     @Test
@@ -84,12 +78,12 @@ internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a' 'b' 'a'}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -99,12 +93,12 @@ internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a' 'b' 'a' 'b' 'a'}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -114,12 +108,12 @@ internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a' 'b' 'a' 'b' 'a' 'b' 'a'}"
 
-        val actual = super.test(
+       super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -129,25 +123,25 @@ internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a' 'b' 'a' 'b' 'a' 'b' 'a' 'b' 'a'}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
-    fun literal_ab25__r__a6_fails() {
-        val inputText = "abababababa"
+    fun a6_fails() {
+        val sentence = "abababababa"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            test(rrs, goal, inputText,1)
-        }
+        //println(rrs.fullAutomatonToString(goal,AutomatonKind.LOOKAHEAD_1))
 
-        assertEquals(1, e.location.line)
-        assertEquals(10, e.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(9,10,1,1),"ababababa^ba",setOf("<EOT>"))
+        ),issues.error)
     }
 }

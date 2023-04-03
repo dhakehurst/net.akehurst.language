@@ -1,7 +1,11 @@
 package net.akehurst.language.api.style
 
+interface AglStyleModel {
+    val rules:List<AglStyleRule>
+}
+
 data class AglStyleRule(
-        val selector:String
+        val selector:List<String>
 ) {
     var styles = mutableMapOf<String,AglStyle>()
 
@@ -11,7 +15,7 @@ data class AglStyleRule(
 
     fun toCss(): String {
         return """
-            ${this.selector} {
+            ${this.selector.joinToString(separator = ", ") { it }} {
                 ${this.styles.values.joinToString(separator = "\n"){it.toCss()}}
             }
          """.trimIndent()

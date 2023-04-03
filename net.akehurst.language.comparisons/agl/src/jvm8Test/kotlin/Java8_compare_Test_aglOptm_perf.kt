@@ -15,7 +15,10 @@
  */
 package net.akehurst.language.comparisons.agl
 
+import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.comparisons.common.FileData
@@ -43,12 +46,20 @@ class Java8_compare_Test_aglOptm_perf(val file: FileData) {
             return f
         }
 
-        fun createAndBuildProcessor(aglFile: String): LanguageProcessor {
+        fun createAndBuildProcessor(aglFile: String): LanguageProcessor<AsmSimple,ContextSimple> {
             val bytes = Java8_compare_Test_aglOptm_perf::class.java.getResourceAsStream(aglFile).readBytes()
             val javaGrammarStr = String(bytes)
-            val proc = Agl.processorFromString(javaGrammarStr)
-            proc.buildFor("CompilationUnit")
-            return proc
+            val res = Agl.processorFromString<AsmSimple, ContextSimple>(
+                grammarDefinitionStr = javaGrammarStr,
+                aglOptions = Agl.options {
+                    semanticAnalysis {
+                        // switch off ambiguity analysis for performance
+                        option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
+                    }
+                }
+            )
+            //proc.buildFor("CompilationUnit")
+            return res.processor!!
         }
 
         val agl1 = createAndBuildProcessor("/agl/Java8AglSpec.agl")
@@ -57,11 +68,11 @@ class Java8_compare_Test_aglOptm_perf(val file: FileData) {
         var input: String? = null
 
         @ExperimentalTime
-        fun parse(file: FileData, proc:LanguageProcessor): TimedValue<SharedPackedParseTree> {
-            val tree = proc.parseForGoal("CompilationUnit", input!!)
+        fun parse(file: FileData, proc:LanguageProcessor<AsmSimple,ContextSimple>): TimedValue<SharedPackedParseTree> {
+            val tree = proc.parse( input!!,Agl.parseOptions { goalRuleName("CompilationUnit") })
             return TimeSource.Monotonic.measureTimedValue {
-                val tree = proc.parseForGoal("CompilationUnit", input!!)
-                tree
+                val res = proc.parse( input!!,Agl.parseOptions { goalRuleName("CompilationUnit") })
+                res.sppt!!
             }
         }
 /*

@@ -16,18 +16,16 @@
 
 package net.akehurst.language.parser.scanondemand.listSeparated
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_literal_a1n : test_ScanOnDemandParserAbstract() {
 
-    // S = [a / ',']+
-    // a = 'a'
+    // S = ['a' / ',']+
 
     private companion object {
         val rrs = runtimeRuleSet {
@@ -42,13 +40,11 @@ internal class test_literal_a1n : test_ScanOnDemandParserAbstract() {
     fun empty_fails() {
         val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence, 1)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
-        assertEquals(setOf("'a'"), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+        ),issues.error)
     }
 
     @Test
@@ -62,21 +58,30 @@ internal class test_literal_a1n : test_ScanOnDemandParserAbstract() {
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
+    }
+
+    @Test
+    fun ac_fails() {
+        val sentence = "a,"
+
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(2,3,1,1),"a,^",setOf("'a'"))
+        ),issues.error)
     }
 
     @Test
     fun aa_fails() {
         val sentence = "aa"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(2, e.location.column)
-        assertEquals(setOf("','", RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(1,2,1,1),"a^a",setOf("','","<EOT>"))
+        ),issues.error)
     }
 
     @Test
@@ -90,7 +95,7 @@ internal class test_literal_a1n : test_ScanOnDemandParserAbstract() {
                 goal = Companion.goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -98,13 +103,23 @@ internal class test_literal_a1n : test_ScanOnDemandParserAbstract() {
     fun acaa_fails() {
         val sentence = "a,aa"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(3,4,1,1),"a,a^a",setOf("','","<EOT>"))
+        ),issues.error)
+    }
 
-        assertEquals(1, e.location.line)
-        assertEquals(4, e.location.column)
-        assertEquals(setOf("','", RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
+    @Test
+    fun acac_fails() {
+        val sentence = "a,a,"
+
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        println(rrs.usedAutomatonToString(goal))
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(4,5,1,1),"a,a,^",setOf("'a'"))
+        ),issues.error)
     }
 
     @Test
@@ -118,7 +133,7 @@ internal class test_literal_a1n : test_ScanOnDemandParserAbstract() {
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -133,7 +148,7 @@ internal class test_literal_a1n : test_ScanOnDemandParserAbstract() {
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 

@@ -18,22 +18,24 @@ package net.akehurst.language.parser.scanondemand.choiceAmbiguous
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_acsOads : test_ScanOnDemandParserAbstract() {
 
-    // S = acs || ads
+    // S = ambig
+    // ambig = acs || ads
     // acs = 'a' | acs1
     // acs1 = acs 'c' 'a'
     // ads = 'a' | ads1
     // ads1 = acs 'd' 'a'
     private companion object {
         val rrs = runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.AMBIGUOUS) {
+            concatenation("S") { ref("ambig") }
+            choice("ambig", RuntimeRuleChoiceKind.AMBIGUOUS) {
                 ref("acs")
                 ref("ads")
             }
@@ -42,28 +44,26 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
             choice("ads", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { literal("a"); ref("ads1") }
             concatenation("ads1") { ref("ads"); literal("d"); literal("a") }
         }
+        val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val goal = "S"
         val sentence = ""
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
-        assertEquals(setOf("'a'"), ex.expected)
+        val (sppt,issues)=super.testFail(rrs,goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+        ),issues.error)
     }
 
     @Test
     fun aca() {
-        val goal = "S"
         val sentence = "aca"
 
         val expected = """
-            S {
+            S { ambig {
                 acs|1 {
                     acs1 {
                         acs { 'a' }
@@ -71,25 +71,24 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
                         'a'
                     }
                 }
-            }
+            } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun ada() {
-        val goal = "S"
         val sentence = "ada"
 
         val expected = """
-            S|1 {
+            S { ambig|1 {
                 ads|1 {
                     ads1 {
                         ads { 'a' }
@@ -97,37 +96,36 @@ internal class test_acsOads : test_ScanOnDemandParserAbstract() {
                         'a'
                     }
                 }
-            }
+            }}
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun a() {
-        val goal = "S"
         val sentence = "a"
 
         val expected1 = """
-            S { acs { 'a' } }
+            S { ambig { acs { 'a' } } }
         """.trimIndent()
 
         val expected2 = """
-            S|1 { ads { 'a' } }
+            S { ambig|1 { ads { 'a' } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 2, //TODO can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected1,expected2)
+                expectedNumGSSHeads = 1,
+                expectedTrees = arrayOf(expected1,expected2)
         )
     }
 }

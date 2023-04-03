@@ -15,28 +15,27 @@
  */
 package net.akehurst.language.agl.processor.sql
 
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.util.ArrayList
-
-import org.junit.Assert
+import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
-
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.agl.processor.Agl
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 
 @RunWith(Parameterized::class)
-class test_SQLValid(val data:Data) {
+class test_SQLValid(val data: Data) {
 
     companion object {
 
         private val grammarStr = test_SQLValid::class.java.getResource("/sql/simple-sql.agl").readText()
-        val processor : LanguageProcessor by lazy {
-            Agl.processorFromString(grammarStr)
+        val processor by lazy {
+            Agl.processorFromStringDefault(grammarStr).processor!!
         }
 
         var sourceFiles = arrayOf("/sql/valid.txt")
@@ -76,15 +75,16 @@ class test_SQLValid(val data:Data) {
         }
     }
 
-    @Test(timeout=1000)
+    @Test(timeout = 1000)
     fun test() {
         val queryStr = this.data.queryStr
-        val result = processor.parseForGoal("terminated-statement", queryStr)
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
-        Assert.assertEquals(queryStr, resultStr)
+        val goal = "terminated-statement"
+        val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
+        val resultStr = result.sppt!!.asString
+        assertEquals(queryStr, resultStr)
     }
-
 
 
 }

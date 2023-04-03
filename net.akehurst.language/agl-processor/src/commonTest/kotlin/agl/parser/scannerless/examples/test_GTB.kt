@@ -58,18 +58,26 @@ internal class test_GTB : test_ScanOnDemandParserAbstract() {
     fun a() {
         val sentence = "a"
 
+        // will parse with S = A B rather than S= 'a'
+        // because of priorities, choice 'AB' is higher than choice 'a'
+        // S = 'a' | A B | A 'z'
+        // if reorganise to be
+        // S = A B | 'a' | A 'z'
+        // then result is S { 'a' }
+
         val expected = """
-            S {
-              'a'
-            }
+        S { S1 {
+          A { 'a' }
+          B { be { §empty } }
+        } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 2,
-                expectedTrees = *arrayOf(expected)
+                expectedNumGSSHeads = 1,
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -83,12 +91,12 @@ internal class test_GTB : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -102,12 +110,12 @@ internal class test_GTB : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 }

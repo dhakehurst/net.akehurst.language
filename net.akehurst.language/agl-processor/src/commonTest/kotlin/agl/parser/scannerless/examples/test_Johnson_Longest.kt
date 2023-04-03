@@ -19,12 +19,12 @@ package net.akehurst.language.parser.scanondemand.examples
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.TimeSource
@@ -49,19 +49,23 @@ internal class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
             }
             concatenation("S3") { ref("S"); ref("S"); ref("S") }
             concatenation("S2") { ref("S"); ref("S") }
+            //precedenceFor("S") {
+            //    left("S2","'a'")
+            //    left("S3","'a'")
+            //}
         }
         val goal = "S"
     }
 
     @Test
-    fun empty() {
+    fun empty_fails() {
         val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+        ),issues.error)
     }
 
     @Test
@@ -69,15 +73,15 @@ internal class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         val sentence = "a"
 
         val expected = """
-            S|2 { 'a' }
+            S { 'a' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -86,20 +90,20 @@ internal class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         val sentence = "aa"
 
         val expected = """
-            S|1 {
+            S {
               S2 {
-                S|2 { 'a' }
-                S|2 { 'a' }
+                S { 'a' }
+                S { 'a' }
               }
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -110,19 +114,19 @@ internal class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               S3 {
-                S|2 { 'a' }
-                S|2 { 'a' }
-                S|2 { 'a' }
+                S { 'a' }
+                S { 'a' }
+                S { 'a' }
               }
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 3,
-                expectedTrees = *arrayOf(expected)
+                expectedNumGSSHeads = 1,
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -141,12 +145,12 @@ internal class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 5,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -183,17 +187,17 @@ internal class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
               } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @ExperimentalTime
-    @Test
+    //@Test
     fun time() {
         val parser = ScanOnDemandParser(rrs)
         val times = mutableListOf<Duration>()
@@ -210,7 +214,7 @@ internal class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         }
 
         times.forEach {
-            println(it.inMilliseconds.toInt())
+            println(it.inWholeMilliseconds.toInt())
         }
     }
 }

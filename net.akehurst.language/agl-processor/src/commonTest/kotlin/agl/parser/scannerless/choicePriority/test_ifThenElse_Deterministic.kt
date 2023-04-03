@@ -18,11 +18,14 @@ package net.akehurst.language.parser.scanondemand.choicePriority
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
 
@@ -57,11 +60,11 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = ""
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^", setOf("var","'if'"))
+        ),issues.error)
     }
 
     @Test
@@ -71,8 +74,8 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              expr|1 {
-                conditional|1 {
+              expr {
+                conditional {
                     ifThenElse {
                       'if' WS : ' ' 
                       expr { var : 'a' WS  : ' '  }
@@ -90,12 +93,12 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
         //TODO: if we can implement better combination of states, then this should need only 1 head
         // currently the "if var then" bit ends up on diff states
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -119,12 +122,12 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -159,12 +162,12 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -199,14 +202,63 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
+    @Test
+    fun ifthenifthenifthenelse() {
+        val goal = "S"
+        val sentence = "if x then if a then if b then c else d"
+
+        val expected = """
+            S {
+              expr {
+                conditional {
+                  ifThen {
+                    'if' WS:' '
+                      expr { var : 'a' WS:' ' }
+                      'then' WS:' '
+                      expr {
+                        conditional {
+                            ifThen {
+                              'if' WS:' '
+                              expr { var : 'a' WS:' ' }
+                              'then' WS:' '
+                              expr {
+                                conditional {
+                                    ifThenElse {
+                                      'if' WS:' '
+                                      expr { var : 'b' WS:' ' }
+                                      'then' WS:' '
+                                      expr { var  : 'c' WS:' ' }
+                                      'else' WS:' '
+                                      expr { var : 'd' }
+                                    }
+                                }
+                              }
+                            }
+                        }
+                      }
+
+                  }
+                }
+              }
+            }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
 
 }

@@ -30,7 +30,7 @@ class test_Multi0N_noConcatAtTopLevel {
                 ab = 'a' 'b' ;
             }
         """.trimIndent()
-        val processor = Agl.processorFromString(grammarStr)
+        val processor = Agl.processorFromString<Any, Any>(grammarStr).processor!!
     }
 
     @Test
@@ -38,11 +38,11 @@ class test_Multi0N_noConcatAtTopLevel {
         val sentence = ""
         val position = 0
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "a"
+            "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -50,11 +50,11 @@ class test_Multi0N_noConcatAtTopLevel {
         val sentence = "a"
         val position = 0
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "a"
+            "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -62,11 +62,11 @@ class test_Multi0N_noConcatAtTopLevel {
         val sentence = "a"
         val position = 1
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "b"
+            "b"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -74,11 +74,11 @@ class test_Multi0N_noConcatAtTopLevel {
         val sentence = "ab"
         val position = 1
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "b"
+            "b"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -86,10 +86,10 @@ class test_Multi0N_noConcatAtTopLevel {
         val sentence = "ab"
         val position = 2
 
-        val actual = processor.expectedAt(sentence, position, 1).map { it.text }.toSet()
+        val actual = processor.expectedTerminalsAt(sentence, position, 1).items.map { it.text }.toSet()
         val expected = setOf<String>(
-                "a"
+            "a"
         )
-        assertEquals(expected,actual)
+        assertEquals(expected, actual)
     }
 }

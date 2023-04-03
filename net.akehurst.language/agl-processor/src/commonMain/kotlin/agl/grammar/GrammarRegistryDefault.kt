@@ -16,11 +16,11 @@
 
 package net.akehurst.language.agl.grammar
 
-import net.akehurst.language.api.analyser.GrammarExeception
 import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.grammar.GrammarExeception
 import net.akehurst.language.api.grammar.GrammarRegistry
 
-
+/*
 object GrammarRegistryDefault : GrammarRegistry {
 
     // <namespace, <grammar.name, Grammar>>
@@ -52,3 +52,4 @@ object GrammarRegistryDefault : GrammarRegistry {
     }
 
 }
+ */

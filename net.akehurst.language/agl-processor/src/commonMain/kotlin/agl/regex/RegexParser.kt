@@ -19,8 +19,6 @@ package net.akehurst.language.agl.regex
 import net.akehurst.language.api.regex.RegexMatcher
 import net.akehurst.language.collections.MutableStack
 
-class RegexParserException(msg: String) : RuntimeException(msg)
-
 internal class RegexParser(
         val pattern: String
 ) {
@@ -144,6 +142,7 @@ internal class RegexParser(
                                         needConcat.push(true)
                                     }
                                 }
+                                EscapeKind.OPTIONS -> TODO()
                             }
                             c = this.next()
                         }
@@ -275,7 +274,7 @@ internal class RegexParser(
                                 c = this.next()
                             }
                             val n = nb.toString().toIntOrNull(10)
-                                    ?: throw RegexParserException("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
+                                    ?: error("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
                             when (c) {
                                 '}' -> {
                                     postfix.push(Pair(PREC_REP, { this.matcherBuilder.repetition(n, n) }))
@@ -297,18 +296,18 @@ internal class RegexParser(
                                                 c = this.next()
                                             }
                                             val m = mb.toString().toIntOrNull(10)
-                                                    ?: throw RegexParserException("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
+                                                    ?: error("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
                                             when (c) {
                                                 '}' -> {
                                                     postfix.push(Pair(PREC_REP, { this.matcherBuilder.repetition(n, m) }))
                                                     c = this.next()
                                                 }
-                                                else -> throw RegexParserException("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
+                                                else -> error("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
                                             }
                                         }
                                     }
                                 }
-                                else -> RegexParserException("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
+                                else -> error("Counted repetition must be one of the forms {n} | {n,} | {n,m} where n and m are numbers")
                             }
                         }
                         ')' -> {
@@ -345,7 +344,7 @@ internal class RegexParser(
                 val before = this.pattern.substring(maxOf(0,this.pp-5),minOf(this.pattern.length,this.pp))
                 val after = this.pattern.substring(maxOf(this.pattern.length,this.pp-5), minOf(this.pattern.length,this.pp+5))
                 val posStr = "$before^$after"
-                throw RegexParserException("Failed to parse regex \"${this.pattern}\" at position ${this.pp}, \"$posStr\", "+t.message)
+                error("Failed to parse regex \"${this.pattern}\" at position ${this.pp}, \"$posStr\", "+t.message)
             }
             while (opStack.isEmpty.not()) {
                 postfix.push(opStack.pop())
@@ -487,21 +486,21 @@ internal class RegexParser(
             'x' -> {
                 this.parseHex()
             }
-            else -> throw RegexParserException("Unknown escape code '$c' in character class, at position ${this.pp} in ${pattern}, ")
+            else -> error("Unknown escape code '$c' in character class, at position ${this.pp} in ${pattern}, ")
         }
     }
 
     private fun parseHex(): Char {
-        var hex = this.toHexInt(this.next(), 16) ?: throw RegexParserException("Cannot parse Hex, at position ${this.pp}")
-        hex += this.toHexInt(this.next(), 1) ?: throw RegexParserException("Cannot parse Hex, at position ${this.pp}")
+        var hex = this.toHexInt(this.next(), 16) ?: error("Cannot parse Hex, at position ${this.pp}")
+        hex += this.toHexInt(this.next(), 1) ?: error("Cannot parse Hex, at position ${this.pp}")
         return hex.toChar()
     }
 
     private fun parseUnicode(): Char {
-        var unicode = this.toHexInt(this.next(), 4096) ?: throw RegexParserException("Cannot parse Unicode, at position ${this.pp}")
-        unicode += this.toHexInt(this.next(), 256) ?: throw RegexParserException("Cannot parse Unicode, at position ${this.pp}")
-        unicode += this.toHexInt(this.next(), 16) ?: throw RegexParserException("Cannot parse Unicode, at position ${this.pp}")
-        unicode += this.toHexInt(this.next(), 1) ?: throw RegexParserException("Cannot parse Unicode, at position ${this.pp}")
+        var unicode = this.toHexInt(this.next(), 4096) ?: error("Cannot parse Unicode, at position ${this.pp}")
+        unicode += this.toHexInt(this.next(), 256) ?: error("Cannot parse Unicode, at position ${this.pp}")
+        unicode += this.toHexInt(this.next(), 16) ?: error("Cannot parse Unicode, at position ${this.pp}")
+        unicode += this.toHexInt(this.next(), 1) ?: error("Cannot parse Unicode, at position ${this.pp}")
         return unicode.toChar()
     }
 

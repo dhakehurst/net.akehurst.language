@@ -18,6 +18,8 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsList
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 
@@ -29,24 +31,36 @@ import net.akehurst.language.api.sppt.*
     override val option: Int,
     final override val startPosition: Int,
     override val nextInputPosition: Int,
-    override val priority: Int                      //not needed as part of the SPPTNode, but needed for the parsing algorithm
+    override val priority: Int               //TODO: no longer needed I think       //not needed as part of the SPPTNode, but needed for the parsing algorithm
 ) : SPPTNode {
 
-    var embeddedIn : String? = null
+    var embeddedIn: String? = null
 
-    override val identity: SPPTNodeIdentity = SPPTNodeIdentityDefault(
-            this.runtimeRule.number,
-            this.startPosition//,
-            //this.nextInputPosition - this.startPosition
-    )
+    override val identity: SPPTNodeIdentity by lazy {
+        SPPTNodeIdentityDefault(
+            this.runtimeRule.runtimeRuleSetNumber,
+            this.runtimeRule.ruleNumber,
+            this.startPosition
+        )
+    }
+
+    override val runtimeRuleSetNumber: Int get() = this.identity.runtimeRuleSetNumber
+
+    override val runtimeRuleNumber: Int get() = this.identity.runtimeRuleNumber
 
     override val name: String get() = this.runtimeRule.tag
 
-    override val runtimeRuleNumber: Int get() { return this.identity.runtimeRuleNumber }
-
-    override val matchedTextLength: Int get() { return this.nextInputPosition - this.startPosition}//this.identity.matchedTextLength }
+    override val matchedTextLength: Int get() = this.nextInputPosition - this.startPosition
 
     override val isSkip: Boolean get() = runtimeRule.isSkip
+
+    override val isList: Boolean get() = this.runtimeRule.rhs is RuntimeRuleRhsList
+
+    override val isEmbedded: Boolean get() = this.runtimeRule.isEmbedded
+
+    override val isOptional: Boolean get() = this.runtimeRule.rhs is RuntimeRuleRhsList
+            && (this.runtimeRule.rhs as RuntimeRuleRhsList).min==0
+            && (this.runtimeRule.rhs as RuntimeRuleRhsList).max==1
 
     // match empty if start and next-input positions are the same
     override val isEmptyMatch: Boolean get() = this.startPosition == this.nextInputPosition
@@ -63,26 +77,28 @@ import net.akehurst.language.api.sppt.*
 
     private var _tree: SharedPackedParseTree? = null
     override var tree: SharedPackedParseTree?
-    get() = if (null != this._tree || null==this.parent) {
-        this._tree
-    } else {
-        var br = this.parent
-        while (null!=br?.parent) {
-           br = br.parent
+        get() = if (null != this._tree || null == this.parent) {
+            this._tree
+        } else {
+            var br = this.parent
+            while (null != br?.parent) {
+                br = br.parent
+            }
+            br?.tree
         }
-        br?.tree
-    }
-    set(value) { _tree = value }
+        set(value) {
+            _tree = value
+        }
 
-    override val location: InputLocation get() = input.locationFor(startPosition,matchedTextLength)
+    override val location: InputLocation get() = input.locationFor(startPosition, matchedTextLength)
 
-    abstract override fun hashCode() : Int
+    abstract override fun hashCode(): Int
 
     abstract override fun equals(other: Any?): Boolean
 
     fun toStringIndented(indentIncrement: String): String {
         val visitor = ToStringVisitor("\n", indentIncrement)
-        val all: Set<String> = visitor.visitNode(this, ToStringVisitor.Indent("", true))
+        val all: Set<String> = visitor.visitNode(this, "  ")
         val total = all.size
         val sep = "\n"
         var cur = 0

@@ -2,11 +2,11 @@ apply plugin: 'antlr'
 apply plugin: 'java-library'
 
 dependencies {
-    antlr 'org.antlr:antlr4:4.8'
+    antlr 'org.antlr:antlr4:4.12.0'
 
     testImplementation project(":common")
 
     testImplementation "junit:junit:4.12"
 
-    testImplementation 'org.antlr:antlr4-runtime:4.8'
+    testImplementation 'org.antlr:antlr4-runtime:4.12.0'
 }

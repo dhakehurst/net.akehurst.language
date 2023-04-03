@@ -2,11 +2,11 @@ package net.akehurst.language.parser.scanondemand.choicePriority
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_ifThenElse_NoWS_Inverted : test_ScanOnDemandParserAbstract() {
 
@@ -37,37 +37,41 @@ internal class test_ifThenElse_NoWS_Inverted : test_ScanOnDemandParserAbstract()
                 literal("Y")
                 literal("Z")
             }
+            preferenceFor("expr") {
+                right("ifthen", setOf("'then'"))
+                right("ifthenelse", setOf("'then'","'else'"))
+            }
         }
+        val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val goal = "S"
+
         val sentence = ""
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        val (sppt,issues) = super.testFail(rrs,goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^", setOf("'W'","'X'","'Y'","'Z'","'if'"))
+        ),issues.error)
     }
 
     @Test
     fun ifthenelse() {
-        val goal = "S"
         val sentence = "ifWthenXelseY"
 
         val expected = """
             S {
-              expr|1 {
+              expr {
                 conditional {
                     ifthenelse {
                       'if'
                       expr { var { 'W' } }
                       'then'
-                      expr { var|1 { 'X' } }
+                      expr { var { 'X' } }
                       'else'
-                      expr { var|2 { 'Y' } }
+                      expr { var { 'Y' } }
                     }
                 }
               }
@@ -76,66 +80,66 @@ internal class test_ifThenElse_NoWS_Inverted : test_ScanOnDemandParserAbstract()
 
         //NOTE: season 35, long expression is dropped in favour of the shorter one!
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected),
+            printAutomaton = true
         )
+
     }
 
     @Test
     fun ifthen() {
-        val goal = "S"
         val sentence = "ifWthenX"
 
         val expected = """
             S {
-              expr|1 {
-                conditional|1 {
+              expr {
+                conditional {
                     ifthen {
                       'if'
                       expr { var { 'W' } }
                       'then'
-                      expr { var|1 { 'X' } }
+                      expr { var { 'X' } }
                     }
                 }
               }
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun ifthenelseifthen() {
-        val goal = "S"
         val sentence = "ifWthenXelseifYthenZ"
 
         val expected = """
             S {
-              expr|1 {
+              expr {
                 conditional {
                     ifthenelse {
                       'if'
                       expr { var { 'W' } }
                       'then'
-                      expr { var|1 { 'X' } }
+                      expr { var { 'X' } }
                       'else'
-                      expr|1 {
-                        conditional|1 {
+                      expr {
+                        conditional {
                             ifthen {
                               'if'
-                              expr { var|2 { 'Y'} }
+                              expr { var { 'Y'} }
                               'then'
-                              expr { var|3 { 'Z' } }
+                              expr { var { 'Z' } }
                             }
                         }
                       }
@@ -145,42 +149,41 @@ internal class test_ifThenElse_NoWS_Inverted : test_ScanOnDemandParserAbstract()
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun ifthenifthenelse() {
-        val goal = "S"
         val sentence = "ifWthenifXthenYelseZ"
 
         val expected = """
-         S { expr|1 { conditional { ifthenelse {
+         S { expr { conditional { ifthenelse {
                 'if'
                 expr { var { 'W' } }
                 'then'
-                expr|1 { conditional|1 { ifthen {
+                expr { conditional { ifthen {
                       'if'
-                      expr { var|1 { 'X' } }
+                      expr { var { 'X' } }
                       'then'
-                      expr { var|2 { 'Y' } }
+                      expr { var { 'Y' } }
                     } } }
                 'else'
-                expr { var|3 { 'Z' } }
+                expr { var { 'Z' } }
               } } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 2, //TODO: can it be 1
-                expectedTrees = *arrayOf(expected)
+                expectedNumGSSHeads = 1,
+                expectedTrees = arrayOf(expected)
         )
     }
 

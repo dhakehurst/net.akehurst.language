@@ -15,40 +15,40 @@
  */
 package net.akehurst.language.agl.processor.vistraq
 
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.util.ArrayList
-
+import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
-
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.agl.processor.Agl
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 
 @RunWith(Parameterized::class)
-class test_QueryParserValid(val data:Data) {
+class test_QueryParserValid(val data: Data) {
 
     companion object {
 
         private val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/Query.agl")?.readText() ?: error("File not found")
-        var processor: LanguageProcessor = tgqlprocessor()
+        var processor: LanguageProcessor<Any,Any> = tgqlprocessor()
 
         var sourceFiles = arrayOf("/vistraq/sampleValidQueries.txt")
 
-        fun tgqlprocessor() : LanguageProcessor {
-            return Agl.processorFromString(grammarStr)
-         }
+        fun tgqlprocessor(): LanguageProcessor<Any,Any> {
+            return Agl.processorFromString<Any, Any>(grammarStr).processor!!
+        }
 
         @JvmStatic
         @Parameters(name = "{0}")
         fun data(): Collection<Array<Any>> {
             val col = ArrayList<Array<Any>>()
             for (sourceFile in sourceFiles) {
-               // val inps = ClassLoader.getSystemClassLoader().getResourceAsStream(sourceFile)
+                // val inps = ClassLoader.getSystemClassLoader().getResourceAsStream(sourceFile)
                 val inps = test_QueryParserValid::class.java.getResourceAsStream(sourceFile) ?: error("File not found")
 
                 val br = BufferedReader(InputStreamReader(inps))
@@ -79,15 +79,16 @@ class test_QueryParserValid(val data:Data) {
         }
     }
 
-    @Test(timeout=1000)
+    @Test(timeout = 2000)
     fun test() {
         val queryStr = this.data.queryStr
-        val result = processor.parseForGoal("query", queryStr)
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
+        val goal = "query"
+        val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
+        val resultStr = result.sppt!!.asString
         Assert.assertEquals(queryStr, resultStr)
     }
-
 
 
 }

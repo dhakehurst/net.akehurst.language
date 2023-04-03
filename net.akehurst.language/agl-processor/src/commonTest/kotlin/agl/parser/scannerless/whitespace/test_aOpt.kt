@@ -26,7 +26,7 @@ internal class test_aOpt : test_ScanOnDemandParserAbstract() {
     // S = 'a'? ;
     private companion object {
         val rrs = runtimeRuleSet {
-            skip("WS") { pattern("\\s+") }
+            concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { ref("aOpt") }
             multi("aOpt" ,0, 1, "'a'")
             literal("'a'","a")

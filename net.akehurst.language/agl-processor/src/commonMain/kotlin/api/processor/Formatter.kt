@@ -16,8 +16,8 @@
 
 package net.akehurst.language.api.processor
 
-interface Formatter {
+interface Formatter<in AsmType> {
 
-    fun <T> format(asm:T): String
+    fun format(asm:AsmType): FormatResult
 
 }

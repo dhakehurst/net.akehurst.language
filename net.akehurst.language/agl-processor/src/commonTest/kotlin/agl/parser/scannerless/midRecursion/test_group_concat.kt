@@ -37,7 +37,7 @@ internal class test_group_concat : test_ScanOnDemandParserAbstract() {
     private companion object {
 
         val rrs = runtimeRuleSet {
-            skip("W") { pattern("\\s+") }
+            concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { ref("rules") }
             multi("rules",0,-1,"normalRule")
             concatenation("normalRule") { ref("ID"); literal("="); ref("concat"); literal(";")}

@@ -1,5 +1,5 @@
 plugins {
-    kotlin("multiplatform") version ("1.5.30")
+    kotlin("multiplatform") version ("1.8.10")
 }
 
 val version_agl:String by project
@@ -21,7 +21,7 @@ kotlin {
 
 dependencies {
 
-    "jvm8MainImplementation"("iguana:iguana:0.0.1-SNAPSHOT")
+   // "jvm8MainImplementation"("iguana:iguana:0.0.1-SNAPSHOT")
 
     //"commonMainImplementation"(kotlin("stdlib"))
     "commonTestImplementation"(kotlin("test"))

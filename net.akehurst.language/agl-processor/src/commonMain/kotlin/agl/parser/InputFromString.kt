@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.parser
 
 import agl.runtime.graph.CompletedNodesStore
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.regex.RegexMatcher
@@ -25,14 +25,9 @@ import net.akehurst.language.api.sppt.SPPTLeaf
 import kotlin.math.min
 
 internal class InputFromString(
-        numTerminalRules: Int,
-        sentence: String
+    numTerminalRules: Int,
+    sentence: String
 ) {
-
-    data class Match(
-            val matchedText: String,
-            val eolPositions: List<Int>
-    )
 
     companion object {
         const val contextSize = 10
@@ -48,7 +43,23 @@ internal class InputFromString(
     fun contextInText(position: Int): String {
         val startIndex = maxOf(0, position - contextSize)
         val endIndex = minOf(this.text.length, position + contextSize)
-        return this.text.substring(startIndex, position) + "^" + this.text.substring(position,endIndex)
+        val forText = this.text.substring(startIndex, position)
+        val aftText = this.text.substring(position, endIndex)
+        val startOfLine = forText.lastIndexOfAny(listOf("\n", "\r"))
+        val s = if (-1 == startOfLine) {
+            0
+        } else {
+            startOfLine + 1
+        }
+        val forTextAfterLastEol = forText.substring(s)
+        val startOrStartOfLine = startIndex + startOfLine
+        val prefix = when {
+            startOfLine > 0 -> ""
+            startIndex > 0 -> "..."
+            else -> ""
+        }
+        val postFix = if (endIndex < this.text.length) "..." else ""
+        return "$prefix$forTextAfterLastEol^$aftText$postFix"
     }
 
     //internal val leaves: MutableMap<LeafIndex, SPPTLeafDefault?> = mutableMapOf()
@@ -79,20 +90,38 @@ internal class InputFromString(
     }
 
     //TODO: write a scanner that counts eols as it goes, rather than scanning the text twice
-    fun eolPositions(text: String): List<Int> {
-        return EOL_PATTERN.findAll(text).map { it.range.first }.toList()
+    fun eolPositions(text: String): List<Int> = EOL_PATTERN.findAll(text).map { it.range.first }.toList()
+
+    // seems faster to match literal with regex than substring and startsWith
+    private val isLookingAt_cache = hashMapOf<Pair<Int,RuntimeRule>,Boolean>()
+    fun isLookingAt(position: Int, terminalRule: RuntimeRule):Boolean {
+        val r = isLookingAt_cache[Pair(position,terminalRule)]
+        return if (null!=r) {
+             r
+        } else {
+            val rhs = terminalRule.rhs
+            val matched = when {
+                this.isEnd(position) -> if (terminalRule == RuntimeRuleSet.END_OF_TEXT) true else false //TODO: do we need this
+                rhs is RuntimeRuleRhsPattern -> rhs.regex.matchesAt(this.text, position)
+                rhs is RuntimeRuleRhsLiteral ->this.text.regionMatches(position, rhs.value, 0, rhs.value.length)
+                else -> error("Internal Error: not handled")
+            }
+            isLookingAt_cache[Pair(position,terminalRule)] = matched
+            matched
+        }
     }
 
-    private fun matchLiteral(position: Int, patternText: String):RegexMatcher.MatchResult? {
-        val stext = this.text.substring(position)
-        val match = stext.startsWith(patternText)//regionMatches(position, patternText, 0, patternText.length, false)
-        val matchedText = if (match) patternText else null
-        return if (null == matchedText) {
-            null
-        } else {
-            val eolPositions = this.eolPositions(matchedText)
-            RegexMatcher.MatchResult(matchedText, eolPositions)
+    private fun matchLiteral(position: Int, terminalRule: RuntimeRule): RegexMatcher.MatchResult? {
+        //val stext = this.text.substring(position)
+        //val match = stext.startsWith(patternText)//regionMatches(position, patternText, 0, patternText.length, false)
+        val match = this.isLookingAt(position,terminalRule)
+        return if (match) {
+            val text = (terminalRule.rhs as RuntimeRuleRhsLiteral).value
+            val eolPositions = emptyList<Int>() //this.eolPositions(text)
+            RegexMatcher.MatchResult(text, eolPositions)
             //matchedText
+        } else {
+            null
         }
     }
 
@@ -116,7 +145,7 @@ internal class InputFromString(
     private fun matchRegEx2(position: Int, regex: Regex): RegexMatcher.MatchResult? {
         //val stext = this.text.substring(position)
         //val matchedText = regex.matchAtStart(stext)
-        val matchedText = regex.matchAt(this.text,position)?.value
+        val matchedText = regex.matchAt(this.text, position)?.value
         return if (null == matchedText)
             null
         else {
@@ -125,6 +154,7 @@ internal class InputFromString(
             //matchedText
         }
     }
+
     private fun matchRegEx3(position: Int, regex: Regex): String? {//RegexMatcher.MatchResult? {
         val stext = this.text.substring(position)
         val match = regex.find(stext)
@@ -136,12 +166,14 @@ internal class InputFromString(
             match.value
         }
     }
+
     internal fun tryMatchText(position: Int, terminalRule: RuntimeRule): RegexMatcher.MatchResult? {
+        val rhs = terminalRule.rhs
         val matched = when {
-            (position >= this.text.length) -> if (terminalRule.value == END_OF_TEXT) RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
-            terminalRule.isPattern -> this.matchRegEx2(position, terminalRule.patternAtStart!!)
-            else -> this.matchLiteral(position, terminalRule.value)
-            //else ->pattern.match(this.text, position)
+            this.isEnd(position) -> if (terminalRule == RuntimeRuleSet.END_OF_TEXT) RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
+            rhs is RuntimeRuleRhsPattern -> this.matchRegEx2(position, rhs.regex)
+            rhs is RuntimeRuleRhsLiteral -> this.matchLiteral(position, terminalRule)
+            else -> error("Internal Error: not handled")
         }
         return matched
     }
@@ -170,10 +202,10 @@ internal class InputFromString(
 
     private fun tryCreateLeaf(terminalRuntimeRule: RuntimeRule, atInputPosition: Int): SPPTLeaf {
         // LeafIndex passed as argument because we already created it to try and find the leaf in the cache
-        return if (terminalRuntimeRule.isEmptyRule) {
+        return if (terminalRuntimeRule.rhs is RuntimeRuleRhsEmpty) {
             //val location = this.nextLocation(lastLocation, 0)
             //val leaf = SPPTLeafDefault(terminalRuntimeRule, location, true, "", 0)
-            val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, atInputPosition,0)
+            val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, atInputPosition, 0)
             this.leaves[terminalRuntimeRule, atInputPosition] = leaf
             //val cindex = CompleteNodeIndex(terminalRuntimeRule.number, inputPosition)//0, index.startPosition)
             //this.completeNodes[cindex] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
@@ -186,8 +218,7 @@ internal class InputFromString(
             } else {
                 //val location = this.nextLocation(lastLocation, match.length)//match.matchedText.length)
                 val nextInputPosition = atInputPosition + match.matchedText.length
-                val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, nextInputPosition,0)//.matchedText, 0)
-                leaf.eolPositions = match.eolPositions
+                val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, nextInputPosition, 0)
                 this.leaves[terminalRuntimeRule, atInputPosition] = leaf
                 //val cindex = CompleteNodeIndex(terminalRuntimeRule.number, inputPosition)//0, index.startPosition)
                 //this.completeNodes[cindex] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
@@ -216,10 +247,14 @@ internal class InputFromString(
      * nextInputPosition - 0 index position of next 'token', so we can calculate length
      */
     fun locationFor(startPosition: Int, length: Int): InputLocation {
-        val before = this.text.substring(0,startPosition)
-        val line = before.count { it=='\n' } +1
+        val before = this.text.substring(0, startPosition)
+        val line = before.count { it == '\n' } + 1
         val column = startPosition - before.lastIndexOf('\n')
-        return InputLocation(startPosition,column,line,length)
+        return InputLocation(startPosition, column, line, length)
+    }
+
+    fun textFromUntil(startPosition: Int, nextInputPosition: Int): String {
+        return this.text.substring(startPosition, nextInputPosition)
     }
 
 }

@@ -36,28 +36,28 @@ internal class CompletedNodesStore2<T>(val num: Int, val inputLength: Int) {
 
     operator fun set(runtimeRule: RuntimeRule, inputPosition: Int, value: T) {
         when {
-            runtimeRule.number == RuntimeRuleSet.GOAL_RULE_NUMBER -> {
+            runtimeRule.ruleNumber == RuntimeRuleSet.GOAL_RULE_NUMBER -> {
                 //check(0 == inputPosition) //TODO: remove this
                 _goal = value
             }
-            runtimeRule.number == RuntimeRuleSet.EOT_RULE_NUMBER -> {
+            runtimeRule.ruleNumber == RuntimeRuleSet.EOT_RULE_NUMBER -> {
                 _eot[inputPosition] = value
             }
-            runtimeRule.number == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
+            runtimeRule.ruleNumber == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
                 //check(0 == inputPosition) //TODO: remove this
                 _skip = value
             }
             //0 > runtimeRule.number -> error("") //TODO: remove this
             else -> {
-                var m2 = _map[runtimeRule.number]
+                var m2 = _map[runtimeRule.ruleNumber]
                 if (null == m2) {
                     //m2 = MapIntTo<T>()
                     if (_map.isInitialised) {
-                        _map.setToInitialised(runtimeRule.number)
-                        m2 = _map[runtimeRule.number]!!
+                        _map.setToInitialised(runtimeRule.ruleNumber)
+                        m2 = _map[runtimeRule.ruleNumber]!!
                     } else {
                         m2 = MapIntTo<T>()
-                        _map[runtimeRule.number] = m2
+                        _map[runtimeRule.ruleNumber] = m2
                     }
                 }
                 m2[inputPosition] = value
@@ -67,19 +67,19 @@ internal class CompletedNodesStore2<T>(val num: Int, val inputLength: Int) {
 
     operator fun get(runtimeRule: RuntimeRule, inputPosition: Int): T? {
         return when {
-            runtimeRule.number == RuntimeRuleSet.GOAL_RULE_NUMBER -> {
+            runtimeRule.ruleNumber == RuntimeRuleSet.GOAL_RULE_NUMBER -> {
                 //check(0 == inputPosition) //TODO: remove this
                 _goal
             }
-            runtimeRule.number == RuntimeRuleSet.EOT_RULE_NUMBER -> {
+            runtimeRule.ruleNumber == RuntimeRuleSet.EOT_RULE_NUMBER -> {
                 _eot[inputPosition]
             }
-            runtimeRule.number == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
+            runtimeRule.ruleNumber == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
                 //check(0 == inputPosition) //TODO: remove this
                 _skip
             }
             else -> {
-                val m2 = _map[runtimeRule.number] ?: return null
+                val m2 = _map[runtimeRule.ruleNumber] ?: return null
                 m2[inputPosition]
             }
         }
@@ -90,7 +90,7 @@ internal class CompletedNodesStore2<T>(val num: Int, val inputLength: Int) {
 
 internal class CompletedNodesStore<T>(val num: Int, val inputLength: Int) {
 
-    private val _map = HashMap<Pair<Int,Int>,T>()
+    private val _map = HashMap<Pair<RuntimeRule,Int>,T>() //TODO: make this more efficient
     private var _goal: T? = null
     private var _eot = HashMap<Int,T>()//MapIntTo<T>()
     private var _skip: T? = null
@@ -104,39 +104,39 @@ internal class CompletedNodesStore<T>(val num: Int, val inputLength: Int) {
 
     operator fun set(runtimeRule: RuntimeRule, inputPosition: Int, value: T) {
         when {
-            runtimeRule.number == RuntimeRuleSet.GOAL_RULE_NUMBER -> {
+            runtimeRule.ruleNumber == RuntimeRuleSet.GOAL_RULE_NUMBER -> {
                 //check(0 == inputPosition) //TODO: remove this
                 _goal = value
             }
-            runtimeRule.number == RuntimeRuleSet.EOT_RULE_NUMBER -> {
+            runtimeRule.ruleNumber == RuntimeRuleSet.EOT_RULE_NUMBER -> {
                 _eot[inputPosition] = value
             }
-            runtimeRule.number == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
+            runtimeRule.ruleNumber == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
                 //check(0 == inputPosition) //TODO: remove this
                 _skip = value
             }
             //0 > runtimeRule.number -> error("") //TODO: remove this
             else -> {
-                _map[Pair(runtimeRule.number,inputPosition)] = value
+                _map[Pair(runtimeRule,inputPosition)] = value
             }
         }
     }
 
     operator fun get(runtimeRule: RuntimeRule, inputPosition: Int): T? {
         return when {
-            runtimeRule.number == RuntimeRuleSet.GOAL_RULE_NUMBER -> {
+            runtimeRule.ruleNumber == RuntimeRuleSet.GOAL_RULE_NUMBER -> {
                 //check(0 == inputPosition) //TODO: remove this
                 _goal
             }
-            runtimeRule.number == RuntimeRuleSet.EOT_RULE_NUMBER -> {
+            runtimeRule.ruleNumber == RuntimeRuleSet.EOT_RULE_NUMBER -> {
                 _eot[inputPosition]
             }
-            runtimeRule.number == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
+            runtimeRule.ruleNumber == RuntimeRuleSet.SKIP_RULE_NUMBER -> {
                 //check(0 == inputPosition) //TODO: remove this
                 _skip
             }
             else -> {
-                _map[Pair(runtimeRule.number,inputPosition)]
+                _map[Pair(runtimeRule,inputPosition)]
             }
         }
     }

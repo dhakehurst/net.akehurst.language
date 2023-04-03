@@ -17,17 +17,26 @@
 package net.akehurst.language.parser.scanondemand.concatenation
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_multiple_the_same : test_ScanOnDemandParserAbstract() {
 
+    /*
+        WS = "\s+"
+        S = X Ls
+        Ls = L*
+        L = A A B
+        A = 'a'
+        B = 'b'
+        X = 'x'
+     */
     private companion object {
         val rrs = runtimeRuleSet {
-            skip("WS") { literal("\\s+") }
+            concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { ref("X"); ref("Ls") }
             multi("Ls", 0, -1, "L")
             concatenation("L") { ref("A"); ref("A"); ref("B"); }
@@ -35,41 +44,40 @@ internal class test_multiple_the_same : test_ScanOnDemandParserAbstract() {
             literal("B", "b")
             literal("X", "x")
         }
+        const val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val goal = "S"
         val sentence = ""
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0,1,1,1),"^", setOf("X"))
+            ), issues.error)
     }
 
     @Test
     fun id_only() {
-        val goal = "S"
         val sentence = "x"
 
         val expected = """
             S { X:'x' Ls|1 { §empty } }
         """.trimIndent()
 
-        val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun xaab() {
-        val goal = "S"
         val sentence = "xaab"
 
         val expected = """
@@ -78,12 +86,12 @@ internal class test_multiple_the_same : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 

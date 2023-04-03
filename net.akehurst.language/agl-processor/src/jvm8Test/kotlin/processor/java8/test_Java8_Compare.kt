@@ -16,14 +16,17 @@
 
 package net.akehurst.language.processor.java8
 
+import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @RunWith(Parameterized::class)
 class test_Java8_Compare(val data: Data) {
@@ -50,18 +53,26 @@ class test_Java8_Compare(val data: Data) {
 
     companion object {
 
-        var aglSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglSpec.agl", true)
-        var aglOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AglOptm.agl", true)
+        var aglSpecProcessor: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor("/java8/Java8AglSpec.agl", true)
+        var aglOptmProcessor: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor("/java8/Java8AglOptm.agl", true)
 
-        var antlrSpecProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrSpec.agl")
-        var antlrOptmProcessor: LanguageProcessor = createJava8Processor("/java8/Java8AntlrOptm.agl")
+        var antlrSpecProcessor: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor("/java8/Java8AntlrSpec.agl")
+        var antlrOptmProcessor: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor("/java8/Java8AntlrOptm.agl")
 
-        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor {
+        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<AsmSimple, ContextSimple> {
             println("Building $path")
             val grammarStr = this::class.java.getResource(path).readText()
-            val proc = Agl.processorFromString(grammarStr)
+            val proc = Agl.processorFromString<AsmSimple, ContextSimple>(
+                grammarDefinitionStr = grammarStr,
+                aglOptions = Agl.options {
+                    semanticAnalysis {
+                        // switch off ambiguity analysis for performance
+                        option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
+                    }
+                }
+            ).processor!!
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
-            //proc.buildFor(forRule)//TODO: use build
+            //proc.buildFor(Agl.parseOptions { goalRuleName(forRule) })//TODO: use build
             println("Built $path")
             return proc
         }
@@ -129,20 +140,14 @@ class test_Java8_Compare(val data: Data) {
         return res
     }
 
-    private fun testParse(proc: LanguageProcessor, toUpper: Boolean = false) {
-        try {
-            val queryStr = this.data.sentence
-            val grammarRule = if (toUpper) this.data.grammarRule.capitalize() else this.data.grammarRule
-            val tree = proc.parseForGoal(grammarRule, queryStr)
-            assertNotNull(tree)
-            val resultStr = clean(tree.asString)
-            assertEquals(queryStr, resultStr)
-        } catch (ex: ParseFailedException) {
-            println(this.data)
-            println(ex.message)
-            println(ex.longestMatch?.asString)
-            throw ex
-        }
+    private fun testParse(proc: LanguageProcessor<AsmSimple, ContextSimple>, toUpper: Boolean = false) {
+        val queryStr = this.data.sentence
+        val grammarRule = if (toUpper) this.data.grammarRule.capitalize() else this.data.grammarRule
+        val result = proc.parse(queryStr, Agl.parseOptions { goalRuleName(grammarRule) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
+        val resultStr = clean(result.sppt!!.asString)
+        assertEquals(queryStr, resultStr)
     }
 
     @Test(timeout = 5000)

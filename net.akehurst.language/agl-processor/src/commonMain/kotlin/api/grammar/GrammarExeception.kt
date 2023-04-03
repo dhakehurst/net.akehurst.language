@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.analyser
+package net.akehurst.language.api.grammar
 
 class GrammarExeception(message: String, cause: Throwable?) : RuntimeException(message, cause)

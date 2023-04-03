@@ -16,10 +16,11 @@
 
 package net.akehurst.language.agl.sppt
 
-import net.akehurst.language.agl.ast.GrammarBuilderDefault
-import net.akehurst.language.agl.ast.NamespaceDefault
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
+import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.agl.parser.InputFromString
+import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.sppt.SPPTNode
 import kotlin.test.*
@@ -121,7 +122,7 @@ class test_SPPTParser {
         val actual = sut.addTree(treeString)
 
         assertNotNull(actual)
-        assertEquals(" 'a'", actual.toStringAll)
+        assertEquals("'a'", actual.toStringAll)
     }
 
     @Test
@@ -137,7 +138,7 @@ class test_SPPTParser {
         val actual = sut.addTree(treeString)
 
         assertNotNull(actual)
-        assertEquals(" '\\\\'", actual.toStringAll)
+        assertEquals("'\\\\'", actual.toStringAll)
     }
 
     @Test
@@ -169,7 +170,7 @@ class test_SPPTParser {
         val actual = sut.addTree(treeString)
 
         assertNotNull(actual)
-        assertEquals(" a { §empty.a }", actual.toStringAll)
+        assertEquals("a { <EMPTY> }", actual.toStringAll)
     }
 
     @Test
@@ -185,7 +186,7 @@ class test_SPPTParser {
         val actual = sut.addTree(treeString)
 
         assertNotNull(actual)
-        assertEquals(" a { 'a' }", actual.toStringAll)
+        assertEquals("a { 'a' }", actual.toStringAll)
     }
 
 

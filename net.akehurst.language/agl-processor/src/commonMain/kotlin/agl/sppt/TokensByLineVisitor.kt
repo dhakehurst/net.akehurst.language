@@ -17,8 +17,10 @@
 package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.sppt.*
+import net.akehurst.language.api.sppt.SPPTBranch
+import net.akehurst.language.api.sppt.SPPTLeaf
+import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
 
 
 internal class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, List<String>> {

@@ -16,8 +16,6 @@
 
 package net.akehurst.language.agl
 
-import kotlin.reflect.KProperty
-
 // TODO: remove this pre release
 // This a workaround for the debugger
 // see [https://youtrack.jetbrains.com/issue/KTIJ-1170#focus=Comments-27-4433190.0-0]

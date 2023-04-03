@@ -18,11 +18,12 @@ package net.akehurst.language.parser.scanondemand.choiceEqual
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract() {
 
@@ -34,7 +35,7 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
     // WS = "\s+" ;
     private companion object {
         val rrs = runtimeRuleSet {
-            skip("WS") { pattern("\\s+") }
+            concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { ref("expr") }
             choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("var")
@@ -44,29 +45,30 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
             concatenation("var") { pattern("[a-zA-Z]+") }
             concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
             concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
+        }.also {
+            //it.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         }
+        val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val goal = "S"
         val sentence = ""
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^",setOf("\"[a-zA-Z]+\"","'if'"))
+        ),issues.error)
     }
 
     @Test
     fun ifthenelse() {
-        val goal = "S"
         val sentence = "if a then b else c"
 
         val expected = """
             S {
-              expr|1 {
+              expr {
                 ifthenelse {
                   'if' WS { "\s+" : ' ' }
                   expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
@@ -79,18 +81,17 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun ifthen() {
-        val goal = "S"
         val sentence = "if a then b"
 
         val expected = """
@@ -106,18 +107,17 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun ifthenelseifthen() {
-        val goal = "S"
         val sentence = "if a then b else if c then d"
 
         val expected = """
@@ -142,18 +142,17 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun ifthenifthenelse() {
-        val goal = "S"
         val sentence = "if a then if b then c else d"
 
         val expected1 = """
@@ -200,14 +199,77 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 2, //TODO: can it be 1?
-                expectedTrees = *arrayOf(expected1)
+                expectedNumGSSHeads = 2,
+                expectedTrees = arrayOf(expected1)
         )
     }
 
+    @Test
+    fun ifthenifthenifthenelse() {
+        val sentence = "if x then if a then if b then c else d"
+
+        val expected1 = """
+            S {
+              expr {
+                ifthen {
+                  'if' WS { "\s+" : ' ' }
+                  expr { var { "[a-zA-Z]+" : 'x' WS { "\s+" : ' ' } } }
+                  'then' WS { "\s+" : ' ' }
+                  expr {
+                      ifthen {
+                          'if' WS { "\s+" : ' ' }
+                          expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
+                          'then' WS { "\s+" : ' ' }
+                          expr {
+                            ifthenelse {
+                              'if' WS { "\s+" : ' ' }
+                              expr { var { "[a-zA-Z]+" : 'b' WS { "\s+" : ' ' } } }
+                              'then' WS { "\s+" : ' ' }
+                              expr { var { "[a-zA-Z]+" : 'c' WS { "\s+" : ' ' } } }
+                              'else' WS { "\s+" : ' ' }
+                              expr { var { "[a-zA-Z]+" : 'd' } }
+                            }
+                          }
+                      }
+                  }
+                }
+              }
+            }
+        """.trimIndent()
+
+        val expected2 = """
+            S {
+              expr {
+                ifthenelse {
+                  'if' WS { "\s+" : ' ' }
+                  expr { var { "[a-zA-Z]+" : 'a' WS { "\s+" : ' ' } } }
+                  'then' WS { "\s+" : ' ' }
+                  expr {
+                    ifthen {
+                      'if' WS { "\s+" : ' ' }
+                      expr { var { "[a-zA-Z]+" : 'b' WS { "\s+" : ' ' } } }
+                      'then' WS { "\s+" : ' ' }
+                      expr { var { "[a-zA-Z]+" : 'c' WS { "\s+" : ' ' } } }
+                    }
+                  }
+                  'else' WS { "\s+" : ' ' }
+                  expr { var { "[a-zA-Z]+" : 'd' } }
+                }
+              }
+            }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected1)
+        )
+    }
 
 }

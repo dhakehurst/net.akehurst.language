@@ -17,7 +17,6 @@
 package net.akehurst.language.parser.scanondemand
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -28,8 +27,8 @@ internal class test_RuntimeParser {
 
     @Test
     fun construct() {
-        val rrb = RuntimeRuleSetBuilder()
-        val sp = ScanOnDemandParser(rrb.ruleSet())
+        val rrs = runtimeRuleSet {  }
+        val sp = ScanOnDemandParser(rrs)
 
         assertNotNull(sp)
     }
@@ -47,30 +46,30 @@ internal class test_RuntimeParser {
 
     @Test
     fun expectedAt() {
-        val rrb = RuntimeRuleSetBuilder()
-        val r_a = rrb.literal("a")
-        val r_S = rrb.rule("S").concatenation(r_a)
+        val rrs = runtimeRuleSet {
+            concatenation("S") { literal("a") }
+        }
 
-        val sp = ScanOnDemandParser(rrb.ruleSet())
+        val sp = ScanOnDemandParser(rrs)
 
         val actual = sp.expectedAt("S", "", 0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
 
-        val expected = listOf(r_S)
+        val expected = listOf(rrs.findTerminalRule("'a'"))
 
         assertEquals(expected, actual)
     }
 
     @Test
     fun expectedTerminalsAt() {
-        val rrb = RuntimeRuleSetBuilder()
-        val r_a = rrb.literal("a")
-        val r_S = rrb.rule("S").concatenation(r_a)
+        val rrs = runtimeRuleSet {
+            concatenation("S") { literal("a") }
+        }
 
-        val sp = ScanOnDemandParser(rrb.ruleSet())
+        val sp = ScanOnDemandParser(rrs)
 
         val actual = sp.expectedTerminalsAt("S", "", 0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
 
-        val expected = listOf(r_a)
+        val expected = listOf(rrs.findTerminalRule("'a'"))
 
         assertEquals(expected, actual)
     }

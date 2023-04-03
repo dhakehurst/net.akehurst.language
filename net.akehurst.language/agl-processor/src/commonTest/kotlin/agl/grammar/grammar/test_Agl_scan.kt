@@ -25,8 +25,8 @@ internal class test_Agl_scan {
 
     @Test
     fun scan_literal_empty_a() {
-        val sut = Agl.processorFromRuleList(listOf("a = '';"))
-        val tokens = sut.scan("ab")
+        val pr = Agl.processorFromString<Any,Any>("namespace test grammar Test { a = ''; }")
+        val tokens = pr.processor!!.scan("ab")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
@@ -43,8 +43,8 @@ internal class test_Agl_scan {
 
     @Test
     fun scan_pattern_empty_a() {
-        val sut = Agl.processorFromRuleList(listOf("a = \"[x]*\";"))
-        val tokens = sut.scan("ab")
+        val pr = Agl.processorFromString<Any,Any>("namespace test grammar Test { a = \"[x]*\"; }")
+        val tokens = pr.processor!!.scan("ab")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
@@ -61,8 +61,8 @@ internal class test_Agl_scan {
 
     @Test
     fun scan_a_a() {
-        val sut = Agl.processorFromRuleList(listOf("a = 'a';"))
-        val tokens = sut.scan("a")
+        val pr = Agl.processorFromStringDefault("namespace test grammar Test { a = 'a';}")
+        val tokens = pr.processor!!.scan("a")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
@@ -79,8 +79,8 @@ internal class test_Agl_scan {
 
     @Test
     fun scan_a_aa() {
-        val sut = Agl.processorFromRuleList(listOf("a = 'a';"))
-        val tokens = sut.scan("aa")
+        val pr = Agl.processorFromString<Any,Any>("namespace test grammar Test { a = 'a';}")
+        val tokens = pr.processor!!.scan("aa")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
@@ -90,8 +90,8 @@ internal class test_Agl_scan {
 
     @Test
     fun scan_a_aaa() {
-        val sut = Agl.processorFromRuleList(listOf("a = 'a';"))
-        val tokens = sut.scan("aaa")
+        val pr = Agl.processorFromString<Any,Any>("namespace test grammar Test { a = 'a';}")
+        val tokens = pr.processor!!.scan("aaa")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
@@ -101,8 +101,8 @@ internal class test_Agl_scan {
 
     @Test
     fun scan_ab_aba() {
-        val sut = Agl.processorFromRuleList(listOf("a = 'a';", "b = 'b';"))
-        val tokens = sut.scan("aba")
+        val pr = Agl.processorFromString<Any,Any>("namespace test grammar Test { a = 'a'; b = 'b'; }")
+        val tokens = pr.processor!!.scan("aba")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
@@ -116,7 +116,7 @@ internal class test_Agl_scan {
 
     @Test
     fun scan_end_of_line() {
-        val sut = Agl.processorFromString("""
+        val pr = Agl.processorFromString<Any,Any>("""
             namespace test
             grammar Test {
                 skip WHITESPACE = "\s+" ;
@@ -124,12 +124,12 @@ internal class test_Agl_scan {
                 char = "[a-z]" ;
             }
         """.trimIndent())
-        var tokens = sut.scan("a")
+        var tokens = pr.processor!!.scan("a")
         var tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
         assertEquals(1, tokens.size)
 
-        tokens = sut.scan("a b")
+        tokens = pr.processor!!.scan("a b")
         tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
         assertEquals(3, tokens.size)

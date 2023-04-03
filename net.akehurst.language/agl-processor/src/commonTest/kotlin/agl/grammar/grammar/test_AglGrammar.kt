@@ -17,15 +17,20 @@
 package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
-import net.akehurst.language.api.syntaxAnalyser.AsmSimple
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
+import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorException
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+import kotlin.test.*
 
 class test_AglGrammar {
+
+    @BeforeTest
+    fun before() {
+        //Agl.registry.agl.grammar.processor?.buildFor()
+    }
 
     @Test
     fun single_line_comment() {
@@ -38,15 +43,18 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual = p.parse("a");
-        val expected = p.spptParser.parse("""
+        val result = pr.processor!!.parse("a")
+        val expected = pr.processor!!.spptParser.parse(
+            """
             a { 'a' }
-        """)
-        assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(expected, actual)
+        """
+        )
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -59,15 +67,18 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual = p.parse("");
-        val expected = p.spptParser.parse("""
+        val result = pr.processor!!.parse("");
+        val expected = pr.processor!!.spptParser.parse(
+            """
             a { §empty }
-        """)
-        assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(expected, actual)
+        """
+        )
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -80,15 +91,18 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual = p.parse("a");
-        val expected = p.spptParser.parse("""
+        val result = pr.processor!!.parse("a");
+        val expected = pr.processor!!.spptParser.parse(
+            """
             a { 'a' }
-        """)
-        assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(expected, actual)
+        """
+        )
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -101,15 +115,18 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual = p.parse("a");
-        val expected = p.spptParser.parse("""
+        val result = pr.processor!!.parse("a");
+        val expected = pr.processor!!.spptParser.parse(
+            """
             a { '' 'a' }
-        """)
-        assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(expected, actual)
+        """
+        )
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -122,18 +139,21 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual = p.parse("\\b");
-        val expected = p.spptParser.parse("""
+        val result = pr.processor!!.parse("\\b");
+        val expected = pr.processor!!.spptParser.parse(
+            """
              EscapeSequence {
                 '\\'
                 "[btnfr'\\]" : 'b'
              }
-        """)
-        assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(expected, actual)
+        """
+        )
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -146,17 +166,20 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual = p.parse("b");
-        val expected = p.spptParser.parse("""
+        val result = pr.processor!!.parse("b");
+        val expected = pr.processor!!.spptParser.parse(
+            """
              a {
                 "[a-c]":'b'
              }
-        """)
-        assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(expected, actual)
+        """
+        )
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -169,15 +192,18 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual = p.parse("a");
-        val expected = p.spptParser.parse("""
+        val result = pr.processor!!.parse("a");
+        val expected = pr.processor!!.spptParser.parse(
+            """
              a:'a'
-        """)
-        assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(expected, actual)
+        """
+        )
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -191,15 +217,18 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual = p.parse("ba");
-        val expected = p.spptParser.parse("""
+        val result = pr.processor!!.parse("ba");
+        val expected = pr.processor!!.spptParser.parse(
+            """
              b{ 'b' a : 'a' }
-        """)
-        assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(expected, actual)
+        """
+        )
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -212,15 +241,18 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual = p.parse("abc");
-        val expected = p.spptParser.parse("""
+        val result = pr.processor!!.parse("abc");
+        val expected = pr.processor!!.spptParser.parse(
+            """
              a { 'a' 'b' 'c' }
-        """)
-        assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(expected, actual)
+        """
+        )
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -233,15 +265,18 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual = p.parse("b");
-        val expected = p.spptParser.parse("""
+        val result = pr.processor!!.parse("b");
+        val expected = pr.processor!!.spptParser.parse(
+            """
              abc|1 { 'b' }
-        """)
-        assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(expected, actual)
+        """
+        )
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -254,15 +289,18 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual = p.parse("b");
-        val expected = p.spptParser.parse("""
+        val result = pr.processor!!.parse("b");
+        val expected = pr.processor!!.spptParser.parse(
+            """
              abc|1 { 'b' }
-        """)
-        assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(expected, actual)
+        """
+        )
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -282,15 +320,18 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual = p.parse("f");
-        val expected = p.spptParser.parse("""
+        val result = pr.processor!!.parse("f");
+        val expected = pr.processor!!.spptParser.parse(
+            """
              choice|5 { f { 'f' } }
-        """)
-        assertEquals(expected.toStringAll, actual.toStringAll)
-        assertEquals(expected, actual)
+        """
+        )
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -303,22 +344,28 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual1 = p.parse("");
-        val expected1 = p.spptParser.parse("""
-             a|1 { §empty }
-        """)
-        assertEquals(expected1.toStringAll, actual1.toStringAll)
-        assertEquals(expected1, actual1)
+        val result1 = pr.processor!!.parse("");
+        val expected1 = pr.processor!!.spptParser.parse(
+            """
+             a { §a§multi1 { §empty } }
+        """
+        )
+        assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
+        assertEquals(expected1, result1.sppt)
+        assertTrue(result1.issues.isEmpty())
 
-        val actual2 = p.parse("a");
-        val expected2 = p.spptParser.parse("""
-             a { 'a' }
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
-        assertEquals(expected2, actual2)
+        val result2 = pr.processor!!.parse("a");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             a { §a§multi1 { 'a' } }
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
     }
 
     @Test
@@ -331,29 +378,38 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual1 = p.parse("");
-        val expected1 = p.spptParser.parse("""
-             a|1 { §empty }
-        """)
-        assertEquals(expected1.toStringAll, actual1.toStringAll)
-        assertEquals(expected1, actual1)
+        val result1 = pr.processor!!.parse("");
+        val expected1 = pr.processor!!.spptParser.parse(
+            """
+             a { §a§multi1 { §empty } }
+        """
+        )
+        assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
+        assertEquals(expected1, result1.sppt)
+        assertTrue(result1.issues.isEmpty())
 
-        val actual2 = p.parse("a");
-        val expected2 = p.spptParser.parse("""
-             a { 'a' }
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
-        assertEquals(expected2, actual2)
+        val result2 = pr.processor!!.parse("a");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             a { §a§multi1 { 'a' } }
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
 
-        val actual3 = p.parse("aaa");
-        val expected3 = p.spptParser.parse("""
-             a { 'a' 'a' 'a' }
-        """)
-        assertEquals(expected3.toStringAll, actual3.toStringAll)
-        assertEquals(expected3, actual3)
+        val result3 = pr.processor!!.parse("aaa");
+        val expected3 = pr.processor!!.spptParser.parse(
+            """
+             a { §a§multi1 { 'a' 'a' 'a' } }
+        """
+        )
+        assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
+        assertEquals(expected3, result3.sppt)
+        assertTrue(result3.issues.isEmpty())
     }
 
     @Test
@@ -366,26 +422,267 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        assertFailsWith<ParseFailedException> {
-            val actual1 = p.parse("")
-        }
+        val result1 = pr.processor!!.parse("")
+        assertEquals(null, result1.sppt)
+        val expIssues1 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'")))
+        assertEquals(expIssues1, result1.issues.all)
 
-        val actual2 = p.parse("a");
-        val expected2 = p.spptParser.parse("""
-             a { 'a' }
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
-        assertEquals(expected2, actual2)
+        val result2 = pr.processor!!.parse("a");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             a { §a§multi1 { 'a' } }
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
 
-        val actual3 = p.parse("aaa");
-        val expected3 = p.spptParser.parse("""
-             a { 'a' 'a' 'a' }
-        """)
-        assertEquals(expected3.toStringAll, actual3.toStringAll)
-        assertEquals(expected3, actual3)
+        val result3 = pr.processor!!.parse("aaa");
+        val expected3 = pr.processor!!.spptParser.parse(
+            """
+             a { §a§multi1 { 'a' 'a' 'a' } }
+        """
+        )
+        assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
+        assertEquals(expected3, result3.sppt)
+        assertTrue(result3.issues.isEmpty())
+    }
+
+    @Test
+    fun literal_multi_range_fixed() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = 'a'4 ;
+            }
+        """.trimIndent()
+
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
+
+        val result0 = pr.processor!!.parse("")
+        assertEquals(null, result0.sppt)
+        val expIssues0 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'")))
+        assertEquals(expIssues0, result0.issues.all)
+
+        val result1 = pr.processor!!.parse("a")
+        assertEquals(null, result1.sppt)
+        val expIssues1 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'")))
+        assertEquals(expIssues1, result1.issues.all)
+
+        val result2 = pr.processor!!.parse("aa");
+        assertEquals(null, result2.sppt)
+        val expIssues2 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(2, 3, 1, 1), "aa^", setOf("'a'")))
+        assertEquals(expIssues2, result2.issues.all)
+
+        val result3 = pr.processor!!.parse("aaa");
+        assertEquals(null, result3.sppt)
+        val expIssues3 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(3, 4, 1, 1), "aaa^", setOf("'a'")))
+        assertEquals(expIssues3, result3.issues.all)
+
+        val result4 = pr.processor!!.parse("aaaa");
+        val expected4 = pr.processor!!.spptParser.parse(
+            """
+             a { §a§multi1 { 'a' 'a' 'a' 'a' } }
+        """
+        )
+        assertNotNull(result4.sppt, result4.issues.joinToString(separator = "\n") { "$it" })
+        assertEquals(expected4.toStringAll, result4.sppt?.toStringAll)
+        assertEquals(expected4, result4.sppt)
+        assertTrue(result4.issues.isEmpty())
+
+        val result5 = pr.processor!!.parse("aaaaa");
+        assertEquals(null, result5.sppt)
+        val expIssues5 = listOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(4, 5, 1, 1), "aaaa^a", setOf("<EOT>")))
+        assertEquals(expIssues5, result5.issues.error)
+    }
+
+    @Test
+    fun literal_multi_range_unbraced_unbounded() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = 'a'2+ ;
+            }
+        """.trimIndent()
+
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
+
+        val result0 = pr.processor!!.parse("")
+        assertEquals(null, result0.sppt)
+        val expIssues0 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'")))
+        assertEquals(expIssues0, result0.issues.all)
+
+        val result1 = pr.processor!!.parse("a")
+        assertEquals(null, result1.sppt)
+        val expIssues1 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'")))
+        assertEquals(expIssues1, result1.issues.all)
+
+        val result2 = pr.processor!!.parse("aa");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             a { §a§multi1 { 'a' 'a' } }
+        """
+        )
+        assertNotNull(result2.sppt, result2.issues.joinToString(separator = "\n") { "$it" })
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
+
+        val result3 = pr.processor!!.parse("aaa");
+        val expected3 = pr.processor!!.spptParser.parse(
+            """
+             a { §a§multi1 { 'a' 'a' 'a' } }
+        """
+        )
+        assertNotNull(result3.sppt, result2.issues.joinToString(separator = "\n") { "$it" })
+        assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
+        assertEquals(expected3, result3.sppt)
+        assertTrue(result3.issues.isEmpty())
+    }
+
+    @Test
+    fun literal_multi_range_braced_unbounded() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = 'a'{2+} ;
+            }
+        """.trimIndent()
+
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
+
+        val result0 = pr.processor!!.parse("")
+        assertEquals(null, result0.sppt)
+        val expIssues0 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'")))
+        assertEquals(expIssues0, result0.issues.all)
+
+        val result1 = pr.processor!!.parse("a")
+        assertEquals(null, result1.sppt)
+        val expIssues1 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'")))
+        assertEquals(expIssues1, result1.issues.all)
+
+        val result2 = pr.processor!!.parse("aa");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             a { §a§multi1 { 'a' 'a' } }
+        """
+        )
+        assertNotNull(result2.sppt, result2.issues.joinToString(separator = "\n") { "$it" })
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
+
+        val result3 = pr.processor!!.parse("aaa");
+        val expected3 = pr.processor!!.spptParser.parse(
+            """
+             a { §a§multi1 { 'a' 'a' 'a' } }
+        """
+        )
+        assertNotNull(result3.sppt, result2.issues.joinToString(separator = "\n") { "$it" })
+        assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
+        assertEquals(expected3, result3.sppt)
+        assertTrue(result3.issues.isEmpty())
+    }
+
+    @Test
+    fun literal_multi_range_unbraced_bounded() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = 'a'2..5 ;
+            }
+        """.trimIndent()
+
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
+
+        val result0 = pr.processor!!.parse("")
+        assertEquals(null, result0.sppt)
+        val expIssues0 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'")))
+        assertEquals(expIssues0, result0.issues.all)
+
+        val result1 = pr.processor!!.parse("a")
+        assertEquals(null, result1.sppt)
+        val expIssues1 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'")))
+        assertEquals(expIssues1, result1.issues.all)
+
+        val result2 = pr.processor!!.parse("aa");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             a { §a§multi1 { 'a' 'a' } }
+        """
+        )
+        assertNotNull(result2.sppt, result2.issues.joinToString(separator = "\n") { "$it" })
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
+
+        val result3 = pr.processor!!.parse("aaa");
+        val expected3 = pr.processor!!.spptParser.parse(
+            """
+             a { §a§multi1 { 'a' 'a' 'a' } }
+        """
+        )
+        assertNotNull(result3.sppt, result2.issues.joinToString(separator = "\n") { "$it" })
+        assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
+        assertEquals(expected3, result3.sppt)
+        assertTrue(result3.issues.isEmpty())
+    }
+
+    @Test
+    fun literal_multi_range_braced_bounded() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = 'a'{2..5} ;
+            }
+        """.trimIndent()
+
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
+
+        val result0 = pr.processor!!.parse("")
+        assertEquals(null, result0.sppt)
+        val expIssues0 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'")))
+        assertEquals(expIssues0, result0.issues.all)
+
+        val result1 = pr.processor!!.parse("a")
+        assertEquals(null, result1.sppt)
+        val expIssues1 = setOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'")))
+        assertEquals(expIssues1, result1.issues.all)
+
+        val result2 = pr.processor!!.parse("aa");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             a { §a§multi1 { 'a' 'a' } }
+        """
+        )
+        assertNotNull(result2.sppt, result2.issues.joinToString(separator = "\n") { "$it" })
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
+
+        val result3 = pr.processor!!.parse("aaa");
+        val expected3 = pr.processor!!.spptParser.parse(
+            """
+             a { §a§multi1 { 'a' 'a' 'a' } }
+        """
+        )
+        assertNotNull(result3.sppt, result2.issues.joinToString(separator = "\n") { "$it" })
+        assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
+        assertEquals(expected3, result3.sppt)
+        assertTrue(result3.issues.isEmpty())
     }
 
     @Test
@@ -401,15 +698,19 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        val p2 = Agl.processorFromString<Any, Any>(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual1 = p.parse("abc");
-        val expected1 = p.spptParser.parse("""
+        val result1 = pr.processor!!.parse("abc");
+        val expected1 = pr.processor!!.spptParser.parse(
+            """
              S { a {'a'} b{'b'} c{'c'} }
-        """)
-        assertEquals(expected1.toStringAll, actual1.toStringAll)
-        assertEquals(expected1, actual1)
+        """
+        )
+        assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
+        assertEquals(expected1, result1.sppt)
+        assertTrue(result1.issues.isEmpty())
     }
 
     @Test
@@ -423,22 +724,28 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual1 = p.parse("");
-        val expected1 = p.spptParser.parse("""
-             S|1 {  §empty }
-        """)
-        assertEquals(expected1.toStringAll, actual1.toStringAll)
-        assertEquals(expected1, actual1)
+        val result1 = pr.processor!!.parse("");
+        val expected1 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§multi1 {  §empty } }
+        """
+        )
+        assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
+        assertEquals(expected1, result1.sppt)
+        assertTrue(result1.issues.isEmpty())
 
-        val actual2 = p.parse("a");
-        val expected2 = p.spptParser.parse("""
-             S { a{'a'} }
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
-        assertEquals(expected2, actual2)
+        val result2 = pr.processor!!.parse("a");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§multi1 { a{'a'} } }
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
     }
 
     @Test
@@ -454,29 +761,38 @@ class test_AglGrammar {
 
         //NOTE: there should be no pseudo rule because there is only one item on rhs of rule 'S'
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual1 = p.parse("");
-        val expected1 = p.spptParser.parse("""
-             S|1 { §empty }
-        """)
-        assertEquals(expected1.toStringAll, actual1.toStringAll)
-        assertEquals(expected1, actual1)
+        val result1 = pr.processor!!.parse("");
+        val expected1 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§multi1 { §empty } }
+        """
+        )
+        assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
+        assertEquals(expected1, result1.sppt)
+        assertTrue(result1.issues.isEmpty())
 
-        val actual2 = p.parse("a");
-        val expected2 = p.spptParser.parse("""
-             S { a{'a'} }
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
-        assertEquals(expected2, actual2)
+        val result2 = pr.processor!!.parse("a");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§multi1 { a{'a'} } }
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
 
-        val actual3 = p.parse("aaa");
-        val expected3 = p.spptParser.parse("""
-             S { a{'a'} a{'a'} a{'a'} }
-        """)
-        assertEquals(expected3.toStringAll, actual3.toStringAll)
-        assertEquals(expected3, actual3)
+        val result3 = pr.processor!!.parse("aaa");
+        val expected3 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§multi1 { a{'a'} a{'a'} a{'a'} } }
+        """
+        )
+        assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
+        assertEquals(expected3, result3.sppt)
+        assertTrue(result3.issues.isEmpty())
     }
 
     @Test
@@ -490,30 +806,40 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        assertFailsWith<ParseFailedException> {
-            val actual1 = p.parse("")
-        }
+        val result1 = pr.processor!!.parse("")
+        assertEquals(null, result1.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), result1.issues.all
+        )
 
-        val actual2 = p.parse("a");
-        val expected2 = p.spptParser.parse("""
-             S {  a{'a'} }
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
-        assertEquals(expected2, actual2)
+        val result2 = pr.processor!!.parse("a");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§multi1 { a{'a'} } }
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
 
-        val actual3 = p.parse("aaa");
-        val expected3 = p.spptParser.parse("""
-             S {  a{'a'} a{'a'} a{'a'} }
-        """)
-        assertEquals(expected3.toStringAll, actual3.toStringAll)
-        assertEquals(expected3, actual3)
+        val result3 = pr.processor!!.parse("aaa");
+        val expected3 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§multi1 { a{'a'} a{'a'} a{'a'} } }
+        """
+        )
+        assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
+        assertEquals(expected3, result3.sppt)
+        assertTrue(result3.issues.isEmpty())
     }
 
     @Test
-    fun nonTerminal_multi_2_n() {
+    fun nonTerminal_multi_range_unbraced_unbounded() {
 
         val grammarStr = """
             namespace test
@@ -523,71 +849,215 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        assertFailsWith<ParseFailedException> {
-            val actual0 = p.parse("")
-        }
+        val result0 = pr.processor!!.parse("")
+        assertEquals(null, result0.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), result0.issues.all
+        )
 
-        assertFailsWith<ParseFailedException> {
-            val actual1 = p.parse("a")
-        }
+        val result1 = pr.processor!!.parse("a")
+        assertEquals(null, result1.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'"))
+            ), result1.issues.all
+        )
 
-        val actual2 = p.parse("aa");
-        val expected2 = p.spptParser.parse("""
-             S { a{'a'} a{'a'} }
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
-        assertEquals(expected2, actual2)
+        val result2 = pr.processor!!.parse("aa");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§multi1 { a{'a'} a{'a'} } }
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
 
-        val actual4 = p.parse("aaaa");
-        val expected4 = p.spptParser.parse("""
-             S { a{'a'} a{'a'} a{'a'} a{'a'} }
-        """)
-        assertEquals(expected4.toStringAll, actual4.toStringAll)
-        assertEquals(expected4, actual4)
+        val result4 = pr.processor!!.parse("aaaa");
+        val expected4 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§multi1 { a{'a'} a{'a'} a{'a'} a{'a'} } }
+        """
+        )
+        assertEquals(expected4.toStringAll, result4.sppt?.toStringAll)
+        assertEquals(expected4, result4.sppt)
+        assertTrue(result4.issues.isEmpty())
     }
 
     @Test
-    fun nonTerminal_multi_2_5() {
+    fun nonTerminal_multi_range_unbraced_bounded() {
 
         val grammarStr = """
             namespace test
             grammar Test {
-                S = a 2..5 ;
+                S = a 2..5;
                 a = 'a' ;
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        assertFailsWith<ParseFailedException> {
-            val actual0 = p.parse("")
-        }
+        val result0 = pr.processor!!.parse("")
+        assertEquals(null, result0.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), result0.issues.all
+        )
 
-        assertFailsWith<ParseFailedException> {
-            val actual1 = p.parse("a")
-        }
+        val result1 = pr.processor!!.parse("a")
+        assertEquals(null, result1.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'"))
+            ), result1.issues.all
+        )
 
-        val actual2 = p.parse("aa");
-        val expected2 = p.spptParser.parse("""
-             S { a{'a'} a{'a'} }
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
-        assertEquals(expected2, actual2)
+        val result2 = pr.processor!!.parse("aa");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§multi1 { a{'a'} a{'a'} } }
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
 
-        val actual5 = p.parse("aaaaa");
-        val expected5 = p.spptParser.parse("""
-             S { a{'a'} a{'a'} a{'a'} a{'a'} a{'a'} }
-        """)
-        assertEquals(expected5.toStringAll, actual5.toStringAll)
-        assertEquals(expected5, actual5)
+        val result5 = pr.processor!!.parse("aaaaa");
+        val expected5 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§multi1 { a{'a'} a{'a'} a{'a'} a{'a'} a{'a'} } }
+        """
+        )
+        assertEquals(expected5.toStringAll, result5.sppt?.toStringAll)
+        assertEquals(expected5, result5.sppt)
+        assertTrue(result5.issues.isEmpty())
 
-        assertFailsWith<ParseFailedException> {
-            val actual6 = p.parse("aaaaaa")
-        }
+        val result6 = pr.processor!!.parse("aaaaaa")
+        assertEquals(null, result6.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(5, 6, 1, 1), "aaaaa^a", setOf("<EOT>"))
+            ), result6.issues.all
+        )
+
+    }
+
+    @Test
+    fun nonTerminal_multi_range_braced_unbounded() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a{2+} ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
+
+        val result0 = pr.processor!!.parse("")
+        assertEquals(null, result0.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), result0.issues.all
+        )
+
+        val result1 = pr.processor!!.parse("a")
+        assertEquals(null, result1.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'"))
+            ), result1.issues.all
+        )
+
+        val result2 = pr.processor!!.parse("aa");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§multi1 { a{'a'} a{'a'} } }
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
+
+        val result4 = pr.processor!!.parse("aaaa");
+        val expected4 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§multi1 { a{'a'} a{'a'} a{'a'} a{'a'} } }
+        """
+        )
+        assertEquals(expected4.toStringAll, result4.sppt?.toStringAll)
+        assertEquals(expected4, result4.sppt)
+        assertTrue(result4.issues.isEmpty())
+    }
+
+    @Test
+    fun nonTerminal_multi_range_braced_bounded() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a{2..5};
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
+
+        val result0 = pr.processor!!.parse("")
+        assertEquals(null, result0.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), result0.issues.all
+        )
+
+        val result1 = pr.processor!!.parse("a")
+        assertEquals(null, result1.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'a'"))
+            ), result1.issues.all
+        )
+
+        val result2 = pr.processor!!.parse("aa");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§multi1 { a{'a'} a{'a'} } }
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
+
+        val result5 = pr.processor!!.parse("aaaaa");
+        val expected5 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§multi1 { a{'a'} a{'a'} a{'a'} a{'a'} a{'a'} } }
+        """
+        )
+        assertEquals(expected5.toStringAll, result5.sppt?.toStringAll)
+        assertEquals(expected5, result5.sppt)
+        assertTrue(result5.issues.isEmpty())
+
+        val result6 = pr.processor!!.parse("aaaaaa")
+        assertEquals(null, result6.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(5, 6, 1, 1), "aaaaa^a", setOf("<EOT>"))
+            ), result6.issues.all
+        )
+
     }
 
     @Test
@@ -601,26 +1071,36 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual0 = p.parse("");
-        val expected0 = p.spptParser.parse("""
-             S|1 { §empty }
-        """)
-        assertEquals(expected0.toStringAll, actual0.toStringAll)
-        assertEquals(expected0, actual0)
+        val result0 = pr.processor!!.parse("");
+        val expected0 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§sepList1 { §empty } }
+        """
+        )
+        assertEquals(expected0.toStringAll, result0.sppt?.toStringAll)
+        assertEquals(expected0, result0.sppt)
+        assertTrue( result0.issues.isEmpty())
 
-        val actual1 = p.parse("a");
-        val expected1 = p.spptParser.parse("""
-             S { a{'a'} }
-        """)
-        assertEquals(expected1.toStringAll, actual1.toStringAll)
-        assertEquals(expected1, actual1)
+        val result1 = pr.processor!!.parse("a");
+        val expected1 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§sepList1 { a{'a'} } }
+        """
+        )
+        assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
+        assertEquals(expected1, result1.sppt)
+        assertTrue(result1.issues.isEmpty())
 
-        assertFailsWith<ParseFailedException> {
-            val actual2 = p.parse("aa")
-        }
+        val result2 = pr.processor!!.parse("aa")
+        assertEquals(null, result2.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^a", setOf("<EOT>"))
+            ), result2.issues.all
+        )
     }
 
     @Test
@@ -634,29 +1114,38 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual0 = p.parse("")
-        val expected0 = p.spptParser.parse("""
-             S|1 { §empty }
-        """)
-        assertEquals(expected0.toStringAll, actual0.toStringAll)
-        assertEquals(expected0, actual0)
+        val result0 = pr.processor!!.parse("")
+        val expected0 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§sepList1 { §empty } }
+        """
+        )
+        assertEquals(expected0.toStringAll, result0.sppt?.toStringAll)
+        assertEquals(expected0, result0.sppt)
+        assertTrue(result0.issues.isEmpty())
 
-        val actual1 = p.parse("a")
-        val expected1 = p.spptParser.parse("""
-             S { a{'a'} }
-        """)
-        assertEquals(expected1.toStringAll, actual1.toStringAll)
-        assertEquals(expected1, actual1)
+        val result1 = pr.processor!!.parse("a")
+        val expected1 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§sepList1 { a{'a'} } }
+        """
+        )
+        assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
+        assertEquals(expected1, result1.sppt)
+        assertTrue(result1.issues.isEmpty())
 
-        val actual3 = p.parse("a,a,a");
-        val expected3 = p.spptParser.parse("""
-             S { a{'a'} ',' a{'a'} ',' a{'a'} }
-        """)
-        assertEquals(expected3.toStringAll, actual3.toStringAll)
-        assertEquals(expected3, actual3)
+        val result3 = pr.processor!!.parse("a,a,a");
+        val expected3 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§sepList1 { a{'a'} ',' a{'a'} ',' a{'a'} } }
+        """
+        )
+        assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
+        assertEquals(expected3, result3.sppt)
+        assertTrue(result3.issues.isEmpty())
     }
 
     @Test
@@ -670,30 +1159,40 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        assertFailsWith<ParseFailedException> {
-            val actual0 = p.parse("")
-        }
+        val result0 = pr.processor!!.parse("")
+        assertEquals(null, result0.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), result0.issues.all
+        )
 
-        val actual1 = p.parse("a")
-        val expected1 = p.spptParser.parse("""
-             S { a{'a'} }
-        """)
-        assertEquals(expected1.toStringAll, actual1.toStringAll)
-        assertEquals(expected1, actual1)
+        val result1 = pr.processor!!.parse("a")
+        val expected1 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§sepList1 { a{'a'} } }
+        """
+        )
+        assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
+        assertEquals(expected1, result1.sppt)
+        assertTrue(result1.issues.isEmpty())
 
-        val actual3 = p.parse("a,a,a");
-        val expected3 = p.spptParser.parse("""
-             S { a{'a'} ',' a{'a'} ',' a{'a'} }
-        """)
-        assertEquals(expected3.toStringAll, actual3.toStringAll)
-        assertEquals(expected3, actual3)
+        val result3 = pr.processor!!.parse("a,a,a");
+        val expected3 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§sepList1 { a{'a'} ',' a{'a'} ',' a{'a'} } }
+        """
+        )
+        assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
+        assertEquals(expected3, result3.sppt)
+        assertTrue(result3.issues.isEmpty())
     }
 
     @Test
-    fun nonTerminal_slist_2_n() {
+    fun nonTerminal_slist_range_unbraced_unbounded() {
 
         val grammarStr = """
             namespace test
@@ -703,34 +1202,48 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        assertFailsWith<ParseFailedException> {
-            val actual0 = p.parse("")
-        }
+        val result0 = pr.processor!!.parse("")
+        assertEquals(null, result0.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), result0.issues.all
+        )
 
-        assertFailsWith<ParseFailedException> {
-            val actual1 = p.parse("a")
-        }
+        val result1 = pr.processor!!.parse("a")
+        assertEquals(null, result1.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("','"))
+            ), result1.issues.all
+        )
 
-        val actual2 = p.parse("a,a");
-        val expected2 = p.spptParser.parse("""
-             S { a{'a'} ',' a{'a'}}
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
-        assertEquals(expected2, actual2)
+        val result2 = pr.processor!!.parse("a,a");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§sepList1 { a{'a'} ',' a{'a'} } }
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
 
-        val actual5 = p.parse("a,a,a,a,a");
-        val expected5 = p.spptParser.parse("""
-             S { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} }
-        """)
-        assertEquals(expected5.toStringAll, actual5.toStringAll)
-        assertEquals(expected5, actual5)
+        val result5 = pr.processor!!.parse("a,a,a,a,a");
+        val expected5 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§sepList1 { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} } }
+        """
+        )
+        assertEquals(expected5.toStringAll, result5.sppt?.toStringAll)
+        assertEquals(expected5, result5.sppt)
+        assertTrue(result5.issues.isEmpty())
     }
 
     @Test
-    fun nonTerminal_slist_2_5() {
+    fun nonTerminal_slist_range_unbraced_bounded() {
 
         val grammarStr = """
             namespace test
@@ -740,34 +1253,182 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        assertFailsWith<ParseFailedException> {
-            val actual0 = p.parse("")
+
+        val result0 = pr.processor!!.parse("")
+        assertEquals(null, result0.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), result0.issues.all
+        )
+
+        val result1 = pr.processor!!.parse("a")
+        assertEquals(null, result1.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("','"))
+            ), result1.issues.all
+        )
+
+        val result2 = pr.processor!!.parse("a,a");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§sepList1 { a{'a'} ',' a{'a'} } }
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
+
+        val result5 = pr.processor!!.parse("a,a,a,a,a");
+        val expected5 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§sepList1 { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} } }
+        """
+        )
+        assertEquals(expected5.toStringAll, result5.sppt?.toStringAll)
+        assertEquals(expected5, result5.sppt)
+        assertTrue(result5.issues.isEmpty())
+
+        val result6 = pr.processor!!.parse("a,a,a,a,a,a")
+        assertEquals(null, result6.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(9, 10, 1, 1), "a,a,a,a,a^,a", setOf("<EOT>"))
+            ), result6.issues.all
+        )
+    }
+
+    @Test
+    fun nonTerminal_slist_range_unbraced_bounded_maxZero() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = [ a  / ',' ]2..0 ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        assertFailsWith<LanguageProcessorException> {
+            val pr = Agl.processorFromStringDefault(grammarStr)
         }
 
-        assertFailsWith<ParseFailedException> {
-            val actual1 = p.parse("a")
-        }
 
-        val actual2 = p.parse("a,a");
-        val expected2 = p.spptParser.parse("""
-             S { a{'a'} ',' a{'a'}}
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
-        assertEquals(expected2, actual2)
+    }
 
-        val actual5 = p.parse("a,a,a,a,a");
-        val expected5 = p.spptParser.parse("""
-             S { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} }
-        """)
-        assertEquals(expected5.toStringAll, actual5.toStringAll)
-        assertEquals(expected5, actual5)
+    @Test
+    fun nonTerminal_slist_range_braced_unbounded() {
 
-        assertFailsWith<ParseFailedException> {
-            val actual6 = p.parse("aaaaaa")
-        }
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = [ a  / ',' ]{2+} ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
+
+        val result0 = pr.processor!!.parse("")
+        assertEquals(null, result0.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), result0.issues.all
+        )
+
+        val result1 = pr.processor!!.parse("a")
+        assertEquals(null, result1.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("','"))
+            ), result1.issues.all
+        )
+
+        val result2 = pr.processor!!.parse("a,a");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§sepList1 { a{'a'} ',' a{'a'} } }
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
+
+        val result5 = pr.processor!!.parse("a,a,a,a,a");
+        val expected5 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§sepList1 { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} } }
+        """
+        )
+        assertEquals(expected5.toStringAll, result5.sppt?.toStringAll)
+        assertEquals(expected5, result5.sppt)
+        assertTrue(result5.issues.isEmpty())
+    }
+
+    @Test
+    fun nonTerminal_slist_range_braced_bounded() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = [ a  / ',' ]{2..5} ;
+                a = 'a' ;
+            }
+        """.trimIndent()
+
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
+
+
+        val result0 = pr.processor!!.parse("")
+        assertEquals(null, result0.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), result0.issues.all
+        )
+
+        val result1 = pr.processor!!.parse("a")
+        assertEquals(null, result1.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("','"))
+            ), result1.issues.all
+        )
+
+        val result2 = pr.processor!!.parse("a,a");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§sepList1 { a{'a'} ',' a{'a'} } }
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
+
+        val result5 = pr.processor!!.parse("a,a,a,a,a");
+        val expected5 = pr.processor!!.spptParser.parse(
+            """
+             S { §S§sepList1 { a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} ',' a{'a'} } }
+        """
+        )
+        assertEquals(expected5.toStringAll, result5.sppt?.toStringAll)
+        assertEquals(expected5, result5.sppt)
+        assertTrue(result5.issues.isEmpty())
+
+        val result6 = pr.processor!!.parse("a,a,a,a,a,a")
+        assertEquals(null, result6.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(9, 10, 1, 1), "a,a,a,a,a^,a", setOf("<EOT>"))
+            ), result6.issues.all
+        )
     }
 
     @Test
@@ -781,48 +1442,70 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        assertFailsWith<ParseFailedException> {
-            p.parse("")
-        }
+        val result1 = pr.processor!!.parse("")
+        assertEquals(null, result1.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), result1.issues.all
+        )
 
-        assertFailsWith<ParseFailedException> {
-            p.parse("a")
-        }
+        val result2 = pr.processor!!.parse("a")
+        assertEquals(null, result2.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'b'", "c"))
+            ), result2.issues.all
+        )
 
-        assertFailsWith<ParseFailedException> {
-            p.parse("b")
-        }
+        val result3 = pr.processor!!.parse("b")
+        assertEquals(null, result3.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^b", setOf("'a'"))
+            ), result3.issues.all
+        )
 
-        assertFailsWith<ParseFailedException> {
-            p.parse("c")
-        }
+        val result4 = pr.processor!!.parse("c")
+        assertEquals(null, result4.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^c", setOf("'a'"))
+            ), result4.issues.all
+        )
 
-        val actual_ab = p.parse("ab");
-        val expected_ab = p.spptParser.parse("""
+        val result5 = pr.processor!!.parse("ab");
+        val expected5 = pr.processor!!.spptParser.parse(
+            """
             S {
                 'a'
                 §S§group1 { 'b' }
             }
-        """)
-        assertEquals(expected_ab.toStringAll, actual_ab.toStringAll)
-        assertEquals(expected_ab, actual_ab)
+        """
+        )
+        assertEquals(expected5.toStringAll, result5.sppt?.toStringAll)
+        assertEquals(expected5, result5.sppt)
+        assertTrue(result5.issues.isEmpty())
 
-        val actual_accc = p.parse("accc");
-        val expected_accc = p.spptParser.parse("""
+        val result6 = pr.processor!!.parse("accc");
+        val expected6 = pr.processor!!.spptParser.parse(
+            """
             S {
                 'a'
-                §S§group1|1 { §S§group1§multi1 {
+                §S§group1|1 { §S§multi1 {
                     c : 'c'
                     c : 'c'
                     c : 'c'
                 } }
             }
-        """)
-        assertEquals(expected_accc.toStringAll, actual_accc.toStringAll)
-        assertEquals(expected_accc, actual_accc)
+        """
+        )
+        assertEquals(expected6.toStringAll, result6.sppt?.toStringAll)
+        assertEquals(expected6, result6.sppt)
+        assertTrue(result6.issues.isEmpty())
     }
 
     @Test
@@ -836,21 +1519,37 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        assertFailsWith<ParseFailedException> { p.parse("") }
-        assertFailsWith<ParseFailedException> { p.parse("a") }
+        val result1 = pr.processor!!.parse("")
+        assertEquals(null, result1.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), result1.issues.all
+        )
 
-        val actual_abbb = p.parse("abbb");
-        val expected_abbb = p.spptParser.parse("""
-            S {
+        val result2 = pr.processor!!.parse("a")
+        assertEquals(null, result1.sppt)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("b"))
+            ), result2.issues.all
+        )
+
+        val result3 = pr.processor!!.parse("abbb");
+        val expected3 = pr.processor!!.spptParser.parse(
+            """
+            S { §S§group1 {
                 'a'
                 §S§multi1 { b:'b' b:'b' b:'b' }
-            }
-        """)
-        assertEquals(expected_abbb.toStringAll, actual_abbb.toStringAll)
-        assertEquals(expected_abbb, actual_abbb)
+            } }
+        """
+        )
+        assertEquals(expected3.toStringAll, result3.sppt?.toStringAll)
+        assertEquals(expected3, result3.sppt)
+        assertTrue(result3.issues.isEmpty())
     }
 
     @Test
@@ -864,28 +1563,34 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual1 = p.parse("a");
-        val expected1 = p.spptParser.parse("""
+        val result1 = pr.processor!!.parse("a");
+        val expected1 = pr.processor!!.spptParser.parse(
+            """
              S { a{'a'} §S§multi1|1 { §empty } }
-        """)
-        assertEquals(expected1.toStringAll, actual1.toStringAll)
-        assertEquals(expected1, actual1)
+        """
+        )
+        assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
+        assertEquals(expected1, result1.sppt)
+        assertTrue(result1.issues.isEmpty())
 
-        val actual2 = p.parse("abc");
-        val expected2 = p.spptParser.parse("""
+        val result2 = pr.processor!!.parse("abc");
+        val expected2 = pr.processor!!.spptParser.parse(
+            """
             S {
                 a { 'a' }
-                §S§multi1 { §S§multi1§choice1 {
+                §S§multi1 { §S§group1 {
                     'b'
                     c { 'c' }
                 } }
             }
-        """)
-        assertEquals(expected2.toStringAll, actual2.toStringAll)
-        assertEquals(expected2, actual2)
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
     }
 
     @Test
@@ -908,9 +1613,50 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
         //TODO: more checks
+    }
+
+    @Test
+    fun override() {
+
+        val grammarStr = """
+            namespace test
+            grammar Original {
+                S1 = ABC ;
+                ABC = 'a' B 'c' ;
+                B = 'b' ;
+            }
+            grammar Extended extends Original {
+                override B = 'd' ;
+            }
+        """.trimIndent()
+
+        val pr = Agl.processorFromString<Any, Any>(grammarStr, Agl.configuration { targetGrammarName("Original"); defaultGoalRuleName("S1") })
+        assertNotNull(pr.processor)
+
+        val result1 = pr.processor!!.parse("abc", Agl.parseOptions { goalRuleName("S1") })
+        val expected1 = pr.processor!!.spptParser.parse(
+            """
+             S1 { ABC { 'a' B { 'b' } 'c' } }
+        """
+        )
+        assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
+        assertEquals(expected1, result1.sppt)
+        assertTrue(result1.issues.isEmpty())
+
+        val pr2 = Agl.processorFromString<Any, Any>(grammarStr, Agl.configuration { targetGrammarName("Extended"); defaultGoalRuleName("S1") })
+        assertNotNull(pr2.processor)
+        val result2 = pr2.processor!!.parse("adc", Agl.parseOptions { goalRuleName("S1") })
+        val expected2 = pr2.processor!!.spptParser.parse(
+            """
+             S1 { ABC { 'a' B { 'd' } 'c' } }
+        """
+        )
+        assertEquals(expected2.toStringAll, result2.sppt?.toStringAll)
+        assertEquals(expected2, result2.sppt)
+        assertTrue(result2.issues.isEmpty())
     }
 
     @Test
@@ -922,19 +1668,33 @@ class test_AglGrammar {
                 B = 'b' ;
             }
             grammar Outer {
-                S = A gB A ;
-                leaf A = 'A' ;
-                gB = test.Inner.B ;
+                S = a gB c ;
+                leaf a = 'a' ;
+                leaf c = 'c' ;
+                gB = Inner::B ;
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
-        //TODO: more checks
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
+
+        val result1 = pr.processor!!.parse("abc", Agl.parseOptions { goalRuleName("S") })
+        val expected1 = pr.processor!!.spptParser.parse(
+            """
+             S { 
+               a:'a'
+               gB { Inner::B { 'b' } }
+               c:'c'
+             }
+        """
+        )
+        assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
+        assertEquals(expected1, result1.sppt)
+        assertTrue(result1.issues.isEmpty())
     }
 
     @Test
-    fun embedded_unqualified_explicitGoal() {
+    fun embedded_qualified_explicitGoal() {
 
         val grammarStr = """
             namespace test
@@ -943,16 +1703,29 @@ class test_AglGrammar {
                 C = 'c' ;
             }
             grammar Outer {
-                S = A gB A ;
+                S = A gB D ;
                 leaf A = 'a' ;
-                gB = Inner.C;
+                leaf D = 'd' ;
+                gB = Inner::C;
             }
         """.trimIndent()
 
-        val p = Agl.processorFromString(grammarStr)
-        assertNotNull(p)
-        //TODO: more checks
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
 
-        val actual:AsmSimple = p.process(AsmSimple::class,"aca")
+        val result1 = pr.processor!!.parse("acd", Agl.parseOptions { goalRuleName("S") })
+        val expected1 = pr.processor!!.spptParser.parse(
+            """
+             S { 
+               A:'a'
+               gB { Inner::C { 'c' } } 
+               D:'d'
+             }
+        """
+        )
+        assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
+        assertEquals(expected1, result1.sppt)
+        assertTrue(result1.issues.isEmpty())
     }
+
 }

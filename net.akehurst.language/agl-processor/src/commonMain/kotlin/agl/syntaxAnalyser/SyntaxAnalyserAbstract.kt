@@ -16,18 +16,18 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.grammar.GrammarLoader
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.syntaxAnalyser.GrammarLoader
+
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
-import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
-import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyserException
 
 typealias BranchHandler<T> = (SPPTBranch, List<SPPTBranch>, Any?) -> T
 
-abstract class SyntaxAnalyserAbstract : SyntaxAnalyser, SharedPackedParseTreeVisitor<Any, Any?> {
+abstract class SyntaxAnalyserAbstract<out AsmType:Any, in ContextType:Any> : SyntaxAnalyser<AsmType, ContextType>, SharedPackedParseTreeVisitor<Any, Any?> {
 
     private var grammarLoader: GrammarLoader? = null
     private val branchHandlers: MutableMap<String, BranchHandler<*>> = mutableMapOf()
@@ -40,11 +40,11 @@ abstract class SyntaxAnalyserAbstract : SyntaxAnalyser, SharedPackedParseTreeVis
 
     private fun <T> findBranchHandler(branchName: String): BranchHandler<T> {
         val handler: BranchHandler<T>? = this.branchHandlers[branchName] as BranchHandler<T>?
-        return handler ?: throw SyntaxAnalyserException("Cannot find SyntaxAnalyser branch handler method named $branchName", null)
+        return handler ?: error("Cannot find SyntaxAnalyser branch handler method named $branchName")
     }
 
     protected fun <T> transformBranch(branch: SPPTBranch, arg: Any?): T {
-        return this.transformBranchOpt(branch, arg) ?: throw SyntaxAnalyserException("cannot transform ${branch}", null)
+        return this.transformBranchOpt(branch, arg) ?: error("cannot transform ${branch}")
     }
 
     protected fun <T> transformBranchOpt(branch: SPPTBranch?, arg: Any?): T? {
@@ -75,7 +75,7 @@ abstract class SyntaxAnalyserAbstract : SyntaxAnalyser, SharedPackedParseTreeVis
         try {
             return handler.invoke(target, branchChildren, arg)
         } catch (e: Exception) {
-            throw SyntaxAnalyserException("Exception trying to transform ${target}", e)
+            error("Exception trying to transform ${target}: ${e.message}")
         }
     }
 

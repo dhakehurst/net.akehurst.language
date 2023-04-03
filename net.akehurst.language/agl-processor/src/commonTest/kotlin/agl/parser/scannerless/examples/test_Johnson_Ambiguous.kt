@@ -19,12 +19,12 @@ package net.akehurst.language.parser.scanondemand.examples
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.TimeSource
@@ -50,41 +50,39 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
             concatenation("S1") { ref("S"); ref("S"); ref("S") }
             concatenation("S2") { ref("S"); ref("S") }
         }
+        val goal = "S"
     }
 
     @Test
-    fun empty() {
-        val goal = "S"
+    fun empty_fails() {
         val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        val (sppt,issues) = super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+        ),issues.error)
     }
 
     @Test
     fun a() {
-        val goal = "S"
         val sentence = "a"
 
         val expected = """
             S|2 { 'a' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun aa() {
-        val goal = "S"
         val sentence = "aa"
 
         val expected = """
@@ -96,79 +94,113 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun aaa() {
-        val goal = "S"
         val sentence = "aaa"
 
         val expected1 = """
             S {
               S1 {
-                S|2 { 'a' }
-                S|2 { 'a' }
-                S|2 { 'a' }
+                S { 'a' }
+                S { 'a' }
+                S { 'a' }
               }
             }
         """.trimIndent()
 
         val expected2 = """
-             S|1 { S2 {
-                S|1 { S2 {
-                    S|2 { 'a' }
-                    S|2 { 'a' }
+             S { S2 {
+                S { S2 {
+                    S { 'a' }
+                    S { 'a' }
                   } }
-                S|2 { 'a' }
+                S { 'a' }
               } }
         """
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected1, expected2)
+                expectedTrees = arrayOf(expected1, expected2)
         )
     }
 
     @Test
     fun aaaa() {
-        val goal = "S"
         val sentence = "aaaa"
 
-        val expected = """
-         S|1 { S2 {
-            S|1 { S2 {
-                S|2 { 'a' }
-                S|2 { 'a' }
+        val expected1 = """
+         S { S2 {
+            S { S2 {
+                S { 'a' }
+                S { 'a' }
               } }
-            S|1 { S2 {
-                S|2 { 'a' }
-                S|2 { 'a' }
+            S { S2 {
+                S { 'a' }
+                S { 'a' }
               } }
           } }
         """.trimIndent()
 
-        val actual = super.test(
+        val expected2 = """
+            S { S2 {
+              S { S2 {
+                S { S2 {
+                  S { 'a' }
+                  S { 'a' }
+                } }
+                S { 'a' }
+              } }
+              S { 'a' }
+            } }
+        """.trimIndent()
+
+        val expected3 = """
+            S { S2 {
+              S { S2 {
+                 S { S1 {
+                    S { 'a' }
+                    S { 'a' }
+                    S { 'a' }
+                 } }
+                 S { 'a' }
+              } }
+            } }
+        """.trimIndent()
+
+        val expected4 = """
+            S { S1 {
+              S { S2 {
+                S { 'a' }
+                S { 'a' }
+              } }
+              S { 'a' }
+              S { 'a' }
+            } }
+        """.trimIndent()
+
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected1, expected2, expected4)
         )
     }
 
     @Test
     fun a10() {
-        val goal = "S"
         val sentence = "a".repeat(10)
 
         val expected = """
@@ -181,12 +213,12 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -195,7 +227,6 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
     fun time() {
         val parser = ScanOnDemandParser(rrs)
         val times = mutableListOf<Duration>()
-        val goal = "S"
 
         for (i in 1..5) {
             val text = "a".repeat(i)
@@ -209,7 +240,7 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
         }
 
         times.forEach {
-            println(it.inMilliseconds.toInt())
+            println(it.inWholeMilliseconds.toInt())
         }
     }
 }

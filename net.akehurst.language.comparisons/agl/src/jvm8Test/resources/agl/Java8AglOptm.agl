@@ -233,27 +233,13 @@ grammar Expressions extends Types {
       ;
     InferredFormalParameterList = [IDENTIFIER / ',']+ ;
 
-/*
-    FormalParameterList = ReceiverParameter | FormalParameters ',' LastFormalParameter | LastFormalParameter ;
-    FormalParameters
-      = [FormalParameter / ',']+
-      | ReceiverParameter (',' FormalParameter)*
-      ;
-    FormalParameter = VariableModifier* UnannType VariableDeclaratorId ;
-    VariableModifier = Annotation | 'final' ;
-    LastFormalParameter
-      = VariableModifier* UnannType Annotation* '...' VariableDeclaratorId
-      | FormalParameter
-      ;
-*/
-
-    VariableModifier = Annotation | 'final' ;
     FormalParameterList = ReceiverParameter? FormalParameters VarargsParameter? ;
     FormalParameters = [FormalParameter / ',']* ;
     FormalParameter = VariableModifier* UnannType VariableDeclaratorId ;
     VarargsParameter = VariableModifier* UnannType Annotation* '...' VariableDeclaratorId ;
     ReceiverParameter = Annotation* UnannType (IDENTIFIER '.')? 'this' ;
 
+    VariableModifier = Annotation | 'final' ;
     VariableDeclaratorId = IDENTIFIER Dims? ;
     VariableDeclaratorList = [ VariableDeclarator / ',' ]+ ;
     VariableDeclarator = VariableDeclaratorId ('=' VariableInitializer)? ;

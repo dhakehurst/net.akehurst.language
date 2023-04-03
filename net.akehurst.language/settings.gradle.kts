@@ -17,16 +17,18 @@
 
 pluginManagement {
     repositories {
-        mavenLocal()
+        mavenLocal {
+            content{
+                includeGroupByRegex("net\\.akehurst.+")
+            }
+        }
         gradlePluginPortal()
-        //maven {
-        //    url = uri("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev/")
-        //}
     }
 }
 
-
 rootProject.name = file(".").name
 
-include( "agl-processor")
-
+include("agl-processor")
+include("test-generated-parser")
+include("test-Java-api-agl-processor")
+include("test-JS-api-agl-processor")

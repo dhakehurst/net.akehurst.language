@@ -16,73 +16,130 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.api.analyser.ScopeModel
+import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.semanticAnalyser.SemanticAnalyserItem
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import kotlin.reflect.KClass
+import net.akehurst.language.api.typeModel.TypeModel
 
-interface LanguageProcessor {
+/**
+ * A LanguageProcessor is used to process a sentence using a given grammar.
+ * In this context, the stages in processing a language are defined as:
+ *   - scan: produce list of tokens / leaves
+ *   - parse: produce a SharedPackedParseTree
+ *   - syntaxAnalysis: produce an abstract syntax tree
+ *   - semanticAnalysis: produce a list of SemanticAnalyserIssue to indicate errors and warnings about the semantics of the sentence
+ */
+interface LanguageProcessor<AsmType : Any, ContextType : Any> {
 
-    val grammar: Grammar
+    val issues:IssueCollection
 
-    val spptParser : SPPTParser
+    val grammar: Grammar?
 
+    /**
+     * An SPPT parser for this language,
+     * will parse the SPPT text syntax,
+     * useful for testing parser output
+     */
+    val spptParser: SPPTParser
+
+    /**
+     * model of the types instantiated by syntaxAnalysis for the LanguageDefinition of this LanguageProcessor
+     */
+    val typeModel: TypeModel?
+
+    /*
+     * model of the scopes and references for the LanguageDefinition of this LanguageProcessor
+     */
+    val scopeModel: ScopeModel?
+
+    val formatterModel : AglFormatterModel?
+
+    val syntaxAnalyser:SyntaxAnalyser<AsmType, ContextType>?
+
+    val semanticAnalyser:SemanticAnalyser<AsmType, ContextType>?
+
+    val formatter:Formatter<AsmType>?
+
+    /**
+     * can be called from a different thread to stop the parser
+     */
     fun interrupt(message: String)
+
+    /**
+     * get the default options for this parser
+     */
+    fun parseOptionsDefault() : ParseOptions
+
+    /**
+     * get the default options for this language processor
+     */
+    fun optionsDefault() : ProcessOptions<AsmType, ContextType>
 
     /**
      * build the parser before use. Optional, but will speed up the first use of the parser.
      */
-    fun buildFor(goalRuleName: String, automatonKind: AutomatonKind = AutomatonKind.LOOKAHEAD_1): LanguageProcessor;
-
-    fun scan(inputText: String): List<SPPTLeaf>
+    fun buildFor(options: ParseOptions? = null): LanguageProcessor<AsmType, ContextType>
 
     /**
-     * use default AutomatonKind LOOKAHEAD_1
+     * Specifically scan the sentence using the terminal rules found in the grammar
      */
-    fun parse(inputText: String): SharedPackedParseTree
+    fun scan(sentence: String): List<SPPTLeaf>
 
-    fun parseWithAutomatonKind(inputText: String, automatonKind:AutomatonKind): SharedPackedParseTree
+    /**
+     * Parse the sentence using the grammar for this language and output a SharedPackedParseTree.
+     * Parsing is performed without scanning up front, tokens are scanned for on-demand during the parse process.
+     *
+     * @param goalRuleName - if null the first non skip rule defined in the grammar is used
+     * @param sentence the sentence to parse
+     * @param automatonKind default LOOKAHEAD_1
+     */
+    fun parse(sentence: String, options: ParseOptions? = null): ParseResult//Pair<SharedPackedParseTree?, List<LanguageIssue>>
 
-    fun parseForGoal(goalRuleName: String, inputText: String, automatonKind:AutomatonKind=AutomatonKind.LOOKAHEAD_1): SharedPackedParseTree
+    /**
+     * Converts the SharedPackedParseTree into a language specific Abstract Syntax Tree/Model
+     */
+    fun syntaxAnalysis(sppt: SharedPackedParseTree, options: ProcessOptions<AsmType, ContextType>? = null): SyntaxAnalysisResult<AsmType>
 
+    /**
+     *
+     */
+    fun semanticAnalysis(asm: AsmType, options: ProcessOptions<AsmType, ContextType>? = null): SemanticAnalysisResult
 
-    fun <T : Any> process(asmType: KClass<in T>, inputText: String, automatonKind:AutomatonKind=AutomatonKind.LOOKAHEAD_1): T
-
-    fun <T : Any> processForGoal(asmType: KClass<in T>, goalRuleName: String, inputText: String, automatonKind:AutomatonKind=AutomatonKind.LOOKAHEAD_1): T
-
-    fun <T : Any> processFromSPPT(asmType: KClass<in T>, sppt: SharedPackedParseTree): T
-
-    fun <T : Any> formatText(asmType: KClass<in T>, inputText: String, automatonKind:AutomatonKind=AutomatonKind.LOOKAHEAD_1): String
-
-    fun <T : Any> formatTextForGoal(asmType: KClass<in T>, goalRuleName: String, inputText: String, automatonKind:AutomatonKind=AutomatonKind.LOOKAHEAD_1): String
-
-    fun <T : Any> formatAsm(asmType: KClass<in T>, asm: T): String
+    /**
+     * Process the sentence, performing all phases where possible.
+     */
+    fun process(
+        sentence: String,
+        options: ProcessOptions<AsmType, ContextType>? = null
+    ): ProcessResult<AsmType>
 
     //fun <T> process(reader: Reader, goalRuleName: String, targetType: Class<T>): T
 
     /**
-     * returns list of names of expected rules
      *
-     * @param inputText text to parse
-     * @param goalRuleName name of a rule in the grammar that is the goal rule
-     * @param position position in the text (from reader) at which to provide completions
+     */
+    fun format(sentence: String, options: ProcessOptions<AsmType, ContextType>? = null): FormatResult
+
+    fun formatAsm(asm: AsmType, options: ProcessOptions<AsmType, ContextType>? = null): FormatResult
+
+    /**
+     * returns list of terminals expected at the given position
+     *
+     * @param sentence text to parse
+     * @param position position in the text (from reader) at which to provide expectations
      * @param desiredDepth depth of nested rules to search when constructing possible completions
+     * @param goalRuleName name of a rule in the grammar that is the goal rule
      * @return list of possible completion items
      * @throws ParseFailedException
      * @throws ParseTreeException
      */
-    fun expectedAt(inputText: String, position: Int, desiredDepth: Int, automatonKind:AutomatonKind=AutomatonKind.LOOKAHEAD_1): List<CompletionItem>
-
-    fun expectedAtForGoal(goalRuleName: String, inputText: String, position: Int, desiredDepth: Int, automatonKind:AutomatonKind=AutomatonKind.LOOKAHEAD_1): List<CompletionItem>
+    fun expectedTerminalsAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>? = null): ExpectedAtResult
 
     //List<CompletionItem> expectedAt(Reader reader, String goalRuleName, int position, int desiredDepth)
 
-    fun <T : Any> analyseText(asmType: KClass<in T>, inputText: String): List<SemanticAnalyserItem>
-
-    fun <T : Any> analyseTextForGoal(asmType: KClass<in T>, goalRuleName: String, inputText: String): List<SemanticAnalyserItem>
-
-    fun <T : Any> analyseAsm(asmType: KClass<in T>, asm: T, locationMap: Map<Any, InputLocation> = emptyMap()): List<SemanticAnalyserItem>
 }

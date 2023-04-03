@@ -17,10 +17,11 @@
 package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class test_SText_tokensByLine {
 
@@ -251,14 +252,16 @@ FQN = ID ('.' ID)*;
 }
         """.trimIndent()
 
-        val exprProcessor = Agl.processorFromString(grammarStr1)
-        var processor: LanguageProcessor = Agl.processorFromString(grammarStr2)
+        val exprProcessor = Agl.processorFromStringDefault(grammarStr1).processor!!
+        var processor = Agl.processorFromStringDefault(grammarStr2).processor!!
     }
 
     @Test
     fun t1() {
-        val sppt = processor.parseForGoal("StateScope", "after 10 s / raise ABC.intEvent")
-        val actual = sppt.tokensByLine(0)
+        val result = processor.parse("after 10 s / raise ABC.intEvent", Agl.parseOptions { goalRuleName("StateScope") })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
+        val actual = result.sppt!!.tokensByLine(0)
 
         assertEquals("after", actual[0].matchedText)
     }

@@ -18,8 +18,11 @@ package net.akehurst.language.parser.scanondemand.leftRecursive
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 internal class  test_a : test_ScanOnDemandParserAbstract() {
 
@@ -33,53 +36,63 @@ internal class  test_a : test_ScanOnDemandParserAbstract() {
             }
             concatenation("S1") { ref("S"); literal("a") }
         }
+        val goal = "S"
     }
+
+    @Test
+    fun empty_fails() {
+        val sentence = ""
+
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+            ), issues.error)
+    }
+
     @Test
     fun a() {
-        val goal = "S"
         val sentence = "a"
 
         val expected = """
             S { 'a' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
-
     @Test
     fun aa() {
-        val goal = "S"
         val sentence = "aa"
 
         val expected = """
-            S|1 { S1 { S { 'a' } 'a' } }
+            S { S1 { S { 'a' } 'a' } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun aaa() {
-        val goal = "S"
         val sentence = "aaa"
 
         val expected = """
-            S|1 {
+            S {
                 S1 {
-                    S|1 {
+                    S {
                         S1 {
                             S { 'a' }
                             'a'
@@ -90,76 +103,101 @@ internal class  test_a : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun aaaaa() {
+        val sentence = "aaaaa"
+
+        val expected = """
+             S { S1 {
+                S { S1 {
+                    S { S1 {
+                        S { S1 {
+                            S { 'a' }
+                            'a'
+                          } }
+                        'a'
+                      } }
+                    'a'
+                  } }
+                'a'
+              } }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun a50() {
-        val goal = "S"
         val sentence = "a".repeat(50)
 
-        val expected = "S|1 { S1 { ".repeat(49) + "S { 'a' }" + "'a' } }".repeat(49)
+        val expected = "S { S1 { ".repeat(49) + "S { 'a' }" + "'a' } }".repeat(49)
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun a150() {
-        val goal = "S"
         val sentence = "a".repeat(150)
 
-        val expected = "S|1 { S1 { ".repeat(149) + "S { 'a' }" + "'a' } }".repeat(149)
+        val expected = "S { S1 { ".repeat(149) + "S { 'a' }" + "'a' } }".repeat(149)
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun a500() {
-        val goal = "S"
         val sentence = "a".repeat(500)
 
-        val expected = "S|1 { S1 { ".repeat(499) + "S { 'a' }" + "'a' } }".repeat(499)
+        val expected = "S { S1 { ".repeat(499) + "S { 'a' }" + "'a' } }".repeat(499)
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
-    @Test
+    //@Test - toString of SPPT takes too long
     fun a2000() {
-        val goal = "S"
         val sentence = "a".repeat(2000)
 
-        val expected = "S|1 { S1 { ".repeat(1999) + "S { 'a' }" + "'a' } }".repeat(1999)
+        val expected = "S { S1 { ".repeat(1999) + "S { 'a' }" + "'a' } }".repeat(1999)
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 }

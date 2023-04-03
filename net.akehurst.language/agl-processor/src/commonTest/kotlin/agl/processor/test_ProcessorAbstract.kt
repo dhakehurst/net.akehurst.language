@@ -16,22 +16,25 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
-import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 abstract class test_ProcessorAbstract {
 
-    fun test(processor:LanguageProcessor, goal:String, sentence:String, vararg expectedTrees:String) {
-        val actual = processor.parseForGoal(goal, sentence)
+    fun <AsmType : Any, ContextType : Any> test(processor:LanguageProcessor<AsmType, ContextType>, goal:String, sentence:String, vararg expectedTrees:String) {
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
 
-        val converter = ConverterToRuntimeRules(processor.grammar)
-        val sppt = SPPTParserDefault(converter.runtimeRuleSet)
-        expectedTrees.forEach { sppt.addTree(it) }
+        val sppt = processor.spptParser
+        expectedTrees.forEach { sppt.parse(it, true) }
         val expected = sppt.tree
 
-        assertEquals(expected.toStringAll, actual.toStringAll)
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+
     }
 
 }

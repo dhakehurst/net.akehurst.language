@@ -16,56 +16,58 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.grammar.grammar.GrammarContext
+import net.akehurst.language.api.analyser.ScopeModel
+import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.processor.LanguageDefinition
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.util.CachedValue
 import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
-class LanguageDefinitionFromAsm(
+internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
     override val identity: String,
     grammar: Grammar,
-    override var defaultGoalRule: String?,
-    style: String?,
-    format: String?,
-    override val syntaxAnalyser: SyntaxAnalyser?,
-    override val semanticAnalyser: SemanticAnalyser?
-) : LanguageDefinition {
-    constructor(identity: String, grammar: Grammar) : this(identity, grammar, null, null, null, null, null)
-
-    private val _grammarAsm: Grammar = grammar
-    private val _processor_cache: CachedValue<LanguageProcessor?> = cached {
-        val r = defaultGoalRule
-        if (null == r) {
-            Agl.processorFromGrammar(this._grammarAsm, syntaxAnalyser, null, semanticAnalyser)
-        } else {
-            Agl.processorFromGrammarForGoal(this._grammarAsm, r, syntaxAnalyser, null, semanticAnalyser)
-        }
-    }
-
-    override val grammarObservers = mutableListOf<(String?, String?) -> Unit>()
-    override val styleObservers = mutableListOf<(String?, String?) -> Unit>()
-    override val formatObservers = mutableListOf<(String?, String?) -> Unit>()
-
-    override var grammar: String?
-        get() = this._grammarAsm.toString() //TODO:
+    buildForDefaultGoal: Boolean,
+    configuration: LanguageProcessorConfiguration<AsmType, ContextType>
+) : LanguageDefinitionAbstract<AsmType, ContextType>(
+    grammar,
+    buildForDefaultGoal,
+    configuration
+) {
+    override var grammarStr: String?
+        get() = this.grammar.toString() //TODO:
         set(value) {
             error("Cannot set the grammar of a LanguageDefinitionFromAsm using a String")
         }
+    override val isModifiable: Boolean = false
 
-    override var style: String? by Delegates.observable(style) { _, oldValue, newValue ->
-        styleObservers.forEach { it(oldValue, newValue) }
-    }
+    override var scopeModelStr: String?
+        get() = this.scopeModel.toString() //TODO:
+        set(value) {
+            error("Cannot set the scopeModel of a LanguageDefinitionFromAsm using a String")
+        }
+/*
+    override var aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?
+        get() = error("Cannot get the aglOptions of a LanguageDefinitionFromAsm")
+        set(value) {
+            error("Cannot set the aglOptions of a LanguageDefinitionFromAsm")
+        }
+*/
 
-    override var format: String? by Delegates.observable(format) { _, oldValue, newValue ->
-        formatObservers.forEach { it(oldValue, newValue) }
-    }
+    override var styleStr: String?
+        get() = this.grammar.toString() //TODO:
+        set(value) {
+            error("Cannot set the styleStr of a LanguageDefinitionFromAsm using a String")
+        }
+/*
+    override var formatStr: String?
+        get() = this.grammar.toString() //TODO:
+        set(value) {
+            error("Cannot set the formatStr of a LanguageDefinitionFromAsm using a String")
+        }
 
-    override val processor: LanguageProcessor? get() = this._processor_cache.value
-
-    override val grammarIsModifiable: Boolean = false
+ */
 }

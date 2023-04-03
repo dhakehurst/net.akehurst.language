@@ -16,13 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
-import net.akehurst.language.api.syntaxAnalyser.AsmSimple
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
 
 internal class test_Agl {
 
@@ -34,8 +28,8 @@ internal class test_Agl {
               a = 'a';
             }
         """.trimIndent()
-        val p = Agl.processorFromString(grammarStr)
-        p.parseForGoal("a", "a")
+        val p = Agl.processorFromStringDefault(grammarStr).processor!!
+        p.parse("a", Agl.parseOptions { goalRuleName("a") })
     }
 
     @Test
@@ -47,8 +41,8 @@ internal class test_Agl {
               b = 'b';
             }
         """.trimIndent()
-        val p = Agl.processorFromString(grammarStr)
-        p.parseForGoal("a", "a")
+        val p = Agl.processorFromStringDefault(grammarStr).processor!!
+        p.parse("a", Agl.parseOptions { goalRuleName("a") })
     }
 
     @Test
@@ -60,48 +54,9 @@ internal class test_Agl {
               b = 'b';
             }
         """.trimIndent()
-        val p = Agl.processorFromString(grammarStr)
-        p.parseForGoal("b", "b")
+        val p = Agl.processorFromStringDefault(grammarStr).processor!!
+        p.parse("b", Agl.parseOptions { goalRuleName("b") })
     }
-
-    @Test
-    fun parser_rules_List() {
-        val p = Agl.processorFromRuleList(listOf("a = 'a';"))
-        val pt = p.parseForGoal("a", "a")
-
-        assertNotNull(pt)
-    }
-
-    @Test
-    fun parser_rules_List_failAt_0() {
-        val e = assertFailsWith(ParseFailedException::class) {
-            val p = Agl.processorFromRuleList(listOf("!"))
-            //p.parse("a", "a")
-        }
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
-    }
-
-    @Test
-    fun parser_rules_List_failAt_1() {
-        val e = assertFailsWith(ParseFailedException::class) {
-            val p = Agl.processorFromRuleList(listOf("a!"))
-            p.parseForGoal("a", "a")
-        }
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
-    }
-
-    @Test
-    fun parser_rules_List_failAt_7() {
-        val e = assertFailsWith(ParseFailedException::class) {
-            val p = Agl.processorFromRuleList(listOf("a = 'a'1..6;"))
-            p.parseForGoal("a", "aaaaaaa")
-        }
-        assertEquals(1, e.location.line)
-        assertEquals(7, e.location.column)
-    }
-
 
     @Test
     fun process() {
@@ -113,8 +68,9 @@ internal class test_Agl {
             }
         """.trimIndent()
         val sentence = "a"
-        val myProcessor = Agl.processorFromString(grammarStr)
-        val asm = myProcessor.process(AsmSimple::class,sentence)
+        val myProcessor = Agl.processorFromStringDefault(grammarStr).processor!!
+        val result = myProcessor.process(sentence)
+        //TODO
     }
 
 }

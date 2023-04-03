@@ -17,14 +17,15 @@ package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
-import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.util.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 
 @RunWith(Parameterized::class)
@@ -37,8 +38,8 @@ class test_StatechartTools(val data: Data) {
         //private val grammarStr = ""//runBlockingNoSuspensions { resourcesVfs["/xml/Xml.agl"].readString() }
 
         // must create processor for 'Expressions' so that SText can extend it
-        val exprProcessor = Agl.processorFromString(grammarStr1)
-        var processor: LanguageProcessor = Agl.processorFromString(grammarStr2)
+        val exprProcessor = Agl.processorFromStringDefault(grammarStr1).processor!!
+        var processor = Agl.processorFromStringDefault(grammarStr2).processor!!
         var sourceFiles = arrayOf("/statechart-tools/samplesValid.txt")
 
         @JvmStatic
@@ -71,11 +72,18 @@ class test_StatechartTools(val data: Data) {
     data class Data(val file: String, val ruleName: String, val text: String)
 
     @Test
-    fun test() {
-        val result = processor.parseForGoal(this.data.ruleName, this.data.text)
-        Assert.assertNotNull(result)
-        val resultStr = result.asString
-        Assert.assertEquals(this.data.text, resultStr)
+    fun parse() {
+        val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName(data.ruleName) })
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty())
+        val resultStr = result.sppt!!.asString
+        assertEquals(this.data.text, resultStr)
     }
 
+    @Test
+    fun process() {
+        val result = processor.process(this.data.text, Agl.options { parse { goalRuleName(data.ruleName) } })
+        assertNotNull(result.asm, result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty())
+    }
 }

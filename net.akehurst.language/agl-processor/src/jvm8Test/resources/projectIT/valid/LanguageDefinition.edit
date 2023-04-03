@@ -1,0 +1,128 @@
+editor default
+
+DemoNumberLiteralExpression {
+    [${self.value}]
+}
+
+
+DemoAttribute {
+    [ ${self.name} : ${self.declaredType} ]
+}
+
+DemoStringLiteralExpression {
+        [
+        '${self.value}'
+        ]
+    trigger = "'"
+}
+
+DemoIfExpression {
+        [
+        if (${self.condition}) then
+                  ${self.whenTrue}
+        else
+           ${self.whenFalse}
+        endif
+        ]
+
+    trigger = "if"
+    symbol = "if"
+}
+
+/*
+DemoIfExpression {
+        [
+        (${ self.condition } ? ${ self.whenTrue } : ${self.whenFalse} )
+        ]
+
+    trigger = "if"
+    symbol = "if"
+}
+*/
+DemoPlusExpression {
+    symbol = "+"
+}
+
+DemoMultiplyExpression {
+    symbol = "*"
+}
+
+DemoDivideExpression {
+    symbol = "/"
+}
+DemoLessThenExpression {
+    symbol = "<"
+}
+DemoOrExpression {
+    symbol = "or"
+}
+DemoEqualsExpression {
+    symbol = "=="
+}
+DemoAndExpression {
+    symbol = "and"
+}
+DemoVariableRef {
+    [${self.variable}]
+}
+DemoVariable {
+    [${self.name} : ${self.declaredType}]
+}
+DemoEntity {
+    trigger = "entity"
+}
+
+/*
+DemoFunctionCallExpression {
+        [
+        ${self.name} (  )
+        ]
+    trigger = "function2"
+}
+*/
+
+DemoFunctionCallExpression {
+        [
+        CALL ${self.functionDefinition} (  )
+        ]
+    trigger = "function"
+}
+
+
+DemoModel {
+// Note that self.type is optional, therefore this projection gives problems in the parser
+//        [
+//        model ${self.name} {
+//        main: ${self.main}
+//        type: ${self.type}
+//        types:
+//            ${self.types
+//                vertical
+//                terminator [\n\n]
+//            }
+//        entities:
+//            ${self.entities
+//                vertical
+//                terminator [\n\n]
+//            }
+//        model wide functions:
+//            ${self.functions horizontal separator [\n] }
+//        }
+//        ]
+        [
+        model ${self.name} {
+        main: ${self.main}
+        [?type: ${self.type}]
+        types:
+            ${self.types
+                vertical
+            }
+        entities:
+            ${self.entities
+                vertical
+            }
+        model wide functions:
+            ${self.functions horizontal }
+        }
+        ]
+}

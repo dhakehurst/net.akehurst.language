@@ -16,120 +16,102 @@
 
 package net.akehurst.language.parser.scanondemand.multi
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_multi_2_n_literal : test_ScanOnDemandParserAbstract() {
 
     // S = 'a'2+
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r0 = b.literal("a")
-        val r1 = b.rule("S").multi(2, -1, r0)
-        return b
+    private companion object {
+        val rrs = runtimeRuleSet {
+            multi("S",2,-1,"'a'")
+            literal("'a'","a")
+        }
+        val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val rrb = S()
-        val goal = "S"
         val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^", setOf("'a'"))
+        ),issues.error)
     }
 
     @Test
     fun a_fails() {
-        val rrb = S()
-        val goal = "S"
         val sentence = "a"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrb, goal, sentence)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(2, e.location.column)
-        assertEquals(setOf("'a'"), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(1,2,1,1),"a^", setOf("'a'"))
+        ),issues.error)
     }
 
     @Test
     fun aa() {
-        val rrb = S()
-        val goal = "S"
         val sentence = "aa"
 
         val expected = """
             S { 'a' 'a' }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun aaa() {
-        val rrb = S()
-        val goal = "S"
         val sentence = "aaa"
 
         val expected = """
             S { 'a' 'a' 'a' }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun aaaa() {
-        val rrb = S()
-        val goal = "S"
         val sentence = "aaaa"
 
         val expected = """
             S { 'a' 'a' 'a' 'a' }
         """.trimIndent()
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
     @Test
     fun a50() {
-        val rrb = S()
-        val goal = "S"
         val sentence = "a".repeat(50)
 
         val expected = "S { "+"'a' ".repeat(50)+" }"
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun a500() {
-        val rrb = S()
-        val goal = "S"
         val sentence = "a".repeat(500)
 
         val expected = "S { "+"'a' ".repeat(500)+" }"
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 
     @Test
     fun a2000() {
-        val rrb = S()
-        val goal = "S"
         val sentence = "a".repeat(2000)
 
         val expected = "S { "+"'a' ".repeat(2000)+" }"
 
-        super.testStringResult(rrb, goal, sentence, expected)
+        super.test(rrs, goal, sentence, 1, expected)
     }
 }

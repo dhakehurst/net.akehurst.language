@@ -36,6 +36,17 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
         A = a n G?     // annotation = '@' 'qualifiedName' arguments
         G = s A?
      */
+    /*
+       S = oP oT
+       oP = P?
+       oT = T?
+       P = oA p
+       T = oA t
+       oA = A?
+       A = a n oG
+       oG = G?
+       G = s oA
+     */
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("oP"); ref("oT") }
@@ -47,6 +58,10 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             concatenation("A") { literal("a"); literal("n"); ref("oG") }
             multi("oG",0,1,"G")
             concatenation("G") { literal("s"); ref("oA")}
+            preferenceFor("<EMPTY>") {
+                leftOption("oA", 1, setOf("'t'"))
+                leftOption("oP", 1, setOf("'t'"))
+            }
         }
 
         val goal = "S"
@@ -59,19 +74,19 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               oP { P {
-                  oA|1 { §empty }
+                  oA { §empty }
                   'p'
                 } }
-              oT|1 { §empty }
+              oT { §empty }
             }
         """
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -81,20 +96,20 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              oP|1 { §empty }
+              oP { §empty }
               oT { T {
-                  oA|1 { §empty }
+                  oA { §empty }
                   't'
                 } }
             }
         """
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -106,23 +121,22 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             S {
               oP { P {
                   oA { A { 'a'  'n'
-                      oG|1 { §empty }
+                      oG { §empty }
                     } }
                   'p'
                 } }
-              oT|1 { §empty }
+              oT { §empty }
             }
         """
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 2,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
-
 
     @Test
     fun ansant() {
@@ -130,7 +144,7 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              oP|1 { §empty }
+              oP { §empty }
               oT { T {
                   oA { A {
                       'a'
@@ -140,7 +154,7 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
                           oA { A {
                               'a'
                               'n'
-                              oG|1 { §empty }
+                              oG { §empty }
                             } }
                         } }
                     } }
@@ -149,12 +163,12 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             }
         """
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 2,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -164,7 +178,7 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              oP|1 { §empty }
+              oP { §empty }
               oT { T {
                   oA { A {
                       'a'
@@ -179,7 +193,7 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
                                   oA { A {
                                       'a'
                                       'n'
-                                      oG|1 { §empty }
+                                      oG { §empty }
                                     } }
                                 } }
                             } }
@@ -190,12 +204,12 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             }
         """
 
-        val actual = super.test(
+        super.test(
             rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 2,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 }

@@ -36,6 +36,11 @@ interface SPPTLeaf : SPPTNode {
     val isLiteral: Boolean
 
     /**
+     * true if this node is a leaf node from an named leaf (i.e. literal or pattern marked as a 'leaf' rule)
+     */
+    val isExplicitlyNamed:Boolean
+
+    /**
      * list of names of all the parent nodes leading to this leaf
      * ( currently  populated by TokensByLineVisitor - called by SharedPackedParseTree.tokensByLine )
      */

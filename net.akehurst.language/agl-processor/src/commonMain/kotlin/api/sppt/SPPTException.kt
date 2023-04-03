@@ -18,6 +18,5 @@ package net.akehurst.language.api.sppt
 
 import kotlin.js.JsExport
 
-@JsExport
 class SPPTException(message: String, cause: Throwable?) : RuntimeException(message, cause) {
 }

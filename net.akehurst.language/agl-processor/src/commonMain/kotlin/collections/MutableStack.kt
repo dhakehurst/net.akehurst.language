@@ -16,53 +16,54 @@
 
 package net.akehurst.language.collections
 
+internal fun <T> mutableStackOf(vararg elements: T): MutableStack<T> {
+    val stack = MutableStack<T>()
+    elements.forEach {
+        stack.push(it)
+    }
+    return stack
+}
+
 internal class Stack<T>(
-        val items : List<T> = emptyList()
+    val elements: List<T> = emptyList()
 ) {
 
     class PopResult<T>(
-            val item : T,
-            val stack: Stack<T>
+        val item: T,
+        val stack: Stack<T>
     )
 
-    val size: Int get() = this.items.size
-    val isEmpty:Boolean get() = this.items.size ==0
-    val elements:List<T> get() = this.items
+    val size: Int get() = this.elements.size
+    val isEmpty: Boolean get() = this.elements.size == 0
+    val isNotEmpty: Boolean get() = this.elements.size != 0
 
-    fun push(item: T) : Stack<T>  = Stack( items + item )
-    fun pushAll(items:List<T>) : Stack<T> = Stack(this.items + items)
-    fun peek(): T = items.last()
-    fun peekOrNull(): T? = items.lastOrNull()
-    fun pop(): PopResult<T> = PopResult(this.peek(), Stack( items.subList(0,size-1) ))
+    fun push(item: T): Stack<T> = Stack(elements + item)
+    fun pushAll(items: List<T>): Stack<T> = Stack(this.elements + items)
+    fun peek(): T = elements.last()
+    fun peekOrNull(): T? = elements.lastOrNull()
+    fun pop(): PopResult<T> = PopResult(this.peek(), Stack(elements.subList(0, size - 1)))
+    fun clone() = Stack(elements)
 
+    override fun hashCode(): Int = elements.hashCode()
+    override fun equals(other: Any?): Boolean = when(other) {
+        !is Stack<*> -> false
+        else -> this.elements==other.elements
+    }
 }
 
 internal class MutableStack<T>() {
     private val list = mutableListOf<T>()
 
     val size: Int get() = this.list.size
-    val isEmpty:Boolean get() = this.list.size ==0
-    val elements:List<T> get() = this.list
+    val isEmpty: Boolean get() = this.list.size == 0
+    val isNotEmpty: Boolean get() = this.list.size != 0
+    val elements: List<T> get() = this.list
 
     fun push(item: T) {
         list.add(item)
     }
+
     fun peek(): T = list.last()
     fun pop(): T = list.removeAt(list.size - 1)
-
-}
-
-internal class MutableQueue<T>() {
-    private val list = mutableListOf<T>()
-
-    val size: Int get() = this.list.size
-    val isEmpty:Boolean get() = this.list.size ==0
-    val elements:List<T> get() = this.list
-
-    fun enqueue(item: T) {
-        list.add(item)
-    }
-    fun peek(): T = list.last()
-    fun dequeue(): T = list.removeAt(0)
 
 }

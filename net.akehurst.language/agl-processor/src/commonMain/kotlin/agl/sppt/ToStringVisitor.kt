@@ -20,45 +20,106 @@ import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
+import net.akehurst.language.collections.MutableStack
 
-internal class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) : SharedPackedParseTreeVisitor<Set<String>, ToStringVisitor.Indent> {
+internal class ToStringVisitor(val lineSeparator: String, val indentIncrement: String) {
 
-    class Indent(val text: String, val onlyChild: Boolean) {
-        fun next(increment: String, onlyChild: Boolean): Indent {
-            return Indent(this.text + increment, onlyChild)
+    private data class Item(
+        val node: SPPTNode,
+        val indent: String,
+        val onlyChild: Boolean,
+        val prefix: String?
+    )
+
+    fun visitTree(target: SharedPackedParseTree, indentText: String): Set<String> {
+        return this.visitNode(target.root, indentText)
+    }
+
+    fun visitNode(start: SPPTNode, indentText: String): Set<String> {
+        val result = MutableStack<Set<String>>()
+        val stack = MutableStack<Item>() // node, onlychild, prefix
+        stack.push(Item(start, "", true, null))
+        while (stack.isEmpty.not()) {
+            val (node, indent, onlyChild, prefix) = stack.pop()
+            when (node) {
+                is SPPTLeaf -> {
+                    val s = handleLeaf(node, indent, onlyChild)
+                    result.push(setOf(s))
+                }
+                is SPPTBranch -> when {
+                    null == prefix -> {
+                        val prefix2 = branchPrefix(node, indent, onlyChild)
+                        stack.push(Item(node, indent, onlyChild, prefix2))
+                        for (children in node.childrenAlternatives) {
+                            when {
+                                children.isEmpty() -> Unit
+                                1 == children.size -> stack.push(Item(children[0], indent, true, null))
+                                else -> children.forEach { stack.push(Item(it, indent + indentText, false, null)) }
+                            }
+                        }
+                    }
+                    else -> {
+                        val r = HashSet<String>()
+                        for (children in node.childrenAlternatives) {
+                            when {
+                                children.isEmpty() -> {
+                                    r.add("$prefix }")
+                                }
+                                1 == children.size -> {
+                                    val childrenStr = result.pop()
+                                    r.add("$prefix ${childrenStr.first()} }")
+                                }
+                                else -> {
+                                    val childs = children.map { result.pop() }
+                                    val cs = childs.joinToString(separator = this.lineSeparator) { it.joinToString() }
+                                    val rs = "${prefix}${this.lineSeparator}$cs${this.lineSeparator}${indent}}"
+                                    r.add(rs)
+                                }
+                            }
+                        }
+                        result.push(r)
+                    }
+                }
+            }
         }
-    }
-
-    override fun visitTree(target: SharedPackedParseTree, arg: Indent): Set<String> {
-        return visitNode(target.root, arg)
+        return result.pop()
     }
 
 
-    override fun visitLeaf(target: SPPTLeaf, arg: Indent): Set<String> {
+    fun handleLeaf(target: SPPTLeaf, indent: String, onlyChild: Boolean): String {
         val t = when {
-            target.isEmptyLeaf -> "${target.name}"
+            target.isEmptyLeaf -> target.name
             (target.isLiteral) -> {
-                "'${target.matchedText.replace("\n", "\u23CE").replace("\t","\u2B72")}'"
+                "'${target.matchedText.replace("\n", "\u23CE").replace("\t", "\u2B72")}'"
             }
             (target.isPattern) -> {
-                "${target.name} : '${target.matchedText.replace("\n", "\u23CE").replace("\t","\u2B72")}'"
+                "${target.name} : '${target.matchedText.replace("\n", "\u23CE").replace("\t", "\u2B72")}'"
             }
             else -> throw RuntimeException("should not happen")
         }
-        val s = (if (arg.onlyChild) " " else arg.text) + t
-        return setOf(s)
+        val s = (if (onlyChild) "" else indent) + t
+        return s
     }
 
-
-    override fun visitBranch(target: SPPTBranch, arg: Indent): Set<String> {
+    fun branchPrefix(target: SPPTBranch, indent: String, onlyChild: Boolean): String {
+        var s = if (onlyChild) "" else indent
+        s += target.name
+        if (target.option != 0) {
+            //               s+="|${target.option}"
+        }
+        s += if (target.childrenAlternatives.size > 1) "*" else ""
+        s += " {"
+        return s
+    }
+/*
+     fun visitBranch(target: SPPTBranch, arg: Indent): Set<String> {
         val r = HashSet<String>()
 
         for (children in target.childrenAlternatives) {
             var s = if (arg.onlyChild) " " else arg.text
             s += target.name
             if (target.option!=0) {
-                s+="|${target.option}"
+ //               s+="|${target.option}"
             }
             s += if (target.childrenAlternatives.size > 1) "*" else ""
             s += " {"
@@ -123,4 +184,5 @@ internal class ToStringVisitor(val lineSeparator: String, val indentIncrement: S
         }
         return r
     }
+ */
 }

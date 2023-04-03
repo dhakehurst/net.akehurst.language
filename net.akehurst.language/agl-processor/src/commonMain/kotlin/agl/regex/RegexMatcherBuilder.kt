@@ -20,10 +20,6 @@ import net.akehurst.language.collections.MutableStack
 
 internal class RegexMatcherBuilder(val pattern:String) {
 
-    companion object {
-
-    }
-
     // List[StateNumber] -> Map<Unicode-Int, List<StateNumber>>
     val nfa = mutableListOf<State>()
     var nextStateNumber = 0

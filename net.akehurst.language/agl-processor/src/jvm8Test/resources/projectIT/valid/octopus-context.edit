@@ -1,0 +1,21 @@
+editor default
+
+
+OclPart {
+        [
+        OCL expressions for ${self.name}
+            ${self.constraints vertical }
+        ]
+}
+
+OclContext {
+    [
+    context ${self.owningModelelement}
+    inv: ${self.expression}
+    ]
+
+}
+
+IModelElementReference {
+    [[?${self.surroundingClassifier}::]${self.feature}]
+}

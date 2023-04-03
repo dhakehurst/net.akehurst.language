@@ -19,7 +19,10 @@ package net.akehurst.language.agl.processor
 import kotlin.test.Test
 
 internal class test_ForMatthias {
-    private val grammarStr = """
+
+    private companion object {
+        const val goal = "conceptDefinition"
+        val grammarStr = """
             namespace test
             grammar Matthias {
               skip WHITESPACE = "\s+";
@@ -33,45 +36,85 @@ internal class test_ForMatthias {
               leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*" ;
             }
         """.trimIndent()
-    private val p = Agl.processorFromString(grammarStr)
+    }
+
+    private val p = Agl.processorFromStringDefault(grammarStr).processor!!
 
     @Test
     fun conceptDefinition0() {
-        p.parseForGoal("conceptDefinition", """
+        p.parse(
+            """
             concept Test {
               properties {
               }
             }
-        """.trimIndent())
+        """.trimIndent(),
+            Agl.parseOptions { goalRuleName(goal) }
+        )
     }
 
     @Test
-    fun conceptDefinition1() {
-        p.parseForGoal("conceptDefinition", """
+    fun conceptDefinition0_twice() {
+        p.parse(
+            """
+            concept Test {
+              properties {
+              }
+            }
+        """.trimIndent(),
+            Agl.parseOptions { goalRuleName(goal) }
+        )
+
+        p.parse(
+            """
             concept Test {
               properties {
                  p1 : Int [1]
               }
             }
-        """.trimIndent())
+        """.trimIndent(),
+            Agl.parseOptions { goalRuleName(goal) }
+        )
     }
+
+    @Test
+    fun conceptDefinition1() {
+        p.parse(
+            """
+            concept Test {
+              properties {
+                 p1 : Int [1]
+              }
+            }
+        """.trimIndent(),
+            Agl.parseOptions { goalRuleName(goal) }
+        )
+    }
+
     @Test
     fun conceptDefinition2() {
-        p.parseForGoal("conceptDefinition", """
+        p.parse(
+            """
             concept Test {
               properties {
                  p1 : Int [1]
                  p2 : Int [0..1]
               }
             }
-        """.trimIndent())
+        """.trimIndent(),
+            Agl.parseOptions { goalRuleName(goal) }
+        )
     }
+
     @Test
     fun properties() {
-        p.parseForGoal("properties", """
+        p.parse(
+            """
             properties {
 
             }
-        """.trimIndent())
+        """.trimIndent(),
+            Agl.parseOptions { goalRuleName("properties") }
+        )
     }
 }

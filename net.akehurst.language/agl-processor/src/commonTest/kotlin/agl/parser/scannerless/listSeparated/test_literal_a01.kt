@@ -16,90 +16,75 @@
 
 package net.akehurst.language.parser.scanondemand.listSeparated
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_literal_a01 : test_ScanOnDemandParserAbstract() {
 
     // S = ['a' / ',']?
-    private fun literal_a01(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_a = b.literal("a")
-        val r_S = b.rule("S").separatedList(0, 1, b.literal(","), r_a)
-        return b
+    private companion object {
+        val rrs = runtimeRuleSet {
+            sList("S",0,1,"'a'","','")
+            literal("','",",")
+            literal("'a'","a")
+        }
+        val goal = "S"
     }
 
     @Test
     fun empty() {
-        val b = literal_a01()
-        val goal = "S"
         val sentence = ""
 
-        val expected = "S { §empty }"
+        val expected = "S|1 { §empty }"
 
-        super.test(b, goal, sentence, expected)
+        super.test(rrs, goal, sentence,1,expected)
     }
 
     @Test
     fun a() {
-        val b = literal_a01()
-        val goal = "S"
         val sentence = "a"
 
         val expected = "S {'a'}"
 
-        super.test(b, goal, sentence, expected)
+        super.test(rrs, goal, sentence,1,expected)
     }
 
     @Test
     fun aa_fails() {
-        val b = literal_a01()
-        val goal = "S"
         val sentence = "aa"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(b, goal, sentence)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(2, e.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(1,2,1,1),"a^a",setOf("<EOT>"))
+        ),issues.error)
     }
 
     @Test
     fun ac_fails() {
-        val b = literal_a01()
-        val goal = "S"
         val sentence = "a,"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(b, goal, sentence)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(2, e.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(1,2,1,1),"a^,",setOf("<EOT>"))
+       ),issues.error)
 
     }
 
     @Test
     fun aca_fails() {
-        val b = literal_a01()
-        val goal = "S"
         val sentence = "a,a"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(b, goal, sentence)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(2, e.location.column)
-        assertEquals(setOf(RuntimeRuleSet.END_OF_TEXT_TAG), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(1,2,1,1),"a^,a",setOf("<EOT>"))
+        ),issues.error)
 
     }
 

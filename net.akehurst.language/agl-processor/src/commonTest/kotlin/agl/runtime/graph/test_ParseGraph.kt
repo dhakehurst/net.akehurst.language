@@ -18,7 +18,6 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -29,23 +28,21 @@ class test_ParseGraph {
 
     @Test
     fun construct() {
-        val rrs = RuntimeRuleSet()
-        val goalRule = RuntimeRule(rrs.number, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
+        val goalRule = RuntimeRule(0, 0, "a",  false)
         val text = ""
-        val input = InputFromString(rrs.terminalRules.size,text)
+        val input = InputFromString(1,text)
 
-        val sut = ParseGraph(goalRule, input, 10,10)
+        val sut = ParseGraph(input, 0)
 
         assertNotNull(sut)
     }
 
     @Test
     fun canGrow_empty() {
-        val rrs = RuntimeRuleSet()
-        val goalRule = RuntimeRule(rrs.number, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
+        val goalRule = RuntimeRule(0, 0, "a",  false)
         val text = ""
-        val input = InputFromString(rrs.terminalRules.size,text)
-        val sut = ParseGraph(goalRule, input, 10,10)
+        val input = InputFromString(1,text)
+        val sut = ParseGraph(input, 0)
 
         val actual = sut.canGrow
 
@@ -54,16 +51,14 @@ class test_ParseGraph {
 
     @Test
     fun start() {
-        val rrs = RuntimeRuleSet()
-
-        val userGoalRule = RuntimeRule(rrs.number, 0, "a", "", RuntimeRuleKind.TERMINAL, false, false)
+        val userGoalRule = RuntimeRule(0, 0, "a",  false)
         val text = "a"
-        val input = InputFromString(rrs.terminalRules.size,text)
-        val sut = ParseGraph(userGoalRule, input, 10,10)
+        val input = InputFromString(1,text)
+        val sut = ParseGraph(input, 0)
 
-        val gr = RuntimeRuleSet.createGoalRule(userGoalRule)
-        val startState = rrs.fetchStateSetFor(userGoalRule, AutomatonKind.LOOKAHEAD_1).startState
-        sut.start(startState,0, startState.stateSet.createLookaheadSet(setOf(RuntimeRuleSet.END_OF_TEXT)))
+    //    val gr = rrs.goalRuleFor[rrs.findRuntimeRule("a")]
+    //    val startState = rrs.fetchStateSetFor(userGoalRule, AutomatonKind.LOOKAHEAD_1).startState
+    //    sut.start(startState, 0, setOf(startState.stateSet.createLookaheadSet(false,true,false, emptySet())), null)
 
         val actual = sut.canGrow
 

@@ -15,21 +15,25 @@
  */
 package net.akehurst.language.agl.processor.dot
 
-import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.agl.processor.ProcessResultDefault
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
-import kotlin.test.fail
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class test_Dot_Singles {
 
-    companion object {
+    private companion object {
 
         private val grammarStr = this::class.java.getResource("/dot/Dot.agl")?.readText() ?: error("File not found")
-        var processor: LanguageProcessor = Agl.processorFromString(grammarStr)
+        var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
 
     }
 
@@ -40,7 +44,9 @@ class test_Dot_Singles {
           // a comment
           graph { }
         """.trimIndent()
-        processor.parseForGoal(goal, sentence)
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -50,7 +56,9 @@ class test_Dot_Singles {
           /* a comment */
           graph { }
         """.trimIndent()
-        processor.parseForGoal(goal, sentence)
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -60,41 +68,38 @@ class test_Dot_Singles {
         val sentence = """
         < <xml >xxxx</xml> >
         """.trimIndent()
-        val actual = processor.parseForGoal(goal, sentence)
-        println(actual.toStringAll)
-        /*
-        TODO: PARSING EMBEDDED GRAMMAR SPPTs
-        val expected = SPPTParserDefault(((processor as LanguageProcessorDefault).parser as ScanOnDemandParser).runtimeRuleSet).addTree("""
-            ID|3 {
-                WHITESPACE : '\n        '
-                HTML {
-                    '<'
-                    Xml.elementContent {
-                        startTag {
-                            '<'
-                            §startTag§multi7|1 { §empty.§startTag§multi7 }
-                            NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xml' }
-                            §startTag§multi8 { WS { "\s+" : ' ' } }
-                            §startTag§multi9|1 { §empty.§startTag§multi9 }
-                            '>'
-                        }
-                        content { §content§multi10 { §content§group0 { §§content§group0§choice0 { §§content§group0§choice0 { CHARDATA { "[^<]+" : 'xxxx' } } } } } }
-                        endTag {
-                            '</'
-                            §endTag§multi11|1 { §empty.§endTag§multi11 }
-                            NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xml' }
-                            §endTag§multi12|1 { §empty.§endTag§multi12 }
-                            '>'
-                        }
-                    }
-                    '>'
-                    WHITESPACE : '\n        '
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt,result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.error.isEmpty())
+        println(result.sppt!!.toStringAll)
+
+        val expected = processor.spptParser.parse("""
+            ID { HTML {
+              '<' WHITESPACE : ' '
+              §Xml§elementContent§embedded1 { Xml::elementContent {
+                startTag {
+                  '<'
+                  §startTag§multi1 { §empty }
+                  NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xml' }
+                  §startTag§multi2 { WS { "\s+" : ' ' } }
+                  §startTag§multi3 { §empty }
+                  '>'
                 }
-            }
+                content { §content§multi1 { §content§group1 { CHARDATA { "[^<]+" : 'xxxx' } } } }
+                endTag {
+                  '</'
+                  §endTag§multi1 { §empty }
+                  NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xml' }
+                  §endTag§multi2 { §empty }
+                  '>'
+                }
+              } } WHITESPACE : ' '
+              '>'
+            } }
         """.trimIndent())
+        val actual = result.sppt!!
         assertEquals(expected.toStringAll,actual.toStringAll)
         assertEquals(expected,actual)
-        */
     }
 
     @Test
@@ -104,7 +109,9 @@ class test_Dot_Singles {
         label = "<f0> 0x10ba8| <f1>"
         shape = "record"
         """
-        processor.parseForGoal(goal, sentence)
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -114,7 +121,9 @@ class test_Dot_Singles {
         label = "<f0> 0x10ba8| <f1>"
         shape = "record"
         ]"""
-        processor.parseForGoal(goal, sentence)
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -123,7 +132,9 @@ class test_Dot_Singles {
         val sentence = """
             edge [ ]
         """.trimIndent()
-        processor.parseForGoal(goal, sentence)
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -140,7 +151,9 @@ class test_Dot_Singles {
             edge [
             ];
         """.trimIndent()
-        processor.parseForGoal(goal, sentence)
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -163,7 +176,9 @@ class test_Dot_Singles {
             ];
             }
         """.trimIndent()
-        processor.parseForGoal(goal, sentence)
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
 
     }
 
@@ -171,14 +186,18 @@ class test_Dot_Singles {
     fun stmt_list__1() {
         val goal = "stmt_list"
         val sentence = "graph[a=a ]; node [b=b c=c]; edge[];"
-        processor.parseForGoal(goal, sentence)
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
     fun attr_list__2s() {
         val goal = "attr_list"
         val sentence = "[x = x; y=y]"
-        processor.parseForGoal(goal, sentence)
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
 
     }
 
@@ -186,7 +205,9 @@ class test_Dot_Singles {
     fun attr_list__2n() {
         val goal = "attr_list"
         val sentence = "[x = x y=y]"
-        processor.parseForGoal(goal, sentence)
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
 
     }
 
@@ -196,11 +217,9 @@ class test_Dot_Singles {
         val sentence = """
             "001"
         """.trimIndent()
-        try {
-            processor.parseForGoal(goal, sentence)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -209,11 +228,10 @@ class test_Dot_Singles {
         val sentence = """
             [shape=box     , regular=1,style=filled,fillcolor=white   ]
         """.trimIndent()
-        try {
-            processor.parseForGoal(goal, sentence)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -222,11 +240,11 @@ class test_Dot_Singles {
         val sentence = """
             "001" [shape=box     , regular=1,style=filled,fillcolor=white   ]
         """.trimIndent()
-        try {
-            processor.parseForGoal(goal, sentence)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
+
     }
 
     @Test
@@ -234,22 +252,23 @@ class test_Dot_Singles {
         val goal = "stmt_list"
         val sentence = "a -> b ;"
 
-        val converterToRuntimeRules = ConverterToRuntimeRules(processor.grammar)
+        val converterToRuntimeRules = ConverterToRuntimeRules(processor.grammar!!)
         val parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
 
         //fails at season 9 with edge_list
-        parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
     fun stmt_list1() {
         val goal = "stmt_list"
         val sentence = "a -> b ;"
-        try {
-            processor.parseForGoal(goal, sentence)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -261,11 +280,10 @@ class test_Dot_Singles {
             "027" -> "marr0017" [dir=none,weight=1] ;
             "marr0017" -> "028" [dir=none, weight=2] ;
         """.trimIndent()
-        try {
-            processor.parseForGoal(goal, sentence)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -371,11 +389,10 @@ class test_Dot_Singles {
             "027" -> "marr0017" [dir=none,weight=1] ;
             "marr0017" -> "028" [dir=none, weight=2] ;
         """.trimIndent()
-        try {
-            processor.parseForGoal(goal, sentence)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -492,7 +509,9 @@ class test_Dot_Singles {
             "marr0017" -> "028" [dir=none, weight=2] ;
             }
             """.trimIndent()
-        processor.parseForGoal(goal, sentence)
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -501,11 +520,10 @@ class test_Dot_Singles {
         val sentence = """
             ""
         """.trimIndent()
-        try {
-            processor.parseForGoal(goal, sentence)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -514,11 +532,10 @@ class test_Dot_Singles {
         val sentence = """
             node[style=filled,label=""]
         """.trimIndent()
-        try {
-            processor.parseForGoal(goal, sentence)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
     }
 
     @Test
@@ -626,10 +643,304 @@ digraph G {
 	}
 }
         """.trimIndent()
-        try {
-            processor.parseForGoal(goal, sentence)
-        } catch (e: ParseFailedException) {
-            fail("${e.message} at ${e.location} expected ${e.expected}")
-        }
+
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
+    }
+
+    @Test
+    fun Synchronous_Digital_Hierarchy_Stack2() {
+        val goal = "graph"
+        val sentence = """
+digraph G {
+	graph [bgcolor=black];	/* set background */
+	edge [color=white];
+	graph[page="8.5,11",size="7.5,7",ratio=fill,center=1];
+	node[style=filled,label=""];
+	subgraph ds3CTP {
+		rank = same;
+		node[shape=box,color=green];
+		ds3CTP_1_1;
+		ds3CTP_1_2;
+		ds3CTP_5_1;
+		ds3CTP_5_2;
+	}
+	subgraph t3TTP {
+		rank = same;
+		node[shape=invtriangle,color=red];
+		t3TTP_1_1;
+		t3TTP_5_2;
+	}
+	subgraph vc3TTP {
+		rank = same;
+		node[shape=invtriangle,color=red];
+		vc3TTP_1_2;
+		vc3TTP_5_1;
+	}
+	subgraph fabric {
+		rank = same;
+		node[shape=hexagon,color=blue];
+		fabric_1_2;
+		fabric_4_1;
+		fabric_5_1;
+	}
+	subgraph xp {
+		rank = same;
+		node[shape=diamond,color=blue];
+		xp_1_2;
+		xp_4_1;
+		xp_5_1;
+	}
+	subgraph au3CTP {
+		rank = same;
+		node[shape=box,color=green];
+		au3CTP_1_2;
+		au3CTP_4_1;
+		au3CTP_4_2;
+		au3CTP_5_1;
+	}
+	subgraph aug {
+		rank = same;
+		node[shape=invtrapezium,color=pink];
+		aug_1_2;
+		aug_4_1;
+		aug_4_2;
+		aug_5_1;
+	}
+	subgraph protectionTTP {
+		rank = same;
+		node[shape=invtriangle,color=red];
+		prTTP_1_2;
+		prTTP_4_1;
+		prTTP_4_2;
+		prTTP_5_1;
+	}
+	subgraph protectionGroup {
+		rank = same;
+		node[shape=hexagon,color=blue];
+		pg_1_2;
+		pg_4_1;
+		pg_4_2;
+		pg_5_1;
+	}
+	subgraph protectionUnit {
+		rank = same;
+		node[shape=diamond,color=blue];
+		pu_1_2;
+		pu_4_1;
+		pu_4_2;
+		pu_5_1;
+	}
+	subgraph protectionCTP {
+		node[shape=box,color=green];
+		prCTP_1_2;
+		prCTP_4_1;
+		prCTP_4_2;
+		prCTP_5_1;
+	}
+	subgraph msTTP {
+		rank = same;
+		node[shape=invtriangle,color=red];
+		msTTP_1_2;
+		msTTP_4_1;
+		msTTP_4_2;
+		msTTP_5_1;
+	}
+	subgraph msCTP {
+		rank = same;
+		node[shape=box,color=green];
+		msCTP_1_2;
+		msCTP_3_1;
+		msCTP_3_2;
+		msCTP_4_1;
+		msCTP_4_2;
+		msCTP_5_1;
+	}
+	subgraph rsTTP {
+		rank = same;
+		node[shape=invtriangle,color=red];
+		rsTTP_1_2;
+		rsTTP_3_1;
+		rsTTP_3_2;
+		rsTTP_4_1;
+		rsTTP_4_2;
+		rsTTP_5_1;
+	}
+	subgraph rsCTP {
+		rank = same;
+		node[shape=box,color=green];
+		rsCTP_1_2;
+		rsCTP_2_1;
+		rsCTP_2_2;
+		rsCTP_3_1;
+		rsCTP_3_2;
+		rsCTP_4_1;
+		rsCTP_4_2;
+		rsCTP_5_1;
+	}
+	subgraph spiTTP {
+		rank = same;
+		node[shape=invtriangle,color=red];
+		spiTTP_1_2;
+		spiTTP_2_1;
+		spiTTP_2_2;
+		spiTTP_3_1;
+		spiTTP_3_2;
+		spiTTP_4_1;
+		spiTTP_4_2;
+		spiTTP_5_1;
+	}
+	subgraph me {
+		rank = same;
+		node[shape=box,peripheries=2];
+		me_1;
+		me_2;
+		me_3;
+		me_4;
+		me_5;
+	}
+	subgraph client_server {
+		edge[style=dotted,dir=none,weight=100];
+		ds3CTP_1_1->t3TTP_1_1;
+		ds3CTP_1_2->vc3TTP_1_2;
+		au3CTP_1_2->aug_1_2->prTTP_1_2;
+		prCTP_1_2->msTTP_1_2;
+		msCTP_1_2->rsTTP_1_2;
+		rsCTP_1_2->spiTTP_1_2;
+		rsCTP_2_1->spiTTP_2_1;
+		rsCTP_2_2->spiTTP_2_2;
+		msCTP_3_1->rsTTP_3_1;
+		rsCTP_3_1->spiTTP_3_1;
+		msCTP_3_2->rsTTP_3_2;
+		rsCTP_3_2->spiTTP_3_2;
+		au3CTP_4_1->aug_4_1->prTTP_4_1;
+		prCTP_4_1->msTTP_4_1;
+		msCTP_4_1->rsTTP_4_1;
+		rsCTP_4_1->spiTTP_4_1;
+		au3CTP_4_2->aug_4_2->prTTP_4_2;
+		prCTP_4_2->msTTP_4_2;
+		msCTP_4_2->rsTTP_4_2;
+		rsCTP_4_2->spiTTP_4_2;
+		ds3CTP_5_1->vc3TTP_5_1;
+		au3CTP_5_1->aug_5_1->prTTP_5_1;
+		prCTP_5_1->msTTP_5_1;
+		msCTP_5_1->rsTTP_5_1;
+		rsCTP_5_1->spiTTP_5_1;
+		ds3CTP_5_2->t3TTP_5_2;
+	}
+	subgraph trail {
+		edge[style=dashed,dir=none];
+		vc3TTP_1_2->vc3TTP_5_1;
+		prTTP_1_2->prTTP_4_1;
+		prTTP_4_2->prTTP_5_1;
+		msTTP_1_2->msTTP_4_1;
+		msTTP_4_2->msTTP_5_1;
+		rsTTP_1_2->rsTTP_3_1;
+		rsTTP_3_2->rsTTP_4_1;
+		rsTTP_4_2->rsTTP_5_1;
+		spiTTP_1_2->spiTTP_2_1;
+		spiTTP_2_2->spiTTP_3_1;
+		spiTTP_3_2->spiTTP_4_1;
+		spiTTP_4_2->spiTTP_5_1;
+	}
+	subgraph contain {
+		pu_1_2->pg_1_2;
+		pu_4_1->pg_4_1;
+		pu_4_2->pg_4_2;
+		pu_5_1->pg_5_1;
+		xp_1_2->fabric_1_2;
+		xp_4_1->fabric_4_1;
+		xp_5_1->fabric_5_1;
+		fabric_1_2->me_1;
+		fabric_4_1->me_4;
+		fabric_5_1->me_5;
+		pg_1_2->me_1;
+		pg_4_1->me_4;
+		pg_4_2->me_4;
+		pg_5_1->me_5;
+		t3TTP_1_1->me_1;
+		t3TTP_5_2->me_5;
+		vc3TTP_1_2->me_1;
+		vc3TTP_5_1->me_5;
+		prTTP_1_2->me_1;
+		prTTP_4_1->me_4;
+		prTTP_4_2->me_4;
+		prTTP_5_1->me_5;
+		msTTP_1_2->me_1;
+		msTTP_4_1->me_4;
+		msTTP_4_2->me_4;
+		msTTP_5_1->me_5;
+		rsTTP_1_2->me_1;
+		rsTTP_3_1->me_3;
+		rsTTP_3_2->me_3;
+		rsTTP_4_1->me_4;
+		rsTTP_4_2->me_4;
+		rsTTP_5_1->me_5;
+		spiTTP_1_2->me_1;
+		spiTTP_2_1->me_2;
+		spiTTP_2_2->me_2;
+		spiTTP_3_1->me_3;
+		spiTTP_3_2->me_3;
+		spiTTP_4_1->me_4;
+		spiTTP_4_2->me_4;
+		spiTTP_5_1->me_5;
+	}
+	subgraph connectedBy {
+		vc3TTP_1_2->fabric_1_2;
+		au3CTP_1_2->fabric_1_2;
+		au3CTP_4_1->fabric_4_1;
+		au3CTP_4_2->fabric_4_1;
+		vc3TTP_5_1->fabric_5_1;
+		au3CTP_5_1->fabric_5_1;
+		prTTP_1_2->pg_1_2;
+		prTTP_4_1->pg_4_1;
+		prTTP_4_2->pg_4_2;
+		prTTP_5_1->pg_5_1;
+		prCTP_1_2->pg_1_2;
+		prCTP_4_1->pg_4_1;
+		prCTP_4_2->pg_4_2;
+		prCTP_5_1->pg_5_1;
+	}
+	subgraph crossConnection {
+		edge[style=dotted,dir=none];
+		vc3TTP_1_2->xp_1_2->au3CTP_1_2;
+		prTTP_1_2->pu_1_2->prCTP_1_2;
+		prTTP_4_1->pu_4_1->prCTP_4_1;
+		au3CTP_4_1->xp_4_1->au3CTP_4_2;
+		prTTP_4_2->pu_4_2->prCTP_4_2;
+		prTTP_5_1->pu_5_1->prCTP_5_1;
+		vc3TTP_5_1->xp_5_1->au3CTP_5_1;
+	}
+	subgraph bindingConnection {
+		edge[style=bold,dir=none,weight=100];
+		ds3CTP_1_1->ds3CTP_1_2;
+		vc3TTP_1_2->au3CTP_1_2;
+		prTTP_1_2->prCTP_1_2;
+		msTTP_1_2->msCTP_1_2;
+		rsTTP_1_2->rsCTP_1_2;
+		rsCTP_2_1->rsCTP_2_2;
+		rsTTP_3_1->rsCTP_3_1;
+		msCTP_3_1->msCTP_3_2;
+		rsTTP_3_2->rsCTP_3_2;
+		prTTP_4_1->prCTP_4_1;
+		msTTP_4_1->msCTP_4_1;
+		rsTTP_4_1->rsCTP_4_1;
+		au3CTP_4_1->au3CTP_4_2;
+		prTTP_4_2->prCTP_4_2;
+		msTTP_4_2->msCTP_4_2;
+		rsTTP_4_2->rsCTP_4_2;
+		prTTP_5_1->prCTP_5_1;
+		msTTP_5_1->msCTP_5_1;
+		rsTTP_5_1->rsCTP_5_1;
+		ds3CTP_5_1->ds3CTP_5_2;
+		vc3TTP_5_1->au3CTP_5_1;
+	}
+}
+        """.trimIndent()
+
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
     }
 }

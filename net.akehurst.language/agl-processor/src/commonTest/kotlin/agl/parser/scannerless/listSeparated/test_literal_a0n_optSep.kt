@@ -22,9 +22,8 @@ import kotlin.test.Test
 
 internal class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
 
-    // S = [a / sep]*
+    // S = ['a' / sep]*
     // sep = ','?
-    // a = 'a'
     private companion object {
         val rrs = runtimeRuleSet {
             sList("S", 0, -1, "'a'", "sep")
@@ -41,12 +40,12 @@ internal class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
 
         val expected = "S|1 { §empty }"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -57,12 +56,12 @@ internal class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
 
         val expected = "S { 'a' }"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -73,12 +72,12 @@ internal class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a' sep{','} 'a'}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -89,12 +88,12 @@ internal class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a' sep|1 { §empty } 'a'}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -105,12 +104,12 @@ internal class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a' sep { ',' } 'a' sep|1 { §empty } 'a'}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -121,12 +120,12 @@ internal class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a' sep{','} 'a' sep{','} 'a'}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -137,12 +136,12 @@ internal class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
 
         val expected = "S {'a'"+" sep{','} 'a'".repeat(99)+"}"
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 

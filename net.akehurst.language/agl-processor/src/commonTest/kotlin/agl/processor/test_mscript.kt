@@ -15,27 +15,31 @@
  */
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.api.asm.asmSimple
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.syntaxAnalyser.AsmSimple
-import net.akehurst.language.api.syntaxAnalyser.asmSimple
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.typeModel.StringType
+import net.akehurst.language.api.typeModel.TypeModelTest
+import net.akehurst.language.api.typeModel.asString
+import net.akehurst.language.api.typeModel.typeModel
+import kotlin.test.*
 
 class test_mscript {
-    companion object {
+    private companion object {
         val grammarStr = """
 namespace com.yakindu.modelviewer.parser
 
 grammar Mscript {
 
     // end-of-line ('\n') is not whitespace as it marks end of a line in a statementList
-    skip WHITESPACE = "[ \t\x0B\f]+" ;
-    skip LINE_CONTINUATION =  "[.][.][.](?:.*)\R" ;
-    skip COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
-         MULTI_LINE_COMMENT = "%[{](?:.|\n)*?%[}]" ;
-         SINGLE_LINE_COMMENT = "(?:%[^{].+${'$'})|(?:%${'$'})" ;
+    skip leaf WHITESPACE = "[ \t\x0B\f]+" ;
+    skip leafLINE_CONTINUATION =  "[.][.][.](?:.*)[\r\n]" ;
+    skip leaf COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
+         leaf MULTI_LINE_COMMENT = "%[{](?:.|\n)*?%[}]" ;
+         leaf SINGLE_LINE_COMMENT = "(?:%[^{].+${'$'})|(?:%${'$'})" ;
 
     script = statementList ;
     statementList = [line / "\R"]* ;
@@ -49,16 +53,16 @@ grammar Mscript {
       //TODO: others
       ;
 
-    assignment = rootVariable '=' expression ;
     conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
+    assignment = rootVariable '=' expression ;
 
     expressionStatement = expression ;
 
     expression
       = rootVariable
-      | literal
+      | literalExpression
       | matrix
-      | functionCall
+      | functionCallOrIndex
       | prefixExpression
       | infixExpression
       | groupExpression
@@ -66,9 +70,9 @@ grammar Mscript {
 
     groupExpression = '(' expression ')' ;
 
-    functionCall = NAME '(' argumentList ')' ;
+    functionCallOrIndex = NAME '(' argumentList ')' ;
     argumentList = [ argument / ',' ]* ;
-    argument = expression | COLON ;
+    argument = expression | colonOperator ;
 
     prefixExpression = prefixOperator expression ;
     prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
@@ -80,11 +84,14 @@ grammar Mscript {
         | '&' | '|' | '&&' | '||' | '~'                         // logical
         | ':'                                                   // vector creation
         ;
+    colonOperator = COLON ; // for index operations
 
-    matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
+    matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatenation!
     row = expression (','? expression)* ;
 
-    literal
+    literalExpression = literalValue ;
+    
+    literalValue
       = BOOLEAN
       | number
       | SINGLE_QUOTE_STRING
@@ -95,26 +102,165 @@ grammar Mscript {
 
     number = INTEGER | REAL ;
 
-    NAME = "[a-zA-Z_][a-zA-Z_0-9]*" ;
+    leaf NAME = "[a-zA-Z_][a-zA-Z_0-9]*" ;
 
-    COLON               = ':' ;
-    BOOLEAN             = 'true' | 'false' ;
-    INTEGER             = "([+]|[-])?[0-9]+" ;
-    REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;
-    SINGLE_QUOTE_STRING = "'(?:[^'\\]|\\.)*'" ;
-    DOUBLE_QUOTE_STRING = "\"(?:[^\"\\]|\\.)*\"" ;
+    leaf COLON               = ':' ;
+    leaf BOOLEAN             = 'true' | 'false' ;
+    leaf INTEGER             = "([+]|[-])?[0-9]+" ;
+    leaf REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;
+    leaf SINGLE_QUOTE_STRING = "'(?:[^'\\]|\\.)*'" ;
+    leaf DOUBLE_QUOTE_STRING = "\"(?:[^\"\\]|\\.)*\"" ;
 }
     """.trimIndent()
-        val sut = Agl.processorFromString(grammarStr)
+        val sut = Agl.processorFromStringDefault(grammarStr).processor!!
+    }
+
+    @Test
+    fun mscript_typeModel() {
+        val actual = sut.typeModel
+        val expected = typeModel("com.yakindu.modelviewer.parser", "Mscript") {
+            elementType("Script") {
+                // script = statementList ;
+                propertyListSeparatedTypeOf("statementList", "line", StringType, false, 0)
+            }
+            elementType("StatementList") {
+                // statementList = [line / "\R"]* ;
+                propertyListSeparatedTypeOf("line", "line", StringType, false, 0)
+            }
+            elementType("Line") {
+                // line = [statement / ';']* ';'? ;
+                propertyListSeparatedTypeOf("statement", "statement", StringType, false, 0)
+                propertyStringTypeUnnamed(true, 1)
+            }
+            elementType("Statement") {
+                // statement
+                //   = conditional
+                //   | assignment
+                //   | expressionStatement
+                //   //TODO: others
+                //   ;
+                subTypes("Conditional", "Assignment", "ExpressionStatement")
+            }
+            elementType("Conditional") {
+                // conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
+                propertyElementTypeOf("expression", "expression", false, 1)
+                propertyListSeparatedTypeOf("statementList", "line", StringType, false, 3)
+                propertyListSeparatedTypeOf("statementList2", "line", StringType, false, 5)
+            }
+            elementType("Assignment") {
+                // assignment = rootVariable '=' expression ;
+                propertyElementTypeOf("rootVariable", "rootVariable", false, 0)
+                propertyElementTypeOf("expression", "expression", false, 2)
+            }
+            elementType("ExpressionStatement") {
+                // expressionStatement = expression ;
+                propertyElementTypeOf("expression", "expression", false, 0)
+            }
+            elementType("Expression") {
+                // expression
+                //   = rootVariable
+                //   | literalExpression
+                //   | matrix
+                //   | functionCallOrIndex
+                //   | prefixExpression
+                //   | infixExpression
+                //   | groupExpression
+                //   ;
+                subTypes("RootVariable", "LiteralExpression", "Matrix", "FunctionCallOrIndex", "PrefixExpression", "InfixExpression", "GroupExpression")
+            }
+            elementType("GroupExpression") {
+                // groupExpression = '(' expression ')' ;
+                //superType("expression")
+                propertyElementTypeOf("expression", "expression", false, 1)
+            }
+            elementType("FunctionCallOrIndex") {
+                // functionCall = NAME '(' argumentList ')' ;
+                //superType("expression")
+                propertyStringType("name", false, 0)
+                propertyListSeparatedTypeOf("argumentList", "argument", StringType, false, 2)
+            }
+            elementType("ArgumentList") {
+                // argumentList = [ argument / ',' ]* ;
+                propertyListSeparatedTypeOf("argument", "argument", StringType, false, 0)
+            }
+            elementType("Argument") {
+                // argument = expression | colonOperator ;
+                subTypes("Expression", "ColonOperator")
+            }
+            elementType("PrefixExpression") {
+                // prefixExpression = prefixOperator expression ;
+                propertyStringType("prefixOperator", false, 0)
+                propertyElementTypeOf("expression", "expression", false, 1)
+            }
+            stringTypeFor("PrefixOperator")
+            //elementType("prefixOperator") {
+            // prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
+            //    propertyUnnamedPrimitiveType(StringType, false, 0)
+            //}
+            elementType("InfixExpression") {
+                // infixExpression =  [ expression / infixOperator ]2+ ;
+                propertyListSeparatedTypeOf("expression", "expression", StringType, false, 0)
+            }
+            stringTypeFor("InfixOperator")
+            //elementType("infixOperator") {
+            // infixOperator
+            //        = '.*' | '*' | './' | '/' | '.\\' | '\\' | '+' | '-'    // arithmetic
+            //        | '==' | '~=' | '>' | '>=' | '<' | '<='                 // relational
+            //        | '&' | '|' | '&&' | '||' | '~'                         // logical
+            //        | ':'                                                   // vector creation
+            //        ;
+            //    propertyUnnamedPrimitiveType(StringType, false, 0)
+            //}
+            elementType("ColonOperator") {
+                propertyStringType("colon", false, 0)
+            }
+            elementType("Matrix") {
+                // matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
+                propertyListSeparatedTypeOf("row", "row", StringType, false, 1)
+            }
+            elementType("Row") {
+                // row = expression (','? expression)* ;
+                propertyElementTypeOf("expression", "Expression", false, 0)
+                propertyListOfTupleType("\$group", false, 1) {
+                    propertyStringTypeUnnamed(true, 0)
+                    propertyElementTypeOf("expression", "Expression", false, 1)
+                }
+            }
+            elementType("LiteralExpression") {
+                propertyStringType("literalValue", false, 0)
+            }
+            stringTypeFor("LiteralValue")
+            //elementType("literalValue") {
+            //    literal
+            //      = BOOLEAN
+            //      | number
+            //      | SINGLE_QUOTE_STRING
+            //      | DOUBLE_QUOTE_STRING
+            //      ;
+            //    propertyUnnamedPrimitiveType(PrimitiveType.ANY, false, 0)
+            //}
+            elementType("RootVariable") {
+                // rootVariable = NAME ;
+                propertyStringType("name", false, 0)
+            }
+            stringTypeFor("Number")
+            //elementType("number") {
+            // number = INTEGER | REAL ;
+            //    propertyUnnamedPrimitiveType(StringType, false, 0)
+            //}
+        }
+        assertEquals(expected.asString(), actual?.asString())
+        TypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
     fun process_single_line_comment() {
 
         val text = "% this is a comment"
-        val actual = sut.parseForGoal("script", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
 
     }
 
@@ -127,9 +273,10 @@ grammar Mscript {
              a multiline comment
             %}
         """.trimIndent()
-        val actual = sut.parseForGoal("script", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
 
     }
 
@@ -137,80 +284,88 @@ grammar Mscript {
     fun process_rootVariable_x() {
 
         val text = "x"
-        val actual = sut.parseForGoal("rootVariable", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("rootVariable") })
 
-        assertNotNull(actual)
-        assertEquals("rootVariable", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("rootVariable", result.sppt!!.root.name)
     }
 
     @Test
     fun process_expression_x() {
 
         val text = "x"
-        val actual = sut.parseForGoal("expression", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
-        assertNotNull(actual)
-        assertEquals("expression", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("expression", result.sppt!!.root.name)
     }
 
     @Test
     fun process_BOOLEAN_true() {
 
         val text = "true"
-        val actual = sut.parseForGoal("BOOLEAN", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("BOOLEAN") })
 
-        assertNotNull(actual)
-        assertEquals("BOOLEAN", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("BOOLEAN", result.sppt!!.root.name)
     }
 
     @Test
     fun process_expression_true() {
 
         val text = "true"
-        val actual = sut.parseForGoal("expression", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
-        assertNotNull(actual)
-        assertEquals("expression", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("expression", result.sppt!!.root.name)
     }
 
     @Test
     fun process_REAL_0p1() {
 
         val text = "0.1"
-        val actual = sut.parseForGoal("REAL", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
-        assertNotNull(actual)
-        assertEquals("REAL", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("REAL", result.sppt!!.root.name)
     }
 
     @Test
     fun process_REAL_0p1em5() {
 
         val text = "0.1e-5"
-        val actual = sut.parseForGoal("REAL", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
-        assertNotNull(actual)
-        assertEquals("REAL", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("REAL", result.sppt!!.root.name)
     }
 
     @Test
     fun process_REAL_p1() {
 
         val text = ".1"
-        val actual = sut.parseForGoal("REAL", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
-        assertNotNull(actual)
-        assertEquals("REAL", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("REAL", result.sppt!!.root.name)
     }
 
     @Test
     fun process_REAL_p1e5() {
 
         val text = ".1e5"
-        val actual = sut.parseForGoal("REAL", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
-        assertNotNull(actual)
-        assertEquals("REAL", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("REAL", result.sppt!!.root.name)
     }
 
     @Test
@@ -218,209 +373,235 @@ grammar Mscript {
 
         val text = "1"
         val ex = ParseFailedException::class
-        val e = assertFailsWith<ParseFailedException> {
-            sut.parseForGoal("REAL", text)
-        }
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        val expIssues = listOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^1",
+                setOf("REAL")
+            )
+        )
+        assertNull(result.sppt)
+        assertEquals(expIssues, result.issues.error)
+
     }
 
     @Test
     fun process_INTEGER_1_fails() {
         val text = "1"
-        val actual = sut.parseForGoal("INTEGER", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("INTEGER") })
 
-        assertNotNull(actual)
-        assertEquals("INTEGER", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("INTEGER", result.sppt!!.root.name)
     }
 
     @Test
     fun process_SINGLE_QUOTE_STRING_empty() {
         val text = "''"
-        val actual = sut.parseForGoal("SINGLE_QUOTE_STRING", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("SINGLE_QUOTE_STRING") })
 
-        assertNotNull(actual)
-        assertEquals("SINGLE_QUOTE_STRING", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.root.name)
     }
 
     @Test
     fun process_SINGLE_QUOTE_STRING_simple() {
         val text = "'xxx'"
-        val actual = sut.parseForGoal("SINGLE_QUOTE_STRING", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("SINGLE_QUOTE_STRING") })
 
-        assertNotNull(actual)
-        assertEquals("SINGLE_QUOTE_STRING", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.root.name)
     }
 
     @Test
     fun process_SINGLE_QUOTE_STRING_withLineBreak() {
         val text = """'xx
             x'""".trimIndent()
-        val actual = sut.parseForGoal("SINGLE_QUOTE_STRING", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("SINGLE_QUOTE_STRING") })
 
-        assertNotNull(actual)
-        assertEquals("SINGLE_QUOTE_STRING", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.root.name)
     }
 
     @Test
     fun process_matrix_0x0() {
 
         val text = "[]"
-        val actual = sut.parseForGoal("matrix", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
-        assertNotNull(actual)
-        assertEquals("matrix", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("matrix", result.sppt!!.root.name)
     }
 
     @Test
     fun process_matrix_1x1() {
 
         val text = "[1]"
-        val actual = sut.parseForGoal("matrix", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
-        assertNotNull(actual)
-        assertEquals("matrix", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("matrix", result.sppt!!.root.name)
     }
 
     @Test
     fun process_matrix_1x1_2() {
 
         val text = "[[1]]"
-        val actual = sut.parseForGoal("matrix", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
-        assertNotNull(actual)
-        assertEquals("matrix", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("matrix", result.sppt!!.root.name)
     }
 
     @Test
     fun process_matrix_row_x4() {
 
         val text = "1 2 3 4"
-        val actual = sut.parseForGoal("row", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("row") })
 
-        assertNotNull(actual)
-        assertEquals("row", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("row", result.sppt!!.root.name)
     }
 
     @Test
     fun process_matrix_1x4() {
 
         val text = "[1 2 3 4]"
-        val actual = sut.parseForGoal("matrix", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
-        assertNotNull(actual)
-        assertEquals("matrix", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("matrix", result.sppt!!.root.name)
     }
 
     @Test
     fun process_matrix_column_composition_1x4() {
 
         val text = "[1, 2, 3, 4]"
-        val actual = sut.parseForGoal("matrix", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
-        assertNotNull(actual)
-        assertEquals("matrix", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("matrix", result.sppt!!.root.name)
     }
 
     @Test
     fun process_matrix_row_composition_4x1() {
 
         val text = "[1; 2; 3; 4]"
-        val actual = sut.parseForGoal("matrix", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
-        assertNotNull(actual)
-        assertEquals("matrix", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("matrix", result.sppt!!.root.name)
     }
 
     @Test
     fun process_field_access() {
         val text = "cn.src_cpu"
-        val actual = sut.parseForGoal("matrix", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
-        assertNotNull(actual)
-        assertEquals("matrix", actual.root.name)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals("matrix", result.sppt!!.root.name)
     }
 
     @Test
     fun process_argumentList_50() {
 
         val text = "0" + ",0".repeat(49)
-        val actual = sut.parseForGoal("argumentList", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("argumentList") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
     fun process_expression_func() {
 
         val text = "func()"
-        val actual = sut.parseForGoal("expression", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
     fun process_expression_func1() {
 
         val text = "func(a)"
-        val actual = sut.parseForGoal("expression", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
     fun process_expression_func2() {
 
         val text = "func(a,1)"
-        val actual = sut.parseForGoal("expression", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
     fun process_expression_func3() {
 
         val text = "func(a,1,'hello')"
-        val actual = sut.parseForGoal("expression", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
     fun process_expression_func10() {
 
         val text = "func(a, 1, b, 2, c, 3, d, 4, e, 5)"
-        val actual = sut.parseForGoal("expression", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
     fun process_expression_func20() {
 
         val text = "func(a,1,b,2,c,3,d,4,e,5,f,6,g,7,h,8,i,9,j,10)"
-        val actual = sut.parseForGoal("expression", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
     fun process_expression_func50() {
 
         val text = "fprintf(''" + ",0".repeat(49) + ")"
-        val actual = sut.parseForGoal("expression", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
     fun process_expression_func_func_1() {
 
         val text = "func( func(a) )"
-        val actual = sut.parseForGoal("expression", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
@@ -430,54 +611,60 @@ grammar Mscript {
             func( 1, 2, ...
               3, 4)
         """.trimIndent()
-        val actual = sut.parseForGoal("expression", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
     fun process_expression_operators_1() {
 
         val text = "1 + 1"
-        val actual = sut.parseForGoal("expression", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
     fun process_expression_operators_10() {
 
         val text = "1" + " + 1".repeat(10)
-        val actual = sut.parseForGoal("expression", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
     fun process_expression_operators_100() {
 
         val text = "1" + " + 1".repeat(100)
-        val actual = sut.parseForGoal("expression", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
     fun process_expression_groups() {
 
         val text = "((1+1)*(2+3)+4)*5"
-        val actual = sut.parseForGoal("expression", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
     fun process_script_empty() {
 
         val text = ""
-        val actual = sut.parseForGoal("script", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
     }
 
     @Test
@@ -485,62 +672,76 @@ grammar Mscript {
 
         val text = """
         """
-        val actual = sut.parseForGoal("script", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+
     }
 
     @Test
     fun process_func_100_args() {
         val text = "fprintf(''" + ",0".repeat(99) + ");"
-        val actual = sut.parseForGoal("script", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+
     }
 
     @Test
     fun process_functionCall_func() {
 
         val text = "func()"
-        val actual = sut.parseForGoal("functionCall", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("functionCallOrIndex") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+
     }
 
     @Test
     fun process_statement_func() {
 
         val text = "func()"
-        val actual = sut.parseForGoal("statement", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("statement") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+
     }
 
     @Test
     fun process_line_func() {
 
         val text = "func();"
-        val actual = sut.parseForGoal("line", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("line") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+
     }
 
     @Test
     fun process_statementList_func() {
 
         val text = "func();"
-        val actual = sut.parseForGoal("statementList", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("statementList") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+
     }
 
     @Test
     fun process_script_func() {
 
         val text = "func();"
-        val actual = sut.parseForGoal("script", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+
     }
 
     @Test
@@ -551,33 +752,63 @@ grammar Mscript {
             func();
             func();
         """.trimIndent()
-        val actual = sut.parseForGoal("script", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+
     }
 
     @Test
     fun parse_script_func_args() {
 
         val text = "func(false,1,'abc',3.14, root);"
-        val actual = sut.parseForGoal("script", text)
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
-        assertNotNull(actual)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.error.isEmpty())
+
     }
 
     @Test
     fun process_script_nested_func() {
 
         val text = "disp(get_param(gcbh,'xxx'))"
-        val actual = sut.processForGoal(AsmSimple::class,"script", text)
+        val result = sut.process(text, Agl.options { parse { goalRuleName("script") } })
 
         val expected = asmSimple {
-            element(":script") {
-
+            root("Script") {
+                propertyListOfElement("statementList") {
+                    element("Line") {
+                        propertyListOfElement("statement") {
+                            element("ExpressionStatement") {
+                                propertyElementExplicitType("expression", "FunctionCallOrIndex") {
+                                    propertyString("name", "disp")
+                                    propertyListOfElement("argumentList") {
+                                        element("FunctionCallOrIndex") {
+                                            propertyString("name", "get_param")
+                                            propertyListOfElement("argumentList") {
+                                                element("RootVariable") {
+                                                    propertyString("name", "gcbh")
+                                                }
+                                                element("LiteralExpression") {
+                                                    propertyString("literalValue","'xxx'")
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        propertyUnnamedString(null)
+                    }
+                }
             }
         }
 
-        assertEquals(expected.asString(" "), actual.asString(" "))
+        assertNotNull(result.asm)
+        assertTrue(result.issues.error.isEmpty())
+        assertEquals(expected.asString(" "), result.asm?.asString(" "))
     }
 
 }

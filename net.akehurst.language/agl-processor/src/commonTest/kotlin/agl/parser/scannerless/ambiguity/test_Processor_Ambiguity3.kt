@@ -18,11 +18,11 @@ package net.akehurst.language.parser.scanondemand.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
     /**
@@ -43,7 +43,7 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
      * P2 = P a ;
      */
     private companion object {
-        val S = runtimeRuleSet {
+        val rrs = runtimeRuleSet {
             choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("S1")
                 ref("S2")
@@ -62,50 +62,39 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
             }
             concatenation("P1") { literal("a"); ref("P") }
             concatenation("P2") { ref("P"); literal("a") }
+            preferenceFor("'a'") {
+                left("P1", setOf("'a'"))
+                leftOption("P", 2, setOf("'b'","'a'"))
+                left("Q", setOf("'c'"))
+            }
         }
         val goal = "S"
     }
-    /*
-    private fun S(): RuntimeRuleSetBuilder {
-        val b = RuntimeRuleSetBuilder()
-        val r_a = b.literal("a")
-        val r_b = b.literal("b")
-        val r_c = b.literal("c")
-        val r_P = b.rule("P").build()
-        val r_P1 = b.rule("P1").concatenation(r_a, r_P)
-        val r_P2 = b.rule("P2").concatenation(r_P, r_a)
-        b.rule(r_P).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_P1, r_P2, r_a)
-        val r_Q = b.rule("Q").build()
-        val r_Q1 = b.rule("Q1").concatenation(r_Q, r_a)
-        b.rule(r_Q).choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_Q1, r_a)
-        val r_S2 = b.rule("S2").concatenation(r_Q, r_c)
-        val r_S1 = b.rule("S1").concatenation(r_P, r_b)
-        b.rule("S").choice(RuntimeRuleChoiceKind.LONGEST_PRIORITY, r_S1, r_S2)
-        return b
-    }
-
-     */
 
     @Test
     fun empty_fails() {
         val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(S, goal, sentence,1)
-        }
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+            ), issues.error
+        )
     }
 
     @Test
     fun a_fails() {
         val sentence = "a"
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(S, goal, sentence,1)
-        }
-        assertEquals(1, e.location.line)
-        assertEquals(2, e.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1,2,1,1),"a^",setOf("'a'","'b'","'c'"))
+            ), issues.error
+        )
     }
 
     @Test
@@ -114,17 +103,17 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S { S1 {
-                P|2 { 'a' }
+                P { 'a' }
                 'b'
             } }
         """.trimIndent()
 
-        val actual = super.test(
-            rrs = S,
+        super.test(
+            rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -133,18 +122,67 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
         val sentence = "ac"
 
         val expected = """
-            S|1 { S2 {
-                Q|1 { 'a' }
+            S { S2 {
+                Q { 'a' }
                 'c'
             } }
         """.trimIndent()
 
-        val actual = super.test(
-            rrs = S,
+        super.test(
+            rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun aab() {
+        val sentence = "aab"
+
+        val expected = """
+             S { S1 {
+                P { P2 {
+                    P { 'a' }
+                    'a'
+                  } }
+                'b'
+              } }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
+
+    @Test
+    fun aaab() {
+        val sentence = "aaab"
+
+        val expected = """
+             S { S1 {
+                P { P2 {
+                    P { P2 {
+                        P { 'a' }
+                        'a'
+                      } }
+                    'a'
+                  } }
+                'b'
+              } }
+        """.trimIndent()
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -154,16 +192,16 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
 
         val expected = """
          S { S1 {
-            P|1 { P2 {
-                P|1 { P2 {
-                    P|1 { P2 {
-                        P|1 { P2 {
-                            P|1 { P2 {
-                                P|1 { P2 {
-                                    P|1 { P2 {
-                                        P|1 { P2 {
-                                            P|1 { P2 {
-                                                P|2 { 'a' }
+            P { P2 {
+                P { P2 {
+                    P { P2 {
+                        P { P2 {
+                            P { P2 {
+                                P { P2 {
+                                    P { P2 {
+                                        P { P2 {
+                                            P { P2 {
+                                                P { 'a' }
                                                 'a'
                                               } }
                                             'a'
@@ -186,12 +224,12 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
-            rrs = S,
+        super.test(
+            rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -199,14 +237,14 @@ internal class test_Processor_Ambiguity3 : test_ScanOnDemandParserAbstract() {
     fun a50b() {
         val sentence = "a".repeat(50) + "b"
 
-        val expected = "S { S1 {" + "P|1 { P2 {".repeat(49) + "P|2 {'a'}" + "'a' } }".repeat(49) + "'b'} }"
+        val expected = "S { S1 {" + "P { P2 {".repeat(49) + "P {'a'}" + "'a' } }".repeat(49) + "'b'} }"
 
-        val actual = super.test(
-            rrs = S,
+        super.test(
+            rrs = rrs,
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = *arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 }

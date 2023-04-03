@@ -17,11 +17,11 @@
 package net.akehurst.language.parser.scanondemand.multi
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_multi01_x2_nested : test_ScanOnDemandParserAbstract() {
 
@@ -40,25 +40,23 @@ internal class test_multi01_x2_nested : test_ScanOnDemandParserAbstract() {
             literal("'b'", "b")
             pattern("V", "[a-c]")
         }
+        val goal = "S"
     }
 
     @Test
     fun empty_fails() {
-        val goal = "S"
+
         val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
-        assertEquals(setOf("'a'","'b'","V"), e.expected)
+        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            parseError(InputLocation(0,1,1,1),"^", setOf("'a'","'b'","V"))
+        ),issues.error)
     }
 
     @Test
     fun abcd() {
-        val goal = "S"
         val sentence = "abcd"
 
         val expected = """
@@ -72,18 +70,17 @@ internal class test_multi01_x2_nested : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 2,//TODO can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected)
+                expectedNumGSSHeads = 2,
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun acd() {
-        val goal = "S"
         val sentence = "acd"
 
         val expected = """
@@ -97,14 +94,13 @@ internal class test_multi01_x2_nested : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 2, //TODO can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected)
+                expectedNumGSSHeads = 2,
+                expectedTrees = arrayOf(expected)
         )
     }
-
 
 }

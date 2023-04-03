@@ -32,7 +32,7 @@ class test_Hannes : test_ProcessorAbstract() {
             
         """.trimIndent()
 
-        val processor = Agl.processorFromString(grammarStr)
+        val processor = Agl.processorFromString<Any,Any>(grammarStr).processor!!
     }
 
     @Test

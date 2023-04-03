@@ -17,35 +17,81 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.syntaxAnalyser.AsmSimple
-import net.akehurst.language.api.syntaxAnalyser.asmSimple
+import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.asm.asmSimple
+import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+
+class TestData(
+    val sentence: String,
+    val expected: AsmSimple
+)
 
 class test_SyntaxAnalyserSimple {
 
+    private companion object {
+        val grammarProc = Agl.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
+
+        fun processor(grammarStr: String) = Agl.processorFromStringDefault(grammarStr)
+
+        fun testProc(grammarStr: String): LanguageProcessor<AsmSimple, ContextSimple> {
+            val result = processor(grammarStr)
+            assertNotNull(result.processor, result.issues.joinToString(separator = "\n") { "$it" })
+            assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+            return result.processor!!
+        }
+
+        fun MutableList<TestData>.define(sentence: String, expected: () -> AsmSimple) = this.add(TestData(sentence, expected()))
+
+        fun test(proc: LanguageProcessor<AsmSimple, ContextSimple>, data: TestData) {
+            val result = proc.process(data.sentence)
+            assertNotNull(result.asm)
+            assertTrue(result.issues.isEmpty())
+            val actual = result.asm!!.rootElements[0]
+
+            assertEquals(data.expected.asString("  "), actual.asString("  "))
+        }
+    }
 
     @Test
-    fun oneLiteral() {
+    fun oneLiteral_ignored_because_not_a_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
                 S = 'a' ;
             }
         """.trimIndent()
+        val proc = testProc(grammarStr)
 
         val sentence = "a"
-
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
-
         val expected = asmSimple() {
-            element("S") {
-                property("'a'", "a")
+            root("S") {
             }
-        }.rootElements[0]
+        }
+        test(proc, TestData(sentence, expected))
+    }
 
-        assertEquals(expected.asString("  "), actual.asString("  "))
+    @Test
+    fun oneLiteral_as_leaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a ;
+                leaf a = 'a' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = "a"
+        val expected = asmSimple() {
+            root("S") {
+                propertyString("a", "a")
+            }
+        }
+        test(proc, TestData(sentence, expected))
     }
 
     @Test
@@ -57,19 +103,15 @@ class test_SyntaxAnalyserSimple {
                 leaf ID = "[a-z]" ;
             }
         """.trimIndent()
+        val proc = testProc(grammarStr)
 
         val sentence = "a"
-
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
-
         val expected = asmSimple() {
-            element("S") {
-                property("ID", "a")
+            root("S") {
+                propertyString("id", "a")
             }
-        }.rootElements[0]
-
-        assertEquals(expected.asString("  "), actual.asString("  "))
+        }
+        test(proc, TestData(sentence, expected))
     }
 
     @Test
@@ -83,23 +125,17 @@ class test_SyntaxAnalyserSimple {
                 leaf ID = "[a-z]" ;
             }
         """.trimIndent()
+        val proc = testProc(grammarStr)
 
         val sentence = "a : A"
-
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
-
         val expected = asmSimple() {
-            element("S") {
-                property("ID", "a")
-                property("':'", ":")
-                property("type", "A")
+            root("S") {
+                propertyString("id", "a")
+                propertyString("type", "A")
             }
-        }.rootElements[0]
-
-        assertEquals(expected.asString("  "), actual.asString("  "))
+        }
+        test(proc, TestData(sentence, expected))
     }
-
 
     @Test
     fun concatenation() {
@@ -113,21 +149,94 @@ class test_SyntaxAnalyserSimple {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
             }
         """.trimIndent()
+        val proc = testProc(grammarStr)
 
         val sentence = "a 8 fred"
-
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
-
         val expected = asmSimple() {
-            element("S") {
-                property("ID", "a")
-                property("NUMBER", "8")
-                property("NAME", "fred")
+            root("S") {
+                propertyString("id", "a")
+                propertyString("number", "8")
+                propertyString("name", "fred")
             }
-        }.rootElements[0]
+        }
+        test(proc, TestData(sentence, expected))
+    }
 
-        assertEquals(expected.asString("  "), actual.asString("  "))
+    @Test
+    fun root_choice_twoLiteral() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' | 'b' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = "a"
+        val expected = asmSimple() {
+            root("S") {
+                propertyUnnamedString("a")
+            }
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    @Test
+    fun root_empty() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a'? ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = ""
+        val expected = asmSimple() {
+            root("S") {
+                propertyUnnamedString(null)
+            }
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    @Test
+    fun root_multi_literals() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a'* ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = "aaaa"
+        val expected = asmSimple() {
+            root("S") {
+                propertyUnnamedListOfString(emptyList())
+            }
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    @Test
+    fun root_multi_leafs() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a* ;
+                leaf a = 'a' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = "aaaa"
+        val expected = asmSimple() {
+            root("S") {
+                propertyListOfString("a", listOf("a", "a", "a", "a"))
+            }
+        }
+        test(proc, TestData(sentence, expected))
     }
 
     @Test
@@ -146,42 +255,43 @@ class test_SyntaxAnalyserSimple {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
             }
         """.trimIndent()
+        val proc = testProc(grammarStr)
 
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual1 = proc.process(AsmSimple::class, "a 8").rootElements[0]
-        val actual2 = proc.process(AsmSimple::class, "a fred").rootElements[0]
-        val actual3 = proc.process(AsmSimple::class, "a fred 8").rootElements[0]
-
-        val expected1 = asmSimple() {
-            element("S") {
-                property("ID", "a")
-                property("item", "A") {
-                    property("NUMBER", "8")
+        val tests = mutableListOf<TestData>()
+        tests.define("a 8") {
+            asmSimple() {
+                root("S") {
+                    propertyString("id", "a")
+                    propertyElementExplicitType("item", "A") {
+                        propertyString("number", "8")
+                    }
                 }
             }
-        }.rootElements[0]
-        assertEquals(expected1.asString("  "), actual1.asString("  "))
-
-        val expected2 = asmSimple() {
-            element("S") {
-                property("ID", "a")
-                property("item", "B") {
-                    property("NAME", "fred")
+        }
+        tests.define("a fred") {
+            asmSimple() {
+                root("S") {
+                    propertyString("id", "a")
+                    propertyElementExplicitType("item", "B") {
+                        propertyString("name", "fred")
+                    }
                 }
             }
-        }.rootElements[0]
-        assertEquals(expected2.asString("  "), actual2.asString("  "))
-
-        val expected3 = asmSimple() {
-            element("S") {
-                property("ID", "a")
-                property("item", "C") {
-                    property("NAME", "fred")
-                    property("NUMBER", "8")
+        }
+        tests.define("a fred 8") {
+            asmSimple() {
+                root("S") {
+                    propertyString("id", "a")
+                    propertyElementExplicitType("item", "C") {
+                        propertyString("name", "fred")
+                        propertyString("number", "8")
+                    }
                 }
             }
-        }.rootElements[0]
-        assertEquals(expected3.asString("  "), actual3.asString("  "))
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
     }
 
     @Test
@@ -196,18 +306,17 @@ class test_SyntaxAnalyserSimple {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
             }
         """.trimIndent()
+        val proc = testProc(grammarStr)
 
         val sentence = "a 8 fred"
-
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
-
-        assertEquals("S", actual.typeName)
-        assertEquals(3, actual.properties.size)
-        assertEquals(true, actual.hasProperty("ID"))
-        assertEquals("a", actual.getPropertyValue("ID"))
-        assertEquals("8", actual.getPropertyValue("NUMBER"))
-        assertEquals("fred", actual.getPropertyValue("NAME"))
+        val expected = asmSimple() {
+            root("S") {
+                propertyString("id", "a")
+                propertyString("number", "8")
+                propertyString("name", "fred")
+            }
+        }
+        test(proc, TestData(sentence, expected))
     }
 
     @Test
@@ -222,24 +331,21 @@ class test_SyntaxAnalyserSimple {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
             }
         """.trimIndent()
+        val proc = testProc(grammarStr)
 
         val sentence = "a fred"
-
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
-
         val expected = asmSimple() {
-            element("S") {
-                property("ID", "a")
-                property("NUMBER", null)
-                property("NAME", "fred")
+            root("S") {
+                propertyString("id", "a")
+                propertyString("number", null)
+                propertyString("name", "fred")
             }
-        }.rootElements[0]
-        assertEquals(expected.asString("  "), actual.asString("  "))
+        }
+        test(proc, TestData(sentence, expected))
     }
 
     @Test
-    fun multi_empty() {
+    fun list_empty() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -250,23 +356,20 @@ class test_SyntaxAnalyserSimple {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
             }
         """.trimIndent()
+        val proc = testProc(grammarStr)
 
         val sentence = "a"
-
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
-
         val expected = asmSimple() {
-            element("S") {
-                property("ID", "a")
-                property("NAME", emptyList<String>())
+            root("S") {
+                propertyString("id", "a")
+                propertyListOfString("name", emptyList<String>())
             }
-        }.rootElements[0]
-        assertEquals(expected.asString("  "), actual.asString("  "))
+        }
+        test(proc, TestData(sentence, expected))
     }
 
     @Test
-    fun multi() {
+    fun list() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -277,23 +380,129 @@ class test_SyntaxAnalyserSimple {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
             }
         """.trimIndent()
+        val proc = testProc(grammarStr)
 
         val sentence = "a adam betty charles"
-
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
-
         val expected = asmSimple() {
-            element("S") {
-                property("ID", "a")
-                property("NAME", listOf("adam", "betty", "charles"))
+            root("S") {
+                propertyString("id", "a")
+                propertyListOfString("name", listOf("adam", "betty", "charles"))
             }
-        }.rootElements[0]
-        assertEquals(expected.asString("  "), actual.asString("  "))
+        }
+        test(proc, TestData(sentence, expected))
     }
 
     @Test
-    fun slist() {
+    fun list_expressions() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                S = exprList ;
+                exprList = expr (';' expr)* ;
+                expr = root | mul | add ;
+                root = NAME | NUMBER ;
+                mul = [expr / '*']2+ ;
+                add = [expr / '+']2+ ;
+                leaf NUMBER = "[0-9]+" ;
+                leaf NAME = "[a-zA-Z]+" ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("v") {
+            asmSimple {
+                root("S") {
+                    propertyElementExplicitType("exprList", "ExprList") {
+                        propertyString("expr", "v")
+                        propertyUnnamedListOfElement() {
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("v+w") {
+            asmSimple {
+                root("S") {
+                    propertyElementExplicitType("exprList", "ExprList") {
+                        propertyElementExplicitType("expr", "Add") {
+                            propertyListOfString("expr", listOf("v","w"))
+                        }
+                        propertyUnnamedListOfElement() {
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("v*w") {
+            asmSimple {
+                root("S") {
+                    propertyElementExplicitType("exprList", "ExprList") {
+                        propertyElementExplicitType("expr", "Mul") {
+                            propertyListOfString("expr", listOf("v","w"))
+                        }
+                        propertyUnnamedListOfElement {  }
+                    }
+                }
+            }
+        }
+        tests.define("v;w") {
+            asmSimple {
+                root("S") {
+                    propertyElementExplicitType("exprList", "ExprList") {
+                        propertyString("expr", "v")
+                        propertyUnnamedListOfElement {
+                            tuple { propertyString("expr", "w")   }
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("v;w;x") {
+            asmSimple {
+                root("S") {
+                    propertyElementExplicitType("exprList", "ExprList") {
+                        propertyString("expr", "v")
+                        propertyUnnamedListOfElement {
+                            tuple { propertyString("expr", "w") }
+                            tuple {  propertyString("expr", "x")  }
+                        }
+                    }
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test
+    fun list_of_group() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                S = ID (NAME | NUMBER)* ;
+                leaf ID = "[a-z]" ;
+                leaf NUMBER = "[0-9]+" ;
+                leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = "a adam 2 charles"
+        val expected = asmSimple() {
+            root("S") {
+                propertyString("id", "a")
+                propertyUnnamedListOfString(listOf("adam", "2", "charles"))
+            }
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    @Test
+    fun sepList() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -306,40 +515,36 @@ class test_SyntaxAnalyserSimple {
                 leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
             }
         """.trimIndent()
+        val proc = testProc(grammarStr)
 
         val sentence = "bk1 adam ant 12345, betty boo 34567, charlie chaplin 98765"
-
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.process(AsmSimple::class, sentence).rootElements[0]
         val expected = asmSimple() {
-            element("addressBook") {
-                property("ID", "bk1")
-                property("contacts", listOf(
-                    element("person") {
-                        property("NAME", "adam")
-                        property("NAME2", "ant")
-                        property("NUMBER", "12345")
-                    },
-                    ",",
-                    element("person") {
-                        property("NAME", "betty")
-                        property("NAME2", "boo")
-                        property("NUMBER", "34567")
-                    },
-                    ",",
-                    element("person") {
-                        property("NAME", "charlie")
-                        property("NAME2", "chaplin")
-                        property("NUMBER", "98765")
+            root("AddressBook") {
+                propertyString("id", "bk1")
+                propertyListOfElement("contacts") {
+                    element("Person") {
+                        propertyString("name", "adam")
+                        propertyString("name2", "ant")
+                        propertyString("number", "12345")
                     }
-                ))
+                    element("Person") {
+                        propertyString("name", "betty")
+                        propertyString("name2", "boo")
+                        propertyString("number", "34567")
+                    }
+                    element("Person") {
+                        propertyString("name", "charlie")
+                        propertyString("name2", "chaplin")
+                        propertyString("number", "98765")
+                    }
+                }
             }
-        }.rootElements[0]
-        assertEquals(expected.asString("  "), actual.asString("  "))
+        }
+        test(proc, TestData(sentence, expected))
     }
 
     @Test
-    fun slist2() {
+    fun sepList2() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -354,51 +559,273 @@ class test_SyntaxAnalyserSimple {
                 leaf ID = "[a-zA-Z_][a-zA-Z_0-9]+" ;
             }
         """.trimIndent()
+        val proc = testProc(grammarStr)
 
         val sentence = "graph [fontsize=ss, labelloc=yy label=bb; splines=true overlap=false]"
-
-        val proc = Agl.processorFromString(grammarStr, SyntaxAnalyserSimple())
-        val actual = proc.processForGoal(AsmSimple::class, "attr_stmt", sentence).rootElements[0]
-
         val expected = asmSimple() {
-            element("attr_stmt") {
-                property("attr_type", "graph")
-                property("attr_lists", listOf(
-                        element("attr_list") {
-                            property("'['", "[")
-                            property("attr_list_content", listOf(
-                                element("attr") {
-                                    property("ID","fontsize")
-                                    property("'='","=")
-                                    property("ID2","ss")
-                                },",",
-                                element("attr") {
-                                    property("ID","labelloc")
-                                    property("'='","=")
-                                    property("ID2","yy")
-                                },"",
-                                element("attr") {
-                                    property("ID","label")
-                                    property("'='","=")
-                                    property("ID2","bb")
-                                },";",
-                                element("attr") {
-                                    property("ID","splines")
-                                    property("'='","=")
-                                    property("ID2","true")
-                                },"",
-                                element("attr") {
-                                    property("ID","overlap")
-                                    property("'='","=")
-                                    property("ID2","false")
-                                }
-                            ))
-                            property("']'", "]")
-                        },
-                    )
-                )
+            root("Attr_stmt") {
+                propertyString("attr_type", "graph")
+                propertyListOfElement("attr_lists") {
+                    element("Attr_list") {
+                        propertyListOfElement("attr_list_content") {
+                            element("Attr") {
+                                propertyString("id", "fontsize")
+                                propertyString("id2", "ss")
+                            }
+                            string(",")
+                            element("Attr") {
+                                propertyString("id", "labelloc")
+                                propertyString("id2", "yy")
+                            }
+                            string("")
+                            element("Attr") {
+                                propertyString("id", "label")
+                                propertyString("id2", "bb")
+                            }
+                            string(";")
+                            element("Attr") {
+                                propertyString("id", "splines")
+                                propertyString("id2", "true")
+                            }
+                            string("")
+                            element("Attr") {
+                                propertyString("id", "overlap")
+                                propertyString("id2", "false")
+                            }
+                        }
+                    }
+                }
             }
-        }.rootElements[0]
-        assertEquals(expected.asString("  "), actual.asString("  "))
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    @Test
+    fun group_concat_leaf_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b c d) e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = "abcde"
+        val expected = asmSimple() {
+            root("S") {
+                propertyString("a", "a")
+                propertyTuple("\$group") {
+                    propertyString("b", "b")
+                    propertyString("c", "c")
+                    propertyString("d", "d")
+                }
+                propertyString("e", "e")
+            }
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    @Test
+    fun group_choice_leaf_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b | c | d) e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = "abe"
+        val expected = asmSimple() {
+            root("S") {
+                propertyString("a", "a")
+                propertyString("\$group", "b")
+                propertyString("e", "e")
+            }
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    @Test
+    fun group_choice_concat_leaf_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b c | d) e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("abce") {
+            asmSimple {
+                root("S") {
+                    propertyString("a", "a")
+                    propertyTuple("\$group") {
+                        propertyString("b", "b")
+                        propertyString("c", "c")
+                    }
+                    propertyString("e", "e")
+                }
+            }
+        }
+        tests.define("ade") {
+            asmSimple {
+                root("S") {
+                    propertyString("a", "a")
+                    propertyString("\$group", "d")
+                    propertyString("e", "e")
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test
+    fun nesting() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                S = type ;
+                type = NAME typeArgs? ;
+                typeArgs = '<' typeArgList '>' ;
+                typeArgList = [type / ',']+ ;
+                leaf NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("A") {
+            asmSimple {
+                root("S") {
+                    propertyElementExplicitType("type", "Type") {
+                        propertyString("name", "A")
+                        propertyNull("typeArgs")
+                    }
+                }
+            }
+        }
+        tests.define("A<B>") {
+            asmSimple {
+                root("S") {
+                    propertyElementExplicitType("type", "Type") {
+                        propertyString("name", "A")
+                        propertyElementExplicitType("typeArgs", "TypeArgs") {
+                            propertyListOfElement("typeArgList") {
+                                element("Type") {
+                                    propertyString("name", "B")
+                                    propertyNull("typeArgs")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("A<B,C,D>") {
+            asmSimple {
+                root("S") {
+                    propertyElementExplicitType("type", "Type") {
+                        propertyString("name", "A")
+                        propertyElementExplicitType("typeArgs", "TypeArgs") {
+                            propertyListOfElement("typeArgList") {
+                                element("Type") {
+                                    propertyString("name", "B")
+                                    propertyNull("typeArgs")
+                                }
+                                element("Type") {
+                                    propertyString("name", "C")
+                                    propertyNull("typeArgs")
+                                }
+                                element("Type") {
+                                    propertyString("name", "D")
+                                    propertyNull("typeArgs")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("A<B<C,D<E,F,G>,H<I,J>>>") {
+            asmSimple {
+                root("S") {
+                    propertyElementExplicitType("type", "Type") {
+                        propertyString("name", "A")
+                        propertyElementExplicitType("typeArgs", "TypeArgs") {
+                            propertyListOfElement("typeArgList") {
+                                element("Type") {
+                                    propertyString("name", "B")
+                                    propertyElementExplicitType("typeArgs", "TypeArgs") {
+                                        propertyListOfElement("typeArgList") {
+                                            element("Type") {
+                                                propertyString("name", "C")
+                                                propertyNull("typeArgs")
+                                            }
+                                            element("Type") {
+                                                propertyString("name", "D")
+                                                propertyElementExplicitType("typeArgs", "TypeArgs") {
+                                                    propertyListOfElement("typeArgList") {
+                                                        element("Type") {
+                                                            propertyString("name", "E")
+                                                            propertyNull("typeArgs")
+                                                        }
+                                                        element("Type") {
+                                                            propertyString("name", "F")
+                                                            propertyNull("typeArgs")
+                                                        }
+                                                        element("Type") {
+                                                            propertyString("name", "G")
+                                                            propertyNull("typeArgs")
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            element("Type") {
+                                                propertyString("name", "H")
+                                                propertyElementExplicitType("typeArgs", "TypeArgs") {
+                                                    propertyListOfElement("typeArgList") {
+                                                        element("Type") {
+                                                            propertyString("name", "I")
+                                                            propertyNull("typeArgs")
+                                                        }
+                                                        element("Type") {
+                                                            propertyString("name", "J")
+                                                            propertyNull("typeArgs")
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
     }
 }

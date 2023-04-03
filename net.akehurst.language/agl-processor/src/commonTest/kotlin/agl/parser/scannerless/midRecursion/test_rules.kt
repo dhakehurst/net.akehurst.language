@@ -25,7 +25,7 @@ internal class test_rules : test_ScanOnDemandParserAbstract() {
 
     private companion object {
         val rrs = runtimeRuleSet {
-            skip("W") { pattern("\\s+") }
+            concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { ref("rules") }
             multi("rules", 0, -1, "normalRule")
             concatenation("normalRule") { ref("ID"); literal("="); ref("choice"); literal(";") }
@@ -64,12 +64,12 @@ internal class test_rules : test_ScanOnDemandParserAbstract() {
     } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -91,12 +91,12 @@ internal class test_rules : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -122,12 +122,12 @@ internal class test_rules : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -153,12 +153,12 @@ internal class test_rules : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -199,12 +199,12 @@ internal class test_rules : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -228,12 +228,12 @@ internal class test_rules : test_ScanOnDemandParserAbstract() {
             } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -261,12 +261,12 @@ internal class test_rules : test_ScanOnDemandParserAbstract() {
     } } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
@@ -289,7 +289,7 @@ internal class test_rules : test_ScanOnDemandParserAbstract() {
                       N { '?' }
                     } } } }
               ';'
-              W { "\s+" : '⏎' }
+              WS { "\s+" : '⏎' }
             }
             normalRule {
               ID : 'e'
@@ -305,7 +305,7 @@ internal class test_rules : test_ScanOnDemandParserAbstract() {
                     } }
                 } }
               ';'
-              W { "\s+" : '⏎' }
+              WS { "\s+" : '⏎' }
             }
             normalRule {
               ID : 's'
@@ -315,7 +315,7 @@ internal class test_rules : test_ScanOnDemandParserAbstract() {
                         choice { concat {
                             concatItem { simpleItem {
                                 ID : 's'
-                                W { "\s+" : ' ' }
+                                WS { "\s+" : ' ' }
                               } }
                             concatItem|1 { multi {
                                 simpleItem { ID : 'i' }
@@ -329,12 +329,12 @@ internal class test_rules : test_ScanOnDemandParserAbstract() {
           } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 }

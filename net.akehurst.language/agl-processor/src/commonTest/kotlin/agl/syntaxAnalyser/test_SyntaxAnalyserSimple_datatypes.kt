@@ -16,16 +16,31 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
+import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.syntaxAnalyser.AsmElementSimple
-import net.akehurst.language.api.syntaxAnalyser.AsmSimple
-import net.akehurst.language.api.syntaxAnalyser.asmSimple
+import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.agl.processor.ProcessResultDefault
+import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
+import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.asm.asmSimple
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.typeModel.StringType
+import net.akehurst.language.api.typeModel.TypeModelTest
+import net.akehurst.language.api.typeModel.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class test_SyntaxAnalyserSimple_datatypes {
 
-    companion object {
+    private companion object {
+        val grammarProc = Agl.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
+
         val grammarStr = """
             namespace test
             
@@ -33,89 +48,238 @@ class test_SyntaxAnalyserSimple_datatypes {
                 skip WS = "\s+" ;
             
                 unit = declaration* ;
-                declaration = 'datatype' ID '{' property* '}' ;
+                declaration = datatype | primitive ;
+                primitive = 'primitive' ID ;
+                datatype = 'datatype' ID '{' property* '}' ;
                 property = ID ':' typeReference ;
-                typeReference = ID typeArguments? ;
+                typeReference = type typeArguments? ;
                 typeArguments = '<' [typeReference / ',']+ '>' ;
             
                 leaf ID = "[A-Za-z_][A-Za-z0-9_]*" ;
+                leaf type = ID;
             
             }
         """.trimIndent()
-        val processor = Agl.processorFromString(grammarStr)
+        val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!.first()
+        val typeModel by lazy {
+            val result = grammarProc.process(grammarStr)
+            assertNotNull(result.asm)
+            assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.joinToString(separator = "\n") { "$it" })
+            TypeModelFromGrammar(result.asm!!.last())
+        }
+        val scopeModel = ScopeModelAgl.fromString(
+            ContextFromGrammar(grammar), """
+                    identify Unit by §nothing
+                    scope Unit {
+                        identify Primitive by id
+                        identify Datatype by id
+                    }
+                    references {
+                        in TypeReference property type refers-to Primitive|Datatype
+                    }
+                """.trimIndent()
+        ).asm!!
+        val syntaxAnalyser = SyntaxAnalyserSimple(typeModel, scopeModel)
+        val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
+            grammarStr,
+            Agl.configuration {
+                scopeModelResolver { ProcessResultDefault(scopeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
+                typeModelResolver { ProcessResultDefault(typeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
+                syntaxAnalyserResolver {  ProcessResultDefault(syntaxAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) }
+            }
+        ).also {
+            val issues = syntaxAnalyser.configure(
+                configurationContext = ContextFromGrammar(grammar)
+            )
+            assertEquals(0, issues.size, issues.joinToString(separator = "\n") { "$it" })
+        }.processor!!
     }
 
+    @Test
+    fun typeModel() {
+        val actual = processor.typeModel
+        val expected = typeModel("test", "Test") {
+            //unit = declaration* ;
+            elementType("Unit") {
+                propertyListTypeOf("declaration", "Declaration", false, 0)
+            }
+            // declaration = datatype | primitive ;
+            elementType("Declaration") {
+                subTypes("Datatype", "Primitive")
+            }
+            // primitive = 'primitive' ID ;
+            elementType("Primitive") {
+                propertyStringType("id", false, 1)
+            }
+            // datatype = 'datatype' ID '{' property* '}' ;
+            elementType("Datatype") {
+                propertyStringType("id", false, 1)
+                propertyListTypeOf("property", "Property", false, 3)
+            }
+            // property = ID ':' typeReference ;
+            elementType("Property") {
+                propertyStringType("id", false, 0)
+                propertyElementTypeOf("typeReference", "TypeReference", false, 2)
+            }
+            // typeReference = type typeArguments? ;
+            elementType("TypeReference") {
+                propertyStringType("type", false, 0)
+                propertyElementTypeOf("typeArguments", "TypeArguments", true, 1)
+            }
+            // typeArguments = '<' [typeReference / ',']+ '>' ;
+            elementType("TypeArguments") {
+                propertyListSeparatedTypeOf("typeReference", "TypeReference", StringType, false, 1)
+            }
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
+    }
 
     @Test
-    fun dt1() {
+    fun datatype_with_no_properties() {
         val sentence = """
             datatype A { }
         """.trimIndent()
 
-        val actual = processor.process(AsmSimple::class,sentence)
+        val result = processor.process(sentence)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.isEmpty())
 
         val expected = asmSimple {
-            element("unit") {
-                property("declaration", listOf(
-                    element("declaration") {
-                        property("ID", "A")
-                        property("property", emptyList<AsmElementSimple>())
+            root("Unit") {
+                propertyListOfElement("declaration") {
+                    element("Datatype") {
+                        propertyString("id", "A")
+                        propertyListOfElement("property") {}
                     }
-                ))
+                }
             }
         }
 
-        assertEquals(expected.asString("  ",""), actual.asString("  ",""))
+        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
     }
 
     @Test
-    fun dt2() {
+    fun two_datatypes_with_no_properties() {
         val sentence = """
             datatype A { }
             datatype B { }
         """.trimIndent()
 
-        val actual = processor.process(AsmSimple::class,sentence)
+        val result = processor.process(sentence)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.isEmpty())
 
         val expected = asmSimple {
-            element("unit") {
-                property("declaration", listOf(
-                    element("datatype") {
-                        property("ID", "A")
-                        property("property", emptyList<AsmElementSimple>())
-                    },
-                    element("datatype") {
-                        property("ID", "B")
-                        property("property", emptyList<AsmElementSimple>())
+            root("Unit") {
+                propertyListOfElement("declaration") {
+                    element("Datatype") {
+                        propertyString("id", "A")
+                        propertyListOfElement("property") {}
                     }
-                ))
+                    element("Datatype") {
+                        propertyString("id", "B")
+                        propertyListOfElement("property") {}
+                    }
+                }
             }
         }
 
-        assertEquals(expected.asString("  ",""), actual.asString("  ",""))
+        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
     }
 
     @Test
-    fun prop1() {
+    fun datatype_with_property_whos_type_is_undefined() {
         val sentence = """
             datatype A {
                 a : String
             }
         """.trimIndent()
 
-        val actual = processor.process(AsmSimple::class,sentence)
+        val result = processor.process(
+            sentence = sentence,
+            Agl.options {
+                syntaxAnalysis {
+                    context(ContextSimple())
+                }
+            }
+        )
+        assertNotNull(result.asm)
 
         val expected = asmSimple {
-            element("unit") {
-                property("declaration", listOf(
-                    element("declaration") {
-                        property("ID", "A")
-                        property("property", emptyList<AsmElementSimple>())
+            root("Unit") {
+                propertyListOfElement("declaration") {
+                    element("Datatype") {
+                        propertyString("id", "A")
+                        propertyListOfElement("property") {
+                            element("Property") {
+                                propertyString("id", "a")
+                                propertyElementExplicitType("typeReference", "TypeReference") {
+                                    reference("type", "String")
+                                    propertyString("typeArguments", null)
+                                }
+                            }
+                        }
                     }
-                ))
+                }
+            }
+        }
+        val expItems = listOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR,
+                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(21, 9, 2, 7),
+                "Cannot find 'String' as reference for 'TypeReference.type'"
+            )
+        )
+
+        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
+        assertEquals(expItems, result.issues.error)
+    }
+
+    @Test
+    fun datatype_with_property_whos_type_is_defined() {
+        val sentence = """
+            primitive String
+            datatype A {
+                a : String
+            }
+        """.trimIndent()
+
+        val result = processor.process(
+            sentence = sentence,
+            Agl.options {
+                syntaxAnalysis {
+                    context(ContextSimple())
+                }
+            }
+        )
+        assertNotNull(result.asm)
+        assertTrue(result.issues.isEmpty())
+
+        val expected = asmSimple(scopeModel, ContextSimple()) {
+            root("Unit") {
+                propertyListOfElement("declaration") {
+                    element("Primitive") {
+                        propertyString("id", "String")
+                    }
+                    element("Datatype") {
+                        propertyString("id", "A")
+                        propertyListOfElement("property") {
+                            element("Property") {
+                                propertyString("id", "a")
+                                propertyElementExplicitType("typeReference","TypeReference") {
+                                    reference("type", "String")
+                                    propertyString("typeArguments", null)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
-        assertEquals(expected.asString("  ",""), actual.asString("  ",""))
+        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
+
     }
 }

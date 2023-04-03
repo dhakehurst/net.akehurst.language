@@ -16,53 +16,52 @@
 
 package net.akehurst.language.parser.scanondemand
 
-import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetBuilder
-import net.akehurst.language.api.parser.ParseFailedException
-import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
-internal class test_literal {
+internal class test_literal : test_ScanOnDemandParserAbstract() {
 
-    private fun test_parse(sp: ScanOnDemandParser, goalRuleName: String, inputText: String): SharedPackedParseTree {
-        return sp.parseForGoal(goalRuleName, inputText, AutomatonKind.LOOKAHEAD_1)
-    }
-
-    // literal
-    //  a = 'a'
-    private fun literal_a(): ScanOnDemandParser {
-        val rrb = RuntimeRuleSetBuilder()
-        val r0 = rrb.literal("a")
-        val r1 = rrb.rule("a").concatenation(r0)
-        return ScanOnDemandParser(rrb.ruleSet())
+    //  S = 'a'
+    private companion object {
+        val rrs = runtimeRuleSet {
+            concatenation("S") { literal("a") }
+        }
+        val goal = "S"
     }
 
     @Test
     fun a() {
-        val sp = literal_a()
-        val goalRuleName = "a"
-        val inputText = "a"
+        val sentence = "a"
 
-        val actual = test_parse(sp, goalRuleName, inputText)
+        val expected = """
+            S{ 'a' }
+        """.trimIndent()
 
-        assertNotNull(actual)
+        super.test(
+            rrs = rrs,
+            goal=goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expected
+        )
+
     }
 
     @Test
     fun b_fails() {
-        val sp = literal_a()
-        val goalRuleName = "a"
-        val inputText = "b"
+        val sentence = "b"
 
-        val ex = assertFailsWith(ParseFailedException::class) {
-            test_parse(sp, goalRuleName, inputText)
-        }
-        assertEquals(1, ex.location.line)
-        assertEquals(1, ex.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
+        assertNull(sppt)
+        assertEquals(listOf(
+            LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^b", setOf("'a'"))
+        ),issues.error)
     }
 
 }

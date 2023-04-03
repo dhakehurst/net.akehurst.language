@@ -18,14 +18,14 @@ package net.akehurst.language.parser.scanondemand.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.parser.ParseFailedException
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
-    //TODO: make this use || ambiguouse choice
+    //TODO: make this use || ambiguous choice
     /**
      * S : 'a' | 'a' S B B ;
      * B : 'b' ? ;
@@ -49,35 +49,37 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
     }
 
     @Test
-    fun S_S_empty_fails() {
+    fun empty_fails() {
         val sentence = ""
 
-        val e = assertFailsWith(ParseFailedException::class) {
-            super.test(rrs, goal, sentence,1)
-        }
-        assertEquals(1, e.location.line)
-        assertEquals(1, e.location.column)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
+        assertNull(sppt)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+            ), issues.error
+        )
     }
 
     @Test
-    fun S_S_a() {
+    fun a() {
         val sentence = "a"
 
         val expected = """
             S { 'a' }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+                expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
-    fun S_S_aa() {
+    fun aa() {
         val sentence = "aa"
 
         val expected1 = """
@@ -91,17 +93,17 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected1)
+                expectedTrees = arrayOf(expected1)
         )
     }
 
     @Test
-    fun S_S_aab() {
+    fun aab() {
         val sentence = "aab"
 
         val expected1 = """
@@ -126,17 +128,17 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected1)
+                expectedTrees = arrayOf(expected1)
         )
     }
 
     @Test
-    fun S_S_aabb() {
+    fun aabb() {
         val sentence = "aabb"
 
         val expected1 = """
@@ -150,17 +152,17 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
             }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
-                expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected1)
+                expectedNumGSSHeads = 2,
+                expectedTrees = arrayOf(expected1)
         )
     }
 
     @Test
-    fun S_S_aaabb() {
+    fun aaabb() {
         val sentence = "aaabb"
 
         val expected1 = """
@@ -233,12 +235,12 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
             } }
         """.trimIndent()
 
-        val actual = super.test(
+        super.test(
                 rrs = rrs,
                 goal = goal,
                 sentence = sentence,
                 expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
-                expectedTrees = *arrayOf(expected5)
+                expectedTrees = arrayOf(expected5)
         )
     }
 }
