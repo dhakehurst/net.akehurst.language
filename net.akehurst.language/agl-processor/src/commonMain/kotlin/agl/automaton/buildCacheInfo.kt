@@ -38,6 +38,8 @@ internal data class LookaheadSetPart(
             val content = fullContent.minus(RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD).minus(RuntimeRuleSet.END_OF_TEXT).minus(RuntimeRuleSet.ANY_LOOKAHEAD)
             return LookaheadSetPart(includeRT, includeEOT, matchAny, content)
         }
+
+        fun Collection<LookaheadSetPart>.unionAll() = this.fold(LookaheadSetPart.EMPTY){acc,it->acc.union(it)}
     }
 
     val regex by lazy {

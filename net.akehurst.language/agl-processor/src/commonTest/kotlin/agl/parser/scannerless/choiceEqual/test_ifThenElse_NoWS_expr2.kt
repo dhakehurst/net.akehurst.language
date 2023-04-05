@@ -55,7 +55,7 @@ internal class test_ifThenElse_NoWS_expr2 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("VAR", "'if'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test

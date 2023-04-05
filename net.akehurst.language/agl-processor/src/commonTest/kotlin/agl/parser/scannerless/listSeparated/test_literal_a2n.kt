@@ -44,7 +44,7 @@ internal class test_literal_a2n : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test
@@ -56,7 +56,7 @@ internal class test_literal_a2n : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1,2,1,1),"a^",setOf("','"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test
@@ -68,7 +68,7 @@ internal class test_literal_a2n : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(2,3,1,1),"a,^",setOf("'a'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test
@@ -80,7 +80,7 @@ internal class test_literal_a2n : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1,2,1,1),"a^a",setOf("','"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test
@@ -101,7 +101,7 @@ internal class test_literal_a2n : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(3,4,1,1),"a,a^a",setOf("','","<EOT>"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test

@@ -47,61 +47,59 @@ internal object AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst
         b.leaf("STYLE_ID").concatenation(b.terminalPattern("[-a-zA-Z_][-a-zA-Z_0-9]*"));
         b.leaf("STYLE_VALUE").concatenation(b.terminalPattern("([^;:]*)"))
 
-        return b.grammar.rule
+        return b.grammar.grammarRule
     }
     //}
 
-    const val styleStr = """
-        META_IDENTIFIER {
-          foreground: orange;
-          font-style: bold;
-        }
-        IDENTIFIER {
-          foreground: blue;
-          font-style: bold;
-        }
-        LITERAL {
-          foreground: blue;
-          font-style: bold;
-        }
-        PATTERN {
-          foreground: darkblue;
-          font-style: bold;
-        }
-        STYLE_ID {
-          foreground: darkred;
-          font-style: italic;
-        }
-    """
+    const val styleStr = """META_IDENTIFIER {
+  foreground: orange;
+  font-style: bold;
+}
+IDENTIFIER {
+  foreground: blue;
+  font-style: bold;
+}
+LITERAL {
+  foreground: blue;
+  font-style: bold;
+}
+PATTERN {
+  foreground: darkblue;
+  font-style: bold;
+}
+STYLE_ID {
+  foreground: darkred;
+  font-style: italic;
+}"""
 
     const val scopeModelStr = """
-        references {
-            in scope property typeReference refers-to GrammarRule
-            in identifiable property typeReference refers-to GrammarRule
-            in referenceDefinition property typeReference refers-to GrammarRule
-            in referenceDefinition property propertyReference refers-to GrammarRule
-        }
+references {
+    in scope property typeReference refers-to GrammarRule
+    in identifiable property typeReference refers-to GrammarRule
+    in referenceDefinition property typeReference refers-to GrammarRule
+    in referenceDefinition property propertyReference refers-to GrammarRule
+}
     """
 
     init {
-        super.rule.addAll(createRules())
+        super.grammarRule.addAll(createRules())
     }
 
     //TODO: gen this from the ASM
     override fun toString(): String = """
-        namespace net.akehurst.language.agl
-        grammar AglStyle {
-            rules = rule* ;
-            rule = selectorExpression '{' styleList '}' ;
-            selectorExpression
-             = selectorSingle
-             | selectorAndComposition
-             ; //TODO
-            selectorAndComposition = [selectorSingle /',']2+ ;
-            selectorSingle = LITERAL | PATTERN | IDENTIFIER ;
-            styleList = style* ;
-            style = STYLE_ID ':' STYLE_VALUE ';' ;
-        }
+namespace net.akehurst.language.agl
+grammar AglStyle {
+    rules = rule* ;
+    rule = selectorExpression '{' styleList '}' ;
+    selectorExpression
+     = selectorSingle
+     | selectorAndComposition
+     ; //TODO
+    selectorAndComposition = [selectorSingle /',']2+ ;
+    selectorSingle = LITERAL | PATTERN | IDENTIFIER ;
+    styleList = style* ;
+    style = STYLE_ID ':' STYLE_VALUE ';' ;
+}
     """.trimIndent()
 }
 

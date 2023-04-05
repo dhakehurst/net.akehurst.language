@@ -16,7 +16,9 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 internal class test_Agl {
 
@@ -71,6 +73,15 @@ internal class test_Agl {
         val myProcessor = Agl.processorFromStringDefault(grammarStr).processor!!
         val result = myProcessor.process(sentence)
         //TODO
+    }
+
+    @Test
+    fun grammar_styleStr() {
+        val actual = Agl.registry.agl.grammar.styleStr
+        val expected = AglGrammarGrammar.styleStr
+
+        assertEquals(expected, actual)
+
     }
 
 }

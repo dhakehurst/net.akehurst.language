@@ -23,7 +23,13 @@ public class test_LanguageProcessor {
             + "  W = 'world' '!' ;" + EOL
             + "}";
 
-    private static final LanguageProcessor<AsmSimple, ContextSimple> proc = Agl.INSTANCE.processorFromStringDefault(grammarStr, null);
+    private static final LanguageProcessor<AsmSimple, ContextSimple> proc = Agl.INSTANCE.processorFromStringDefault(
+            grammarStr,
+            null,
+            null,
+            null,
+            null
+    ).getProcessor();
 
     @Test
     public void scan() {
@@ -56,10 +62,10 @@ public class test_LanguageProcessor {
     @Test
     public void parse_buildOptions() {
 
-        ParseResult result = proc.parse("world !", Agl.INSTANCE.parseOptions( KotlinFromJava.toKotlin(b-> {
+        ParseResult result = proc.parse("world !", Agl.INSTANCE.parseOptions( b-> {
             b.goalRuleName("W");
             return Unit.INSTANCE;
-        })));
+        }));
 
         Assert.assertNotNull(result.getSppt());
         System.out.println(result.getSppt().getToStringAll());

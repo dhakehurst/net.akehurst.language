@@ -57,7 +57,7 @@ internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean=false)
         if(build)parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
         val result = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
         if(printAutomaton) println(rrs.usedAutomatonToString(goal))
-        assertTrue(result.issues.error.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" }) //TODO: check all, not error
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" }) //TODO: check all, not error
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         val sppt = SPPTParserDefault(rrs, embeddedRuntimeRuleSets)
         expectedTrees.forEach { sppt.addTree(it) }

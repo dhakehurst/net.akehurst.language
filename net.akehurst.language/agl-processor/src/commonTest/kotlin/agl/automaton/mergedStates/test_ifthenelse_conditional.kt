@@ -48,6 +48,10 @@ internal class test_ifthenelse_conditional : test_AutomatonAbstract() {
         concatenation("ifthen") { literal("if"); ref("expr"); literal("then"); ref("expr") }
         concatenation("ifthenelse") { literal("if"); ref("expr"); literal("then"); ref("expr"); literal("else"); ref("expr") }
         pattern("VAR","[A-Z]")
+        preferenceFor("expr") {
+            right("ifthen", setOf("'then'"))
+            right("ifthenelse", setOf("'else'"))
+        }
     }
     private val SM = rrs.fetchStateSetFor("S", AutomatonKind.LOOKAHEAD_1)
     private val G = SM.startState.runtimeRules.first()
@@ -109,6 +113,23 @@ internal class test_ifthenelse_conditional : test_AutomatonAbstract() {
     }
 
     @Test
+    fun automaton_parse_ifXthenifYthenZelseW() {
+        val parser = ScanOnDemandParser(rrs)
+        val result = parser.parseForGoal("S", "ifXthenifYthenZelseW", AutomatonKind.LOOKAHEAD_1)
+        println(rrs.usedAutomatonToString("S"))
+        assertNotNull(result.sppt)
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+        val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
+
+        val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
+
+        }
+
+        AutomatonTest.assertEquals(expected, actual)
+    }
+
+    @Test
     fun buildFor() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
@@ -118,7 +139,7 @@ internal class test_ifthenelse_conditional : test_AutomatonAbstract() {
             val parser = ScanOnDemandParser(rrs)
             val result = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
             assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-            assertEquals(0, result.issues.size)
+            assertEquals(0, result.issues.size, result.issues.joinToString("\n") { it.toString() })
             assertEquals(1, result.sppt!!.maxNumHeads)
         }
 

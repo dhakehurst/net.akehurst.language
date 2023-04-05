@@ -47,7 +47,7 @@ internal class test_multi_1_n_choice : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^", setOf("'a'","'b'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test

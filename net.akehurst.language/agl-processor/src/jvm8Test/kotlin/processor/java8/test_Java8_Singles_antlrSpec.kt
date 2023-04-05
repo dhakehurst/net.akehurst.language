@@ -163,7 +163,7 @@ class test_Java8_Singles_antlrSpec {
                         "'?'"
                     )
                 )
-            ), result.issues.error
+            ), result.issues.errors
         )
 
     }
@@ -200,7 +200,7 @@ public class BadBinaryLiterals {
                     "...t1 = 0b01.^01;  // no...",
                     setOf("'new'", "'<'", "Identifier")
                 )
-            ), result.issues.error
+            ), result.issues.errors
         )
 
     }

@@ -92,7 +92,7 @@ class TypeModelFromGrammar(
     override val name: String get() = grammar.name
 
     override val types: Map<String, RuleType> by lazy {
-        grammar.allResolvedRule
+        grammar.allResolvedGrammarRule
             .filter { it.isLeaf.not() && it.isSkip.not() }
             .associateBy({ configuration?.typeNameFor?.invoke(it)?:it.name }) {
                 typeForRhs(it) as RuleType

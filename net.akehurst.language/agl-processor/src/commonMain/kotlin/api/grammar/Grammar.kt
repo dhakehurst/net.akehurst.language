@@ -56,14 +56,17 @@ interface Grammar {
      */
     val extends: List<GrammarReference>
 
-    val rule: List<GrammarRule>
+    val grammarRule: List<GrammarRule>
+    val preferenceRule: List<PreferenceRule>
 
     /**
      * the List of rules defined by this grammar and those that this grammar extends
      * the order of the rules is the order they are defined in with the top of the grammar extension
      * hierarchy coming first (in extension order where more than one grammar is extended)
      */
-    val allResolvedRule: List<GrammarRule>
+    val allResolvedGrammarRule: List<GrammarRule>
+
+    val allResolvedPreferenceRuleRule: List<PreferenceRule>
 
     /**
      * the Set of all non-terminal rules in this grammar and those that this grammar extends

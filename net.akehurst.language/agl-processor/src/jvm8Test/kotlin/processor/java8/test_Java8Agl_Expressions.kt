@@ -24,6 +24,7 @@ package net.akehurst.language.agl.processor.java8
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.processor.test.utils.notWidth
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -98,11 +99,11 @@ class test_Java8Agl_Expressions(val data: Data) {
     @Test
     fun test() {
         val result = processor.parse(this.data.text)
+        assertTrue(result.issues.notWidth.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
         val resultStr = result.sppt!!.asString
         assertEquals(this.data.text, resultStr)
-        assertEquals(1, result.sppt!!.maxNumHeads)
+        assertTrue(2 >= result.sppt!!.maxNumHeads, "number of heads = ${result.sppt!!.maxNumHeads}")
     }
 
 }

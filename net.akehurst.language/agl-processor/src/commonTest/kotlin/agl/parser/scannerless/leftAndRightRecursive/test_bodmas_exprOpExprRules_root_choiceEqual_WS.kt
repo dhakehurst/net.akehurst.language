@@ -82,7 +82,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_WS : test_ScanOnDema
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("var","'true'","'false'","'('"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test

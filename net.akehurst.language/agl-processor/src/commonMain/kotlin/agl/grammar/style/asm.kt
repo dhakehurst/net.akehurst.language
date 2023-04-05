@@ -39,4 +39,15 @@ internal class AglStyleModelDefault(
             )
         }
     }
+
+    override fun toString(): String {
+        return rules.joinToString(separator = "\n") {
+            val stylesStr = it.styles.values.joinToString(separator = "\n  ") { "${it.name}: ${it.value};" }
+            """
+${it.selector.joinToString { it }} {
+  $stylesStr
+}
+""".trimIndent()
+        }
+    }
 }

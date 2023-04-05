@@ -50,7 +50,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl, SentenceContext<Gr
         val asm = this.declarations(sppt.root.asBranch)
 
         if (null != context) {
-            asm.scopes.forEach { (k, scope) ->
+            asm.scopes.forEach { (_, scope) ->
                 val msgStart = if (ScopeModelAgl.ROOT_SCOPE_TYPE_NAME == scope.scopeFor) {
                     //do nothing
                     "In root scope"

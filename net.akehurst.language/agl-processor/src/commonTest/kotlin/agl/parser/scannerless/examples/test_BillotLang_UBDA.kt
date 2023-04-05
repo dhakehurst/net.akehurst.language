@@ -50,7 +50,7 @@ internal class test_BillotLang_UBDA : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test

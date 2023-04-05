@@ -48,84 +48,82 @@ internal object AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst
             b.rule("propertyReference").concatenation(b.nonTerminal("IDENTIFIER"))
             b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
 
-            return b.grammar.rule
+            return b.grammar.grammarRule
         }
     //}
     const val grammarStr = """
-        namespace net.akehurst.language.agl
-        grammar AglScopes {
-        
-            skip WHITESPACE = "\s+" ;
-            skip MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
-            skip SINGLE_LINE_COMMENT = "//[\n\r]*?" ;
+namespace net.akehurst.language.agl
+grammar AglScopes {
 
-            declarations = rootIdentifiables scopes references?
-            rootIdentifiables = identifiable*
-            scopes = scope*
-            scope = 'scope' typeReference '{' identifiables '}
-            identifiables = identifiable*
-            identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
-        
-            references = 'references' '{' referenceDefinitions '}'
-            referenceDefinitions = referenceDefinition*
-            referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
-            typeReferences = [typeReferences / '|']+
-        
-            propertyReferenceOrNothing = '§nothing' | propertyReference
-            typeReference = IDENTIFIER     // same as grammar rule name
-            propertyReference = IDENTIFIER // same as grammar rule name
-            leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*"
-        }
+    skip WHITESPACE = "\s+" ;
+    skip MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
+    skip SINGLE_LINE_COMMENT = "//[\n\r]*?" ;
+
+    declarations = rootIdentifiables scopes references?
+    rootIdentifiables = identifiable*
+    scopes = scope*
+    scope = 'scope' typeReference '{' identifiables '}
+    identifiables = identifiable*
+    identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
+
+    references = 'references' '{' referenceDefinitions '}'
+    referenceDefinitions = referenceDefinition*
+    referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
+    typeReferences = [typeReferences / '|']+
+
+    propertyReferenceOrNothing = '§nothing' | propertyReference
+    typeReference = IDENTIFIER     // same as grammar rule name
+    propertyReference = IDENTIFIER // same as grammar rule name
+    leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*"
+}
     """
-    const val styleStr = """
-        'scope' {
-          foreground: darkgreen;
-          font-style: bold;
-        }
-        'identify' {
-          foreground: darkgreen;
-          font-style: bold;
-        }
-        'by' {
-          foreground: darkgreen;
-          font-style: bold;
-        }
-        'references' {
-          foreground: darkgreen;
-          font-style: bold;
-        }
-        'in' {
-          foreground: darkgreen;
-          font-style: bold;
-        }
-        'property' {
-          foreground: darkgreen;
-          font-style: bold;
-        }
-        'refers-to' {
-          foreground: darkgreen;
-          font-style: bold;
-        }
-        '|' {
-          foreground: darkgreen;
-          font-style: bold;
-        }
-    """
+    const val styleStr = """'scope' {
+  foreground: darkgreen;
+  font-style: bold;
+}
+'identify' {
+  foreground: darkgreen;
+  font-style: bold;
+}
+'by' {
+  foreground: darkgreen;
+  font-style: bold;
+}
+'references' {
+  foreground: darkgreen;
+  font-style: bold;
+}
+'in' {
+  foreground: darkgreen;
+  font-style: bold;
+}
+'property' {
+  foreground: darkgreen;
+  font-style: bold;
+}
+'refers-to' {
+  foreground: darkgreen;
+  font-style: bold;
+}
+'|' {
+  foreground: darkgreen;
+  font-style: bold;
+}"""
     const val formatterStr = """
-        @TODO
-        References -> when {
-            referenceDefinitions.isEmpty -> "references { }"
-            else -> "
-              references {
-                referenceDefinitions
-              }
-            "
-        }
-        ReferenceDefinitions -> [referenceDefinition / '\n']
-        ReferenceDefinition -> "in §typeReference property §propertyReference refers-to §typeReferences"
+@TODO
+References -> when {
+    referenceDefinitions.isEmpty -> "references { }"
+    else -> "
+      references {
+        referenceDefinitions
+      }
+    "
+}
+ReferenceDefinitions -> [referenceDefinition / '\n']
+ReferenceDefinition -> "in §typeReference property §propertyReference refers-to §typeReferences"
     """
     init {
-        super.rule.addAll(createRules())
+        super.grammarRule.addAll(createRules())
     }
     //TODO: gen this from the ASM
     override fun toString(): String = grammarStr.trimIndent()

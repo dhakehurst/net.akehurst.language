@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -26,6 +25,18 @@ import net.akehurst.language.api.processor.LanguageProcessorPhase
 import kotlin.test.*
 
 class test_AglGrammar {
+
+    private fun test(grammarStr:String, sentence:String, expectedStr:String) {
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertNotNull(pr.processor)
+
+        val result = pr.processor!!.parse(sentence)
+        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+
+        val expected = pr.processor!!.spptParser.parse(expectedStr)
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+    }
 
     @BeforeTest
     fun before() {
@@ -498,7 +509,7 @@ class test_AglGrammar {
         val result5 = pr.processor!!.parse("aaaaa");
         assertEquals(null, result5.sppt)
         val expIssues5 = listOf(LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(4, 5, 1, 1), "aaaa^a", setOf("<EOT>")))
-        assertEquals(expIssues5, result5.issues.error)
+        assertEquals(expIssues5, result5.issues.errors)
     }
 
     @Test
@@ -1728,4 +1739,36 @@ class test_AglGrammar {
         assertTrue(result1.issues.isEmpty())
     }
 
+
+    @Test
+    fun preference() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = v | A | D ;
+                leaf v = "[a-z]+" ;
+                A = S '+' S ;
+                D = S '/' S ;
+                
+                preference S {
+                  A on '+' left
+                  D on '/' left
+                }
+            }
+        """.trimIndent()
+        test(grammarStr,"v", "S{ v:'v' }")
+        test(grammarStr,"a+b", "S{ A{ S{v:'a'} '+' S{v:'b'} } }")
+        test(grammarStr,"a/b", "S{ D{ S{v:'a'} '/' S{v:'b'} } }")
+        test(grammarStr,"a+b/c", """
+            S { A {
+              S { v : 'a' }
+              '+'
+              S { D {
+                S { v : 'b' }
+                '/'
+                S { v : 'c' }
+              } }
+            } }
+        """.trimIndent())
+    }
 }

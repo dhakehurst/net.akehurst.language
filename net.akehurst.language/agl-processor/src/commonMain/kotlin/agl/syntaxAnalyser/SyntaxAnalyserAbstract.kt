@@ -72,11 +72,11 @@ abstract class SyntaxAnalyserAbstract<out AsmType:Any, in ContextType:Any> : Syn
         val handler = this.findBranchHandler<Any>(branchName)
         val branchChildren = target.branchNonSkipChildren// .stream().map(it -> it.getIsEmpty() ? null :
         // it).collect(Collectors.toList());
-        try {
+        //try {
             return handler.invoke(target, branchChildren, arg)
-        } catch (e: Exception) {
-            error("Exception trying to transform ${target}: ${e.message}")
-        }
+       // } catch (e: Exception) {
+       //     error("Exception trying to transform ${target}: ${e.message}")
+       // }
     }
 
 }

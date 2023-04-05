@@ -498,4 +498,13 @@ internal class test_Converter {
         assertTrue(expected.matches(actual))
     }
 
+
+    @Test
+    fun preference() {
+        // S = v | A | M
+        // v = "[a-z]+"
+        // A = S + S
+        // M = S / S
+        val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
+    }
 }

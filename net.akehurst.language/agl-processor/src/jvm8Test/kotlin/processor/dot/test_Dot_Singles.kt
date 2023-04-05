@@ -18,7 +18,6 @@ package net.akehurst.language.agl.processor.dot
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.processor.AutomatonKind
@@ -70,7 +69,7 @@ class test_Dot_Singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt,result.issues.joinToString(separator = "\n") { "$it" })
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         println(result.sppt!!.toStringAll)
 
         val expected = processor.spptParser.parse("""
@@ -941,6 +940,6 @@ digraph G {
 
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 }

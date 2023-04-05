@@ -65,7 +65,7 @@ class test_Dot(val data: Data) {
     fun test() {
         val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName("graph") })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         val resultStr = result.sppt!!.asString
         assertEquals(this.data.text, resultStr)
     }

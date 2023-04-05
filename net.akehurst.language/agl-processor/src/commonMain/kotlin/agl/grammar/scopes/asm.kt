@@ -98,7 +98,7 @@ class ScopeModelAgl
                     } else if (v is AsmElementReference) {
                         val typeNames = this.getReferredToTypeNameFor(el.typeName, prop.name)
                         val referreds: List<AsmElementPath> = typeNames.mapNotNull {
-                            elScope.findOrNull(v.reference, it) as AsmElementPath?
+                            elScope.findOrNull(v.reference, it)
                         }
                         if (1 < referreds.size) {
                             issues.warn(

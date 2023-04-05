@@ -68,7 +68,7 @@ internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
         b.leaf("LITERAL_STRING").concatenation(b.terminalPattern("'([^'\\\\]|\\\\.)*'"))
         b.leaf("RAW_TEXT").concatenation(b.terminalPattern("([^\$\"\\\\]|\\\\.)+"))
 
-        return b.grammar.rule
+        return b.grammar.grammarRule
     }
     //}
 
@@ -115,7 +115,7 @@ internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
     """
 
     init {
-        super.rule.addAll(AglFormatGrammar.createRules())
+        super.grammarRule.addAll(AglFormatGrammar.createRules())
     }
 
     //TODO: gen this from the ASM

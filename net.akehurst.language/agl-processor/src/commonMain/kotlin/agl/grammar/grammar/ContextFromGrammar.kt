@@ -35,7 +35,7 @@ class ContextFromGrammar(
     override val rootScope = ScopeSimple<GrammarItem>(null, "", grammar.name)
 
     init {
-        grammar.allResolvedRule.forEach {
+        grammar.allResolvedGrammarRule.forEach {
             rootScope.addToScope(it.name, GRAMMAR_RULE_CONTEXT_TYPE_NAME, it)
         }
         grammar.allResolvedTerminal.forEach {

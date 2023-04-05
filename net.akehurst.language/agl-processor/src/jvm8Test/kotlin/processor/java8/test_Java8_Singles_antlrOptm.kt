@@ -174,7 +174,7 @@ class test_Java8_Singles_antlrOptm {
                         "'='", "'+='", "'-='", "'*='", "'/='", "'&='", "'|='", "'^='", "'>>='", "'>>>='", "'<<='", "'%='", "'::'"
                     )
                 )
-            ), result.issues.error
+            ), result.issues.errors
         )
 
     }
@@ -211,7 +211,7 @@ public class BadBinaryLiterals {
                     "...t1 = 0b01.^01;  // no...",
                     setOf("IDENTIFIER", "THIS", "SUPER", "NEW", "'<'")
                 )
-            ), result.issues.error
+            ), result.issues.errors
         )
 
     }

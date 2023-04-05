@@ -21,7 +21,6 @@ import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
@@ -234,7 +233,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         )
 
         assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
-        assertEquals(expItems, result.issues.error)
+        assertEquals(expItems, result.issues.errors)
     }
 
     @Test

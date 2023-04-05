@@ -73,34 +73,26 @@ grammar Annotations extends Base, Literals {
 }
 
 grammar Types extends Annotations {
-    Type = Annotation* UnannType ;
-    PrimitiveType = Annotation* UnannPrimitiveType ;
-    leaf UnannPrimitiveType = NumericType | 'boolean' ;
-    leaf NumericType = IntegralType | FloatingPointType ;
-    leaf IntegralType = 'byte' | 'short' | 'int' | 'long' | 'char' ;
-    leaf FloatingPointType = 'float' | 'double' ;
 
-    ReferenceType = QualifiedTypeReference | ArrayType ;
-    QualifiedTypeReference = [ TypeReference / '.' ]+ ;
-    TypeReference = Annotation* UnannTypeReference ;
-    ArrayType = (PrimitiveType | QualifiedTypeReference) Dims ;
+    TypeReference = TypeReferenceNonArray Dims? ;
     Dims = (Annotation* '[' ']')+ ;
+    TypeReferenceNonArray = QualifiedTypeReference | PrimitiveTypeReference ;
 
-    TypeParameter = Annotation* IDENTIFIER TypeBound? ;
-    TypeBound = 'extends' QualifiedTypeReference AdditionalBound? ;
-    AdditionalBound = '&' QualifiedTypeReference ;
+    PrimitiveTypeReference = PRIMITIVE_TYPE_LITERAL ;
+    QualifiedTypeReference = UnannClassifierTypeReference ( '.' [ ClassifierTypeReference / '.' ]+)? ;
+    UnannClassifierTypeReference = IDENTIFIER TypeArguments? ;
+    ClassifierTypeReference = Annotation* UnannClassifierTypeReference ;
 
     TypeArguments = '<' TypeArgumentList '>' ;
     TypeArgumentList = [ TypeArgument / ',']* ;
-    TypeArgument = ReferenceType | Wildcard ;
+    TypeArgument = TypeReference | Wildcard ;
     Wildcard = Annotation* '?' WildcardBounds? ;
-    WildcardBounds = 'extends' ReferenceType | 'super' ReferenceType ;
+    WildcardBounds = ('extends' | 'super') TypeReference ;
 
-    UnannType = UnannTypeNonArray Dims? ;
-    UnannTypeNonArray = UnannReferenceType < UnannPrimitiveType ;
-    UnannReferenceType = UnannQualifiedTypeReference ;
-    UnannQualifiedTypeReference = UnannTypeReference ( '.' [ TypeReference / '.' ]+ )? ;
-    UnannTypeReference = IDENTIFIER TypeArguments? ;
+    leaf PRIMITIVE_TYPE_LITERAL = NumericType | 'boolean' ;
+    leaf NumericType = IntegralType | FloatingPointType ;
+    leaf IntegralType = 'byte' | 'short' | 'int' | 'long' | 'char' ;
+    leaf FloatingPointType = 'float' | 'double' ;
 }
 
 grammar Expressions extends Types {
@@ -109,53 +101,134 @@ grammar Expressions extends Types {
     override ElementValue = Expression | ElementValueArrayInitializer | Annotation ;
 
     Expression
-     = LambdaExpression
+     = MethodReference
+     | LambdaExpression
      | Assignment
      | TernaryIf
-     | Infix
+     | InfixLogicalOr
+     | InfixLogicalAnd
+     | InfixBitwiseOr
+     | InfixBitwiseXor
+     | InfixBitwiseAnd
+     | InfixEquality
+     | InstanceOf
+     | InfixRelational
+     | InfixBitShift
+     | InfixAdditive
+     | InfixMultiplicative
      | Prefix
      | Postfix
      | CastExpression
-     | Navigations
+     | InstanceCreation
+     | MethodInvocation
+     | ArrayAccess
+     | Navigation
+     | Primary
      ;
 
-    Navigations = Primary ('.' [ NavigableExpression  / '.' ]+)? ;
+    preference Expression {
+      MethodReference on '::' left
+//      LambdaExpression
+      Assignment on ASSIGNMENT_OPERATOR left
+      TernaryIf on '?' right
+      InfixLogicalOr on '||' left
+      InfixLogicalAnd on '&&' left
+      InfixBitwiseOr on '|' left
+      InfixBitwiseXor on '^' left
+      InfixBitwiseAnd on '&' left
+      InfixEquality on INFIX_OPERATOR_EQUALITY left
+      InstanceOf on 'instanceOf' left
+      InfixRelational on INFIX_OPERATOR_RELATIONAL left
+      InfixBitShift on INFIX_OPERATOR_BIT_SHIFT left
+      InfixAdditive on INFIX_OPERATOR_ADDITIVE left
+      InfixMultiplicative on INFIX_OPERATOR_MULTIPLICATIVE left
+//      Prefix
+      Postfix on POSTFIX_OPERATOR left
+//      CastExpression
+//      InstanceCreation
+//      MethodInvocation
+      ArrayAccess on '[' left
+      Navigation on '.' left
+//      Primary
+    }
+
+    Navigation = Expression '.' Navigations ;
+    Navigations = [ NavigableExpression  / '.' ]+ ;
     NavigableExpression
-      = IDENTIFIER
-      | MethodReference
-      | GenericMethodInvocation
-      | ArrayAccess
-      | 'this'
+      = MethodInvocation
       | 'super'
+      | InstanceCreation
+      | 'this'
+      | IDENTIFIER
       ;
 
-    Primary = PrimaryNoNewArray | ArrayCreationExpression ;
-
-    PrimaryNoNewArray
+    Primary
       = IDENTIFIER
       | Literal
-      | MethodReference
-      | MethodInvocation
-      | ArrayAccess
-      | ClassLiteral
       | 'this'
       | 'super'
       | GroupedExpression
-      | ClassInstanceCreationExpression
+      ;
+    leaf DOT_CLASS = '.' WHITESPACE 'class' ;
+
+    MethodReference = Expression '::' TypeArguments? IDENTIFIER ;
+
+    LambdaExpression = LambdaParameters '->' LambdaBody ;
+    LambdaParameters
+      = IDENTIFIER
+      | '(' FormalParameterList? ')'
+      | '(' InferredFormalParameterList ')'
+      ;
+    InferredFormalParameterList = [IDENTIFIER / ',']+ ;
+
+    Assignment = [ Expression / ASSIGNMENT_OPERATOR ]2+ ;
+    leaf ASSIGNMENT_OPERATOR
+      = '=' | '+=' | '-=' | '*=' | '/=' | '%='
+      | '&=' | '|=' | '^='
+      | '>>=' | '>>>=' | '<<='
       ;
 
-    MethodReference
-      = QualifiedName '::' TypeArguments? IDENTIFIER
-      | ReferenceType '::' TypeArguments? IDENTIFIER
-      | Primary '::' TypeArguments? IDENTIFIER
-      | 'super' '::' TypeArguments? IDENTIFIER
-      | QualifiedName '.' 'super' '::' TypeArguments? IDENTIFIER
-      | QualifiedTypeReference '::' TypeArguments? 'new'
-      | ArrayType '::' 'new'
-      ;
+    TernaryIf = Expression '?' Expression ':' Expression ;
 
-    GenericMethodInvocation = TypeArguments? MethodInvocation ;
-    MethodInvocation = IDENTIFIER ArgumentList ;
+    InfixLogicalOr = [ Expression / '||' ]2+ ;
+    InfixLogicalAnd = [ Expression / '&&' ]2+ ;
+
+    InfixBitwiseOr = [ Expression / '|' ]2+ ;
+    InfixBitwiseXor = [ Expression / '^' ]2+ ;
+    InfixBitwiseAnd = [ Expression / '&' ]2+ ;
+
+    InfixEquality = [ Expression / INFIX_OPERATOR_EQUALITY ]2+ ;
+
+    leaf INFIX_OPERATOR_EQUALITY = '==' | '!=' ;
+
+    InstanceOf = Expression 'instanceOf' TypeReference ;
+
+    InfixRelational = [ Expression / INFIX_OPERATOR_RELATIONAL ]2+ ;
+    leaf INFIX_OPERATOR_RELATIONAL = '<=' | '>=' | '<' | '>' ;
+
+    InfixBitShift = [ Expression / INFIX_OPERATOR_BIT_SHIFT ]2+ ;
+    leaf INFIX_OPERATOR_BIT_SHIFT = '>>>' | '>>' | '<<' ;
+
+    InfixAdditive = [ Expression / INFIX_OPERATOR_ADDITIVE ]2+ ;
+    leaf INFIX_OPERATOR_ADDITIVE = '+' | '-' ;
+
+    InfixMultiplicative = [ Expression / INFIX_OPERATOR_MULTIPLICATIVE ]2+ ;
+    leaf INFIX_OPERATOR_MULTIPLICATIVE = '*' | '/' | '%' ;
+
+    Prefix = PREFIX_OPERATOR Expression ;
+    leaf PREFIX_OPERATOR = '++' | '--' | '+' | '-' | '!' | '~' ;
+
+    Postfix = Expression POSTFIX_OPERATOR ;
+    leaf POSTFIX_OPERATOR = '++' | '--' ;
+
+    CastExpression = '(' TypeReference ')' Expression ;
+
+    InstanceCreation = 'new' TypeArguments? ClassOrInterfaceTypeToInstantiate ArgumentList ClassBody? ;
+    // overridden in Classes
+    ClassBody = '{' '}' ;
+    ClassOrInterfaceTypeToInstantiate = Annotation* IDENTIFIER ('.' Annotation* IDENTIFIER)* TypeArgumentsOrDiamond? ;
+
+    MethodInvocation = TypeArguments? IDENTIFIER ArgumentList ;
     ArgumentList = '(' Arguments ')' ;
     Arguments = [ Expression / ',' ]* ;
 
@@ -168,54 +241,13 @@ grammar Expressions extends Types {
 
     GroupedExpression = '(' Expression ')' ;
 
-    ClassInstanceCreationExpression
-      = UnqualifiedClassInstanceCreationExpression
-      | QualifiedName '.' UnqualifiedClassInstanceCreationExpression
-      | Primary '.' UnqualifiedClassInstanceCreationExpression
-      ;
-    UnqualifiedClassInstanceCreationExpression
-      = 'new' TypeArguments? ClassOrInterfaceTypeToInstantiate  ArgumentList ClassBody? ;
-    // overridden in Classes
-    ClassBody = '{' '}' ;
-    ClassOrInterfaceTypeToInstantiate = Annotation* IDENTIFIER ('.' Annotation* IDENTIFIER)* TypeArgumentsOrDiamond? ;
-
-
-    TernaryIf = Expression '?' Expression ':' Expression ;
-
-    Infix = [ Expression / INFIX_OPERATOR ]2+ ;
-    leaf INFIX_OPERATOR
-      = '%' | '/' | '*' | '+' | '-'
-      | '<<' | '>>>' | '>>'
-      | '<=' | '>=' | '<' | '>' | 'instanceof'
-      | '==' | '!='
-      | '&&' | '||' | '&' | '|' | '^'
-      ;
-
-    Assignment = [ Expression / ASSIGNMENT_OPERATOR ]2+ ;
-    leaf ASSIGNMENT_OPERATOR
-      = '=' | '+=' | '-=' | '*=' | '/=' | '%='
-      | '&=' | '|=' | '^='
-      | '>>=' | '>>>=' | '<<='
-      ;
-
-    Prefix = PREFIX_OPERATOR Expression ;
-    leaf PREFIX_OPERATOR = '++' | '--' | '+' | '-' | '!' | '~' ;
-    Postfix = Expression POSTFIX_OPERATOR ;
-    leaf POSTFIX_OPERATOR = '++' | '--' ;
-    CastExpression
-          = '(' PrimitiveType ')' Expression
-          | '(' ReferenceType AdditionalBound* ')' Expression
-          ;
-
     TypeArgumentsOrDiamond = TypeArguments | '<>' ;
 
     ArrayAccess = Expression '[' Expression ']' ;
 
     ArrayCreationExpression
-      = 'new' PrimitiveType DimExprs Dims?
-      | 'new' QualifiedTypeReference DimExprs Dims?
-      | 'new' PrimitiveType Dims ArrayInitializer
-      | 'new' QualifiedTypeReference Dims ArrayInitializer
+      = 'new' TypeReferenceNonArray DimExprs Dims?
+      | 'new' TypeReferenceNonArray Dims ArrayInitializer
       ;
 
     ArrayInitializer = '{' VariableInitializerList ','? '}' ;
@@ -225,19 +257,11 @@ grammar Expressions extends Types {
     DimExprs = DimExpr DimExpr* ;
     DimExpr = Annotation* '[' Expression ']' ;
 
-    LambdaExpression = LambdaParameters '->' LambdaBody ;
-    LambdaParameters
-      = IDENTIFIER
-      | '(' FormalParameterList? ')'
-      | '(' InferredFormalParameterList ')'
-      ;
-    InferredFormalParameterList = [IDENTIFIER / ',']+ ;
-
     FormalParameterList = ReceiverParameter? FormalParameters VarargsParameter? ;
     FormalParameters = [FormalParameter / ',']* ;
-    FormalParameter = VariableModifier* UnannType VariableDeclaratorId ;
-    VarargsParameter = VariableModifier* UnannType Annotation* '...' VariableDeclaratorId ;
-    ReceiverParameter = Annotation* UnannType (IDENTIFIER '.')? 'this' ;
+    FormalParameter = VariableModifier* TypeReference VariableDeclaratorId ;
+    VarargsParameter = VariableModifier* TypeReference Annotation* '...' VariableDeclaratorId ;
+    ReceiverParameter = Annotation* TypeReference (IDENTIFIER '.')? 'this' ;
 
     VariableModifier = Annotation | 'final' ;
     VariableDeclaratorId = IDENTIFIER Dims? ;
@@ -260,7 +284,7 @@ grammar BlocksAndStatements extends Expressions {
     // overridden in classes
     BlockStatement = LocalVariableDeclarationStatement | Statement ;
     LocalVariableDeclarationStatement = LocalVariableDeclaration ';' ;
-    LocalVariableDeclaration = VariableModifier* UnannType VariableDeclaratorList ;
+    LocalVariableDeclaration = VariableModifier* TypeReference VariableDeclaratorList ;
     Statement
       = StatementWithoutTrailingSubstatement
       | LabeledStatement
@@ -323,8 +347,8 @@ grammar BlocksAndStatements extends Expressions {
     ForInit = StatementExpressionList | LocalVariableDeclaration ;
     ForUpdate = StatementExpressionList ;
     StatementExpressionList = [StatementExpression /',' ]+ ;
-    EnhancedForStatement = 'for' '(' VariableModifier* UnannType VariableDeclaratorId ':' Expression ')' Statement ;
-    EnhancedForStatementNoShortIf = 'for' '(' VariableModifier* UnannType VariableDeclaratorId ':' Expression ')' StatementNoShortIf ;
+    EnhancedForStatement = 'for' '(' VariableModifier* TypeReference VariableDeclaratorId ':' Expression ')' Statement ;
+    EnhancedForStatementNoShortIf = 'for' '(' VariableModifier* TypeReference VariableDeclaratorId ':' Expression ')' StatementNoShortIf ;
     BreakStatement = 'break' IDENTIFIER? ';' ;
     ContinueStatement = 'continue' IDENTIFIER? ';' ;
     ReturnStatement = 'return' Expression? ';' ;
@@ -338,12 +362,12 @@ grammar BlocksAndStatements extends Expressions {
     Catches = CatchClause CatchClause* ;
     CatchClause = 'catch' '(' CatchFormalParameter ')' Block ;
     CatchFormalParameter = VariableModifier* CatchType VariableDeclaratorId ;
-    CatchType = UnannQualifiedTypeReference ('|' QualifiedTypeReference)* ;
+    CatchType = [TypeReference / '|']+ ;
     Finally = 'finally' Block ;
     TryWithResourcesStatement = 'try' ResourceSpecification Block Catches? Finally? ;
     ResourceSpecification = '(' ResourceList ';'? ')' ;
     ResourceList = Resource (';' Resource)* ;
-    Resource = VariableModifier* UnannType VariableDeclaratorId '=' Expression ;
+    Resource = VariableModifier* TypeReference VariableDeclaratorId '=' Expression ;
 }
 
 grammar Classes extends BlocksAndStatements {
@@ -363,6 +387,10 @@ grammar Classes extends BlocksAndStatements {
     Superinterfaces = 'implements' InterfaceTypeList ;
     InterfaceTypeList = [ QualifiedTypeReference / ',' ]+ ;
 
+    TypeParameter = Annotation* IDENTIFIER TypeBound? ;
+    TypeBound = 'extends' QualifiedTypeReference AdditionalBound? ;
+    AdditionalBound = '&' QualifiedTypeReference ;
+
     ClassBodyDeclaration
        = ClassMemberDeclaration
        | InstanceInitializer
@@ -376,7 +404,7 @@ grammar Classes extends BlocksAndStatements {
        | ClassDeclaration
        | ';'
        ;
-    FieldDeclaration = FieldModifier* UnannType VariableDeclaratorList ';' ;
+    FieldDeclaration = FieldModifier* TypeReference VariableDeclaratorList ';' ;
     FieldModifier = Annotation | FIELD_MODIFIER ;
     leaf FIELD_MODIFIER = 'public' | 'protected' | 'private' | 'static' | 'final' | 'transient' | 'volatile' ;
 
@@ -389,7 +417,7 @@ grammar Classes extends BlocksAndStatements {
       = Result MethodDeclarator Throws?
       | TypeParameters Annotation* Result MethodDeclarator Throws?
       ;
-    Result = UnannType | 'void' ;
+    Result = TypeReference | 'void' ;
     MethodDeclarator = IDENTIFIER '(' FormalParameterList? ')' Dims? ;
 
     Throws = 'throws' ExceptionTypeList ;
@@ -441,7 +469,7 @@ grammar Interfaces extends Classes {
       | InterfaceDeclaration
       | ';'
       ;
-    ConstantDeclaration = ConstantModifier* UnannType VariableDeclaratorList ;
+    ConstantDeclaration = ConstantModifier* TypeReference VariableDeclaratorList ;
     ConstantModifier = Annotation | CONSTANT_MODIFIER ;
     leaf CONSTANT_MODIFIER = 'public' | 'static' | 'final' ;
     InterfaceMethodDeclaration = InterfaceMethodModifier* MethodHeader MethodBody ;
@@ -455,7 +483,7 @@ grammar Interfaces extends Classes {
       | InterfaceDeclaration
       | ';'
       ;
-    AnnotationTypeElementDeclaration = AnnotationTypeElementModifier* UnannType IDENTIFIER '(' ')' Dims? DefaultValue? ';' ;
+    AnnotationTypeElementDeclaration = AnnotationTypeElementModifier* TypeReference IDENTIFIER '(' ')' Dims? DefaultValue? ';' ;
     AnnotationTypeElementModifier = Annotation | ANNOTATION_MODIFIER ;
     leaf ANNOTATION_MODIFIER = 'public' | 'abstract' ;
     DefaultValue = 'default' ElementValue ;

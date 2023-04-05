@@ -16,7 +16,9 @@
 
 package net.akehurst.language.agl.automaton
 
+import net.akehurst.language.agl.agl.automaton.FirstOf
 import net.akehurst.language.agl.api.automaton.ParseAction
+import net.akehurst.language.agl.automaton.LookaheadSetPart.Companion.unionAll
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.collections.lazyMutableMapNonNull
@@ -806,15 +808,64 @@ internal class BuildCacheLC1(
         return mergedStateInfos
     }
 
-    private fun mergeStates(rulePositions: Iterable<RulePosition>): Set<StateInfo> {
+    private fun mergeStates(rulePositions: Iterable<RulePosition>): Set<StateInfo> = mergeStates1(rulePositions)
+
+    private fun mergeStates1(rulePositions: Iterable<RulePosition>): Set<StateInfo> {
         val stateRpBefore = rulePositions.flatMap { s ->  s.next().map { n -> Pair(n,s) } }.toSet()
         val before = lazyMutableMapNonNull<RulePosition,MutableSet<RulePosition>> { mutableSetOf<RulePosition>() }
         stateRpBefore.forEach { before[it.first].add(it.second) }
 
         val stateRpsCanMerge = rulePositions.filter { it.canMergeState }
         val stateRpsNotToMerge = rulePositions.filter { it.cannotMergeState }
-        val groupedStateRpsCanMerge = stateRpsCanMerge.groupBy { srcRp ->
+        val groupedStateRpsNotAtEnd = stateRpsCanMerge.groupBy { srcRp ->
             Pair(before[srcRp].flatMap { it.items }, srcRp.items)
+        }
+        val mergedSateInfoNotAtEnd = groupedStateRpsNotAtEnd.flatMap { me ->
+            when {
+                //me.key.second.isEmpty() -> me.value.map { StateInfo(setOf(it)) }
+                else -> listOf(StateInfo(me.value.toSet()))
+            }
+        }
+        val stateInfoAtEnd = stateRpsNotToMerge.map { StateInfo(setOf(it)) }
+        return mergedSateInfoNotAtEnd.toSet() + stateInfoAtEnd.toSet()
+    }
+
+    private fun mergeStates2(rulePositions: Iterable<RulePosition>): Set<StateInfo> {
+        val stateRpBefore = rulePositions.flatMap { rp ->  rp.next().map { n -> Pair(rp,n) } }.toSet()
+        val before = lazyMutableMapNonNull<RulePosition,MutableSet<RulePosition>> { mutableSetOf<RulePosition>() }
+        stateRpBefore.forEach { before[it.second].add(it.first) }
+
+        val stateRpsCanMerge = rulePositions.filter { it.canMergeState }
+        val stateRpsNotToMerge = rulePositions.filter { it.cannotMergeState }
+        val expectedAt = mutableMapOf<RulePosition,LookaheadSetPart>()
+        val expectedAtInv = lazyMutableMapNonNull<LookaheadSetPart,MutableSet<RulePosition>>(){ mutableSetOf() }
+        for(rp in stateRpsCanMerge) {
+            val ea = FirstOf().expectedAt(rp, LookaheadSetPart.RT)
+            expectedAt[rp]=ea
+            expectedAtInv[ea].add(rp)
+        }
+        for(k1 in expectedAt.values) {
+            for (k2 in expectedAt.values) {
+                when {
+                    (k1 === k2) -> Unit
+                    k1.containsAll(k2)-> {
+                        expectedAtInv[k1].addAll(expectedAtInv[k2])
+                    }
+                }
+            }
+        }
+        val pairs = expectedAtInv.entries.flatMap { me->
+            val ea = me.key
+            me.value.map {
+                val x = before[it].map { expectedAt[it]!! }.unionAll()
+                Pair(x,ea)
+            }
+        }.toSet()
+
+        val groupedStateRpsCanMerge = stateRpsCanMerge.groupBy { srcRp ->
+            val y = expectedAt[srcRp]
+            val x = before[srcRp].map { expectedAt[it]!! }.unionAll()
+            Pair(x, y)
         }
         val mergedSateInfoCanMerge = groupedStateRpsCanMerge.flatMap { me ->
             when {
@@ -1136,7 +1187,7 @@ internal class BuildCacheLC1(
     //for graft, previous must match prevGuard, for height must not match
     private fun calcHeightOrGraftInto(prevPrev: ParserState, prev: ParserState, from: ParserState): Set<TransInfo> {//, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
         //FirstFollow3
-        val rps = mutableSetOf<RulePosition>()
+        val rls = mutableSetOf<RuntimeRule>()
         val hgInfo = prevPrev.rulePositions.flatMap { contextContext ->
             prev.rulePositions.flatMap { context ->
                 val parentsOfFrom = from.runtimeRules.flatMap { fr ->
@@ -1151,7 +1202,7 @@ internal class BuildCacheLC1(
                     val tgt = parentNext.rulePosition
                     val grd = parentNext.expectedAt
                     val up = parentNext.parentExpectedAt
-                    rps.add(tgt)
+                    rls.add(tgt.rule)
                     TransInfo(setOf(setOf(context)), action, setOf(tgt), setOf(LookaheadInfoPart(grd, up)))
                     //HeightGraftInfo(action, listOf(tgt), setOf(LookaheadInfoPart(grd, up)))
                 }
@@ -1160,6 +1211,7 @@ internal class BuildCacheLC1(
         val merged = mergeTransInfo(hgInfo, emptySet())
 
         //val rpsNotMerge = rps.filter { it.cannotMergeState }
+        val rps = rls.flatMap { it.rulePositionsNotAtStart }
         val mergedSateInfoNotAtEnd = mergeStates(rps)
         mergedSateInfoNotAtEnd.forEach { si ->
             si.rulePositions.forEach {

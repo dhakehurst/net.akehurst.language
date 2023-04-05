@@ -65,7 +65,7 @@ internal class test_bodmas_infix_sList_op_root_choiceEqual_WS : test_ScanOnDeman
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("\"[a-zA-Z]+\"","'true'","'false'","'('"))
-        ),issues.error)
+        ),issues.errors)
     }
 
 

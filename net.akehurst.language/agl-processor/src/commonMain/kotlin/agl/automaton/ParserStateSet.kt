@@ -195,7 +195,7 @@ internal class ParserStateSet(
 
     internal fun createLookaheadSet(part: LookaheadSetPart): LookaheadSet = createLookaheadSet(part.includesRT, part.includesEOT, part.matchANY, part.content)
 
-    fun precedenceRulesFor(sourceState: ParserState): PrecedenceRules? =
+    fun precedenceRulesFor(sourceState: ParserState): RuntimePreferenceRule? =
         sourceState.runtimeRules.map { src -> this.runtimeRuleSet.precedenceRulesFor(src) }.firstOrNull() //FIXME: if more than one rule ?
 
     fun build(): ParserStateSet {

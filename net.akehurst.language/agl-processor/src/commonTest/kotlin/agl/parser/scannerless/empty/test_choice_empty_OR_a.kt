@@ -81,7 +81,7 @@ internal class test_choice_empty_OR_a : test_ScanOnDemandParserAbstract() {
         // fails because a? matches empty and then is no longer an option when parsing with no lookahead for error situation
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^b",setOf("'a'","<EOT>"))
-        ),issues.error)
+        ),issues.errors)
     }
 
 }

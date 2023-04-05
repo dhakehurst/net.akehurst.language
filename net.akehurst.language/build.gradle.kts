@@ -18,11 +18,11 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import com.github.gmazzo.gradle.plugins.BuildConfigExtension
 
 plugins {
-    kotlin("multiplatform") version ("1.8.10") apply false
+    kotlin("multiplatform") version ("1.8.20") apply false
     id("org.jetbrains.dokka") version ("1.8.10") apply false
     id("com.github.gmazzo.buildconfig") version("3.1.0") apply false
     id("nu.studer.credentials") version ("3.0")
-    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version("1.8.10") apply false
+    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version("1.8.20") apply false
 }
 val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8
 val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8
@@ -123,7 +123,7 @@ subprojects {
         archiveClassifier.set("javadoc")
         //from(dokkaHtml.outputDirectory)
     }
-    tasks.named("publish").get().dependsOn("javadocJar")
+    //tasks.named("publish").get().dependsOn("javadocJar")
 
     dependencies {
         "commonTestImplementation"(kotlin("test"))
@@ -138,6 +138,8 @@ subprojects {
         ?: error("Must set project property with Sonatype Password (-P SONATYPE_PASSWORD=<...> or set in ~/.gradle/gradle.properties)")
     project.ext.set("signing.password", sonatype_pwd)
 
+    //tasks.named("publishJsPublicationToMavenLocal").get().dependsOn("signJvm8Publication")
+
     configure<PublishingExtension> {
         repositories {
             maven {
@@ -151,7 +153,7 @@ subprojects {
             }
         }
         publications.withType<MavenPublication> {
-            artifact(javadocJar.get())
+            //artifact(javadocJar.get())
 
             pom {
                 name.set("AGL Processor")

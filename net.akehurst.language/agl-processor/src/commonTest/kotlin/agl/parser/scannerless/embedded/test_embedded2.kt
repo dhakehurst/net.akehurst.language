@@ -67,7 +67,7 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'s'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test
@@ -79,7 +79,7 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^d", setOf("'s'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test
@@ -91,7 +91,7 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1, 2, 1, 1), "s^", setOf("'{'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test
@@ -103,7 +103,7 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(2, 3, 1, 1), "s{^", setOf("ID","'/'","'#'","'}'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test

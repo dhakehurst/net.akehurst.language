@@ -24,7 +24,7 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.TreeDataComplete
-import net.akehurst.language.agl.runtime.structure.PrecedenceRules
+import net.akehurst.language.agl.runtime.structure.RuntimePreferenceRule
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
@@ -32,7 +32,6 @@ import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParserTerminatedException
-import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import kotlin.math.max
 
@@ -239,6 +238,7 @@ internal class RuntimeParser(
             false
         } else {
             var grown = false
+            val transTaken = mutableSetOf<Transition>()
             val transitions = head.runtimeState.transitionsGoal(stateSet.startState)
             if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
             for (tr in transitions) {
@@ -247,8 +247,10 @@ internal class RuntimeParser(
                     ParseAction.EMBED -> doEmbedded(head, tr, possibleEndOfText, growArgs)
                     else -> error("Internal Error: should only have WIDTH or EMBED transitions here")
                 }
+                if (b) transTaken.add(tr)
                 grown = grown || b
             }
+            if (transTaken.size > 1) ambiguity(head,transTaken,possibleEndOfText)
             if (grown.not()) doNoTransitionsTaken(head)
             grown
         }
@@ -257,6 +259,7 @@ internal class RuntimeParser(
     private fun growIncomplete(head: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
         var grown = false
         val prevSet = this.graph.previousOf(head)
+        val transTaken = mutableSetOf<Transition>()
         for (previous in prevSet) {
             val transitions = head.runtimeState.transitionsInComplete(previous.state)
             if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${transitions.joinToString(separator = "\n") { "  $it" }}" }
@@ -266,9 +269,11 @@ internal class RuntimeParser(
                     ParseAction.EMBED -> doEmbedded(head, tr, possibleEndOfText, growArgs)
                     else -> error("Internal Error: should only have WIDTH or EMBED transitions here")
                 }
+                if (b) transTaken.add(tr)
                 grown = grown || b
             }
         }
+        if (transTaken.size > 1) ambiguity(head,transTaken,possibleEndOfText)
         if (grown.not()) doNoTransitionsTaken(head)
         return grown
     }
@@ -377,7 +382,7 @@ internal class RuntimeParser(
                 ParseAction.HEIGHT -> recordFailedHeightLh(head.nextInputPositionAfterSkip, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
                 ParseAction.GRAFT -> recordFailedGraftLH(head.nextInputPositionAfterSkip, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
                 ParseAction.GOAL -> recordFailedGraftLH(head.nextInputPositionAfterSkip, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
-                else -> error("Internal Erorr: should never happen")
+                else -> error("Internal Error: should never happen")
             }
         }
         //val vlhg = transWithValidLookahead.groupBy { it.first.to }
@@ -394,12 +399,7 @@ internal class RuntimeParser(
         if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${trans2.joinToString(separator = "\n") { "  $it" }}" }
         //val grouped = transitions.groupBy { it.to.runtimeRulesSet }
         if (trans2.size > 1) {
-            val ambigStr = trans2.map { tr ->
-                val lh = transWithValidLookahead.first { tr == it.first }.second.fullContent//flatMap { it.second.fullContent }
-                "${tr.from.firstRule.tag} into ${tr.to.rulePositions.map { "(${it.rule.tag},${it.option})" }} on ${lh.map { it.tag }}"
-            }
-            val loc = input.locationFor(head.nextInputPositionAfterSkip, 1)
-            _issues.warn(loc, "Ambiguity in parse: $ambigStr")
+            ambiguity(head, trans2, possibleEndOfText)
         }
         val grouped = trans2.groupBy { it.to.runtimeRulesSet }
         for (it in grouped) {
@@ -532,8 +532,8 @@ internal class RuntimeParser(
                         val byTarget = maxPrec.groupBy { Pair(it.first.to.runtimeRules, it.second.associativity) }
                         val assoc = byTarget.flatMap {
                             when (it.key.second) {
-                                PrecedenceRules.Associativity.NONE -> it.value
-                                PrecedenceRules.Associativity.LEFT -> when {
+                                RuntimePreferenceRule.Assoc.NONE -> it.value
+                                RuntimePreferenceRule.Assoc.LEFT -> when {
                                     it.key.first[0].isList -> {
                                         val grafts = it.value.filter { it.first.action == ParseAction.GRAFT }
                                         val left = grafts.filter { it.first.to.rulePositions[0].isAtEnd.not() }
@@ -546,7 +546,7 @@ internal class RuntimeParser(
                                     else -> it.value.filter { it.first.action == ParseAction.GRAFT }
                                 }
 
-                                PrecedenceRules.Associativity.RIGHT -> when {
+                                RuntimePreferenceRule.Assoc.RIGHT -> when {
                                     it.key.first[0].isList -> {
                                         val heights = it.value.filter { it.first.action == ParseAction.HEIGHT }
                                         val right = heights.filter { it.first.to.rulePositions[0].isAtEnd.not() }
@@ -1109,6 +1109,25 @@ internal class RuntimeParser(
         }
     }
 
+    private fun ambiguity(head: GrowingNodeIndex, trans:Collection<Transition>,possibleEndOfText: Set<LookaheadSet>) {
+        val from = head.runtimeState.state.runtimeRules.joinToString(separator = ",") { it.tag }
+        val ambigStr = trans.map { tr ->
+            val lh:LookaheadSetPart = tr.lookahead.map { it.guard.part }.fold(LookaheadSetPart.EMPTY){acc,it->acc.union(it)}
+            val eot = possibleEndOfText.map { it.part }.fold(LookaheadSetPart.EMPTY){acc,it->acc.union(it)}
+            val rt:LookaheadSetPart = head.runtimeState.runtimeLookaheadSet.map { it.part }.fold(LookaheadSetPart.EMPTY){acc,it->acc.union(it)}
+            val lhr = lh.resolve(eot,rt).fullContent
+            "${tr.to.rulePositions.map { "(${it.rule.tag},${it.option})" }} on ${lhr.map { it.tag }}"
+        }
+        val ambigOn = trans.map { it.action }.toSet()
+        val ambigOnStr = ambigOn.joinToString(separator = "/") { "$it" }
+        val into = when(ambigStr.size) {
+            1 -> ambigStr.first()
+            else -> ambigStr.joinToString(prefix = "\n    ", separator = "\n    ", postfix = "\n") { it }
+        }
+        val loc = input.locationFor(head.nextInputPositionAfterSkip, 1)
+        _issues.warn(loc, "Ambiguity in parse (on $ambigOnStr): ($from) into $into", ambigOn)
+    }
+
     private fun recordLastToTryWidthTrans(head: GrowingNodeIndex) {
         this.lastToTryWidthTrans.add(head)
     }
@@ -1136,39 +1155,4 @@ internal class RuntimeParser(
     private fun recordFailedGraftLH(position: Int, transition: Transition, runtimeLhs: Set<LookaheadSet>, possibleEndOfText: Set<LookaheadSet>) {
         failedReasons.add(FailedParseReasonLookahead(position, transition, runtimeLhs, possibleEndOfText))
     }
-
-    /*
-    private fun growNormalHeightOrGraftOnly(nextToProcess: ParseGraph.Companion.NextToProcess, possibleEndOfText: Set<LookaheadSet>, noLookahead: Boolean): Boolean {
-        val toDropData = mutableSetOf<GrowingNodeIndex>()
-        val toDropHead = mutableSetOf<GrowingNodeIndex>()
-        var grown = false
-        for (toProcess in nextToProcess.triples) {
-            val g = this.growWithPrev(toProcess, possibleEndOfText, noLookahead, false)
-            if (g) {
-                grown = true
-            } else {
-                //toDropHead.addIfNotNull(toProcess.remainingHead)
-                //toDropData.addIfNotNull(toProcess.previous)
-                //toDropData.addIfNotNull(toProcess.remainingHead)
-            }
-        }
-        if (grown.not()) {
-            //nothing was grown, so drop data for growingHead also
-            toDropData.add(nextToProcess.growingNode)
-            //TODO: maybe also drop other things!
-
-        } else {
-            // growingHead must have grown with one of the previous
-        }
-        for (hd in toDropHead) {
-            graph.dropHead(hd)
-            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped Head: $hd" }
-        }
-        for (dd in toDropData) {
-            graph.dropData(dd)
-            if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped Data: $dd" }
-        }
-        return grown
-    }
-*/
 }

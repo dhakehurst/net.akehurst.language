@@ -39,7 +39,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
             val res = Agl.grammarFromString<List<Grammar>, GrammarContext>(newValue, aglOptions)
             this._issues.addAll(res.issues)
             this.grammar = when {
-                res.issues.error.isNotEmpty() -> null
+                res.issues.errors.isNotEmpty() -> null
                 null == targetGrammarName ->res.asm?.firstOrNull()
                 else -> res.asm?.firstOrNull { it.name == this.targetGrammarName }
             }

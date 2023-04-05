@@ -27,7 +27,7 @@ import net.akehurst.language.collections.lazyMutableMapNonNull
 internal class RuntimeRuleSet(
     val number: Int,
     val runtimeRules: List<RuntimeRule>,
-    val precedenceRules: List<PrecedenceRules>
+    val precedenceRules: List<RuntimePreferenceRule>
 ) : RuleSet {
 
     companion object {
@@ -314,7 +314,7 @@ internal class RuntimeRuleSet(
         return this.runtimeRules[number]
     }
 
-    fun precedenceRulesFor(precedenceContext: RuntimeRule): PrecedenceRules? =
+    fun precedenceRulesFor(precedenceContext: RuntimeRule): RuntimePreferenceRule? =
         this.precedenceRules.firstOrNull {
             it.contextRule == precedenceContext
         }
@@ -401,12 +401,12 @@ internal class RuntimeRuleSet(
         val rules = clonedRules.values.toList()
         val clonedPrecedenceRules = this.precedenceRules.map {
             val clonedCtx = clonedRules[it.contextRule.tag]!!
-            val clonedPrecRules = it.rules.map { pr ->
+            val clonedPrecRules = it.options.map { pr ->
                 val cTgt = clonedRules[pr.target.tag]!!
                 val cOp = pr.operators.map{clonedRules[it.tag]!!}.toSet()
-                PrecedenceRules.PrecedenceRule(pr.precedence, cTgt, pr.option, cOp, pr.associativity)
+                RuntimePreferenceRule.RuntimePreferenceOption(pr.precedence, cTgt, pr.option, cOp, pr.associativity)
             }
-            PrecedenceRules(clonedCtx, clonedPrecRules)
+            RuntimePreferenceRule(clonedCtx, clonedPrecRules)
         }
         val clone = RuntimeRuleSet(cloneNumber, rules, clonedPrecedenceRules)
         return clone

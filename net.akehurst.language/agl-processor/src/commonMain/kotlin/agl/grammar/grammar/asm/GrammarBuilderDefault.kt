@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.grammar.grammar.asm
 
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.collections.lazyMutableMapNonNull
 
@@ -34,15 +33,15 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
     }
 
     fun rule(name: String): RuleBuilder {
-        return RuleBuilder(RuleDefault(grammar, name, false, false, false))
+        return RuleBuilder(GrammarRuleDefault(grammar, name, false, false, false))
     }
 
     fun skip(name: String, isLeaf: Boolean = false): RuleBuilder {
-        return RuleBuilder(RuleDefault(this.grammar, name, false, true, isLeaf))
+        return RuleBuilder(GrammarRuleDefault(this.grammar, name, false, true, isLeaf))
     }
 
     fun leaf(name: String): RuleBuilder {
-        return RuleBuilder(RuleDefault(this.grammar, name, false, false, true))
+        return RuleBuilder(GrammarRuleDefault(this.grammar, name, false, false, true))
     }
 
     fun terminalLiteral(value: String): Terminal {

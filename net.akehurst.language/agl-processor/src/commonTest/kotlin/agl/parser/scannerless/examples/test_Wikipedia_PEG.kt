@@ -54,7 +54,7 @@ internal class test_Wikipedia_PEG : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("'x'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -82,7 +82,7 @@ internal class test_Wikipedia_PEG : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(2,3,1,1),"xx^",setOf("'x'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -110,7 +110,7 @@ internal class test_Wikipedia_PEG : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(4,5,1,1),"xxxx^",setOf("'x'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test

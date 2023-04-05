@@ -65,7 +65,7 @@ internal class test_da_sList_root_choicePriority : test_ScanOnDemandParserAbstra
         assertEquals(
             listOf(
                 parseError(InputLocation(0,1,1,1),"^", setOf("'v'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test

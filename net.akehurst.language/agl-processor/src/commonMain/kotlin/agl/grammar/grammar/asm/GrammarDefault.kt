@@ -52,12 +52,13 @@ abstract class GrammarAbstract(
 
     override val extends: MutableList<GrammarReference> = mutableListOf<GrammarReference>()
 
-    override val rule: MutableList<GrammarRule> = mutableListOf<GrammarRule>()
+    override val grammarRule = mutableListOf<GrammarRule>()
+    override val preferenceRule = mutableListOf<PreferenceRule>()
 
-    override val allResolvedRule: List<GrammarRule> by lazy {
+    override val allResolvedGrammarRule: List<GrammarRule> by lazy {
         //TODO: Handle situation where super grammar/rule is included more than once ?
-        val rules = this.extends.flatMap { it.resolved?.allResolvedRule?: emptyList() }.toMutableList()
-        this.rule.forEach { rule ->
+        val rules = this.extends.flatMap { it.resolved?.allResolvedGrammarRule?: emptyList() }.toMutableList()
+        this.grammarRule.forEach { rule ->
             if (rule.isOverride) {
                 val overridden = rules.find { it.name == rule.name }
                     ?: error("GrammarRule ${rule.name} is marked as override, but there is no super rule with that name to override.")
@@ -71,7 +72,7 @@ abstract class GrammarAbstract(
     }
 
     override val allResolvedTerminal: Set<Terminal> by lazy {
-        this.allResolvedRule.toSet().flatMap {
+        this.allResolvedGrammarRule.toSet().flatMap {
             when (it.isLeaf) {
                 true -> setOf(it.compressedLeaf)
                 false -> it.rhs.allTerminal
@@ -80,11 +81,16 @@ abstract class GrammarAbstract(
     }
 
     override val allResolvedNonTerminalRule: Set<GrammarRule> by lazy {
-        this.allResolvedRule.filter { it.isLeaf.not() }.toSet()
+        this.allResolvedGrammarRule.filter { it.isLeaf.not() }.toSet()
+    }
+
+    override val allResolvedPreferenceRuleRule: List<PreferenceRule> by lazy {
+        val rules = this.extends.flatMap { it.resolved?.allResolvedPreferenceRuleRule?: emptyList() }.toMutableList()
+        rules+this.preferenceRule
     }
 
     override val allResolvedEmbeddedRules: Set<Embedded>by lazy {
-        this.allResolvedRule.flatMap { it.rhs.allEmbedded }.toSet()
+        this.allResolvedGrammarRule.flatMap { it.rhs.allEmbedded }.toSet()
     }
 
     override val allResolvedEmbeddedGrammars: Set<Grammar> by lazy {
@@ -92,10 +98,10 @@ abstract class GrammarAbstract(
         egs + egs.flatMap { it.allResolvedEmbeddedGrammars }.toSet()//FIXME: recursion
     }
 
-    override fun findAllNonTerminalRule(ruleName: String): List<GrammarRule> = this.allResolvedRule.filter { it.name == ruleName }
+    override fun findAllNonTerminalRule(ruleName: String): List<GrammarRule> = this.allResolvedGrammarRule.filter { it.name == ruleName }
 
     override fun findNonTerminalRule(ruleName: String): GrammarRule? {
-        val all = this.allResolvedRule.filter { it.name == ruleName }
+        val all = this.allResolvedGrammarRule.filter { it.name == ruleName }
         return when {
             all.isEmpty() -> null//throw GrammarRuleNotFoundException("NonTerminal GrammarRule '${ruleName}' not found in grammar '${this.name}'")
             all.size > 1 -> error("More than one rule named '${ruleName}' in grammar '${this.name}', have you remembered the 'override' modifier")

@@ -21,9 +21,9 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 interface IssueCollection : Collection<LanguageIssue> {
     val all:Set<LanguageIssue>
-    val error:List<LanguageIssue>
-    val warning:List<LanguageIssue>
-    val information:List<LanguageIssue>
+    val errors:List<LanguageIssue>
+    val warnings:List<LanguageIssue>
+    val informations:List<LanguageIssue>
 }
 
 interface ParseResult {

@@ -18,7 +18,6 @@ package net.akehurst.language.parser.scanondemand.listSeparated
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -47,7 +46,7 @@ internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -58,7 +57,7 @@ internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"a^",setOf("'b'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -69,7 +68,7 @@ internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(2,3,1,1),"ab^",setOf("'a'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -142,6 +141,6 @@ internal class test_literal_a2t5 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(9,10,1,1),"ababababa^ba",setOf("<EOT>"))
-        ),issues.error)
+        ),issues.errors)
     }
 }

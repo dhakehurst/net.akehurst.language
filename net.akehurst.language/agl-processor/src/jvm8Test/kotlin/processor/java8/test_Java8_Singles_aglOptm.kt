@@ -24,14 +24,9 @@ import net.akehurst.language.agl.sppt.SPPT2InputText
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.processor.LanguageProcessorPhase
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import net.akehurst.language.api.processor.*
+import net.akehurst.language.processor.test.utils.notWidth
+import kotlin.test.*
 
 class test_Java8_Singles_aglOptm {
 
@@ -54,20 +49,33 @@ class test_Java8_Singles_aglOptm {
             //proc.buildFor(forRule)//TODO: use build
             return proc
         }
+
     }
 
-    @Test(timeout = 5000)
+    @Test
     fun Literal__0() {
         val sentence = "0"
         val goal = "Literal"
 
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
-    @Test(timeout = 5000)
+    @Test
+    fun Expression__true() {
+        val sentence = "true"
+        val goal = "Expression"
+
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        // expect WIDTH ambiguity as 'true' could be a type name
+        assertTrue( result.issues.filterNot { it.message.contains("on WIDTH") }.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
+        assertEquals(3, result.sppt!!.maxNumHeads)
+    }
+
+    @Test//(timeout = 5000)
     fun Types_Type__int() {
 
         val grammarStr = this::class.java.getResource(grammarFile).readText()
@@ -86,9 +94,9 @@ class test_Java8_Singles_aglOptm {
             }).processor!!
 
         val sentence = "int"
-        val result = p.parse(sentence, Agl.parseOptions { goalRuleName("Type") })//TODO: use build
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        val result = p.parse(sentence, Agl.parseOptions { goalRuleName("TypeReference") })//TODO: use build
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
@@ -115,8 +123,8 @@ class test_Java8_Singles_aglOptm {
 
         val sentence = "int"
         val result = p.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
@@ -127,8 +135,8 @@ class test_Java8_Singles_aglOptm {
         val goal = "CompilationUnit"
 
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
@@ -137,8 +145,8 @@ class test_Java8_Singles_aglOptm {
         val sentence = "a[0]"
         val goal = "Expression"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
@@ -147,8 +155,8 @@ class test_Java8_Singles_aglOptm {
         val sentence = "a[0]"
         val goal = "ArrayAccess"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
@@ -191,8 +199,8 @@ grammar Expressions {
         val sentence = "a[b]"
         val goal = "ArrayAccess"
         val result = p.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
@@ -201,8 +209,8 @@ grammar Expressions {
         val sentence = "a[0].b"
         val goal = "Expression"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
@@ -212,8 +220,8 @@ grammar Expressions {
         val goal = "FieldDeclaration"
         //proc.parse(goal, sentence)
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
@@ -222,8 +230,8 @@ grammar Expressions {
         val sentence = "class A { int valid = 0b0; }"
         val goal = "TypeDeclaration"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
@@ -232,8 +240,8 @@ grammar Expressions {
         val sentence = "{ int valid = 0b0; }"
         val goal = "ClassBody"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
@@ -242,8 +250,8 @@ grammar Expressions {
         val sentence = "class A { int valid = 0b0; }"
         val goal = "CompilationUnit"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
@@ -261,7 +269,7 @@ grammar Expressions {
                     "0b01^2",
                     setOf("'.'", "ASSIGNMENT_OPERATOR", "'::'", "'?'", "INFIX_OPERATOR", "POSTFIX_OPERATOR", "'['", "<EOT>")
                 )
-            ), result.issues.error
+            ), result.issues.errors
         )
 
     }
@@ -290,8 +298,8 @@ public class BadBinaryLiterals {
             """.trimIndent()
         val goal = "CompilationUnit"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
     }
@@ -301,8 +309,8 @@ public class BadBinaryLiterals {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "BlockStatement"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
@@ -311,8 +319,8 @@ public class BadBinaryLiterals {
         val sentence = "Map.Entry<Object,Object> x;"
         val goal = "BlockStatement"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
@@ -321,8 +329,8 @@ public class BadBinaryLiterals {
         val sentence = "{ Map.@An Entry<Object,Object> x; }"
         val goal = "Block"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
@@ -331,8 +339,8 @@ public class BadBinaryLiterals {
         val sentence = "enum E { A, B, C }"
         val goal = "ClassDeclaration"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -344,8 +352,8 @@ public class BadBinaryLiterals {
         val sentence = "interface An { An[] value(); }"
         val goal = "CompilationUnit"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
@@ -356,8 +364,8 @@ public class BadBinaryLiterals {
         val sentence = "class B {  B() {  } }"
         val goal = "CompilationUnit"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
@@ -368,8 +376,8 @@ public class BadBinaryLiterals {
         val sentence = "A a"
         val goal = "FormalParameterList"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -381,8 +389,8 @@ public class BadBinaryLiterals {
         val sentence = "A this"
         val goal = "FormalParameterList"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -394,8 +402,8 @@ public class BadBinaryLiterals {
         val sentence = "A... this"
         val goal = "FormalParameterList"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -407,8 +415,8 @@ public class BadBinaryLiterals {
         val sentence = "A a, B b"
         val goal = "FormalParameterList"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -420,8 +428,8 @@ public class BadBinaryLiterals {
         val sentence = "A a, B b, C c"
         val goal = "FormalParameterList"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -433,8 +441,8 @@ public class BadBinaryLiterals {
         val sentence = "B() {  }"
         val goal = "ConstructorDeclaration"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -446,8 +454,8 @@ public class BadBinaryLiterals {
         val sentence = "B()"
         val goal = "ConstructorDeclarator"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -459,8 +467,8 @@ public class BadBinaryLiterals {
         val sentence = "{  }"
         val goal = "ConstructorBody"
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -515,8 +523,8 @@ public class BadBinaryLiterals {
         val goal = "Block"
 
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -627,8 +635,8 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         val goal = "CompilationUnit"
 
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -644,8 +652,8 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         val goal = "Navigations"
 
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -661,8 +669,8 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         val goal = "MethodInvocation"
 
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -678,8 +686,8 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         val goal = "Navigations"
 
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -695,8 +703,8 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         val goal = "Navigations"
 
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -712,8 +720,8 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         val goal = "NavigableExpression"
 
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -729,8 +737,8 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         val goal = "NavigableExpression"
 
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -746,8 +754,8 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         val goal = "GenericMethodInvocation"
 
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
@@ -758,8 +766,88 @@ class CharBufferSpliterator implements Spliterator.OfInt {
     fun withNoWhitespace() {
         val sentence="classclass{voidvoid(){}}"
         val result = proc.parse(sentence)
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
+    }
+
+    @Test
+    fun Type() {
+        val sentences = listOf(
+            "int", "int[]", "int@An[]", "int@An[]@An[]@An[]",
+            "A","A.B.C","A","A.@An B.@An C",
+            "A<>", "A<?>", "A<? extends B>"
+        )
+        val goal = "TypeReference"
+        for(sentence in sentences) {
+            println("sentence = '$sentence'")
+            val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+            assertTrue(result.issues.notWidth.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+            assertNotNull(result.sppt)
+            assertTrue(2 >= result.sppt!!.maxNumHeads)
+        }
+    }
+
+    @Test(timeout = 5000)
+    fun Expression__InfixAdditive() {
+        val sentence = "1+2+3+4"
+        val goal = "Expression"
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.sppt)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+    }
+
+    @Test(timeout = 5000)
+    fun Expression__InfixMultiplicative() {
+        val sentences = listOf("1/2","1/2/3/4","1*2*3*4","1/2*3/4*5","1%2/3*4")
+        val goal = "Expression"
+        for(sentence in sentences) {
+            println("sentence = '$sentence'")
+            val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+            assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+            assertNotNull(result.sppt)
+            assertTrue(1 >= result.sppt!!.maxNumHeads, "number of heads = ${result.sppt!!.maxNumHeads}")
+        }
+    }
+
+    @Test(timeout = 5000)
+    fun Expression__precedence() {
+        val sentences = listOf("a*b+c")
+        val goal = "Expression"
+        for(sentence in sentences) {
+            println("sentence = '$sentence'")
+            val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+            assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+            assertNotNull(result.sppt)
+            println(result.sppt!!.toStringAll)
+            assertTrue(1 >= result.sppt!!.maxNumHeads, "number of heads = ${result.sppt!!.maxNumHeads}")
+        }
+    }
+
+    @Test(timeout = 5000)
+    fun Expression__Prefix() {
+        val sentences = listOf("+1","-1","++1","--1")
+        val goal = "Expression"
+        for(sentence in sentences) {
+            val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+            assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+            assertNotNull(result.sppt)
+            assertEquals(1, result.sppt!!.maxNumHeads)
+        }
+    }
+
+    @Test
+    fun Expression__Primary() {
+        val sentences = listOf("(A)", "A.class", "A","int","a","1","this", "super", "(1)")
+        val goal = "Expression"
+        for(sentence in sentences) {
+            println("sentence = '$sentence'")
+            val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+            assertNotNull(result.sppt)
+            println(result.sppt!!.toStringAll)
+            assertTrue(result.issues.notWidth.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+            assertTrue(2 >= result.sppt!!.maxNumHeads, "number of heads = ${result.sppt!!.maxNumHeads}")
+        }
     }
 }

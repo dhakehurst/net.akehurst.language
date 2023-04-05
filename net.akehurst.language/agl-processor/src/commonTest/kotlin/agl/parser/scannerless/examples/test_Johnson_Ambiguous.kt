@@ -61,7 +61,7 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test

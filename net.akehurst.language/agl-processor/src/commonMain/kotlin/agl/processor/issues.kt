@@ -36,9 +36,9 @@ class IssueHolder(
     private val _issues = mutableSetOf<LanguageIssue>()
 
     override val all: Set<LanguageIssue> get() = _issues
-    override val error: List<LanguageIssue> get() = _issues.filter { it.kind == LanguageIssueKind.ERROR }
-    override val warning: List<LanguageIssue> get() = _issues.filter { it.kind == LanguageIssueKind.WARNING }
-    override val information: List<LanguageIssue> get() = _issues.filter { it.kind == LanguageIssueKind.INFORMATION }
+    override val errors: List<LanguageIssue> get() = _issues.filter { it.kind == LanguageIssueKind.ERROR }
+    override val warnings: List<LanguageIssue> get() = _issues.filter { it.kind == LanguageIssueKind.WARNING }
+    override val informations: List<LanguageIssue> get() = _issues.filter { it.kind == LanguageIssueKind.INFORMATION }
 
     fun clear() {
         _issues.clear()
@@ -60,7 +60,7 @@ class IssueHolder(
         this._issues.addAll(other.all)
     }
 
-    override val size: Int = this._issues.size
+    override val size: Int get() = this._issues.size
     override fun iterator(): Iterator<LanguageIssue> = this._issues.iterator()
     override fun isEmpty(): Boolean = this._issues.isEmpty()
     override fun contains(element: LanguageIssue): Boolean = this._issues.contains(element)

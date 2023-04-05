@@ -18,7 +18,7 @@ package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
 
-data class RuleDefault(
+data class GrammarRuleDefault(
     override val grammar: GrammarDefault,
     override val name: String,
     override val isOverride: Boolean,
@@ -102,7 +102,7 @@ data class RuleDefault(
     }
 
     init {
-        this.grammar.rule.add(this)
+        this.grammar.grammarRule.add(this)
     }
 
     private var _rhs: RuleItem? = null

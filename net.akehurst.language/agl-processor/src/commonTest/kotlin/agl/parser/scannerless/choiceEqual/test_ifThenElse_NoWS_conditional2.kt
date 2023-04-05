@@ -59,7 +59,7 @@ internal class test_ifThenElse_NoWS_conditional2 : test_ScanOnDemandParserAbstra
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("VAR","'if'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test

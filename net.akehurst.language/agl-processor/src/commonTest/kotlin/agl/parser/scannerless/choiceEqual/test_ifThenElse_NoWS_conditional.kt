@@ -19,7 +19,6 @@ package net.akehurst.language.parser.scanondemand.choiceEqual
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -65,7 +64,7 @@ internal class test_ifThenElse_NoWS_conditional : test_ScanOnDemandParserAbstrac
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("VAR","'if'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test

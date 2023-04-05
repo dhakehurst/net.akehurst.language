@@ -100,7 +100,22 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     abstract override var styleStr: String?
 
     override var style: AglStyleModel?
-        get() = _style
+        get() {
+            return if (null==_style) {
+                _styleResolver?.let {
+                    val p = this.processor
+                    if(null==p) {
+                        null
+                    } else {
+                        val r = it.invoke(p)
+                        _issues.addAll(r.issues)
+                        r.asm
+                    }
+                }
+            } else {
+                _style
+            }
+        }
         set(value) {
             val oldValue = _style
             if (oldValue != value) {
@@ -136,7 +151,8 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
                 scopeModelResolver = this._scopeModelResolver,
                 syntaxAnalyserResolver = this._syntaxAnalyserResolver,
                 semanticAnalyserResolver = this._semanticAnalyserResolver,
-                formatterResolver = this._formatterResolver
+                formatterResolver = this._formatterResolver,
+                //styleResolver = this._styleResolver //not used to create processor
             )
             val proc = Agl.processorFromGrammar(g,config)
             if (buildForDefaultGoal) proc.buildFor(null) //null options will use default goal

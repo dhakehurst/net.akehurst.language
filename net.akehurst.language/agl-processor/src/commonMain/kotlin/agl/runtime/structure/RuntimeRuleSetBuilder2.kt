@@ -240,42 +240,42 @@ internal class PrecedenceRuleBuilder(
 
     data class Quad<out A, out B, out C, out D>(val first: A, val second: B, val third: C, val fourth: D)
 
-    private val _rules = mutableListOf<Quad<String, Int, Set<String>, PrecedenceRules.Associativity>>()
+    private val _rules = mutableListOf<Quad<String, Int, Set<String>, RuntimePreferenceRule.Assoc>>()
 
     /**
      * indicate that @param ruleName is left-associative
      */
     fun none(ruleName: String) {
-        _rules.add(Quad(ruleName, 0, emptySet(), PrecedenceRules.Associativity.NONE))
+        _rules.add(Quad(ruleName, 0, emptySet(), RuntimePreferenceRule.Assoc.NONE))
     }
 
     /**
      * indicate that @param ruleName is left-associative
      */
     fun left(ruleName: String, operatorRuleNames: Set<String>) {
-        _rules.add(Quad(ruleName, 0, operatorRuleNames, PrecedenceRules.Associativity.LEFT))
+        _rules.add(Quad(ruleName, 0, operatorRuleNames, RuntimePreferenceRule.Assoc.LEFT))
     }
     fun leftOption(ruleName: String, option:Int, operatorRuleNames: Set<String>) {
-        _rules.add(Quad(ruleName, option, operatorRuleNames, PrecedenceRules.Associativity.LEFT))
+        _rules.add(Quad(ruleName, option, operatorRuleNames, RuntimePreferenceRule.Assoc.LEFT))
     }
     /**
      * indicate that @param ruleName is right-associative
      */
     fun right(ruleName: String, operatorRuleNames: Set<String>) {
-        _rules.add(Quad(ruleName, 0, operatorRuleNames, PrecedenceRules.Associativity.RIGHT))
+        _rules.add(Quad(ruleName, 0, operatorRuleNames, RuntimePreferenceRule.Assoc.RIGHT))
     }
 
     fun rightOption(ruleName: String, option:Int, operatorRuleNames: Set<String>) {
-        _rules.add(Quad(ruleName, option, operatorRuleNames, PrecedenceRules.Associativity.RIGHT))
+        _rules.add(Quad(ruleName, option, operatorRuleNames, RuntimePreferenceRule.Assoc.RIGHT))
     }
 
-    fun build(ruleMap: Map<String, RuntimeRule>): PrecedenceRules {
+    fun build(ruleMap: Map<String, RuntimeRule>): RuntimePreferenceRule {
         val contextRule = ruleMap[contextRuleName] ?: error("Cannot find rule named '$contextRuleName' as a context rule for precedence definitions")
         val rules = _rules.mapIndexed { idx, it ->
             val r = ruleMap[it.first] ?: error("Cannot find rule named '${it.first}' for target rule in precedence definitions")
             val ops = it.third.map { ruleMap[it] ?: error("Cannot find rule named '${it}' for operator in precedence definitions") }
-            PrecedenceRules.PrecedenceRule(idx, r, it.second, ops.toSet(), it.fourth)
+            RuntimePreferenceRule.RuntimePreferenceOption(idx, r, it.second, ops.toSet(), it.fourth)
         }
-        return PrecedenceRules(contextRule, rules)
+        return RuntimePreferenceRule(contextRule, rules)
     }
 }

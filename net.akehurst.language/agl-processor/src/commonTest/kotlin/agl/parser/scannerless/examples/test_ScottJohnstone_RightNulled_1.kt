@@ -57,7 +57,7 @@ internal class test_ScottJohnstone_RightNulled_1 : test_ScanOnDemandParserAbstra
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -67,7 +67,7 @@ internal class test_ScottJohnstone_RightNulled_1 : test_ScanOnDemandParserAbstra
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"a^",setOf("'b'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -77,7 +77,7 @@ internal class test_ScottJohnstone_RightNulled_1 : test_ScanOnDemandParserAbstra
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(2,3,1,1),"ab^",setOf("'a'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test

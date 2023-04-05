@@ -36,7 +36,7 @@ public class test_antlr4_Java8_optm {
 
     @Parameterized.Parameters(name = "{index}: {0}")
     public static Collection<FileData> getFiles() {
-        var files = Java8TestFiles.INSTANCE.getFiles();
+        var files = Java8TestFiles.INSTANCE.getFiles(); // 144 failed!
         totalFiles = files.size();
         return files;
     }

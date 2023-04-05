@@ -109,12 +109,13 @@ internal class FirstOf(
 
     private fun firstOfNotEmpty(rule: RuntimeRule, doneRp: MutableMap<RulePosition, FirstOfResult>, done: MutableMap<Int,Boolean>): FirstOfResult {
         return when {
-            0 > rule.ruleNumber -> when { // handle special kinds of RuntimeRule
-                RuntimeRuleSet.GOAL_RULE_NUMBER == rule.ruleNumber -> TODO()
-                RuntimeRuleSet.EOT_RULE_NUMBER == rule.ruleNumber -> TODO()
-                RuntimeRuleSet.SKIP_RULE_NUMBER == rule.ruleNumber -> TODO()
-                RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER == rule.ruleNumber -> firstOfNotEmptySafe(rule, doneRp, done)
-                RuntimeRuleSet.RUNTIME_LOOKAHEAD_RULE_NUMBER == rule.ruleNumber -> TODO()
+            0 > rule.ruleNumber -> when (rule.ruleNumber) {
+                // handle special kinds of RuntimeRule
+                RuntimeRuleSet.GOAL_RULE_NUMBER -> TODO()
+                RuntimeRuleSet.EOT_RULE_NUMBER -> TODO()
+                RuntimeRuleSet.SKIP_RULE_NUMBER -> firstOfNotEmptySafe(rule, doneRp, done)//TODO()
+                RuntimeRuleSet.SKIP_CHOICE_RULE_NUMBER -> firstOfNotEmptySafe(rule, doneRp, done)
+                RuntimeRuleSet.RUNTIME_LOOKAHEAD_RULE_NUMBER -> TODO()
                 else -> error("unsupported rule number $rule")
             }
 

@@ -61,7 +61,7 @@ internal class test_literal_a01 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"a^a",setOf("<EOT>"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -72,7 +72,7 @@ internal class test_literal_a01 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"a^,",setOf("<EOT>"))
-       ),issues.error)
+       ),issues.errors)
 
     }
 
@@ -84,7 +84,7 @@ internal class test_literal_a01 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"a^,a",setOf("<EOT>"))
-        ),issues.error)
+        ),issues.errors)
 
     }
 

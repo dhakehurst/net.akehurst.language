@@ -18,18 +18,13 @@ package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
 
-class TerminalDefault(override val value: String, override val isPattern: Boolean) : RuleItemAbstract(), Terminal {
-/*
-    fun pattern(): Regex {
-            return if (isPattern) Regex(value, RegexOption.MULTILINE) else throw GrammarRuleItemNotFoundException("${this} is not a pattern")
-        }
-*/
+class TerminalDefault(
+    override val value: String,
+    override val isPattern: Boolean
+) : RuleItemAbstract(), Terminal {
+
     override val name: String = if (isPattern) "\"$value\"" else "'$value'"
-/*
-    fun matches(value: String): Boolean {
-        return if (isPattern) this.pattern().matches(value) else value.equals(this.value);
-    }
-*/
+
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
         this.index = indices

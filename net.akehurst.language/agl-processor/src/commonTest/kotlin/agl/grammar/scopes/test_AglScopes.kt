@@ -290,7 +290,7 @@ class test_AglScopes {
                     "In scope for 'rule1' GrammarRule 'ruleX' not found as identifiable type"
                 )
             ),
-            result.issues.error
+            result.issues.errors
         )
     }
 
@@ -337,7 +337,7 @@ class test_AglScopes {
                     InputLocation(36, 23, 2, 6),
                     "In scope for 'rule1' GrammarRule 'ruleX' not found for identifying property of 'rule2'"
                 )
-            ), result.issues.error
+            ), result.issues.errors
         )
     }
 
@@ -431,7 +431,7 @@ class test_AglScopes {
                     InputLocation(57, 45, 2, 6),
                     "For reference in 'ruleX' referred to type GrammarRule 'ruleW' not found"
                 )
-            ), result.issues.error
+            ), result.issues.errors
         )
     }
 
