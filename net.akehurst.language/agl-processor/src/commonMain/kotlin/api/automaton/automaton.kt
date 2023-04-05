@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.api.automaton
+package net.akehurst.language.api.automaton
 
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.automaton.automaton

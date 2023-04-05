@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.agl.api.automaton.ParseAction
+import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.analyser.SemanticAnalyser

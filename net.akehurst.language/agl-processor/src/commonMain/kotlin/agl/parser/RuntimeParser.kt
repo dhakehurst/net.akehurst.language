@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.parser
 
-import net.akehurst.language.agl.api.automaton.ParseAction
+import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.agl.api.messages.Message
 import net.akehurst.language.agl.automaton.*
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs

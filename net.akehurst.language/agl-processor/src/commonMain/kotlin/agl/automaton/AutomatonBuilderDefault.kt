@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.api.automaton.*
+import net.akehurst.language.api.automaton.*
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule

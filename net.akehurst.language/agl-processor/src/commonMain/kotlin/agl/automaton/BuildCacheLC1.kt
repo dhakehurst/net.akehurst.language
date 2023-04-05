@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.agl.automaton.FirstOf
-import net.akehurst.language.agl.api.automaton.ParseAction
+import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.agl.automaton.LookaheadSetPart.Companion.unionAll
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug

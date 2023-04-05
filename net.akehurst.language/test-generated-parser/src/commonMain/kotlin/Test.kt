@@ -1,4 +1,4 @@
-import net.akehurst.language.agl.api.automaton.Automaton
+import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.formatter.FormatterSimple

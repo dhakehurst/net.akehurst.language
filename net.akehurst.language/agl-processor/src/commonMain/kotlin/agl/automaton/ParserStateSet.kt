@@ -17,10 +17,10 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.agl.automaton.FirstOf
-import net.akehurst.language.agl.api.automaton.Automaton
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.processor.AutomatonKind
 
 internal class ParserStateSet(

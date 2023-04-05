@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.agl.api.automaton.Automaton
+import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.api.grammar.Grammar

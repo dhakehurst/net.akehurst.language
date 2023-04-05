@@ -15,7 +15,6 @@
  */
 package net.akehurst.language.agl.grammar.style
 
-import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.processor.ProcessResult

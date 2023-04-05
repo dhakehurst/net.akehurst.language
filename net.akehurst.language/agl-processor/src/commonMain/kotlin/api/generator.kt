@@ -1,7 +1,7 @@
 package net.akehurst.language.agl.api.generator
 
-import net.akehurst.language.agl.api.automaton.Automaton
-import net.akehurst.language.agl.api.automaton.ParseAction
+import net.akehurst.language.api.automaton.Automaton
+import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.RulePosition

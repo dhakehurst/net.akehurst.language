@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.parser
 
-import net.akehurst.language.agl.api.automaton.ParseAction
+import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.automaton.Transition
