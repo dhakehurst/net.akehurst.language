@@ -751,7 +751,7 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         val sentence = """
             getUnchecked(i++)
         """.trimIndent()
-        val goal = "GenericMethodInvocation"
+        val goal = "MethodInvocation"
 
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertTrue( result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })

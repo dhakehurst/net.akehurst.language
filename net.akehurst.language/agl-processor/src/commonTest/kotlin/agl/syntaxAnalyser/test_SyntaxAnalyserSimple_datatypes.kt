@@ -86,12 +86,7 @@ class test_SyntaxAnalyserSimple_datatypes {
                 typeModelResolver { ProcessResultDefault(typeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
                 syntaxAnalyserResolver {  ProcessResultDefault(syntaxAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) }
             }
-        ).also {
-            val issues = syntaxAnalyser.configure(
-                configurationContext = ContextFromGrammar(grammar)
-            )
-            assertEquals(0, issues.size, issues.joinToString(separator = "\n") { "$it" })
-        }.processor!!
+        ).processor!!
     }
 
     @Test

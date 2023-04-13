@@ -320,12 +320,14 @@ internal class ParserStateSet(
         else -> false
     }
 
+    override fun asString(withStates: Boolean) = usedAutomatonToString(withStates)
+
     fun usedAutomatonToString(withStates: Boolean = false): String {
         val b = StringBuilder()
         val states = this.allBuiltStates
         val transitions = states.flatMap { it.outTransitions.allBuiltTransitions }
 
-        b.append("States: ${states.size}  Transitions: ${transitions.size} ")
+        b.append("UsedRules: ${this.usedRules.size}  States: ${states.size}  Transitions: ${transitions.size} ")
         b.append("\n")
 
         if (withStates) {

@@ -166,10 +166,18 @@ class TypeModelFromGrammar(
                 // rhs's are only ever these things (currently)
                 is EmptyRule -> findOrCreateElementType(rule) {}
                 is Choice -> typeForChoiceRule(rule)
-                is Concatenation -> typeForConcatenation(rule, rhs.items)
+                is Concatenation -> when (rhs.items.size) {
+                    0 -> error("Should not happen")
+                    1 -> when (rhs.items[0]) {
+                        is SimpleList -> typeForRuleItem(rhs.items[0])
+                        is SeparatedList -> typeForRuleItem(rhs.items[0])
+                        else -> typeForConcatenation(rule, rhs.items)
+                    }
+                    else -> typeForConcatenation(rule, rhs.items)
+                }
                 is SimpleList -> when (rhs.max) {
                     1 -> typeForRuleItem(rhs.item) //no need for nullable, when min is 0 we get empty list
-                    else -> ListSimpleType(typeForRuleItem(rhs.item)) //PrimitiveType.LIST //TODO: add list type
+                    else -> ListSimpleType(typeForRuleItem(rhs.item))
                 }
 
                 is SeparatedList -> when (rhs.max) {

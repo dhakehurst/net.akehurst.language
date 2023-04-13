@@ -55,11 +55,15 @@ class SemanticAnalyserSimple(
 
         this.buildScope(asm, context?.rootScope)
 
-        asm.rootElements.forEach {
-            _scopeModel?.resolveReferencesElement(_issues, it, locationMap, context?.rootScope)
-        }
+        asm.rootElements.forEach { resolveReferences(it,locationMap,context) }
 
         return SemanticAnalysisResultDefault(this._issues)
+    }
+    private fun resolveReferences(o:Any?,locationMap: Map<Any, InputLocation>?, context: ContextSimple?) {
+        when (o) {
+            is AsmElementSimple -> _scopeModel?.resolveReferencesElement(_issues, o, locationMap, context?.rootScope)
+            is List<*> -> o.forEach { resolveReferences(it,locationMap,context) }
+        }
     }
 
     private fun buildScope(asm: AsmSimple, rootScope: ScopeSimple<AsmElementPath>?) {

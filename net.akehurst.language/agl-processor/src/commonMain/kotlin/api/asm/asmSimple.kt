@@ -16,6 +16,7 @@
 
 package net.akehurst.language.api.asm
 
+import net.akehurst.language.api.asm.AsmSimple.Companion.asStringAny
 import net.akehurst.language.api.typeModel.PropertyDeclaration
 
 data class AsmElementPath(val value: String) {
@@ -27,9 +28,27 @@ data class AsmElementPath(val value: String) {
 }
 
 open class AsmSimple {
+
+    companion object {
+        internal fun Any.asStringAny(indent: String, currentIndent: String = ""): String = when (this) {
+            is String -> "'$this'"
+            is List<*> -> when (this.size) {
+                0 -> "[]"
+                1 -> "[${this[0]?.asStringAny(indent, currentIndent)}]"
+                else -> {
+                    val newIndent = currentIndent + indent
+                    this.joinToString(separator = "\n$newIndent", prefix = "[\n$newIndent", postfix = "\n$currentIndent]") { it?.asStringAny(indent, newIndent) ?: "null" }
+                }
+            }
+
+            is AsmElementSimple -> this.asString(indent, currentIndent)
+            else -> error("property value type not handled '${this::class}'")
+        }
+    }
+
     private var _nextElementId = 0
 
-    val rootElements: List<AsmElementSimple> = mutableListOf()
+    val rootElements: List<Any> = mutableListOf()
     val index = mutableMapOf<AsmElementPath, AsmElementSimple>()
 
     fun addRoot(root: AsmElementSimple) {
@@ -39,7 +58,7 @@ open class AsmSimple {
     fun createElement(asmPath: AsmElementPath, typeName: String) = AsmElementSimple(asmPath, this, typeName)
 
     fun asString(indent: String, currentIndent: String = ""): String = this.rootElements.joinToString(separator = "\n") {
-        it.asString(indent, currentIndent)
+       it.asStringAny(indent, currentIndent)
     }
 
 }
@@ -95,21 +114,6 @@ class AsmElementSimple(
 
     fun addAllProperty(value: List<AsmElementProperty>) {
         value.forEach { this._properties[it.name] = it }
-    }
-
-    private fun Any.asStringAny(indent: String, currentIndent: String = ""): String = when (this) {
-        is String -> "'$this'"
-        is List<*> -> when (this.size) {
-            0 -> "[]"
-            1 -> "[${this[0]?.asStringAny(indent, currentIndent)}]"
-            else -> {
-                val newIndent = currentIndent + indent
-                this.joinToString(separator = "\n$newIndent", prefix = "[\n$newIndent", postfix = "\n$currentIndent]") { it?.asStringAny(indent, newIndent) ?: "null" }
-            }
-        }
-
-        is AsmElementSimple -> this.asString(indent, currentIndent)
-        else -> error("property value type not handled '${this::class}'")
     }
 
     fun asString(indent: String, currentIndent: String = ""): String {
@@ -179,6 +183,7 @@ val AsmElementSimple.children: List<AsmElementSimple>
 /**
  * detailed comparison of elements an properties
  */
+/*
 fun AsmSimple.equalTo(other: AsmSimple): Boolean {
     return when {
         this.rootElements.size != other.rootElements.size -> false
@@ -192,7 +197,7 @@ fun AsmSimple.equalTo(other: AsmSimple): Boolean {
         }
     }
 }
-
+*/
 fun AsmElementSimple.equalTo(other: AsmElementSimple): Boolean {
     return when {
         this.asmPath != other.asmPath -> false

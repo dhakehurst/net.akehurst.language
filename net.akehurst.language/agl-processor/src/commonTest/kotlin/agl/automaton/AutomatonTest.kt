@@ -16,10 +16,11 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.api.automaton.Automaton
+
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.collections.CollectionsTest.matches
+import net.akehurst.language.api.automaton.Automaton
 import kotlin.test.fail
 
 internal object AutomatonTest {

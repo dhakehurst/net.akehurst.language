@@ -31,6 +31,8 @@ interface Automaton {
             init: AutomatonBuilder.() -> Unit
         ): Automaton = automaton(rrs as RuntimeRuleSet, automatonKind, userGoalRule, isSkip, init)
     }
+
+    fun asString(withStates:Boolean=false):String
 }
 
 enum class ParseAction {

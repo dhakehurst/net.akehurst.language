@@ -40,7 +40,7 @@ class test_deriveTypeModelFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -63,7 +63,7 @@ class test_deriveTypeModelFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -86,7 +86,7 @@ class test_deriveTypeModelFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -109,7 +109,7 @@ class test_deriveTypeModelFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -132,7 +132,7 @@ class test_deriveTypeModelFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -154,7 +154,7 @@ class test_deriveTypeModelFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -182,7 +182,7 @@ class test_deriveTypeModelFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -219,7 +219,7 @@ class test_deriveTypeModelFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -251,7 +251,7 @@ class test_deriveTypeModelFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        //TODO: there are ambiguities! assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        //TODO: there are ambiguities! assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -299,7 +299,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        //TODO: there are ambiguities! assertTrue(result.issues.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        //TODO: there are ambiguities! assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -332,7 +332,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -355,7 +355,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -384,7 +384,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -418,7 +418,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -446,7 +446,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -477,7 +477,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -511,7 +511,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -542,7 +542,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -571,7 +571,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -599,7 +599,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -628,7 +628,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -662,7 +662,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -699,7 +699,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -729,7 +729,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -759,7 +759,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -800,7 +800,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
@@ -846,7 +846,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {

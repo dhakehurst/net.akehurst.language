@@ -19,13 +19,14 @@ package net.akehurst.language.api.asm
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.syntaxAnalyser.*
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.typeModel.TupleType
 
 @DslMarker
 annotation class AsmSimpleBuilderMarker
 
-fun asmSimple(scopeModel: ScopeModelAgl = ScopeModelAgl(), context: ContextSimple? = null, resolveReferences:Boolean=true, init: AsmSimpleBuilder.() -> Unit): AsmSimple {
+fun asmSimple(scopeModel: ScopeModelAgl = ScopeModelAgl(), context: ContextSimple? = null, resolveReferences: Boolean = true, init: AsmSimpleBuilder.() -> Unit): AsmSimple {
     val b = AsmSimpleBuilder(scopeModel, context, resolveReferences)
     b.init()
     return b.build()
@@ -35,7 +36,7 @@ fun asmSimple(scopeModel: ScopeModelAgl = ScopeModelAgl(), context: ContextSimpl
 class AsmSimpleBuilder(
     private val _scopeModel: ScopeModelAgl,
     private val _context: ContextSimple?,
-    private val resolveReferences:Boolean
+    private val resolveReferences: Boolean
 ) {
 
     private val _asm = AsmSimple()
@@ -48,11 +49,18 @@ class AsmSimpleBuilder(
         return b.build()
     }
 
+    private fun resolveReferences(issues: IssueHolder, o: Any?, locationMap: Map<Any, InputLocation>?, context: ScopeSimple<AsmElementPath>?) {
+        when (o) {
+            is AsmElementSimple -> _scopeModel.resolveReferencesElement(issues, o, locationMap, context?.rootScope)
+            is List<*> -> o.forEach { resolveReferences(issues, it, locationMap, context) }
+        }
+    }
+
     fun build(): AsmSimple {
         val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
         if (resolveReferences) {
             _asm.rootElements.forEach { el ->
-                _scopeModel.resolveReferencesElement(issues, el, emptyMap(), _context?.rootScope)
+                resolveReferences(issues, el, emptyMap(), _context?.rootScope)
             }
         }
         if (issues.all.isEmpty()) {
@@ -97,8 +105,10 @@ class AsmElementSimpleBuilder(
     fun propertyUnnamedString(value: String?) = this._property(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, value)
     fun propertyString(name: String, value: String?) = this._property(name, value)
     fun propertyNull(name: String) = this._property(name, null)
-    fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElementExplicitType(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, typeName, init)
-    fun propertyTuple(name:String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple =propertyElementExplicitType(name, TupleType.INSTANCE_NAME, init)
+    fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple =
+        propertyElementExplicitType(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, typeName, init)
+
+    fun propertyTuple(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElementExplicitType(name, TupleType.INSTANCE_NAME, init)
     fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElementExplicitType(name, name, init)
     fun propertyElementExplicitType(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
         val newPath = _element.asmPath + name
@@ -152,7 +162,7 @@ class ListAsmElementSimpleBuilder(
 
     private val _list = mutableListOf<Any>()
 
-    fun string(value: String){
+    fun string(value: String) {
         _list.add(value)
     }
 
@@ -173,7 +183,7 @@ class ListAsmElementSimpleBuilder(
         return el
     }
 
-    fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple =element(TupleType.INSTANCE_NAME, init)
+    fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = element(TupleType.INSTANCE_NAME, init)
 
 
     fun build(): List<Any> {

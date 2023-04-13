@@ -32,6 +32,8 @@ import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParserTerminatedException
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import kotlin.math.max
 
@@ -1125,7 +1127,7 @@ internal class RuntimeParser(
             else -> ambigStr.joinToString(prefix = "\n    ", separator = "\n    ", postfix = "\n") { it }
         }
         val loc = input.locationFor(head.nextInputPositionAfterSkip, 1)
-        _issues.warn(loc, "Ambiguity in parse (on $ambigOnStr): ($from) into $into", ambigOn)
+        _issues.raise(LanguageIssueKind.WARNING, LanguageProcessorPhase.GRAMMAR, loc, "Ambiguity in parse (on $ambigOnStr): ($from) into $into", ambigOn)
     }
 
     private fun recordLastToTryWidthTrans(head: GrowingNodeIndex) {

@@ -85,10 +85,21 @@ class FormatterSimple<AsmType>(
         val sb = StringBuilder()
 
         for(root in (asm as AsmSimple).rootElements) {
-            val str = root.format(model)
+            val str = formatAny(root)
             sb.append(str)
         }
 
         return FormatResultDefault(sb.toString(), IssueHolder(LanguageProcessorPhase.FORMATTER))
+    }
+
+    private fun formatAny(o:Any?):String {
+        return when(o) {
+            is AsmElementSimple -> o.format(model)
+            else -> if(null==o) {
+                ""
+            } else {
+                error("Internal Error: type '${o::class.simpleName}' not supported")
+            }
+        }
     }
 }

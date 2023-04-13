@@ -49,7 +49,7 @@ class AglFormatterModelDefault(
     override val rules: Map<String, AglFormatterRule> by lazy {
         when (asm) {
             null -> emptyMap()
-            else -> asm.rootElements[0].getPropertyAsList("ruleList").associate {
+            else -> (asm.rootElements[0] as AsmElementSimple).getPropertyAsList("ruleList").associate {
                 when (it) {
                     is AsmElementSimple -> {
                         val rule = AglFormatterRuleDefault(this,it)

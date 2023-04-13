@@ -22,7 +22,7 @@ import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 
-operator fun IssueCollection.plus(other: IssueCollection):IssueHolder {
+operator fun IssueCollection.plus(other: IssueCollection): IssueHolder {
     val issues = IssueHolder(LanguageProcessorPhase.ALL)
     issues.addAll(this)
     issues.addAll(other)
@@ -30,7 +30,7 @@ operator fun IssueCollection.plus(other: IssueCollection):IssueHolder {
 }
 
 class IssueHolder(
-    val phase: LanguageProcessorPhase
+    private val defaultPhase: LanguageProcessorPhase
 ) : IssueCollection {
 
     private val _issues = mutableSetOf<LanguageIssue>()
@@ -44,19 +44,23 @@ class IssueHolder(
         _issues.clear()
     }
 
-    fun info(location: InputLocation?, message: String, data: Any? = null) {
-        _issues.add(LanguageIssue(LanguageIssueKind.INFORMATION, phase, location, message, data))
+    fun raise(kind: LanguageIssueKind, phase: LanguageProcessorPhase, location: InputLocation?, message: String, data: Any? = null) {
+        _issues.add(LanguageIssue(kind, phase, location, message, data))
     }
 
-    fun warn(location: InputLocation?, message: String, data: Any? = null) {
-        _issues.add(LanguageIssue(LanguageIssueKind.WARNING, phase, location, message, data))
-    }
+    fun info(location: InputLocation?, message: String, data: Any? = null) =
+        raise(LanguageIssueKind.INFORMATION, defaultPhase, location, message, data)
 
-    fun error(location: InputLocation?, message: String, data: Any? = null) {
-        _issues.add(LanguageIssue(LanguageIssueKind.ERROR, phase, location, message, data))
-    }
 
-    fun addAll(other:IssueCollection) {
+    fun warn(location: InputLocation?, message: String, data: Any? = null) =
+        raise(LanguageIssueKind.WARNING, defaultPhase, location, message, data)
+
+
+    fun error(location: InputLocation?, message: String, data: Any? = null) =
+        raise(LanguageIssueKind.ERROR, defaultPhase, location, message, data)
+
+
+    fun addAll(other: IssueCollection) {
         this._issues.addAll(other.all)
     }
 

@@ -16,9 +16,11 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.sppt.SPPTLeaf
@@ -84,6 +86,8 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
      * build the parser before use. Optional, but will speed up the first use of the parser.
      */
     fun buildFor(options: ParseOptions? = null): LanguageProcessor<AsmType, ContextType>
+
+    fun usedAutomatonFor(goalRuleName:String): Automaton
 
     /**
      * Specifically scan the sentence using the terminal rules found in the grammar

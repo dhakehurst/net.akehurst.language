@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.agl.parser.Scanner
+import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.formatter.FormatterSimple
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.Parser
@@ -108,6 +109,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         res?.let { this.issues.addAll(res.issues) }
         FormatterSimple<AsmType>(res?.asm)
     }
+
+    override fun usedAutomatonFor(goalRuleName:String):ParserStateSet = (this.parser as ScanOnDemandParser).runtimeRuleSet.usedAutomatonFor(goalRuleName)
 
     override fun interrupt(message: String) {
         this.parser.interrupt(message)

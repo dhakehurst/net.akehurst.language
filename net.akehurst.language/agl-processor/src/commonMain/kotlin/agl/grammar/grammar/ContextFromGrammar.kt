@@ -24,23 +24,29 @@ import net.akehurst.language.api.processor.SentenceContext
 // used by other languages that reference rules  in a grammar
 
 class ContextFromGrammar(
-    val grammar: Grammar
 ) : SentenceContext<GrammarItem> {
+    constructor(grammar: Grammar) : this() { createScopeFrom(grammar) }
 
     companion object {
         const val GRAMMAR_RULE_CONTEXT_TYPE_NAME = "GrammarRule"
         const val GRAMMAR_TERMINAL_CONTEXT_TYPE_NAME = "Terminal"
     }
 
-    override val rootScope = ScopeSimple<GrammarItem>(null, "", grammar.name)
+    override var rootScope = ScopeSimple<GrammarItem>(null, "", "")
 
-    init {
+    fun clear() {
+        this.rootScope = ScopeSimple<GrammarItem>(null, "", "")
+    }
+
+    fun createScopeFrom(grammar: Grammar) {
+        val scope = ScopeSimple<GrammarItem>(null, "", grammar.name)
         grammar.allResolvedGrammarRule.forEach {
             rootScope.addToScope(it.name, GRAMMAR_RULE_CONTEXT_TYPE_NAME, it)
         }
         grammar.allResolvedTerminal.forEach {
             rootScope.addToScope(it.name, GRAMMAR_TERMINAL_CONTEXT_TYPE_NAME, it)
         }
+        this.rootScope = scope
     }
 
 }
