@@ -57,6 +57,15 @@ class TypeModelBuilder(
         _types[name] = StringType
     }
 
+    fun listTypeFor(name: String,elementType: RuleType) {
+        _types[name] = ListSimpleType().also { it.elementType=elementType }
+    }
+
+    fun listTypeOf(name: String,elementTypeName: String) {
+        val elementType = _model.findType(elementTypeName)!!
+        _types[name] = ListSimpleType().also { it.elementType=elementType }
+    }
+
     fun elementType(name: String, init: ElementTypeBuilder.() -> Unit = {}): ElementType {
         val b = ElementTypeBuilder(_model, name)
         b.init()
@@ -118,12 +127,15 @@ abstract class StructuredTypeBuilder(
         return propertyListType(propertyName, elementType, isNullable, childIndex)
     }
 
-    fun propertyListType(propertyName: String, elementType: RuleType, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
-        property(propertyName, ListSimpleType(elementType), isNullable, childIndex)
+    fun propertyListType(propertyName: String, elementType: RuleType, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
+        val t = ListSimpleType()
+        t.elementType = elementType
+        return property(propertyName, t, isNullable, childIndex)
+    }
 
     // ListSeparated
     fun propertyUnnamedListSeparatedType(itemType: RuleType, separatorType: RuleType, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
-        property(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME, ListSeparatedType(itemType, separatorType), isNullable, childIndex)
+        property(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME, ListSeparatedType().also { it.itemType=itemType; it.separatorType=separatorType }, isNullable, childIndex)
 
     fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
         val itemType = _model.findType(itemTypeName)!!
@@ -137,7 +149,7 @@ abstract class StructuredTypeBuilder(
     }
 
     fun propertyListSeparatedType(propertyName: String, itemType: RuleType, separatorType: RuleType, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
-        property(propertyName, ListSeparatedType(itemType, separatorType), isNullable, childIndex)
+        property(propertyName, ListSeparatedType().also { it.itemType=itemType; it.separatorType=separatorType }, isNullable, childIndex)
 
     // Tuple
     fun propertyTupleTypeUnnamed(isNullable: Boolean, childIndex: Int, init: TupleTypeBuilder.() -> Unit): PropertyDeclaration =
@@ -150,7 +162,9 @@ abstract class StructuredTypeBuilder(
         val b = TupleTypeBuilder(_model)
         b.init()
         val tt = b.build()
-        return property(propertyName, ListSimpleType(tt), isNullable, childIndex)
+        val t = ListSimpleType()
+        t.elementType = tt
+        return property(propertyName, t, isNullable, childIndex)
     }
 
     fun propertyTupleType(propertyName: String, isNullable: Boolean, childIndex: Int, init: TupleTypeBuilder.() -> Unit): PropertyDeclaration {

@@ -42,7 +42,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     var scopeModelStr: String?
     var scopeModel:ScopeModel?
 
-    val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
+    val syntaxAnalyser: SyntaxAnalyser<AsmType>?
     val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
 
     //var formatStr: String?

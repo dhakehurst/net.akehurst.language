@@ -30,14 +30,12 @@ class AglFormatterModelDefault(
 ) : AsmSimple(), AglFormatterModel {
 
     companion object {
-        fun fromString(context: SentenceContext<GrammarItem>, aglFormatterModelSentence: String): ProcessResult<AglFormatterModel> {
+        fun fromString(context: SentenceContext<String>, aglFormatterModelSentence: String): ProcessResult<AglFormatterModel> {
             val proc = Agl.registry.agl.formatter.processor ?: error("Formatter language not found!")
             return proc.process(
                 sentence = aglFormatterModelSentence,
                 Agl.options {
-                    syntaxAnalysis {
-                        context(context)
-                    }
+                    semanticAnalysis { context(context) }
                 }
             )
         }

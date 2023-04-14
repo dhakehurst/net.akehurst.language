@@ -40,7 +40,7 @@ class test_SyntaxAnalyserSimple {
         fun testProc(grammarStr: String): LanguageProcessor<AsmSimple, ContextSimple> {
             val result = processor(grammarStr)
             assertNotNull(result.processor, result.issues.joinToString(separator = "\n") { "$it" })
-            assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+            assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
             return result.processor!!
         }
 
@@ -49,8 +49,8 @@ class test_SyntaxAnalyserSimple {
         fun test(proc: LanguageProcessor<AsmSimple, ContextSimple>, data: TestData) {
             val result = proc.process(data.sentence)
             assertNotNull(result.asm)
-            assertTrue(result.issues.isEmpty())
-            val actual = result.asm!!.rootElements[0]
+            assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+            val actual = result.asm!!
 
             assertEquals(data.expected.asString("  "), actual.asString("  "))
         }
@@ -67,8 +67,8 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = "a"
-        val expected = asmSimple() {
-            root("S") {
+        val expected = asmSimple {
+            element("S") {
             }
         }
         test(proc, TestData(sentence, expected))
@@ -87,7 +87,7 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a"
         val expected = asmSimple() {
-            root("S") {
+            element("S") {
                 propertyString("a", "a")
             }
         }
@@ -107,7 +107,7 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a"
         val expected = asmSimple() {
-            root("S") {
+            element("S") {
                 propertyString("id", "a")
             }
         }
@@ -129,7 +129,7 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a : A"
         val expected = asmSimple() {
-            root("S") {
+            element("S") {
                 propertyString("id", "a")
                 propertyString("type", "A")
             }
@@ -153,7 +153,7 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a 8 fred"
         val expected = asmSimple() {
-            root("S") {
+            element("S") {
                 propertyString("id", "a")
                 propertyString("number", "8")
                 propertyString("name", "fred")
@@ -173,10 +173,8 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = "a"
-        val expected = asmSimple() {
-            root("S") {
-                propertyUnnamedString("a")
-            }
+        val expected = asmSimple {
+            string("a")
         }
         test(proc, TestData(sentence, expected))
     }
@@ -193,8 +191,8 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = ""
         val expected = asmSimple() {
-            root("S") {
-                propertyUnnamedString(null)
+            element("S") {
+
             }
         }
         test(proc, TestData(sentence, expected))
@@ -211,9 +209,9 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = "aaaa"
-        val expected = asmSimple() {
-            root("S") {
-                propertyUnnamedListOfString(emptyList())
+        val expected = asmSimple {
+            element("S") {
+
             }
         }
         test(proc, TestData(sentence, expected))
@@ -231,9 +229,9 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = "aaaa"
-        val expected = asmSimple() {
-            root("S") {
-                propertyListOfString("a", listOf("a", "a", "a", "a"))
+        val expected = asmSimple {
+            element("S") {
+                propertyListOfString("a", listOf("a","a","a","a"))
             }
         }
         test(proc, TestData(sentence, expected))
@@ -260,7 +258,7 @@ class test_SyntaxAnalyserSimple {
         val tests = mutableListOf<TestData>()
         tests.define("a 8") {
             asmSimple() {
-                root("S") {
+                element("S") {
                     propertyString("id", "a")
                     propertyElementExplicitType("item", "A") {
                         propertyString("number", "8")
@@ -270,7 +268,7 @@ class test_SyntaxAnalyserSimple {
         }
         tests.define("a fred") {
             asmSimple() {
-                root("S") {
+                element("S") {
                     propertyString("id", "a")
                     propertyElementExplicitType("item", "B") {
                         propertyString("name", "fred")
@@ -280,7 +278,7 @@ class test_SyntaxAnalyserSimple {
         }
         tests.define("a fred 8") {
             asmSimple() {
-                root("S") {
+                element("S") {
                     propertyString("id", "a")
                     propertyElementExplicitType("item", "C") {
                         propertyString("name", "fred")
@@ -310,7 +308,7 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a 8 fred"
         val expected = asmSimple() {
-            root("S") {
+            element("S") {
                 propertyString("id", "a")
                 propertyString("number", "8")
                 propertyString("name", "fred")
@@ -335,7 +333,7 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a fred"
         val expected = asmSimple() {
-            root("S") {
+            element("S") {
                 propertyString("id", "a")
                 propertyString("number", null)
                 propertyString("name", "fred")
@@ -360,7 +358,7 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a"
         val expected = asmSimple() {
-            root("S") {
+            element("S") {
                 propertyString("id", "a")
                 propertyListOfString("name", emptyList<String>())
             }
@@ -384,7 +382,7 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a adam betty charles"
         val expected = asmSimple() {
-            root("S") {
+            element("S") {
                 propertyString("id", "a")
                 propertyListOfString("name", listOf("adam", "betty", "charles"))
             }
@@ -413,7 +411,7 @@ class test_SyntaxAnalyserSimple {
         val tests = mutableListOf<TestData>()
         tests.define("v") {
             asmSimple {
-                root("S") {
+                element("S") {
                     propertyElementExplicitType("exprList", "ExprList") {
                         propertyString("expr", "v")
                         propertyUnnamedListOfElement() {
@@ -424,7 +422,7 @@ class test_SyntaxAnalyserSimple {
         }
         tests.define("v+w") {
             asmSimple {
-                root("S") {
+                element("S") {
                     propertyElementExplicitType("exprList", "ExprList") {
                         propertyElementExplicitType("expr", "Add") {
                             propertyListOfString("expr", listOf("v","w"))
@@ -437,7 +435,7 @@ class test_SyntaxAnalyserSimple {
         }
         tests.define("v*w") {
             asmSimple {
-                root("S") {
+                element("S") {
                     propertyElementExplicitType("exprList", "ExprList") {
                         propertyElementExplicitType("expr", "Mul") {
                             propertyListOfString("expr", listOf("v","w"))
@@ -449,7 +447,7 @@ class test_SyntaxAnalyserSimple {
         }
         tests.define("v;w") {
             asmSimple {
-                root("S") {
+                element("S") {
                     propertyElementExplicitType("exprList", "ExprList") {
                         propertyString("expr", "v")
                         propertyUnnamedListOfElement {
@@ -461,7 +459,7 @@ class test_SyntaxAnalyserSimple {
         }
         tests.define("v;w;x") {
             asmSimple {
-                root("S") {
+                element("S") {
                     propertyElementExplicitType("exprList", "ExprList") {
                         propertyString("expr", "v")
                         propertyUnnamedListOfElement {
@@ -493,7 +491,7 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "a adam 2 charles"
         val expected = asmSimple() {
-            root("S") {
+            element("S") {
                 propertyString("id", "a")
                 propertyUnnamedListOfString(listOf("adam", "2", "charles"))
             }
@@ -519,7 +517,7 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "bk1 adam ant 12345, betty boo 34567, charlie chaplin 98765"
         val expected = asmSimple() {
-            root("AddressBook") {
+            element("AddressBook") {
                 propertyString("id", "bk1")
                 propertyListOfElement("contacts") {
                     element("Person") {
@@ -563,7 +561,7 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "graph [fontsize=ss, labelloc=yy label=bb; splines=true overlap=false]"
         val expected = asmSimple() {
-            root("Attr_stmt") {
+            element("Attr_stmt") {
                 propertyString("attr_type", "graph")
                 propertyListOfElement("attr_lists") {
                     element("Attr_list") {
@@ -617,7 +615,7 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "abcde"
         val expected = asmSimple() {
-            root("S") {
+            element("S") {
                 propertyString("a", "a")
                 propertyTuple("\$group") {
                     propertyString("b", "b")
@@ -647,7 +645,7 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "abe"
         val expected = asmSimple() {
-            root("S") {
+            element("S") {
                 propertyString("a", "a")
                 propertyString("\$group", "b")
                 propertyString("e", "e")
@@ -674,7 +672,7 @@ class test_SyntaxAnalyserSimple {
         val tests = mutableListOf<TestData>()
         tests.define("abce") {
             asmSimple {
-                root("S") {
+                element("S") {
                     propertyString("a", "a")
                     propertyTuple("\$group") {
                         propertyString("b", "b")
@@ -686,7 +684,7 @@ class test_SyntaxAnalyserSimple {
         }
         tests.define("ade") {
             asmSimple {
-                root("S") {
+                element("S") {
                     propertyString("a", "a")
                     propertyString("\$group", "d")
                     propertyString("e", "e")
@@ -716,7 +714,7 @@ class test_SyntaxAnalyserSimple {
         val tests = mutableListOf<TestData>()
         tests.define("A") {
             asmSimple {
-                root("S") {
+                element("S") {
                     propertyElementExplicitType("type", "Type") {
                         propertyString("name", "A")
                         propertyNull("typeArgs")
@@ -726,7 +724,7 @@ class test_SyntaxAnalyserSimple {
         }
         tests.define("A<B>") {
             asmSimple {
-                root("S") {
+                element("S") {
                     propertyElementExplicitType("type", "Type") {
                         propertyString("name", "A")
                         propertyElementExplicitType("typeArgs", "TypeArgs") {
@@ -743,7 +741,7 @@ class test_SyntaxAnalyserSimple {
         }
         tests.define("A<B,C,D>") {
             asmSimple {
-                root("S") {
+                element("S") {
                     propertyElementExplicitType("type", "Type") {
                         propertyString("name", "A")
                         propertyElementExplicitType("typeArgs", "TypeArgs") {
@@ -768,7 +766,7 @@ class test_SyntaxAnalyserSimple {
         }
         tests.define("A<B<C,D<E,F,G>,H<I,J>>>") {
             asmSimple {
-                root("S") {
+                element("S") {
                     propertyElementExplicitType("type", "Type") {
                         propertyString("name", "A")
                         propertyElementExplicitType("typeArgs", "TypeArgs") {

@@ -36,7 +36,7 @@ internal class LanguageProcessorFromGenerated<AsmType : Any, ContextType : Any>(
     override val _runtimeRuleSet: RuntimeRuleSet = generated.ruleSet as RuntimeRuleSet
     override val mapToGrammar: (Int, Int) -> RuleItem = generated.mapToGrammar
     override val scopeModel: ScopeModel? = generated.scopeModel
-    override val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>? = generated.syntaxAnalyser
+    override val syntaxAnalyser: SyntaxAnalyser<AsmType>? = generated.syntaxAnalyser
     override val formatter: Formatter<AsmType>? = generated.formatter
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? = generated.semanticAnalyser
     override val grammar: Grammar = generated.grammar

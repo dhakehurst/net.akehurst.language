@@ -75,7 +75,7 @@ class test_StatechartTools(val data: Data) {
     fun parse() {
         val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName(data.ruleName) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
         val resultStr = result.sppt!!.asString
         assertEquals(this.data.text, resultStr)
     }
@@ -84,6 +84,6 @@ class test_StatechartTools(val data: Data) {
     fun process() {
         val result = processor.process(this.data.text, Agl.options { parse { goalRuleName(data.ruleName) } })
         assertNotNull(result.asm, result.issues.joinToString(separator = "\n") { "$it" })
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
     }
 }

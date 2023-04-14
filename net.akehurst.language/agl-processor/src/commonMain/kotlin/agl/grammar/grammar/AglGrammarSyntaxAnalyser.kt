@@ -30,7 +30,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 internal class AglGrammarSyntaxAnalyser(
     //val languageRegistry: LanguageRegistryDefault
-) : SyntaxAnalyserAbstract<List<Grammar>, GrammarContext>() {
+) : SyntaxAnalyserAbstract<List<Grammar>>() {
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
 
@@ -41,7 +41,9 @@ internal class AglGrammarSyntaxAnalyser(
         this.register("namespace", this::namespace as BranchHandler<Namespace>)
         this.register("definitions", this::definitions as BranchHandler<List<Grammar>>)
         this.register("grammar", this::grammar as BranchHandler<Grammar>)
+        this.register("extendsOpt", this::extendsOpt as BranchHandler<List<GrammarReference>>)
         this.register("extends", this::extends as BranchHandler<List<GrammarReference>>)
+        this.register("extendsList", this::extendsList as BranchHandler<List<GrammarReference>>)
         this.register("rules", this::rules as BranchHandler<List<GrammarRule>>)
         this.register("rule", this::rule as BranchHandler<GrammarItem>)
         this.register("grammarRule", this::grammarRule as BranchHandler<GrammarRule>)
@@ -63,7 +65,7 @@ internal class AglGrammarSyntaxAnalyser(
         this.register("range", this::range as BranchHandler<Pair<Int, Int>>)
         this.register("rangeUnBraced", this::rangeUnBraced as BranchHandler<Pair<Int, Int>>)
         this.register("rangeBraced", this::rangeBraced as BranchHandler<Pair<Int, Int>>)
-        this.register("rangeMaxOpt", this::rangeMax as BranchHandler<Int>)
+        this.register("rangeMaxOpt", this::rangeMaxOpt as BranchHandler<Int>)
         this.register("rangeMax", this::rangeMax as BranchHandler<Int>)
         this.register("rangeMaxBounded", this::rangeMaxBounded as BranchHandler<Int>)
         this.register("rangeMaxUnbounded", this::rangeMaxUnbounded as BranchHandler<Int>)
@@ -89,7 +91,7 @@ internal class AglGrammarSyntaxAnalyser(
         return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: GrammarContext?): SyntaxAnalysisResult<List<Grammar>> {
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<List<Grammar>> {
         val grammars = this.transformBranch<List<Grammar>>(sppt.root.asBranch, "")
         return SyntaxAnalysisResultDefault(grammars, _issues, locationMap)
     }
@@ -103,7 +105,7 @@ internal class AglGrammarSyntaxAnalyser(
 
     // definitions = grammar+ ;
     private fun definitions(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<Grammar> {
-        val definitions = children.map {
+        val definitions = children[0].branchNonSkipChildren.map {
             this.transformBranch<Grammar>(it, arg)
         }
         return definitions
@@ -115,7 +117,7 @@ internal class AglGrammarSyntaxAnalyser(
         return NamespaceDefault(qualifiedName).also { this.locationMap[it] = target.location }
     }
 
-    // grammar : 'grammar' IDENTIFIER extends? '{' rules '}' ;
+    // grammar : 'grammar' IDENTIFIER extendsOpt '{' rules '}' ;
     private fun grammar(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Grammar {
         val namespace = arg as Namespace
         val name = target.nonSkipChildren[1].nonSkipMatchedText
@@ -154,24 +156,30 @@ internal class AglGrammarSyntaxAnalyser(
 */
     }
 
-    // extends : 'extends' [qualifiedName / ',']+ ;
+    // extendsOpt = extends?
+    private fun extendsOpt(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<GrammarReference> {
+        return this.transformBranchOpt<List<GrammarReference>>(children[0], arg)?: emptyList()
+    }
+
+    // extends = 'extends' extendsList ;
     private fun extends(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<GrammarReference> {
+        return this.transformBranch<List<GrammarReference>>(children[0], arg)?: emptyList()
+    }
+
+    // extendsList = [qualifiedName / ',']+ ;
+    private fun extendsList(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<GrammarReference> {
         val localNamespace = arg as Namespace
-        return if (children.isEmpty()) {
-            emptyList<GrammarReference>()
-        } else {
-            val extendNameList = children[0].branchNonSkipChildren[0].branchNonSkipChildren.map { it.nonSkipMatchedText }
-            val extendedGrammars = extendNameList.map {
-                val qn = localNamespace.qualifiedName + "." + it
-                GrammarReferenceDefault(localNamespace, it).also { this.locationMap[it] = target.location }
-            }
-            extendedGrammars
+        val extendNameList = children[0].branchNonSkipChildren.map { it.nonSkipMatchedText }
+        val extendedGrammars = extendNameList.map {
+            val qn = localNamespace.qualifiedName + "." + it
+            GrammarReferenceDefault(localNamespace, it).also { this.locationMap[it] = target.location }
         }
+        return extendedGrammars
     }
 
     // rules : rule+ ;
     private fun rules(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<GrammarItem> {
-        return children.mapIndexed { index, it ->
+        return children[0].branchNonSkipChildren.mapIndexed { index, it ->
             this.transformBranch<GrammarItem>(it, arg)
         }
     }
@@ -226,7 +234,7 @@ internal class AglGrammarSyntaxAnalyser(
     // simpleChoice : [concatenation, '|']* ;
     private fun simpleChoice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem {
         // children will have one element, an sList
-        val alternative = children.mapIndexed { index, it ->
+        val alternative = children[0].branchNonSkipChildren.mapIndexed { index, it ->
             this.transformBranch<Concatenation>(it, arg)
         }
         return ChoiceLongestDefault(alternative).also { this.locationMap[it] = target.location }
@@ -234,7 +242,7 @@ internal class AglGrammarSyntaxAnalyser(
 
     // priorityChoice : [concatenation, '<']* ;
     private fun priorityChoice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem {
-        val alternative = children.mapIndexed { index, it ->
+        val alternative = children[0].branchNonSkipChildren.mapIndexed { index, it ->
             this.transformBranch<Concatenation>(it, arg)
         }
         return ChoicePriorityDefault(alternative).also { this.locationMap[it] = target.location }
@@ -242,7 +250,7 @@ internal class AglGrammarSyntaxAnalyser(
 
     // ambiguousChoice : [concatenation, '||']* ;
     private fun ambiguousChoice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem {
-        val alternative = children.mapIndexed { index, it ->
+        val alternative = children[0].branchNonSkipChildren.mapIndexed { index, it ->
             this.transformBranch<Concatenation>(it, arg)
         }
         return ChoiceAmbiguousDefault(alternative).also { this.locationMap[it] = target.location }
@@ -250,7 +258,7 @@ internal class AglGrammarSyntaxAnalyser(
 
     // concatenation : concatenationItem+ ;
     private fun concatenation(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Concatenation {
-        val items = children.mapIndexed { index, it ->
+        val items = children[0].branchNonSkipChildren.mapIndexed { index, it ->
             this.transformBranch<ConcatenationItem>(it, arg)
         }
         return ConcatenationDefault(items).also { this.locationMap[it] = target.location }
@@ -305,10 +313,14 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // rangeMaxOpt = rangeMax? ;
-    private fun rangeMaxOpt(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Int = this.transformBranch<Int>(children[0], arg)
+    private fun rangeMaxOpt(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Int {
+        return this.transformBranch<Int>(children[0].branchNonSkipChildren[0], arg)
+    }
 
     //rangeMax = rangeMaxUnbounded | rangeMaxBounded ;
-    private fun rangeMax(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Int = this.transformBranch<Int>(children[0], arg)
+    private fun rangeMax(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Int {
+        return this.transformBranch<Int>(children[0], arg)
+    }
 
     //rangeMaxUnbounded = '+' ;
     private fun rangeMaxUnbounded(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Int = -1
@@ -391,7 +403,7 @@ internal class AglGrammarSyntaxAnalyser(
     private fun preferenceRule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): PreferenceRule {
         val grammar = arg as GrammarDefault
         val forItem = this.transformBranch<SimpleItem>(children[0], arg)
-        val optionList = children[1].branchNonSkipChildren.map {
+        val optionList = children[1].branchNonSkipChildren[0].branchNonSkipChildren.map {
             this.transformBranch<PreferenceOption>(it, arg)
         }
         return PreferenceRuleDefault(grammar, forItem, optionList)
@@ -404,7 +416,7 @@ internal class AglGrammarSyntaxAnalyser(
             children[1].isEmptyMatch -> 0
             else -> this.transformBranch<Int>(children[1], arg)
         }
-        val terminalList = children[2].branchNonSkipChildren.map {
+        val terminalList = children[2].branchNonSkipChildren[0].branchNonSkipChildren.map {
             this.transformBranch<SimpleItem>(it, arg)
         }
         val assStr = children[3].nonSkipMatchedText

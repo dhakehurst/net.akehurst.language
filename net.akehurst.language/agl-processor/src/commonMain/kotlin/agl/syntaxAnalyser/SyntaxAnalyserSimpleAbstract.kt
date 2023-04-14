@@ -40,10 +40,10 @@ import net.akehurst.language.api.typeModel.*
  * @param scopeDefinition TypeNameDefiningScope -> Map<TypeNameDefiningSomethingReferencable, referencableProperty>
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
-abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple,C:SentenceContext<*>>(
+abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
     val typeModel: TypeModel?,
     val scopeModel: ScopeModel?
-) : SyntaxAnalyser<A,C> {
+) : SyntaxAnalyser<A> {
 
     companion object {
         private const val ns = "net.akehurst.language.agl.syntaxAnalyser"
@@ -70,11 +70,12 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple,C:SentenceContext<*>>(
         return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: C?): SyntaxAnalysisResult<A> {
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<A> {
         this._mapToGrammar = mapToGrammar
         _asm = AsmSimple()
         val path = AsmElementPath.ROOT + (_asm!!.rootElements.size).toString()
         val value = this.createValue(sppt.root, path)
+        /*
         val rootEl = if (null == value) {
             val el = _asm!!.createElement(path, sppt.root.name)
             val pName = TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
@@ -98,7 +99,12 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple,C:SentenceContext<*>>(
             is AsmElementSimple -> value
             else -> error("Internal Error: unhandled class ${value::class.simpleName}")
         }
-        _asm?.addRoot(rootEl)
+         */
+        if (null == value) {
+            _asm?.addRoot("<null>")
+        } else {
+            _asm?.addRoot(value)
+        }
 
         return SyntaxAnalysisResultDefault(_asm as A?, _issues, locationMap)
     }

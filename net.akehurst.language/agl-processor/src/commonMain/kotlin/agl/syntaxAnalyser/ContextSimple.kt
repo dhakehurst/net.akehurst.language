@@ -61,7 +61,7 @@ class ScopeSimple<AsmElementIdType>(
     }
 
     // accessor needed for serialisation which assumes mutableMap for deserialisation
-    val childScopes:Map<String,ScopeSimple<AsmElementIdType>> = _childScopes
+    override val childScopes:Map<String,ScopeSimple<AsmElementIdType>> = _childScopes
 
     // accessor needed for serialisation which assumes mutableMap for deserialisation
     val items:Map<String,Map<String,AsmElementIdType>> = _items

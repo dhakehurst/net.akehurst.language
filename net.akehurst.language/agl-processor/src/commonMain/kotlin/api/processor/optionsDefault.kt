@@ -41,13 +41,13 @@ internal class ParseOptionsDefault(
 ) : ParseOptions
 
 internal class SyntaxAnalysisOptionsDefault<AsmType : Any, ContextType : Any>(
-    override var active: Boolean = true,
-    override var context: ContextType? = null
+    override var active: Boolean = true
 ) : SyntaxAnalysisOptions<AsmType, ContextType>
 
 internal class SemanticAnalysisOptionsDefault<AsmType : Any, ContextType : Any>(
     override var active: Boolean = true,
     override var locationMap: Map<Any, InputLocation> = emptyMap(),
+    override var context: ContextType? = null,
     override val options: Map<String, Any> = mutableMapOf()
 ) : SemanticAnalysisOptions<AsmType, ContextType>
 
@@ -184,18 +184,13 @@ class ParseOptionsBuilder {
 class SyntaxAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
 
     private var _active = true
-    private var _context: ContextType? = null
 
     fun active(value: Boolean) {
         _active = value
     }
 
-    fun context(value: ContextType?) {
-        _context = value
-    }
-
     fun build(): SyntaxAnalysisOptions<AsmType, ContextType> {
-        return SyntaxAnalysisOptionsDefault<AsmType, ContextType>(_active, _context)
+        return SyntaxAnalysisOptionsDefault<AsmType, ContextType>(_active)
     }
 }
 
@@ -204,6 +199,7 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
 
     private var _active = true
     private var _locationMap = emptyMap<Any, InputLocation>()
+    private var _context: ContextType? = null
     private val _options = mutableMapOf<String, Any>()
 
     fun active(value: Boolean) {
@@ -214,11 +210,15 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
         _locationMap = value
     }
 
+    fun context(value: ContextType?) {
+        _context = value
+    }
+
     fun option(key: String, value: Any) {
         _options[key] = value
     }
 
     fun build(): SemanticAnalysisOptions<AsmType, ContextType> {
-        return SemanticAnalysisOptionsDefault<AsmType, ContextType>(_active, _locationMap, _options)
+        return SemanticAnalysisOptionsDefault<AsmType, ContextType>(_active, _locationMap, _context, _options)
     }
 }

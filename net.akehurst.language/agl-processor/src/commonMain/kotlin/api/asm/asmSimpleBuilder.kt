@@ -42,11 +42,24 @@ class AsmSimpleBuilder(
     private val _asm = AsmSimple()
     private val _scopeMap = mutableMapOf<AsmElementPath, ScopeSimple<AsmElementPath>>()
 
-    fun root(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
+    fun string(value: String) {
+        _asm.addRoot(value)
+    }
+
+    fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
         val path = AsmElementPath.ROOT + (_asm.rootElements.size).toString()
         val b = AsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, path, typeName, true, _context?.rootScope)
         b.init()
         return b.build()
+    }
+
+    fun list(init: ListAsmElementSimpleBuilder.() -> Unit): List<Any> {
+        val path = AsmElementPath.ROOT + (_asm.rootElements.size).toString()
+        val b = ListAsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, path, _context?.rootScope)
+        b.init()
+        val list = b.build()
+        _asm.addRoot(list)
+        return list
     }
 
     private fun resolveReferences(issues: IssueHolder, o: Any?, locationMap: Map<Any, InputLocation>?, context: ScopeSimple<AsmElementPath>?) {

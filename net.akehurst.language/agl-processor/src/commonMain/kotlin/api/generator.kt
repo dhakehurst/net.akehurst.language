@@ -32,7 +32,7 @@ abstract class GeneratedLanguageProcessorAbstract<AsmType : Any, ContextType : A
     abstract val ruleSet: RuleSet
     abstract val mapToGrammar: (Int, Int) -> RuleItem
     abstract val scopeModel: ScopeModel?
-    abstract val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
+    abstract val syntaxAnalyser: SyntaxAnalyser<AsmType>?
     abstract val formatter: Formatter<AsmType>?
     abstract val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
     abstract val automata: Map<String, Automaton>

@@ -42,9 +42,9 @@ interface AglLanguages {
     val scopesLanguageIdentity: String
 
     val grammar: LanguageDefinition<List<Grammar>, GrammarContext>
-    val style: LanguageDefinition<AglStyleModel, SentenceContext<GrammarItem>>
-    val formatter: LanguageDefinition<AglFormatterModel, SentenceContext<GrammarItem>>
-    val scopes: LanguageDefinition<ScopeModelAgl, SentenceContext<GrammarItem>>
+    val style: LanguageDefinition<AglStyleModel, SentenceContext<String>>
+    val formatter: LanguageDefinition<AglFormatterModel, SentenceContext<String>>
+    val scopes: LanguageDefinition<ScopeModelAgl, SentenceContext<String>>
 }
 
 class LanguageRegistryDefault : GrammarRegistry {
@@ -82,8 +82,8 @@ class LanguageRegistryDefault : GrammarRegistry {
             )
         )
 
-        override val scopes: LanguageDefinition<ScopeModelAgl, SentenceContext<GrammarItem>> = this@LanguageRegistryDefault.registerFromDefinition(
-            LanguageDefinitionFromAsm<ScopeModelAgl, SentenceContext<GrammarItem>>(
+        override val scopes: LanguageDefinition<ScopeModelAgl, SentenceContext<String>> = this@LanguageRegistryDefault.registerFromDefinition(
+            LanguageDefinitionFromAsm<ScopeModelAgl, SentenceContext<String>>(
                 identity = scopesLanguageIdentity,
                 AglScopesGrammar,
                 buildForDefaultGoal = false,
@@ -103,15 +103,15 @@ class LanguageRegistryDefault : GrammarRegistry {
                         )
                     }
                 }
-            ).also {
-                it.syntaxAnalyser?.configure(
-                    configurationContext = ContextFromGrammar(AglScopesGrammar),
-                )
-            }
+            )//.also {
+            //    it.syntaxAnalyser?.configure(
+            //        configurationContext = ContextFromGrammar(AglScopesGrammar),
+            //    )
+           // }
         )
 
         override val formatter = this@LanguageRegistryDefault.registerFromDefinition(
-            LanguageDefinitionFromAsm<AglFormatterModel, SentenceContext<GrammarItem>>(
+            LanguageDefinitionFromAsm<AglFormatterModel, SentenceContext<String>>(
                 identity = formatLanguageIdentity,
                 AglFormatGrammar,
                 buildForDefaultGoal = false,
@@ -134,7 +134,7 @@ class LanguageRegistryDefault : GrammarRegistry {
             )
         )
 
-        override val style: LanguageDefinition<AglStyleModel, SentenceContext<GrammarItem>> = this@LanguageRegistryDefault.registerFromDefinition(
+        override val style: LanguageDefinition<AglStyleModel, SentenceContext<String>> = this@LanguageRegistryDefault.registerFromDefinition(
             LanguageDefinitionFromAsm(
                 identity = styleLanguageIdentity,
                 AglStyleGrammar,

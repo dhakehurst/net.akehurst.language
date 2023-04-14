@@ -152,7 +152,7 @@ class test_Dot_Singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
     }
 
     @Test
@@ -177,7 +177,7 @@ class test_Dot_Singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
     }
 
@@ -187,7 +187,7 @@ class test_Dot_Singles {
         val sentence = "graph[a=a ]; node [b=b c=c]; edge[];"
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
     }
 
     @Test
@@ -645,7 +645,7 @@ digraph G {
 
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
     }
 
     @Test

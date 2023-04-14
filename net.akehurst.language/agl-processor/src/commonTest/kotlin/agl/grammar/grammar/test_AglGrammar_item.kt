@@ -780,7 +780,7 @@ class test_AglGrammar_item {
                     } } } } }
                 } } }
                 ';'
-            }
+            } }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -818,20 +818,25 @@ class test_AglGrammar_item {
         val result = parse("rule", sentence)
         val expected = this.sppt(
             """
-            rule {
-                ruleTypeLabels {
-                    isOverride|1 { §empty }
-                    isSkip { 'skip' WHITESPACE : ' ' }
-                    isLeaf|1 { §empty }
-                }
-                IDENTIFIER : 'r' WHITESPACE : ' '
-                '=' WHITESPACE : ' '
-                rhs|1 { concatenation { concatenationItem { simpleItem|1 { nonTerminal { 
-                    IDENTIFIER : 'a'
-                    WHITESPACE : ' '
-                } } } } }
-                ';'
-            }
+rule { grammarRule {
+  ruleTypeLabels {
+    isOverride { §empty }
+    isSkip {
+      'skip'
+      WHITESPACE : ' '
+    }
+    isLeaf { §empty }
+  }
+  IDENTIFIER : 'r'
+  WHITESPACE : ' '
+  '='
+  WHITESPACE : ' '
+  rhs { concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal {
+    IDENTIFIER : 'a'
+    WHITESPACE : ' '
+  } } } } } }
+  ';'
+} }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -847,7 +852,7 @@ class test_AglGrammar_item {
         val result = parse("rule", sentence)
         val expected = this.sppt(
             """
-            rule {
+            rule { grammarRule {
                 ruleTypeLabels {
                     isOverride|1 {  §empty } 
                     isSkip|1 {  §empty } 
@@ -860,7 +865,7 @@ class test_AglGrammar_item {
                     WHITESPACE : ' '
                 } } } } }
                 ';'
-            }
+            } }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -876,20 +881,28 @@ class test_AglGrammar_item {
         val result = parse("rule", sentence)
         val expected = this.sppt(
             """
-            rule {
-                ruleTypeLabels {
-                    isOverride|1 { §empty }
-                    isSkip { 'skip' WHITESPACE : ' ' }
-                    isLeaf { 'leaf' WHITESPACE : ' ' }
-                }
-                IDENTIFIER : 'r' WHITESPACE : ' '
-                '=' WHITESPACE : ' '
-                rhs|1 {  concatenation { concatenationItem { simpleItem|1 { nonTerminal { 
-                    IDENTIFIER : 'a'
-                    WHITESPACE : ' '
-                } } } } }
-                ';'
-            }
+rule { grammarRule {
+  ruleTypeLabels {
+    isOverride { §empty }
+    isSkip {
+      'skip'
+      WHITESPACE : ' '
+    }
+    isLeaf {
+      'leaf'
+      WHITESPACE : ' '
+    }
+  }
+  IDENTIFIER : 'r'
+  WHITESPACE : ' '
+  '='
+  WHITESPACE : ' '
+  rhs { concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal {
+    IDENTIFIER : 'a'
+    WHITESPACE : ' '
+  } } } } } }
+  ';'
+} }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -905,20 +918,25 @@ class test_AglGrammar_item {
         val result = parse("rule", sentence)
         val expected = this.sppt(
             """
-              rule {
-                ruleTypeLabels {
-                  isOverride|1 { §empty }
-                  isSkip|1 { §empty }
-                  isLeaf|1 { §empty }
-                }
-                IDENTIFIER : 'list' WHITESPACE : ' '
-                '=' WHITESPACE : ' '
-                rhs|1 { concatenation { concatenationItem|1 { listOfItems { simpleList {
-                  simpleItem|1 { nonTerminal { IDENTIFIER : 'a' } }
-                  multiplicity { '*' WHITESPACE : ' ' }
-                } } } } }
-                ';'
+            rule { grammarRule {
+              ruleTypeLabels {
+                isOverride { §empty }
+                isSkip { §empty }
+                isLeaf { §empty }
               }
+              IDENTIFIER : 'list'
+              WHITESPACE : ' '
+              '='
+              WHITESPACE : ' '
+              rhs { concatenation { concatenationItem { listOfItems { simpleList {
+                simpleItemOrGroup { simpleItem { nonTerminal { IDENTIFIER : 'a' } } }
+                multiplicity {
+                  '*'
+                  WHITESPACE : ' '
+                }
+              } } } } }
+              ';'
+            } }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -934,24 +952,24 @@ class test_AglGrammar_item {
         val result = parse("rule", sentence)
         val expected = this.sppt(
             """
-              rule {
-                ruleTypeLabels {
-                  isOverride|1 { §empty }
-                  isSkip|1 { §empty }
-                  isLeaf|1 { §empty }
-                }
-                IDENTIFIER : 'list'
-                '='
-                rhs|1 { concatenation { concatenationItem|1 { listOfItems|1 { separatedList {
-                  '['
-                  simpleItem|1 { nonTerminal { IDENTIFIER : 'a' } }
-                  '/'
-                  simpleItem|1 { nonTerminal { IDENTIFIER : 'c' } }
-                  ']'
-                  multiplicity { '*'}
-                } } } } }
-                ';'
-              }
+rule { grammarRule {
+  ruleTypeLabels {
+    isOverride { §empty }
+    isSkip { §empty }
+    isLeaf { §empty }
+  }
+  IDENTIFIER : 'list'
+  '='
+  rhs { concatenation { concatenationItem { listOfItems { separatedList {
+    '['
+    simpleItemOrGroup { simpleItem { nonTerminal { IDENTIFIER : 'a' } } }
+    '/'
+    simpleItemOrGroup { simpleItem { nonTerminal { IDENTIFIER : 'c' } } }
+    ']'
+    multiplicity { '*' }
+  } } } } }
+  ';'
+} }
             """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -967,24 +985,27 @@ class test_AglGrammar_item {
         val result = parse("rules", gstr)
         val expected = this.sppt(
             """
-            rules { rule {
-                ruleTypeLabels {
-                    isOverride|1 { §empty }
-                    isSkip|1 { §empty }
-                    isLeaf|1 { §empty }
-                }
-                IDENTIFIER : 's'
-                '='
-                rhs|1 { concatenation { concatenationItem { simpleItem|2 { group {
+            rules { rule { grammarRule {
+              ruleTypeLabels {
+                isOverride { §empty }
+                isSkip { §empty }
+                isLeaf { §empty }
+              }
+              IDENTIFIER : 's'
+              '='
+              rhs { concatenation { concatenationItem { simpleItemOrGroup { group {
                 '('
-                    groupedContent { concatenation {
-                        concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'b' WHITESPACE : ' ' } } }
-                        concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'c' } } }
-                    } }
+                groupedContent { concatenation {
+                  concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal {
+                    IDENTIFIER : 'b'
+                    WHITESPACE : ' '
+                  } } } }
+                  concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { IDENTIFIER : 'c' } } } }
+                } }
                 ')'
-                } } } } }
-                ';'
-            } }
+              } } } } }
+              ';'
+            } } }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -1000,26 +1021,33 @@ class test_AglGrammar_item {
         val result = parse("rules", gstr)
         val expected = this.sppt(
             """
-            rules { rule {
-                ruleTypeLabels { isOverride|1 { §empty } isSkip|1 { §empty } isLeaf|1 { §empty } }
-                IDENTIFIER : 's'
-                '='
-                rhs|1 { concatenation {
-                    concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'a' } } }
-                    concatenationItem { simpleItem|2 { group {
-                        '('
-                        groupedContent { concatenation {
-                        concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'b' WHITESPACE : ' ' } } }
-                        concatenationItem|1 { listOfItems { simpleList { 
-                            simpleItem|1 { nonTerminal { IDENTIFIER : 'c' } }
-                            multiplicity|2 { '?' }
-                        } } }
-                        } }
-                        ')'
+            rules { rule { grammarRule {
+              ruleTypeLabels {
+                isOverride { §empty }
+                isSkip { §empty }
+                isLeaf { §empty }
+              }
+              IDENTIFIER : 's'
+              '='
+              rhs { concatenation {
+                concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { IDENTIFIER : 'a' } } } }
+                concatenationItem { simpleItemOrGroup { group {
+                  '('
+                  groupedContent { concatenation {
+                    concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal {
+                      IDENTIFIER : 'b'
+                      WHITESPACE : ' '
+                    } } } }
+                    concatenationItem { listOfItems { simpleList {
+                      simpleItemOrGroup { simpleItem { nonTerminal { IDENTIFIER : 'c' } } }
+                      multiplicity { '?' }
                     } } }
-                } }
-                ';'
-            } }
+                  } }
+                  ')'
+                } } }
+              } }
+              ';'
+            } } }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -1035,27 +1063,41 @@ class test_AglGrammar_item {
         val result = parse("rules", gstr)
         val expected = this.sppt(
             """
-            rules { rule {
-                ruleTypeLabels { isOverride|1 { §empty } isSkip|1 { §empty } isLeaf|1 { §empty } }
-                IDENTIFIER : 's' WHITESPACE : ' '
-                '=' WHITESPACE : ' '
-                rhs|1 { concatenation { concatenationItem { simpleItem|2 { group {
-                    '('
-                    groupedContent|1 { choice|2 { simpleChoice {
-                        concatenation {
-                            concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'a' WHITESPACE : ' ' } } }
-                            concatenationItem { simpleItem|1 { nonTerminal { IDENTIFIER : 'b' WHITESPACE : ' ' } } }
-                        }
-                        '|' WHITESPACE : ' '
-                        concatenation { concatenationItem|1 { listOfItems { simpleList {
-                            simpleItem|1 { nonTerminal { IDENTIFIER : 'c' } }
-                            multiplicity|2 { '?' }
-                        } } } }
-                    } } }
-                    ')' WHITESPACE : ' '
-                } } } } }
-                ';'
-            } }
+rules { rule { grammarRule {
+  ruleTypeLabels {
+    isOverride { §empty }
+    isSkip { §empty }
+    isLeaf { §empty }
+  }
+  IDENTIFIER : 's'
+  WHITESPACE : ' '
+  '='
+  WHITESPACE : ' '
+  rhs { concatenation { concatenationItem { simpleItemOrGroup { group {
+    '('
+    groupedContent { choice { simpleChoice {
+      concatenation {
+        concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal {
+          IDENTIFIER : 'a'
+          WHITESPACE : ' '
+        } } } }
+        concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal {
+          IDENTIFIER : 'b'
+          WHITESPACE : ' '
+        } } } }
+      }
+      '|'
+      WHITESPACE : ' '
+      concatenation { concatenationItem { listOfItems { simpleList {
+        simpleItemOrGroup { simpleItem { nonTerminal { IDENTIFIER : 'c' } } }
+        multiplicity { '?' }
+      } } } }
+    } } }
+    ')'
+    WHITESPACE : ' '
+  } } } } }
+  ';'
+} } }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -1071,26 +1113,33 @@ class test_AglGrammar_item {
         val result = parse("grammar", gstr)
         val expected = this.sppt(
             """
-            grammar {
-              'grammar' WHITESPACE : ' '
-              IDENTIFIER : 'Test' WHITESPACE : ' '
-              extends { §empty }
-              '{'  WHITESPACE : ' '
-              rules { rule {
-                ruleTypeLabels {
-                  isOverride { §empty }
-                  isSkip { §empty }
-                  isLeaf { §empty }
-                }
-                IDENTIFIER : 's' WHITESPACE : ' '
-                '=' WHITESPACE : ' '
-                rhs { concatenation { concatenationItem { simpleItem { nonTerminal { 
-                  IDENTIFIER : 'a' WHITESPACE : ' '
-                } } } } }
-                ';' WHITESPACE : ' '
-              } }
-              '}'
-            }
+grammar {
+  'grammar'
+  WHITESPACE : ' '
+  IDENTIFIER : 'Test'
+  WHITESPACE : ' '
+  extends { §empty }
+  '{'
+  WHITESPACE : ' '
+  rules { rule { grammarRule {
+    ruleTypeLabels {
+      isOverride { §empty }
+      isSkip { §empty }
+      isLeaf { §empty }
+    }
+    IDENTIFIER : 's'
+    WHITESPACE : ' '
+    '='
+    WHITESPACE : ' '
+    rhs { concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal {
+      IDENTIFIER : 'a'
+      WHITESPACE : ' '
+    } } } } } }
+    ';'
+    WHITESPACE : ' '
+  } } }
+  '}'
+}
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -1106,26 +1155,36 @@ class test_AglGrammar_item {
         val result = parse("grammar", gstr)
         val expected = this.sppt(
             """
-            grammar {
-              'grammar' WHITESPACE : ' '
-              IDENTIFIER : 'Test' WHITESPACE : ' '
-              extends { §empty }
-              '{'  WHITESPACE : ' '
-              rules { rule {
-                ruleTypeLabels {
-                  isOverride { §empty }
-                  isSkip { 'skip' WHITESPACE : ' ' }
-                  isLeaf { §empty }
-                }
-                IDENTIFIER : 's' WHITESPACE : ' '
-                '=' WHITESPACE : ' '
-                rhs { concatenation { concatenationItem { simpleItem { nonTerminal { 
-                  IDENTIFIER : 'a' WHITESPACE : ' '
-                } } } } }
-                ';' WHITESPACE : ' '
-              } }
-              '}'
-            }
+grammar {
+  'grammar'
+  WHITESPACE : ' '
+  IDENTIFIER : 'Test'
+  WHITESPACE : ' '
+  extends { §empty }
+  '{'
+  WHITESPACE : ' '
+  rules { rule { grammarRule {
+    ruleTypeLabels {
+      isOverride { §empty }
+      isSkip {
+        'skip'
+        WHITESPACE : ' '
+      }
+      isLeaf { §empty }
+    }
+    IDENTIFIER : 's'
+    WHITESPACE : ' '
+    '='
+    WHITESPACE : ' '
+    rhs { concatenation { concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal {
+      IDENTIFIER : 'a'
+      WHITESPACE : ' '
+    } } } } } }
+    ';'
+    WHITESPACE : ' '
+  } } }
+  '}'
+}
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -1155,13 +1214,13 @@ class test_AglGrammar_item {
                 choiceNumber { §empty }
                 'on' WHITESPACE : ' '
                 terminalList {
-                  terminal { LITERAL : '\'a\'' }
+                  simpleItem { terminal { LITERAL : '\'a\'' } }
                   ','
-                  terminal { LITERAL : '\'b\'' }
+                  simpleItem { terminal { LITERAL : '\'b\'' } }
                   ','
-                  terminal {
+                  simpleItem { terminal {
                     LITERAL : '\'c\'' WHITESPACE : ' '
-                  }
+                  } }
                 }
                 associativity {
                   'left' WHITESPACE : '⏎'

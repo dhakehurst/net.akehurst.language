@@ -144,8 +144,8 @@ class test_Java8_Compare(val data: Data) {
         val queryStr = this.data.sentence
         val grammarRule = if (toUpper) this.data.grammarRule.capitalize() else this.data.grammarRule
         val result = proc.parse(queryStr, Agl.parseOptions { goalRuleName(grammarRule) })
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
         val resultStr = clean(result.sppt!!.asString)
         assertEquals(queryStr, resultStr)
     }

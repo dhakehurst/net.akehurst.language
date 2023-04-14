@@ -100,10 +100,14 @@ class UnnamedSuperTypeType(
     override fun toString(): String = name
 }
 
-class ListSimpleType(val elementType: RuleType) : RuleType() {
+class ListSimpleType() : RuleType() {
     companion object {
         const val INSTANCE_NAME = "\$List"
     }
+
+    //usage should set this to something else,
+    //but needs to not be a constructor param to avoid recursion when constructing typemodel
+    var elementType: RuleType = NothingType
 
     override val name: String = INSTANCE_NAME
     override fun signature(context:TypeModel):String = "${name}<${this.elementType.signature(context)}>"
@@ -117,10 +121,16 @@ class ListSimpleType(val elementType: RuleType) : RuleType() {
     override fun toString(): String = name
 }
 
-class ListSeparatedType(val itemType: RuleType, val separatorType: RuleType) : RuleType() {
+class ListSeparatedType() : RuleType() {
     companion object {
         const val INSTANCE_NAME = "\$SList"
     }
+    //usage should set this to something else,
+    //but needs to not be a constructor param to avoid recursion when constructing typemodel
+    var itemType: RuleType = NothingType
+    //usage should set this to something else,
+    //but needs to not be a constructor param to avoid recursion when constructing typemodel
+    var separatorType: RuleType = NothingType
 
     override val name: String = INSTANCE_NAME
     override fun signature(context:TypeModel):String = "${name}<${itemType.signature(context)}, ${separatorType.signature(context)}>"

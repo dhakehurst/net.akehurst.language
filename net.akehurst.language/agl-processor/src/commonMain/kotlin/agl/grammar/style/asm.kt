@@ -26,14 +26,12 @@ internal class AglStyleModelDefault(
     override val rules: List<AglStyleRule>
 ) : AglStyleModel {
     companion object {
-        fun fromString(context: SentenceContext<GrammarItem>, aglStyleModelSentence:String): ProcessResult<AglStyleModel> {
+        fun fromString(context: SentenceContext<String>, aglStyleModelSentence:String): ProcessResult<AglStyleModel> {
             val proc = Agl.registry.agl.style.processor ?: error("Scopes language not found!")
             return proc.process(
                 sentence = aglStyleModelSentence,
                 Agl.options {
-                    syntaxAnalysis {
-                        context(context)
-                    }
+                    semanticAnalysis { context(context) }
                 }
             )
         }

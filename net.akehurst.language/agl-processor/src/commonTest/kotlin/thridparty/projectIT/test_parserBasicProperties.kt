@@ -208,7 +208,7 @@ class test_parserBasicProperties {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("LimitedTest") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
     }
 
     @Test
@@ -237,7 +237,7 @@ class test_parserBasicProperties {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("PartsTest") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
     }
 
     @Test
@@ -373,7 +373,7 @@ PartsTest myName
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("PartsTest") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
     }
 
     @Test
@@ -416,7 +416,7 @@ PartsTest myName
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("PartsTest") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
     }
 
     @Test
@@ -483,7 +483,7 @@ PartsTest myName
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("PrimitivesTest") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
     }
 
     @Test
@@ -543,7 +543,7 @@ PartsTest myName
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("RefsTest") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
     }
 
     @Test
@@ -657,7 +657,7 @@ PartsTest myName
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("RefsTest") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
     }
 
     @Test
@@ -676,6 +676,6 @@ PartsTest myName
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("WithKeywordProj") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
     }
 }

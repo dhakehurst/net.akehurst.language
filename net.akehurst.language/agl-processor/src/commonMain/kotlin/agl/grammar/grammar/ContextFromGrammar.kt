@@ -17,6 +17,8 @@
 package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
+import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
+import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammarConfiguration
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.processor.SentenceContext
@@ -24,7 +26,7 @@ import net.akehurst.language.api.processor.SentenceContext
 // used by other languages that reference rules  in a grammar
 
 class ContextFromGrammar(
-) : SentenceContext<GrammarItem> {
+) : SentenceContext<String> {
     constructor(grammar: Grammar) : this() { createScopeFrom(grammar) }
 
     companion object {
@@ -32,19 +34,19 @@ class ContextFromGrammar(
         const val GRAMMAR_TERMINAL_CONTEXT_TYPE_NAME = "Terminal"
     }
 
-    override var rootScope = ScopeSimple<GrammarItem>(null, "", "")
+    override var rootScope = ScopeSimple<String>(null, "", "")
 
     fun clear() {
-        this.rootScope = ScopeSimple<GrammarItem>(null, "", "")
+        this.rootScope = ScopeSimple<String>(null, "", "")
     }
 
     fun createScopeFrom(grammar: Grammar) {
-        val scope = ScopeSimple<GrammarItem>(null, "", grammar.name)
+        val scope = ScopeSimple<String>(null, "", grammar.name)
         grammar.allResolvedGrammarRule.forEach {
-            rootScope.addToScope(it.name, GRAMMAR_RULE_CONTEXT_TYPE_NAME, it)
+            scope.addToScope(it.name, GRAMMAR_RULE_CONTEXT_TYPE_NAME, it.name)
         }
         grammar.allResolvedTerminal.forEach {
-            rootScope.addToScope(it.name, GRAMMAR_TERMINAL_CONTEXT_TYPE_NAME, it)
+            scope.addToScope(it.name, GRAMMAR_TERMINAL_CONTEXT_TYPE_NAME, it.name)
         }
         this.rootScope = scope
     }

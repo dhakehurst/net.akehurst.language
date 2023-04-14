@@ -12,7 +12,7 @@ import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.processor.SentenceContext
 
-class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatterModel, SentenceContext<GrammarItem>> {
+class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatterModel, SentenceContext<String>> {
     override fun clear() {
 
     }
@@ -21,7 +21,7 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatterModel, SentenceCo
         return emptyList()
     }
 
-    override fun analyse(asm: AglFormatterModel, locationMap: Map<Any, InputLocation>?, context: SentenceContext<GrammarItem>?, options:Map<String,Any>): SemanticAnalysisResult {
+    override fun analyse(asm: AglFormatterModel, locationMap: Map<Any, InputLocation>?, context: SentenceContext<String>?, options:Map<String,Any>): SemanticAnalysisResult {
         return SemanticAnalysisResultDefault(IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
     }
 }

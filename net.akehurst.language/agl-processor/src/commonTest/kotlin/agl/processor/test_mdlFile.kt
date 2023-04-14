@@ -276,7 +276,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
         assertNotNull(result.sppt)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
@@ -365,7 +365,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
         assertNotNull(result.sppt)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
@@ -388,7 +388,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
         assertNotNull(result.sppt)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
@@ -408,7 +408,7 @@ grammar Mdl {
         )
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -476,7 +476,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
         assertNotNull(result.sppt)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
@@ -520,7 +520,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
         assertNotNull(result.sppt)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
@@ -562,7 +562,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
         assertNotNull(result.sppt)
 
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
@@ -586,7 +586,7 @@ grammar Mdl {
         )
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
         //assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
         assertEquals("section", result.sppt!!.root.name)
         //TODO

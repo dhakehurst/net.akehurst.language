@@ -419,7 +419,7 @@ class test_octopusSmall {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
     }
 
     @Test

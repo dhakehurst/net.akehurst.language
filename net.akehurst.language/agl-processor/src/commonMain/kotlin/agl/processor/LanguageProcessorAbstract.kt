@@ -86,7 +86,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         res?.asm
     }
 
-    override val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>? by lazy {
+    override val syntaxAnalyser: SyntaxAnalyser<AsmType>? by lazy {
         val res = configuration.syntaxAnalyserResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
         res?.asm
@@ -146,10 +146,10 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         options: ProcessOptions<AsmType, ContextType>?
     ): SyntaxAnalysisResult<AsmType> { //Triple<AsmType?, List<LanguageIssue>, Map<Any, InputLocation>> {
         val opts = defaultOptions(options)
-        val sa: SyntaxAnalyser<AsmType, ContextType> = this.syntaxAnalyser
-            ?: SyntaxAnalyserSimple(this.typeModel, this.scopeModel) as SyntaxAnalyser<AsmType, ContextType>
+        val sa: SyntaxAnalyser<AsmType> = this.syntaxAnalyser
+            ?: SyntaxAnalyserSimple(this.typeModel, this.scopeModel) as SyntaxAnalyser<AsmType>
         sa.clear()
-        return sa.transform(sppt, this.mapToGrammar, opts.syntaxAnalysis.context)
+        return sa.transform(sppt, this.mapToGrammar)
     }
 
     override fun semanticAnalysis(
@@ -161,7 +161,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             ?: SemanticAnalyserSimple(this.scopeModel) as SemanticAnalyser<AsmType, ContextType>
         semAnalyser.clear()
         val lm = opts.semanticAnalysis.locationMap ?: emptyMap<Any, InputLocation>()
-        return semAnalyser.analyse(asm, lm, opts.syntaxAnalysis.context, opts.semanticAnalysis.options)
+        return semAnalyser.analyse(asm, lm, opts.semanticAnalysis.context, opts.semanticAnalysis.options)
     }
 
     override fun process(

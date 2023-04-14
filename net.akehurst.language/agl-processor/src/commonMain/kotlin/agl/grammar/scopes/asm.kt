@@ -35,14 +35,12 @@ class ScopeModelAgl
         val ROOT_SCOPE_TYPE_NAME = "§root"
         val IDENTIFY_BY_NOTHING = "§nothing"
 
-        fun fromString(context: SentenceContext<GrammarItem>, aglScopeModelSentence:String): ProcessResult<ScopeModelAgl> {
+        fun fromString(context: SentenceContext<String>, aglScopeModelSentence:String): ProcessResult<ScopeModelAgl> {
             val proc = Agl.registry.agl.scopes.processor ?: error("Scopes language not found!")
             return proc.process(
                 sentence = aglScopeModelSentence,
                 Agl.options {
-                    syntaxAnalysis {
-                        context(context)
-                    }
+                    semanticAnalysis { context(context) }
                 }
             )
         }

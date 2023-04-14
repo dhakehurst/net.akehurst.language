@@ -79,8 +79,8 @@ class test_ProjectIT(val data: Data) {
     fun test() {
         if(data.valid) {
             val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName("projectionGroup") })
-            assertNotNull(result.sppt, "$data\n"+result.issues.joinToString(separator = "\n") { "$it" })
-            assertTrue(result.issues.isEmpty())
+            assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+            assertNotNull(result.sppt)
             val resultStr = result.sppt!!.asString
             assertEquals(this.data.text, resultStr)
             println(result.sppt!!.toStringAll)

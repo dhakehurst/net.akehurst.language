@@ -1,7 +1,9 @@
 package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
+import net.akehurst.language.agl.grammar.scopes.test_AglScopes
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.syntaxAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -39,7 +41,11 @@ class test_AglStyle {
         """.trimIndent())?.asm?.first()!!
     }
 
-    private fun process(sentence:String) =aglProc.process(sentence, Agl.options { syntaxAnalysis { context(ContextFromGrammar(testGrammar)) } })
+    private fun process(sentence:String) =aglProc.process(
+        sentence,
+        Agl.options {
+             semanticAnalysis { context(ContextFromGrammar(testGrammar)) }
+        })
 
 
     @Test

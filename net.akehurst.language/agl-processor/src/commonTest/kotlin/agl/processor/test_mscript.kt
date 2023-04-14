@@ -777,7 +777,7 @@ grammar Mscript {
         val result = sut.process(text, Agl.options { parse { goalRuleName("script") } })
 
         val expected = asmSimple {
-            root("Script") {
+            element("Script") {
                 propertyListOfElement("statementList") {
                     element("Line") {
                         propertyListOfElement("statement") {
@@ -800,7 +800,6 @@ grammar Mscript {
                                 }
                             }
                         }
-                        propertyUnnamedString(null)
                     }
                 }
             }

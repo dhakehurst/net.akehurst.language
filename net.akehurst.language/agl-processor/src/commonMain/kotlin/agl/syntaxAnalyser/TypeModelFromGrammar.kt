@@ -169,15 +169,22 @@ class TypeModelFromGrammar(
                 is Concatenation -> when (rhs.items.size) {
                     0 -> error("Should not happen")
                     1 -> when (rhs.items[0]) {
-                        is SimpleList -> typeForRuleItem(rhs.items[0])
-                        is SeparatedList -> typeForRuleItem(rhs.items[0])
+                        //is SimpleList -> when ((rhs.items[0] as SimpleList).item) {
+                        //    is Terminal -> typeForConcatenation(rule, rhs.items)
+                        //    else -> typeForRuleItem(rhs.items[0])
+                        //}
+                        //is SeparatedList -> typeForRuleItem(rhs.items[0])
                         else -> typeForConcatenation(rule, rhs.items)
                     }
                     else -> typeForConcatenation(rule, rhs.items)
                 }
                 is SimpleList -> when (rhs.max) {
                     1 -> typeForRuleItem(rhs.item) //no need for nullable, when min is 0 we get empty list
-                    else -> ListSimpleType(typeForRuleItem(rhs.item))
+                    else -> {
+                        val t = ListSimpleType()
+                        t.elementType = typeForRuleItem(rhs.item)
+                        t
+                    }
                 }
 
                 is SeparatedList -> when (rhs.max) {
@@ -185,7 +192,10 @@ class TypeModelFromGrammar(
                     else -> {
                         val itemType = typeForRuleItem(rhs.item)
                         val sepType = typeForRuleItem(rhs.separator)
-                        ListSeparatedType(itemType, sepType)
+                        val t = ListSeparatedType()
+                        t.itemType = itemType
+                        t.separatorType = sepType
+                        t
                     }
                 }
 
@@ -208,15 +218,22 @@ class TypeModelFromGrammar(
                 is Terminal -> StringType
                 is SimpleList -> when (ruleItem.max) {
                     1 -> typeForRuleItem(ruleItem.item) //no need for nullable, when min is 0 we get empty list
-                    else -> ListSimpleType(typeForRuleItem(ruleItem.item)) //PrimitiveType.LIST //TODO: add list type
+                    else -> {
+                        val t = ListSimpleType()
+                        _typeForRuleItem[ruleItem] = t
+                        t.elementType = typeForRuleItem(ruleItem.item)
+                        t
+                    }
                 }
 
                 is SeparatedList -> when (ruleItem.max) {
                     1 -> typeForRuleItem(ruleItem.item) //no need for nullable, when min is 0 we get empty list
                     else -> {
-                        val itemType = typeForRuleItem(ruleItem.item)
-                        val sepType = typeForRuleItem(ruleItem.separator)
-                        ListSeparatedType(itemType, sepType)
+                        val t = ListSeparatedType()
+                        _typeForRuleItem[ruleItem] = t
+                        t.itemType =typeForRuleItem(ruleItem.item)
+                        t.separatorType = typeForRuleItem(ruleItem.separator)
+                        t
                     }
                 }
 
@@ -238,7 +255,11 @@ class TypeModelFromGrammar(
                 }
 
                 is Concatenation -> when {
-                    1 == ruleItem.items.size -> typeForRuleItem(ruleItem.items[0])
+                    1 == ruleItem.items.size -> {
+                        val t = typeForRuleItem(ruleItem.items[0])
+                        this._typeForRuleItem[ruleItem] = t
+                        t
+                    }
                     else -> {
                         val concatType = TupleType()
                         this._typeForRuleItem[ruleItem] = concatType
@@ -294,7 +315,8 @@ class TypeModelFromGrammar(
             }
 
             subtypes.all { it is ListSimpleType } -> { //=== PrimitiveType.LIST } -> {
-                val choiceType = ListSimpleType(AnyType) //TODO: elementTypes ?
+                val choiceType = ListSimpleType()
+                choiceType.elementType = AnyType //TODO: compute better elementType ?
                 choiceType
             }
 
@@ -322,9 +344,14 @@ class TypeModelFromGrammar(
             }
 
             is SimpleList -> {
-                val isNullable = ruleItem.min == 0 && ruleItem.max == 1
-                val t = typeForRuleItem(ruleItem)
-                createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item, t), t, isNullable, childIndex)
+                when (ruleItem.item){
+                    is Terminal -> Unit //do not add optional literals
+                    else -> {
+                        val isNullable = ruleItem.min == 0 && ruleItem.max == 1
+                        val t = typeForRuleItem(ruleItem)
+                        createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item, t), t, isNullable, childIndex)
+                    }
+                }
             }
 
             is SeparatedList -> {

@@ -337,7 +337,31 @@ println(actual.asString())
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
             elementType("S") {
-                propertyStringTypeUnnamed(true, 0) // of String
+               // propertyStringTypeUnnamed(true, 0) // of String
+            }
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun optional_literal_leaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a? ;
+                leaf a = 'a';
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+
+        val actual = TypeModelFromGrammar(result.asm!!.last())
+        val expected = typeModel("test", "Test") {
+            elementType("S") {
+                propertyStringType("a",true, 0) // of String
             }
         }
 
@@ -360,7 +384,30 @@ println(actual.asString())
         val actual = TypeModelFromGrammar(result.asm!!.last())
         val expected = typeModel("test", "Test") {
             elementType("S") {
-                propertyListTypeUnnamed(StringType, false, 0) // of String
+            }
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun list_literal_leaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a* ;
+                leaf a = 'a';
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+
+        val actual = TypeModelFromGrammar(result.asm!!.last())
+        val expected = typeModel("test", "Test") {
+            elementType("S") {
+                propertyListType("a",StringType, false,0)
             }
         }
 
@@ -579,7 +626,35 @@ println(actual.asString())
                 propertyListType("as", StringType, false, 0) // of String
             }
             elementType("As") {
-                propertyListTypeUnnamed(StringType, false, 0) // of String
+               // propertyListTypeUnnamed(StringType, false, 0) // of String
+            }
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun nonTerm_multi_literal_leaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = as ;
+                as = a* ;
+                leaf a = 'a' ;
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+
+        val actual = TypeModelFromGrammar(result.asm!!.last())
+        val expected = typeModel("test", "Test") {
+            elementType("S") {
+                propertyListType("as", StringType, false, 0) // of String
+            }
+            elementType("As") {
+                propertyListType("a", StringType, false, 0) // of String
             }
         }
 

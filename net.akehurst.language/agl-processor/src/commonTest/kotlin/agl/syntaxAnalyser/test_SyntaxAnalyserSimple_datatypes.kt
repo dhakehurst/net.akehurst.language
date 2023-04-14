@@ -67,16 +67,14 @@ class test_SyntaxAnalyserSimple_datatypes {
             TypeModelFromGrammar(result.asm!!.last())
         }
         val scopeModel = ScopeModelAgl.fromString(
-            ContextFromGrammar(grammar), """
-                    identify Unit by §nothing
-                    scope Unit {
-                        identify Primitive by id
-                        identify Datatype by id
-                    }
-                    references {
-                        in TypeReference property type refers-to Primitive|Datatype
-                    }
-                """.trimIndent()
+            ContextFromTypeModel(TypeModelFromGrammar(grammar)),
+            """
+                identify Primitive by id
+                identify Datatype by id
+                references {
+                    in TypeReference property type refers-to Primitive|Datatype
+                }
+            """.trimIndent()
         ).asm!!
         val syntaxAnalyser = SyntaxAnalyserSimple(typeModel, scopeModel)
         val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
@@ -84,7 +82,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             Agl.configuration {
                 scopeModelResolver { ProcessResultDefault(scopeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
                 typeModelResolver { ProcessResultDefault(typeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
-                syntaxAnalyserResolver {  ProcessResultDefault(syntaxAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) }
+                syntaxAnalyserResolver { ProcessResultDefault(syntaxAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) }
             }
         ).processor!!
     }
@@ -140,8 +138,8 @@ class test_SyntaxAnalyserSimple_datatypes {
         assertTrue(result.issues.isEmpty())
 
         val expected = asmSimple {
-            root("Unit") {
-                propertyListOfElement("declaration") {
+            element("Unit") {
+                propertyListOfElement("declaration",) {
                     element("Datatype") {
                         propertyString("id", "A")
                         propertyListOfElement("property") {}
@@ -165,8 +163,8 @@ class test_SyntaxAnalyserSimple_datatypes {
         assertTrue(result.issues.isEmpty())
 
         val expected = asmSimple {
-            root("Unit") {
-                propertyListOfElement("declaration") {
+            element("Unit") {
+                propertyListOfElement("declaration",) {
                     element("Datatype") {
                         propertyString("id", "A")
                         propertyListOfElement("property") {}
@@ -193,7 +191,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         val result = processor.process(
             sentence = sentence,
             Agl.options {
-                syntaxAnalysis {
+                semanticAnalysis {
                     context(ContextSimple())
                 }
             }
@@ -201,8 +199,8 @@ class test_SyntaxAnalyserSimple_datatypes {
         assertNotNull(result.asm)
 
         val expected = asmSimple {
-            root("Unit") {
-                propertyListOfElement("declaration") {
+            element("Unit") {
+                propertyListOfElement("declaration",) {
                     element("Datatype") {
                         propertyString("id", "A")
                         propertyListOfElement("property") {
@@ -243,17 +241,17 @@ class test_SyntaxAnalyserSimple_datatypes {
         val result = processor.process(
             sentence = sentence,
             Agl.options {
-                syntaxAnalysis {
+                semanticAnalysis {
                     context(ContextSimple())
                 }
             }
         )
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val expected = asmSimple(scopeModel, ContextSimple()) {
-            root("Unit") {
-                propertyListOfElement("declaration") {
+            element("Unit") {
+                propertyListOfElement("declaration",) {
                     element("Primitive") {
                         propertyString("id", "String")
                     }
@@ -262,7 +260,7 @@ class test_SyntaxAnalyserSimple_datatypes {
                         propertyListOfElement("property") {
                             element("Property") {
                                 propertyString("id", "a")
-                                propertyElementExplicitType("typeReference","TypeReference") {
+                                propertyElementExplicitType("typeReference", "TypeReference") {
                                     reference("type", "String")
                                     propertyString("typeArguments", null)
                                 }

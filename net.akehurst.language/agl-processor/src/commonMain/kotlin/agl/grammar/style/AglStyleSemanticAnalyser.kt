@@ -1,5 +1,7 @@
 package net.akehurst.language.agl.agl.grammar.style
 
+import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
+import net.akehurst.language.agl.grammar.style.AglStyleSyntaxAnalyser
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.analyser.SemanticAnalyser
@@ -12,7 +14,7 @@ import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.style.AglStyleRule
 
-class AglStyleSemanticAnalyser : SemanticAnalyser<AglStyleModel, SentenceContext<GrammarItem>> {
+class AglStyleSemanticAnalyser : SemanticAnalyser<AglStyleModel, SentenceContext<String>> {
     override fun clear() {
 
     }
@@ -21,7 +23,35 @@ class AglStyleSemanticAnalyser : SemanticAnalyser<AglStyleModel, SentenceContext
         return emptyList()
     }
 
-    override fun analyse(asm: AglStyleModel, locationMap: Map<Any, InputLocation>?, context: SentenceContext<GrammarItem>?, options:Map<String,Any>): SemanticAnalysisResult {
-        return SemanticAnalysisResultDefault(IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
+    override fun analyse(asm: AglStyleModel, locationMap: Map<Any, InputLocation>?, context: SentenceContext<String>?, options:Map<String,Any>): SemanticAnalysisResult {
+        val locMap = locationMap?: mapOf()
+        val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+        if (null != context) {
+            asm.rules.forEach { rule ->
+                rule.selector.forEach { sel ->
+                    if (AglStyleSyntaxAnalyser.KEYWORD_STYLE_ID == sel) {
+                        //it is ok
+                    } else {
+                        if (context.rootScope.isMissing(sel, ContextFromGrammar.GRAMMAR_RULE_CONTEXT_TYPE_NAME) &&
+                            context.rootScope.isMissing(sel, ContextFromGrammar.GRAMMAR_TERMINAL_CONTEXT_TYPE_NAME)
+                        ) {
+                            val loc = locMap[rule]
+                            if (sel.startsWith("'") && sel.endsWith("'")) {
+                                issues.error(loc, "Terminal Literal ${sel} not found for style rule")
+                            } else if (sel.startsWith("\"") && sel.endsWith("\"")) {
+                                issues.error(loc, "Terminal Pattern ${sel} not found for style rule")
+
+                            } else {
+                                issues.error(loc, "GrammarRule '${sel}' not found for style rule")
+                            }
+                        } else {
+                            //no issues
+                        }
+                    }
+                }
+            }
+        }
+
+        return SemanticAnalysisResultDefault(issues)
     }
 }

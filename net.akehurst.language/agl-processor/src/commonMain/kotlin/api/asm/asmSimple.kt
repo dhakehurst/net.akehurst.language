@@ -51,7 +51,7 @@ open class AsmSimple {
     val rootElements: List<Any> = mutableListOf()
     val index = mutableMapOf<AsmElementPath, AsmElementSimple>()
 
-    fun addRoot(root: AsmElementSimple) {
+    fun addRoot(root: Any) {
         (rootElements as MutableList).add(root)
     }
 

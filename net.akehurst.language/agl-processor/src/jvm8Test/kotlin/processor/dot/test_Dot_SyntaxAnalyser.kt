@@ -192,7 +192,7 @@ class test_Dot_SyntaxAnalyser {
         assertNotNull(actual)
 
         val expected = asmSimple {
-            root("Graph") {
+            element("Graph") {
                 propertyString("strict", null)
                 propertyString("type", "graph")
                 propertyString("id", null)
@@ -205,7 +205,6 @@ class test_Dot_SyntaxAnalyser {
                                 }
                                 propertyString("attr_lists", null)
                             }
-                        propertyUnnamedString(null)
                     }
                 }
             }
@@ -286,7 +285,7 @@ digraph g {
         val result = processor.process(sentence)
         val actual = result.asm?.rootElements?.firstOrNull()
         assertNotNull(actual)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
     }
 
 }

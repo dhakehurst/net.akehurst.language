@@ -85,7 +85,7 @@ class test_QueryParserValid(val data: Data) {
         val goal = "query"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
         val resultStr = result.sppt!!.asString
         Assert.assertEquals(queryStr, resultStr)
     }

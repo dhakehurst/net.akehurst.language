@@ -69,7 +69,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
             }
         }
 
-    override val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
+    override val syntaxAnalyser: SyntaxAnalyser<AsmType>?
         get() = this.processor?.syntaxAnalyser
 
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?

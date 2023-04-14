@@ -61,7 +61,7 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
 
     val formatterModel : AglFormatterModel?
 
-    val syntaxAnalyser:SyntaxAnalyser<AsmType, ContextType>?
+    val syntaxAnalyser:SyntaxAnalyser<AsmType>?
 
     val semanticAnalyser:SemanticAnalyser<AsmType, ContextType>?
 

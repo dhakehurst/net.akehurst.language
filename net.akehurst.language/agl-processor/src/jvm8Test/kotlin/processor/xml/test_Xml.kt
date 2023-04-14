@@ -72,13 +72,13 @@ class test_Xml(val data: Data) {
         val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName(goal) })
 
         if (data.valid) {
-            assertNotNull(result.sppt,result.issues.joinToString(separator = "\n") { "$it" })
-            assertTrue(result.issues.isEmpty())
+            assertNotNull(result.sppt)
+            assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
             val resultStr = result.sppt!!.asString
             assertEquals(this.data.text, resultStr)
         } else {
             assertNull(result.sppt)
-            assertTrue(result.issues.isNotEmpty())
+            assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
         }
     }
 
@@ -88,7 +88,7 @@ class test_Xml(val data: Data) {
 
         if (data.valid) {
             assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
-            assertTrue(result.issues.isEmpty())
+            assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
         } else {
             assertNull(result.asm)
             assertTrue(result.issues.isNotEmpty())

@@ -34,12 +34,12 @@ internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehur
             b.rule("definitions").multi(1, -1, b.nonTerminal("grammar"))
             b.rule("namespace").concatenation(b.terminalLiteral("namespace"), b.nonTerminal("qualifiedName"))
             b.rule("grammar").concatenation(
-                b.terminalLiteral("grammar"), b.nonTerminal("IDENTIFIER"), b.nonTerminal("extends"),
+                b.terminalLiteral("grammar"), b.nonTerminal("IDENTIFIER"), b.nonTerminal("extendsOpt"),
                 b.terminalLiteral("{"), b.nonTerminal("rules"), b.terminalLiteral("}")
             )
-            b.rule("extends").multi(0, 1, b.nonTerminal("extends1"))
-            b.rule("extends1").concatenation(b.terminalLiteral("extends"), b.nonTerminal("extends2"))
-            b.rule("extends2").separatedList(1, -1, b.terminalLiteral(","), b.nonTerminal("qualifiedName"))
+            b.rule("extendsOpt").multi(0, 1, b.nonTerminal("extends"))
+            b.rule("extends").concatenation(b.terminalLiteral("extends"), b.nonTerminal("extendsList"))
+            b.rule("extendsList").separatedList(1, -1, b.terminalLiteral(","), b.nonTerminal("qualifiedName"))
             b.rule("rules").multi(1, -1, b.nonTerminal("rule"))
             b.rule("rule").choiceLongestFromConcatenationItem(b.nonTerminal("grammarRule"),b.nonTerminal("preferenceRule"))
             b.rule("grammarRule").concatenation(b.nonTerminal("ruleTypeLabels"), b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="), b.nonTerminal("rhs"), b.terminalLiteral(";"))
@@ -156,8 +156,10 @@ grammar AglGrammar {
     grammarDefinition = namespace definitions ;
     namespace = 'namespace' qualifiedName ;
     definitions = grammar+ ;
-    grammar = 'grammar' IDENTIFIER extends? '{' rules '}' ;
-    extends = 'extends' [qualifiedName / ',']+ ;
+    grammar = 'grammar' IDENTIFIER extendsOpt '{' rules '}' ;
+    extendsOpt = extends?
+    extends = 'extends' extendsList ;
+    extendsList = [qualifiedName / ',']+ ;
     rules = rule+ ;
     rule = grammarRule | preferenceRule ;
     grammarRule = ruleTypeLabels IDENTIFIER '=' rhs ';' ;

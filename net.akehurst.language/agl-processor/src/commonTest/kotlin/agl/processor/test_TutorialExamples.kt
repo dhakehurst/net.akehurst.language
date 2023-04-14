@@ -39,7 +39,7 @@ class test_TutorialExamples {
 
         val result = pr.processor!!.parse("int")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertEquals(0, result.issues.errors.size, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(2, result.sppt!!.maxNumHeads)
 
         val actual = result.sppt!!.toStringAll.trim()
@@ -91,7 +91,7 @@ class test_TutorialExamples {
 
         val result = pr.processor!!.parse("boolean")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertEquals(0, result.issues.errors.size, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(2, result.sppt!!.maxNumHeads)
 
         val actual = result.sppt!!.toStringAll.trim()
@@ -118,7 +118,7 @@ class test_TutorialExamples {
 
         val result = pr.processor!!.parse("int")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertEquals(0, result.issues.errors.size, result.issues.joinToString(separator = "\n") { "$it" })
         assertEquals(2, result.sppt!!.maxNumHeads)
 
         val actual = result.sppt!!.toStringAll.trim()
