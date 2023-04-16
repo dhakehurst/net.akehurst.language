@@ -16,7 +16,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.grammar.format.test_AglFormat
-import net.akehurst.language.api.typeModel.TypeModelTest
+import net.akehurst.language.api.typemodel.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -74,7 +74,7 @@ grammar Mdl {
     @Test
     fun typeModel() {
         val actual = processor.typeModel
-        val expected = net.akehurst.language.api.typeModel.typeModel("test", "Mdl") {
+        val expected = net.akehurst.language.api.typemodel.typeModel("test", "Mdl") {
             //file = section+ ;
             elementType("File") {
                 propertyListTypeOf("section","Section",false,0)

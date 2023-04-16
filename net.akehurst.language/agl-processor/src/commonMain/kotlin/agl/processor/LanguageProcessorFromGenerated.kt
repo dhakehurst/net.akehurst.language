@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
+import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
@@ -35,7 +36,7 @@ internal class LanguageProcessorFromGenerated<AsmType : Any, ContextType : Any>(
 
     override val _runtimeRuleSet: RuntimeRuleSet = generated.ruleSet as RuntimeRuleSet
     override val mapToGrammar: (Int, Int) -> RuleItem = generated.mapToGrammar
-    override val scopeModel: ScopeModel? = generated.scopeModel
+    override val scopeModel: ScopeModel = generated.scopeModel ?: ScopeModelAgl()
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? = generated.syntaxAnalyser
     override val formatter: Formatter<AsmType>? = generated.formatter
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? = generated.semanticAnalyser

@@ -32,7 +32,7 @@ import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.typeModel.*
+import net.akehurst.language.api.typemodel.*
 
 /**
  * TypeName <=> RuleName
@@ -41,8 +41,8 @@ import net.akehurst.language.api.typeModel.*
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
 abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
-    val typeModel: TypeModel?,
-    val scopeModel: ScopeModel?
+    val typeModel: TypeModel,
+    val scopeModel: ScopeModel
 ) : SyntaxAnalyser<A> {
 
     companion object {
@@ -58,7 +58,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
 
-    private fun findType(name: String) = this.typeModel?.findType(name)
+    private fun findTypeForRule(ruleName: String) = this.typeModel.findTypeForRule(ruleName)
 
     override fun clear() {
         this.locationMap.clear()
@@ -110,7 +110,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
     }
 
     private fun createValue(target: SPPTNode, path: AsmElementPath): Any? {
-        val elType = this.findType(target.name)
+        val elType = this.findTypeForRule(target.name)
         return when {
             null == elType -> {
                 "No Element Type for ${target.name}" //TODO
@@ -142,7 +142,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
             is StringType -> createStringValueFromBranch(target)
 
             is AnyType -> {
-                val actualType = this.findType(target.name) ?: error("Internal Error: cannot find actual type for ${target.name}")
+                val actualType = this.findTypeForRule(target.name) ?: error("Internal Error: cannot find actual type for ${target.name}")
                 when (actualType) {
                     is AnyType -> {// when {
                         //must be a choice in a group
@@ -150,7 +150,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
                         when (choice.alternative.size) {
                             1 -> {
                                 val ch = target.children[0]
-                                val childType = this.findType(ch.name) ?: error("Internal Error: cannot find type for ${ch.name}")
+                                val childType = this.findTypeForRule(ch.name) ?: error("Internal Error: cannot find type for ${ch.name}")
                                 val chPath = path
                                 //val childsScope = scope
                                 createValue(ch, chPath, childType)//, childsScope)
@@ -501,6 +501,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
         }
 
     }
+    /*
     private fun setPropertyOrReference(el: AsmElementSimple, name:String, value: Any?) {
         val isRef = this.isReference(el, name)
         when {
@@ -509,4 +510,5 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
         }
 
     }
+     */
 }

@@ -21,10 +21,7 @@ import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.typeModel.StringType
-import net.akehurst.language.api.typeModel.TypeModelTest
-import net.akehurst.language.api.typeModel.asString
-import net.akehurst.language.api.typeModel.typeModel
+import net.akehurst.language.api.typemodel.*
 import kotlin.test.*
 
 class test_mscript {

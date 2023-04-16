@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.typeModel
+package net.akehurst.language.api.typemodel
 
-import net.akehurst.language.agl.collections.MutableOrderedSet
-import net.akehurst.language.agl.collections.OrderedSet
-import net.akehurst.language.agl.collections.mutableOrderedSetOf
 import net.akehurst.language.agl.util.Debug
 
 interface TypeModel {
@@ -26,9 +23,12 @@ interface TypeModel {
     val namespace: String
     val name: String
 
+    /**
+     * ruleName -> RuleType
+     */
     val types: Map<String, RuleType>
 
-    fun findType(name: String): RuleType?
+    fun findTypeForRule(ruleName: String): RuleType?
 }
 
 sealed class RuleType {

@@ -17,7 +17,8 @@
 package net.akehurst.language.api.asm
 
 import net.akehurst.language.api.asm.AsmSimple.Companion.asStringAny
-import net.akehurst.language.api.typeModel.PropertyDeclaration
+import net.akehurst.language.api.typemodel.PropertyDeclaration
+import net.akehurst.language.api.typemodel.TypeModel
 
 data class AsmElementPath(val value: String) {
     companion object {
@@ -27,7 +28,7 @@ data class AsmElementPath(val value: String) {
     operator fun plus(segment: String) = if (this == ROOT) AsmElementPath("/$segment") else AsmElementPath("$value/$segment")
 }
 
-open class AsmSimple {
+open class AsmSimple() {
 
     companion object {
         internal fun Any.asStringAny(indent: String, currentIndent: String = ""): String = when (this) {
@@ -90,25 +91,26 @@ class AsmElementSimple(
     fun getPropertyAsReference(name: String): AsmElementReference = getProperty(name) as AsmElementReference
     fun getPropertyAsList(name: String): List<Any> = getProperty(name) as List<Any>
     fun getPropertyAsListOfElement(name: String): List<AsmElementSimple> = getProperty(name) as List<AsmElementSimple>
-
+/*
     fun setPropertyAsString(name: String, value: String?) = setProperty(name, value, false)
     fun setPropertyAsListOfString(name: String, value: List<String>?) = setProperty(name, value, false)
     fun setPropertyAsAsmElement(name: String, value: AsmElementSimple?, isReference: Boolean) = setProperty(name, value, isReference)
-    fun setProperty(name: String, value: Any?, isReference: Boolean) {
+*/
+    fun setProperty(name: String, value: Any?, isReference: Boolean, childIndex: Int) {
         if (isReference) {
             val ref = AsmElementReference(value as String, null)
-            _properties[name] = AsmElementProperty(name, null, ref, true)
+            _properties[name] = AsmElementProperty(name, childIndex, ref, true)
         } else {
-            _properties[name] = AsmElementProperty(name, null, value, false)
+            _properties[name] = AsmElementProperty(name, childIndex, value, false)
         }
     }
 
     fun setPropertyFromDeclaration(declaration: PropertyDeclaration, value: Any?, isReference: Boolean) {
         if (isReference) {
             val ref = AsmElementReference(value as String, null)
-            _properties[declaration.name] = AsmElementProperty(declaration.name, declaration, ref, true)
+            _properties[declaration.name] = AsmElementProperty(declaration.name, declaration.childIndex, ref, true)
         } else {
-            _properties[declaration.name] = AsmElementProperty(declaration.name, declaration, value, false)
+            _properties[declaration.name] = AsmElementProperty(declaration.name, declaration.childIndex, value, false)
         }
     }
 
@@ -158,7 +160,7 @@ class AsmElementReference(
 
 class AsmElementProperty(
     val name: String,
-    val declaration: PropertyDeclaration?,
+    val childIndex: Int,
     val value: Any?,
     val isReference: Boolean
 ) {
@@ -180,24 +182,6 @@ val AsmElementSimple.children: List<AsmElementSimple>
         .filterIsInstance<AsmElementSimple>()
 
 
-/**
- * detailed comparison of elements an properties
- */
-/*
-fun AsmSimple.equalTo(other: AsmSimple): Boolean {
-    return when {
-        this.rootElements.size != other.rootElements.size -> false
-        else -> {
-            for (i in 0..this.rootElements.size) {
-                val t = this.rootElements[i]
-                val o = other.rootElements[i]
-                if (t.equalTo(o).not()) return false
-            }
-            return true
-        }
-    }
-}
-*/
 fun AsmElementSimple.equalTo(other: AsmElementSimple): Boolean {
     return when {
         this.asmPath != other.asmPath -> false
@@ -260,12 +244,11 @@ fun AsmSimple.traverseDepthFirst(callback: AsmSimpleTreeWalker) {
             is AsmElementSimple -> {
                 callback.beforeElement(element)
                 val props = element.properties.values.sortedWith { a, b ->
-                    val aDecl = a.declaration
-                    val bDecl = b.declaration
+                    val aIdx = a.childIndex
+                    val bIdx = b.childIndex
                     when {
-                        aDecl == null || bDecl == null -> 0
-                        aDecl.childIndex > bDecl.childIndex -> 1
-                        aDecl.childIndex < bDecl.childIndex -> -1
+                        aIdx > bIdx -> 1
+                        aIdx < bIdx -> -1
                         else -> 0
                     }
                 }

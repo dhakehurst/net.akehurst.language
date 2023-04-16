@@ -120,7 +120,7 @@ class LanguageRegistryDefault : GrammarRegistry {
                     defaultGoalRuleName(AglFormatGrammar.goalRuleName)
                     typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(AglFormatGrammar),IssueHolder(LanguageProcessorPhase.ALL)) }
                     scopeModelResolver { ProcessResultDefault(ScopeModelAgl(), IssueHolder(LanguageProcessorPhase.ALL)) }
-                    syntaxAnalyserResolver { ProcessResultDefault(AglFormatSyntaxAnalyser(it.typeModel, it.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+                    syntaxAnalyserResolver { ProcessResultDefault(AglFormatSyntaxAnalyser(it.typeModel!!, it.scopeModel!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                     semanticAnalyserResolver { ProcessResultDefault(AglFormatSemanticAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
                     formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                     styleResolver {

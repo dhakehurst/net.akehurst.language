@@ -21,7 +21,7 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.syntaxAnalyser.*
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.typeModel.TupleType
+import net.akehurst.language.api.typemodel.TupleType
 
 @DslMarker
 annotation class AsmSimpleBuilderMarker
@@ -112,7 +112,7 @@ class AsmElementSimpleBuilder(
     }
 
     private fun _property(name: String, value: Any?) {
-        _element.setProperty(name, value, false)
+        _element.setProperty(name, value, false,0)//TODO childIndex
     }
 
     fun propertyUnnamedString(value: String?) = this._property(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, value)
@@ -128,7 +128,7 @@ class AsmElementSimpleBuilder(
         val b = AsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, newPath, typeName, false, _elementScope)
         b.init()
         val el = b.build()
-        this._element.setProperty(name, el, false)
+        this._element.setProperty(name, el, false,0)//TODO childIndex
         return el
     }
 
@@ -140,12 +140,12 @@ class AsmElementSimpleBuilder(
         val b = ListAsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, newPath, _elementScope)
         b.init()
         val list = b.build()
-        this._element.setProperty(name, list, false)
+        this._element.setProperty(name, list, false,0)//TODO childIndex
         return list
     }
 
     fun reference(name: String, elementReference: String) {
-        _element.setProperty(name, elementReference, true)
+        _element.setProperty(name, elementReference, true,0)//TODO childIndex
     }
 
     fun build(): AsmElementSimple {

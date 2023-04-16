@@ -22,7 +22,7 @@ import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammarConfiguratio
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.processor.SentenceContext
-import net.akehurst.language.api.typeModel.*
+import net.akehurst.language.api.typemodel.*
 
 // used by other languages that reference rules  in a grammar
 
@@ -69,4 +69,12 @@ class ContextFromTypeModel(
         this.rootScope = scope
     }
 
+    override fun hashCode(): Int = rootScope.hashCode()
+
+    override fun equals(other: Any?): Boolean = when {
+        other !is ContextFromTypeModel -> false
+        this.rootScope != other.rootScope -> false
+        else -> true
+    }
+    override fun toString(): String = "ContextFromTypeModel"
 }

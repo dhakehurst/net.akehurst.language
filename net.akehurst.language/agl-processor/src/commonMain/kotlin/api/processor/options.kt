@@ -24,7 +24,7 @@ import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.style.AglStyleRule
-import net.akehurst.language.api.typeModel.TypeModel
+import net.akehurst.language.api.typemodel.TypeModel
 
 /**
  * Options to configure the building of a language processor

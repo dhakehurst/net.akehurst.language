@@ -21,9 +21,9 @@ import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.typeModel.StringType
-import net.akehurst.language.api.typeModel.TypeModelTest
-import net.akehurst.language.api.typeModel.asString
+import net.akehurst.language.api.typemodel.StringType
+import net.akehurst.language.api.typemodel.TypeModelTest
+import net.akehurst.language.api.typemodel.asString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -39,7 +39,7 @@ class test_Dot_SyntaxAnalyser {
     @Test
     fun typeModel() {
         val actual = processor.typeModel
-        val expected = net.akehurst.language.api.typeModel.typeModel("net.akehurst.language.example.dot","Dot") {
+        val expected = net.akehurst.language.api.typemodel.typeModel("net.akehurst.language.example.dot","Dot") {
             elementType("graph") {
                 // graph = STRICT? type ID? '{' stmt_list '}' ;
                 propertyStringType("STRICT", true, 0)

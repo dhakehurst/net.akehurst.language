@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
 import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammarConfiguration
@@ -51,4 +52,12 @@ class ContextFromGrammar(
         this.rootScope = scope
     }
 
+    override fun hashCode(): Int = rootScope.hashCode()
+
+    override fun equals(other: Any?): Boolean = when {
+        other !is ContextFromGrammar -> false
+        this.rootScope != other.rootScope -> false
+        else -> true
+    }
+    override fun toString(): String = "ContextFromGrammar"
 }

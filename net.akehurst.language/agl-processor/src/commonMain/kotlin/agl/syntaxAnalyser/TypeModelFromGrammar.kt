@@ -17,13 +17,26 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.agl.grammar.grammar.PseudoRuleNames
+import net.akehurst.language.agl.agl.typemodel.TypeModelAbstract
 import net.akehurst.language.api.grammar.*
-import net.akehurst.language.api.typeModel.*
+import net.akehurst.language.api.typemodel.*
 
 class TypeModelFromGrammar(
-    val grammar: Grammar,
-    val configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration
-) : TypeModel {
+    namespace: String,
+    name: String
+) : TypeModelAbstract(namespace, name) {
+    constructor(grammar: Grammar, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration)
+            : this(grammar.namespace.qualifiedName, grammar.name) {
+        this._configuration = configuration
+        this.grammar = grammar
+        grammar.allResolvedGrammarRule
+            .filter { it.isLeaf.not() && it.isSkip.not() }
+            .forEach {
+                val key = it.name
+                val value = typeForRhs(it)
+                super.types[key] = value
+            }
+    }
 
     companion object {
         const val UNNAMED_PRIMITIVE_PROPERTY_NAME = "\$value"
@@ -31,91 +44,18 @@ class TypeModelFromGrammar(
         const val UNNAMED_TUPLE_PROPERTY_NAME = "\$tuple"
         const val UNNAMED_GROUP_PROPERTY_NAME = "\$group"
 
-        fun configure(init: TypeModelFromGrammarConfigurationBuilder.() -> Unit): TypeModelFromGrammarConfiguration {
-            val b = TypeModelFromGrammarConfigurationBuilder()
-            b.init()
-            return b.build()
-        }
-
-        fun String.lower()=when {
-            this.uppercase()==this -> this.lowercase()
-            else -> this.replaceFirstChar { it.lowercase() }
-        }
-
-        val defaultConfiguration = configure {
-            typeNameFor { rule -> rule.name.replaceFirstChar { it.titlecase() } }
-            propertyNameFor { ruleItem, ruleItemType ->
-                val baseName = when (ruleItem) {
-                    is Terminal -> when (ruleItemType) {
-                        is StringType -> UNNAMED_PRIMITIVE_PROPERTY_NAME
-                        is ListSimpleType -> UNNAMED_LIST_PROPERTY_NAME
-                        is ListSeparatedType -> UNNAMED_LIST_PROPERTY_NAME
-                        is TupleType -> UNNAMED_TUPLE_PROPERTY_NAME
-                        else -> UNNAMED_PRIMITIVE_PROPERTY_NAME
-                    }
-
-                    is Embedded -> ruleItem.embeddedGoalName.lower()
-                    is NonTerminal -> ruleItem.name.lower()
-                    is Group -> UNNAMED_GROUP_PROPERTY_NAME
-                    else -> error("Internal error, unhandled subtype of SimpleItem")
-                }.replaceFirstChar { it.lowercase() }
-                when (ruleItemType) {
-                    is NothingType -> baseName
-                    is AnyType -> baseName
-                    is StringType -> baseName
-                    is UnnamedSuperTypeType -> baseName
-                    is ListSimpleType -> when(ruleItem) {
-                        is NonTerminal -> ruleItem.name.lower()
-                        is Terminal -> UNNAMED_LIST_PROPERTY_NAME
-                        is Group -> UNNAMED_LIST_PROPERTY_NAME
-                        else -> "${baseName}List"
-                    }
-                    is ListSeparatedType -> when(ruleItem) {
-                        is NonTerminal -> ruleItem.name.lower()
-                        is Terminal -> UNNAMED_LIST_PROPERTY_NAME
-                        else -> "${baseName}List"
-                    }
-                    is TupleType -> baseName
-                    is ElementType -> baseName
-                }
-            }
-        }
+        val defaultConfiguration = TypeModelFromGrammarConfigurationDefault()
     }
 
     // GrammarRule.name -> ElementType
     private val _ruleToType = mutableMapOf<String, RuleType>()
     private val _typeForRuleItem = mutableMapOf<RuleItem, RuleType>()
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredRuleType, String>, Int>()
-    private val _pseudoRuleNameGenerator = PseudoRuleNames(grammar)
+    private var _configuration:TypeModelFromGrammarConfiguration?=null
+    private lateinit var grammar: Grammar
+    //private val _pseudoRuleNameGenerator = PseudoRuleNames(grammar)
 
-    override val namespace: String get() = grammar.namespace.qualifiedName
-    override val name: String get() = grammar.name
-
-    override val types: Map<String, RuleType> by lazy {
-        grammar.allResolvedGrammarRule
-            .filter { it.isLeaf.not() && it.isSkip.not() }
-            .associateBy({ configuration?.typeNameFor?.invoke(it)?:it.name }) {
-                typeForRhs(it) as RuleType
-            }
-    }
-
-    override fun findType(name: String): RuleType {
-        return when (val type = _ruleToType[name]) {
-            null -> {
-                when (val rule = this.grammar.findNonTerminalRule(name)) {
-                    null -> {
-                        //Maybe a pseudoRule
-                        val pseudoRuleItem = _pseudoRuleNameGenerator.itemForPseudoRuleName(name)
-                        typeForRuleItem(pseudoRuleItem)
-                    }
-
-                    else -> typeForRhs(rule)
-                }
-            }
-
-            else -> type
-        }
-    }
+    //override fun findTypeForRule(ruleName: String): RuleType? = _ruleToType[ruleName]
 
     private fun stringTypeForRuleName(name: String): StringType {
         val existing = _ruleToType[name]
@@ -128,11 +68,11 @@ class TypeModelFromGrammar(
         }
     }
 
-    private fun findOrCreateElementType(rule: GrammarRule, ifCreate:(ElementType)->Unit): ElementType {
+    private fun findOrCreateElementType(rule: GrammarRule, ifCreate: (ElementType) -> Unit): ElementType {
         val ruleName = rule.name
         val existing = _ruleToType[ruleName]
         return if (null == existing) {
-            val elTypeName = configuration?.typeNameFor?.invoke(rule) ?: ruleName
+            val elTypeName = _configuration?.typeNameFor(rule) ?: ruleName
             val type = ElementType(this, elTypeName)
             _ruleToType[ruleName] = type //halt recursion
             ifCreate.invoke(type)
@@ -154,7 +94,7 @@ class TypeModelFromGrammar(
             }
         }
     */
-    private fun findElementType(rule: GrammarRule): ElementType? = _ruleToType[name] as ElementType?
+    private fun findElementType(rule: GrammarRule): ElementType? = _ruleToType[rule.name] as ElementType?
 
     private fun typeForRhs(rule: GrammarRule): RuleType {
         val type = _ruleToType[rule.name]
@@ -176,8 +116,10 @@ class TypeModelFromGrammar(
                         //is SeparatedList -> typeForRuleItem(rhs.items[0])
                         else -> typeForConcatenation(rule, rhs.items)
                     }
+
                     else -> typeForConcatenation(rule, rhs.items)
                 }
+
                 is SimpleList -> when (rhs.max) {
                     1 -> typeForRuleItem(rhs.item) //no need for nullable, when min is 0 we get empty list
                     else -> {
@@ -231,7 +173,7 @@ class TypeModelFromGrammar(
                     else -> {
                         val t = ListSeparatedType()
                         _typeForRuleItem[ruleItem] = t
-                        t.itemType =typeForRuleItem(ruleItem.item)
+                        t.itemType = typeForRuleItem(ruleItem.item)
                         t.separatorType = typeForRuleItem(ruleItem.separator)
                         t
                     }
@@ -240,7 +182,7 @@ class TypeModelFromGrammar(
                 is Embedded -> {
                     val embTmfg = TypeModelFromGrammar(ruleItem.embeddedGrammarReference.resolved!!) //TODO: check for null
                     val embTm = embTmfg
-                    embTm.findType(ruleItem.name) ?: error("Should never happen")
+                    embTm.findTypeForRule(ruleItem.name) ?: error("Should never happen")
                 }
 
                 is NonTerminal -> when {
@@ -260,6 +202,7 @@ class TypeModelFromGrammar(
                         this._typeForRuleItem[ruleItem] = t
                         t
                     }
+
                     else -> {
                         val concatType = TupleType()
                         this._typeForRuleItem[ruleItem] = concatType
@@ -283,7 +226,7 @@ class TypeModelFromGrammar(
     }
 
     private fun typeForConcatenation(rule: GrammarRule, items: List<ConcatenationItem>): StructuredRuleType {
-        val concatType = findOrCreateElementType(rule) {newType ->
+        val concatType = findOrCreateElementType(rule) { newType ->
             items.forEachIndexed { idx, it -> createPropertyDeclaration(newType, it, idx) }
         }
         return concatType
@@ -305,7 +248,7 @@ class TypeModelFromGrammar(
             subtypes.all { it is ElementType } -> when {
                 null == choiceRule -> UnnamedSuperTypeType(subtypes)
                 else -> {
-                    val choiceType = findOrCreateElementType(choiceRule) {newType ->
+                    val choiceType = findOrCreateElementType(choiceRule) { newType ->
                         subtypes.forEach {
                             (it as ElementType).addSuperType(newType)
                         }
@@ -344,7 +287,7 @@ class TypeModelFromGrammar(
             }
 
             is SimpleList -> {
-                when (ruleItem.item){
+                when (ruleItem.item) {
                     is Terminal -> Unit //do not add optional literals
                     else -> {
                         val isNullable = ruleItem.min == 0 && ruleItem.max == 1
@@ -412,7 +355,7 @@ class TypeModelFromGrammar(
     }
 
     private fun propertyNameFor(et: StructuredRuleType, ruleItem: SimpleItem, ruleItemType: RuleType): String {
-        return when (configuration) {
+        return when (_configuration) {
             null -> when (ruleItem) {
                 is EmptyRule -> error("should not happen")
                 is Terminal -> when (ruleItemType) {
@@ -429,7 +372,7 @@ class TypeModelFromGrammar(
                 else -> error("Internal error, unhandled subtype of SimpleItem")
             }
 
-            else -> configuration.propertyNameFor.invoke(ruleItem, ruleItemType)
+            else -> _configuration!!.propertyNameFor(ruleItem, ruleItemType)
         }
     }
 
@@ -449,7 +392,6 @@ class TypeModelFromGrammar(
         }
         return uniqueName
     }
-
 
     override fun toString(): String = "TypeModel(${grammar.qualifiedName})"
 }

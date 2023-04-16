@@ -78,7 +78,7 @@ class test_Xml(val data: Data) {
             assertEquals(this.data.text, resultStr)
         } else {
             assertNull(result.sppt)
-            assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+            assertTrue(result.issues.errors.isNotEmpty())
         }
     }
 

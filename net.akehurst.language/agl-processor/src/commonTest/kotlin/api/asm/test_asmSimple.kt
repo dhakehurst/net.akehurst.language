@@ -16,6 +16,7 @@
 
 package net.akehurst.language.api.asm
 
+import net.akehurst.language.api.typemodel.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

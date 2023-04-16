@@ -18,7 +18,7 @@ package net.akehurst.language.api.format
 
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.formatter.AglFormatterRule
-import net.akehurst.language.api.typeModel.TypeModelTest
+import net.akehurst.language.api.typemodel.TypeModelTest
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail

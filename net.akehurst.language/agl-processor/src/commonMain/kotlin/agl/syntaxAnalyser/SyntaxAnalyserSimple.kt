@@ -32,7 +32,7 @@ import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.typeModel.*
+import net.akehurst.language.api.typemodel.*
 
 /**
  * TypeName <=> RuleName
@@ -41,8 +41,8 @@ import net.akehurst.language.api.typeModel.*
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
 class SyntaxAnalyserSimple(
-    typeModel: TypeModel?,
-    scopeModel: ScopeModel?
+    typeModel: TypeModel,
+    scopeModel: ScopeModel
 ) : SyntaxAnalyserSimpleAbstract<AsmSimple>(typeModel, scopeModel) {
 
     companion object {

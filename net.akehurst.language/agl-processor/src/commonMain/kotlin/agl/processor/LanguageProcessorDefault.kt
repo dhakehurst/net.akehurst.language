@@ -39,7 +39,7 @@ import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.typeModel.TypeModel
+import net.akehurst.language.api.typemodel.TypeModel
 
 internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(
     override val grammar: Grammar,

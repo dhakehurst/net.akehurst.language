@@ -27,7 +27,7 @@ import net.akehurst.language.api.processor.SentenceContext
 
 class AglFormatterModelDefault(
     val asm: AsmSimple?
-) : AsmSimple(), AglFormatterModel {
+) :  AglFormatterModel {
 
     companion object {
         fun fromString(context: SentenceContext<String>, aglFormatterModelSentence: String): ProcessResult<AglFormatterModel> {

@@ -20,6 +20,7 @@ import net.akehurst.language.agl.agl.parser.Scanner
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.formatter.FormatterSimple
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
+import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
@@ -40,7 +41,8 @@ import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.typeModel.TypeModel
+import net.akehurst.language.api.typemodel.TypeModel
+import net.akehurst.language.api.typemodel.typeModel
 
 internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : Any>(
 ) : LanguageProcessor<AsmType, ContextType> {
@@ -74,16 +76,16 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     //    res?.asm
     //}
 
-    override val typeModel: TypeModel? by lazy {
+    override val typeModel: TypeModel by lazy {
         val res = configuration.typeModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
-        res?.asm
+        res?.asm?: typeModel("","<Empty>"){}
     }
 
-    override val scopeModel: ScopeModel? by lazy {
+    override val scopeModel: ScopeModel by lazy {
         val res = configuration.scopeModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
-        res?.asm
+        res?.asm?: ScopeModelAgl()
     }
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? by lazy {
@@ -147,7 +149,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     ): SyntaxAnalysisResult<AsmType> { //Triple<AsmType?, List<LanguageIssue>, Map<Any, InputLocation>> {
         val opts = defaultOptions(options)
         val sa: SyntaxAnalyser<AsmType> = this.syntaxAnalyser
-            ?: SyntaxAnalyserSimple(this.typeModel, this.scopeModel) as SyntaxAnalyser<AsmType>
+            ?: SyntaxAnalyserSimple(this.typeModel!!, this.scopeModel!!) as SyntaxAnalyser<AsmType>
         sa.clear()
         return sa.transform(sppt, this.mapToGrammar)
     }

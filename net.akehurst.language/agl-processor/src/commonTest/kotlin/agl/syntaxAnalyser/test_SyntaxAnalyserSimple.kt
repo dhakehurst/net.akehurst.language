@@ -86,7 +86,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = "a"
-        val expected = asmSimple() {
+        val expected = asmSimple {
             element("S") {
                 propertyString("a", "a")
             }
@@ -106,7 +106,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = "a"
-        val expected = asmSimple() {
+        val expected = asmSimple {
             element("S") {
                 propertyString("id", "a")
             }
@@ -128,7 +128,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = "a : A"
-        val expected = asmSimple() {
+        val expected = asmSimple {
             element("S") {
                 propertyString("id", "a")
                 propertyString("type", "A")
@@ -152,7 +152,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = "a 8 fred"
-        val expected = asmSimple() {
+        val expected = asmSimple {
             element("S") {
                 propertyString("id", "a")
                 propertyString("number", "8")
@@ -190,7 +190,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = ""
-        val expected = asmSimple() {
+        val expected = asmSimple {
             element("S") {
 
             }
@@ -257,7 +257,7 @@ class test_SyntaxAnalyserSimple {
 
         val tests = mutableListOf<TestData>()
         tests.define("a 8") {
-            asmSimple() {
+            asmSimple {
                 element("S") {
                     propertyString("id", "a")
                     propertyElementExplicitType("item", "A") {
@@ -267,7 +267,7 @@ class test_SyntaxAnalyserSimple {
             }
         }
         tests.define("a fred") {
-            asmSimple() {
+            asmSimple {
                 element("S") {
                     propertyString("id", "a")
                     propertyElementExplicitType("item", "B") {
@@ -277,7 +277,7 @@ class test_SyntaxAnalyserSimple {
             }
         }
         tests.define("a fred 8") {
-            asmSimple() {
+            asmSimple {
                 element("S") {
                     propertyString("id", "a")
                     propertyElementExplicitType("item", "C") {
@@ -307,7 +307,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = "a 8 fred"
-        val expected = asmSimple() {
+        val expected = asmSimple {
             element("S") {
                 propertyString("id", "a")
                 propertyString("number", "8")
@@ -332,7 +332,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = "a fred"
-        val expected = asmSimple() {
+        val expected = asmSimple {
             element("S") {
                 propertyString("id", "a")
                 propertyString("number", null)
@@ -357,7 +357,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = "a"
-        val expected = asmSimple() {
+        val expected = asmSimple {
             element("S") {
                 propertyString("id", "a")
                 propertyListOfString("name", emptyList<String>())
@@ -381,7 +381,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = "a adam betty charles"
-        val expected = asmSimple() {
+        val expected = asmSimple {
             element("S") {
                 propertyString("id", "a")
                 propertyListOfString("name", listOf("adam", "betty", "charles"))
@@ -490,7 +490,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = "a adam 2 charles"
-        val expected = asmSimple() {
+        val expected = asmSimple {
             element("S") {
                 propertyString("id", "a")
                 propertyUnnamedListOfString(listOf("adam", "2", "charles"))
@@ -516,7 +516,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = "bk1 adam ant 12345, betty boo 34567, charlie chaplin 98765"
-        val expected = asmSimple() {
+        val expected = asmSimple {
             element("AddressBook") {
                 propertyString("id", "bk1")
                 propertyListOfElement("contacts") {
@@ -560,7 +560,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = "graph [fontsize=ss, labelloc=yy label=bb; splines=true overlap=false]"
-        val expected = asmSimple() {
+        val expected = asmSimple {
             element("Attr_stmt") {
                 propertyString("attr_type", "graph")
                 propertyListOfElement("attr_lists") {
@@ -614,7 +614,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = "abcde"
-        val expected = asmSimple() {
+        val expected = asmSimple {
             element("S") {
                 propertyString("a", "a")
                 propertyTuple("\$group") {
@@ -644,7 +644,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val sentence = "abe"
-        val expected = asmSimple() {
+        val expected = asmSimple {
             element("S") {
                 propertyString("a", "a")
                 propertyString("\$group", "b")
