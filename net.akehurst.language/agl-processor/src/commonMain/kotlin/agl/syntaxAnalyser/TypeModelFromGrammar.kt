@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.agl.grammar.grammar.PseudoRuleNames
 import net.akehurst.language.agl.agl.typemodel.TypeModelAbstract
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.typemodel.*
@@ -25,17 +24,20 @@ class TypeModelFromGrammar(
     namespace: String,
     name: String
 ) : TypeModelAbstract(namespace, name) {
-    constructor(grammar: Grammar, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration)
-            : this(grammar.namespace.qualifiedName, grammar.name) {
+    constructor(grammar:Grammar, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration):this(listOf(grammar),configuration)
+    constructor(grammars:List<Grammar>, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration)
+            : this(grammars.last().namespace.qualifiedName, grammars.last().name) {
         this._configuration = configuration
-        this.grammar = grammar
-        grammar.allResolvedGrammarRule
-            .filter { it.isLeaf.not() && it.isSkip.not() }
-            .forEach {
-                val key = it.name
-                val value = typeForRhs(it)
-                super.types[key] = value
-            }
+        grammars.forEach { g ->
+            this.grammar = g
+            g.allResolvedGrammarRule
+                .filter { it.isLeaf.not() && it.isSkip.not() }
+                .forEach {
+                    val key = it.name
+                    val value = typeForRhs(it)
+                    super.allTypes[key] = value
+                }
+        }
     }
 
     companion object {
@@ -52,6 +54,7 @@ class TypeModelFromGrammar(
     private val _typeForRuleItem = mutableMapOf<RuleItem, RuleType>()
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredRuleType, String>, Int>()
     private var _configuration:TypeModelFromGrammarConfiguration?=null
+    // temp var - changes for each Grammar processed
     private lateinit var grammar: Grammar
     //private val _pseudoRuleNameGenerator = PseudoRuleNames(grammar)
 
@@ -141,7 +144,7 @@ class TypeModelFromGrammar(
                     }
                 }
 
-                else -> error("Internal error, unhandled subtype of rule '${rule.name}'.rhs '${rhs::class.simpleName}' when getting TypeModel from grammar '${this.grammar.qualifiedName}'")
+                else -> error("Internal error, unhandled subtype of rule '${rule.name}'.rhs '${rhs::class.simpleName}' when getting TypeModel from grammar '${this.qualifiedName}'")
             }
             if (ruleType is ElementType) {
                 _ruleToType[rule.name] = ruleType
@@ -180,7 +183,7 @@ class TypeModelFromGrammar(
                 }
 
                 is Embedded -> {
-                    val embTmfg = TypeModelFromGrammar(ruleItem.embeddedGrammarReference.resolved!!) //TODO: check for null
+                    val embTmfg = TypeModelFromGrammar(listOf(ruleItem.embeddedGrammarReference.resolved!!)) //TODO: check for null
                     val embTm = embTmfg
                     embTm.findTypeForRule(ruleItem.name) ?: error("Should never happen")
                 }
@@ -393,5 +396,5 @@ class TypeModelFromGrammar(
         return uniqueName
     }
 
-    override fun toString(): String = "TypeModel(${grammar.qualifiedName})"
+    override fun toString(): String = "TypeModel(${this.qualifiedName})"
 }

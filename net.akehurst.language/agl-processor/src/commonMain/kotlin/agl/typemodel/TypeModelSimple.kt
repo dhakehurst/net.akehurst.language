@@ -16,7 +16,9 @@ abstract class TypeModelAbstract(
     override val name: String
 ) : TypeModel {
 
-    override var types = mutableMapOf<String, RuleType>()
+    val qualifiedName get() = "$namespace.$name"
 
-    override fun findTypeForRule(ruleName: String): RuleType?  = types[ruleName]
+    override var allTypes = mutableMapOf<String, RuleType>()
+
+    override fun findTypeForRule(ruleName: String): RuleType?  = allTypes[ruleName]
 }

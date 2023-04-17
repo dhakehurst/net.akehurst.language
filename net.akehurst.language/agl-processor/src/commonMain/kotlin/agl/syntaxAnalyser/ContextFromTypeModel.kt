@@ -16,11 +16,6 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammarConfiguration
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.typemodel.*
 
@@ -45,8 +40,8 @@ class ContextFromTypeModel(
 
     fun createScopeFrom(typeModel: TypeModel) {
         val scope = ScopeSimple<String>(null, "", typeModel.name)
-        typeModel.types.forEach {
-            scope.addToScope(it.key, TYPE_NAME_FOR_TYPES, it.value.name)
+        typeModel.allTypes.forEach {
+            scope.addToScope(it.value.name, TYPE_NAME_FOR_TYPES, it.value.name)
             val type = it.value
             when (type) {
                 is NothingType -> Unit

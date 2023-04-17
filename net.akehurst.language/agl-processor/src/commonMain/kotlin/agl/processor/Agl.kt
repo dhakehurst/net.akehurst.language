@@ -42,7 +42,7 @@ object Agl {
     fun configurationDefault(): LanguageProcessorConfiguration<AsmSimple, ContextSimple> = Agl.configuration {
             targetGrammarName(null) //use default
             defaultGoalRuleName(null) //use default
-            typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+            typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar(listOf(p.grammar!!)), IssueHolder(LanguageProcessorPhase.ALL)) }
             scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.typeModel!!), "") }
             syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserSimple(p.typeModel!!, p.scopeModel!!), IssueHolder(LanguageProcessorPhase.ALL)) }
             semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -110,7 +110,7 @@ object Agl {
         val config = Agl.configuration {
             targetGrammarName(null) //use default
             defaultGoalRuleName(null) //use default
-            typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+            typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar(listOf(p.grammar!!)), IssueHolder(LanguageProcessorPhase.ALL)) }
             scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.typeModel!!), scopeModelStr ?: "") }
             syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserSimple(p.typeModel!!, p.scopeModel!!), IssueHolder(LanguageProcessorPhase.ALL)) }
             semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }

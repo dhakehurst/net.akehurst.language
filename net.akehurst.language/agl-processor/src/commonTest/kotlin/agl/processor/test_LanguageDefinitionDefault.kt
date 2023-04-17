@@ -16,11 +16,13 @@
 
 package net.akehurst.language.agl.processor
 
+import agl.semanticAnalyser.test_SemanticAnalyser
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
@@ -347,5 +349,79 @@ class test_LanguageDefinitionDefault {
     fun aglOptions_change_null_to_value() {
         sut.grammarStr = null
         TODO()
+    }
+
+    @Test
+    fun checkReferencesWork() {
+        val grammarStr = """
+            namespace test
+            
+            grammar Test {
+                skip leaf WS = "\s+" ;
+                skip leaf COMMENT = "//[^\n]*(\n)" ;
+            
+                unit = declaration* ;
+                declaration = datatype | primitive | collection ;
+                primitive = 'primitive' ID ;
+                collection = 'collection' ID typeParameters? ;
+                typeParameters = '<' typeParameterList '>' ;
+                typeParameterList = [ID / ',']+ ;
+                datatype = 'datatype' ID '{' property* '}' ;
+                property = ID ':' typeReference ;
+                typeReference = type typeArguments? ;
+                typeArguments = '<' typeArgumentList '>' ;
+                typeArgumentList = [typeReference / ',']+ ;
+            
+                leaf ID = "[A-Za-z_][A-Za-z0-9_]*" ;
+                leaf type = ID;
+            }
+        """
+        val scopeStr = """
+                identify Unit by §nothing
+                scope Unit {
+                    identify Primitive by id
+                    identify Datatype by id
+                    identify Collection by id
+                }
+                references {
+                    in TypeReference property type refers-to Primitive|Datatype|Collection
+                }
+            """
+        val sentence = """
+            primitive String
+            datatype A {
+                a : String
+            }
+        """.trimIndent()
+
+        sut.grammarStr = grammarStr
+        sut.scopeModelStr = scopeStr
+        val result = sut.processor!!.process(sentence)
+
+        val expected = asmSimple {
+            element("Unit") {
+                propertyListOfElement("declaration") {
+                    element("Primitive") {
+                        propertyString("id", "String")
+                    }
+                    element("Datatype") {
+                        propertyString("id", "A")
+                        propertyListOfElement("property") {
+                            element("Property") {
+                                propertyString("id", "a")
+                                propertyElementExplicitType("typeReference", "TypeReference") {
+                                    reference("type", "String")
+                                    propertyNull("typeArguments")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        assertNotNull(result.asm)
+        assertTrue(result.issues.isEmpty())
+        assertEquals(expected.asString("  "), result.asm!!.asString("  "))
     }
 }

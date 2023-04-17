@@ -28,7 +28,8 @@ import net.akehurst.language.api.processor.SentenceContext
 
 class ContextFromGrammar(
 ) : SentenceContext<String> {
-    constructor(grammar: Grammar) : this() { createScopeFrom(grammar) }
+    constructor(grammar: Grammar) : this(listOf(grammar))
+    constructor(grammars: List<Grammar>) : this() { createScopeFrom(grammars) }
 
     companion object {
         const val GRAMMAR_RULE_CONTEXT_TYPE_NAME = "GrammarRule"
@@ -41,13 +42,15 @@ class ContextFromGrammar(
         this.rootScope = ScopeSimple<String>(null, "", "")
     }
 
-    fun createScopeFrom(grammar: Grammar) {
-        val scope = ScopeSimple<String>(null, "", grammar.name)
-        grammar.allResolvedGrammarRule.forEach {
-            scope.addToScope(it.name, GRAMMAR_RULE_CONTEXT_TYPE_NAME, it.name)
-        }
-        grammar.allResolvedTerminal.forEach {
-            scope.addToScope(it.name, GRAMMAR_TERMINAL_CONTEXT_TYPE_NAME, it.name)
+    fun createScopeFrom(grammars: List<Grammar>) {
+        val scope = ScopeSimple<String>(null, "", grammars.last().name)
+        grammars.forEach { g ->
+            g.allResolvedGrammarRule.forEach {
+                scope.addToScope(it.name, GRAMMAR_RULE_CONTEXT_TYPE_NAME, it.name)
+            }
+            g.allResolvedTerminal.forEach {
+                scope.addToScope(it.name, GRAMMAR_TERMINAL_CONTEXT_TYPE_NAME, it.name)
+            }
         }
         this.rootScope = scope
     }

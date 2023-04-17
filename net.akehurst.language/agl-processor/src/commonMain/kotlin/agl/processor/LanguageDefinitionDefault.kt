@@ -40,8 +40,8 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
             this._issues.addAll(res.issues)
             this.grammar = when {
                 res.issues.errors.isNotEmpty() -> null
-                null == targetGrammarName ->res.asm?.firstOrNull()
-                else -> res.asm?.firstOrNull { it.name == this.targetGrammarName }
+                null == targetGrammarName ->res.asm?.lastOrNull()
+                else -> res.asm?.lastOrNull { it.name == this.targetGrammarName }
             }
             grammarStrObservers.forEach { it.invoke(oldValue, newValue) }
         }

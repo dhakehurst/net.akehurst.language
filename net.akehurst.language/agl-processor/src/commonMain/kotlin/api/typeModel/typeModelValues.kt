@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.typeModel
+package net.akehurst.language.api.typemodel
 
 abstract class AnyValue(
     open val type: RuleType

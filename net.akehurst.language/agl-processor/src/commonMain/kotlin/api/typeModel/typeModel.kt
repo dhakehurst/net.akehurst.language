@@ -26,7 +26,7 @@ interface TypeModel {
     /**
      * ruleName -> RuleType
      */
-    val types: Map<String, RuleType>
+    val allTypes: Map<String, RuleType>
 
     fun findTypeForRule(ruleName: String): RuleType?
 }
@@ -34,7 +34,7 @@ interface TypeModel {
 sealed class RuleType {
     abstract val name: String
 
-    abstract fun signature(context:TypeModel):String
+    abstract fun signature(context: TypeModel?):String
 
     fun asString(context:TypeModel): String = when (this) {
         is NothingType -> signature(context)
@@ -58,7 +58,7 @@ interface WithSubtypes {
 
 object StringType : RuleType() {
     override val name: String = "\$String"
-    override fun signature(context:TypeModel):String = name
+    override fun signature(context: TypeModel?):String = name
     override fun hashCode(): Int = name.hashCode()
     override fun equals(other: Any?): Boolean = this === other
     override fun toString(): String = name
@@ -66,7 +66,7 @@ object StringType : RuleType() {
 
 object AnyType : RuleType() {
     override val name: String = "\$Any"
-    override fun signature(context:TypeModel):String = name
+    override fun signature(context: TypeModel?):String = name
     override fun hashCode(): Int = name.hashCode()
     override fun equals(other: Any?): Boolean = this === other
     override fun toString(): String = name
@@ -74,7 +74,7 @@ object AnyType : RuleType() {
 
 object NothingType : RuleType() {
     override val name: String = "\$Nothing"
-    override fun signature(context:TypeModel):String = name
+    override fun signature(context: TypeModel?):String = name
     override fun hashCode(): Int = name.hashCode()
     override fun equals(other: Any?): Boolean = this === other
     override fun toString(): String = name
@@ -89,7 +89,7 @@ class UnnamedSuperTypeType(
     }
 
     override val name: String = INSTANCE_NAME
-    override fun signature(context:TypeModel):String = "? supertypeOf " + this.subtypes.sortedBy { it.signature(context) }.joinToString(prefix = "(", postfix = ")") { it.signature(context) }
+    override fun signature(context: TypeModel?):String = "? supertypeOf " + this.subtypes.sortedBy { it.signature(context) }.joinToString(prefix = "(", postfix = ")") { it.signature(context) }
 
     override fun hashCode(): Int = name.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {
@@ -110,7 +110,7 @@ class ListSimpleType() : RuleType() {
     var elementType: RuleType = NothingType
 
     override val name: String = INSTANCE_NAME
-    override fun signature(context:TypeModel):String = "${name}<${this.elementType.signature(context)}>"
+    override fun signature(context: TypeModel?):String = "${name}<${this.elementType.signature(context)}>"
 
     override fun hashCode(): Int = name.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {
@@ -133,7 +133,7 @@ class ListSeparatedType() : RuleType() {
     var separatorType: RuleType = NothingType
 
     override val name: String = INSTANCE_NAME
-    override fun signature(context:TypeModel):String = "${name}<${itemType.signature(context)}, ${separatorType.signature(context)}>"
+    override fun signature(context: TypeModel?):String = "${name}<${itemType.signature(context)}, ${separatorType.signature(context)}>"
 
     override fun hashCode(): Int = name.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {
@@ -166,7 +166,7 @@ class TupleType() : StructuredRuleType() {
 
     private val nameTypePair get() = properties.map { Pair(it.name, it.type) }
 
-    override fun signature(context:TypeModel):String = "${name}<${this.properties.joinToString { it.name + ":" + it.type.signature(context) }}>"
+    override fun signature(context: TypeModel?):String = "${name}<${this.properties.joinToString { it.name + ":" + it.type.signature(context) }}>"
 
     override fun getPropertyByIndex(i: Int): PropertyDeclaration = properties[i]
 
@@ -198,7 +198,7 @@ data class ElementType(
     override val property = mutableMapOf<String, PropertyDeclaration>()
     private val _propertyIndex = mutableListOf<PropertyDeclaration>()
 
-    override fun signature(context:TypeModel):String = if(context==typeModel) name else "${typeModel.name}.$name"
+    override fun signature(context: TypeModel?):String = if(context==typeModel) name else "${typeModel.name}.$name"
 
     fun addSuperType(type: ElementType) {
         (this.supertypes as MutableSet).add(type)
@@ -232,7 +232,7 @@ data class PropertyDeclaration(
 }
 
 fun TypeModel.asString(): String {
-    val typesSorted = this.types.entries.sortedBy { it.key }
+    val typesSorted = this.allTypes.entries.sortedBy { it.key }
     val types = typesSorted.joinToString(separator = "\n") { it.key + "->" + it.value.asString(this) }
     val s= """
     typemodel '$namespace.$name' {

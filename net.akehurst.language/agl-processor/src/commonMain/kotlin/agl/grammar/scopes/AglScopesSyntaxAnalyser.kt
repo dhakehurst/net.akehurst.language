@@ -132,20 +132,21 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl> {
         val inTypeName = this.typeReference(node.branchChild(0))
         val referringPropertyName = this.typeReference(node.branchChild(1))
         val typeReferences = this.typeReferences(node.branchChild(2))
-        val def = ReferenceDefinition(inTypeName, referringPropertyName, typeReferences)
+        val def = ReferenceDefinition(inTypeName, referringPropertyName, typeReferences.map { it.first })
         this.locationMap[def] = node.location
         locationMap[PropertyValue(def, "in")] = node.branchChild(0).location
         locationMap[PropertyValue(def, "propertyReference")] = node.branchChild(1).location
-        node.branchChild(2).branchNonSkipChildren.forEachIndexed { i, n ->
-            locationMap[PropertyValue(def, "typeReferences[$i]")] = n.location
+        typeReferences.forEachIndexed { i, n ->
+            locationMap[PropertyValue(def, "typeReferences[$i]")] = n.second
         }
         return def
     }
 
     // typeReferences = [typeReferences / ',']+
-    private fun typeReferences(node: SPPTBranch): List<String> {
-        return node.branchNonSkipChildren[0].branchNonSkipChildren.map {
-            this.typeReference(it.asBranch)
+    private fun typeReferences(node: SPPTBranch): List<Pair<String,InputLocation>> {
+        return node.branchNonSkipChildren[0].branchNonSkipChildren.mapIndexed { i, n ->
+            val ref = this.typeReference(n.asBranch)
+            Pair(ref,n.location)
         }
     }
 
