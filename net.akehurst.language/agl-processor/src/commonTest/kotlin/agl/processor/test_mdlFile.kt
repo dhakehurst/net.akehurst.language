@@ -76,7 +76,7 @@ grammar Mdl {
         val actual = processor.typeModel
         val expected = net.akehurst.language.api.typemodel.typeModel("test", "Mdl") {
             //file = section+ ;
-            elementType("File") {
+            elementType("file","File") {
                 propertyListTypeOf("section","Section",false,0)
             }
             //section = IDENTIFIER '{' content* '}' ;

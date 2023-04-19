@@ -36,6 +36,11 @@ class test_Dot_Singles {
 
     }
 
+    @Test()
+    fun scan() {
+        processor.scan("graph { }")
+    }
+
     @Test
     fun SINGLE_LINE_COMMENT() {
         val goal = "graph"

@@ -113,7 +113,7 @@ class ScopeModelAgl
                             )
                         } else {
                             val rel = el.asm.index[referred]
-                            el.getPropertyAsReferenceOrNull(prop.name)?.value = rel
+                            v.value = rel
                         }
 
                     } else {

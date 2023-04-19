@@ -88,7 +88,15 @@ internal class RuntimeRuleSet(
     val nonSkipRules: Array<RuntimeRule> by lazy { this.runtimeRules.filter { it.isSkip.not() }.toTypedArray() }
 
     // used if scanning (excluding skip)
-    val nonSkipTerminals: List<RuntimeRule> by lazy { this.runtimeRules.filter { it.isTerminal && it.isSkip.not() } }
+    val nonSkipTerminals: List<RuntimeRule> by lazy {
+        this.runtimeRules.flatMap {
+            when {
+                it.isEmbedded -> (it.rhs as RuntimeRuleRhsEmbedded).embeddedRuntimeRuleSet.nonSkipTerminals.toList()
+                it.isTerminal && it.isSkip.not() -> listOf(it)
+                else -> emptyList()
+            }
+        }
+    }
 
     // used if scanning (including skip)
     val terminalRules: List<RuntimeRule> by lazy {

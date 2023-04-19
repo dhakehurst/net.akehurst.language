@@ -42,25 +42,25 @@ class test_AglFormat {
     fun typeModel() {
         val actual = aglProc.typeModel
         val expected = typeModel("net.akehurst.language.agl","AglFormat") {
-            elementType("declarations") {
+            elementType("declarations", "Declarations") {
                 propertyListTypeOf("rootIdentifiables","identifiable",false,0)
                 propertyListTypeOf("scopes","scope",false,1)
                 propertyListTypeOf("references","references",true,2)
             }
-            elementType("rootIdentifiables") {
+            elementType("rootIdentifiables","RootIdentifiables") {
                 propertyListTypeOf("identifiable","identifiable",false,0)
             }
-            elementType("scopes") {
+            elementType("scopes","Scopes") {
                 propertyListTypeOf("scope","scope",false,0)
             }
-            elementType("scope") {
+            elementType("scope","Scope") {
                 propertyElementTypeOf("typeReference","typeReference",false,0)
                 propertyListTypeOf("identifiables","identifiable",false,1)
             }
-            elementType("identifiables") {
+            elementType("identifiables","Identifiables") {
                 propertyListTypeOf("identifiable","identifiable",false,0)
             }
-            elementType("identifiable") {
+            elementType("identifiable","Identifiable") {
                 propertyElementTypeOf("typeReference","typeReference",false,0)
                 propertyStringType("propertyReferenceOrNothing",false,1)
             }

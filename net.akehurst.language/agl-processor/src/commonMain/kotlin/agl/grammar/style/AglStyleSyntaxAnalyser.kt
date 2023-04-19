@@ -59,7 +59,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<AglStyleModel> {
         return if (children.isEmpty()) {
             emptyList()
         } else {
-            children[0].branchNonSkipChildren.mapIndexed { index, it ->
+            children.mapIndexed { index, it ->
                 this.rule(it, it.branchNonSkipChildren, arg)
             }
         }
@@ -92,7 +92,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<AglStyleModel> {
 
     // selectorAndComposition = [selectorSingle /',']2+ ;
     fun selectorAndComposition(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<String> {
-        return children[0].branchNonSkipChildren.flatMap {
+        return children.flatMap {
             selectorSingle(it, it.branchNonSkipChildren, arg)
         }
     }
@@ -115,7 +115,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<AglStyleModel> {
 
     // styleList = style* ;
     fun styleList(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<AglStyle> {
-        return children[0].branchNonSkipChildren.mapIndexed { index, it ->
+        return children.mapIndexed { index, it ->
             this.style(it, it.branchNonSkipChildren, arg)
         }
     }

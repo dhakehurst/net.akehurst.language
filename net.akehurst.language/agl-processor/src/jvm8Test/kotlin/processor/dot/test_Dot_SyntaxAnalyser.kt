@@ -40,23 +40,23 @@ class test_Dot_SyntaxAnalyser {
     fun typeModel() {
         val actual = processor.typeModel
         val expected = net.akehurst.language.api.typemodel.typeModel("net.akehurst.language.example.dot","Dot") {
-            elementType("graph") {
+            elementType("","graph") {
                 // graph = STRICT? type ID? '{' stmt_list '}' ;
                 propertyStringType("STRICT", true, 0)
                 propertyStringType("type", false, 1)
                 propertyStringType("ID", true, 2)
                 propertyListTypeOf("stmt_list", "stmt1",false, 3)
             }
-            elementType("statementList") {
+            elementType("","statementList") {
                 // statementList = [line / "\R"]* ;
                 propertyListSeparatedTypeOf("line", "line", StringType, false, 0)
             }
-            elementType("line") {
+            elementType("","line") {
                 // line = [statement / ';']* ';'? ;
                 propertyListSeparatedTypeOf("statement", "statement", StringType, false, 0)
                 propertyStringTypeUnnamed(true, 1)
             }
-            elementType("statement") {
+            elementType("","statement") {
                 // statement
                 //   = conditional
                 //   | assignment
@@ -65,22 +65,22 @@ class test_Dot_SyntaxAnalyser {
                 //   ;
                 subTypes("conditional", "assignment", "expressionStatement")
             }
-            elementType("conditional") {
+            elementType("","conditional") {
                 // conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
                 propertyElementTypeOf("expression", "expression", false, 1)
                 propertyListSeparatedTypeOf("statementList", "line", StringType, false, 3)
                 propertyListSeparatedTypeOf("statementList2", "line", StringType, false, 5)
             }
-            elementType("assignment") {
+            elementType("","assignment") {
                 // assignment = rootVariable '=' expression ;
                 propertyElementTypeOf("rootVariable", "rootVariable", false, 0)
                 propertyElementTypeOf("expression", "expression", false, 2)
             }
-            elementType("expressionStatement") {
+            elementType("","expressionStatement") {
                 // expressionStatement = expression ;
                 propertyElementTypeOf("expression", "expression", false, 0)
             }
-            elementType("expression") {
+            elementType("","expression") {
                 // expression
                 //   = rootVariable
                 //   | literalExpression
@@ -92,26 +92,26 @@ class test_Dot_SyntaxAnalyser {
                 //   ;
                 subTypes("rootVariable", "literalExpression", "matrix", "functionCallOrIndex", "prefixExpression", "infixExpression", "groupExpression")
             }
-            elementType("groupExpression") {
+            elementType("","groupExpression") {
                 // groupExpression = '(' expression ')' ;
                 //superType("expression")
                 propertyElementTypeOf("expression", "expression", false, 1)
             }
-            elementType("functionCallOrIndex") {
+            elementType("","functionCallOrIndex") {
                 // functionCall = NAME '(' argumentList ')' ;
                 //superType("expression")
                 propertyStringType("NAME", false, 0)
                 propertyListSeparatedTypeOf("argumentList", "argument", StringType, false, 2)
             }
-            elementType("argumentList") {
+            elementType("","argumentList") {
                 // argumentList = [ argument / ',' ]* ;
                 propertyListSeparatedTypeOf("argument", "argument", StringType, false, 0)
             }
-            elementType("argument") {
+            elementType("","argument") {
                 // argument = expression | colonOperator ;
                 subTypes("expression", "colonOperator")
             }
-            elementType("prefixExpression") {
+            elementType("","prefixExpression") {
                 // prefixExpression = prefixOperator expression ;
                 propertyStringType("prefixOperator", false, 0)
                 propertyElementTypeOf("expression", "expression", false, 1)
@@ -121,7 +121,7 @@ class test_Dot_SyntaxAnalyser {
             // prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
-            elementType("infixExpression") {
+            elementType("","infixExpression") {
                 // infixExpression =  [ expression / infixOperator ]2+ ;
                 propertyListSeparatedTypeOf("expression", "expression", StringType, false, 0)
             }
@@ -135,14 +135,14 @@ class test_Dot_SyntaxAnalyser {
             //        ;
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
-            elementType("colonOperator") {
+            elementType("","colonOperator") {
                 propertyStringType("COLON", false, 0)
             }
-            elementType("matrix") {
+            elementType("","matrix") {
                 // matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
                 propertyListSeparatedTypeOf("row", "row", StringType, false, 1)
             }
-            elementType("row") {
+            elementType("","row") {
                 // row = expression (','? expression)* ;
                 propertyElementTypeOf("expression", "expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
@@ -150,7 +150,7 @@ class test_Dot_SyntaxAnalyser {
                     propertyElementTypeOf("expression", "expression", false, 1)
                 }
             }
-            elementType("literalExpression") {
+            elementType("","literalExpression") {
                 propertyStringType("literalValue", false, 0)
             }
             stringTypeFor("literalValue")
@@ -163,7 +163,7 @@ class test_Dot_SyntaxAnalyser {
             //      ;
             //    propertyUnnamedPrimitiveType(PrimitiveType.ANY, false, 0)
             //}
-            elementType("rootVariable") {
+            elementType("","rootVariable") {
                 // rootVariable = NAME ;
                 propertyStringType("NAME", false, 0)
             }

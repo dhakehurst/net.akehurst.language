@@ -82,34 +82,34 @@ class test_SyntaxAnalyserSimple_datatypes {
         val actual = processor.typeModel
         val expected = typeModel("test", "Test") {
             //unit = declaration* ;
-            elementType("Unit") {
+            elementType("","Unit") {
                 propertyListTypeOf("declaration", "Declaration", false, 0)
             }
             // declaration = datatype | primitive ;
-            elementType("Declaration") {
+            elementType("","Declaration") {
                 subTypes("Datatype", "Primitive")
             }
             // primitive = 'primitive' ID ;
-            elementType("Primitive") {
+            elementType("","Primitive") {
                 propertyStringType("id", false, 1)
             }
             // datatype = 'datatype' ID '{' property* '}' ;
-            elementType("Datatype") {
+            elementType("","Datatype") {
                 propertyStringType("id", false, 1)
                 propertyListTypeOf("property", "Property", false, 3)
             }
             // property = ID ':' typeReference ;
-            elementType("Property") {
+            elementType("","Property") {
                 propertyStringType("id", false, 0)
                 propertyElementTypeOf("typeReference", "TypeReference", false, 2)
             }
             // typeReference = type typeArguments? ;
-            elementType("TypeReference") {
+            elementType("","TypeReference") {
                 propertyStringType("type", false, 0)
                 propertyElementTypeOf("typeArguments", "TypeArguments", true, 1)
             }
             // typeArguments = '<' [typeReference / ',']+ '>' ;
-            elementType("TypeArguments") {
+            elementType("","TypeArguments") {
                 propertyListSeparatedTypeOf("typeReference", "TypeReference", StringType, false, 1)
             }
         }

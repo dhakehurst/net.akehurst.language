@@ -24,19 +24,21 @@ class TypeModelFromGrammar(
     namespace: String,
     name: String
 ) : TypeModelAbstract(namespace, name) {
-    constructor(grammar:Grammar, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration):this(listOf(grammar),configuration)
-    constructor(grammars:List<Grammar>, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration)
+    constructor(grammar: Grammar, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration) : this(listOf(grammar), configuration)
+    constructor(grammars: List<Grammar>, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration)
             : this(grammars.last().namespace.qualifiedName, grammars.last().name) {
         this._configuration = configuration
         grammars.forEach { g ->
             this.grammar = g
             g.allResolvedGrammarRule
                 .filter { it.isLeaf.not() && it.isSkip.not() }
-                .forEach {
-                    val key = it.name
-                    val value = typeForRhs(it)
-                    super.allTypes[key] = value
-                }
+                .forEach { typeForRhs(it) }
+            this._ruleToType.entries.forEach {
+                val key = it.key
+                val value = it.value
+                super.allTypesByRuleName[key] = value
+                super.allTypesByName[value.name] = value
+            }
         }
     }
 
@@ -53,7 +55,9 @@ class TypeModelFromGrammar(
     private val _ruleToType = mutableMapOf<String, RuleType>()
     private val _typeForRuleItem = mutableMapOf<RuleItem, RuleType>()
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredRuleType, String>, Int>()
-    private var _configuration:TypeModelFromGrammarConfiguration?=null
+    private var _configuration: TypeModelFromGrammarConfiguration? = null
+    private var _psuedoTypes = mutableSetOf<RuleType>()
+
     // temp var - changes for each Grammar processed
     private lateinit var grammar: Grammar
     //private val _pseudoRuleNameGenerator = PseudoRuleNames(grammar)
@@ -113,9 +117,10 @@ class TypeModelFromGrammar(
                     0 -> error("Should not happen")
                     1 -> when (rhs.items[0]) {
                         //is SimpleList -> when ((rhs.items[0] as SimpleList).item) {
-                        //    is Terminal -> typeForConcatenation(rule, rhs.items)
+                        //    //is Terminal -> typeForConcatenation(rule, rhs.items)
                         //    else -> typeForRuleItem(rhs.items[0])
                         //}
+
                         //is SeparatedList -> typeForRuleItem(rhs.items[0])
                         else -> typeForConcatenation(rule, rhs.items)
                     }
@@ -146,9 +151,9 @@ class TypeModelFromGrammar(
 
                 else -> error("Internal error, unhandled subtype of rule '${rule.name}'.rhs '${rhs::class.simpleName}' when getting TypeModel from grammar '${this.qualifiedName}'")
             }
-            if (ruleType is ElementType) {
+            //if (ruleType is ElementType) {
                 _ruleToType[rule.name] = ruleType
-            }
+           // }
             ruleType
         }
     }
@@ -193,7 +198,8 @@ class TypeModelFromGrammar(
                     ruleItem.referencedRule(this.grammar).rhs is EmptyRule -> NothingType
                     ruleItem.referencedRule(this.grammar).rhs is Choice -> {
                         val r = ruleItem.referencedRule(this.grammar)
-                        typeForChoiceRule(r) //r.name, (r.rhs as Choice).alternative)
+                        //typeForChoiceRule(r) //r.name, (r.rhs as Choice).alternative)
+                        typeForRhs(r)
                     }
 
                     else -> typeForRhs(ruleItem.referencedRule(this.grammar))
@@ -271,7 +277,34 @@ class TypeModelFromGrammar(
                 else -> UnnamedSuperTypeType(subtypes)
             }
 
-            else -> UnnamedSuperTypeType(subtypes)
+            else -> when {
+                null == choiceRule -> UnnamedSuperTypeType(subtypes)
+                else -> {/*
+                    val elTypes = choice.alternative.mapIndexed { i, it ->
+                        val itType = subtypes[i]
+                        when (itType) {
+                            is ElementType -> itType
+                            else -> {
+                                val baseElTypeName = _configuration?.typeNameFor(choiceRule) ?: choiceRule.name
+                                val psudoRuleName = choiceRule.name + "Choice$i"
+                                val elTypeName = "${baseElTypeName}Choice$i"
+                                val et = ElementType(this, elTypeName)
+                                et.appendProperty("\$value", PropertyDeclaration(et, "\$value", itType, false, 0))
+                                _ruleToType[psudoRuleName] = et
+                                et
+                            }
+                        }
+                    }
+                    val choiceType = findOrCreateElementType(choiceRule) { newType ->
+                        elTypes.forEach {
+                            (it as ElementType).addSuperType(newType)
+                        }
+                    }
+                    choiceType
+                    */
+                    UnnamedSuperTypeType(subtypes)
+                }
+            }
         }
     }
 

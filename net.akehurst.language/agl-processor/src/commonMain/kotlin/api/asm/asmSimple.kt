@@ -123,11 +123,12 @@ class AsmElementSimple(
         val propsStr = this.properties.values.joinToString(separator = "\n$newIndent", prefix = "{\n$newIndent", postfix = "\n$currentIndent}") {
             if (it.isReference) {
                 val ref = it.value as AsmElementReference
-                if (null == ref.value) {
-                    "${it.name} = <unresolved> &${ref.reference}"
-                } else {
-                    "${it.name} = &${ref.reference} : ${ref.value?.typeName}"
-                }
+                //if (null == ref.value) {
+                //    "${it.name} = <unresolved> &${ref.reference}"
+                //} else {
+                //    "${it.name} = &${ref.reference} : ${ref.value?.typeName}"
+                //}
+                "${it.name} = $ref"
             } else if (null == it.value) {
                 "${it.name} = null"
             } else {
@@ -152,10 +153,10 @@ class AsmElementReference(
     val reference: String,
     var value: AsmElementSimple?
 ) {
-    override fun toString(): String {
-        val resolved = if (null == value) "<unresolved> " else ""
-        return "$resolved&$reference"
-    }
+    override fun toString(): String =when (value) {
+           null -> "<unresolved> &$reference"
+           else -> "&{'${value!!.asmPath.value}' : ${value!!.typeName}}"
+       }
 }
 
 class AsmElementProperty(

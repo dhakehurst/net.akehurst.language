@@ -79,7 +79,9 @@ class test_SemanticAnalyserSimple_datatypes {
                     identify Collection by id
                 }
                 references {
-                    in TypeReference property type refers-to Primitive|Datatype|Collection
+                    in TypeReference {
+                      property type refers-to Primitive|Datatype|Collection
+                    }
                 }
             """.trimIndent()
         ).asm!!

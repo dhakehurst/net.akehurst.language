@@ -137,7 +137,8 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
         else -> target.nonSkipMatchedText
     }
 
-    private fun createValueFromBranch(target: SPPTBranch, path: AsmElementPath, type: RuleType): Any? {//, scope: ScopeSimple<AsmElementPath>?): Any? {
+    private fun createValueFromBranch(target: SPPTBranch, path: AsmElementPath, argType: RuleType): Any? {//, scope: ScopeSimple<AsmElementPath>?): Any? {
+        val type = typeModel.findTypeForRule(target.name) ?: argType
         return when (type) {
             is StringType -> createStringValueFromBranch(target)
 
@@ -296,21 +297,39 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
                 }
                 val el = _asm!!.createElement(path, actualType.name)
                 for (propDecl in actualType.property.values) {
-                    val propTgt = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
-                    val propType = propDecl.type
                     val propPath = path + propDecl.name
+                    val propType = propDecl.type
                     val propValue = when {
-                        propTgt.isOptional -> when {
-                            propDecl.isNullable -> createValue(propTgt.asBranch.nonSkipChildren[0], propPath, propType)
-                            else -> error("Internal Error: '$propDecl' is not nullable !")
+                        propType is ListSimpleType -> {
+                            val listNode = when {
+                                actualTarget.isList -> actualTarget
+                                else -> actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
+                            }
+                            createListSimpleValueFromBranch(listNode, path, propType)
                         }
-                        propTgt.isEmbedded -> {
-                            val embTgt = propTgt.asBranch.nonSkipChildren[0]
-                            createValue(embTgt, propPath, propType)
+                        propType is ListSeparatedType -> {
+                            val listNode = when {
+                                actualTarget.isList -> actualTarget
+                                else -> actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
+                            }
+                            createListSeparatedValueFromBranch(listNode, path, propType)
                         }
-                        else -> createValue(propTgt, propPath, propType)
+                        else -> {
+                            val propTgt = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
+                            when {
+                                propTgt.isOptional -> when {
+                                    propDecl.isNullable -> createValue(propTgt.asBranch.nonSkipChildren[0], propPath, propType)
+                                    else -> error("Internal Error: '$propDecl' is not nullable !")
+                                }
+                                propTgt.isEmbedded -> {
+                                    val embTgt = propTgt.asBranch.nonSkipChildren[0]
+                                    createValue(embTgt, propPath, propType)
+                                }
+                                else -> createValue(propTgt, propPath, propType)
+                            }
+                        }
                     }
-                    setPropertyOrReferenceFromDeclaration(el, propDecl, propValue)
+                     setPropertyOrReferenceFromDeclaration(el, propDecl, propValue)
                     /*
                     if (propDecl.isNullable && propTgt.asBranch.nonSkipChildren[0].isEmptyLeaf) {
                         setPropertyOrReference(el, propDecl.name, null)

@@ -301,8 +301,8 @@ class test_VistraqQuery_Singles {
         //val queryStr = "MATCH A  RETURN 1"
         val goal = "query"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
+        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
         val resultStr = result.sppt!!.asString
         assertEquals(queryStr, resultStr)
     }

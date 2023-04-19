@@ -34,6 +34,8 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     configuration,
 ) {
 
+    override val isModifiable: Boolean = true
+
     override var grammarStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             val res = Agl.grammarFromString<List<Grammar>, GrammarContext>(newValue, aglOptions)
@@ -46,12 +48,6 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
             grammarStrObservers.forEach { it.invoke(oldValue, newValue) }
         }
     }
-
-    init {
-        grammarStr = grammarStrArg
-    }
-
-    override val isModifiable: Boolean = true
 
     override var scopeModelStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
@@ -88,5 +84,9 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                 }
             }
         }
+    }
+
+    init {
+        grammarStr = grammarStrArg
     }
 }

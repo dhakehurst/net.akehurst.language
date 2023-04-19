@@ -59,22 +59,27 @@ grammar AglScopes {
     skip MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
     skip SINGLE_LINE_COMMENT = "//[\n\r]*?" ;
 
-    declarations = rootIdentifiables scopes references?
-    rootIdentifiables = identifiable*
-    scopes = scope*
-    scope = 'scope' typeReference '{' identifiables '}
-    identifiables = identifiable*
-    identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
+    declarations = rootIdentifiables scopes references? ;
+    rootIdentifiables = identifiable* ;
+    scopes = scope* ;
+    scope = 'scope' typeReference '{' identifiables '}' ;
+    identifiables = identifiable* ;
+    identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing ;
 
-    references = 'references' '{' referenceDefinitions '}'
-    referenceDefinitions = referenceDefinition*
-    referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
-    typeReferences = [typeReferences / '|']+
+    references = 'references' '{' referenceDefinitions '}' ;
+    referenceDefinitions = referenceDefinition* ;
+    referenceDefinition = 'in' typeReference '{' referenceExpression* '}' ;
+    referenceExpression = propertyReferenceExpression | collectionReferenceExpression ;
+    propertyReferenceExpression = 'property' propertyReference 'refers-to' typeReferences from ;
+    collectionReferenceExpression = 'forall' navigation '{' referenceExpression '}' ;
+    from = 'from' navigation ;
+    navigation = [propertyReference / '.']+ ;
+    typeReferences = [typeReference / '|']+ ;
 
-    propertyReferenceOrNothing = '§nothing' | propertyReference
-    typeReference = IDENTIFIER     // same as grammar rule name
-    propertyReference = IDENTIFIER // same as grammar rule name
-    leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*"
+    propertyReferenceOrNothing = '§nothing' | propertyReference ;
+    typeReference = IDENTIFIER ;     // same as grammar rule name
+    propertyReference = IDENTIFIER ; // same as grammar rule name
+    leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
 }
     """
     const val styleStr = """'scope' {

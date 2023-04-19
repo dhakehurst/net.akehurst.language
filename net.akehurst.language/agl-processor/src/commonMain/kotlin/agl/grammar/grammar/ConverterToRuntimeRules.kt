@@ -235,8 +235,9 @@ internal class ConverterToRuntimeRules(
         is Concatenation -> when (target.items.size) {
             0 -> error("Should not happen")
             1 -> when (target.items[0]) {
-                //is SimpleList -> this.createRhs(rule, target.items[0], arg)
-                //is SeparatedList -> this.createRhs(rule, target.items[0], arg)
+                // need to allow r = A* to have r as a list, so that preference disambiguation is clear.
+                is SimpleList -> this.createRhs(rule, target.items[0], arg)
+                is SeparatedList -> this.createRhs(rule, target.items[0], arg)
                 else -> {
                     val items = target.items.map { this.visitConcatenationItem(it, arg) }
                     RuntimeRuleRhsConcatenation(rule, items)

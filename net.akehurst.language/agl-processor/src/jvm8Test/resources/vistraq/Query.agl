@@ -107,10 +107,19 @@ grammar Query {
 		| literalValue
 		| propertyCall
 		| methodCall
-		| infixFunction
+		| infixLogical
+		| infixArithmetic
+		| infixComparison
 		| conditionalExpression
     	| groupExpression
         ;
+	preference expression {
+	  conditionalExpression on '?' left
+	  infixLogical on logicalOperator left
+	  infixComparison on comparisonOperator left
+	  infixArithmetic on arithmeticOperator left
+  	  propertyCall on '.' left
+	}
 
     nameDefinition = 'AS' NAME ;
 
@@ -119,12 +128,10 @@ grammar Query {
 	propertyCall = expression '.' NAME ;
 	methodCall = expression '.' NAME '(' argList ')';
 	argList = [expression / ',']* ;
-	infixFunction = [expression / operator]2+ ;
-    operator
-        = logicalOperator
-        | arithmeticOperator
-        | comparisonOperator
-        ;
+	infixLogical = [expression / logicalOperator]2+ ;
+	infixArithmetic = [expression / arithmeticOperator]2+ ;
+	infixComparison = [expression / comparisonOperator]2+ ;
+
     leaf arithmeticOperator =  '/' | '*' | '+' | '-' ;
     leaf comparisonOperator = '==' | '!=' | '<=' | '>=' | '<' | '>' ;
     leaf logicalOperator = 'AND' | 'OR' | 'XOR' ;

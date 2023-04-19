@@ -41,61 +41,51 @@ class test_AglScopes {
         val actual = aglProc.typeModel
         val expected = typeModel("net.akehurst.language.agl", "AglScopes") {
             // declarations = rootIdentifiables scopes references?
-            elementType("Declarations") {
+            elementType("declarations","Declarations") {
                 propertyListTypeOf("rootIdentifiables", "Identifiable", false, 0)
                 propertyListTypeOf("scopes", "Scope", false, 1)
                 propertyListTypeOf("references", "Reference", true, 2)
             }
             // rootIdentifiables = identifiable*
-            elementType("RootIdentifiables") {
-                propertyListTypeOf("identifiable", "Identifiable", false, 0)
-            }
+            listTypeOf("rootIdentifiables","Identifiable")
             // scopes = scope*
-            elementType("Scopes") {
-                propertyListTypeOf("scope", "Scope", false, 0)
-            }
+            listTypeOf("scopes","Scope")
             // scope = 'scope' typeReference '{' identifiables '}
-            elementType("Scope") {
+            elementType("scope","Scope") {
                 propertyElementTypeOf("typeReference", "TypeReference", false, 0)
                 propertyListTypeOf("identifiables", "Identifiable", false, 1)
             }
             // identifiables = identifiable*
-            elementType("Identifiables") {
-                propertyListTypeOf("identifiable", "Identifiable", false, 0)
-            }
+            listTypeOf("identifiables","Identifiable")
             // identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
-            elementType("Identifiable") {
+            elementType("identifiable","Identifiable") {
                 propertyElementTypeOf("typeReference", "TypeReference", false, 0)
                 propertyStringType("propertyReferenceOrNothing", false, 1)
             }
             // references = 'references' '{' referenceDefinitions '}'
-            elementType("References") {
+            elementType("references","References") {
                 propertyListTypeOf("referenceDefinitions", "ReferenceDefinition", false, 1)
             }
             // referenceDefinitions = referenceDefinition*
-            elementType("ReferenceDefinitions") {
-                propertyListTypeOf("referenceDefinition", "ReferenceDefinition", false, 0)
-            }
+            listTypeOf("referenceDefinitions","ReferenceDefinition")
             // referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
-            elementType("ReferenceDefinition") {
+            elementType("referenceDefinition","ReferenceDefinition") {
                 propertyElementTypeOf("typeReference", "TypeReference", false, 0)
                 propertyElementTypeOf("propertyReference", "PropertyReference", false, 1)
                 propertyListTypeOf("typeReferences", "TypeReference", false, 2)
             }
             // typeReferences = [typeReferences / '|']+
-            elementType("Identifiables") {
-                propertyListSeparatedTypeOf("typeReferences", "TypeReference", StringType, false, 0)
-            }
+            listSeparatedTypeOf("typeReferences","TypeReference",StringType.name)
             // propertyReferenceOrNothing = '§nothing' | propertyReference
-            elementType("PropertyReferenceOrNothing") {
+            elementType("propertyReferenceOrNothing","PropertyReferenceOrNothing") {
 
             }
             // typeReference = IDENTIFIER     // same as grammar rule name
-            elementType("TypeReference") {
+            elementType("typeReference","TypeReference") {
                 propertyStringType("identifier",false, 0)
             }
             // propertyReference = IDENTIFIER // same as grammar rule name
-            elementType("PropertyReference") {
+            elementType("propertyReference","PropertyReference") {
                 propertyStringType("identifier",false, 0)
             }
             // leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*"

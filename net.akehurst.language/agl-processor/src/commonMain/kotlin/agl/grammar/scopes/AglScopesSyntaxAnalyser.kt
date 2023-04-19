@@ -67,14 +67,14 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl> {
 
     // rootIdentifiables = identifiable*
     private fun rootIdentifiables(node: SPPTBranch): List<Identifiable> {
-        return node.branchNonSkipChildren[0].branchNonSkipChildren.map {
+        return node.branchNonSkipChildren.map {
             this.identifiable(it.asBranch)
         }
     }
 
     // scopes = scope+
     private fun scopes(node: SPPTBranch): List<ScopeDefinition> {
-        return node.branchNonSkipChildren[0].branchNonSkipChildren.map {
+        return node.branchNonSkipChildren.map {
             this.scope(it.asBranch)
         }
     }
@@ -92,7 +92,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl> {
 
     // identifiables = identifiable*
     private fun identifiables(node: SPPTBranch): List<Identifiable> {
-        return node.branchNonSkipChildren[0].branchNonSkipChildren.map {
+        return node.branchNonSkipChildren.map {
             this.identifiable(it.asBranch)
         }
     }
@@ -110,7 +110,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl> {
 
     // referencesOpt = references?
     private fun referencesOpt(node: SPPTBranch): List<ReferenceDefinition> {
-        return node.branchNonSkipChildren[0].branchNonSkipChildren.flatMap {
+        return node.branchNonSkipChildren.flatMap {
             this.references(it.asBranch)
         }
     }
@@ -122,7 +122,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl> {
 
     // referenceDefinitions = referenceDefinition*
     private fun referenceDefinitions(node: SPPTBranch): List<ReferenceDefinition> {
-        return node.branchNonSkipChildren[0].branchNonSkipChildren.map {
+        return node.branchNonSkipChildren.map {
             this.referenceDefinition(it.asBranch)
         }
     }
@@ -144,7 +144,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl> {
 
     // typeReferences = [typeReferences / ',']+
     private fun typeReferences(node: SPPTBranch): List<Pair<String,InputLocation>> {
-        return node.branchNonSkipChildren[0].branchNonSkipChildren.mapIndexed { i, n ->
+        return node.branchNonSkipChildren.mapIndexed { i, n ->
             val ref = this.typeReference(n.asBranch)
             Pair(ref,n.location)
         }
