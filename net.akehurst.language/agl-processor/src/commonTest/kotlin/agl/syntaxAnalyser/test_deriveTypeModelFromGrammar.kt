@@ -40,11 +40,11 @@ class test_deriveTypeModelFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
             }
         }
 
@@ -63,11 +63,11 @@ class test_deriveTypeModelFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyStringType("a", false, 0)
             }
         }
@@ -86,11 +86,11 @@ class test_deriveTypeModelFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
             }
         }
 
@@ -109,11 +109,11 @@ class test_deriveTypeModelFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyStringType("v", false, 0)
             }
         }
@@ -132,11 +132,11 @@ class test_deriveTypeModelFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
             }
         }
 
@@ -154,7 +154,7 @@ class test_deriveTypeModelFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
@@ -182,22 +182,22 @@ class test_deriveTypeModelFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 subTypes("A", "B", "C")
             }
-            elementType("A","A") {
+            elementType("A", "A") {
                 propertyStringType("a", false, 0)
                 propertyStringType("x", false, 1)
             }
-            elementType("B","B") {
+            elementType("B", "B") {
                 propertyStringType("b", false, 0)
                 propertyStringType("x", false, 1)
             }
-            elementType("C","C") {
+            elementType("C", "C") {
                 propertyStringType("c", false, 0)
                 propertyStringType("x", false, 1)
             }
@@ -219,7 +219,7 @@ class test_deriveTypeModelFromGrammar {
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
@@ -255,26 +255,26 @@ class test_deriveTypeModelFromGrammar {
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 subTypes("A", "B", "C")
             }
-            elementType("A","A") {
+            elementType("A", "A") {
                 propertyStringType("a", false, 0)
                 propertyStringType("x", false, 1)
             }
-            elementType("B","B") {
+            elementType("B", "B") {
                 subTypes("C", "D")
             }
-            elementType("C","C") {
+            elementType("C", "C") {
                 propertyStringType("c", false, 0)
                 propertyStringType("x", false, 1)
             }
-            elementType("D","D") {
+            elementType("D", "D") {
                 propertyStringType("d", false, 0)
                 propertyStringType("x", false, 1)
             }
         }
-println(actual.asString())
+        println(actual.asString())
         assertEquals(expected.asString(), actual.asString())
         TypeModelTest.assertEquals(expected, actual)
     }
@@ -305,14 +305,14 @@ println(actual.asString())
         val expected = typeModel("test", "Test") {
             val B = unnamedSuperTypeTypeFor("B", listOf(StringType, "D"))
             unnamedSuperTypeTypeFor("S", listOf("A", B, "C"))
-            elementType("A","A") {
+            elementType("A", "A") {
                 propertyStringType("a", false, 0)
                 propertyStringType("x", false, 1)
             }
-            elementType("C","C") {
+            elementType("C", "C") {
                 propertyStringType("c", false, 0)
             }
-            elementType("D","D") {
+            elementType("D", "D") {
                 propertyStringType("d", false, 0)
             }
         }
@@ -332,7 +332,7 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
@@ -354,11 +354,11 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-           stringTypeFor("S", true)
+            stringTypeFor("S", true)
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -375,11 +375,11 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            listTypeFor("S",StringType)
+            listTypeFor("S", StringType)
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -397,11 +397,11 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            listTypeFor("S",StringType)
+            listTypeFor("S", StringType)
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -424,25 +424,25 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyStringType("id", false, 0)
-                propertyListTypeUnnamedOfUnnamedSuperTypeType(listOf("A","B"),1)
+                propertyListTypeUnnamedOfUnnamedSuperTypeType(listOf("A", "B"), 1)
             }
-            elementType("A","A") {
+            elementType("A", "A") {
                 propertyStringType("name", false, 0)
                 propertyStringType("number", false, 1)
             }
-            elementType("B","B") {
+            elementType("B", "B") {
                 propertyStringType("name", false, 0)
                 propertyStringType("name2", false, 1)
             }
         }
 
-        assertEquals(expected.asString(),actual.asString())
+        assertEquals(expected.asString(), actual.asString())
         TypeModelTest.assertEquals(expected, actual)
     }
 
@@ -458,11 +458,11 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyListSeparatedType("as", StringType, StringType, false, 0)
             }
             listSeparatedTypeFor("as", StringType, StringType)
@@ -484,15 +484,15 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyListSeparatedTypeOf("as", "A", StringType, false, 0) // of String
             }
             listSeparatedTypeOf("as", "A", "$String")
-            elementType("A","A") {
+            elementType("A", "A") {
             }
         }
 
@@ -513,16 +513,16 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyListSeparatedTypeOf("ass", "As", StringType, false, 0) // of String
             }
             //listSeparatedTypeOf("ass",) TODO
             listTypeOf("as", "A")
-            elementType("A","A") {
+            elementType("A", "A") {
             }
         }
 
@@ -543,18 +543,18 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyStringType("a", false, 0)
                 propertyStringType("b", false, 1)
                 propertyStringType("c", false, 2)
             }
-            elementType("a","A") {}
-            elementType("b","B") {}
-            elementType("c","C") {}
+            elementType("a", "A") {}
+            elementType("b", "B") {}
+            elementType("c", "C") {}
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -574,18 +574,18 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyStringType("a", false, 0)
                 propertyStringType("b", false, 2)
                 propertyStringType("c", false, 4)
             }
-            elementType("a","A") {}
-            elementType("b","B") {}
-            elementType("c","C") {}
+            elementType("a", "A") {}
+            elementType("b", "B") {}
+            elementType("c", "C") {}
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -603,14 +603,14 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyListType("as", StringType, false, 0) // of String
             }
-            listTypeFor("as",StringType)
+            listTypeFor("as", StringType)
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -629,11 +629,11 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyListType("as", StringType, false, 0) // of String
             }
             listTypeFor("as", StringType)
@@ -658,11 +658,11 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyStringType("a", false, 0)
                 propertyStringType("e", false, 2)
             }
@@ -687,11 +687,11 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyStringType("a", false, 0)
                 propertyTupleType("\$group", false, 1) {
                     propertyStringType("b", false, 0)
@@ -725,7 +725,7 @@ println(actual.asString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyStringType("a", false, 0)
                 propertyTupleType("\$group", false, 1) {
                     propertyStringType("b", false, 0)
@@ -758,11 +758,11 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyStringType("a", false, 0)
                 propertyStringType("\$group", false, 1)
                 propertyStringType("e", false, 2)
@@ -788,11 +788,11 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyStringType("a", false, 0)
                 propertyStringType("\$group", false, 1)
                 propertyStringType("e", false, 2)
@@ -818,18 +818,18 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyStringType("a", false, 0)
                 property(
                     "\$group", UnnamedSuperTypeType(
                         listOf(
                             TupleType {
-                                PropertyDeclaration(this, "b", StringType, false, 0)
-                                PropertyDeclaration(this, "c", StringType, false, 1)
+                                PropertyDeclaration(this, "b", StringType, 0)
+                                PropertyDeclaration(this, "c", StringType, 1)
                             },
                             StringType,
                         )
@@ -859,21 +859,21 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyStringType("a", false, 0)
                 property(
                     "\$group", UnnamedSuperTypeType(listOf(
                         TupleType {
-                            PropertyDeclaration(this, "b", StringType, false, 0)
-                            PropertyDeclaration(this, "c", StringType, false, 1)
+                            PropertyDeclaration(this, "b", StringType, 0)
+                            PropertyDeclaration(this, "c", StringType, 1)
                         },
                         TupleType {
-                            PropertyDeclaration(this, "d", StringType, false, 0)
-                            PropertyDeclaration(this, "e", StringType, false, 1)
+                            PropertyDeclaration(this, "d", StringType, 0)
+                            PropertyDeclaration(this, "e", StringType, 1)
                         }
                     )), false, 1
                 )
@@ -905,37 +905,37 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyElementTypeOf("exprList", "ExprList", false, 0)
             }
-            elementType("exprList","ExprList") {
+            elementType("exprList", "ExprList") {
                 propertyElementTypeOf("expr", "Expr", false, 0)
-                propertyListUnnamedOfTupleType(false, 1){
+                propertyListUnnamedOfTupleType(false, 1) {
                     propertyElementTypeOf("expr", "Expr", false, 1)
                 }
             }
-            elementType("expr","Expr") {
-                subTypes("Root","Mul","Add")
+            elementType("expr", "Expr") {
+                subTypes("Root", "Mul", "Add")
             }
-            elementType("root","Root") {
-                subTypes("Var","Literal")
+            elementType("root", "Root") {
+                subTypes("Var", "Literal")
             }
-            elementType("var","Var") {
-                propertyStringType("name",false,0)
+            elementType("var", "Var") {
+                propertyStringType("name", false, 0)
             }
-            elementType("literal","Literal") {
-                propertyStringType("number",false,0)
+            elementType("literal", "Literal") {
+                propertyStringType("number", false, 0)
             }
-            elementType("mul","Mul") {
-                propertyListSeparatedTypeOf("expr","Expr", StringType, false,0)
+            elementType("mul", "Mul") {
+                propertyListSeparatedTypeOf("expr", "Expr", StringType, false, 0)
             }
             listTypeOf("add", "Expr")
-            elementType("add","Add") {
-                propertyListSeparatedTypeOf("expr","Expr", StringType, false,0)
+            elementType("add", "Add") {
+                propertyListSeparatedTypeOf("expr", "Expr", StringType, false, 0)
             }
         }
 
@@ -963,37 +963,37 @@ println(actual.asString())
 
         val result = grammarProc.process(grammarStr)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            elementType("S","S") {
+            elementType("S", "S") {
                 propertyElementTypeOf("exprList", "ExprList", false, 0)
             }
-            elementType("exprList","ExprList") {
+            elementType("exprList", "ExprList") {
                 propertyElementTypeOf("expr", "Expr", false, 0)
-                propertyListUnnamedOfTupleType(false, 1){
+                propertyListUnnamedOfTupleType(false, 1) {
                     propertyElementTypeOf("expr", "Expr", false, 1)
                 }
             }
-            elementType("expr","Expr") {
-                subTypes("Root","Mul","Add")
+            elementType("expr", "Expr") {
+                subTypes("Root", "Mul", "Add")
             }
-            elementType("root","Root") {
-                subTypes("Var","Literal")
+            elementType("root", "Root") {
+                subTypes("Var", "Literal")
             }
-            elementType("var","Var") {
-                propertyStringType("name",false,0)
+            elementType("var", "Var") {
+                propertyStringType("name", false, 0)
             }
-            elementType("literal","Literal") {
-                propertyStringType("number",false,0)
+            elementType("literal", "Literal") {
+                propertyStringType("number", false, 0)
             }
-            elementType("mul","Mul") {
-                propertyListSeparatedTypeOf("expr","Expr", StringType, false,0)
+            elementType("mul", "Mul") {
+                propertyListSeparatedTypeOf("expr", "Expr", StringType, false, 0)
             }
             listTypeOf("add", "Expr")
-            elementType("add","Add") {
-                propertyListSeparatedTypeOf("expr","Expr", StringType, false,0)
+            elementType("add", "Add") {
+                propertyListSeparatedTypeOf("expr", "Expr", StringType, false, 0)
             }
         }
 

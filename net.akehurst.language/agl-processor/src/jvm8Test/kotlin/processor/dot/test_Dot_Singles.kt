@@ -73,11 +73,12 @@ class test_Dot_Singles {
         < <xml >xxxx</xml> >
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt,result.issues.joinToString(separator = "\n") { "$it" })
+        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
         assertTrue(result.issues.errors.isEmpty())
         println(result.sppt!!.toStringAll)
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             ID { HTML {
               '<' WHITESPACE : ' '
               §Xml§elementContent§embedded1 { Xml::elementContent {
@@ -89,7 +90,7 @@ class test_Dot_Singles {
                   §startTag§multi3 { §empty }
                   '>'
                 }
-                content { §content§multi1 { §content§group1 { CHARDATA { "[^<]+" : 'xxxx' } } } }
+                content {  §content§group1 { CHARDATA { "[^<]+" : 'xxxx' } } }
                 endTag {
                   '</'
                   §endTag§multi1 { §empty }
@@ -100,10 +101,11 @@ class test_Dot_Singles {
               } } WHITESPACE : ' '
               '>'
             } }
-        """.trimIndent())
+        """.trimIndent()
+        )
         val actual = result.sppt!!
-        assertEquals(expected.toStringAll,actual.toStringAll)
-        assertEquals(expected,actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+        assertEquals(expected, actual)
     }
 
     @Test

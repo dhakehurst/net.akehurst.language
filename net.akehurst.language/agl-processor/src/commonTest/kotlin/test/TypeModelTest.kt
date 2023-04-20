@@ -16,31 +16,31 @@
 
 package net.akehurst.language.api.typemodel
 
-import kotlin.test.assertNotNull
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertSame
 import kotlin.test.fail
 
 object TypeModelTest {
 
     fun assertEquals(expected: TypeModel?, actual: TypeModel?) {
-        assertEquals(expected?.asString(),actual?.asString())
+        assertEquals(expected?.asString(), actual?.asString())
         when {
-            (expected==null && actual==null) -> Unit // pass
-            expected==null -> fail()
-            actual==null -> fail()
+            (expected == null && actual == null) -> Unit // pass
+            expected == null -> fail()
+            actual == null -> fail()
             else -> {
-                assertEquals(expected.allTypesByRuleName.size, actual.allTypesByRuleName.size,"number of types in model is different")
-                for (k in expected.allTypesByRuleName.keys) {
-                    val expEl = expected.allTypesByRuleName[k]
-                    val actEl = actual.allTypesByRuleName[k]
+                assertEquals(expected.allRuleNameToType.size, actual.allRuleNameToType.size, "number of types in model is different")
+                for (k in expected.allRuleNameToType.keys) {
+                    val expEl = expected.allRuleNameToType[k]
+                    val actEl = actual.allRuleNameToType[k]
                     tmAssertEquals(expEl, actEl, "TypeModel")
                 }
             }
         }
     }
 
-    private fun tmAssertEquals(expected: RuleType?, actual: RuleType?, source:String) {
+    private fun tmAssertEquals(expected: RuleType?, actual: RuleType?, source: String) {
         when {
             null == expected || null == actual -> fail("should never be null")
             expected is NothingType && actual is NothingType -> assertSame(expected, actual)
@@ -60,7 +60,7 @@ object TypeModelTest {
         for (i in 0 until expected.subtypes.size) {
             val exp = expected.subtypes[i]
             val act = actual.subtypes[i]
-            tmAssertEquals(exp,act,"subtypes do not match")
+            tmAssertEquals(exp, act, "subtypes do not match")
         }
     }
 
@@ -82,12 +82,12 @@ object TypeModelTest {
     }
 
     private fun tmAssertEquals(expected: ListSimpleType, actual: ListSimpleType) {
-        tmAssertEquals(expected.elementType,actual.elementType,"List element types do not match")
+        tmAssertEquals(expected.elementType, actual.elementType, "List element types do not match")
     }
 
     private fun tmAssertEquals(expected: ListSeparatedType, actual: ListSeparatedType) {
-        tmAssertEquals(expected.itemType,actual.itemType,"List item types do not match")
-        tmAssertEquals(expected.separatorType,actual.separatorType,"List separator types do not match")
+        tmAssertEquals(expected.itemType, actual.itemType, "List item types do not match")
+        tmAssertEquals(expected.separatorType, actual.separatorType, "List separator types do not match")
     }
 
     private fun tmAssertEquals(expected: TupleType, actual: TupleType) {
@@ -105,9 +105,9 @@ object TypeModelTest {
             null == expected || null == actual -> fail("should never be null")
             else -> {
                 assertEquals(expected.name, actual.name)
-                assertEquals(expected.isNullable, actual.isNullable, "Different nullable for ${expected}")
+                assertEquals(expected.type.nullable, actual.type.nullable, "Different nullable for ${expected}")
                 assertEquals(expected.childIndex, actual.childIndex, "Different childIndex for ${expected}")
-                when(expected.type) {
+                when (expected.type) {
                     is ElementType -> assertEquals(expected.type.name, actual.type.name, "Different types for ${expected}")
                     else -> tmAssertEquals(expected.type, actual.type, "${expected.owner.name}.${expected.name}")
                 }

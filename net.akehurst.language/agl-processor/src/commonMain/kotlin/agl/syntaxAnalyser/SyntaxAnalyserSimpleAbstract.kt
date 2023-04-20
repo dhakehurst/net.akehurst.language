@@ -40,7 +40,7 @@ import net.akehurst.language.api.typemodel.*
  * @param scopeDefinition TypeNameDefiningScope -> Map<TypeNameDefiningSomethingReferencable, referencableProperty>
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
-abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
+abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
     val typeModel: TypeModel,
     val scopeModel: ScopeModel
 ) : SyntaxAnalyser<A> {
@@ -58,7 +58,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
 
-    private fun findTypeForRule(ruleName: String) = this.typeModel.findTypeForRule(ruleName)
+    private fun findTypeForRule(ruleName: String) = this.typeModel.findTypeUsageForRule(ruleName)
 
     override fun clear() {
         this.locationMap.clear()
@@ -138,7 +138,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
     }
 
     private fun createValueFromBranch(target: SPPTBranch, path: AsmElementPath, argType: RuleType): Any? {//, scope: ScopeSimple<AsmElementPath>?): Any? {
-        val type = typeModel.findTypeForRule(target.name) ?: argType
+        val type = typeModel.findTypeUsageForRule(target.name) ?: argType
         return when (type) {
             is StringType -> createStringValueFromBranch(target)
 
@@ -175,7 +175,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
                 var actualType: RuleType = type
                 while (actualType is WithSubtypes && actualType.subtypes.isNotEmpty()) {
                     actualType = actualType.subtypes[actualTarget.option]
-                    actualTarget = when(actualType) {
+                    actualTarget = when (actualType) {
                         is ElementType -> actualTarget.asBranch.nonSkipChildren[0]
                         else -> actualTarget
                     }
@@ -199,10 +199,12 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
                             propDecl.isNullable -> createValue(propTgt.asBranch.nonSkipChildren[0], propPath, propType)
                             else -> error("Internal Error: '$propDecl' is not nullable !")
                         }
+
                         propTgt.isEmbedded -> {
                             val embTgt = propTgt.asBranch.nonSkipChildren[0]
                             createValue(embTgt, propPath, propType)
                         }
+
                         else -> createValue(propTgt, propPath, propType)
                     }
                     /*
@@ -307,6 +309,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
                             }
                             createListSimpleValueFromBranch(listNode, path, propType)
                         }
+
                         propType is ListSeparatedType -> {
                             val listNode = when {
                                 actualTarget.isList -> actualTarget
@@ -314,6 +317,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
                             }
                             createListSeparatedValueFromBranch(listNode, path, propType)
                         }
+
                         else -> {
                             val propTgt = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
                             when {
@@ -321,15 +325,17 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
                                     propDecl.isNullable -> createValue(propTgt.asBranch.nonSkipChildren[0], propPath, propType)
                                     else -> error("Internal Error: '$propDecl' is not nullable !")
                                 }
+
                                 propTgt.isEmbedded -> {
                                     val embTgt = propTgt.asBranch.nonSkipChildren[0]
                                     createValue(embTgt, propPath, propType)
                                 }
+
                                 else -> createValue(propTgt, propPath, propType)
                             }
                         }
                     }
-                     setPropertyOrReferenceFromDeclaration(el, propDecl, propValue)
+                    setPropertyOrReferenceFromDeclaration(el, propDecl, propValue)
                     /*
                     if (propDecl.isNullable && propTgt.asBranch.nonSkipChildren[0].isEmptyLeaf) {
                         setPropertyOrReference(el, propDecl.name, null)
@@ -464,12 +470,12 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
         }
     }
 
-    private fun createStringValueFromBranch(target: SPPTNode):String? = when {
+    private fun createStringValueFromBranch(target: SPPTNode): String? = when {
         target.isEmptyMatch -> null
         else -> target.nonSkipMatchedText
     }
 
-    private fun createListSimpleValueFromBranch(target: SPPTNode,path: AsmElementPath, type: ListSimpleType):List<*> = when {
+    private fun createListSimpleValueFromBranch(target: SPPTNode, path: AsmElementPath, type: ListSimpleType): List<*> = when {
         target.isEmptyLeaf -> emptyList<Any>()
         target.isList -> target.asBranch.nonSkipChildren.mapIndexedNotNull { ci, b ->
             val childPath2 = path + ci.toString()
@@ -480,11 +486,11 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
             }
         }
         // a concatenation rule that contains a list maps the list direct to a property
-        target.isBranch && target.asBranch.nonSkipChildren[0].isList -> createListSimpleValueFromBranch(target.asBranch.nonSkipChildren[0], path,type)
+        target.isBranch && target.asBranch.nonSkipChildren[0].isList -> createListSimpleValueFromBranch(target.asBranch.nonSkipChildren[0], path, type)
         else -> error("Internal Error: cannot create a List from '$target'")
     }
 
-    private fun createListSeparatedValueFromBranch(target: SPPTNode,path: AsmElementPath, type: ListSeparatedType):List<*> = when {
+    private fun createListSeparatedValueFromBranch(target: SPPTNode, path: AsmElementPath, type: ListSeparatedType): List<*> = when {
         target.isEmptyLeaf -> emptyList<Any>()
         target.isList -> {
             val elements = target.asBranch.nonSkipChildren
@@ -504,7 +510,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
             sList
         }
         // a concatenation rule that contains a list maps the list direct to a property
-        target.isBranch && target.asBranch.nonSkipChildren[0].isList -> createListSeparatedValueFromBranch(target.asBranch.nonSkipChildren[0], path,type)
+        target.isBranch && target.asBranch.nonSkipChildren[0].isList -> createListSeparatedValueFromBranch(target.asBranch.nonSkipChildren[0], path, type)
         else -> error("Internal Error: cannot create a List from '$target'")
     }
 
@@ -512,7 +518,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A:AsmSimple>(
         return scopeModel?.isReference(el.typeName, name) ?: false
     }
 
-    private fun setPropertyOrReferenceFromDeclaration(el: AsmElementSimple, declaration:PropertyDeclaration, value: Any?) {
+    private fun setPropertyOrReferenceFromDeclaration(el: AsmElementSimple, declaration: PropertyDeclaration, value: Any?) {
         val isRef = this.isReference(el, declaration.name)
         when {
             isRef -> el.setPropertyFromDeclaration(declaration, value, true)

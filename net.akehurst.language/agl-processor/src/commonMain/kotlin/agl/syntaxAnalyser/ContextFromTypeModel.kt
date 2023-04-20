@@ -40,7 +40,7 @@ class ContextFromTypeModel(
 
     fun createScopeFrom(typeModel: TypeModel) {
         val scope = ScopeSimple<String>(null, "", typeModel.name)
-        typeModel.allTypesByRuleName.forEach {
+        typeModel.allRuleNameToType.forEach {
             scope.addToScope(it.value.name, TYPE_NAME_FOR_TYPES, it.value.name)
             val type = it.value
             when (type) {
@@ -71,5 +71,6 @@ class ContextFromTypeModel(
         this.rootScope != other.rootScope -> false
         else -> true
     }
+
     override fun toString(): String = "ContextFromTypeModel"
 }

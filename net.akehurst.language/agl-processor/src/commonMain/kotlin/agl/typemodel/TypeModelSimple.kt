@@ -20,20 +20,21 @@ package net.akehurst.language.agl.agl.typemodel
 import net.akehurst.language.api.typemodel.ElementType
 import net.akehurst.language.api.typemodel.RuleType
 import net.akehurst.language.api.typemodel.TypeModel
+import net.akehurst.language.api.typemodel.TypeUsage
 
 class TypeModelSimple(
     namespace: String,
     name: String
 ) : TypeModelAbstract(namespace, name) {
 
-    fun addTypeFor(grammarRuleName: String, type: RuleType) {
-        super.allTypesByRuleName[grammarRuleName] = type
-        super.allTypesByName[type.name] = type
+    fun addTypeFor(grammarRuleName: String, typeUse: TypeUsage) {
+        super.allRuleNameToType[grammarRuleName] = typeUse
+        super.allTypesByName[typeUse.type.name] = typeUse.type
     }
 
     fun findOrCreateTypeFor(grammarRuleName: String, typeName: String): ElementType {
         val existing = findOrCreateTypeNamed(typeName)
-        super.allTypesByRuleName[grammarRuleName] = existing
+        super.allRuleNameToType[grammarRuleName] = existing
         return existing
     }
 
@@ -56,16 +57,10 @@ abstract class TypeModelAbstract(
 
     val qualifiedName get() = "$namespace.$name"
 
-    /**
-     * RuleType.name --> RuleType
-     */
     override val allTypesByName = mutableMapOf<String, RuleType>()
 
-    /**
-     * GrammarRule.name --> RuleType
-     */
-    override var allTypesByRuleName = mutableMapOf<String, RuleType>()
+    override var allRuleNameToType = mutableMapOf<String, TypeUsage>()
 
-    override fun findTypeForRule(ruleName: String): RuleType? = allTypesByRuleName[ruleName]
+    override fun findTypeUsageForRule(ruleName: String): TypeUsage? = allRuleNameToType[ruleName]
     override fun findTypeNamed(typeName: String): RuleType? = allTypesByName[typeName]
 }

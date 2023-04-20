@@ -15,7 +15,6 @@
  */
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.grammar.format.test_AglFormat
 import net.akehurst.language.api.typemodel.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -76,8 +75,8 @@ grammar Mdl {
         val actual = processor.typeModel
         val expected = net.akehurst.language.api.typemodel.typeModel("test", "Mdl") {
             //file = section+ ;
-            elementType("file","File") {
-                propertyListTypeOf("section","Section",false,0)
+            elementType("file", "File") {
+                propertyListTypeOf("section", "Section", false, 0)
             }
             //section = IDENTIFIER '{' content* '}' ;
 
@@ -98,7 +97,7 @@ grammar Mdl {
 
     @Test
     fun literal_BOOLEAN() {
-        val result = processor.parse("on",  Agl.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("on", Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -113,7 +112,7 @@ grammar Mdl {
 
     @Test
     fun literal_INTEGER() {
-        val result = processor.parse("1",  Agl.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("1", Agl.parseOptions { goalRuleName("literal") })
         val expected = processor.spptParser.parse(
             """
             literal { INTEGER : '1' }
@@ -127,7 +126,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_1() {
-        val result = processor.parse("3.14",  Agl.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("3.14", Agl.parseOptions { goalRuleName("literal") })
         val expected = processor.spptParser.parse(
             """
             literal { REAL : '3.14' }
@@ -141,7 +140,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_2() {
-        val result = processor.parse(".14",  Agl.parseOptions { goalRuleName("literal") })
+        val result = processor.parse(".14", Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -156,7 +155,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_3() {
-        val result = processor.parse("3.14e-05",  Agl.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("3.14e-05", Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -171,7 +170,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_4() {
-        val result = processor.parse("3.0e5",  Agl.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("3.0e5", Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -186,7 +185,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_5() {
-        val result = processor.parse(".3e5",  Agl.parseOptions { goalRuleName("literal") })
+        val result = processor.parse(".3e5", Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -201,7 +200,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_6() {
-        val result = processor.parse("1e-05",  Agl.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("1e-05", Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -216,11 +215,11 @@ grammar Mdl {
 
     @Test
     fun stringList_1() {
-        val result = processor.parse("\"hello\"",  Agl.parseOptions { goalRuleName("stringList") })
+        val result = processor.parse("\"hello\"", Agl.parseOptions { goalRuleName("stringList") })
 
         val expected = processor.spptParser.parse(
             """
-            stringList { §stringList§multi1 { DOUBLE_QUOTE_STRING : '"hello"' } }
+            stringList { DOUBLE_QUOTE_STRING : '"hello"' }
         """.trimIndent()
         )
 
@@ -231,14 +230,14 @@ grammar Mdl {
 
     @Test
     fun stringList_2() {
-        val result = processor.parse("\"hello\" \"world\"",  Agl.parseOptions { goalRuleName("stringList") })
+        val result = processor.parse("\"hello\" \"world\"", Agl.parseOptions { goalRuleName("stringList") })
 
         val expected = processor.spptParser.parse(
             """
-            stringList { §stringList§multi1 {
+            stringList { 
                 DOUBLE_QUOTE_STRING : '"hello"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"world"'
-            } }
+            }
         """.trimIndent()
         )
 
@@ -249,15 +248,15 @@ grammar Mdl {
 
     @Test
     fun stringList_3() {
-        val result = processor.parse("\"aa\" \"bb\" \"cc\"",  Agl.parseOptions { goalRuleName("stringList") })
+        val result = processor.parse("\"aa\" \"bb\" \"cc\"", Agl.parseOptions { goalRuleName("stringList") })
 
         val expected = processor.spptParser.parse(
             """
-            stringList { §stringList§multi1 {
+            stringList { 
                 DOUBLE_QUOTE_STRING : '"aa"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"bb"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"cc"'
-            } }
+            }
         """.trimIndent()
         )
 
@@ -268,7 +267,7 @@ grammar Mdl {
 
     @Test
     fun value_stringList_1() {
-        val result = processor.parse("\"hello\"",  Agl.parseOptions { goalRuleName("value") })
+        val result = processor.parse("\"hello\"", Agl.parseOptions { goalRuleName("value") })
 
         val expected = processor.spptParser.parse(
             """
@@ -287,10 +286,10 @@ grammar Mdl {
 
         val expected = processor.spptParser.parse(
             """
-            value { stringList { §stringList§multi1 {
+            value { stringList { 
                 DOUBLE_QUOTE_STRING : '"hello"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"world"'
-            } } }
+            } }
         """.trimIndent()
         )
 
@@ -305,11 +304,11 @@ grammar Mdl {
 
         val expected = processor.spptParser.parse(
             """
-            value { stringList { §stringList§multi1 {
+            value { stringList { 
                 DOUBLE_QUOTE_STRING : '"aa"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"bb"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"cc"'
-            } } }
+            } }
         """.trimIndent()
         )
 
