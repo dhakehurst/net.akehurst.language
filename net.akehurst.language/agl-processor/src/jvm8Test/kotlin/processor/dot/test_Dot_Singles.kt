@@ -73,7 +73,7 @@ class test_Dot_Singles {
         < <xml >xxxx</xml> >
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
+        assertNotNull(result.sppt, result.issues.toString())
         assertTrue(result.issues.errors.isEmpty())
         println(result.sppt!!.toStringAll)
 
@@ -159,7 +159,7 @@ class test_Dot_Singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 
     @Test
@@ -184,7 +184,7 @@ class test_Dot_Singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
     }
 
@@ -194,7 +194,7 @@ class test_Dot_Singles {
         val sentence = "graph[a=a ]; node [b=b c=c]; edge[];"
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 
     @Test
@@ -652,7 +652,7 @@ digraph G {
 
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 
     @Test

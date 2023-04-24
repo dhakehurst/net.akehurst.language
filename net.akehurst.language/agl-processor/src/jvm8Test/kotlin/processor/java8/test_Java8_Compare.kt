@@ -67,7 +67,7 @@ class test_Java8_Compare(val data: Data) {
                 aglOptions = Agl.options {
                     semanticAnalysis {
                         // switch off ambiguity analysis for performance
-                        option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
+                        option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }
                 }
             ).processor!!
@@ -144,7 +144,7 @@ class test_Java8_Compare(val data: Data) {
         val queryStr = this.data.sentence
         val grammarRule = if (toUpper) this.data.grammarRule.capitalize() else this.data.grammarRule
         val result = proc.parse(queryStr, Agl.parseOptions { goalRuleName(grammarRule) })
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         val resultStr = clean(result.sppt!!.asString)
         assertEquals(queryStr, resultStr)

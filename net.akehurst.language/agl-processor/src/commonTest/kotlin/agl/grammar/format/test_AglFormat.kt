@@ -31,9 +31,9 @@ class test_AglFormat {
         val aglProc = Agl.registry.agl.formatter.processor!!
     }
 
-    private fun test(sentence:String, expected:AglFormatterModel) {
+    private fun test(sentence: String, expected: AglFormatterModel) {
         val result = aglProc.process(sentence)
-        assertNotNull(result.asm, result.issues.joinToString(separator = "\n") { "$it" })
+        assertNotNull(result.asm, result.issues.toString())
         assertTrue(result.issues.isEmpty())
         FormatModelTest.assertEqual(expected, result.asm)
     }
@@ -41,28 +41,28 @@ class test_AglFormat {
     @Test
     fun typeModel() {
         val actual = aglProc.typeModel
-        val expected = typeModel("net.akehurst.language.agl","AglFormat") {
+        val expected = typeModel("net.akehurst.language.agl", "AglFormat") {
             elementType("declarations", "Declarations") {
-                propertyListTypeOf("rootIdentifiables","identifiable",false,0)
-                propertyListTypeOf("scopes","scope",false,1)
-                propertyListTypeOf("references","references",true,2)
+                propertyListTypeOf("rootIdentifiables", "identifiable", false, 0)
+                propertyListTypeOf("scopes", "scope", false, 1)
+                propertyListTypeOf("references", "references", true, 2)
             }
-            elementType("rootIdentifiables","RootIdentifiables") {
-                propertyListTypeOf("identifiable","identifiable",false,0)
+            elementType("rootIdentifiables", "RootIdentifiables") {
+                propertyListTypeOf("identifiable", "identifiable", false, 0)
             }
-            elementType("scopes","Scopes") {
-                propertyListTypeOf("scope","scope",false,0)
+            elementType("scopes", "Scopes") {
+                propertyListTypeOf("scope", "scope", false, 0)
             }
-            elementType("scope","Scope") {
-                propertyElementTypeOf("typeReference","typeReference",false,0)
-                propertyListTypeOf("identifiables","identifiable",false,1)
+            elementType("scope", "Scope") {
+                propertyElementTypeOf("typeReference", "typeReference", false, 0)
+                propertyListTypeOf("identifiables", "identifiable", false, 1)
             }
-            elementType("identifiables","Identifiables") {
-                propertyListTypeOf("identifiable","identifiable",false,0)
+            elementType("identifiables", "Identifiables") {
+                propertyListTypeOf("identifiable", "identifiable", false, 0)
             }
-            elementType("identifiable","Identifiable") {
-                propertyElementTypeOf("typeReference","typeReference",false,0)
-                propertyStringType("propertyReferenceOrNothing",false,1)
+            elementType("identifiable", "Identifiable") {
+                propertyElementTypeOf("typeReference", "typeReference", false, 0)
+                propertyStringType("propertyReferenceOrNothing", false, 1)
             }
             //TODO
         }
@@ -80,7 +80,7 @@ class test_AglFormat {
         val expected = formatModel {
         }
 
-       test(sentence, expected)
+        test(sentence, expected)
 
     }
 

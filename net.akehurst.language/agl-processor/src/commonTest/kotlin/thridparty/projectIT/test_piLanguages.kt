@@ -19,7 +19,6 @@ package thridparty.projectIT
 
 import net.akehurst.language.agl.processor.Agl
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -320,7 +319,7 @@ class test_piLanguages {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("PiStructureDef") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 
     @Test
@@ -493,6 +492,6 @@ class test_piLanguages {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName("PiStructureDef") })
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 }

@@ -66,7 +66,7 @@ data class GrammarRuleDefault(
                     }
                 }
 
-                is Choice -> when(item.alternative.size){
+                is Choice -> when (item.alternative.size) {
                     1 -> this.compressRuleItem(compressedName, item.alternative[0])
                     else -> {
                         val ct = item.alternative.mapIndexed { idx, it -> this.compressRuleItem("$compressedName$idx", it) }
@@ -84,7 +84,7 @@ data class GrammarRuleDefault(
                 }
 
                 is Group -> {
-                    val ct = this.compressRuleItem("${compressedName}Group", item.choice)
+                    val ct = this.compressRuleItem("${compressedName}Group", item.groupedContent)
                     val pattern = "(${ct.value})"
                     CompressedLeafRule(compressedName, pattern, true)
                 }

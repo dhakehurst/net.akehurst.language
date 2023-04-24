@@ -16,39 +16,3 @@
 
 package net.akehurst.language.agl.grammar.grammar.asm
 
-import net.akehurst.language.api.grammar.*
-
-abstract class ChoiceAbstract(
-	override val alternative: List<Concatenation>
-) : RuleItemAbstract(), Choice {
-
-	override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
-		this._owningRule = rule
-		this.index = indices
-		var i: Int = 0
-		this.alternative.forEach {
-			val nextIndex: List<Int> = indices + (i++)
-			it.setOwningRule(rule, nextIndex)
-		}
-	}
-
-	override fun subItem(index: Int): RuleItem {
-//		 return if (index < this.alternative.size) this.alternative.get(index) else null
-		return this.alternative.get(index)
-	}
-
-	override val allTerminal: Set<Terminal> by lazy {
-		this.alternative.flatMap { it.allTerminal }.toSet()
-	}
-
-	override val allNonTerminal: Set<NonTerminal> by lazy {
-		this.alternative.flatMap { it.allNonTerminal }.toSet()
-	}
-
-	override val allEmbedded: Set<Embedded> by lazy {
-		this.alternative.flatMap { it.allEmbedded }.toSet()
-	}
-
-	override fun toString(): String = this.alternative.joinToString(separator = " | ")
-
-}

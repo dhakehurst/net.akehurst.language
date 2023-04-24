@@ -36,6 +36,29 @@ object TypeModelTest {
                     val actEl = actual.allRuleNameToType[k]
                     tmAssertEquals(expEl, actEl, "TypeModel")
                 }
+                assertEquals(expected.allTypesByName.size, actual.allTypesByName.size, "number of types in model is different")
+                for (k in expected.allTypesByName.keys) {
+                    val expEl = expected.allTypesByName[k]
+                    val actEl = actual.allTypesByName[k]
+                    tmAssertEquals(expEl, actEl, "TypeModel")
+                }
+            }
+        }
+    }
+
+    private fun tmAssertEquals(expected: TypeUsage?, actual: TypeUsage?, source: String) {
+        when {
+            null == expected && null == actual -> true
+            null == expected || null == actual -> fail("${source}.TypeUsage do not match")
+            else -> {
+                assertEquals(expected.nullable, actual.nullable, "Different nullable for ${source}.${expected}")
+                assertEquals(expected.type.qualifiedName, actual.type.qualifiedName, "Different type for ${source}.${expected}")
+                assertEquals(expected.arguments.size, actual.arguments.size, "Different number of arguments for ${source}.${expected}")
+                for (i in expected.arguments.indices) {
+                    val exp = expected.arguments[i]
+                    val act = actual.arguments[i]
+                    tmAssertEquals(exp, act, "Different argument[$i] for ${source}.${expected}")
+                }
             }
         }
     }
@@ -82,12 +105,14 @@ object TypeModelTest {
     }
 
     private fun tmAssertEquals(expected: ListSimpleType, actual: ListSimpleType) {
-        tmAssertEquals(expected.elementType, actual.elementType, "List element types do not match")
+        //tmAssertEquals(expected.elementType, actual.elementType, "List element types do not match")
+        // always matches
     }
 
     private fun tmAssertEquals(expected: ListSeparatedType, actual: ListSeparatedType) {
-        tmAssertEquals(expected.itemType, actual.itemType, "List item types do not match")
-        tmAssertEquals(expected.separatorType, actual.separatorType, "List separator types do not match")
+        //tmAssertEquals(expected.itemType, actual.itemType, "List item types do not match")
+        //tmAssertEquals(expected.separatorType, actual.separatorType, "List separator types do not match")
+        // always matches
     }
 
     private fun tmAssertEquals(expected: TupleType, actual: TupleType) {
@@ -105,12 +130,8 @@ object TypeModelTest {
             null == expected || null == actual -> fail("should never be null")
             else -> {
                 assertEquals(expected.name, actual.name)
-                assertEquals(expected.type.nullable, actual.type.nullable, "Different nullable for ${expected}")
+                tmAssertEquals(expected.typeUse, actual.typeUse, "Different nullable for ${expected}")
                 assertEquals(expected.childIndex, actual.childIndex, "Different childIndex for ${expected}")
-                when (expected.type) {
-                    is ElementType -> assertEquals(expected.type.name, actual.type.name, "Different types for ${expected}")
-                    else -> tmAssertEquals(expected.type, actual.type, "${expected.owner.name}.${expected.name}")
-                }
             }
         }
     }

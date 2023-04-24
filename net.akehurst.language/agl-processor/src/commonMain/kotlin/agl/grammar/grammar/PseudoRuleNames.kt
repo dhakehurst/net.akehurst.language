@@ -73,7 +73,7 @@ internal class PseudoRuleNames(val grammar: Grammar) {
 
             is ConcatenationItem -> when (item) {
                 is SimpleItem -> when (item) {
-                    is Group -> pseudoRulesFor(item.choice) + Pair(item, createGroupRuleName(item.owningRule.name))
+                    is Group -> pseudoRulesFor(item.groupedContent) + Pair(item, createGroupRuleName(item.owningRule.name))
                     is TangibleItem -> when (item) {
                         is Embedded -> setOf(Pair(item, createEmbeddedRuleName(item.embeddedGrammarReference.resolved!!.name, item.embeddedGoalName)))
                         is Terminal -> emptySet()

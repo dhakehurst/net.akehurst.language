@@ -28,8 +28,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean=false) {
-    fun test(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int,vararg expectedTrees: String): SharedPackedParseTree? {
+internal abstract class test_ScanOnDemandParserAbstract(val build: Boolean = false) {
+    fun test(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int, vararg expectedTrees: String): SharedPackedParseTree? {
         return this.test(
             rrs as RuntimeRuleSet,
             goal,
@@ -39,7 +39,8 @@ internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean=false)
             *expectedTrees
         )
     }
-    fun test(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int, printAutomaton:Boolean, vararg expectedTrees: String): SharedPackedParseTree? {
+
+    fun test(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int, printAutomaton: Boolean, vararg expectedTrees: String): SharedPackedParseTree? {
         return this.test2(
             rrs as RuntimeRuleSet,
             emptyMap(),
@@ -51,13 +52,21 @@ internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean=false)
         )
     }
 
-    fun test2(rrs: RuleSet, embeddedRuntimeRuleSets:Map<String,RuntimeRuleSet>, goal: String, sentence: String, expectedNumGSSHeads: Int, printAutomaton:Boolean=false, vararg expectedTrees: String): SharedPackedParseTree? {
+    fun test2(
+        rrs: RuleSet,
+        embeddedRuntimeRuleSets: Map<String, RuntimeRuleSet>,
+        goal: String,
+        sentence: String,
+        expectedNumGSSHeads: Int,
+        printAutomaton: Boolean = false,
+        vararg expectedTrees: String
+    ): SharedPackedParseTree? {
         println("${this::class.simpleName} - '$sentence'")
         val parser = ScanOnDemandParser(rrs as RuntimeRuleSet)
-        if(build)parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
+        if (build) parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
         val result = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
-        if(printAutomaton) println(rrs.usedAutomatonToString(goal))
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" }) //TODO: check all, not error
+        if (printAutomaton) println(rrs.usedAutomatonToString(goal))
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString()) //TODO: check all, not error
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         val sppt = SPPTParserDefault(rrs, embeddedRuntimeRuleSets)
         expectedTrees.forEach { sppt.addTree(it) }
@@ -70,14 +79,14 @@ internal abstract class test_ScanOnDemandParserAbstract(val build:Boolean=false)
         return result.sppt
     }
 
-    fun testFail(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int): Pair<SharedPackedParseTree?,IssueCollection> {
+    fun testFail(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int): Pair<SharedPackedParseTree?, IssueCollection> {
         val parser = ScanOnDemandParser(rrs as RuntimeRuleSet)
-        if(build)parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
+        if (build) parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
         val p = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
-        return Pair(p.sppt,p.issues)
+        return Pair(p.sppt, p.issues)
     }
 
-    protected fun parseError(location:InputLocation, message:String, expected:Set<String>) =
+    protected fun parseError(location: InputLocation, message: String, expected: Set<String>) =
         LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, location, message, expected)
 
     /*

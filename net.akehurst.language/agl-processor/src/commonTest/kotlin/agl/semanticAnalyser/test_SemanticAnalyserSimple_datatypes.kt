@@ -26,9 +26,6 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.typemodel.StringType
-import net.akehurst.language.api.typemodel.TypeModelTest
-import net.akehurst.language.api.typemodel.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -66,7 +63,7 @@ class test_SemanticAnalyserSimple_datatypes {
         val typeModel by lazy {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
-            assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.joinToString(separator = "\n") { "$it" })
+            assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
             TypeModelFromGrammar(result.asm!!.last())
         }
         val scopeModel = ScopeModelAgl.fromString(
@@ -79,9 +76,9 @@ class test_SemanticAnalyserSimple_datatypes {
                     identify Collection by id
                 }
                 references {
-                    in TypeReference {
+                    in TypeReference //{
                       property type refers-to Primitive|Datatype|Collection
-                    }
+                   // }
                 }
             """.trimIndent()
         ).asm!!
@@ -103,12 +100,12 @@ class test_SemanticAnalyserSimple_datatypes {
         """.trimIndent()
 
         val result = processor.process(sentence)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.asm)
 
         val expected = asmSimple {
             element("Unit") {
-                propertyListOfElement("declaration",) {
+                propertyListOfElement("declaration") {
                     element("Datatype") {
                         propertyString("id", "A")
                         propertyListOfElement("property") {}
@@ -133,7 +130,7 @@ class test_SemanticAnalyserSimple_datatypes {
 
         val expected = asmSimple {
             element("Unit") {
-                propertyListOfElement("declaration",) {
+                propertyListOfElement("declaration") {
                     element("Datatype") {
                         propertyString("id", "A")
                         propertyListOfElement("property") {}
@@ -169,7 +166,7 @@ class test_SemanticAnalyserSimple_datatypes {
 
         val expected = asmSimple {
             element("Unit") {
-                propertyListOfElement("declaration",) {
+                propertyListOfElement("declaration") {
                     element("Datatype") {
                         propertyString("id", "A")
                         propertyListOfElement("property") {
@@ -216,11 +213,11 @@ class test_SemanticAnalyserSimple_datatypes {
             }
         )
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val expected = asmSimple(scopeModel, ContextSimple()) {
             element("Unit") {
-                propertyListOfElement("declaration",) {
+                propertyListOfElement("declaration") {
                     element("Primitive") {
                         propertyString("id", "String")
                     }

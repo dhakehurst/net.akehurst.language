@@ -34,7 +34,7 @@ class TypeModelSimple(
 
     fun findOrCreateTypeFor(grammarRuleName: String, typeName: String): ElementType {
         val existing = findOrCreateTypeNamed(typeName)
-        super.allRuleNameToType[grammarRuleName] = existing
+        super.allRuleNameToType[grammarRuleName] = TypeUsage.ofType(existing)
         return existing
     }
 

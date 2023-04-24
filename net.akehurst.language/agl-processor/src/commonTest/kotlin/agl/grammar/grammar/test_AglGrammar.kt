@@ -26,12 +26,12 @@ import kotlin.test.*
 
 class test_AglGrammar {
 
-    private fun test(grammarStr:String, sentence:String, expectedStr:String) {
+    private fun test(grammarStr: String, sentence: String, expectedStr: String) {
         val pr = Agl.processorFromStringDefault(grammarStr)
         assertNotNull(pr.processor)
 
         val result = pr.processor!!.parse(sentence)
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
 
         val expected = pr.processor!!.spptParser.parse(expectedStr)
         assertEquals(expected.toStringAll, result.sppt?.toStringAll)
@@ -1093,7 +1093,7 @@ class test_AglGrammar {
         )
         assertEquals(expected0.toStringAll, result0.sppt?.toStringAll)
         assertEquals(expected0, result0.sppt)
-        assertTrue( result0.issues.isEmpty())
+        assertTrue(result0.issues.isEmpty())
 
         val result1 = pr.processor!!.parse("a");
         val expected1 = pr.processor!!.spptParser.parse(
@@ -1755,10 +1755,11 @@ class test_AglGrammar {
                 }
             }
         """.trimIndent()
-        test(grammarStr,"v", "S{ v:'v' }")
-        test(grammarStr,"a+b", "S{ A{ S{v:'a'} '+' S{v:'b'} } }")
-        test(grammarStr,"a/b", "S{ D{ S{v:'a'} '/' S{v:'b'} } }")
-        test(grammarStr,"a+b/c", """
+        test(grammarStr, "v", "S{ v:'v' }")
+        test(grammarStr, "a+b", "S{ A{ S{v:'a'} '+' S{v:'b'} } }")
+        test(grammarStr, "a/b", "S{ D{ S{v:'a'} '/' S{v:'b'} } }")
+        test(
+            grammarStr, "a+b/c", """
             S { A {
               S { v : 'a' }
               '+'
@@ -1768,7 +1769,8 @@ class test_AglGrammar {
                 S { v : 'c' }
               } }
             } }
-        """.trimIndent())
+        """.trimIndent()
+        )
     }
 
     @Test
@@ -1787,10 +1789,11 @@ class test_AglGrammar {
                 }
             }
         """.trimIndent()
-        test(grammarStr,"v", "S{ v:'v' }")
-        test(grammarStr,"a+b", "S{ A{ S{v:'a'} '+' S{v:'b'} } }")
-        test(grammarStr,"a*b", "S{ D{ S{v:'a'} '*' S{v:'b'} } }")
-        test(grammarStr,"a+b+c", """
+        test(grammarStr, "v", "S{ v:'v' }")
+        test(grammarStr, "a+b", "S{ A{ S{v:'a'} '+' S{v:'b'} } }")
+        test(grammarStr, "a*b", "S{ D{ S{v:'a'} '*' S{v:'b'} } }")
+        test(
+            grammarStr, "a+b+c", """
             S { A {
               S { v : 'a' }
               '+'
@@ -1798,8 +1801,10 @@ class test_AglGrammar {
               '+'
               S { v : 'c' }
             } }
-        """.trimIndent())
-        test(grammarStr,"a+b*c", """
+        """.trimIndent()
+        )
+        test(
+            grammarStr, "a+b*c", """
             S { A {
               S { v : 'a' }
               '+'
@@ -1809,8 +1814,10 @@ class test_AglGrammar {
                 S { v : 'c' }
               } }
             } }
-        """.trimIndent())
-        test(grammarStr,"a*b+c", """
+        """.trimIndent()
+        )
+        test(
+            grammarStr, "a*b+c", """
             S { A {
               S { D {
                 S { v : 'a' }
@@ -1820,6 +1827,7 @@ class test_AglGrammar {
               '+'
               S { v : 'c' }
             } }
-        """.trimIndent())
+        """.trimIndent()
+        )
     }
 }

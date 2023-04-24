@@ -22,7 +22,6 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
@@ -62,7 +61,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         val typeModel by lazy {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
-            assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.joinToString(separator = "\n") { "$it" })
+            assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
             TypeModelFromGrammar(result.asm!!.last())
         }
         val scopeModel = ScopeModelAgl()
@@ -82,34 +81,34 @@ class test_SyntaxAnalyserSimple_datatypes {
         val actual = processor.typeModel
         val expected = typeModel("test", "Test") {
             //unit = declaration* ;
-            elementType("","Unit") {
+            elementType("unit", "Unit") {
                 propertyListTypeOf("declaration", "Declaration", false, 0)
             }
             // declaration = datatype | primitive ;
-            elementType("","Declaration") {
+            elementType("declaration", "Declaration") {
                 subTypes("Datatype", "Primitive")
             }
             // primitive = 'primitive' ID ;
-            elementType("","Primitive") {
+            elementType("primitive", "Primitive") {
                 propertyStringType("id", false, 1)
             }
             // datatype = 'datatype' ID '{' property* '}' ;
-            elementType("","Datatype") {
+            elementType("datatype", "Datatype") {
                 propertyStringType("id", false, 1)
                 propertyListTypeOf("property", "Property", false, 3)
             }
             // property = ID ':' typeReference ;
-            elementType("","Property") {
+            elementType("property", "Property") {
                 propertyStringType("id", false, 0)
                 propertyElementTypeOf("typeReference", "TypeReference", false, 2)
             }
             // typeReference = type typeArguments? ;
-            elementType("","TypeReference") {
+            elementType("typeReference", "TypeReference") {
                 propertyStringType("type", false, 0)
                 propertyElementTypeOf("typeArguments", "TypeArguments", true, 1)
             }
             // typeArguments = '<' [typeReference / ',']+ '>' ;
-            elementType("","TypeArguments") {
+            elementType("typeArguments", "TypeArguments") {
                 propertyListSeparatedTypeOf("typeReference", "TypeReference", StringType, false, 1)
             }
         }
@@ -129,7 +128,7 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val expected = asmSimple {
             element("Unit") {
-                propertyListOfElement("declaration",) {
+                propertyListOfElement("declaration") {
                     element("Datatype") {
                         propertyString("id", "A")
                         propertyListOfElement("property") {}
@@ -154,7 +153,7 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val expected = asmSimple {
             element("Unit") {
-                propertyListOfElement("declaration",) {
+                propertyListOfElement("declaration") {
                     element("Datatype") {
                         propertyString("id", "A")
                         propertyListOfElement("property") {}
@@ -190,7 +189,7 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val expected = asmSimple {
             element("Unit") {
-                propertyListOfElement("declaration",) {
+                propertyListOfElement("declaration") {
                     element("Datatype") {
                         propertyString("id", "A")
                         propertyListOfElement("property") {
@@ -230,11 +229,11 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         )
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val expected = asmSimple(scopeModel, ContextSimple()) {
             element("Unit") {
-                propertyListOfElement("declaration",) {
+                propertyListOfElement("declaration") {
                     element("Primitive") {
                         propertyString("id", "String")
                     }

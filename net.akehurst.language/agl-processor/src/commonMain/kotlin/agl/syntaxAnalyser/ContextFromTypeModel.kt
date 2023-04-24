@@ -41,8 +41,8 @@ class ContextFromTypeModel(
     fun createScopeFrom(typeModel: TypeModel) {
         val scope = ScopeSimple<String>(null, "", typeModel.name)
         typeModel.allRuleNameToType.forEach {
-            scope.addToScope(it.value.name, TYPE_NAME_FOR_TYPES, it.value.name)
-            val type = it.value
+            scope.addToScope(it.value.type.name, TYPE_NAME_FOR_TYPES, it.value.type.name)
+            val type = it.value.type
             when (type) {
                 is NothingType -> Unit
                 is AnyType -> Unit

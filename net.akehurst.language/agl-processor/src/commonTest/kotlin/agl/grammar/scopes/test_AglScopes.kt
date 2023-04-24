@@ -15,7 +15,6 @@
  */
 package net.akehurst.language.agl.grammar.scopes
 
-import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.syntaxAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
@@ -41,52 +40,52 @@ class test_AglScopes {
         val actual = aglProc.typeModel
         val expected = typeModel("net.akehurst.language.agl", "AglScopes") {
             // declarations = rootIdentifiables scopes references?
-            elementType("declarations","Declarations") {
+            elementType("declarations", "Declarations") {
                 propertyListTypeOf("rootIdentifiables", "Identifiable", false, 0)
                 propertyListTypeOf("scopes", "Scope", false, 1)
                 propertyListTypeOf("references", "Reference", true, 2)
             }
             // rootIdentifiables = identifiable*
-            listTypeOf("rootIdentifiables","Identifiable")
+            listTypeOf("rootIdentifiables", "Identifiable")
             // scopes = scope*
-            listTypeOf("scopes","Scope")
+            listTypeOf("scopes", "Scope")
             // scope = 'scope' typeReference '{' identifiables '}
-            elementType("scope","Scope") {
+            elementType("scope", "Scope") {
                 propertyElementTypeOf("typeReference", "TypeReference", false, 0)
                 propertyListTypeOf("identifiables", "Identifiable", false, 1)
             }
             // identifiables = identifiable*
-            listTypeOf("identifiables","Identifiable")
+            listTypeOf("identifiables", "Identifiable")
             // identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
-            elementType("identifiable","Identifiable") {
+            elementType("identifiable", "Identifiable") {
                 propertyElementTypeOf("typeReference", "TypeReference", false, 0)
                 propertyStringType("propertyReferenceOrNothing", false, 1)
             }
             // references = 'references' '{' referenceDefinitions '}'
-            elementType("references","References") {
+            elementType("references", "References") {
                 propertyListTypeOf("referenceDefinitions", "ReferenceDefinition", false, 1)
             }
             // referenceDefinitions = referenceDefinition*
-            listTypeOf("referenceDefinitions","ReferenceDefinition")
+            listTypeOf("referenceDefinitions", "ReferenceDefinition")
             // referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
-            elementType("referenceDefinition","ReferenceDefinition") {
+            elementType("referenceDefinition", "ReferenceDefinition") {
                 propertyElementTypeOf("typeReference", "TypeReference", false, 0)
                 propertyElementTypeOf("propertyReference", "PropertyReference", false, 1)
                 propertyListTypeOf("typeReferences", "TypeReference", false, 2)
             }
             // typeReferences = [typeReferences / '|']+
-            listSeparatedTypeOf("typeReferences","TypeReference",StringType.name)
+            listSeparatedTypeOf("typeReferences", "TypeReference", StringType.name)
             // propertyReferenceOrNothing = '§nothing' | propertyReference
-            elementType("propertyReferenceOrNothing","PropertyReferenceOrNothing") {
+            elementType("propertyReferenceOrNothing", "PropertyReferenceOrNothing") {
 
             }
             // typeReference = IDENTIFIER     // same as grammar rule name
-            elementType("typeReference","TypeReference") {
-                propertyStringType("identifier",false, 0)
+            elementType("typeReference", "TypeReference") {
+                propertyStringType("identifier", false, 0)
             }
             // propertyReference = IDENTIFIER // same as grammar rule name
-            elementType("propertyReference","PropertyReference") {
-                propertyStringType("identifier",false, 0)
+            elementType("propertyReference", "PropertyReference") {
+                propertyStringType("identifier", false, 0)
             }
             // leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*"
 
@@ -109,7 +108,7 @@ class test_AglScopes {
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, result.asm?.references)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 
     @Test
@@ -129,7 +128,7 @@ class test_AglScopes {
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, result.asm?.references)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 
     @Test
@@ -161,7 +160,7 @@ class test_AglScopes {
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, result.asm?.references)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 
     @Test
@@ -235,7 +234,7 @@ class test_AglScopes {
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, result.asm?.references)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 
     @Test
@@ -366,7 +365,7 @@ class test_AglScopes {
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, result.asm?.references)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 
     @Test
@@ -443,7 +442,7 @@ class test_AglScopes {
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, result.asm?.references)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 
     //TODO more checks + check rules (types/properties) exist in context of grammar

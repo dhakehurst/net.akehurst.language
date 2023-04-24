@@ -22,13 +22,8 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.typemodel.StringType
-import net.akehurst.language.api.typemodel.TypeModelTest
-import net.akehurst.language.api.typemodel.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -107,7 +102,7 @@ grammar SQL {
         val typeModel by lazy {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
-            assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.joinToString(separator = "\n") { "$it" })
+            assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
             TypeModelFromGrammar(result.asm!!.last())
         }
         val scopeModel = ScopeModelAgl.fromString(
@@ -161,7 +156,7 @@ grammar SQL {
         """.trimIndent()
 
         val result = processor.process(sentence)
-        assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.asm)
 
         val expected = asmSimple {
@@ -185,7 +180,7 @@ grammar SQL {
 
         val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextSimple()) } })
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
 
         val expected = asmSimple {
 

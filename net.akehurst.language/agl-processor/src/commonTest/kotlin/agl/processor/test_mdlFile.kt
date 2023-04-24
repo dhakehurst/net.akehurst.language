@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.api.typemodel.StringType
 import net.akehurst.language.api.typemodel.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -79,17 +80,34 @@ grammar Mdl {
                 propertyListTypeOf("section", "Section", false, 0)
             }
             //section = IDENTIFIER '{' content* '}' ;
-
+            elementType("section", "Section") {
+                propertyStringType("identifier", false, 0)
+                propertyListTypeOf("content", "Content", false, 1)
+            }
             //content = section | parameter ;
-
+            elementType("content", "Content") {
+                subTypes("Section", "Parameter")
+            }
             //parameter = IDENTIFIER value ;
-
+            elementType("parameter", "Parameter") {
+                propertyStringType("identifier", false, 0)
+                propertyElementTypeOf("value", "Value", false, 1)
+            }
             //value = stringList | matrix | identifier | literal ;
+            elementType("value", "Value") {
+                subTypes("StringList", "Matrix", "Identifier", "Literal")
+            }
             //identifier = IDENTIFIER ;
+            elementType("identifier", "Identifier") {
+                propertyStringType("identifier", false, 0)
+            }
             //matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
             //row = [literal / ',']+ | literal+ ;
 
             //stringList = DOUBLE_QUOTE_STRING+ ;
+            elementType("stringList", "StringList") {
+                propertyListType("double_quoted_string", StringType, false, 0)
+            }
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -275,7 +293,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
@@ -364,7 +382,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
@@ -387,7 +405,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
@@ -407,7 +425,7 @@ grammar Mdl {
         )
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -475,7 +493,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
@@ -519,7 +537,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
@@ -561,7 +579,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
 
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
@@ -585,7 +603,7 @@ grammar Mdl {
         )
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         //assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
         assertEquals("section", result.sppt!!.root.name)
         //TODO

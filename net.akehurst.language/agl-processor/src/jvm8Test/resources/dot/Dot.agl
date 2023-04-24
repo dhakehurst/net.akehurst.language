@@ -37,13 +37,15 @@ grammar Dot  {
 
 	stmt_list = stmt1 * ;
     stmt1 = stmt  ';'? ;
-	stmt =
-	    node_stmt
+	stmt
+	  = node_stmt
       | edge_stmt
       | attr_stmt
-      | ID '=' ID
+      | assign
       | subgraph
       ;
+
+    assign = ID '=' ID ;
 
     node_stmt = node_id attr_lists? ;
     node_id = ID port? ;

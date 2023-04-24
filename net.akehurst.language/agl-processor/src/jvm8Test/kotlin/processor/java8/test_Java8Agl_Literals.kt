@@ -95,7 +95,7 @@ class test_Java8Agl_Literals(val data: Data) {
     @Test
     fun test() {
         val result = processor.parse(this.data.text)
-        assertTrue(result.issues.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         val resultStr = result.sppt!!.asString
         assertEquals(this.data.text, resultStr)

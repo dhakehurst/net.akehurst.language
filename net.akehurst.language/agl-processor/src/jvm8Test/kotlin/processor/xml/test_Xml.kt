@@ -21,7 +21,6 @@ package net.akehurst.language.agl.processor.xml
 //import java.io.InputStreamReader
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -73,7 +72,7 @@ class test_Xml(val data: Data) {
 
         if (data.valid) {
             assertNotNull(result.sppt)
-            assertTrue(result.issues.errors.isEmpty(),result.issues.joinToString(separator = "\n") { "$it" })
+            assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
             val resultStr = result.sppt!!.asString
             assertEquals(this.data.text, resultStr)
         } else {
@@ -87,8 +86,8 @@ class test_Xml(val data: Data) {
         val result = processor.process(this.data.text, Agl.options { parse { goalRuleName(goal) } })
 
         if (data.valid) {
-            assertNotNull(result.asm,result.issues.joinToString(separator = "\n") { "$it" })
-            assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString(separator = "\n") { "$it" })
+            assertNotNull(result.asm, result.issues.toString())
+            assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         } else {
             assertNull(result.asm)
             assertTrue(result.issues.isNotEmpty())

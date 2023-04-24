@@ -52,7 +52,7 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
         return TerminalDefault(value, true)
     }
 
-    fun embed(embeddedGrammarName:String, embeddedGoalName:String) : Embedded {
+    fun embed(embeddedGrammarName: String, embeddedGoalName: String): Embedded {
         val qn = embeddedGrammarName
         val embeddedGrammarRef = GrammarReferenceDefault(namespace, embeddedGrammarName)
         return EmbeddedDefault(embeddedGoalName, embeddedGrammarRef)
@@ -94,13 +94,16 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
             this.rule.rhs = ChoicePriorityDefault(alternative.asList());
         }
 
-        fun multi(min: Int, max: Int, item: SimpleItem) {
-            this.rule.rhs = ConcatenationDefault(listOf(SimpleListDefault(min, max, item)))
+        fun optional(item: SimpleItem) {
+            this.rule.rhs = OptionalItemDefault(item)
         }
 
-        //TODO: original only allows separator to be a TerminalLiteral here,  I think any Terminal is ok though!
+        fun multi(min: Int, max: Int, item: SimpleItem) {
+            this.rule.rhs = SimpleListDefault(min, max, item)
+        }
+
         fun separatedList(min: Int, max: Int, separator: SimpleItem, item: SimpleItem) {
-            this.rule.rhs = ConcatenationDefault(listOf(SeparatedListDefault(min, max, item, separator)))
+            this.rule.rhs = SeparatedListDefault(min, max, item, separator)
         }
     }
 }

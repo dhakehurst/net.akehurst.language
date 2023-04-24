@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.agl.typemodel.TypeModelAbstract
+import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.typemodel.*
 
@@ -104,37 +105,29 @@ class TypeModelFromGrammar(
     */
     private fun findElementType(rule: GrammarRule): ElementType? = _ruleToType[rule.name] as ElementType?
 
+    // Type for a GrammarRule is in some cases different than type for a rule item when part of something else in a rule
     private fun typeForRhs(rule: GrammarRule): TypeUsage {
         val type = _ruleToType[rule.name]
         return if (null != type) {
-            type // return the type if it exists, also stops infinite recursion
+            type // return the type if it exists, also stops recursion
         } else {
             val rhs = rule.rhs
-            val ruleTypeUse:TypeUsage = when (rhs) {
-                // rhs's are only ever these things (currently)
-                is EmptyRule -> {
-                    val et = findOrCreateElementType(rule) {}
-                    et
-                }
-
+            val ruleTypeUse: TypeUsage = when (rhs) {
+                is EmptyRule -> findOrCreateElementType(rule) {}
+                is Terminal -> typeForConcatenationRule(rule, listOf(rhs))
+                is NonTerminal -> typeForConcatenationRule(rule, listOf(rhs))
+                is Embedded -> typeForConcatenationRule(rule, listOf(rhs))
                 is Choice -> typeForChoiceRule(rule)
-                is Concatenation -> when (rhs.items.size) {
-                    0 -> error("Should not happen")
-                    1 -> when (rhs.items[0]) {
-                        //is SimpleList -> when ((rhs.items[0] as SimpleList).item) {
-                        //    //is Terminal -> typeForConcatenation(rule, rhs.items)
-                        //    else -> typeForRuleItem(rhs.items[0])
-                        //}
-
-                        //is SeparatedList -> typeForRuleItem(rhs.items[0])
-                        else -> typeForConcatenation(rule, rhs.items)
+                is Concatenation -> typeForConcatenationRule(rule, rhs.items)
+                is Group -> typeForGroup(rhs)
+                is OptionalItem -> TODO()
+                is SimpleList -> when (rhs.max) {
+                    1 -> {
+                        val nullable = rhs.min == 0
+                        val t = typeForRuleItem(rhs.item)
+                        TypeUsage.ofType(t.type, t.arguments, nullable)
                     }
 
-                    else -> typeForConcatenation(rule, rhs.items)
-                }
-
-                is SimpleList -> when (rhs.max) {
-                    1 -> typeForRuleItem(rhs.item) //no need for nullable, when min is 0 we get empty list
                     else -> {
                         val et = typeForRuleItem(rhs.item)
                         val t = ListSimpleType.ofType(et)
@@ -142,54 +135,33 @@ class TypeModelFromGrammar(
                     }
                 }
 
-                is SeparatedList -> when (rhs.max) {
-                    1 -> typeForRuleItem(rhs.item) //no need for nullable, when min is 0 we get empty list
-                    else -> {
-                        val itemType = typeForRuleItem(rhs.item)
-                        val sepType = typeForRuleItem(rhs.separator)
-                        val t = ListSeparatedType()
-                        t.itemType = itemType
-                        t.separatorType = sepType
-                        t
-                    }
-                }
-
+                is SeparatedList -> typeForSeparatedList(rhs)
                 else -> error("Internal error, unhandled subtype of rule '${rule.name}'.rhs '${rhs::class.simpleName}' when getting TypeModel from grammar '${this.qualifiedName}'")
             }
-            //if (ruleType is ElementType) {
             _ruleToType[rule.name] = ruleTypeUse
-            // }
             ruleTypeUse
         }
     }
 
+    // Type for a GrammarRule is in some cases different than type for a rule item when part of something else in a rule
     private fun typeForRuleItem(ruleItem: RuleItem): TypeUsage {
         val type = _typeForRuleItem[ruleItem]
         return if (null != type) {
             type
         } else {
             val ruleType: TypeUsage = when (ruleItem) {
-                is EmptyRule -> TypeUsage.ofType(NothingType)
+                is EmptyRule -> NothingType.use
                 is Terminal -> TypeUsage.ofType(StringType)
-                is SimpleList -> when (ruleItem.max) {
-                    1 -> typeForRuleItem(ruleItem.item) //no need for nullable, when min is 0 we get empty list
-                    else -> {
-                        val elementType = typeForRuleItem(ruleItem.item)
-                        val isNullable = ruleItem.min == 0 && ruleItem.max == 1
-                        val t = ListSimpleType.ofType(elementType, isNullable)
-                        _typeForRuleItem[ruleItem] = t
-                        t
-                    }
-                }
+                is NonTerminal -> {
+                    val refRule = ruleItem.referencedRule(this.grammar)
+                    when {
+                        refRule.isLeaf -> TypeUsage.ofType(StringType)
+                        refRule.rhs is EmptyRule -> NothingType.use
+                        refRule.rhs is Choice -> {
+                            typeForRhs(refRule)
+                        }
 
-                is SeparatedList -> when (ruleItem.max) {
-                    1 -> typeForRuleItem(ruleItem.item) //no need for nullable, when min is 0 we get empty list
-                    else -> {
-                        val itemType = typeForRuleItem(ruleItem.item)
-                        val sepType = typeForRuleItem(ruleItem.separator)
-                        val t = ListSeparatedType.ofType(itemType, sepType)
-                        _typeForRuleItem[ruleItem] = t
-                        t
+                        else -> typeForRhs(refRule)
                     }
                 }
 
@@ -199,41 +171,47 @@ class TypeModelFromGrammar(
                     embTm.findTypeUsageForRule(ruleItem.name) ?: error("Should never happen")
                 }
 
-                is NonTerminal -> when {
-                    ruleItem.referencedRule(this.grammar).isLeaf -> TypeUsage.ofType(StringType)
-                    ruleItem.referencedRule(this.grammar).rhs is EmptyRule -> TypeUsage.ofType(NothingType)
-                    ruleItem.referencedRule(this.grammar).rhs is Choice -> {
-                        val r = ruleItem.referencedRule(this.grammar)
-                        //typeForChoiceRule(r) //r.name, (r.rhs as Choice).alternative)
-                        typeForRhs(r)
+                is Choice -> TODO()
+                is Concatenation -> typeForConcatenationAsRuleItem(ruleItem)
+                is Group -> typeForGroup(ruleItem)
+                is OptionalItem -> TODO()
+                is SimpleList -> {
+                    val isOptional = ruleItem.min == 0 && ruleItem.max == 1
+                    when {
+                        isOptional -> {
+                            val elementType = typeForRuleItem(ruleItem.item) //TODO: could cause recursion overflow
+                            val t = TypeUsage.ofType(elementType.type, emptyList(), true)
+                            _typeForRuleItem[ruleItem] = t
+                            t
+                        }
+
+                        else -> {
+                            // assign type to rule item before getting arg types to avoid recursion overflow
+                            val typeArgs = mutableListOf<TypeUsage>()
+                            val t = TypeUsage.ofType(ListSimpleType, typeArgs)
+                            _typeForRuleItem[ruleItem] = t
+                            val elementType = typeForRuleItem(ruleItem.item)
+                            typeArgs.add(elementType)
+                            t
+                        }
                     }
 
-                    else -> typeForRhs(ruleItem.referencedRule(this.grammar))
                 }
 
-                is Concatenation -> when {
-                    1 == ruleItem.items.size -> {
-                        val t = typeForRuleItem(ruleItem.items[0])
-                        this._typeForRuleItem[ruleItem] = t
-                        t
-                    }
-
+                is SeparatedList -> when (ruleItem.max) {
+                    1 -> typeForRuleItem(ruleItem.item) //no need for nullable, when min is 0 we get empty list
                     else -> {
-                        val concatType = TupleType()
-                        val t = TypeUsage.ofType(concatType)
-                        this._typeForRuleItem[ruleItem] = t
-                        ruleItem.items.forEachIndexed { idx, it ->
-                            createPropertyDeclaration(concatType, it, idx)
-                        }
-                        when {
-                            concatType.property.isEmpty() -> NothingType
-                            else -> concatType
-                        }
+                        // assign type to rule item before getting arg types to avoid recursion overflow
+                        val typeArgs = mutableListOf<TypeUsage>()
+                        val t = TypeUsage.ofType(ListSeparatedType, typeArgs)
+                        _typeForRuleItem[ruleItem] = t
+                        val itemType = typeForRuleItem(ruleItem.item)
+                        val sepType = typeForRuleItem(ruleItem.separator)
+                        typeArgs.add(itemType)
+                        typeArgs.add(sepType)
                         t
                     }
                 }
-
-                is Group -> populateTypeForChoice(ruleItem.choice, null)
 
                 else -> error("Internal error, unhandled subtype of RuleItem")
             }
@@ -242,15 +220,43 @@ class TypeModelFromGrammar(
         }
     }
 
-    private fun typeForConcatenation(rule: GrammarRule, items: List<ConcatenationItem>): TypeUsage {
+    private fun typeForConcatenationRule(rule: GrammarRule, items: List<ConcatenationItem>): TypeUsage {
         val concatType = findOrCreateElementType(rule) { newType ->
             items.forEachIndexed { idx, it -> createPropertyDeclaration(newType, it, idx) }
         }
         return concatType
     }
 
+    private fun typeForConcatenationAsRuleItem(ruleItem: Concatenation): TypeUsage {
+        if (Debug.CHECK) check(ruleItem.items.size > 1)
+        val concatType = TupleType()
+        val t = TypeUsage.ofType(concatType)
+        this._typeForRuleItem[ruleItem] = t
+        ruleItem.items.forEachIndexed { idx, it ->
+            createPropertyDeclaration(concatType, it, idx)
+        }
+        return when {
+            concatType.property.isEmpty() -> NothingType.use
+            else -> t
+        }
+        //return t
+    }
+
     private fun typeForChoiceRule(choiceRule: GrammarRule): TypeUsage { //name: String, alternative: List<Concatenation>): RuleType {
         val t = populateTypeForChoice(choiceRule.rhs as Choice, choiceRule)
+        return t
+    }
+
+    private fun typeForGroup(group: Group): TypeUsage {
+        val t = TupleType()
+        createPropertyDeclaration(t, group.groupedContent, 0)
+        return TypeUsage.ofType(t)
+    }
+
+    private fun typeForSeparatedList(slist: SeparatedList): TypeUsage {
+        val itemType = typeForRuleItem(slist.item)
+        val sepType = typeForRuleItem(slist.separator)
+        val t = ListSeparatedType.ofType(itemType, sepType)
         return t
     }
 
@@ -259,15 +265,18 @@ class TypeModelFromGrammar(
         // else choices maps to properties
         val subtypes = choice.alternative.map { typeForRuleItem(it) }
         return when {
-            subtypes.all { it.type is NothingType } -> TypeUsage.ofType(NothingType)
-            subtypes.all { it.type is StringType } -> TypeUsage.ofType(StringType)
+            subtypes.all { it.type is NothingType } -> TypeUsage.ofType(NothingType, emptyList(), subtypes.any { it.nullable })
+            subtypes.all { it.type is StringType } -> TypeUsage.ofType(StringType, emptyList(), subtypes.any { it.nullable })
 
             subtypes.all { it.type is ElementType } -> when {
-                null == choiceRule -> TypeUsage.ofType(UnnamedSuperTypeType(subtypes))
+                null == choiceRule -> {
+                    TypeUsage.ofType(UnnamedSuperTypeType(subtypes.map { it }, true))
+                }
+
                 else -> {
                     val choiceType = findOrCreateElementType(choiceRule) { newType ->
                         subtypes.forEach {
-                            (it as ElementType).addSuperType(newType)
+                            (it.type as ElementType).addSuperType(newType)
                         }
                     }
                     choiceType
@@ -281,12 +290,24 @@ class TypeModelFromGrammar(
             }
 
             subtypes.all { it.type is TupleType } -> when {
-                1 == subtypes.map { (it as TupleType).property.values.map { Pair(it.name, it) }.toSet() }.toSet().size -> subtypes.first()
-                else -> TypeUsage.ofType(UnnamedSuperTypeType(subtypes))
+                1 == subtypes.map { (it.type as TupleType).property.values.map { Pair(it.name, it) }.toSet() }.toSet().size -> {
+                    val t = subtypes.first()
+                    when {
+                        t.type is TupleType && t.type.properties.isEmpty() -> NothingType.use
+                        else -> t
+                    }
+                }
+
+                else -> {
+                    TypeUsage.ofType(UnnamedSuperTypeType(subtypes.map { it }, false))
+                }
             }
 
             else -> when {
-                null == choiceRule -> TypeUsage.ofType(UnnamedSuperTypeType(subtypes))
+                null == choiceRule -> {
+                    TypeUsage.ofType(UnnamedSuperTypeType(subtypes.map { it }, true))
+                }
+
                 else -> {/*
                     val elTypes = choice.alternative.mapIndexed { i, it ->
                         val itType = subtypes[i]
@@ -310,13 +331,13 @@ class TypeModelFromGrammar(
                     }
                     choiceType
                     */
-                    TypeUsage.ofType(UnnamedSuperTypeType(subtypes))
+                    TypeUsage.ofType(UnnamedSuperTypeType(subtypes.map { it }, true))
                 }
             }
         }
     }
 
-    private fun createPropertyDeclaration(et: StructuredRuleType, ruleItem: ConcatenationItem, childIndex: Int) {
+    private fun createPropertyDeclaration(et: StructuredRuleType, ruleItem: RuleItem, childIndex: Int) {
         when (ruleItem) {
             is EmptyRule -> Unit
             is Terminal -> Unit //createUniquePropertyDeclaration(et, UNNAMED_STRING_VALUE, propType)
@@ -330,28 +351,35 @@ class TypeModelFromGrammar(
                 createPropertyDeclarationForReferencedRule(refRule, et, ruleItem, childIndex)
             }
 
+            is Concatenation -> TODO("Concatenation")
+            is Choice -> TODO("Choice")
+
+            is OptionalItem -> TODO("OptionalItem")
+
             is SimpleList -> {
-                when (ruleItem.item) {
-                    is Terminal -> Unit //do not add optional literals
+                val list = ruleItem
+                val isOptional = list.max == 1 && list.min == 0
+                when {
+                    ruleItem.item is Terminal && isOptional -> Unit //do not add optional literals
                     else -> {
                         val t = typeForRuleItem(ruleItem)
-                        createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item, t), t, childIndex)
+                        createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item, t.type), t, childIndex)
                     }
                 }
             }
 
             is SeparatedList -> {
                 val t = typeForRuleItem(ruleItem)
-                createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item, t), t, false, childIndex)
+                createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item, t.type), t, childIndex)
             }
 
             is Group -> {
-                val choiceType = populateTypeForChoice(ruleItem.choice, null)
-                if (choiceType is NothingType) {
+                val groupType = typeForGroup(ruleItem)
+                if (groupType.type is NothingType) {
                     Unit
                 } else {
-                    val pName = propertyNameFor(et, ruleItem, choiceType)
-                    createUniquePropertyDeclaration(et, pName, choiceType, false, childIndex)
+                    val pName = propertyNameFor(et, ruleItem, groupType.type)
+                    createUniquePropertyDeclaration(et, pName, groupType, childIndex)
                 }
             }
 
@@ -362,37 +390,36 @@ class TypeModelFromGrammar(
     private fun createPropertyDeclarationForReferencedRule(refRule: GrammarRule, et: StructuredRuleType, ruleItem: SimpleItem, childIndex: Int) {
         val rhs = refRule.rhs
         when (rhs) {
-            is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, StringType), StringType, false, childIndex)
+            is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, StringType), StringType.use, childIndex)
             is Concatenation -> when {
                 1 == rhs.items.size -> when (rhs.items[0]) {
-                    is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, StringType), StringType, false, childIndex)
+                    is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, StringType), StringType.use, childIndex)
                     is ListOfItems -> {
                         val propType = typeForRuleItem(rhs) //to get list type
-                        val isNullable = (rhs.items[0] as ListOfItems).min == 0 && (rhs.items[0] as ListOfItems).min == -1
-                        createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, propType), propType, isNullable, childIndex)
+                        createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, propType.type), propType, childIndex)
                     }
 
                     else -> {
                         val t = typeForRuleItem(ruleItem)
-                        createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, t), t, false, childIndex)
+                        createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, t.type), t, childIndex)
                     }
                 }
 
                 else -> {
                     val t = typeForRuleItem(ruleItem)
-                    createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, t), t, false, childIndex)
+                    createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, t.type), t, childIndex)
                 }
             }
 
             is Choice -> {
                 val choiceType = typeForChoiceRule(refRule) //pName, rhs.alternative)
-                val pName = propertyNameFor(et, ruleItem, choiceType)
-                createUniquePropertyDeclaration(et, pName, choiceType, false, childIndex)
+                val pName = propertyNameFor(et, ruleItem, choiceType.type)
+                createUniquePropertyDeclaration(et, pName, choiceType, childIndex)
             }
 
             else -> {
                 val propType = typeForRuleItem(ruleItem)
-                createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, propType), propType, false, childIndex)
+                createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, propType.type), propType, childIndex)
             }
         }
     }

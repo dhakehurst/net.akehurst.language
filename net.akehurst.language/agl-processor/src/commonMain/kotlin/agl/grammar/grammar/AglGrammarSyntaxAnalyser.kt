@@ -23,7 +23,10 @@ import net.akehurst.language.agl.syntaxAnalyser.BranchHandler
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserAbstract
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
@@ -158,7 +161,7 @@ internal class AglGrammarSyntaxAnalyser(
 
     // extendsOpt = extends?
     private fun extendsOpt(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<GrammarReference> {
-        return when{
+        return when {
             children.isEmpty() -> emptyList<GrammarReference>()
             else -> this.transformBranch<List<GrammarReference>>(children[0], arg)
         }
@@ -166,7 +169,7 @@ internal class AglGrammarSyntaxAnalyser(
 
     // extends = 'extends' extendsList ;
     private fun extends(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<GrammarReference> {
-        return this.transformBranch<List<GrammarReference>>(children[0], arg)?: emptyList()
+        return this.transformBranch<List<GrammarReference>>(children[0], arg) ?: emptyList()
     }
 
     // extendsList = [qualifiedName / ',']+ ;
@@ -221,7 +224,12 @@ internal class AglGrammarSyntaxAnalyser(
 
     // rhs = empty | concatenation | choice ;
     private fun rhs(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem {
-        return this.transformBranch<RuleItem>(children[0], arg)
+        val rhs = this.transformBranch<RuleItem>(children[0], arg)
+        val rhs2 = when (rhs) {
+            is Concatenation -> reduceConcatenation(rhs)
+            else -> rhs
+        }
+        return rhs2
     }
 
     // empty = ;
@@ -238,7 +246,8 @@ internal class AglGrammarSyntaxAnalyser(
     private fun simpleChoice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem {
         // children will have one element, an sList
         val alternative = children.mapIndexed { index, it ->
-            this.transformBranch<Concatenation>(it, arg)
+            val c = this.transformBranch<Concatenation>(it, arg)
+            reduceConcatenation(c)
         }
         return ChoiceLongestDefault(alternative).also { this.locationMap[it] = target.location }
     }
@@ -346,16 +355,24 @@ internal class AglGrammarSyntaxAnalyser(
         return SeparatedListDefault(min, max, item, separator).also { this.locationMap[it] = target.location }
     }
 
-    // group : '(' choice ')' ;
+    // group = '(' groupedContent ')' ;
     private fun group(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Group {
         val groupContent = this.transformBranch<RuleItem>(children[0], arg)
-        return when (groupContent) {
-            is Choice -> GroupDefault(groupContent).also { this.locationMap[it] = target.location }
-            is Concatenation -> GroupDefault(ChoiceLongestDefault(listOf(groupContent))).also { this.locationMap[it] = target.location }
-            else -> error("Internal Error: type of group content not handled '${groupContent::class.simpleName}'")
+        val reduced = when (groupContent) {
+            is Choice -> groupContent
+            is Concatenation -> reduceConcatenation(groupContent)
+            else -> error("Internal Error: subtype of RuleItem not handled - ${groupContent::class.simpleName}")
         }
+
+        return GroupDefault(groupContent).also { this.locationMap[it] = target.location }
+        //return when (groupContent) {
+        //    is Choice -> GroupDefault(groupContent).also { this.locationMap[it] = target.location }
+        //    is Concatenation -> GroupDefault(ChoiceLongestDefault(listOf(groupContent))).also { this.locationMap[it] = target.location }
+        //    else -> error("Internal Error: type of group content not handled '${groupContent::class.simpleName}'")
+        //}
     }
 
+    // groupedContent = concatenation | choice ;
     private fun groupedContent(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem {
         val content = this.transformBranch<RuleItem>(children[0], arg)
         return content
@@ -423,7 +440,7 @@ internal class AglGrammarSyntaxAnalyser(
             this.transformBranch<SimpleItem>(it, arg)
         }
         val assStr = children[3].nonSkipMatchedText
-        val associativity = when(assStr) {
+        val associativity = when (assStr) {
             "left" -> PreferenceOption.Associativity.LEFT
             "right" -> PreferenceOption.Associativity.RIGHT
             else -> error("Internal Error: associativity value '$assStr' not supported")
@@ -431,9 +448,26 @@ internal class AglGrammarSyntaxAnalyser(
         return PreferenceOptionDefault(item, choiceNumber, terminalList, associativity)
     }
 
-    private fun choiceNumber(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?):Int {
+    private fun choiceNumber(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Int {
         val str = target.nonSkipMatchedText
         return str.toInt()
+    }
+
+    private fun reduceConcatenation(concat: Concatenation): RuleItem {
+        return when (concat.items.size) {
+            1 -> when (concat.items[0]) {
+                is SimpleItem -> when (concat.items[0]) {
+                    is Group -> concat
+                    is TangibleItem -> concat.items[0]
+                    else -> error("Internal Error: subtype of SimpleItem not handled - ${concat.items[0]::class.simpleName}")
+                }
+
+                is ListOfItems -> concat.items[0]
+                else -> error("Internal Error: subtype of ConcatenationItem not handled - ${concat.items[0]::class.simpleName}")
+            }
+
+            else -> concat
+        }
     }
 
 }
