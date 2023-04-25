@@ -72,6 +72,7 @@ internal class PseudoRuleNames(val grammar: Grammar) {
             }
 
             is ConcatenationItem -> when (item) {
+                is OptionalItem -> pseudoRulesFor(item.item) + Pair(item, createOptionalItemRuleName(item.owningRule.name))
                 is SimpleItem -> when (item) {
                     is Group -> pseudoRulesFor(item.groupedContent) + Pair(item, createGroupRuleName(item.owningRule.name))
                     is TangibleItem -> when (item) {
@@ -118,6 +119,14 @@ internal class PseudoRuleNames(val grammar: Grammar) {
         n++
         _nextChoiceNumber[parentRuleName] = n
         return "§${parentRuleName.removePrefix("§")}§choice$n" //TODO: include original rule name fo easier debug
+    }
+
+
+    private fun createOptionalItemRuleName(parentRuleName: String): String {
+        var n = _nextSimpleListNumber[parentRuleName] ?: 0
+        n++
+        _nextSimpleListNumber[parentRuleName] = n
+        return "§${parentRuleName.removePrefix("§")}§opt$n" //TODO: include original rule name fo easier debug
     }
 
     private fun createSimpleListRuleName(parentRuleName: String): String {

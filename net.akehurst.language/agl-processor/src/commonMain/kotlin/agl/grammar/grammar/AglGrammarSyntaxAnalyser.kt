@@ -286,7 +286,8 @@ internal class AglGrammarSyntaxAnalyser(
     private fun simpleItem(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): SimpleItem = this.transformBranch<SimpleItem>(children[0], arg)
 
     // listOfItems = simpleList | separatedList ;
-    private fun listOfItems(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): ListOfItems = this.transformBranch<ListOfItems>(children[0], arg)
+    // could also return optional
+    private fun listOfItems(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): ConcatenationItem = this.transformBranch<ConcatenationItem>(children[0], arg)
 
     // multiplicity = '*' | '+' | '?' | range ;
     private fun multiplicity(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Pair<Int, Int> {
@@ -341,10 +342,13 @@ internal class AglGrammarSyntaxAnalyser(
     private fun rangeMaxBounded(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Int = target.nonSkipChildren[1].nonSkipMatchedText.toInt()
 
     // simpleList = simpleItem multiplicity ;
-    private fun simpleList(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): SimpleList {
+    private fun simpleList(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): ConcatenationItem {
         val (min, max) = this.transformBranch<Pair<Int, Int>>(children[1], arg)
         val item = this.transformBranch<SimpleItem>(children[0], arg)
-        return SimpleListDefault(min, max, item).also { this.locationMap[it] = target.location }
+        return when {
+            min == 0 && max == 1 -> OptionalItemDefault(item).also { this.locationMap[it] = target.location }
+            else -> SimpleListDefault(min, max, item).also { this.locationMap[it] = target.location }
+        }
     }
 
     // separatedList : '[' simpleItem '/' terminal ']' multiplicity ;
@@ -462,6 +466,7 @@ internal class AglGrammarSyntaxAnalyser(
                     else -> error("Internal Error: subtype of SimpleItem not handled - ${concat.items[0]::class.simpleName}")
                 }
 
+                is OptionalItem -> concat.items[0]
                 is ListOfItems -> concat.items[0]
                 else -> error("Internal Error: subtype of ConcatenationItem not handled - ${concat.items[0]::class.simpleName}")
             }

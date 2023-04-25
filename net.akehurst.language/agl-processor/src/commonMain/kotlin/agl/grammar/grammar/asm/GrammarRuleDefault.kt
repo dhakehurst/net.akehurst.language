@@ -75,6 +75,12 @@ data class GrammarRuleDefault(
                     }
                 }
 
+                is OptionalItem -> {
+                    val ct = this.compressRuleItem("${compressedName}List", item.item)
+                    val pattern = "(${ct.value})?"
+                    CompressedLeafRule(compressedName, pattern, true)
+                }
+
                 is SimpleList -> {
                     val ct = this.compressRuleItem("${compressedName}List", item.item)
                     val min = item.min
@@ -95,7 +101,7 @@ data class GrammarRuleDefault(
                     this.compressRuleItem(compressedName, item.referencedRule(grammar).rhs)
                 }
 
-                else -> throw GrammarExeception("GrammarRule ${item.owningRule.name}, compressing ${item::class} to leaf is not yet supported", null)
+                else -> throw GrammarExeception("GrammarRule ${item.owningRule.name}, compressing ${item::class.simpleName} to leaf is not yet supported", null)
             }
         }
 

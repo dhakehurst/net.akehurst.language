@@ -46,16 +46,22 @@ class test_AglScopes {
                 propertyListTypeOf("references", "Reference", true, 2)
             }
             // rootIdentifiables = identifiable*
-            listTypeOf("rootIdentifiables", "Identifiable")
+            elementType("rootIdentifiables", "RootIdentifiables") {
+                propertyListTypeOf("identifiables", "Identifiable", false, 0)
+            }
             // scopes = scope*
-            listTypeOf("scopes", "Scope")
+            elementType("scopes", "Scope") {
+                propertyListTypeOf("scope", "Scope", false, 0)
+            }
             // scope = 'scope' typeReference '{' identifiables '}
             elementType("scope", "Scope") {
                 propertyElementTypeOf("typeReference", "TypeReference", false, 0)
                 propertyListTypeOf("identifiables", "Identifiable", false, 1)
             }
             // identifiables = identifiable*
-            listTypeOf("identifiables", "Identifiable")
+            elementType("identifiables", "Identifiable") {
+                propertyListTypeOf("identifiable", "Identifiable", false, 0)
+            }
             // identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
             elementType("identifiable", "Identifiable") {
                 propertyElementTypeOf("typeReference", "TypeReference", false, 0)
@@ -66,7 +72,9 @@ class test_AglScopes {
                 propertyListTypeOf("referenceDefinitions", "ReferenceDefinition", false, 1)
             }
             // referenceDefinitions = referenceDefinition*
-            listTypeOf("referenceDefinitions", "ReferenceDefinition")
+            elementType("referenceDefinitions", "ReferenceDefinition") {
+                propertyListTypeOf("referenceDefinition", "ReferenceDefinition", false, 0)
+            }
             // referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
             elementType("referenceDefinition", "ReferenceDefinition") {
                 propertyElementTypeOf("typeReference", "TypeReference", false, 0)
@@ -74,7 +82,9 @@ class test_AglScopes {
                 propertyListTypeOf("typeReferences", "TypeReference", false, 2)
             }
             // typeReferences = [typeReferences / '|']+
-            listSeparatedTypeOf("typeReferences", "TypeReference", StringType.name)
+            elementType("typeReferences", "TypeReference") {
+                propertyListSeparatedTypeOf("typeReference", "TypeReference", StringType, false, 0)
+            }
             // propertyReferenceOrNothing = '§nothing' | propertyReference
             elementType("propertyReferenceOrNothing", "PropertyReferenceOrNothing") {
 

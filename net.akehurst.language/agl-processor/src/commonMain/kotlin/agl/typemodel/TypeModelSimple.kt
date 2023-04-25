@@ -48,6 +48,8 @@ class TypeModelSimple(
             existing as ElementType
         }
     }
+
+    override fun toString(): String = "${namespace}.$name"
 }
 
 abstract class TypeModelAbstract(

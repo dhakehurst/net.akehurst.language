@@ -192,9 +192,7 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = ""
         val expected = asmSimple {
-            element("S") {
-
-            }
+            string("<null>")
         }
         test(proc, TestData(sentence, expected))
     }
@@ -211,9 +209,9 @@ class test_SyntaxAnalyserSimple {
 
         val sentence = "aaaa"
         val expected = asmSimple {
-            //element("S") {
+            element("S") {
 
-            //}
+            }
         }
         test(proc, TestData(sentence, expected))
     }
@@ -559,12 +557,11 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         val tests = mutableListOf<TestData>()
-        /*
         tests.define("v") {
             asmSimple {
                 element("S") {
                     propertyElementExplicitType("exprList", "ExprList") {
-                        propertyElementExplicitType("expr","Var") {
+                        propertyElementExplicitType("expr", "Var") {
                             propertyString("name", "v")
                         }
                         propertyUnnamedListOfElement() {
@@ -573,7 +570,6 @@ class test_SyntaxAnalyserSimple {
                 }
             }
         }
-         */
         tests.define("v+w") {
             asmSimple {
                 element("S") {
@@ -618,7 +614,31 @@ class test_SyntaxAnalyserSimple {
                 element("S") {
                     propertyElementExplicitType("exprList", "ExprList") {
                         propertyElementExplicitType("expr", "Add") {
-                            propertyListOfString("expr", listOf("v", "w"))
+                            propertyListOfElement("expr") {
+                                element("Mul") {
+                                    propertyListOfElement("expr") {
+                                        element("Var") {
+                                            propertyString("name", "v")
+                                        }
+                                        element("Var") {
+                                            propertyString("name", "w")
+                                        }
+                                    }
+                                }
+                                element("Mul") {
+                                    propertyListOfElement("expr") {
+                                        element("Var") {
+                                            propertyString("name", "x")
+                                        }
+                                        element("Var") {
+                                            propertyString("name", "y")
+                                        }
+                                    }
+                                }
+                                element("Var") {
+                                    propertyString("name", "z")
+                                }
+                            }
                         }
                         propertyUnnamedListOfElement { }
                     }
@@ -629,9 +649,15 @@ class test_SyntaxAnalyserSimple {
             asmSimple {
                 element("S") {
                     propertyElementExplicitType("exprList", "ExprList") {
-                        propertyString("expr", "v")
+                        propertyElementExplicitType("expr", "Var") {
+                            propertyString("name", "v")
+                        }
                         propertyUnnamedListOfElement {
-                            tuple { propertyString("expr", "w") }
+                            tuple {
+                                propertyElementExplicitType("expr", "Var") {
+                                    propertyString("name", "w")
+                                }
+                            }
                         }
                     }
                 }
@@ -641,17 +667,26 @@ class test_SyntaxAnalyserSimple {
             asmSimple {
                 element("S") {
                     propertyElementExplicitType("exprList", "ExprList") {
-                        propertyString("expr", "v")
+                        propertyElementExplicitType("expr", "Var") {
+                            propertyString("name", "v")
+                        }
                         propertyUnnamedListOfElement {
-                            tuple { propertyString("expr", "w") }
-                            tuple { propertyString("expr", "x") }
+                            tuple {
+                                propertyElementExplicitType("expr", "Var") {
+                                    propertyString("name", "w")
+                                }
+                            }
+                            tuple {
+                                propertyElementExplicitType("expr", "Var") {
+                                    propertyString("name", "x")
+                                }
+                            }
                         }
                     }
                 }
             }
         }
         for (data in tests) {
-            println("${data.sentence}")
             test(proc, data)
         }
     }
@@ -945,7 +980,9 @@ class test_SyntaxAnalyserSimple {
                     propertyString("a", "a")
                     propertyTuple("\$group") {
                         propertyString("\$group", "b")
-                        propertyString("\$group2", null)
+                        propertyTuple("\$group2") {
+                            propertyString("d", null)
+                        }
                         propertyString("e", "e")
                     }
                     propertyString("f", "f")
@@ -958,7 +995,9 @@ class test_SyntaxAnalyserSimple {
                     propertyString("a", "a")
                     propertyTuple("\$group") {
                         propertyString("\$group", "c")
-                        propertyString("\$group2", null)
+                        propertyTuple("\$group2") {
+                            propertyString("d", null)
+                        }
                         propertyString("e", "e")
                     }
                     propertyString("f", "f")
@@ -971,7 +1010,9 @@ class test_SyntaxAnalyserSimple {
                     propertyString("a", "a")
                     propertyTuple("\$group") {
                         propertyString("\$group", "b")
-                        propertyString("\$group2", "d")
+                        propertyTuple("\$group2") {
+                            propertyString("d", "d")
+                        }
                         propertyString("e", "e")
                     }
                     propertyString("f", "f")
@@ -984,7 +1025,9 @@ class test_SyntaxAnalyserSimple {
                     propertyString("a", "a")
                     propertyTuple("\$group") {
                         propertyString("\$group", "c")
-                        propertyString("\$group2", "d")
+                        propertyTuple("\$group2") {
+                            propertyString("d", "d")
+                        }
                         propertyString("e", "e")
                     }
                     propertyString("f", "f")

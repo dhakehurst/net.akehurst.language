@@ -24,6 +24,7 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class test_StatechartTools_Singles {
 
@@ -53,11 +54,11 @@ class test_StatechartTools_Singles {
     }
 
     @Test
-    fun ConditionalExpression_integer() {
+    fun Expression_integer() {
         val goal = "Expression"
         val sentence = "integer"
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
-        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.asm, result.issues.toString())
         assertEquals(0, result.issues.size)
 
         val resultStr = processor.formatAsm(result.asm!!).sentence
@@ -153,8 +154,8 @@ class test_StatechartTools_Singles {
         val goal = "ReactionTrigger"
         val sentence = "exit"
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
-        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.asm)
 
         val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)

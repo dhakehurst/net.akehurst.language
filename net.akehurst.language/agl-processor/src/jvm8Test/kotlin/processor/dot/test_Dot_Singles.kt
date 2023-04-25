@@ -84,7 +84,7 @@ class test_Dot_Singles {
               §Xml§elementContent§embedded1 { Xml::elementContent {
                 startTag {
                   '<'
-                  §startTag§multi1 { §empty }
+                  §startTag§opt1 { §empty }
                   NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xml' }
                   §startTag§multi2 { WS { "\s+" : ' ' } }
                   §startTag§multi3 { §empty }
@@ -93,9 +93,9 @@ class test_Dot_Singles {
                 content {  §content§group1 { CHARDATA { "[^<]+" : 'xxxx' } } }
                 endTag {
                   '</'
-                  §endTag§multi1 { §empty }
+                  §endTag§opt1 { §empty }
                   NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xml' }
-                  §endTag§multi2 { §empty }
+                  §endTag§opt2 { §empty }
                   '>'
                 }
               } } WHITESPACE : ' '

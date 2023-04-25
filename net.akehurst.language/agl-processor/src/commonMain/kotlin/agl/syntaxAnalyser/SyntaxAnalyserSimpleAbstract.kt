@@ -139,7 +139,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
     }
 
     private fun createValueFromBranch(target: SPPTBranch, path: AsmElementPath, argType: TypeUsage): Any? {//, scope: ScopeSimple<AsmElementPath>?): Any? {
-        val type = typeModel.findTypeUsageForRule(target.name) ?: argType
+        val type = argType//typeModel.findTypeUsageForRule(target.name) ?: argType
         return when (type.type) {
             is StringType -> createStringValueFromBranch(target)
 

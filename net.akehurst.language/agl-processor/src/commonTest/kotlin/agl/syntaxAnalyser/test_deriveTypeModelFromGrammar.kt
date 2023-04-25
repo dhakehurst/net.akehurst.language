@@ -409,7 +409,10 @@ class test_deriveTypeModelFromGrammar {
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            listTypeFor("S", StringType)
+            elementType("S", "S") {
+
+            }
+//            listTypeFor("S", StringType)
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -431,7 +434,10 @@ class test_deriveTypeModelFromGrammar {
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            listTypeFor("S", StringType)
+            elementType("S", "S") {
+                propertyListType("a", StringType, false, 0)
+            }
+            //listTypeFor("S", StringType)
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -493,9 +499,12 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
             elementType("S", "S") {
-                propertyListSeparatedType("as", StringType, StringType, false, 0)
+                //propertyListSeparatedType("as", StringType, StringType, false, 0)
             }
-            listSeparatedTypeFor("as", StringType, StringType)
+            elementType("as", "As") {
+
+            }
+            //listSeparatedTypeFor("as", StringType, StringType)
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -521,8 +530,11 @@ class test_deriveTypeModelFromGrammar {
             elementType("S", "S") {
                 propertyListSeparatedTypeOf("as", "A", StringType, false, 0) // of String
             }
-            listSeparatedTypeOf("as", "A", "$String")
-            elementType("A", "A") {
+            //listSeparatedTypeOf("as", "A", StringType)
+            elementType("as", "As") {
+                propertyListSeparatedTypeOf("a", "A", StringType, false, 0) // of String
+            }
+            elementType("a", "A") {
             }
         }
 
@@ -550,8 +562,14 @@ class test_deriveTypeModelFromGrammar {
             elementType("S", "S") {
                 propertyListSeparatedTypeOf("ass", "As", StringType, false, 0) // of String
             }
-            //listSeparatedTypeOf("ass",) TODO
-            listTypeOf("as", "A")
+            elementType("ass", "Ass") {
+                propertyListTypeOf("as", "A", false, 0)
+            }
+            elementType("as", "As") {
+                propertyListTypeOf("a", "A", false, 0)
+            }
+            //val t_as = listTypeOf("as", "A")
+            //listSeparatedTypeFor("ass", t_as, StringType.use)
             elementType("a", "A") {
             }
         }
@@ -638,9 +656,12 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
             elementType("S", "S") {
-                propertyListType("as", StringType, false, 0) // of String
+                //propertyListType("as", StringType, false, 0) // of String
             }
-            listTypeFor("as", StringType)
+            elementType("as", "As") {
+
+            }
+            //listTypeFor("as", StringType)
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -666,10 +687,10 @@ class test_deriveTypeModelFromGrammar {
             elementType("S", "S") {
                 propertyListType("as", StringType, false, 0) // of String
             }
-            listTypeFor("as", StringType)
-            //elementType("As") {
-            //    propertyListType("a", StringType, false, 0) // of String
-            //}
+            //listTypeFor("as", StringType)
+            elementType("as", "As") {
+                propertyListType("a", StringType, false, 0) // of String
+            }
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -794,7 +815,9 @@ class test_deriveTypeModelFromGrammar {
         val expected = typeModel("test", "Test") {
             elementType("S", "S") {
                 propertyStringType("a", false, 0)
-                propertyStringType("\$group", false, 1)
+                propertyTupleType("\$group", false, 1) {
+                    propertyStringType("b", false, 0)
+                }
                 propertyStringType("e", false, 2)
             }
         }
@@ -1026,7 +1049,7 @@ class test_deriveTypeModelFromGrammar {
             elementType("mul", "Mul") {
                 propertyListSeparatedTypeOf("expr", "Expr", StringType, false, 0)
             }
-            listTypeOf("add", "Expr")
+            //listTypeOf("add", "Expr")
             elementType("add", "Add") {
                 propertyListSeparatedTypeOf("expr", "Expr", StringType, false, 0)
             }

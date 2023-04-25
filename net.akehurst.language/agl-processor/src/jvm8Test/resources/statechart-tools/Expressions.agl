@@ -59,7 +59,13 @@ grammar Expressions {
     ArgumentList = '(' [Argument / ',']* ')' ;
     ArrayIndex = '[' Expression ']' ;
 
-    ElementReferenceExpression = ID	('('(Argument (',' Argument)*)?	')' | ('[' Expression ']')  ('[' Expression ']')* )?;
+    ElementReferenceExpression =
+       ID
+       (
+         '('
+         (Argument (',' Argument)*)?	')' | ('[' Expression ']')  ('[' Expression ']')*
+       )?
+       ;
 
     Argument=(ID '=')?  Expression ;
 

@@ -248,6 +248,7 @@ internal class ConverterToRuntimeRules(
         is SimpleList -> this.createPseudoRuleForSimpleList(target, arg)
         is SeparatedList -> this.createPseudoRuleForSeparatedList(target, arg)
         is SimpleItem -> this.visitSimpleItem(target, arg)
+        is OptionalItem -> this.createPseudoRuleForOptionalItem(target, arg)
         else -> error("${target::class} is not a supported subtype of ConcatenationItem")
     }
 
@@ -320,6 +321,14 @@ internal class ConverterToRuntimeRules(
 
     private fun createPseudoRuleForGroup(target: RuleItem, psudeoRuleName: String): RuntimeRule {
         val nrule = this.nextRule(psudeoRuleName, false)
+        this.originalRuleItem[Pair(nrule.runtimeRuleSetNumber, nrule.ruleNumber)] = target
+        return nrule
+    }
+
+    private fun createPseudoRuleForOptionalItem(target: OptionalItem, arg: String): RuntimeRule {
+        val optRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)//this.createSimpleListRuleName(arg)
+        val nrule = this.nextRule(optRuleName, false)
+        nrule.setRhs(this.createRhsForOptional(nrule, target, optRuleName))
         this.originalRuleItem[Pair(nrule.runtimeRuleSetNumber, nrule.ruleNumber)] = target
         return nrule
     }
