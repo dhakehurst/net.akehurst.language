@@ -266,12 +266,6 @@ internal class ConverterToRuntimeRules(
         else -> error("${target::class} is not a supported subtype of TangibleItem")
     }
 
-    // private fun visitEmptyRule(target: EmptyRule, arg: String): RuntimeRule {
-    //    val emptyRule = this.createEmptyRuntimeRuleFor(arg)
-    //    this.originalRuleItem[Pair(emptyRule.runtimeRuleSetNumber, emptyRule.ruleNumber)] = target
-    //     return emptyRule
-    // }
-
     private fun visitTerminal(target: Terminal, arg: String): RuntimeRule {
         val existing = this.findTerminal(target.value)
         return if (null == existing) {
@@ -312,14 +306,26 @@ internal class ConverterToRuntimeRules(
 
     private fun visitGroup(target: Group, arg: String): RuntimeRule {
         val content = target.groupedContent
-        val groupRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)
-        val gRule = this.createPseudoRuleForGroup(content, groupRuleName)
-        val rhs = createRhs(gRule, content, arg)
-        gRule.setRhs(rhs)
-        return gRule
+        return when (content) {
+            is Choice -> {
+                val choiceRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)
+                val cRule = this.createPseudoRule(content, choiceRuleName)
+                val rhs = createRhsForChoice(cRule, content, arg)
+                cRule.setRhs(rhs)
+                cRule
+            }
+
+            else -> {
+                val groupRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)
+                val gRule = this.createPseudoRule(content, groupRuleName)
+                val rhs = createRhs(gRule, content, arg)
+                gRule.setRhs(rhs)
+                gRule
+            }
+        }
     }
 
-    private fun createPseudoRuleForGroup(target: RuleItem, psudeoRuleName: String): RuntimeRule {
+    private fun createPseudoRule(target: RuleItem, psudeoRuleName: String): RuntimeRule {
         val nrule = this.nextRule(psudeoRuleName, false)
         this.originalRuleItem[Pair(nrule.runtimeRuleSetNumber, nrule.ruleNumber)] = target
         return nrule

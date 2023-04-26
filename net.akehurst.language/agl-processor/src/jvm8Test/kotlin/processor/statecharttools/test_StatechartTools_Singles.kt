@@ -34,7 +34,7 @@ class test_StatechartTools_Singles {
 
         private val formatterStr = """
            AssignmentExpression -> "§expression §assignmentOperator §expression2"
-           FeatureCall -> "§elementReferenceExpression"
+           FeatureCall -> "§elementReferenceExpression§\§list"
            ElementReferenceExpression -> "§id"
            PrimitiveValueExpression -> "§literal"
            

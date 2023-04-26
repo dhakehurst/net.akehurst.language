@@ -121,11 +121,18 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
         }
     }
 
-    private fun createValue(target: SPPTNode, path: AsmElementPath, elType: TypeUsage): Any? {//, scope: ScopeSimple<AsmElementPath>?): Any? {
-        val v = when (target) {
-            is SPPTLeaf -> createValueFromLeaf(target)
-            is SPPTBranch -> createValueFromBranch(target, path, elType)//, scope)
-            else -> error("should never happen!")
+    private fun createValue(target: SPPTNode, path: AsmElementPath, type: TypeUsage): Any? {
+        val nonOptTarget = when {
+            type.nullable -> target.asBranch.nonSkipChildren[0]
+            else -> target
+        }
+        val v = when {
+            nonOptTarget.isEmptyLeaf -> null
+            else -> when (nonOptTarget) {
+                is SPPTLeaf -> createValueFromLeaf(nonOptTarget)
+                is SPPTBranch -> createValueFromBranch(nonOptTarget, path, type.notNullable)
+                else -> error("should never happen!")
+            }
         }
         if (v is AsmElementSimple) {
             locationMap[v] = target.location
@@ -205,10 +212,10 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
                     val propType = propDecl.typeUse
                     val propPath = path + propDecl.name
                     val propValue = when {
-                        propTgt.isOptional -> when {
-                            propDecl.typeUse.nullable -> createValue(propTgt.asBranch.nonSkipChildren[0], propPath, propType)
-                            else -> error("Internal Error: '$propDecl' is not nullable !")
-                        }
+                        //propTgt.isOptional -> when {
+                        //    propDecl.typeUse.nullable -> createValue(propTgt.asBranch.nonSkipChildren[0], propPath, propType)
+                        //    else -> error("Internal Error: '$propDecl' is not nullable !")
+                        //}
 
                         propTgt.isEmbedded -> {
                             val embTgt = propTgt.asBranch.nonSkipChildren[0]
@@ -217,84 +224,6 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
 
                         else -> createValue(propTgt, propPath, propType)
                     }
-                    /*
-                    val propertyValue = when (propType) {
-                        is AnyType -> {
-                            this.createValue(propTgt, childPath, propType)//, childsScope)
-                        }
-
-                        is StringType -> {
-                            val propValue = when {
-                                propTgt.isLeaf -> this.createValue(propTgt, childPath, propType)//, childsScope)
-                                propTgt.isEmptyMatch -> null
-                                else -> this.createValue(propTgt.asBranch.nonSkipChildren[0], childPath, propType)//, childsScope)
-                            }
-                            propValue
-                        }
-
-                        is ListSimpleType -> {
-                            val propValue = when {
-                                target.isList -> when {
-                                    target.isEmptyLeaf -> emptyList<Any>()
-                                    else -> target.asBranch.nonSkipChildren.mapIndexedNotNull { ci, b ->
-                                        val childPath2 = childPath + ci.toString()
-                                        if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
-                                            null
-                                        } else {
-                                            this.createValue(b, childPath2, propType)//, childsScope)
-                                        }
-                                    }
-                                }
-
-                                else -> when {
-                                    propTgt.isEmptyLeaf -> emptyList<Any>()
-                                    else -> propTgt.asBranch.nonSkipChildren.mapIndexedNotNull { ci, b ->
-                                        val childPath2 = childPath + ci.toString()
-                                        if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
-                                            null
-                                        } else {
-                                            this.createValue(b, childPath2, propType)//, childsScope)
-                                        }
-                                    }
-                                }
-                            }
-                            propValue
-                        }
-
-                        is ElementType -> {
-                            val propValue = when {
-                                propDecl.isNullable && propTgt.isOptional -> when {
-                                    propTgt.isEmptyLeaf -> null
-                                    else -> this.createValue(propTgt.asBranch.nonSkipChildren[0], childPath, propType)//, childsScope)
-                                }
-
-                                propType.subtypes.isNotEmpty() && propTgt.asBranch.nonSkipChildren.size == 1 -> this.createValue(
-                                    propTgt.asBranch.nonSkipChildren[0],
-                                    childPath,
-                                    propType,
-                                    //childsScope
-                                )
-
-                                else -> this.createValue(propTgt, childPath, propType)//, childsScope)
-                            }
-                            propValue
-                        }
-
-                        is TupleType -> {
-                            val propValue = when {
-                                propDecl.isNullable && propTgt.isOptional -> when {
-                                    propTgt.isEmptyLeaf -> null
-                                    else -> this.createValue(propTgt.asBranch.nonSkipChildren[0], childPath, propType)//, childsScope)
-                                }
-                                //propType.subType.isNotEmpty() && ch.asBranch.nonSkipChildren.size == 1 -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, childsScope)
-                                else -> this.createValue(propTgt, childPath, propType)//, childsScope)
-                            }
-                            propValue
-                        }
-
-                        else -> error("Internal Error: type $propType not handled")
-                    }
-                     */
                     setPropertyOrReferenceFromDeclaration(el, propDecl, propValue)
                 }
                 el
@@ -331,10 +260,10 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
                         else -> {
                             val propTgt = actualTarget.asBranch.nonSkipChildren[propDecl.childIndex]
                             when {
-                                propTgt.isOptional -> when {
-                                    propDecl.typeUse.nullable -> createValue(propTgt.asBranch.nonSkipChildren[0], propPath, propType)
-                                    else -> error("Internal Error: '$propDecl' is not nullable !")
-                                }
+                                // propTgt.isOptional -> when {
+                                //    propDecl.typeUse.nullable -> createValue(propTgt.asBranch.nonSkipChildren[0], propPath, propType)
+                                //    else -> error("Internal Error: '$propDecl' is not nullable !")
+                                //}
 
                                 propTgt.isEmbedded -> {
                                     val embTgt = propTgt.asBranch.nonSkipChildren[0]
@@ -346,134 +275,6 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
                         }
                     }
                     setPropertyOrReferenceFromDeclaration(el, propDecl, propValue)
-                    /*
-                    if (propDecl.isNullable && propTgt.asBranch.nonSkipChildren[0].isEmptyLeaf) {
-                        setPropertyOrReference(el, propDecl.name, null)
-                    } else {
-
-                        val propertyValue = when (propType) {
-                            is AnyType -> this.createValue(propTgt, childPath, propType)
-                            is StringType -> createStringValueFromBranch(propTgt)
-
-                            is ListSimpleType -> {
-                                val propValue = when {
-                                    actualTarget.isList -> when {
-                                        actualTarget.isEmptyLeaf -> emptyList<Any>()
-                                        else -> actualTarget.asBranch.nonSkipChildren.mapIndexedNotNull { ci, b ->
-                                            val childPath2 = childPath + ci.toString()
-                                            if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
-                                                null
-                                            } else {
-                                                this.createValue(b, childPath2, propType.elementType)//, childsScope)
-                                            }
-                                        }
-                                    }
-
-                                    else -> when {
-                                        propTgt.isEmptyLeaf -> emptyList<Any>()
-                                        else -> propTgt.asBranch.nonSkipChildren.mapIndexedNotNull { ci, b ->
-                                            val childPath2 = childPath + ci.toString()
-                                            if (b.isLeaf && b.asLeaf.isExplicitlyNamed.not()) {
-                                                null
-                                            } else {
-                                                this.createValue(b, childPath2, propType.elementType)//, childsScope)
-                                            }
-                                        }
-                                    }
-                                }
-                                propValue
-                            }
-
-                            is ListSeparatedType -> {
-                                val propValue = when {
-                                    actualTarget.isList -> when {
-                                        actualTarget.isEmptyLeaf -> emptyListSeparated<Any, Any>()
-                                        else -> {
-                                            val elements = actualTarget.asBranch.nonSkipChildren
-                                            val sList = mutableListSeparated<Any, Any>()
-                                            for (ci in 0 until elements.size) {
-                                                val cel = elements[ci]
-                                                val type = if (ci / 2 == 0) propType.itemType else propType.separatorType
-                                                val childPath2 = childPath + ci.toString()
-                                                if (cel.isLeaf && cel.asLeaf.isExplicitlyNamed.not()) {
-                                                    //do not add iteml
-                                                } else {
-                                                    val chEl = this.createValue(cel, childPath2, type)//, childsScope)
-                                                    sList.add(chEl)
-                                                }
-
-                                            }
-                                            sList
-                                        }
-                                    }
-
-                                    else -> when {
-                                        propTgt.isEmptyLeaf -> emptyList<Any>()
-                                        else -> {
-                                            val elements = propTgt.asBranch.nonSkipChildren
-                                            val sList = mutableListSeparated<Any, Any>()
-                                            for (ci in 0 until elements.size) {
-                                                val cel = elements[ci]
-                                                val type = if (ci % 2 == 0) propType.itemType else propType.separatorType
-                                                val childPath2 = childPath + ci.toString()
-                                                if (cel.isLeaf && cel.asLeaf.isExplicitlyNamed.not()) {
-                                                    //do not add item
-                                                } else {
-                                                    val chEl = this.createValue(cel, childPath2, type)//, childsScope)
-                                                    sList.add(chEl)
-                                                }
-
-                                            }
-                                            sList
-                                        }
-                                    }
-                                }
-                                propValue
-
-                            }
-
-                            is ElementType -> {
-                                val propValue = when {
-                                    propDecl.isNullable && propTgt.isOptional -> when {
-                                        propTgt.isEmptyLeaf -> null
-                                        else -> this.createValue(propTgt.asBranch.nonSkipChildren[0], childPath, propType)//, childsScope)
-                                    }
-
-                                    propType.subtypes.isNotEmpty() && propTgt.asBranch.nonSkipChildren.size == 1 -> this.createValue(
-                                        propTgt,
-                                        childPath,
-                                        propType,
-                                        //childsScope
-                                    )
-
-                                    else -> this.createValue(propTgt, childPath, propType)//, childsScope)
-                                }
-                                propValue
-                            }
-
-                            is TupleType -> {
-                                val propValue = when {
-                                    propDecl.isNullable && propTgt.isOptional -> when {
-                                        propTgt.isEmptyLeaf -> null
-                                        else -> this.createValue(propTgt.asBranch.nonSkipChildren[0], childPath, propType)//, childsScope)
-                                    }
-                                    //propType.subType.isNotEmpty() && ch.asBranch.nonSkipChildren.size == 1 -> this.createValue(ch.asBranch.nonSkipChildren[0], childPath, childsScope)
-                                    else -> this.createValue(propTgt, childPath, propType)//, childsScope)
-                                }
-                                propValue
-                            }
-
-                            is UnnamedSuperTypeType -> {
-                                val actualPropType = propType.subtypes[propTgt.option]
-                                val actualPropTgt = propTgt.asBranch.nonSkipChildren[0]
-                                this.createValue(actualPropTgt, childPath, actualPropType)//, childsScope)
-                            }
-
-                            else -> error("Internal Error: type $propType not handled")
-                        }
-                        setPropertyOrReference(el, propDecl.name, propertyValue)
-                    }
-                     */
                 }
                 el
             }

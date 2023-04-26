@@ -240,6 +240,8 @@ data class TypeUsage(
         if (Debug.CHECK) check(type.typeParameters.size == arguments.size)
     }
 
+    val notNullable get() = TypeUsage.ofType(this.type, arguments, false)
+
     fun signature(context: TypeModel?, currentDepth: Int): String {
         return when {
             currentDepth >= RuleType.maxDepth -> "..."
@@ -264,7 +266,7 @@ data class TypeUsage(
     override fun toString(): String {
         val args = when {
             arguments.isEmpty() -> ""
-            else -> "<${arguments.joinToString { "$it" }}>"
+            else -> "<${arguments.joinToString { it.toString() }}>"
         }
         val n = when (nullable) {
             true -> "?"

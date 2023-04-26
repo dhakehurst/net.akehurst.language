@@ -18,7 +18,6 @@ package net.akehurst.language.api.asm
 
 import net.akehurst.language.api.asm.AsmSimple.Companion.asStringAny
 import net.akehurst.language.api.typemodel.PropertyDeclaration
-import net.akehurst.language.api.typemodel.TypeModel
 
 data class AsmElementPath(val value: String) {
     companion object {
@@ -59,7 +58,7 @@ open class AsmSimple() {
     fun createElement(asmPath: AsmElementPath, typeName: String) = AsmElementSimple(asmPath, this, typeName)
 
     fun asString(indent: String, currentIndent: String = ""): String = this.rootElements.joinToString(separator = "\n") {
-       it.asStringAny(indent, currentIndent)
+        it.asStringAny(indent, currentIndent)
     }
 
 }
@@ -72,6 +71,7 @@ class AsmElementSimple(
     private var _properties = mutableMapOf<String, AsmElementProperty>()
 
     val properties: Map<String, AsmElementProperty> = _properties
+    val propertiesOrdered get() = properties.values.sortedBy { it.childIndex }
 
     init {
         this.asm.index[asmPath] = this
@@ -91,11 +91,12 @@ class AsmElementSimple(
     fun getPropertyAsReference(name: String): AsmElementReference = getProperty(name) as AsmElementReference
     fun getPropertyAsList(name: String): List<Any> = getProperty(name) as List<Any>
     fun getPropertyAsListOfElement(name: String): List<AsmElementSimple> = getProperty(name) as List<AsmElementSimple>
-/*
-    fun setPropertyAsString(name: String, value: String?) = setProperty(name, value, false)
-    fun setPropertyAsListOfString(name: String, value: List<String>?) = setProperty(name, value, false)
-    fun setPropertyAsAsmElement(name: String, value: AsmElementSimple?, isReference: Boolean) = setProperty(name, value, isReference)
-*/
+
+    /*
+        fun setPropertyAsString(name: String, value: String?) = setProperty(name, value, false)
+        fun setPropertyAsListOfString(name: String, value: List<String>?) = setProperty(name, value, false)
+        fun setPropertyAsAsmElement(name: String, value: AsmElementSimple?, isReference: Boolean) = setProperty(name, value, isReference)
+    */
     fun setProperty(name: String, value: Any?, isReference: Boolean, childIndex: Int) {
         if (isReference) {
             val ref = AsmElementReference(value as String, null)
@@ -153,10 +154,10 @@ class AsmElementReference(
     val reference: String,
     var value: AsmElementSimple?
 ) {
-    override fun toString(): String =when (value) {
-           null -> "<unresolved> &$reference"
-           else -> "&{'${value!!.asmPath.value}' : ${value!!.typeName}}"
-       }
+    override fun toString(): String = when (value) {
+        null -> "<unresolved> &$reference"
+        else -> "&{'${value!!.asmPath.value}' : ${value!!.typeName}}"
+    }
 }
 
 class AsmElementProperty(

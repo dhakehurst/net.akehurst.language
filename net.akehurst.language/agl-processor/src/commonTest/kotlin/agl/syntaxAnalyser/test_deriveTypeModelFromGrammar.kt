@@ -942,6 +942,53 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test
+    fun group_choice_concat_nonterm_list() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (BC | d*) e ;
+                BC = b c ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+
+        val actual = TypeModelFromGrammar(result.asm!!)
+        val expected = typeModel("test", "Test") {
+            elementType("S", "S") {
+                propertyStringType("a", false, 0)
+                property(
+                    "\$group", TypeUsage.ofType(
+                        UnnamedSuperTypeType(
+                            listOf(
+                                TupleType {
+                                    PropertyDeclaration(this, "b", StringType.use, 0)
+                                    PropertyDeclaration(this, "c", StringType.use, 1)
+                                },
+                                StringType,
+                            ).map { TypeUsage.ofType(it) }, false
+                        )
+                    ), 1
+                )
+                propertyStringType("e", false, 2)
+            }
+            elementType("BC", "BC") {
+                propertyStringType("b", false, 0)
+                propertyStringType("c", false, 0)
+            }
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test
     fun expressions_infix() {
         val grammarStr = """
             namespace test

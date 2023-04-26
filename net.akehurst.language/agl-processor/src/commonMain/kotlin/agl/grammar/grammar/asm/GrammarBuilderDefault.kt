@@ -86,7 +86,8 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 
         fun choiceLongestFromConcatenationItem(vararg alternative: ConcatenationItem) {
             val alternativeConcats = alternative.map { ConcatenationDefault(listOf(it)) }
-            this.rule.rhs = ChoiceLongestDefault(alternativeConcats);
+//            this.rule.rhs = ChoiceLongestDefault(alternativeConcats);
+            this.rule.rhs = ChoiceLongestDefault(alternative.asList());
         }
 
         fun choicePriority(vararg alternative: Concatenation) {

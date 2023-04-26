@@ -913,6 +913,49 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test
+    fun group_choice_concat_nonTerm_list() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (BC | d+) e ;
+                BC = b c ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("abce") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyTuple("\$group") {
+                        propertyString("b", "b")
+                        propertyString("c", "c")
+                    }
+                    propertyString("e", "e")
+                }
+            }
+        }
+        tests.define("ade") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("\$group", "d")
+                    propertyString("e", "e")
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test
     fun group_concat_optional() {
         val grammarStr = """
             namespace test

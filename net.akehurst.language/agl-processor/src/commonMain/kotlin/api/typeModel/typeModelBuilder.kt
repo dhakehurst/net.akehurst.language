@@ -59,22 +59,31 @@ class TypeModelBuilder(
     }
 */
     fun stringTypeFor(name: String, isNullable: Boolean = false) {
-        _model.addTypeFor(name, TypeUsage.ofType(StringType, emptyList(), isNullable))
+        _model.addTypeFor(name, if (isNullable) StringType.useNullable else StringType.use)
     }
 
-    fun listTypeFor(name: String, elementType: RuleType) {
+    fun listTypeFor(name: String, elementType: RuleType): TypeUsage {
         val t = ListSimpleType.ofType(TypeUsage.ofType(elementType))
         _model.addTypeFor(name, t)
+        return t
     }
 
-    fun listTypeOf(name: String, elementTypeName: String) {
+    fun listTypeOf(name: String, elementTypeName: String): TypeUsage {
         val elementType = _model.findOrCreateTypeNamed(elementTypeName)!!
-        listTypeFor(name, elementType)
+        return listTypeFor(name, elementType)
     }
 
-    fun listSeparatedTypeFor(name: String, itemType: RuleType, separatorType: RuleType) {
-        val t = ListSeparatedType.ofType(TypeUsage.ofType(itemType), TypeUsage.ofType(separatorType))
+    fun listSeparatedTypeFor(name: String, itemType: TypeUsage, separatorType: TypeUsage) {
+        val t = ListSeparatedType.ofType(itemType, separatorType)
         _model.addTypeFor(name, t)
+    }
+
+    fun listSeparatedTypeFor(name: String, itemType: RuleType, separatorType: RuleType) =
+        listSeparatedTypeFor(name, TypeUsage.ofType(itemType), TypeUsage.ofType(separatorType))
+
+    fun listSeparatedTypeOf(name: String, itemTypeName: String, separatorType: RuleType) {
+        val itemType = _model.findOrCreateTypeNamed(itemTypeName)!!
+        listSeparatedTypeFor(name, itemType, separatorType)
     }
 
     fun listSeparatedTypeOf(name: String, itemTypeName: String, separatorTypeName: String) {
@@ -152,6 +161,10 @@ abstract class StructuredTypeBuilder(
     // ListSeparated
     fun propertyUnnamedListSeparatedType(itemType: RuleType, separatorType: RuleType, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
         property(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME, ListSeparatedType.ofType(TypeUsage.ofType(itemType), TypeUsage.ofType(separatorType), isNullable), childIndex)
+
+    fun propertyUnnamedListSeparatedTypeOf() {
+        TODO()
+    }
 
     fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
         val itemType = _model.findOrCreateTypeNamed(itemTypeName)!!

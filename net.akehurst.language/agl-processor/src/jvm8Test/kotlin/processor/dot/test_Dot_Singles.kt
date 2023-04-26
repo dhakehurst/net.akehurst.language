@@ -86,8 +86,8 @@ class test_Dot_Singles {
                   '<'
                   §startTag§opt1 { §empty }
                   NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xml' }
-                  §startTag§multi2 { WS { "\s+" : ' ' } }
-                  §startTag§multi3 { §empty }
+                  §startTag§op1 { WS { "\s+" : ' ' } }
+                  §startTag§op2 { §empty }
                   '>'
                 }
                 content {  §content§group1 { CHARDATA { "[^<]+" : 'xxxx' } } }

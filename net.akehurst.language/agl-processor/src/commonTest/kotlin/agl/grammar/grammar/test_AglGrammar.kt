@@ -1580,7 +1580,7 @@ class test_AglGrammar {
         val result1 = pr.processor!!.parse("a");
         val expected1 = pr.processor!!.spptParser.parse(
             """
-             S { a{'a'} §group { §empty } }
+             S { a{'a'} §group1 { §empty } }
         """
         )
         assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
