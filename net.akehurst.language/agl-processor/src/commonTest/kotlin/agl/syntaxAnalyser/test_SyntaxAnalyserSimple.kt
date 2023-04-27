@@ -845,6 +845,39 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test
+    fun group_concat_group_group_leaf_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b (c) d) e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+
+        val proc = testProc(grammarStr)
+
+        val sentence = "abcde"
+        val expected = asmSimple {
+            element("S") {
+                propertyString("a", "a")
+                propertyTuple("\$group") {
+                    propertyString("b", "b")
+                    propertyTuple("\$group") {
+                        propertyString("c", "c")
+                    }
+                    propertyString("d", "d")
+                }
+                propertyString("e", "e")
+            }
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    @Test
     fun group_choice_leaf_literal() {
         val grammarStr = """
             namespace test
@@ -863,7 +896,7 @@ class test_SyntaxAnalyserSimple {
         val expected = asmSimple {
             element("S") {
                 propertyString("a", "a")
-                propertyString("\$group", "b")
+                propertyString("\$choice", "b")
                 propertyString("e", "e")
             }
         }
@@ -890,7 +923,7 @@ class test_SyntaxAnalyserSimple {
             asmSimple {
                 element("S") {
                     propertyString("a", "a")
-                    propertyTuple("\$group") {
+                    propertyTuple("\$choice") {
                         propertyString("b", "b")
                         propertyString("c", "c")
                     }
@@ -902,7 +935,7 @@ class test_SyntaxAnalyserSimple {
             asmSimple {
                 element("S") {
                     propertyString("a", "a")
-                    propertyString("\$group", "d")
+                    propertyString("\$choice", "d")
                     propertyString("e", "e")
                 }
             }
@@ -933,7 +966,7 @@ class test_SyntaxAnalyserSimple {
             asmSimple {
                 element("S") {
                     propertyString("a", "a")
-                    propertyTuple("\$group") {
+                    propertyTuple("\$choice") {
                         propertyString("b", "b")
                         propertyString("c", "c")
                     }
@@ -945,7 +978,7 @@ class test_SyntaxAnalyserSimple {
             asmSimple {
                 element("S") {
                     propertyString("a", "a")
-                    propertyString("\$group", "d")
+                    propertyListOfString("\$choice", listOf("d"))
                     propertyString("e", "e")
                 }
             }
@@ -1022,8 +1055,8 @@ class test_SyntaxAnalyserSimple {
                 element("S") {
                     propertyString("a", "a")
                     propertyTuple("\$group") {
-                        propertyString("\$group", "b")
-                        propertyTuple("\$group2") {
+                        propertyString("\$choice", "b")
+                        propertyTuple("\$group") {
                             propertyString("d", null)
                         }
                         propertyString("e", "e")
@@ -1037,8 +1070,8 @@ class test_SyntaxAnalyserSimple {
                 element("S") {
                     propertyString("a", "a")
                     propertyTuple("\$group") {
-                        propertyString("\$group", "c")
-                        propertyTuple("\$group2") {
+                        propertyString("\$choice", "c")
+                        propertyTuple("\$group") {
                             propertyString("d", null)
                         }
                         propertyString("e", "e")
@@ -1052,8 +1085,8 @@ class test_SyntaxAnalyserSimple {
                 element("S") {
                     propertyString("a", "a")
                     propertyTuple("\$group") {
-                        propertyString("\$group", "b")
-                        propertyTuple("\$group2") {
+                        propertyString("\$choice", "b")
+                        propertyTuple("\$group") {
                             propertyString("d", "d")
                         }
                         propertyString("e", "e")
@@ -1067,8 +1100,8 @@ class test_SyntaxAnalyserSimple {
                 element("S") {
                     propertyString("a", "a")
                     propertyTuple("\$group") {
-                        propertyString("\$group", "c")
-                        propertyTuple("\$group2") {
+                        propertyString("\$choice", "c")
+                        propertyTuple("\$group") {
                             propertyString("d", "d")
                         }
                         propertyString("e", "e")

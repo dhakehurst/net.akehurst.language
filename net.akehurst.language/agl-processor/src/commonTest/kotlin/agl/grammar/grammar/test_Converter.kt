@@ -18,6 +18,7 @@ package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
 import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
+import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
@@ -485,6 +486,57 @@ internal class test_Converter {
         gb.rule("c").concatenation(gb.terminalLiteral(","))
         val grammar = gb.grammar
 
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
+
+        val expected = runtimeRuleSet {
+            sList("S", 1, -1, "a", "c")
+            concatenation("a") { literal("a") }
+            concatenation("c") { literal(",") }
+        }
+
+        assertTrue(expected.matches(actual))
+    }
+
+    @Test
+    fun group_choice_concat_leaf_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b c | d) e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!.first()
+        val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
+
+        val expected = runtimeRuleSet {
+            sList("S", 1, -1, "a", "c")
+            concatenation("a") { literal("a") }
+            concatenation("c") { literal(",") }
+        }
+
+        assertTrue(expected.matches(actual))
+    }
+
+    @Test
+    fun group_choice_concat_nonTerm_list() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (BC | d+) e ;
+                BC = b c ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!.first()
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
         val expected = runtimeRuleSet {

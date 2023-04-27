@@ -66,15 +66,20 @@ internal class PseudoRuleNames(val grammar: Grammar) {
         return when (item) {
             is Choice -> item.alternative.flatMap { pseudoRulesFor(it) }.toSet()
 
-            is Concatenation -> when (item.items.size) {
-                1 -> item.items.flatMap { pseudoRulesFor(it) }.toSet()
-                else -> item.items.flatMap { pseudoRulesFor(it) }.toSet() + Pair(item, createChoiceRuleName(item.owningRule.name))
-            }
+            is Concatenation -> item.items.flatMap { pseudoRulesFor(it) }.toSet()
+            //is Concatenation -> when (item.items.size) {
+            //    1 -> item.items.flatMap { pseudoRulesFor(it) }.toSet()
+            //    else -> item.items.flatMap { pseudoRulesFor(it) }.toSet() + Pair(item, createChoiceRuleName(item.owningRule.name))
+            // }
 
             is ConcatenationItem -> when (item) {
                 is OptionalItem -> pseudoRulesFor(item.item) + Pair(item, createOptionalItemRuleName(item.owningRule.name))
                 is SimpleItem -> when (item) {
-                    is Group -> pseudoRulesFor(item.groupedContent) + Pair(item, createGroupRuleName(item.owningRule.name))
+                    is Group -> when (item.groupedContent) {
+                        is Choice -> pseudoRulesFor(item.groupedContent) + Pair(item, createChoiceRuleName(item.owningRule.name))
+                        else -> pseudoRulesFor(item.groupedContent) + Pair(item, createGroupRuleName(item.owningRule.name))
+                    }
+
                     is TangibleItem -> when (item) {
                         is Embedded -> setOf(Pair(item, createEmbeddedRuleName(item.embeddedGrammarReference.resolved!!.name, item.embeddedGoalName)))
                         is Terminal -> emptySet()

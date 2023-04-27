@@ -366,7 +366,8 @@ class test_deriveTypeModelFromGrammar {
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            stringTypeFor("S", true)
+            elementType("S", "S") {
+            }
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -388,7 +389,9 @@ class test_deriveTypeModelFromGrammar {
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
-            stringTypeFor("S", true)
+            elementType("S", "S") {
+                propertyStringType("a", true, 0)
+            }
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -826,6 +829,42 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test
+    fun group_concat_group_group_leaf_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b (c) d) e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+
+        val actual = TypeModelFromGrammar(result.asm!!)
+        val expected = typeModel("test", "Test") {
+            elementType("S", "S") {
+                propertyStringType("a", false, 0)
+                propertyTupleType("\$group", false, 1) {
+                    propertyStringType("b", false, 0)
+                    propertyTupleType("\$group", false, 1) {
+                        propertyStringType("c", false, 0)
+                    }
+                    propertyStringType("d", false, 0)
+                }
+                propertyStringType("e", false, 2)
+            }
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test
     fun group_choice_leaf_literal() {
         val grammarStr = """
             namespace test
@@ -847,7 +886,7 @@ class test_deriveTypeModelFromGrammar {
         val expected = typeModel("test", "Test") {
             elementType("S", "S") {
                 propertyStringType("a", false, 0)
-                propertyStringType("\$group", false, 1)
+                propertyStringType("\$choice", false, 1)
                 propertyStringType("e", false, 2)
             }
         }
@@ -878,7 +917,7 @@ class test_deriveTypeModelFromGrammar {
             elementType("S", "S") {
                 propertyStringType("a", false, 0)
                 property(
-                    "\$group", TypeUsage.ofType(
+                    "\$choice", TypeUsage.ofType(
                         UnnamedSuperTypeType(
                             listOf(
                                 TupleType {
@@ -921,7 +960,7 @@ class test_deriveTypeModelFromGrammar {
             elementType("S", "S") {
                 propertyStringType("a", false, 0)
                 property(
-                    "\$group", TypeUsage.ofType(UnnamedSuperTypeType(listOf(
+                    "\$choice", TypeUsage.ofType(UnnamedSuperTypeType(listOf(
                         TupleType {
                             PropertyDeclaration(this, "b", StringType.use, 0)
                             PropertyDeclaration(this, "c", StringType.use, 1)
@@ -962,27 +1001,22 @@ class test_deriveTypeModelFromGrammar {
 
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
+            val BC = elementType("BC", "BC") {
+                propertyStringType("b", false, 0)
+                propertyStringType("c", false, 1)
+            }
             elementType("S", "S") {
                 propertyStringType("a", false, 0)
                 property(
-                    "\$group", TypeUsage.ofType(
+                    "\$choice", TypeUsage.ofType(
                         UnnamedSuperTypeType(
-                            listOf(
-                                TupleType {
-                                    PropertyDeclaration(this, "b", StringType.use, 0)
-                                    PropertyDeclaration(this, "c", StringType.use, 1)
-                                },
-                                StringType,
-                            ).map { TypeUsage.ofType(it) }, false
+                            listOf(TypeUsage.ofType(BC), ListSimpleType.ofType(StringType.use)), false
                         )
                     ), 1
                 )
                 propertyStringType("e", false, 2)
             }
-            elementType("BC", "BC") {
-                propertyStringType("b", false, 0)
-                propertyStringType("c", false, 0)
-            }
+
         }
 
         TypeModelTest.assertEquals(expected, actual)
