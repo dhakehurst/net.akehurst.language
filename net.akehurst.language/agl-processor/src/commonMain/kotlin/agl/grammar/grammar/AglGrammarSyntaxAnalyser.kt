@@ -271,16 +271,16 @@ internal class AglGrammarSyntaxAnalyser(
     // concatenation : concatenationItem+ ;
     private fun concatenation(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Concatenation {
         val items = children.mapIndexed { index, it ->
-            this.transformBranch<ConcatenationItem>(it, arg)
+            this.transformBranch<RuleItem>(it, arg)
         }
         return ConcatenationDefault(items).also { this.locationMap[it] = target.location }
     }
 
-    // concatenationItem = simpleItem | listOfItems ;
-    private fun concatenationItem(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): ConcatenationItem = this.transformBranch<ConcatenationItem>(children[0], arg)
+    // concatenationItem = simpleItemOrGroup | listOfItems ; // a group can be mapped to a Choice so return RuleItem
+    private fun concatenationItem(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem = this.transformBranch<RuleItem>(children[0], arg)
 
-    // simpleItemOrGroup : simpleItem | group ;
-    private fun simpleItemOrGroup(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): SimpleItem = this.transformBranch<SimpleItem>(children[0], arg)
+    // simpleItemOrGroup : simpleItem | group ; // a group can be mapped to a Choice so return RuleItem
+    private fun simpleItemOrGroup(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem = this.transformBranch<RuleItem>(children[0], arg)
 
     // simpleItem : terminal | nonTerminal | embedded ;
     private fun simpleItem(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): SimpleItem = this.transformBranch<SimpleItem>(children[0], arg)
@@ -344,7 +344,7 @@ internal class AglGrammarSyntaxAnalyser(
     // simpleList = simpleItem multiplicity ;
     private fun simpleList(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): ConcatenationItem {
         val (min, max) = this.transformBranch<Pair<Int, Int>>(children[1], arg)
-        val item = this.transformBranch<SimpleItem>(children[0], arg)
+        val item = this.transformBranch<RuleItem>(children[0], arg)
         return when {
             min == 0 && max == 1 -> OptionalItemDefault(item).also { this.locationMap[it] = target.location }
             else -> SimpleListDefault(min, max, item).also { this.locationMap[it] = target.location }
@@ -360,15 +360,19 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // group = '(' groupedContent ')' ;
-    private fun group(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): Group {
+    private fun group(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem {
         val groupContent = this.transformBranch<RuleItem>(children[0], arg)
-        val reduced = when (groupContent) {
-            is Choice -> groupContent
-            is Concatenation -> reduceConcatenation(groupContent)
+        return when (groupContent) {
+            is Choice -> groupContent.also { this.locationMap[it] = target.location }
+            is Concatenation -> {
+                val reduced = reduceConcatenation(groupContent)
+                GroupDefault(reduced).also { this.locationMap[it] = target.location }
+            }
+
             else -> error("Internal Error: subtype of RuleItem not handled - ${groupContent::class.simpleName}")
         }
 
-        return GroupDefault(groupContent).also { this.locationMap[it] = target.location }
+        //return GroupDefault(reduced).also { this.locationMap[it] = target.location }
         //return when (groupContent) {
         //    is Choice -> GroupDefault(groupContent).also { this.locationMap[it] = target.location }
         //    is Concatenation -> GroupDefault(ChoiceLongestDefault(listOf(groupContent))).also { this.locationMap[it] = target.location }
@@ -460,14 +464,18 @@ internal class AglGrammarSyntaxAnalyser(
     private fun reduceConcatenation(concat: Concatenation): RuleItem {
         return when (concat.items.size) {
             1 -> when (concat.items[0]) {
-                is SimpleItem -> when (concat.items[0]) {
-                    is Group -> concat
-                    is TangibleItem -> concat.items[0]
-                    else -> error("Internal Error: subtype of SimpleItem not handled - ${concat.items[0]::class.simpleName}")
-                }
-
+                is TangibleItem -> concat.items[0]
                 is OptionalItem -> concat.items[0]
                 is ListOfItems -> concat.items[0]
+                is Choice -> concat.items[0]
+                is Group -> {
+                    val content = (concat.items[0] as Group).groupedContent
+                    when (content) {
+                        is Choice -> content
+                        else -> concat
+                    }
+                }
+
                 else -> error("Internal Error: subtype of ConcatenationItem not handled - ${concat.items[0]::class.simpleName}")
             }
 

@@ -187,7 +187,7 @@ class TypeModelFromGrammar(
                     embTm.findTypeUsageForRule(ruleItem.name) ?: error("Should never happen")
                 }
 
-                is Choice -> TODO()
+                is Choice -> typeForChoiceRuleItem(ruleItem)
                 is Concatenation -> typeForConcatenationAsRuleItem(ruleItem)
                 is Group -> typeForGroup(ruleItem)
                 is OptionalItem -> {
@@ -226,7 +226,7 @@ class TypeModelFromGrammar(
         }
     }
 
-    private fun typeForConcatenationRule(rule: GrammarRule, items: List<ConcatenationItem>): TypeUsage {
+    private fun typeForConcatenationRule(rule: GrammarRule, items: List<RuleItem>): TypeUsage {
         val concatType = findOrCreateElementType(rule) { newType ->
             items.forEachIndexed { idx, it -> createPropertyDeclaration(newType, it, idx) }
         }
@@ -360,7 +360,11 @@ class TypeModelFromGrammar(
             }
 
             is Concatenation -> TODO("Concatenation")
-            is Choice -> TODO("Choice")
+            is Choice -> {
+                val t = typeForRuleItem(ruleItem)
+                val n = propertyNameFor(et, ruleItem, t.type)
+                createUniquePropertyDeclaration(et, n, t, childIndex)
+            }
 
             is OptionalItem -> {
                 when {

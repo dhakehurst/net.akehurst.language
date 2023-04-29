@@ -18,7 +18,10 @@ package net.akehurst.language.api.asm
 
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.syntaxAnalyser.*
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
+import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
+import net.akehurst.language.agl.syntaxAnalyser.createReferenceLocalToScope
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.typemodel.TupleType
@@ -51,6 +54,13 @@ class AsmSimpleBuilder(
         val b = AsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, path, typeName, true, _context?.rootScope)
         b.init()
         return b.build()
+    }
+
+    fun listOfString(vararg items: String): List<String> {
+        val path = AsmElementPath.ROOT + (_asm.rootElements.size).toString()
+        val list = items.asList()
+        _asm.addRoot(list)
+        return list
     }
 
     fun list(init: ListAsmElementSimpleBuilder.() -> Unit): List<Any> {
@@ -112,7 +122,7 @@ class AsmElementSimpleBuilder(
     }
 
     private fun _property(name: String, value: Any?) {
-        _element.setProperty(name, value, false,0)//TODO childIndex
+        _element.setProperty(name, value, false, 0)//TODO childIndex
     }
 
     fun propertyUnnamedString(value: String?) = this._property(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, value)
@@ -128,7 +138,7 @@ class AsmElementSimpleBuilder(
         val b = AsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, newPath, typeName, false, _elementScope)
         b.init()
         val el = b.build()
-        this._element.setProperty(name, el, false,0)//TODO childIndex
+        this._element.setProperty(name, el, false, 0)//TODO childIndex
         return el
     }
 
@@ -140,12 +150,12 @@ class AsmElementSimpleBuilder(
         val b = ListAsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, newPath, _elementScope)
         b.init()
         val list = b.build()
-        this._element.setProperty(name, list, false,0)//TODO childIndex
+        this._element.setProperty(name, list, false, 0)//TODO childIndex
         return list
     }
 
     fun reference(name: String, elementReference: String) {
-        _element.setProperty(name, elementReference, true,0)//TODO childIndex
+        _element.setProperty(name, elementReference, true, 0)//TODO childIndex
     }
 
     fun build(): AsmElementSimple {

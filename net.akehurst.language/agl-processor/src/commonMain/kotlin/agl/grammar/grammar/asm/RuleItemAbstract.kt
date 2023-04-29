@@ -32,7 +32,7 @@ sealed class RuleItemAbstract : RuleItem {
 
 }
 
-class ConcatenationDefault(override val items: List<ConcatenationItem>) : RuleItemAbstract(), Concatenation {
+class ConcatenationDefault(override val items: List<RuleItem>) : RuleItemAbstract(), Concatenation {
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
@@ -106,7 +106,7 @@ class ChoiceAmbiguousDefault(override val alternative: List<RuleItem>) : ChoiceA
 sealed class ConcatenationItemAbstract : RuleItemAbstract(), ConcatenationItem {}
 
 class OptionalItemDefault(
-    override val item: SimpleItem
+    override val item: RuleItem
 ) : ConcatenationItemAbstract(), OptionalItem {
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
@@ -274,7 +274,7 @@ sealed class ListOfItemsAbstract(
 class SimpleListDefault(
     min_: Int,
     max_: Int,
-    override val item: SimpleItem
+    override val item: RuleItem
 ) : ListOfItemsAbstract(min_, max_), SimpleList {
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
@@ -309,8 +309,8 @@ class SimpleListDefault(
 class SeparatedListDefault(
     min_: Int,
     max_: Int,
-    override val item: SimpleItem,
-    override val separator: SimpleItem,
+    override val item: RuleItem,
+    override val separator: RuleItem,
     //override val associativity: SeparatedListKind
 ) : ListOfItemsAbstract(min_, max_), SeparatedList {
 

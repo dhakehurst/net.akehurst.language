@@ -64,40 +64,22 @@ internal class PseudoRuleNames(val grammar: Grammar) {
 
     private fun pseudoRulesFor(item: RuleItem): Set<Pair<RuleItem, String>> {
         return when (item) {
-            is Choice -> item.alternative.flatMap { pseudoRulesFor(it) }.toSet()
-
+            is Embedded -> setOf(Pair(item, createEmbeddedRuleName(item.embeddedGrammarReference.resolved!!.name, item.embeddedGoalName)))
+            is Terminal -> emptySet()
+            is NonTerminal -> emptySet()
+            is EmptyRule -> emptySet()
+            is Choice -> item.alternative.flatMap { pseudoRulesFor(it) }.toSet() + Pair(item, createChoiceRuleName(item.owningRule.name))
             is Concatenation -> item.items.flatMap { pseudoRulesFor(it) }.toSet()
             //is Concatenation -> when (item.items.size) {
             //    1 -> item.items.flatMap { pseudoRulesFor(it) }.toSet()
             //    else -> item.items.flatMap { pseudoRulesFor(it) }.toSet() + Pair(item, createChoiceRuleName(item.owningRule.name))
             // }
-
-            is ConcatenationItem -> when (item) {
-                is OptionalItem -> pseudoRulesFor(item.item) + Pair(item, createOptionalItemRuleName(item.owningRule.name))
-                is SimpleItem -> when (item) {
-                    is Group -> when (item.groupedContent) {
-                        is Choice -> pseudoRulesFor(item.groupedContent) + Pair(item, createChoiceRuleName(item.owningRule.name))
-                        else -> pseudoRulesFor(item.groupedContent) + Pair(item, createGroupRuleName(item.owningRule.name))
-                    }
-
-                    is TangibleItem -> when (item) {
-                        is Embedded -> setOf(Pair(item, createEmbeddedRuleName(item.embeddedGrammarReference.resolved!!.name, item.embeddedGoalName)))
-                        is Terminal -> emptySet()
-                        is NonTerminal -> emptySet()
-                        is EmptyRule -> emptySet()
-                        else -> error("Internal Error: subtype of ${TangibleItem::class.simpleName} ${item::class.simpleName} not handled")
-                    }
-
-                    else -> error("Internal Error: subtype of ${SimpleItem::class.simpleName} ${item::class.simpleName} not handled")
-                }
-
-                is ListOfItems -> when (item) {
-                    is SimpleList -> pseudoRulesFor(item.item) + Pair(item, createSimpleListRuleName(item.owningRule.name))
-                    is SeparatedList -> pseudoRulesFor(item.item) + pseudoRulesFor(item.separator) + Pair(item, createSeparatedListRuleName(item.owningRule.name))
-                    else -> error("Internal Error: subtype of ${ListOfItems::class.simpleName} ${item::class.simpleName} not handled")
-                }
-
-                else -> error("Internal Error: subtype of ${ConcatenationItem::class.simpleName} ${item::class.simpleName} not handled")
+            is OptionalItem -> pseudoRulesFor(item.item) + Pair(item, createOptionalItemRuleName(item.owningRule.name))
+            is SimpleList -> pseudoRulesFor(item.item) + Pair(item, createSimpleListRuleName(item.owningRule.name))
+            is SeparatedList -> pseudoRulesFor(item.item) + pseudoRulesFor(item.separator) + Pair(item, createSeparatedListRuleName(item.owningRule.name))
+            is Group -> when (item.groupedContent) {
+                is Choice -> pseudoRulesFor(item.groupedContent) + Pair(item, createChoiceRuleName(item.owningRule.name))
+                else -> pseudoRulesFor(item.groupedContent) + Pair(item, createGroupRuleName(item.owningRule.name))
             }
 
             else -> error("Internal Error: subtype of ${RuleItem::class.simpleName} ${item::class.simpleName} not handled")

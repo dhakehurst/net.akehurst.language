@@ -30,7 +30,7 @@ interface Choice : RuleItem {
 }
 
 interface Concatenation : RuleItem {
-    val items: List<ConcatenationItem>
+    val items: List<RuleItem>
 }
 
 interface ConcatenationItem : RuleItem
@@ -40,19 +40,19 @@ interface ChoicePriority : Choice
 interface ChoiceAmbiguous : Choice
 
 interface OptionalItem : ConcatenationItem {
-    val item: SimpleItem
+    val item: RuleItem
 }
 
 interface SimpleItem : ConcatenationItem
 interface ListOfItems : ConcatenationItem {
     val min: Int
     val max: Int
-    val item: SimpleItem
+    val item: RuleItem
 }
 
 interface SimpleList : ListOfItems
 interface SeparatedList : ListOfItems {
-    val separator: SimpleItem
+    val separator: RuleItem
     // val associativity: SeparatedListKind
 }
 

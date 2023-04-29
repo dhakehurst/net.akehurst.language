@@ -946,7 +946,40 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test
-    fun group_choice_concat_nonTerm_list() {
+    fun rhs_group_choice_concat_nonTerm_list() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = (BC | d+) ;
+                BC = b c ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("bc") {
+            asmSimple {
+                element("BC") {
+                    propertyString("b", "b")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("d") {
+            asmSimple {
+                listOfString("d")
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test
+    fun item_group_choice_concat_nonTerm_list() {
         val grammarStr = """
             namespace test
             grammar Test {

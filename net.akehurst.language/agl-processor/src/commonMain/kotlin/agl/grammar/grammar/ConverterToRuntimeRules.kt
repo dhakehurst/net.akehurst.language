@@ -229,7 +229,7 @@ internal class ConverterToRuntimeRules(
         // need to allow r = A* to have r as a list, so that preference disambiguation is clear.
         is Concatenation -> {
             if (Debug.CHECK) check(target.items.size > 1)
-            val items = target.items.map { this.visitConcatenationItem(it, arg) }
+            val items = target.items.map { this.runtimeRuleForRuleItem(it, arg) }
             RuntimeRuleRhsConcatenation(rule, items)
         }
 
@@ -252,26 +252,17 @@ internal class ConverterToRuntimeRules(
         else -> error("Unsupported")
     }
 
-    private fun visitConcatenationItem(target: ConcatenationItem, arg: String): RuntimeRule = when (target) {
+    private fun runtimeRuleForRuleItem(target: RuleItem, arg: String): RuntimeRule = when (target) {
         is OptionalItem -> this.createPseudoRuleForOptionalItem(target, arg)
         is SimpleList -> this.createPseudoRuleForSimpleList(target, arg)
         is SeparatedList -> this.createPseudoRuleForSeparatedList(target, arg)
-        is SimpleItem -> this.runtimeRuleForSimpleItem(target, arg)
-        else -> error("${target::class} is not a supported subtype of ConcatenationItem")
-    }
-
-    private fun runtimeRuleForSimpleItem(target: SimpleItem, arg: String): RuntimeRule = when (target) {
         is Group -> this.createPseudoRuleForGroup(target, arg)
-        is TangibleItem -> this.runtimeRuleForTangibleItem(target, arg)
-        else -> error("${target::class} is not a supported subtype of SimpleItem")
-    }
-
-    private fun runtimeRuleForTangibleItem(target: TangibleItem, arg: String): RuntimeRule = when (target) {
         is EmptyRule -> RuntimeRuleSet.EMPTY
         is Terminal -> this.visitTerminal(target, arg)
         is NonTerminal -> this.visitNonTerminal(target, arg)
         is Embedded -> this.visitEmbedded(target, arg)
-        else -> error("${target::class} is not a supported subtype of TangibleItem")
+        is Choice -> this.createPseudoRuleForChoice(target, arg)
+        else -> error("${target::class} is not a supported subtype of ConcatenationItem")
     }
 
     private fun visitTerminal(target: Terminal, arg: String): RuntimeRule {
@@ -305,8 +296,8 @@ internal class ConverterToRuntimeRules(
 
     private fun createRhsForChoiceAlternative(rule: RuntimeRule, target: RuleItem, arg: String): RuntimeRuleRhsConcatenation {
         val items = when (target) {
-            is Concatenation -> target.items.map { this.visitConcatenationItem(it, arg) }
-            is ConcatenationItem -> listOf(visitConcatenationItem(target, arg))
+            is Concatenation -> target.items.map { this.runtimeRuleForRuleItem(it, arg) }
+            is ConcatenationItem -> listOf(runtimeRuleForRuleItem(target, arg))
             else -> TODO()
         }
         return RuntimeRuleRhsConcatenation(rule, items)
@@ -315,22 +306,25 @@ internal class ConverterToRuntimeRules(
     private fun createPseudoRuleForGroup(target: Group, arg: String): RuntimeRule {
         val content = target.groupedContent
         return when (content) {
-            is Choice -> {
-                val choiceRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)
-                val cRule = this.createPseudoRule(content, choiceRuleName)
-                val rhs = createRhsForChoice(cRule, content, arg)
-                cRule.setRhs(rhs)
-                cRule
-            }
-
-            else -> {
-                val groupRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)
-                val gRule = this.createPseudoRule(content, groupRuleName)
-                val rhs = createRhs(gRule, content, arg)
-                gRule.setRhs(rhs)
-                gRule
-            }
+            is Choice -> createPseudoRuleForChoice(content, arg)
+            else -> createPseudoRuleForGroupContent(target, arg)
         }
+    }
+
+    private fun createPseudoRuleForChoice(target: Choice, arg: String): RuntimeRule {
+        val chRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)//this.createSimpleListRuleName(arg)
+        val nrule = createPseudoRule(target, chRuleName)
+        val rhs = this.createRhsForChoice(nrule, target, chRuleName)
+        nrule.setRhs(rhs)
+        return nrule
+    }
+
+    private fun createPseudoRuleForGroupContent(target: Group, arg: String): RuntimeRule {
+        val grRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)//this.createSimpleListRuleName(arg)
+        val nrule = createPseudoRule(target.groupedContent, grRuleName)
+        val rhs = this.createRhs(nrule, target.groupedContent, grRuleName)
+        nrule.setRhs(rhs)
+        return nrule
     }
 
     private fun createPseudoRule(target: RuleItem, psudeoRuleName: String): RuntimeRule {
@@ -380,18 +374,18 @@ internal class ConverterToRuntimeRules(
     }
 
     private fun createRhsForOptional(rule: RuntimeRule, target: OptionalItem, arg: String): RuntimeRuleRhs {
-        val item = this.runtimeRuleForSimpleItem(target.item, arg)
+        val item = this.runtimeRuleForRuleItem(target.item, arg)
         return RuntimeRuleRhsListSimple(rule, 0, 1, item)
     }
 
     private fun createRhsForSimpleList(rule: RuntimeRule, target: SimpleList, arg: String): RuntimeRuleRhs {
-        val item = this.runtimeRuleForSimpleItem(target.item, arg)
+        val item = this.runtimeRuleForRuleItem(target.item, arg)
         return RuntimeRuleRhsListSimple(rule, target.min, target.max, item)
     }
 
     private fun createRhsForSeparatedList(rule: RuntimeRule, target: SeparatedList, arg: String): RuntimeRuleRhs {
-        val item = this.runtimeRuleForSimpleItem(target.item, arg)
-        val separator = this.runtimeRuleForSimpleItem(target.separator, arg)
+        val item = this.runtimeRuleForRuleItem(target.item, arg)
+        val separator = this.runtimeRuleForRuleItem(target.separator, arg)
         return RuntimeRuleRhsListSeparated(rule, target.min, target.max, item, separator)
     }
 }
