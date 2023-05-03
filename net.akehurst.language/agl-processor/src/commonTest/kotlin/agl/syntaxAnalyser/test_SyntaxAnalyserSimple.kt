@@ -49,16 +49,42 @@ class test_SyntaxAnalyserSimple {
         fun test(proc: LanguageProcessor<AsmSimple, ContextSimple>, data: TestData) {
             println(data.sentence)
             val result = proc.process(data.sentence)
-            assertNotNull(result.asm)
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+            assertNotNull(result.asm)
             val actual = result.asm!!
 
             assertEquals(data.expected.asString("  "), actual.asString("  "))
         }
+
+        fun testAll(proc: LanguageProcessor<AsmSimple, ContextSimple>, tests: List<TestData>) {
+            for (data in tests) {
+                test(proc, data)
+            }
+        }
     }
 
-    @Test
-    fun oneLiteral_ignored_because_not_a_leaf() {
+    // --- Empty ---
+    @Test // S =  ;
+    fun rhs_empty() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S =  ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = ""
+        val expected = asmSimple {
+            element("S") {
+            }
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    // --- Literal ---
+    @Test // S = 'a' ;
+    fun rhs_terminal_nonleaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -75,8 +101,8 @@ class test_SyntaxAnalyserSimple {
         test(proc, TestData(sentence, expected))
     }
 
-    @Test
-    fun oneLiteral_as_leaf() {
+    @Test // S = a ; leaf a = 'a' ;
+    fun rhs_terminal_leaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -95,13 +121,13 @@ class test_SyntaxAnalyserSimple {
         test(proc, TestData(sentence, expected))
     }
 
-    @Test
-    fun onePattern() {
+    // --- Pattern ---
+    @Test //  S = "[a-z]" ;
+    fun rhs_terminal_nonLeaf_pattern() {
         val grammarStr = """
             namespace test
             grammar Test {
-                S = ID ;
-                leaf ID = "[a-z]" ;
+                S = "[a-z]" ;
             }
         """.trimIndent()
         val proc = testProc(grammarStr)
@@ -109,10 +135,1427 @@ class test_SyntaxAnalyserSimple {
         val sentence = "a"
         val expected = asmSimple {
             element("S") {
-                propertyString("id", "a")
             }
         }
         test(proc, TestData(sentence, expected))
+    }
+
+    @Test // S = v ; leaf v = "[a-z]" ;
+    fun rhs_terminal_leaf_pattern() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = v ;
+                leaf v = "[a-z]" ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = "a"
+        val expected = asmSimple {
+            element("S") {
+                propertyString("v", "a")
+            }
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    // --- Concatenation ---
+    @Test // S = A B C ;
+    fun rhs_concat_nonTerm_x3_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = A B C ;
+                A = 'a' ;
+                B = 'b' ;
+                C = 'c' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("abc") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("b", "b")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test
+    fun rhs_concat_nonTerm_x3_literal_with_separator() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a ',' b ',' c ;
+                a = 'a' ;
+                b = 'b' ;
+                c = 'c' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("a,b,c") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("b", "b")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    // --- Choice ---
+    @Test // S = 'a' | 'b' | 'c' ;
+    fun rhs_choice_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' | 'b' | 'c' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = "a"
+        val expected = asmSimple {
+            string("a")
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    @Test // S = A | B | C ; A = a x; B = b x; C = c x;
+    fun rhs_choice_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = A | B | C ;
+                A = a x;
+                B = b x;
+                C = c x;
+                leaf a = 'a';
+                leaf b = 'b';
+                leaf c = 'c';
+                leaf x = 'x';
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("ax") {
+            asmSimple {
+                element("A") {
+                    propertyString("a", "a")
+                    propertyString("x", "x")
+                }
+            }
+        }
+        tests.define("bx") {
+            asmSimple {
+                element("B") {
+                    propertyString("b", "b")
+                    propertyString("x", "x")
+                }
+            }
+        }
+        tests.define("cx") {
+            asmSimple {
+                element("C") {
+                    propertyString("c", "c")
+                    propertyString("x", "x")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test // S = L | M ; L = 'a' | 'b' | 'c' ; M = 'x' | 'y' ;
+    fun rhs_choice_of_choice_all_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = L | M ;
+                L = 'a' | 'b' | 'c' ;
+                M = 'x' | 'y' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("a") {
+            asmSimple {
+                string("a")
+            }
+        }
+        tests.define("b") {
+            asmSimple {
+                string("b")
+            }
+        }
+        tests.define("c") {
+            asmSimple {
+                string("c")
+            }
+        }
+        tests.define("x") {
+            asmSimple {
+                string("x")
+            }
+        }
+        tests.define("y") {
+            asmSimple {
+                string("y")
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test // S = L | M ; L = a | b | c ;  M = x | y ;
+    fun rhs_choice_of_choice_all_leaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = L | M ;
+                L = a | b | c ;
+                M = x | y ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf x = 'x' ;
+                leaf y = 'y' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("a") {
+            asmSimple {
+                string("a")
+            }
+        }
+        tests.define("b") {
+            asmSimple {
+                string("b")
+            }
+        }
+        tests.define("c") {
+            asmSimple {
+                string("c")
+            }
+        }
+        tests.define("x") {
+            asmSimple {
+                string("x")
+            }
+        }
+        tests.define("y") {
+            asmSimple {
+                string("y")
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test // S = A | B | C ; A = a x ; B = C | D ; C = c x; D = d x ;
+    fun rhs_choice_of_choice_all_concats() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = A | B | C ;
+                A = a x ;
+                B = C | D ;
+                C = c x ;
+                D = d x ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf x = 'x' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("ax") {
+            asmSimple {
+                element("A") {
+                    propertyString("a", "a")
+                    propertyString("x", "x")
+                }
+            }
+        }
+        tests.define("cx") {
+            asmSimple {
+                element("C") {
+                    propertyString("c", "c")
+                    propertyString("x", "x")
+                }
+            }
+        }
+        tests.define("dx") {
+            asmSimple {
+                element("D") {
+                    propertyString("d", "d")
+                    propertyString("x", "x")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test // S = A | B | C ; A = a x ; B = c | D ; C = c ; D = d ;
+    fun rhs_choice_of_choice_mixed_literal_and_concats() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = A | B | C ;
+                A = a x ;
+                B = c | D ;
+                C = c ;
+                D = d ;
+                leaf a = 'a';
+                leaf b = 'b';
+                leaf c = 'c';
+                leaf d = 'd';
+                leaf x = 'x';
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("ax") {
+            asmSimple {
+                element("A") {
+                    propertyString("a", "a")
+                    propertyString("x", "x")
+                }
+            }
+        }
+        tests.define("c") {
+            asmSimple {
+                element("C") {
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("d") {
+            asmSimple {
+                element("D") {
+                    propertyString("d", "d")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test // S = 'a'? ;
+    fun rhs_optional_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a'? ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = ""
+        val expected = asmSimple {
+            element("S") { }
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    @Test // S = a 'b'? c ;
+    fun concat_optional_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a 'b'? c ;
+                leaf a = 'a' ;
+                leaf c = 'c' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("abc") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("ac") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test //S = a? ;
+    fun rhs_optional_literal_leaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a? ;
+                leaf a = 'a';
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("") {
+            asmSimple {
+                element("S") {
+                    propertyNull("a")
+                }
+            }
+        }
+        tests.define("a") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test // S = a 'b'? c ;
+    fun concat_optional_literal_leaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a b? c ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("abc") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("b", "b")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("ac") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("b", null)
+                    propertyString("c", "c")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test //  S = 'a'* ;
+    fun rhs_list_literal_nonLeaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a'* ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("") {
+            asmSimple {
+                element("S") {}
+            }
+        }
+        tests.define("a") {
+            asmSimple {
+                element("S") {}
+            }
+        }
+        tests.define("aa") {
+            asmSimple {
+                element("S") {}
+            }
+        }
+        tests.define("aaa") {
+            asmSimple {
+                element("S") {}
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test // S = a 'b'* c ;
+    fun concat_list_literal_nonLeaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a 'b'* c ;
+                leaf a = 'a' ;
+                leaf c = 'c' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("ac") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("abc") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("abbc") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("abbbc") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test //  S = a* ;
+    fun rhs_list_literal_leaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a* ;
+                leaf a = 'a' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("a", listOf())
+                }
+            }
+        }
+        tests.define("a") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("a", listOf("a"))
+                }
+            }
+        }
+        tests.define("aa") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("a", listOf("a", "a"))
+                }
+            }
+        }
+        tests.define("aaa") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("a", listOf("a", "a", "a"))
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test // S = a b* c ;
+    fun concat_list_literal_leaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a b* c ;
+                leaf a = 'a';
+                leaf b = 'b';
+                leaf c = 'c';
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("ac") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyListOfString("b", emptyList())
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("abc") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyListOfString("b", listOf("b"))
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("abbc") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyListOfString("b", listOf("b", "b"))
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("abbbc") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyListOfString("b", listOf("b", "b", "b"))
+                    propertyString("c", "c")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test //S = as ; as = a* ;
+    fun rhs_nonTerm_multi_literal_leaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = as ;
+                as = a* ;
+                leaf a = 'a' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("as", listOf())
+                }
+            }
+        }
+        tests.define("a") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("as", listOf("a"))
+                }
+            }
+        }
+        tests.define("aa") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("as", listOf("a", "a"))
+                }
+            }
+        }
+        tests.define("aaa") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("as", listOf("a", "a", "a"))
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test // S = as ; as = ['a' / ',']* ;
+    fun rhs_nonTerm_sepList_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = as ;
+                as = ['a' / ',']* ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("") {
+            asmSimple {
+                element("S") {
+                }
+            }
+        }
+        tests.define("a") {
+            asmSimple {
+                element("S") {
+                }
+            }
+        }
+        tests.define("a,a") {
+            asmSimple {
+                element("S") {
+                }
+            }
+        }
+        tests.define("a,a,a") {
+            asmSimple {
+                element("S") {
+                }
+            }
+        }
+        tests.define("a,a,a,a") {
+            asmSimple {
+                element("S") {
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test // S = a bs c ; bs = ['b' / ',']* ;
+    fun concat_nonTerm_sepList_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a bs c;
+                bs = ['b' / ',']* ;
+                leaf a = 'a' ;
+                leaf c = 'c' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("ac") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("abc") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("ab,bc") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("ab,b,bc") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("ab,b,b,bc") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test // S = as ; as = [a / ',']* ;
+    fun rhs_nonTerm_sepList_literal_leaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = as ;
+                as = [a / ',']* ;
+                leaf a = 'a' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("as", listOf())
+                }
+            }
+        }
+        tests.define("a") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("as", listOf("a"))
+                }
+            }
+        }
+        tests.define("a,a") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("as", listOf("a", "a"))
+                }
+            }
+        }
+        tests.define("a,a,a") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("as", listOf("a", "a", "a"))
+                }
+            }
+        }
+        tests.define("a,a,a,a") {
+            asmSimple {
+                element("S") {
+                    propertyListOfString("as", listOf("a", "a", "a", "a"))
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    // --- Group ---
+    @Test // S = a ('b' 'c' 'd') e ;
+    fun concat_group_concat_literal_nonLeaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a ('b' 'c' 'd') e ;
+                leaf a = 'a' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("abcde") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("e", "e")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test // S = a (b c d) e ;
+    fun concat_group_concat_literal_leaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b c d) e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = "abcde"
+        val expected = asmSimple {
+            element("S") {
+                propertyString("a", "a")
+                propertyTuple("\$group") {
+                    propertyString("b", "b")
+                    propertyString("c", "c")
+                    propertyString("d", "d")
+                }
+                propertyString("e", "e")
+            }
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    @Test // S = a (b c d) (b a c) e ;
+    fun concat_group_concat_leaf_literal_2() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b c d) (b a c) e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = "abcdbace"
+        val expected = asmSimple {
+            element("S") {
+                propertyString("a", "a")
+                propertyTuple("\$group") {
+                    propertyString("b", "b")
+                    propertyString("c", "c")
+                    propertyString("d", "d")
+                }
+                propertyTuple("\$group2") {
+                    propertyString("b", "b")
+                    propertyString("a", "a")
+                    propertyString("c", "c")
+                }
+                propertyString("e", "e")
+            }
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    @Test // S = a (b) e ;
+    fun concat_group_1_leaf_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b) e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = "abe"
+        val expected = asmSimple {
+            element("S") {
+                propertyString("a", "a")
+                propertyTuple("\$group") {
+                    propertyString("b", "b")
+                }
+                propertyString("e", "e")
+            }
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    @Test // S = a (b (c) d) e ;
+    fun group_concat_group_group_leaf_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b (c) d) e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+
+        val proc = testProc(grammarStr)
+
+        val sentence = "abcde"
+        val expected = asmSimple {
+            element("S") {
+                propertyString("a", "a")
+                propertyTuple("\$group") {
+                    propertyString("b", "b")
+                    propertyTuple("\$group") {
+                        propertyString("c", "c")
+                    }
+                    propertyString("d", "d")
+                }
+                propertyString("e", "e")
+            }
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    @Test // S = a (b | c | d) e ;
+    fun concat_group_choice_leaf_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b | c | d) e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("abe") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("\$choice", "b")
+                    propertyString("e", "e")
+                }
+            }
+        }
+        tests.define("ace") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("\$choice", "c")
+                    propertyString("e", "e")
+                }
+            }
+        }
+        tests.define("ade") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("\$choice", "d")
+                    propertyString("e", "e")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test // S = a (b c | d) e ;
+    fun concat_group_choice_concat_leaf_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b c | d) e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("abce") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyTuple("\$choice") {
+                        propertyString("b", "b")
+                        propertyString("c", "c")
+                    }
+                    propertyString("e", "e")
+                }
+            }
+        }
+        tests.define("ade") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyString("\$choice", "d")
+                    propertyString("e", "e")
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test // S = a (b c | d e) f ;
+    fun concat_group_choice_concat_leaf_literal_2() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b c | d e) f ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+                leaf f = 'f' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("abcf") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyTuple("\$choice") {
+                        propertyString("b", "b")
+                        propertyString("c", "c")
+                    }
+                    propertyString("f", "f")
+                }
+            }
+        }
+        tests.define("adef") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyTuple("\$choice") {
+                        propertyString("d", "d")
+                        propertyString("e", "e")
+                    }
+                    propertyString("f", "f")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test //  S = a (b? c) e ;
+    fun concat_group_concat_optional() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b? c) e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("abce") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyTuple("\$group") {
+                        propertyString("b", "b")
+                        propertyString("c", "c")
+                    }
+                    propertyString("e", "e")
+                }
+            }
+        }
+        tests.define("ace") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyTuple("\$group") {
+                        propertyString("b", null)
+                        propertyString("c", "c")
+                    }
+                    propertyString("e", "e")
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test // S = a ( (b | c) (d?) e ) f ;
+    fun concat_group_choice_group_concat_optional() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a ( (b | c) (d?) e ) f ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+                leaf f = 'f' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("abef") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyTuple("\$group") {
+                        propertyString("\$choice", "b")
+                        propertyTuple("\$group") {
+                            propertyString("d", null)
+                        }
+                        propertyString("e", "e")
+                    }
+                    propertyString("f", "f")
+                }
+            }
+        }
+        tests.define("acef") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyTuple("\$group") {
+                        propertyString("\$choice", "c")
+                        propertyTuple("\$group") {
+                            propertyString("d", null)
+                        }
+                        propertyString("e", "e")
+                    }
+                    propertyString("f", "f")
+                }
+            }
+        }
+        tests.define("abdef") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyTuple("\$group") {
+                        propertyString("\$choice", "b")
+                        propertyTuple("\$group") {
+                            propertyString("d", "d")
+                        }
+                        propertyString("e", "e")
+                    }
+                    propertyString("f", "f")
+                }
+            }
+        }
+        tests.define("acdef") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyTuple("\$group") {
+                        propertyString("\$choice", "c")
+                        propertyTuple("\$group") {
+                            propertyString("d", "d")
+                        }
+                        propertyString("e", "e")
+                    }
+                    propertyString("f", "f")
+                }
+            }
+        }
+
+        testAll(proc, tests)
+    }
+
+    @Test // S = (BC | d+) ;
+    fun rhs_group_choice_concat_nonTerm_list() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = (BC | d+) ;
+                BC = b c ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("bc") {
+            asmSimple {
+                element("BC") {
+                    propertyString("b", "b")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("d") {
+            asmSimple {
+                listOfString("d")
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test // S = a (BC | d+) e ;
+    fun concat_group_choice_concat_nonTerm_list() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (BC | d+) e ;
+                BC = b c ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("abce") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyElementExplicitType("\$choice", "BC") {
+                        propertyString("b", "b")
+                        propertyString("c", "c")
+                    }
+                    propertyString("e", "e")
+                }
+            }
+        }
+        tests.define("ade") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyListOfString("\$choice", listOf("d"))
+                    propertyString("e", "e")
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    // --- Misc ---
+    @Test
+    fun nesting() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                S = type ;
+                type = NAME typeArgs? ;
+                typeArgs = '<' typeArgList '>' ;
+                typeArgList = [type / ',']+ ;
+                leaf NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("A") {
+            asmSimple {
+                element("S") {
+                    propertyElementExplicitType("type", "Type") {
+                        propertyString("name", "A")
+                        propertyNull("typeArgs")
+                    }
+                }
+            }
+        }
+        tests.define("A<B>") {
+            asmSimple {
+                element("S") {
+                    propertyElementExplicitType("type", "Type") {
+                        propertyString("name", "A")
+                        propertyElementExplicitType("typeArgs", "TypeArgs") {
+                            propertyListOfElement("typeArgList") {
+                                element("Type") {
+                                    propertyString("name", "B")
+                                    propertyNull("typeArgs")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("A<B,C,D>") {
+            asmSimple {
+                element("S") {
+                    propertyElementExplicitType("type", "Type") {
+                        propertyString("name", "A")
+                        propertyElementExplicitType("typeArgs", "TypeArgs") {
+                            propertyListOfElement("typeArgList") {
+                                element("Type") {
+                                    propertyString("name", "B")
+                                    propertyNull("typeArgs")
+                                }
+                                element("Type") {
+                                    propertyString("name", "C")
+                                    propertyNull("typeArgs")
+                                }
+                                element("Type") {
+                                    propertyString("name", "D")
+                                    propertyNull("typeArgs")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("A<B<C,D<E,F,G>,H<I,J>>>") {
+            asmSimple {
+                element("S") {
+                    propertyElementExplicitType("type", "Type") {
+                        propertyString("name", "A")
+                        propertyElementExplicitType("typeArgs", "TypeArgs") {
+                            propertyListOfElement("typeArgList") {
+                                element("Type") {
+                                    propertyString("name", "B")
+                                    propertyElementExplicitType("typeArgs", "TypeArgs") {
+                                        propertyListOfElement("typeArgList") {
+                                            element("Type") {
+                                                propertyString("name", "C")
+                                                propertyNull("typeArgs")
+                                            }
+                                            element("Type") {
+                                                propertyString("name", "D")
+                                                propertyElementExplicitType("typeArgs", "TypeArgs") {
+                                                    propertyListOfElement("typeArgList") {
+                                                        element("Type") {
+                                                            propertyString("name", "E")
+                                                            propertyNull("typeArgs")
+                                                        }
+                                                        element("Type") {
+                                                            propertyString("name", "F")
+                                                            propertyNull("typeArgs")
+                                                        }
+                                                        element("Type") {
+                                                            propertyString("name", "G")
+                                                            propertyNull("typeArgs")
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            element("Type") {
+                                                propertyString("name", "H")
+                                                propertyElementExplicitType("typeArgs", "TypeArgs") {
+                                                    propertyListOfElement("typeArgList") {
+                                                        element("Type") {
+                                                            propertyString("name", "I")
+                                                            propertyNull("typeArgs")
+                                                        }
+                                                        element("Type") {
+                                                            propertyString("name", "J")
+                                                            propertyNull("typeArgs")
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
     }
 
     @Test
@@ -158,79 +1601,6 @@ class test_SyntaxAnalyserSimple {
                 propertyString("id", "a")
                 propertyString("number", "8")
                 propertyString("name", "fred")
-            }
-        }
-        test(proc, TestData(sentence, expected))
-    }
-
-    @Test
-    fun root_choice_twoLiteral() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = 'a' | 'b' ;
-            }
-        """.trimIndent()
-        val proc = testProc(grammarStr)
-
-        val sentence = "a"
-        val expected = asmSimple {
-            string("a")
-        }
-        test(proc, TestData(sentence, expected))
-    }
-
-    @Test
-    fun root_empty() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = 'a'? ;
-            }
-        """.trimIndent()
-        val proc = testProc(grammarStr)
-
-        val sentence = ""
-        val expected = asmSimple {
-            string("<null>")
-        }
-        test(proc, TestData(sentence, expected))
-    }
-
-    @Test
-    fun root_multi_literals() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = 'a'* ;
-            }
-        """.trimIndent()
-        val proc = testProc(grammarStr)
-
-        val sentence = "aaaa"
-        val expected = asmSimple {
-            element("S") {
-
-            }
-        }
-        test(proc, TestData(sentence, expected))
-    }
-
-    @Test
-    fun root_multi_leafs() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = a* ;
-                leaf a = 'a' ;
-            }
-        """.trimIndent()
-        val proc = testProc(grammarStr)
-
-        val sentence = "aaaa"
-        val expected = asmSimple {
-            element("S") {
-                propertyListOfString("a", listOf("a", "a", "a", "a"))
             }
         }
         test(proc, TestData(sentence, expected))
@@ -384,6 +1754,129 @@ class test_SyntaxAnalyserSimple {
             element("S") {
                 propertyString("id", "a")
                 propertyListOfString("name", listOf("adam", "betty", "charles"))
+            }
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    @Test
+    fun list_of_group() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                S = ID (NAME | NUMBER)* ;
+                leaf ID = "[a-z]" ;
+                leaf NUMBER = "[0-9]+" ;
+                leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = "a adam 2 charles"
+        val expected = asmSimple {
+            element("S") {
+                propertyString("id", "a")
+                propertyListOfString("\$choiceList", listOf("adam", "2", "charles"))
+            }
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    @Test
+    fun sepList() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                addressBook = ID contacts;
+                contacts = [person / ',']* ;
+                person = NAME NAME NUMBER ;
+                leaf ID = "[a-zA-Z0-9]+" ;
+                leaf NUMBER = "[0-9]+" ;
+                leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = "bk1 adam ant 12345, betty boo 34567, charlie chaplin 98765"
+        val expected = asmSimple {
+            element("AddressBook") {
+                propertyString("id", "bk1")
+                propertyListOfElement("contacts") {
+                    element("Person") {
+                        propertyString("name", "adam")
+                        propertyString("name2", "ant")
+                        propertyString("number", "12345")
+                    }
+                    element("Person") {
+                        propertyString("name", "betty")
+                        propertyString("name2", "boo")
+                        propertyString("number", "34567")
+                    }
+                    element("Person") {
+                        propertyString("name", "charlie")
+                        propertyString("name2", "chaplin")
+                        propertyString("number", "98765")
+                    }
+                }
+            }
+        }
+        test(proc, TestData(sentence, expected))
+    }
+
+    @Test
+    fun sepList2() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip leaf WHITESPACE = "\s+" ;
+                attr_stmt = attr_type attr_lists ;
+                attr_type = 'graph' | 'node' | 'edge' ;
+                attr_lists = attr_list+ ;
+                attr_list = '[' attr_list_content ']' ;
+                attr_list_content = [ attr / a_list_sep ]* ;
+                attr = ID '=' ID ;
+                leaf a_list_sep = (';' | ',')? ;
+                leaf ID = "[a-zA-Z_][a-zA-Z_0-9]+" ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val sentence = "graph [fontsize=ss, labelloc=yy label=bb; splines=true overlap=false]"
+        val expected = asmSimple {
+            element("Attr_stmt") {
+                propertyString("attr_type", "graph")
+                propertyListOfElement("attr_lists") {
+                    element("Attr_list") {
+                        propertyListOfElement("attr_list_content") {
+                            element("Attr") {
+                                propertyString("id", "fontsize")
+                                propertyString("id2", "ss")
+                            }
+                            string(",")
+                            element("Attr") {
+                                propertyString("id", "labelloc")
+                                propertyString("id2", "yy")
+                            }
+                            string("")
+                            element("Attr") {
+                                propertyString("id", "label")
+                                propertyString("id2", "bb")
+                            }
+                            string(";")
+                            element("Attr") {
+                                propertyString("id", "splines")
+                                propertyString("id2", "true")
+                            }
+                            string("")
+                            element("Attr") {
+                                propertyString("id", "overlap")
+                                propertyString("id2", "false")
+                            }
+                        }
+                    }
+                }
             }
         }
         test(proc, TestData(sentence, expected))
@@ -679,594 +2172,6 @@ class test_SyntaxAnalyserSimple {
                             tuple {
                                 propertyElementExplicitType("expr", "Var") {
                                     propertyString("name", "x")
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        for (data in tests) {
-            test(proc, data)
-        }
-    }
-
-    @Test
-    fun list_of_group() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                skip WS = "\s+" ;
-                S = ID (NAME | NUMBER)* ;
-                leaf ID = "[a-z]" ;
-                leaf NUMBER = "[0-9]+" ;
-                leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
-            }
-        """.trimIndent()
-        val proc = testProc(grammarStr)
-
-        val sentence = "a adam 2 charles"
-        val expected = asmSimple {
-            element("S") {
-                propertyString("id", "a")
-                propertyUnnamedListOfString(listOf("adam", "2", "charles"))
-            }
-        }
-        test(proc, TestData(sentence, expected))
-    }
-
-    @Test
-    fun sepList() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                skip WS = "\s+" ;
-                addressBook = ID contacts;
-                contacts = [person / ',']* ;
-                person = NAME NAME NUMBER ;
-                leaf ID = "[a-zA-Z0-9]+" ;
-                leaf NUMBER = "[0-9]+" ;
-                leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
-            }
-        """.trimIndent()
-        val proc = testProc(grammarStr)
-
-        val sentence = "bk1 adam ant 12345, betty boo 34567, charlie chaplin 98765"
-        val expected = asmSimple {
-            element("AddressBook") {
-                propertyString("id", "bk1")
-                propertyListOfElement("contacts") {
-                    element("Person") {
-                        propertyString("name", "adam")
-                        propertyString("name2", "ant")
-                        propertyString("number", "12345")
-                    }
-                    element("Person") {
-                        propertyString("name", "betty")
-                        propertyString("name2", "boo")
-                        propertyString("number", "34567")
-                    }
-                    element("Person") {
-                        propertyString("name", "charlie")
-                        propertyString("name2", "chaplin")
-                        propertyString("number", "98765")
-                    }
-                }
-            }
-        }
-        test(proc, TestData(sentence, expected))
-    }
-
-    @Test
-    fun sepList2() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                skip leaf WHITESPACE = "\s+" ;
-                attr_stmt = attr_type attr_lists ;
-                attr_type = 'graph' | 'node' | 'edge' ;
-                attr_lists = attr_list+ ;
-                attr_list = '[' attr_list_content ']' ;
-                attr_list_content = [ attr / a_list_sep ]* ;
-                attr = ID '=' ID ;
-                leaf a_list_sep = (';' | ',')? ;
-                leaf ID = "[a-zA-Z_][a-zA-Z_0-9]+" ;
-            }
-        """.trimIndent()
-        val proc = testProc(grammarStr)
-
-        val sentence = "graph [fontsize=ss, labelloc=yy label=bb; splines=true overlap=false]"
-        val expected = asmSimple {
-            element("Attr_stmt") {
-                propertyString("attr_type", "graph")
-                propertyListOfElement("attr_lists") {
-                    element("Attr_list") {
-                        propertyListOfElement("attr_list_content") {
-                            element("Attr") {
-                                propertyString("id", "fontsize")
-                                propertyString("id2", "ss")
-                            }
-                            string(",")
-                            element("Attr") {
-                                propertyString("id", "labelloc")
-                                propertyString("id2", "yy")
-                            }
-                            string("")
-                            element("Attr") {
-                                propertyString("id", "label")
-                                propertyString("id2", "bb")
-                            }
-                            string(";")
-                            element("Attr") {
-                                propertyString("id", "splines")
-                                propertyString("id2", "true")
-                            }
-                            string("")
-                            element("Attr") {
-                                propertyString("id", "overlap")
-                                propertyString("id2", "false")
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        test(proc, TestData(sentence, expected))
-    }
-
-    @Test
-    fun group_concat_leaf_literal() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = a (b c d) e ;
-                leaf a = 'a' ;
-                leaf b = 'b' ;
-                leaf c = 'c' ;
-                leaf d = 'd' ;
-                leaf e = 'e' ;
-            }
-        """.trimIndent()
-        val proc = testProc(grammarStr)
-
-        val sentence = "abcde"
-        val expected = asmSimple {
-            element("S") {
-                propertyString("a", "a")
-                propertyTuple("\$group") {
-                    propertyString("b", "b")
-                    propertyString("c", "c")
-                    propertyString("d", "d")
-                }
-                propertyString("e", "e")
-            }
-        }
-        test(proc, TestData(sentence, expected))
-    }
-
-    @Test
-    fun group_concat_group_group_leaf_literal() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = a (b (c) d) e ;
-                leaf a = 'a' ;
-                leaf b = 'b' ;
-                leaf c = 'c' ;
-                leaf d = 'd' ;
-                leaf e = 'e' ;
-            }
-        """.trimIndent()
-
-        val proc = testProc(grammarStr)
-
-        val sentence = "abcde"
-        val expected = asmSimple {
-            element("S") {
-                propertyString("a", "a")
-                propertyTuple("\$group") {
-                    propertyString("b", "b")
-                    propertyTuple("\$group") {
-                        propertyString("c", "c")
-                    }
-                    propertyString("d", "d")
-                }
-                propertyString("e", "e")
-            }
-        }
-        test(proc, TestData(sentence, expected))
-    }
-
-    @Test
-    fun group_choice_leaf_literal() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = a (b | c | d) e ;
-                leaf a = 'a' ;
-                leaf b = 'b' ;
-                leaf c = 'c' ;
-                leaf d = 'd' ;
-                leaf e = 'e' ;
-            }
-        """.trimIndent()
-        val proc = testProc(grammarStr)
-
-        val sentence = "abe"
-        val expected = asmSimple {
-            element("S") {
-                propertyString("a", "a")
-                propertyString("\$choice", "b")
-                propertyString("e", "e")
-            }
-        }
-        test(proc, TestData(sentence, expected))
-    }
-
-    @Test
-    fun group_choice_concat_leaf_literal() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = a (b c | d) e ;
-                leaf a = 'a' ;
-                leaf b = 'b' ;
-                leaf c = 'c' ;
-                leaf d = 'd' ;
-                leaf e = 'e' ;
-            }
-        """.trimIndent()
-        val proc = testProc(grammarStr)
-
-        val tests = mutableListOf<TestData>()
-        tests.define("abce") {
-            asmSimple {
-                element("S") {
-                    propertyString("a", "a")
-                    propertyTuple("\$choice") {
-                        propertyString("b", "b")
-                        propertyString("c", "c")
-                    }
-                    propertyString("e", "e")
-                }
-            }
-        }
-        tests.define("ade") {
-            asmSimple {
-                element("S") {
-                    propertyString("a", "a")
-                    propertyString("\$choice", "d")
-                    propertyString("e", "e")
-                }
-            }
-        }
-        for (data in tests) {
-            test(proc, data)
-        }
-    }
-
-    @Test
-    fun rhs_group_choice_concat_nonTerm_list() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = (BC | d+) ;
-                BC = b c ;
-                leaf b = 'b' ;
-                leaf c = 'c' ;
-                leaf d = 'd' ;
-            }
-        """.trimIndent()
-        val proc = testProc(grammarStr)
-
-        val tests = mutableListOf<TestData>()
-        tests.define("bc") {
-            asmSimple {
-                element("BC") {
-                    propertyString("b", "b")
-                    propertyString("c", "c")
-                }
-            }
-        }
-        tests.define("d") {
-            asmSimple {
-                listOfString("d")
-            }
-        }
-        for (data in tests) {
-            test(proc, data)
-        }
-    }
-
-    @Test
-    fun item_group_choice_concat_nonTerm_list() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = a (BC | d+) e ;
-                BC = b c ;
-                leaf a = 'a' ;
-                leaf b = 'b' ;
-                leaf c = 'c' ;
-                leaf d = 'd' ;
-                leaf e = 'e' ;
-            }
-        """.trimIndent()
-        val proc = testProc(grammarStr)
-
-        val tests = mutableListOf<TestData>()
-        tests.define("abce") {
-            asmSimple {
-                element("S") {
-                    propertyString("a", "a")
-                    propertyTuple("\$choice") {
-                        propertyString("b", "b")
-                        propertyString("c", "c")
-                    }
-                    propertyString("e", "e")
-                }
-            }
-        }
-        tests.define("ade") {
-            asmSimple {
-                element("S") {
-                    propertyString("a", "a")
-                    propertyListOfString("\$choice", listOf("d"))
-                    propertyString("e", "e")
-                }
-            }
-        }
-        for (data in tests) {
-            test(proc, data)
-        }
-    }
-
-    @Test
-    fun group_concat_optional() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = a (b? c) e ;
-                leaf a = 'a' ;
-                leaf b = 'b' ;
-                leaf c = 'c' ;
-                leaf d = 'd' ;
-                leaf e = 'e' ;
-            }
-        """.trimIndent()
-        val proc = testProc(grammarStr)
-
-        val tests = mutableListOf<TestData>()
-        tests.define("abce") {
-            asmSimple {
-                element("S") {
-                    propertyString("a", "a")
-                    propertyTuple("\$group") {
-                        propertyString("b", "b")
-                        propertyString("c", "c")
-                    }
-                    propertyString("e", "e")
-                }
-            }
-        }
-        tests.define("ace") {
-            asmSimple {
-                element("S") {
-                    propertyString("a", "a")
-                    propertyTuple("\$group") {
-                        propertyString("b", null)
-                        propertyString("c", "c")
-                    }
-                    propertyString("e", "e")
-                }
-            }
-        }
-        for (data in tests) {
-            test(proc, data)
-        }
-    }
-
-    @Test
-    fun group_choice_group_concat_optional() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = a ( (b | c) (d?) e ) f ;
-                leaf a = 'a' ;
-                leaf b = 'b' ;
-                leaf c = 'c' ;
-                leaf d = 'd' ;
-                leaf e = 'e' ;
-                leaf f = 'f' ;
-            }
-        """.trimIndent()
-        val proc = testProc(grammarStr)
-
-        val tests = mutableListOf<TestData>()
-        tests.define("abef") {
-            asmSimple {
-                element("S") {
-                    propertyString("a", "a")
-                    propertyTuple("\$group") {
-                        propertyString("\$choice", "b")
-                        propertyTuple("\$group") {
-                            propertyString("d", null)
-                        }
-                        propertyString("e", "e")
-                    }
-                    propertyString("f", "f")
-                }
-            }
-        }
-        tests.define("acef") {
-            asmSimple {
-                element("S") {
-                    propertyString("a", "a")
-                    propertyTuple("\$group") {
-                        propertyString("\$choice", "c")
-                        propertyTuple("\$group") {
-                            propertyString("d", null)
-                        }
-                        propertyString("e", "e")
-                    }
-                    propertyString("f", "f")
-                }
-            }
-        }
-        tests.define("abdef") {
-            asmSimple {
-                element("S") {
-                    propertyString("a", "a")
-                    propertyTuple("\$group") {
-                        propertyString("\$choice", "b")
-                        propertyTuple("\$group") {
-                            propertyString("d", "d")
-                        }
-                        propertyString("e", "e")
-                    }
-                    propertyString("f", "f")
-                }
-            }
-        }
-        tests.define("acdef") {
-            asmSimple {
-                element("S") {
-                    propertyString("a", "a")
-                    propertyTuple("\$group") {
-                        propertyString("\$choice", "c")
-                        propertyTuple("\$group") {
-                            propertyString("d", "d")
-                        }
-                        propertyString("e", "e")
-                    }
-                    propertyString("f", "f")
-                }
-            }
-        }
-        for (data in tests) {
-            test(proc, data)
-        }
-    }
-
-    @Test
-    fun nesting() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                skip WS = "\s+" ;
-                S = type ;
-                type = NAME typeArgs? ;
-                typeArgs = '<' typeArgList '>' ;
-                typeArgList = [type / ',']+ ;
-                leaf NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
-            }
-        """.trimIndent()
-        val proc = testProc(grammarStr)
-
-        val tests = mutableListOf<TestData>()
-        tests.define("A") {
-            asmSimple {
-                element("S") {
-                    propertyElementExplicitType("type", "Type") {
-                        propertyString("name", "A")
-                        propertyNull("typeArgs")
-                    }
-                }
-            }
-        }
-        tests.define("A<B>") {
-            asmSimple {
-                element("S") {
-                    propertyElementExplicitType("type", "Type") {
-                        propertyString("name", "A")
-                        propertyElementExplicitType("typeArgs", "TypeArgs") {
-                            propertyListOfElement("typeArgList") {
-                                element("Type") {
-                                    propertyString("name", "B")
-                                    propertyNull("typeArgs")
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        tests.define("A<B,C,D>") {
-            asmSimple {
-                element("S") {
-                    propertyElementExplicitType("type", "Type") {
-                        propertyString("name", "A")
-                        propertyElementExplicitType("typeArgs", "TypeArgs") {
-                            propertyListOfElement("typeArgList") {
-                                element("Type") {
-                                    propertyString("name", "B")
-                                    propertyNull("typeArgs")
-                                }
-                                element("Type") {
-                                    propertyString("name", "C")
-                                    propertyNull("typeArgs")
-                                }
-                                element("Type") {
-                                    propertyString("name", "D")
-                                    propertyNull("typeArgs")
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        tests.define("A<B<C,D<E,F,G>,H<I,J>>>") {
-            asmSimple {
-                element("S") {
-                    propertyElementExplicitType("type", "Type") {
-                        propertyString("name", "A")
-                        propertyElementExplicitType("typeArgs", "TypeArgs") {
-                            propertyListOfElement("typeArgList") {
-                                element("Type") {
-                                    propertyString("name", "B")
-                                    propertyElementExplicitType("typeArgs", "TypeArgs") {
-                                        propertyListOfElement("typeArgList") {
-                                            element("Type") {
-                                                propertyString("name", "C")
-                                                propertyNull("typeArgs")
-                                            }
-                                            element("Type") {
-                                                propertyString("name", "D")
-                                                propertyElementExplicitType("typeArgs", "TypeArgs") {
-                                                    propertyListOfElement("typeArgList") {
-                                                        element("Type") {
-                                                            propertyString("name", "E")
-                                                            propertyNull("typeArgs")
-                                                        }
-                                                        element("Type") {
-                                                            propertyString("name", "F")
-                                                            propertyNull("typeArgs")
-                                                        }
-                                                        element("Type") {
-                                                            propertyString("name", "G")
-                                                            propertyNull("typeArgs")
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            element("Type") {
-                                                propertyString("name", "H")
-                                                propertyElementExplicitType("typeArgs", "TypeArgs") {
-                                                    propertyListOfElement("typeArgList") {
-                                                        element("Type") {
-                                                            propertyString("name", "I")
-                                                            propertyNull("typeArgs")
-                                                        }
-                                                        element("Type") {
-                                                            propertyString("name", "J")
-                                                            propertyNull("typeArgs")
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
                                 }
                             }
                         }

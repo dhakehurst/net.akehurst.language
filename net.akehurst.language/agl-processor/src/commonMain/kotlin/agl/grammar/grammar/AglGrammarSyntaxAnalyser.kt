@@ -255,7 +255,8 @@ internal class AglGrammarSyntaxAnalyser(
     // priorityChoice : [concatenation, '<']* ;
     private fun priorityChoice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem {
         val alternative = children.mapIndexed { index, it ->
-            this.transformBranch<Concatenation>(it, arg)
+            val c = this.transformBranch<Concatenation>(it, arg)
+            reduceConcatenation(c)
         }
         return ChoicePriorityDefault(alternative).also { this.locationMap[it] = target.location }
     }
@@ -263,7 +264,8 @@ internal class AglGrammarSyntaxAnalyser(
     // ambiguousChoice : [concatenation, '||']* ;
     private fun ambiguousChoice(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): RuleItem {
         val alternative = children.mapIndexed { index, it ->
-            this.transformBranch<Concatenation>(it, arg)
+            val c = this.transformBranch<Concatenation>(it, arg)
+            reduceConcatenation(c)
         }
         return ChoiceAmbiguousDefault(alternative).also { this.locationMap[it] = target.location }
     }
@@ -354,8 +356,8 @@ internal class AglGrammarSyntaxAnalyser(
     // separatedList : '[' simpleItem '/' terminal ']' multiplicity ;
     private fun separatedList(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): SeparatedList {
         val (min, max) = this.transformBranch<Pair<Int, Int>>(children[2], arg)
-        val separator = this.transformBranch<SimpleItem>(children[1], arg)
-        val item = this.transformBranch<SimpleItem>(children[0], arg)
+        val separator = this.transformBranch<RuleItem>(children[1], arg)
+        val item = this.transformBranch<RuleItem>(children[0], arg)
         return SeparatedListDefault(min, max, item, separator).also { this.locationMap[it] = target.location }
     }
 

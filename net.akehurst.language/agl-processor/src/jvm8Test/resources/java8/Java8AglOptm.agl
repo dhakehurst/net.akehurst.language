@@ -60,16 +60,14 @@ grammar Literals {
 }
 
 grammar Annotations extends Base, Literals {
-    Annotation = NormalAnnotation | MarkerAnnotation | SingleElementAnnotation ;
-    NormalAnnotation = '@' QualifiedName '(' ElementValuePairList ')' ;
+    Annotation = '@' QualifiedName AnnotationArgs? ;
+    AnnotationArgs = '(' (ElementValue | ElementValuePairList) ')' ;
     ElementValuePairList = [ ElementValuePair / ',' ]* ;
     ElementValuePair = IDENTIFIER '=' ElementValue ;
     // overridden in expressions
     ElementValue = Literal | ElementValueArrayInitializer | Annotation ;
     ElementValueArrayInitializer = '{' ElementValueList ','? '}' ;
     ElementValueList = [ ElementValue / ',' ]* ;
-    MarkerAnnotation = '@' QualifiedName ;
-    SingleElementAnnotation = '@' QualifiedName '(' ElementValue ')' ;
 }
 
 grammar Types extends Annotations {

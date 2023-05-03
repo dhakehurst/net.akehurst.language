@@ -15,7 +15,6 @@
  */
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.typemodel.StringType
 import net.akehurst.language.api.typemodel.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -106,7 +105,7 @@ grammar Mdl {
 
             //stringList = DOUBLE_QUOTE_STRING+ ;
             elementType("stringList", "StringList") {
-                propertyListType("double_quoted_string", StringType, false, 0)
+                propertyListType("double_quoted_string", false, 0) { stringType() }
             }
         }
 

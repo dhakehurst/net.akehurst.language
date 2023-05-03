@@ -91,20 +91,18 @@ class test_Dot_SyntaxAnalyser {
             }
             elementType("", "groupExpression") {
                 // groupExpression = '(' expression ')' ;
-                //superType("expression")
                 propertyElementTypeOf("expression", "expression", false, 1)
             }
             elementType("", "functionCallOrIndex") {
                 // functionCall = NAME '(' argumentList ')' ;
-                //superType("expression")
                 propertyStringType("NAME", false, 0)
                 propertyListSeparatedTypeOf("argumentList", "argument", StringType, false, 2)
             }
-            elementType("", "argumentList") {
+            elementType("argumentList", "argumentList") {
                 // argumentList = [ argument / ',' ]* ;
                 propertyListSeparatedTypeOf("argument", "argument", StringType, false, 0)
             }
-            elementType("", "argument") {
+            elementType("argument", "argument") {
                 // argument = expression | colonOperator ;
                 subTypes("expression", "colonOperator")
             }

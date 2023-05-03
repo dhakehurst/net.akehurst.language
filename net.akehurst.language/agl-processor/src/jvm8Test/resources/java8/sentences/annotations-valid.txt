@@ -1,2 +1,12 @@
 @Annotation
 @Annotation( 1 )
+@Annotation( true )
+@Annotation( @Ano )
+@Annotation( { 1 } )
+@Annotation( { 1,2 } )
+@Annotation( { 1,2,3 } )
+@Annotation( { 1,2,3, } )
+@Annotation( { true,2.1,0xFEA0 } )
+@Annotation( true=1 )
+@Annotation( xx=1 )
+@Annotation( xx=true )

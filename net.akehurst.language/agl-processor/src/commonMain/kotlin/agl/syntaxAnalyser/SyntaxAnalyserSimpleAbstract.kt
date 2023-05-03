@@ -123,7 +123,11 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
 
     private fun createValue(target: SPPTNode, path: AsmElementPath, type: TypeUsage): Any? {
         val nonOptTarget = when {
-            type.nullable -> target.asBranch.nonSkipChildren[0]
+            type.nullable -> when (target) {
+                is SPPTBranch -> target.asBranch.nonSkipChildren[0]
+                else -> target
+            }
+
             else -> target
         }
         val v = when {
@@ -145,9 +149,9 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
         else -> target.nonSkipMatchedText
     }
 
-    private fun createValueFromBranch(target: SPPTBranch, path: AsmElementPath, argType: TypeUsage): Any? {//, scope: ScopeSimple<AsmElementPath>?): Any? {
-        val type = argType//typeModel.findTypeUsageForRule(target.name) ?: argType
-        return when (type.type) {
+    private fun createValueFromBranch(target: SPPTBranch, path: AsmElementPath, typeUse: TypeUsage): Any? {//, scope: ScopeSimple<AsmElementPath>?): Any? {
+        val type = typeUse.type//typeModel.findTypeUsageForRule(target.name) ?: argType
+        return when (type) {
             is StringType -> createStringValueFromBranch(target)
 
             is AnyType -> {
@@ -176,11 +180,15 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
                 }
             }
 
-            is NothingType -> TODO()
+            is NothingType -> error("Internal Error: items should not have type 'NothingType'")
 
             is UnnamedSuperTypeType -> {
-                var actualTarget: SPPTNode = target
-                var actualType = type
+                var actualType = type.subtypes[target.option]
+                var actualTarget: SPPTNode = when {
+                    actualType.type is TupleType -> target
+                    else -> target.nonSkipChildren[0]
+                }
+                /*
                 while ((actualType.type is UnnamedSuperTypeType) && (actualType.type as UnnamedSuperTypeType).subtypes.isNotEmpty()) {
                     val consume = when {
                         actualType.type is UnnamedSuperTypeType -> when {
@@ -196,18 +204,18 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
                         else -> actualTarget
                     }
 
-                }
+                }*/
                 this.createValue(actualTarget, path, actualType)//, scope)
             }
 
-            is ListSimpleType -> createListSimpleValueFromBranch(target, path, type)
+            is ListSimpleType -> createListSimpleValueFromBranch(target, path, typeUse)
 
-            is ListSeparatedType -> createListSeparatedValueFromBranch(target, path, type)
+            is ListSeparatedType -> createListSeparatedValueFromBranch(target, path, typeUse)
 
             is TupleType -> {
-                val el = _asm!!.createElement(path, type.type.name)
+                val el = _asm!!.createElement(path, type.name)
                 //val childsScope = createScope(scope, el)
-                for (propDecl in type.type.property.values) {
+                for (propDecl in type.property.values) {
                     val propTgt = target.asBranch.nonSkipChildren[propDecl.childIndex]
                     val propType = propDecl.typeUse
                     val propPath = path + propDecl.name
@@ -231,7 +239,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
 
             is ElementType -> {
                 var actualTarget: SPPTNode = target
-                var actualType: ElementType = type.type
+                var actualType: ElementType = type
                 while (actualType.subtypes.isNotEmpty()) {
                     actualType = actualType.subtypes[actualTarget.option]
                     actualTarget = actualTarget.asBranch.nonSkipChildren[0]

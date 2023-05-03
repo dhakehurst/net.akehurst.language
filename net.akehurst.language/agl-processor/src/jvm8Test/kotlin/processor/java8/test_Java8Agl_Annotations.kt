@@ -92,7 +92,7 @@ class test_Java8Agl_Annotations(val data: Data) {
     fun test() {
         val result = processor.parse(this.data.text)
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         val resultStr = result.sppt!!.asString
         assertEquals(this.data.text, resultStr)
         assertEquals(1, result.sppt!!.maxNumHeads)

@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import com.github.gmazzo.gradle.plugins.BuildConfigExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 plugins {
-    kotlin("multiplatform") version ("1.8.20") apply false
+    kotlin("multiplatform") version ("1.8.21") apply false
     id("org.jetbrains.dokka") version ("1.8.10") apply false
-    id("com.github.gmazzo.buildconfig") version("3.1.0") apply false
+    id("com.github.gmazzo.buildconfig") version ("3.1.0") apply false
     id("nu.studer.credentials") version ("3.0")
-    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version("1.8.20") apply false
+    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version ("1.8.21") apply false
 }
 val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8
 val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8
@@ -49,7 +49,7 @@ subprojects {
 
     repositories {
         mavenLocal {
-            content{
+            content {
                 includeGroupByRegex("net\\.akehurst.+")
             }
         }
@@ -60,9 +60,9 @@ subprojects {
         val now = java.time.Instant.now()
         fun fBbuildStamp(): String = java.time.format.DateTimeFormatter.ISO_DATE_TIME.withZone(java.time.ZoneId.of("UTC")).format(now)
         fun fBuildDate(): String = java.time.format.DateTimeFormatter.ofPattern("yyyy-MMM-dd").withZone(java.time.ZoneId.of("UTC")).format(now)
-        fun fBuildTime(): String= java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss z").withZone(java.time.ZoneId.of("UTC")).format(now)
+        fun fBuildTime(): String = java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss z").withZone(java.time.ZoneId.of("UTC")).format(now)
 
-        packageName("${project.group}.${project.name.replace("-",".")}")
+        packageName("${project.group}.${project.name.replace("-", ".")}")
         buildConfigField("String", "version", "\"${project.version}\"")
         buildConfigField("String", "buildStamp", "\"${fBbuildStamp()}\"")
         buildConfigField("String", "buildDate", "\"${fBuildDate()}\"")
@@ -88,7 +88,7 @@ subprojects {
             }
         }
         js("js", IR) {
-            nodejs{
+            nodejs {
                 testTask {
                     useMocha {
                         timeout = "5000"

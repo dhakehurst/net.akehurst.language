@@ -143,6 +143,68 @@ class test_deriveTypeModelFromGrammar {
         TypeModelTest.assertEquals(expected, actual)
     }
 
+    @Test // S = A B C ;
+    fun rhs_concat_nonTerm_x3_literal() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = A B C ;
+                A = 'a' ;
+                B = 'b' ;
+                C = 'c' ;
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+
+        val actual = TypeModelFromGrammar(result.asm!!)
+        val expected = typeModel("test", "Test") {
+            elementType("S", "S") {
+                propertyStringType("a", false, 0)
+                propertyStringType("b", false, 1)
+                propertyStringType("c", false, 2)
+            }
+            elementType("A", "A") {}
+            elementType("B", "B") {}
+            elementType("C", "C") {}
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test // S = a ',' b ',' c ;
+    fun rhs_concat_nonTerm_x3_literal_with_separator() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a ',' b ',' c ;
+                a = 'a' ;
+                b = 'b' ;
+                c = 'c' ;
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+
+        val actual = TypeModelFromGrammar(result.asm!!)
+        val expected = typeModel("test", "Test") {
+            elementType("S", "S") {
+                propertyStringType("a", false, 0)
+                propertyStringType("b", false, 2)
+                propertyStringType("c", false, 4)
+            }
+            elementType("a", "A") {}
+            elementType("b", "B") {}
+            elementType("c", "C") {}
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
     @Test // S = 'a' | 'b' | 'c' ;
     fun rhs_choice_literal() {
         val grammarStr = """
@@ -399,7 +461,7 @@ class test_deriveTypeModelFromGrammar {
         TypeModelTest.assertEquals(expected, actual)
     }
 
-    @Test //S = a? ;
+    @Test // S = a? ;
     fun rhs_optional_literal_leaf() {
         val grammarStr = """
             namespace test
@@ -423,7 +485,7 @@ class test_deriveTypeModelFromGrammar {
         TypeModelTest.assertEquals(expected, actual)
     }
 
-    @Test //  S = 'a'* ;
+    @Test // S = 'a'* ;
     fun rhs_list_literal_nonLeaf() {
         val grammarStr = """
             namespace test
@@ -465,9 +527,9 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
             elementType("S", "S") {
-
+                propertyStringType("a", false, 0)
+                propertyStringType("c", false, 2)
             }
-//            listTypeFor("S", StringType)
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -490,7 +552,7 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
             elementType("S", "S") {
-                propertyListType("a", StringType, false, 0)
+                propertyListType("a", false, 0) { stringType() }
             }
             //listTypeFor("S", StringType)
         }
@@ -517,9 +579,39 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
             elementType("S", "S") {
-                propertyListType("a", StringType, false, 0)
+                propertyStringType("a", false, 0)
+                propertyListType("b", false, 1) { stringType() }
+                propertyStringType("c", false, 2)
             }
-            //listTypeFor("S", StringType)
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test //S = as ; as = a* ;
+    fun rhs_nonTerm_multi_literal_leaf() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = as ;
+                as = a* ;
+                leaf a = 'a' ;
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+
+        val actual = TypeModelFromGrammar(result.asm!!)
+        val expected = typeModel("test", "Test") {
+            elementType("S", "S") {
+                propertyListType("as", false, 0) { stringType() }
+            }
+            //listTypeFor("as", StringType)
+            elementType("as", "As") {
+                propertyListType("a", false, 0) { stringType() }
+            }
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -572,9 +664,10 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
             elementType("S", "S") {
-                //propertyListSeparatedType("as", StringType, StringType, false, 0)
+                propertyStringType("a", false, 0)
+                propertyStringType("c", false, 2)
             }
-            elementType("as", "As") {
+            elementType("bs", "Bs") {
 
             }
             //listSeparatedTypeFor("as", StringType, StringType)
@@ -583,8 +676,8 @@ class test_deriveTypeModelFromGrammar {
         TypeModelTest.assertEquals(expected, actual)
     }
 
-    @Test
-    fun sepList_nonTerm() {
+    @Test // S = as ; as = [a / ',']* ;
+    fun rhs_nonTerm_sepList_literal_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -601,11 +694,11 @@ class test_deriveTypeModelFromGrammar {
         val actual = TypeModelFromGrammar(result.asm!!)
         val expected = typeModel("test", "Test") {
             elementType("S", "S") {
-                propertyListSeparatedTypeOf("as", "A", StringType, false, 0) // of String
+                propertyListTypeOf("as", "A", false, 0) // of String
             }
             //listSeparatedTypeOf("as", "A", StringType)
             elementType("as", "As") {
-                propertyListSeparatedTypeOf("a", "A", StringType, false, 0) // of String
+                propertyListTypeOf("a", "A", false, 0) // of String
             }
             elementType("a", "A") {
             }
@@ -651,68 +744,6 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test
-    fun nonTerm_x3_literal() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = a b c ;
-                a = 'a' ;
-                b = 'b' ;
-                c = 'c' ;
-            }
-        """.trimIndent()
-
-        val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-
-        val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
-            elementType("S", "S") {
-                propertyStringType("a", false, 0)
-                propertyStringType("b", false, 1)
-                propertyStringType("c", false, 2)
-            }
-            elementType("a", "A") {}
-            elementType("b", "B") {}
-            elementType("c", "C") {}
-        }
-
-        TypeModelTest.assertEquals(expected, actual)
-    }
-
-    @Test
-    fun nonTerm_x3_literal_with_separator() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = a ',' b ',' c ;
-                a = 'a' ;
-                b = 'b' ;
-                c = 'c' ;
-            }
-        """.trimIndent()
-
-        val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-
-        val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
-            elementType("S", "S") {
-                propertyStringType("a", false, 0)
-                propertyStringType("b", false, 2)
-                propertyStringType("c", false, 4)
-            }
-            elementType("a", "A") {}
-            elementType("b", "B") {}
-            elementType("c", "C") {}
-        }
-
-        TypeModelTest.assertEquals(expected, actual)
-    }
-
-    @Test
     fun nonTerm_multi_literal() {
         val grammarStr = """
             namespace test
@@ -740,35 +771,7 @@ class test_deriveTypeModelFromGrammar {
         TypeModelTest.assertEquals(expected, actual)
     }
 
-    @Test //S = as ; as = a* ;
-    fun rhs_nonTerm_multi_literal_leaf() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                S = as ;
-                as = a* ;
-                leaf a = 'a' ;
-            }
-        """.trimIndent()
-
-        val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-
-        val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
-            elementType("S", "S") {
-                propertyListType("as", StringType, false, 0) // of String
-            }
-            //listTypeFor("as", StringType)
-            elementType("as", "As") {
-                propertyListType("a", StringType, false, 0) // of String
-            }
-        }
-
-        TypeModelTest.assertEquals(expected, actual)
-    }
-
+    // --- Group ---
     @Test // S = a ('b' 'c' 'e') e ;
     fun concat_group_concat_nonLeaf_literal() {
         val grammarStr = """
@@ -826,45 +829,6 @@ class test_deriveTypeModelFromGrammar {
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
-    }
-
-    @Test // S = ID (A | B)* ;
-    fun concat_list_group_choice() {
-        val grammarStr = """
-            namespace test
-            grammar Test {
-                skip WS = "\s+" ;
-                S = ID (A | B)* ;
-                A = NAME NUMBER ;
-                B = NAME NAME ;
-                leaf ID = "[a-z]" ;
-                leaf NUMBER = "[0-9]+" ;
-                leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
-            }
-        """.trimIndent()
-
-        val result = grammarProc.process(grammarStr)
-        assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-
-        val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
-            elementType("S", "S") {
-                propertyStringType("id", false, 0)
-                propertyListTypeUnnamedOfUnnamedSuperTypeType(listOf("A", "B"), 1)
-            }
-            elementType("A", "A") {
-                propertyStringType("name", false, 0)
-                propertyStringType("number", false, 1)
-            }
-            elementType("B", "B") {
-                propertyStringType("name", false, 0)
-                propertyStringType("name2", false, 1)
-            }
-        }
-
-        assertEquals(expected.asString(), actual.asString())
         TypeModelTest.assertEquals(expected, actual)
     }
 
@@ -1089,6 +1053,75 @@ class test_deriveTypeModelFromGrammar {
         TypeModelTest.assertEquals(expected, actual)
     }
 
+    @Test //  S = a (b? c) e ;
+    fun group_concat_optional() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b? c) e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+
+        val actual = TypeModelFromGrammar(result.asm!!)
+        val expected = typeModel("test", "Test") {
+            elementType("S", "S") {
+                propertyStringType("a", false, 0)
+                propertyTupleType("\$group", false, 1) {
+                    propertyStringType("b", true, 0)
+                    propertyStringType("c", false, 2)
+                }
+                propertyStringType("e", false, 2)
+            }
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test // S = a ( (b | c) (d?) e ) f ;
+    fun group_choice_group_concat_optional() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a ( (b | c) (d?) e ) f ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+                leaf f = 'f' ;
+            }
+        """.trimIndent()
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+
+        val actual = TypeModelFromGrammar(result.asm!!)
+        val expected = typeModel("test", "Test") {
+            elementType("S", "S") {
+                propertyStringType("a", false, 0)
+                propertyTupleType("\$group", false, 1) {
+                    propertyStringType("\$choice", false, 0)
+                    propertyTupleType("\$group", false, 1) {
+                        propertyStringType("d", true, 0)
+                    }
+                    propertyStringType("e", false, 0)
+                }
+                propertyStringType("f", false, 2)
+            }
+        }
+
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
     @Test // S = (BC | d*) ;
     fun rhs_group_choice_concat_nonTerm_list() {
         val grammarStr = """
@@ -1157,6 +1190,47 @@ class test_deriveTypeModelFromGrammar {
 
         }
 
+        TypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test // S = ID (A | B)* ;
+    fun concat_list_group_choice() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                S = ID (A | B)* ;
+                A = NAME NUMBER ;
+                B = NAME NAME ;
+                leaf ID = "[a-z]" ;
+                leaf NUMBER = "[0-9]+" ;
+                leaf NAME = "[a-zA-Z][a-zA-Z0-9]+" ;
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+
+        val actual = TypeModelFromGrammar(result.asm!!)
+        val expected = typeModel("test", "Test") {
+            elementType("S", "S") {
+                propertyStringType("id", false, 0)
+                propertyListType("\$choiceList", false, 1) {
+                    unnamedSuperTypeOf("A", "B")
+                }
+            }
+            elementType("A", "A") {
+                propertyStringType("name", false, 0)
+                propertyStringType("number", false, 1)
+            }
+            elementType("B", "B") {
+                propertyStringType("name", false, 0)
+                propertyStringType("name2", false, 1)
+            }
+        }
+
+        assertEquals(expected.asString(), actual.asString())
         TypeModelTest.assertEquals(expected, actual)
     }
 

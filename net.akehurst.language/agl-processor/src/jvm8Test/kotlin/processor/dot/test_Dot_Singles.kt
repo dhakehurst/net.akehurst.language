@@ -80,17 +80,18 @@ class test_Dot_Singles {
         val expected = processor.spptParser.parse(
             """
             ID { HTML {
-              '<' WHITESPACE : ' '
-              §Xml§elementContent§embedded1 { Xml::elementContent {
+              '<'
+              WHITESPACE : ' '
+              §Xml§elementContent§embedded1 { elementContent {
                 startTag {
                   '<'
                   §startTag§opt1 { §empty }
                   NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xml' }
-                  §startTag§op1 { WS { "\s+" : ' ' } }
-                  §startTag§op2 { §empty }
+                  §startTag§opt2 { WS { "\s+" : ' ' } }
+                  §startTag§multi3 { §empty }
                   '>'
                 }
-                content {  §content§group1 { CHARDATA { "[^<]+" : 'xxxx' } } }
+                content { §content§choice1 { CHARDATA { "[^<]+" : 'xxxx' } } }
                 endTag {
                   '</'
                   §endTag§opt1 { §empty }
@@ -98,7 +99,8 @@ class test_Dot_Singles {
                   §endTag§opt2 { §empty }
                   '>'
                 }
-              } } WHITESPACE : ' '
+              } }
+              WHITESPACE : ' '
               '>'
             } }
         """.trimIndent()

@@ -15,10 +15,11 @@
  *
  */
 
-import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.formatter.FormatterSimple
+import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
+import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
@@ -28,6 +29,7 @@ import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.processor.*
 
@@ -40,6 +42,9 @@ object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<AsmSimple, C
           S = 'a' ;
         }
      """.trimIndent()
+
+    override val scopeModelString = """
+    """
 
     override val ruleSet: RuleSet = RuleSet.build {
         concatenation("S") { literal("a") }
@@ -60,8 +65,11 @@ object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<AsmSimple, C
 
     override val defaultGoalRuleName: String = "S"
     override val mapToGrammar: (Int, Int) -> RuleItem get() = { _, _ -> TODO() }
-    override val scopeModel: ScopeModel
-        get() = TODO("not implemented")
+    override val scopeModel: ScopeModel by lazy {
+        val res = ScopeModelAgl.fromString(ContextFromGrammar(grammar), scopeModelString)
+        val asm = res.asm ?: error("Error creating ScopeModel.\n${res.issues}")
+        asm
+    }
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmSimple> = SyntaxAnalyserSimple(TypeModelFromGrammar(grammar), scopeModel)
     override val semanticAnalyser: SemanticAnalyser<AsmSimple, ContextSimple> = SemanticAnalyserSimple(scopeModel)
@@ -72,7 +80,7 @@ object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<AsmSimple, C
 
     val processor: LanguageProcessor<AsmSimple, ContextSimple> by lazy { Agl.processorFromGeneratedCode(this) }
 
-    fun parse(sentence: String, options: ParseOptions? = null) = processor.parse(sentence,options)
+    fun parse(sentence: String, options: ParseOptions? = null) = processor.parse(sentence, options)
 
-    fun process(sentence: String,options: ProcessOptions<AsmSimple, ContextSimple>? = null) = processor.process(sentence, options)
+    fun process(sentence: String, options: ProcessOptions<AsmSimple, ContextSimple>? = null) = processor.process(sentence, options)
 }
