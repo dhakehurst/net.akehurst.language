@@ -30,7 +30,7 @@ import kotlin.properties.Delegates
 abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     grammar: Grammar?,
     buildForDefaultGoal: Boolean,
-    configuration: LanguageProcessorConfiguration<AsmType, ContextType>,
+    override var configuration: LanguageProcessorConfiguration<AsmType, ContextType>,
 ) : LanguageDefinition<AsmType, ContextType> {
 
     abstract override val identity: String
@@ -101,10 +101,10 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
 
     override var style: AglStyleModel?
         get() {
-            return if (null==_style) {
+            return if (null == _style) {
                 _styleResolver?.let {
                     val p = this.processor
-                    if(null==p) {
+                    if (null == p) {
                         null
                     } else {
                         val r = it.invoke(p)
@@ -154,7 +154,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
                 formatterResolver = this._formatterResolver,
                 //styleResolver = this._styleResolver //not used to create processor
             )
-            val proc = Agl.processorFromGrammar(g,config)
+            val proc = Agl.processorFromGrammar(g, config)
             if (buildForDefaultGoal) proc.buildFor(null) //null options will use default goal
             processorObservers.forEach { it(null, proc) }
             proc

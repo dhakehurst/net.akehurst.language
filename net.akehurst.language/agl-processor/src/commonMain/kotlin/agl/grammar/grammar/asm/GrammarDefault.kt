@@ -50,14 +50,14 @@ abstract class GrammarAbstract(
 
     override val qualifiedName: String get() = "${namespace.qualifiedName}.$name"
 
-    override val extends: MutableList<GrammarReference> = mutableListOf<GrammarReference>()
+    override val extends = mutableListOf<GrammarReference>()
 
     override val grammarRule = mutableListOf<GrammarRule>()
     override val preferenceRule = mutableListOf<PreferenceRule>()
 
     override val allResolvedGrammarRule: List<GrammarRule> by lazy {
         //TODO: Handle situation where super grammar/rule is included more than once ?
-        val rules = this.extends.flatMap { it.resolved?.allResolvedGrammarRule?: emptyList() }.toMutableList()
+        val rules = this.extends.flatMap { it.resolved?.allResolvedGrammarRule ?: emptyList() }.toMutableList()
         this.grammarRule.forEach { rule ->
             if (rule.isOverride) {
                 val overridden = rules.find { it.name == rule.name }
@@ -85,16 +85,16 @@ abstract class GrammarAbstract(
     }
 
     override val allResolvedPreferenceRuleRule: List<PreferenceRule> by lazy {
-        val rules = this.extends.flatMap { it.resolved?.allResolvedPreferenceRuleRule?: emptyList() }.toMutableList()
-        rules+this.preferenceRule
+        val rules = this.extends.flatMap { it.resolved?.allResolvedPreferenceRuleRule ?: emptyList() }.toMutableList()
+        rules + this.preferenceRule
     }
 
-    override val allResolvedEmbeddedRules: Set<Embedded>by lazy {
+    override val allResolvedEmbeddedRules: Set<Embedded> by lazy {
         this.allResolvedGrammarRule.flatMap { it.rhs.allEmbedded }.toSet()
     }
 
     override val allResolvedEmbeddedGrammars: Set<Grammar> by lazy {
-        val egs = this.allResolvedEmbeddedRules.mapNotNull {  it.embeddedGrammarReference.resolved  }.toSet()
+        val egs = this.allResolvedEmbeddedRules.mapNotNull { it.embeddedGrammarReference.resolved }.toSet()
         egs + egs.flatMap { it.allResolvedEmbeddedGrammars }.toSet()//FIXME: recursion
     }
 
@@ -108,7 +108,6 @@ abstract class GrammarAbstract(
             else -> all.first()
         }
     }
-
 
 
     override fun findTerminalRule(terminalPattern: String): Terminal {

@@ -15,6 +15,7 @@
  */
 
 import com.github.gmazzo.gradle.plugins.BuildConfigExtension
+import org.gradle.internal.jvm.Jvm
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 plugins {
@@ -27,6 +28,11 @@ plugins {
 val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8
 val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8
 val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
+
+println("===============================================")
+println("Gradle: ${GradleVersion.current()}")
+println("JVM: ${Jvm.current()} '${Jvm.current().javaHome}'")
+println("===============================================")
 
 allprojects {
     val version_project: String by project

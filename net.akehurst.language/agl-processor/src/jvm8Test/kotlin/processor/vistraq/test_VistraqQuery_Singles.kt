@@ -390,6 +390,9 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
             val resultStr = result.sppt!!.asString
             assertEquals(queryStr, resultStr)
+
+            val res = processor.process(queryStr)
+            assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
         } catch (e: ParseFailedException) {
             fail("${e.message}, at ${e.location}, expected ${e.expected}")
         }

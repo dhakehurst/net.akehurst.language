@@ -18,6 +18,7 @@ package net.akehurst.language.api.typemodel
 
 import net.akehurst.language.agl.agl.typemodel.TypeModelSimple
 import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
+import kotlin.reflect.KClass
 
 @DslMarker
 annotation class TypeModelDslMarker
@@ -34,7 +35,9 @@ class TypeModelBuilder(
     val namespace: String,
     val name: String
 ) {
+
     private val _model = TypeModelSimple(namespace, name)
+    private val _typeReferences = mutableListOf<TypeUsageReferenceBuilder>()
 
 
     /*
@@ -93,7 +96,7 @@ class TypeModelBuilder(
     }
 
     fun elementType(grammarRuleName: String, typeName: String, init: ElementTypeBuilder.() -> Unit = {}): ElementType {
-        val b = ElementTypeBuilder(_model, typeName)
+        val b = ElementTypeBuilder(_model, _typeReferences, typeName)
         b.init()
         val et = b.build()
         _model.addTypeFor(grammarRuleName, TypeUsage.ofType(et))
@@ -114,13 +117,17 @@ class TypeModelBuilder(
     }
 
     fun build(): TypeModel {
+        _typeReferences.forEach {
+            it.resolve()
+        }
         return _model
     }
 }
 
 @TypeModelDslMarker
 abstract class StructuredTypeBuilder(
-    protected val _model: TypeModelSimple
+    protected val _model: TypeModelSimple,
+    private val _typeReferences: MutableList<TypeUsageReferenceBuilder>
 ) {
     protected abstract val _structuredType: StructuredRuleType
 
@@ -134,6 +141,7 @@ abstract class StructuredTypeBuilder(
         property(propertyName, TypeUsage.ofType(StringType, emptyList(), isNullable), childIndex)
 
     // ListSimple
+    /*
     fun propertyListTypeUnnamedOf(elementTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
         val elementType = _model.findOrCreateTypeNamed(elementTypeName)!!
         return propertyListType(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME, elementType, isNullable, childIndex)
@@ -141,21 +149,24 @@ abstract class StructuredTypeBuilder(
 
     fun propertyListTypeUnnamed(elementType: RuleType, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
         propertyListType(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME, elementType, isNullable, childIndex)
+    */
+    fun propertyListTypeUnnamedOfUnnamedSuperTypeType(subtypeNames: List<String>, childIndex: Int): PropertyDeclaration =
+        propertyListType(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME, false, childIndex) {
+            unnamedSuperTypeOf(*subtypeNames.toTypedArray())
+        }
 
-    fun propertyListTypeUnnamedOfUnnamedSuperTypeType(subtypeNames: List<String>, childIndex: Int): PropertyDeclaration {
-        val subtypes = subtypeNames.map { _model.findOrCreateTypeNamed(it)!! }
-        val elementType = UnnamedSuperTypeType(subtypes.map { TypeUsage.ofType(it) }, false)
-        return propertyListType(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME, elementType, false, childIndex)
-    }
 
-    fun propertyListTypeOf(propertyName: String, elementTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-        val elementType = _model.findOrCreateTypeNamed(elementTypeName)!!
-        return propertyListType(propertyName, elementType, isNullable, childIndex)
-    }
+    fun propertyListTypeOf(propertyName: String, elementTypeName: String, nullable: Boolean, childIndex: Int): PropertyDeclaration =
+        propertyListType(propertyName, nullable, childIndex) {
+            elementTypeOf(elementTypeName)
+        }
 
-    fun propertyListType(propertyName: String, elementType: RuleType, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-        val t = ListSimpleType.ofType(TypeUsage.ofType(elementType))
-        return property(propertyName, t, childIndex)
+    fun propertyListType(propertyName: String, nullable: Boolean, childIndex: Int, init: TypeUsageReferenceBuilder.() -> Unit): PropertyDeclaration {
+        val tb = TypeUsageReferenceBuilder(this._model, ListSimpleType, nullable)
+        tb.init()
+        _typeReferences.add(tb)
+        val tu = tb.build()
+        return property(propertyName, tu, childIndex)
     }
 
     // ListSeparated
@@ -188,7 +199,7 @@ abstract class StructuredTypeBuilder(
         propertyListOfTupleType(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME, isNullable, childIndex, init)
 
     fun propertyListOfTupleType(propertyName: String, isNullable: Boolean, childIndex: Int, init: TupleTypeBuilder.() -> Unit = {}): PropertyDeclaration {
-        val b = TupleTypeBuilder(_model)
+        val b = TupleTypeBuilder(_model, _typeReferences)
         b.init()
         val tt = b.build()
         val t = ListSimpleType.ofType(TypeUsage.ofType(tt))
@@ -196,7 +207,7 @@ abstract class StructuredTypeBuilder(
     }
 
     fun propertyTupleType(propertyName: String, isNullable: Boolean, childIndex: Int, init: TupleTypeBuilder.() -> Unit): PropertyDeclaration {
-        val b = TupleTypeBuilder(_model)
+        val b = TupleTypeBuilder(_model, _typeReferences)
         b.init()
         val tt = b.build()
         return property(propertyName, TypeUsage.ofType(tt), childIndex)
@@ -215,8 +226,9 @@ abstract class StructuredTypeBuilder(
 
 @TypeModelDslMarker
 class TupleTypeBuilder(
-    _model: TypeModelSimple
-) : StructuredTypeBuilder(_model) {
+    _model: TypeModelSimple,
+    _typeReferences: MutableList<TypeUsageReferenceBuilder>
+) : StructuredTypeBuilder(_model, _typeReferences) {
 
     override val _structuredType = TupleType()
 
@@ -228,8 +240,9 @@ class TupleTypeBuilder(
 @TypeModelDslMarker
 class ElementTypeBuilder(
     _model: TypeModelSimple,
+    _typeReferences: MutableList<TypeUsageReferenceBuilder>,
     _elementName: String
-) : StructuredTypeBuilder(_model) {
+) : StructuredTypeBuilder(_model, _typeReferences) {
 
     private val _elementType = _model.findOrCreateTypeNamed(_elementName) as ElementType
     override val _structuredType: StructuredRuleType get() = _elementType
@@ -250,4 +263,55 @@ class ElementTypeBuilder(
         return _elementType
     }
 
+}
+
+class TypeUsageReferenceBuilder(
+    val _model: TypeModelSimple,
+    val type: RuleType,
+    val nullable: Boolean
+) {
+    private val _refs = mutableListOf<String>()
+    private val _args = mutableListOf<TypeUsage>()
+    private lateinit var _refClass: KClass<*>
+
+    fun stringType() {
+        _refClass = StringType::class
+    }
+
+    fun elementTypeOf(typeName: String) {
+        _refClass = ElementType::class
+        _refs.add(typeName)
+    }
+
+    fun unnamedSuperTypeOf(vararg subtypeNames: String) {
+        _refClass = UnnamedSuperTypeType::class
+        _refs.addAll(subtypeNames)
+    }
+
+    fun build(): TypeUsage {
+        return TypeUsage.ofType(type, _args, false)
+    }
+
+    fun resolve() {
+        when (_refClass) {
+            StringType::class -> {
+                _args.add(TypeUsage.ofType(StringType, emptyList(), nullable))
+            }
+
+            ElementType::class -> {
+                val ref = _refs.first()
+                val t = _model.allTypesByName[ref] ?: error("Type not found: '$ref'")
+                _args.add(TypeUsage.ofType(t, emptyList(), nullable))
+            }
+
+            UnnamedSuperTypeType::class -> {
+                val subtypes = _refs.map { _model.allTypesByName[it] ?: error("Type not found: '$it'") }
+                val stu = subtypes.map { TypeUsage.ofType(it) }
+                val t = UnnamedSuperTypeType(stu, false)
+                _args.add(TypeUsage.ofType(t, emptyList(), nullable))
+            }
+
+            else -> error("Not handled: ${_refClass.simpleName}")
+        }
+    }
 }

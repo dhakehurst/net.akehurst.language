@@ -58,7 +58,7 @@ sealed class RuleType {
         is TupleType -> signature(context, 0)
         is ElementType -> {
             val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
-            val props = this.property.values.sortedBy { it.name }.joinToString { it.name + ":" + it.typeUse.signature(context, 0) }
+            val props = this.property.values.sortedBy { it.childIndex }.joinToString { it.name + ":" + it.typeUse.signature(context, 0) }
             "${name}${sups} { $props }"
         }
     }

@@ -25,8 +25,8 @@ import net.akehurst.language.api.grammar.Namespace
 import net.akehurst.language.api.style.AglStyleModel
 
 interface GrammarRegistry {
-    fun register(grammar:Grammar)
-    fun findGrammarOrNull(localNamespace: Namespace, nameOrQName:String) :Grammar?
+    fun register(grammar: Grammar)
+    fun findGrammarOrNull(localNamespace: Namespace, nameOrQName: String): Grammar?
 }
 
 interface LanguageDefinition<AsmType : Any, ContextType : Any> {
@@ -36,11 +36,13 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
 
     var grammarStr: String?
     var grammar: Grammar?
-    var targetGrammarName:String?
+    var targetGrammarName: String?
     var defaultGoalRule: String?
 
     var scopeModelStr: String?
-    var scopeModel:ScopeModel?
+    var scopeModel: ScopeModel?
+
+    var configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 
     val syntaxAnalyser: SyntaxAnalyser<AsmType>?
     val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
@@ -56,16 +58,16 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     var styleStr: String?
     var style: AglStyleModel?
 
-    val issues : IssueCollection
+    val issues: IssueCollection
 
     val processorObservers: MutableList<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>
-    val grammarStrObservers : MutableList<(String?, String?) -> Unit>
+    val grammarStrObservers: MutableList<(String?, String?) -> Unit>
     val grammarObservers: MutableList<(Grammar?, Grammar?) -> Unit>
-    val scopeStrObservers : MutableList<(String?, String?) -> Unit>
+    val scopeStrObservers: MutableList<(String?, String?) -> Unit>
     val scopeModelObservers: MutableList<(ScopeModel?, ScopeModel?) -> Unit>
-    val formatterStrObservers : MutableList<(String?, String?) -> Unit>
+    val formatterStrObservers: MutableList<(String?, String?) -> Unit>
     val formatterObservers: MutableList<(AglFormatterModel?, AglFormatterModel?) -> Unit>
-    val styleStrObservers : MutableList<(String?, String?) -> Unit>
+    val styleStrObservers: MutableList<(String?, String?) -> Unit>
     val styleObservers: MutableList<(AglStyleModel?, AglStyleModel?) -> Unit>
 
 }
