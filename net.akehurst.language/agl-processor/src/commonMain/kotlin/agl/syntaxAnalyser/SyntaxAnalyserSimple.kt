@@ -16,23 +16,12 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.collections.mutableListSeparated
-import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.asm.*
-import net.akehurst.language.api.grammar.Choice
-import net.akehurst.language.api.grammar.GrammarItem
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.sppt.SPPTBranch
-import net.akehurst.language.api.sppt.SPPTLeaf
-import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.typemodel.*
+import net.akehurst.language.typemodel.api.*
 
 /**
  * TypeName <=> RuleName
@@ -41,7 +30,7 @@ import net.akehurst.language.api.typemodel.*
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
 class SyntaxAnalyserSimple(
-    typeModel: TypeModel,
+    typeModel: GrammarTypeModel,
     scopeModel: ScopeModel
 ) : SyntaxAnalyserSimpleAbstract<AsmSimple>(typeModel, scopeModel) {
 

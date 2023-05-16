@@ -24,7 +24,7 @@ import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.agl.syntaxAnalyser.createReferenceLocalToScope
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.typemodel.TupleType
+import net.akehurst.language.typemodel.api.TupleType
 
 @DslMarker
 annotation class AsmSimpleBuilderMarker

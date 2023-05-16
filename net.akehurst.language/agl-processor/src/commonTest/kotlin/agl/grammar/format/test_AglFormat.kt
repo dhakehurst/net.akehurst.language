@@ -19,8 +19,8 @@ import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.format.FormatModelTest
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.formatter.formatModel
-import net.akehurst.language.api.typemodel.TypeModelTest
-import net.akehurst.language.api.typemodel.typeModel
+import net.akehurst.language.typemodel.api.typeModel
+import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue

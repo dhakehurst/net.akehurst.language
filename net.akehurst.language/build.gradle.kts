@@ -16,6 +16,7 @@
 
 import com.github.gmazzo.gradle.plugins.BuildConfigExtension
 import org.gradle.internal.jvm.Jvm
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 plugins {
@@ -76,20 +77,21 @@ subprojects {
     }
 
     configure<KotlinMultiplatformExtension> {
-
         jvm("jvm8") {
-            val main by compilations.getting {
-                compilerOptions.configure {
-                    languageVersion.set(kotlin_languageVersion)
-                    apiVersion.set(kotlin_apiVersion)
-                    jvmTarget.set(jvmTargetVersion)
+            compilations {
+                val main by getting {
+                    compilerOptions.configure {
+                        languageVersion.set(kotlin_languageVersion)
+                        apiVersion.set(kotlin_apiVersion)
+                        jvmTarget.set(jvmTargetVersion)
+                    }
                 }
-            }
-            val test by compilations.getting {
-                compilerOptions.configure {
-                    languageVersion.set(kotlin_languageVersion)
-                    apiVersion.set(kotlin_apiVersion)
-                    jvmTarget.set(jvmTargetVersion)
+                val test by getting {
+                    compilerOptions.configure {
+                        languageVersion.set(kotlin_languageVersion)
+                        apiVersion.set(kotlin_apiVersion)
+                        jvmTarget.set(jvmTargetVersion)
+                    }
                 }
             }
         }
@@ -118,6 +120,70 @@ subprojects {
         sourceSets {
             all {
                 languageSettings.optIn("kotlin.ExperimentalStdlibApi")
+            }
+        }
+    }
+
+    // --- Add TestFixtures to be built into 'main' TODO: update when fixed in kotlin
+    configurations {
+        val jvm8TestFixture by creating { extendsFrom(configurations["jvm8TestImplementation"]) }
+        val jsTestFixture by creating { extendsFrom(configurations["jsTestImplementation"]) }
+    }
+    @OptIn(ExperimentalKotlinGradlePluginApi::class)
+    configure<KotlinMultiplatformExtension> {
+        val COMMON_TEST_FIXTURE = "commonTestFixture"
+        sourceSets {
+            val commonTestFixture = create(COMMON_TEST_FIXTURE) {
+                dependencies {
+                    implementation(kotlin("test"))
+                    implementation(kotlin("test-annotations-common"))
+                }
+            }
+        }
+        targets {
+            val jvm8 by getting {
+                val tgt = this
+                compilations {
+                    val main by getting
+                    val test by getting
+                    val testFixture by creating {
+                        this.associateWith(main)
+                        defaultSourceSet { dependsOn(sourceSets[COMMON_TEST_FIXTURE]) }
+                        test.associateWith(this)
+                    }
+                    tasks.register<Jar>("jvm8TestFixtureJar") {
+                        group = "build"
+                        archiveAppendix.set("jvm8")
+                        archiveClassifier.set("testFixture")
+                        from(testFixture.output)
+                    }.also {
+                        tasks["assemble"].dependsOn(it)
+                        artifacts.add("jvm8TestFixture", it.get()) // for 'project(...)' dependencies
+                        tgt.mavenPublication { artifact(it.get()) }
+                    }
+                }
+            }
+            val js by getting {
+                val tgt = this
+                compilations {
+                    val main by getting
+                    val test by getting
+                    val testFixture by creating {
+                        this.associateWith(main)
+                        defaultSourceSet { dependsOn(sourceSets[COMMON_TEST_FIXTURE]) }
+                        test.associateWith(this)
+                    }
+                    tasks.register<Jar>("jsTestFixtureJar") {
+                        group = "build"
+                        archiveAppendix.set("js")
+                        archiveClassifier.set("testFixture")
+                        from(testFixture.output)
+                    }.also {
+                        tasks["assemble"].dependsOn(it)
+                        artifacts.add("jsTestFixture", it.get()) // for 'project(...)' dependencies
+                        tgt.mavenPublication { artifact(it.get()) }
+                    }
+                }
             }
         }
     }

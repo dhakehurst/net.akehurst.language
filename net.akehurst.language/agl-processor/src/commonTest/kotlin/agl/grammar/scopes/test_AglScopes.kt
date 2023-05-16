@@ -15,6 +15,8 @@
  */
 package net.akehurst.language.agl.grammar.scopes
 
+import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
+import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.syntaxAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
@@ -22,9 +24,6 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.typemodel.StringType
-import net.akehurst.language.api.typemodel.TypeModelTest
-import net.akehurst.language.api.typemodel.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -38,7 +37,7 @@ class test_AglScopes {
     @Test
     fun typeModel() {
         val actual = aglProc.typeModel
-        val expected = typeModel("net.akehurst.language.agl", "AglScopes") {
+        val expected = grammarTypeModel("net.akehurst.language.agl", "AglScopes") {
             // declarations = rootIdentifiables scopes references?
             elementType("declarations", "Declarations") {
                 propertyListTypeOf("rootIdentifiables", "Identifiable", false, 0)
@@ -65,7 +64,7 @@ class test_AglScopes {
             // identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
             elementType("identifiable", "Identifiable") {
                 propertyElementTypeOf("typeReference", "TypeReference", false, 0)
-                propertyStringType("propertyReferenceOrNothing", false, 1)
+                propertyPrimitiveType("propertyReferenceOrNothing", "String", false, 1)
             }
             // references = 'references' '{' referenceDefinitions '}'
             elementType("references", "References") {
@@ -83,7 +82,7 @@ class test_AglScopes {
             }
             // typeReferences = [typeReferences / '|']+
             elementType("typeReferences", "TypeReference") {
-                propertyListSeparatedTypeOf("typeReference", "TypeReference", StringType, false, 0)
+                propertyListSeparatedTypeOf("typeReference", "TypeReference", "String", false, 0)
             }
             // propertyReferenceOrNothing = '§nothing' | propertyReference
             elementType("propertyReferenceOrNothing", "PropertyReferenceOrNothing") {
@@ -91,17 +90,17 @@ class test_AglScopes {
             }
             // typeReference = IDENTIFIER     // same as grammar rule name
             elementType("typeReference", "TypeReference") {
-                propertyStringType("identifier", false, 0)
+                propertyPrimitiveType("identifier", "String", false, 0)
             }
             // propertyReference = IDENTIFIER // same as grammar rule name
             elementType("propertyReference", "PropertyReference") {
-                propertyStringType("identifier", false, 0)
+                propertyPrimitiveType("identifier", "String", false, 0)
             }
             // leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*"
 
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test

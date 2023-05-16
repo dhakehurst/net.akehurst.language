@@ -16,8 +16,11 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+
+import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
+import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.typemodel.*
+import net.akehurst.language.typemodel.api.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -43,12 +46,12 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = 'a' ;
@@ -65,12 +68,12 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = a ; leaf a = 'a' ;
@@ -88,13 +91,13 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
+                propertyPrimitiveType("a", "String", false, 0)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test //  S = "[a-z]" ;
@@ -111,12 +114,12 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = v ; leaf v = "[a-z]" ;
@@ -134,13 +137,13 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("v", false, 0)
+                propertyPrimitiveType("v", "String", false, 0)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = A B C ;
@@ -160,18 +163,18 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
-                propertyStringType("b", false, 1)
-                propertyStringType("c", false, 2)
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyPrimitiveType("b", "String", false, 1)
+                propertyPrimitiveType("c", "String", false, 2)
             }
             elementType("A", "A") {}
             elementType("B", "B") {}
             elementType("C", "C") {}
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = a ',' b ',' c ;
@@ -191,18 +194,18 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
-                propertyStringType("b", false, 2)
-                propertyStringType("c", false, 4)
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyPrimitiveType("b", "String", false, 2)
+                propertyPrimitiveType("c", "String", false, 4)
             }
             elementType("a", "A") {}
             elementType("b", "B") {}
             elementType("c", "C") {}
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = 'a' | 'b' | 'c' ;
@@ -219,11 +222,11 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             stringTypeFor("S")
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = A | B | C ; A = a x; B = b x; C = c x;
@@ -247,25 +250,25 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
                 subTypes("A", "B", "C")
             }
             elementType("A", "A") {
-                propertyStringType("a", false, 0)
-                propertyStringType("x", false, 1)
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyPrimitiveType("x", "String", false, 1)
             }
             elementType("B", "B") {
-                propertyStringType("b", false, 0)
-                propertyStringType("x", false, 1)
+                propertyPrimitiveType("b", "String", false, 0)
+                propertyPrimitiveType("x", "String", false, 1)
             }
             elementType("C", "C") {
-                propertyStringType("c", false, 0)
-                propertyStringType("x", false, 1)
+                propertyPrimitiveType("c", "String", false, 0)
+                propertyPrimitiveType("x", "String", false, 1)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = L | M ; L = 'a' | 'b' | 'c' ; M = 'x' | 'y' ;
@@ -284,13 +287,13 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             stringTypeFor("S")
             stringTypeFor("L")
             stringTypeFor("M")
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = L | M ; L = a | b | c ;  M = x | y ;
@@ -314,13 +317,13 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             stringTypeFor("S")
             stringTypeFor("L")
             stringTypeFor("M")
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = A | B | C ; A = a x ; B = C | D ; C = c x; D = d x ;
@@ -346,29 +349,29 @@ class test_deriveTypeModelFromGrammar {
         //TODO: there are ambiguities! assertTrue(result.issues.errors.isEmpty(),result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
                 subTypes("A", "B", "C")
             }
             elementType("A", "A") {
-                propertyStringType("a", false, 0)
-                propertyStringType("x", false, 1)
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyPrimitiveType("x", "String", false, 1)
             }
             elementType("B", "B") {
                 subTypes("C", "D")
             }
             elementType("C", "C") {
-                propertyStringType("c", false, 0)
-                propertyStringType("x", false, 1)
+                propertyPrimitiveType("c", "String", false, 0)
+                propertyPrimitiveType("x", "String", false, 1)
             }
             elementType("D", "D") {
-                propertyStringType("d", false, 0)
-                propertyStringType("x", false, 1)
+                propertyPrimitiveType("d", "String", false, 0)
+                propertyPrimitiveType("x", "String", false, 1)
             }
         }
         println(actual.asString())
         assertEquals(expected.asString(), actual.asString())
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = A | B | C ; A = a x ; B = c | D ; C = c ; D = d ;
@@ -394,23 +397,23 @@ class test_deriveTypeModelFromGrammar {
         //TODO: there are ambiguities! assertTrue(result.issues.errors.isEmpty(),result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             val B = unnamedSuperTypeTypeFor("B", listOf(StringType, "D"))
             unnamedSuperTypeTypeFor("S", listOf("A", B, "C"))
             elementType("A", "A") {
-                propertyStringType("a", false, 0)
-                propertyStringType("x", false, 1)
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyPrimitiveType("x", "String", false, 1)
             }
             elementType("C", "C") {
-                propertyStringType("c", false, 0)
+                propertyPrimitiveType("c", "String", false, 0)
             }
             elementType("D", "D") {
-                propertyStringType("d", false, 0)
+                propertyPrimitiveType("d", "String", false, 0)
             }
         }
         println(actual.asString())
         assertEquals(expected.asString(), actual.asString())
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test //  S = 'a'? ;
@@ -427,12 +430,12 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = a 'b'? c ;
@@ -451,14 +454,14 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
-                propertyStringType("c", false, 2)
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyPrimitiveType("c", "String", false, 2)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = a? ;
@@ -476,13 +479,13 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("a", true, 0)
+                propertyPrimitiveType("a", "String", true, 0)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = 'a'* ;
@@ -499,14 +502,14 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
 
             }
 //            listTypeFor("S", StringType)
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = a 'b'* c ;
@@ -525,14 +528,14 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
-                propertyStringType("c", false, 2)
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyPrimitiveType("c", "String", false, 2)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test //  S = a* ;
@@ -550,14 +553,14 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyListType("a", false, 0) { stringType() }
+                propertyListType("a", false, 0) { primitiveType("String") }
             }
             //listTypeFor("S", StringType)
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = a b* c ;
@@ -577,15 +580,15 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
-                propertyListType("b", false, 1) { stringType() }
-                propertyStringType("c", false, 2)
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyListType("b", false, 1) { primitiveType("String") }
+                propertyPrimitiveType("c", "String", false, 2)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test //S = as ; as = a* ;
@@ -604,17 +607,17 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyListType("as", false, 0) { stringType() }
+                propertyListType("as", false, 0) { primitiveType("String") }
             }
             //listTypeFor("as", StringType)
             elementType("as", "As") {
-                propertyListType("a", false, 0) { stringType() }
+                propertyListType("a", false, 0) { primitiveType("String") }
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = as ; as = ['a' / ',']* ;
@@ -632,7 +635,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
                 //propertyListSeparatedType("as", StringType, StringType, false, 0)
             }
@@ -642,7 +645,7 @@ class test_deriveTypeModelFromGrammar {
             //listSeparatedTypeFor("as", StringType, StringType)
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = a bs c ; bs = ['b' / ',']* ;
@@ -662,10 +665,10 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
-                propertyStringType("c", false, 2)
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyPrimitiveType("c", "String", false, 2)
             }
             elementType("bs", "Bs") {
 
@@ -673,7 +676,7 @@ class test_deriveTypeModelFromGrammar {
             //listSeparatedTypeFor("as", StringType, StringType)
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = as ; as = [a / ',']* ;
@@ -692,7 +695,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
                 propertyListTypeOf("as", "A", false, 0) // of String
             }
@@ -704,7 +707,7 @@ class test_deriveTypeModelFromGrammar {
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -724,9 +727,9 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyListSeparatedTypeOf("ass", "As", StringType, false, 0) // of String
+                propertyListSeparatedTypeOf("ass", "As", "String", false, 0) // of String
             }
             elementType("ass", "Ass") {
                 propertyListTypeOf("as", "A", false, 0)
@@ -740,7 +743,7 @@ class test_deriveTypeModelFromGrammar {
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -758,7 +761,7 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
                 //propertyListType("as", StringType, false, 0) // of String
             }
@@ -768,7 +771,7 @@ class test_deriveTypeModelFromGrammar {
             //listTypeFor("as", StringType)
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     // --- Group ---
@@ -788,14 +791,14 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
-                propertyStringType("e", false, 2)
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyPrimitiveType("e", "String", false, 2)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = a (b c d) e ;
@@ -817,19 +820,19 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
+                propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
-                    propertyStringType("b", false, 0)
-                    propertyStringType("c", false, 1)
-                    propertyStringType("d", false, 2)
+                    propertyPrimitiveType("b", "String", false, 0)
+                    propertyPrimitiveType("c", "String", false, 1)
+                    propertyPrimitiveType("d", "String", false, 2)
                 }
-                propertyStringType("e", false, 2)
+                propertyPrimitiveType("e", "String", false, 2)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = a (b c d) (b a c) e ;
@@ -851,24 +854,24 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
+                propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
-                    propertyStringType("b", false, 0)
-                    propertyStringType("c", false, 1)
-                    propertyStringType("d", false, 2)
+                    propertyPrimitiveType("b", "String", false, 0)
+                    propertyPrimitiveType("c", "String", false, 1)
+                    propertyPrimitiveType("d", "String", false, 2)
                 }
                 propertyTupleType("\$group2", false, 2) {
-                    propertyStringType("b", false, 0)
-                    propertyStringType("a", false, 1)
-                    propertyStringType("c", false, 2)
+                    propertyPrimitiveType("b", "String", false, 0)
+                    propertyPrimitiveType("a", "String", false, 1)
+                    propertyPrimitiveType("c", "String", false, 2)
                 }
-                propertyStringType("e", false, 3)
+                propertyPrimitiveType("e", "String", false, 3)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = a (b) e ;
@@ -888,17 +891,17 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
+                propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
-                    propertyStringType("b", false, 0)
+                    propertyPrimitiveType("b", "String", false, 0)
                 }
-                propertyStringType("e", false, 2)
+                propertyPrimitiveType("e", "String", false, 2)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = a (b (c) d) e ;
@@ -920,21 +923,21 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
+                propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
-                    propertyStringType("b", false, 0)
+                    propertyPrimitiveType("b", "String", false, 0)
                     propertyTupleType("\$group", false, 1) {
-                        propertyStringType("c", false, 0)
+                        propertyPrimitiveType("c", "String", false, 0)
                     }
-                    propertyStringType("d", false, 0)
+                    propertyPrimitiveType("d", "String", false, 0)
                 }
-                propertyStringType("e", false, 2)
+                propertyPrimitiveType("e", "String", false, 2)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = a (b | c | d) e ;
@@ -956,15 +959,15 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
-                propertyStringType("\$choice", false, 1)
-                propertyStringType("e", false, 2)
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyPrimitiveType("\$choice", "String", false, 1)
+                propertyPrimitiveType("e", "String", false, 2)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = a (b c | d) e ;
@@ -986,27 +989,28 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
+            val gtb = this
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
+                propertyPrimitiveType("a", "String", false, 0)
                 property(
                     "\$choice", TypeUsage.ofType(
                         UnnamedSuperTypeType(
                             listOf(
                                 TupleType {
-                                    PropertyDeclaration(this, "b", StringType.use, 0)
-                                    PropertyDeclaration(this, "c", StringType.use, 1)
+                                    PropertyDeclaration(this, "b", gtb.StringType.use, 0)
+                                    PropertyDeclaration(this, "c", gtb.StringType.use, 1)
                                 },
-                                StringType,
+                                gtb.StringType,
                             ).map { TypeUsage.ofType(it) }, false
                         )
                     ), 1
                 )
-                propertyStringType("e", false, 2)
+                propertyPrimitiveType("e", "String", false, 2)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = a (b c | d e) f ;
@@ -1029,28 +1033,29 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
+            val gtb = this
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
+                propertyPrimitiveType("a", "String", false, 0)
                 property(
                     "\$choice", TypeUsage.ofType(UnnamedSuperTypeType(listOf(
                         TupleType {
-                            PropertyDeclaration(this, "b", StringType.use, 0)
-                            PropertyDeclaration(this, "c", StringType.use, 1)
+                            PropertyDeclaration(this, "b", gtb.StringType.use, 0)
+                            PropertyDeclaration(this, "c", gtb.StringType.use, 1)
                         },
                         TupleType {
-                            PropertyDeclaration(this, "d", StringType.use, 0)
-                            PropertyDeclaration(this, "e", StringType.use, 1)
+                            PropertyDeclaration(this, "d", gtb.StringType.use, 0)
+                            PropertyDeclaration(this, "e", gtb.StringType.use, 1)
                         }
                     ).map { TypeUsage.ofType(it) }, false
                     )
                     ), 1
                 )
-                propertyStringType("f", false, 2)
+                propertyPrimitiveType("f", "String", false, 2)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test //  S = a (b? c) e ;
@@ -1072,18 +1077,18 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
+                propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
-                    propertyStringType("b", true, 0)
-                    propertyStringType("c", false, 2)
+                    propertyPrimitiveType("b", "String", true, 0)
+                    propertyPrimitiveType("c", "String", false, 2)
                 }
-                propertyStringType("e", false, 2)
+                propertyPrimitiveType("e", "String", false, 2)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = a ( (b | c) (d?) e ) f ;
@@ -1105,21 +1110,21 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
+                propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
-                    propertyStringType("\$choice", false, 0)
+                    propertyPrimitiveType("\$choice", "String", false, 0)
                     propertyTupleType("\$group", false, 1) {
-                        propertyStringType("d", true, 0)
+                        propertyPrimitiveType("d", "String", true, 0)
                     }
-                    propertyStringType("e", false, 0)
+                    propertyPrimitiveType("e", "String", false, 0)
                 }
-                propertyStringType("f", false, 2)
+                propertyPrimitiveType("f", "String", false, 2)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = (BC | d*) ;
@@ -1140,15 +1145,15 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             val BC = elementType("BC", "BC") {
-                propertyStringType("b", false, 0)
-                propertyStringType("c", false, 1)
+                propertyPrimitiveType("b", "String", false, 0)
+                propertyPrimitiveType("c", "String", false, 1)
             }
             unnamedSuperTypeTypeFor("S", listOf(BC))
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = a (BC | d*) e ;
@@ -1171,26 +1176,27 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
+            val gtb = this
             val BC = elementType("BC", "BC") {
-                propertyStringType("b", false, 0)
-                propertyStringType("c", false, 1)
+                propertyPrimitiveType("b", "String", false, 0)
+                propertyPrimitiveType("c", "String", false, 1)
             }
             elementType("S", "S") {
-                propertyStringType("a", false, 0)
+                propertyPrimitiveType("a", "String", false, 0)
                 property(
                     "\$choice", TypeUsage.ofType(
                         UnnamedSuperTypeType(
-                            listOf(TypeUsage.ofType(BC), ListSimpleType.ofType(StringType.use)), false
+                            listOf(TypeUsage.ofType(BC), ListSimpleType.ofType(gtb.StringType.use)), false
                         )
                     ), 1
                 )
-                propertyStringType("e", false, 2)
+                propertyPrimitiveType("e", "String", false, 2)
             }
 
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test // S = ID (A | B)* ;
@@ -1213,25 +1219,25 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
-                propertyStringType("id", false, 0)
+                propertyPrimitiveType("id", "String", false, 0)
                 propertyListType("\$choiceList", false, 1) {
                     unnamedSuperTypeOf("A", "B")
                 }
             }
             elementType("A", "A") {
-                propertyStringType("name", false, 0)
-                propertyStringType("number", false, 1)
+                propertyPrimitiveType("name", "String", false, 0)
+                propertyPrimitiveType("number", "String", false, 1)
             }
             elementType("B", "B") {
-                propertyStringType("name", false, 0)
-                propertyStringType("name2", false, 1)
+                propertyPrimitiveType("name", "String", false, 0)
+                propertyPrimitiveType("name2", "String", false, 1)
             }
         }
 
         assertEquals(expected.asString(), actual.asString())
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -1258,13 +1264,13 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
                 propertyElementTypeOf("exprList", "ExprList", false, 0)
             }
             elementType("exprList", "ExprList") {
                 propertyElementTypeOf("expr", "Expr", false, 0)
-                propertyListUnnamedOfTupleType(false, 1) {
+                propertyListOfTupleType(TypeModelFromGrammar.UNNAMED_TUPLE_PROPERTY_NAME, false, 1) {
                     propertyElementTypeOf("expr", "Expr", false, 1)
                 }
             }
@@ -1275,10 +1281,10 @@ class test_deriveTypeModelFromGrammar {
                 subTypes("Var", "Literal")
             }
             elementType("var", "Var") {
-                propertyStringType("name", false, 0)
+                propertyPrimitiveType("name", "String", false, 0)
             }
             elementType("literal", "Literal") {
-                propertyStringType("number", false, 0)
+                propertyPrimitiveType("number", "String", false, 0)
             }
             elementType("mul", "Mul") {
                 propertyElementTypeOf("expr", "Expr", false, 0)
@@ -1290,7 +1296,7 @@ class test_deriveTypeModelFromGrammar {
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -1317,13 +1323,13 @@ class test_deriveTypeModelFromGrammar {
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val actual = TypeModelFromGrammar(result.asm!!)
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             elementType("S", "S") {
                 propertyElementTypeOf("exprList", "ExprList", false, 0)
             }
             elementType("exprList", "ExprList") {
                 propertyElementTypeOf("expr", "Expr", false, 0)
-                propertyListUnnamedOfTupleType(false, 1) {
+                propertyListOfTupleType(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME, false, 1) {
                     propertyElementTypeOf("expr", "Expr", false, 1)
                 }
             }
@@ -1334,20 +1340,20 @@ class test_deriveTypeModelFromGrammar {
                 subTypes("Var", "Literal")
             }
             elementType("var", "Var") {
-                propertyStringType("name", false, 0)
+                propertyPrimitiveType("name", "String", false, 0)
             }
             elementType("literal", "Literal") {
-                propertyStringType("number", false, 0)
+                propertyPrimitiveType("number", "String", false, 0)
             }
             elementType("mul", "Mul") {
-                propertyListSeparatedTypeOf("expr", "Expr", StringType, false, 0)
+                propertyListSeparatedTypeOf("expr", "Expr", "String", false, 0)
             }
             //listTypeOf("add", "Expr")
             elementType("add", "Add") {
-                propertyListSeparatedTypeOf("expr", "Expr", StringType, false, 0)
+                propertyListSeparatedTypeOf("expr", "Expr", "String", false, 0)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 }

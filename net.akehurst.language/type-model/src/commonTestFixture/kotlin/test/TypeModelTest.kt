@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.typemodel
+package net.akehurst.language.typemodel.test
 
+import net.akehurst.language.typemodel.api.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertSame
@@ -30,12 +31,6 @@ object TypeModelTest {
             expected == null -> fail()
             actual == null -> fail()
             else -> {
-                assertEquals(expected.allRuleNameToType.size, actual.allRuleNameToType.size, "number of types in model is different")
-                for (k in expected.allRuleNameToType.keys) {
-                    val expEl = expected.allRuleNameToType[k]
-                    val actEl = actual.allRuleNameToType[k]
-                    tmAssertEquals(expEl, actEl, "TypeModel")
-                }
                 assertEquals(expected.allTypesByName.size, actual.allTypesByName.size, "number of types in model is different")
                 for (k in expected.allTypesByName.keys) {
                     val expEl = expected.allTypesByName[k]
@@ -46,7 +41,7 @@ object TypeModelTest {
         }
     }
 
-    private fun tmAssertEquals(expected: TypeUsage?, actual: TypeUsage?, source: String) {
+    fun tmAssertEquals(expected: TypeUsage?, actual: TypeUsage?, source: String) {
         when {
             null == expected && null == actual -> true
             null == expected || null == actual -> fail("${source}.TypeUsage do not match")
@@ -63,12 +58,12 @@ object TypeModelTest {
         }
     }
 
-    private fun tmAssertEquals(expected: RuleType?, actual: RuleType?, source: String) {
+    fun tmAssertEquals(expected: TypeDefinition?, actual: TypeDefinition?, source: String) {
         when {
             null == expected || null == actual -> fail("should never be null")
             expected is NothingType && actual is NothingType -> assertSame(expected, actual)
             expected is AnyType && actual is AnyType -> assertSame(expected, actual)
-            expected is StringType && actual is StringType -> assertSame(expected, actual)
+            expected is PrimitiveType && actual is PrimitiveType -> tmAssertEquals(expected, actual)
             expected is UnnamedSuperTypeType && actual is UnnamedSuperTypeType -> tmAssertEquals(expected, actual)
             expected is ElementType && actual is ElementType -> tmAssertEquals(expected, actual)
             expected is ListSimpleType && actual is ListSimpleType -> tmAssertEquals(expected, actual)
@@ -76,6 +71,10 @@ object TypeModelTest {
             expected is TupleType && actual is TupleType -> tmAssertEquals(expected, actual)
             else -> fail("Types do not match expected '$expected' actual '$actual' for $source")
         }
+    }
+
+    private fun tmAssertEquals(expected: PrimitiveType, actual: PrimitiveType) {
+        assertEquals(expected.name, actual.name)
     }
 
     private fun tmAssertEquals(expected: UnnamedSuperTypeType, actual: UnnamedSuperTypeType) {

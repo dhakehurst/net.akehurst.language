@@ -17,7 +17,7 @@
 package net.akehurst.language.api.asm
 
 import net.akehurst.language.api.asm.AsmSimple.Companion.asStringAny
-import net.akehurst.language.api.typemodel.PropertyDeclaration
+import net.akehurst.language.typemodel.api.PropertyDeclaration
 
 data class AsmElementPath(val value: String) {
     companion object {
@@ -263,6 +263,7 @@ fun AsmSimple.traverseDepthFirst(callback: AsmSimpleTreeWalker) {
             }
 
             is List<*> -> element.forEach { lv -> traverse(lv) }
+            else -> Unit
         }
     }
     this.rootElements.forEach { traverse(it) }

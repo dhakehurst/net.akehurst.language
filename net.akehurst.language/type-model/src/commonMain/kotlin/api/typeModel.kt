@@ -1,43 +1,42 @@
-/**
- * Copyright (C) 2021 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+/*
+ * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ *          http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package net.akehurst.language.api.typemodel
-
-import net.akehurst.language.agl.util.Debug
+package net.akehurst.language.typemodel.api
 
 interface TypeModel {
 
     val namespace: String
     val name: String
 
-    /**
-     * grammarRuleName -> TypeUsage
-     */
-    val allRuleNameToType: Map<String, TypeUsage>
+    val qualifiedName: String
 
     /**
-     * RuleType.name --> RuleType
+     * TypeDefinition.name --> TypeDefinition
      */
-    val allTypesByName: Map<String, RuleType>
+    val allTypesByName: Map<String, TypeDefinition>
 
-    fun findTypeUsageForRule(ruleName: String): TypeUsage?
-    fun findTypeNamed(typeName: String): RuleType?
+    fun findTypeNamed(typeName: String): TypeDefinition?
+
+    fun findOrCreateElementTypeNamed(typeName: String): ElementType
+
+    fun findOrCreatePrimitiveTypeNamed(typeName: String): PrimitiveType
 }
 
-sealed class RuleType {
+sealed class TypeDefinition {
     companion object {
         const val maxDepth = 5
     }
@@ -50,8 +49,9 @@ sealed class RuleType {
 
     fun asString(context: TypeModel): String = when (this) {
         is NothingType -> signature(context, 0)
+        is PrimitiveType -> signature(context, 0)
         is AnyType -> signature(context, 0)
-        is StringType -> signature(context, 0)
+        //is StringType -> signature(context, 0)
         is UnnamedSuperTypeType -> signature(context, 0)
         is ListSimpleType -> signature(context, 0)
         is ListSeparatedType -> signature(context, 0)
@@ -64,7 +64,8 @@ sealed class RuleType {
     }
 }
 
-object StringType : RuleType() {
+/*
+object StringType : TypeDefinition() {
     val use = TypeUsage.ofType(StringType)
     val useNullable = TypeUsage.ofType(StringType, emptyList(), true)
 
@@ -74,10 +75,11 @@ object StringType : RuleType() {
     override fun equals(other: Any?): Boolean = this === other
     override fun toString(): String = name
 }
+*/
 
-object AnyType : RuleType() {
-    val use = TypeUsage.ofType(StringType)
-    val useNullable = TypeUsage.ofType(StringType, emptyList(), true)
+object AnyType : TypeDefinition() {
+    val use = TypeUsage.ofType(AnyType)
+    val useNullable = TypeUsage.ofType(AnyType, emptyList(), true)
 
     override val name: String = "\$Any"
     override fun signature(context: TypeModel?, currentDepth: Int): String = name
@@ -86,7 +88,7 @@ object AnyType : RuleType() {
     override fun toString(): String = name
 }
 
-object NothingType : RuleType() {
+object NothingType : TypeDefinition() {
     val use = TypeUsage.ofType(NothingType)
     val useNullable = TypeUsage.ofType(NothingType, emptyList(), true)
 
@@ -101,7 +103,7 @@ class UnnamedSuperTypeType(
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     val subtypes: List<TypeUsage>,
     val consumeNode: Boolean
-) : RuleType() {
+) : TypeDefinition() {
     companion object {
         const val INSTANCE_NAME = "UnnamedSuperType"
     }
@@ -124,7 +126,7 @@ class UnnamedSuperTypeType(
     override fun toString(): String = name
 }
 
-object ListSimpleType : RuleType() {
+object ListSimpleType : TypeDefinition() {
     fun ofType(itemTypeUse: TypeUsage, nullable: Boolean = false) = TypeUsage(ListSimpleType, listOf(itemTypeUse), nullable)
 
     const val INSTANCE_NAME = "\$List"
@@ -138,7 +140,7 @@ object ListSimpleType : RuleType() {
     override fun toString(): String = "${name}<I>"
 }
 
-object ListSeparatedType : RuleType() {
+object ListSeparatedType : TypeDefinition() {
     fun ofType(itemTypeUse: TypeUsage, sepTypeUse: TypeUsage, nullable: Boolean = false) = TypeUsage(ListSeparatedType, listOf(itemTypeUse, sepTypeUse), nullable)
 
     const val INSTANCE_NAME = "\$SList"
@@ -149,10 +151,32 @@ object ListSeparatedType : RuleType() {
     override fun toString(): String = "${name}<I,S>"
 }
 
-sealed class StructuredRuleType : RuleType() {
+class PrimitiveType(
+    val typeModel: TypeModel,
+    override val name: String
+) : TypeDefinition() {
+    val use = TypeUsage.ofType(this)
+    val useNullable = TypeUsage.ofType(this, emptyList(), true)
+
+    override fun signature(context: TypeModel?, currentDepth: Int): String =
+        if (context == typeModel) name else "${typeModel.qualifiedName}.$name"
+}
+
+sealed class StructuredRuleType : TypeDefinition() {
     abstract val property: MutableMap<String, PropertyDeclaration>
     abstract fun getPropertyByIndex(i: Int): PropertyDeclaration
-    abstract fun appendProperty(name: String, propertyDeclaration: PropertyDeclaration)
+
+    /**
+     * called from PropertyDeclaration constructor
+     */
+    abstract fun addProperty(propertyDeclaration: PropertyDeclaration)
+
+    /**
+     * append property at the next index
+     */
+    fun appendProperty(name: String, type: TypeUsage) {
+        PropertyDeclaration(this, name, type, property.size)
+    }
 }
 
 class TupleType() : StructuredRuleType() {
@@ -180,10 +204,8 @@ class TupleType() : StructuredRuleType() {
 
     override fun getPropertyByIndex(i: Int): PropertyDeclaration = properties[i]
 
-    override fun appendProperty(name: String, propertyDeclaration: PropertyDeclaration) {
-        if (Debug.CHECK) check(propertyDeclaration.owner == this)
-        if (Debug.CHECK) check(this.property.containsKey(name).not())
-        this.property[name] = propertyDeclaration
+    override fun addProperty(propertyDeclaration: PropertyDeclaration) {
+        this.property[propertyDeclaration.name] = propertyDeclaration
         this.properties.add(propertyDeclaration)
     }
 
@@ -202,7 +224,9 @@ data class ElementType(
     override val name: String
 ) : StructuredRuleType() {
 
-    override val qualifiedName: String = typeModel.name + "." + name
+    override val qualifiedName: String = typeModel.qualifiedName + "." + name
+
+    override var typeParameters = mutableListOf<String>()
 
     val supertypes: Set<ElementType> = mutableSetOf<ElementType>()
 
@@ -211,7 +235,7 @@ data class ElementType(
     override val property = mutableMapOf<String, PropertyDeclaration>()
     private val _propertyIndex = mutableListOf<PropertyDeclaration>()
 
-    override fun signature(context: TypeModel?, currentDepth: Int): String = if (context == typeModel) name else "${typeModel.name}.$name"
+    override fun signature(context: TypeModel?, currentDepth: Int): String = if (context == typeModel) name else "${typeModel.qualifiedName}.$name"
 
     fun addSuperType(type: ElementType) {
         (this.supertypes as MutableSet).add(type)
@@ -219,32 +243,26 @@ data class ElementType(
     }
 
     override fun getPropertyByIndex(i: Int): PropertyDeclaration = _propertyIndex[i]
-    override fun appendProperty(name: String, propertyDeclaration: PropertyDeclaration) {
-        if (Debug.CHECK) check(propertyDeclaration.owner == this)
-        if (Debug.CHECK) check(this.property.containsKey(name).not())
-        this.property[name] = propertyDeclaration
+    override fun addProperty(propertyDeclaration: PropertyDeclaration) {
+        this.property[propertyDeclaration.name] = propertyDeclaration
         this._propertyIndex.add(propertyDeclaration)
     }
 }
 
 data class TypeUsage(
-    val type: RuleType,
+    val type: TypeDefinition,
     val arguments: List<TypeUsage>,
     val nullable: Boolean
 ) {
     companion object {
-        fun ofType(type: RuleType, arguments: List<TypeUsage> = emptyList(), nullable: Boolean = false) = TypeUsage(type, arguments, nullable)
-    }
-
-    init {
-        if (Debug.CHECK) check(type.typeParameters.size == arguments.size)
+        fun ofType(type: TypeDefinition, arguments: List<TypeUsage> = emptyList(), nullable: Boolean = false) = TypeUsage(type, arguments, nullable)
     }
 
     val notNullable get() = TypeUsage.ofType(this.type, arguments, false)
 
     fun signature(context: TypeModel?, currentDepth: Int): String {
         return when {
-            currentDepth >= RuleType.maxDepth -> "..."
+            currentDepth >= TypeDefinition.maxDepth -> "..."
             else -> {
                 val args = when {
                     arguments.isEmpty() -> ""
@@ -283,7 +301,7 @@ data class PropertyDeclaration(
     val childIndex: Int // to indicate the child number in an SPPT
 ) {
     init {
-        owner.appendProperty(name, this)
+        owner.addProperty(this)
     }
 
     override fun toString(): String {
@@ -293,13 +311,9 @@ data class PropertyDeclaration(
 }
 
 fun TypeModel.asString(): String {
-    val rules = this.allRuleNameToType.entries.sortedBy { it.key }
-    val ruleToType = rules.joinToString(separator = "\n") { it.key + "->" + it.value.signature(this, 0) }
     val types = this.allTypesByName.entries.sortedBy { it.key }.joinToString(separator = "\n") { it.value.asString(this) }
     val s = """
     typemodel '$namespace.$name' {
-    $ruleToType
-    
     $types
     }
     """.trimIndent()

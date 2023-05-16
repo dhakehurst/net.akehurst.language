@@ -2,17 +2,26 @@ plugins {
 
 }
 
+dependencies {
+    commonMainApi(project(":type-model"))
 
+    jvm8TestImplementation(project(":type-model", configuration = "jvm8TestFixture"))
+    jsTestImplementation(project(":type-model", configuration = "jsTestFixture"))
+    //jvm8TestImplementation(group = "$group", name = "type-model-jvm8", version = "$version", classifier = "testFixture")
+    //jsTestImplementation(group = "$group", name = "type-model-js", version = "$version", classifier = "testFixture")
+}
 
 kotlin {
     js("js") {
         binaries.library()
         compilations["main"].packageJson {
-            customField("author", mapOf(
-                "name" to "Dr. David H. Akehurst",
-                "email" to "dr.david.h@akehurst.net",
-                "url" to "https://medium.com/@dr.david.h.akehurst"
-            ))
+            customField(
+                "author", mapOf(
+                    "name" to "Dr. David H. Akehurst",
+                    "email" to "dr.david.h@akehurst.net",
+                    "url" to "https://medium.com/@dr.david.h.akehurst"
+                )
+            )
             customField("license", "Apache-2.0")
             customField("keywords", listOf("parser", "grammar", "langauge", "dsl", "agl"))
             customField("homepage", "https://github.com/dhakehurst/net.akehurst.language")
@@ -22,14 +31,16 @@ kotlin {
 }
 
 exportPublic {
-    exportPatterns.set(listOf(
-        "net.akehurst.language.api.**",
-        "net.akehurst.language.agl.regex.**",
-        "net.akehurst.language.agl.processor.**",
-        "net.akehurst.language.agl.grammar.**",
-        "net.akehurst.language.agl.syntaxAnalyser.**",
-        "net.akehurst.language.agl.sppt.**",
-    ))
+    exportPatterns.set(
+        listOf(
+            "net.akehurst.language.api.**",
+            "net.akehurst.language.agl.regex.**",
+            "net.akehurst.language.agl.processor.**",
+            "net.akehurst.language.agl.grammar.**",
+            "net.akehurst.language.agl.syntaxAnalyser.**",
+            "net.akehurst.language.agl.sppt.**",
+        )
+    )
 }
 
 tasks.forEach {

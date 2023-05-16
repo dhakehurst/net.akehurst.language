@@ -16,14 +16,16 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.agl.typemodel.TypeModelAbstract
+
+import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelAbstract
 import net.akehurst.language.api.grammar.*
-import net.akehurst.language.api.typemodel.*
+import net.akehurst.language.api.grammarTypeModel.StringType
+import net.akehurst.language.typemodel.api.*
 
 class TypeModelFromGrammar(
     namespace: String,
     name: String
-) : TypeModelAbstract(namespace, name) {
+) : GrammarTypeModelAbstract(namespace, name) {
     constructor(grammar: Grammar, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration) : this(listOf(grammar), configuration)
     constructor(grammars: List<Grammar>, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration)
             : this(grammars.last().namespace.qualifiedName, grammars.last().name) {
@@ -57,22 +59,18 @@ class TypeModelFromGrammar(
     private val _typeForRuleItem = mutableMapOf<RuleItem, TypeUsage>()
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredRuleType, String>, Int>()
     private var _configuration: TypeModelFromGrammarConfiguration? = null
-    private var _psuedoTypes = mutableSetOf<RuleType>()
 
     // temp var - changes for each Grammar processed
     private lateinit var grammar: Grammar
-    //private val _pseudoRuleNameGenerator = PseudoRuleNames(grammar)
 
-    //override fun findTypeForRule(ruleName: String): RuleType? = _ruleToType[ruleName]
-
-    private fun stringTypeForRuleName(name: String): StringType {
+    private fun stringTypeForRuleName(name: String): PrimitiveType {
         val existing = _ruleToType[name]
         return if (null == existing) {
-            val type = StringType
+            val type = this.StringType
             _ruleToType[name] = TypeUsage.ofType(type) //halt recursion
             type
         } else {
-            existing as StringType
+            existing as PrimitiveType
         }
     }
 
@@ -347,7 +345,7 @@ class TypeModelFromGrammar(
         val subtypes = choice.alternative.map { typeForRuleItem(it, false) }
         return when {
             subtypes.all { it.type is NothingType } -> TypeUsage.ofType(NothingType, emptyList(), subtypes.any { it.nullable })
-            subtypes.all { it.type is StringType } -> TypeUsage.ofType(StringType, emptyList(), subtypes.any { it.nullable })
+            subtypes.all { it.type is PrimitiveType } -> TypeUsage.ofType(StringType, emptyList(), subtypes.any { it.nullable })
 
             subtypes.all { it.type is ElementType } -> findOrCreateElementType(choiceRule) { newType ->
                 subtypes.forEach { (it.type as ElementType).addSuperType(newType) }
@@ -363,7 +361,7 @@ class TypeModelFromGrammar(
                 1 == subtypes.map { (it.type as TupleType).property.values.map { Pair(it.name, it) }.toSet() }.toSet().size -> {
                     val t = subtypes.first()
                     when {
-                        t.type is TupleType && t.type.properties.isEmpty() -> NothingType.use
+                        t.type is TupleType && (t.type as TupleType).properties.isEmpty() -> NothingType.use
                         else -> t
                     }
                 }
@@ -381,7 +379,7 @@ class TypeModelFromGrammar(
         val subtypes = choice.alternative.map { typeForRuleItem(it, forProperty) }
         return when {
             subtypes.all { it.type is NothingType } -> TypeUsage.ofType(NothingType, emptyList(), subtypes.any { it.nullable })
-            subtypes.all { it.type is StringType } -> TypeUsage.ofType(StringType, emptyList(), subtypes.any { it.nullable })
+            subtypes.all { it.type is PrimitiveType } -> TypeUsage.ofType(StringType, emptyList(), subtypes.any { it.nullable })
             subtypes.all { it.type is ElementType } -> TypeUsage.ofType(UnnamedSuperTypeType(subtypes.map { it }, true))
 
             subtypes.all { it.type is ListSimpleType } -> { //=== PrimitiveType.LIST } -> {
@@ -394,7 +392,7 @@ class TypeModelFromGrammar(
                 1 == subtypes.map { (it.type as TupleType).property.values.map { Pair(it.name, it) }.toSet() }.toSet().size -> {
                     val t = subtypes.first()
                     when {
-                        t.type is TupleType && t.type.properties.isEmpty() -> NothingType.use
+                        t.type is TupleType && (t.type as TupleType).properties.isEmpty() -> NothingType.use
                         else -> t
                     }
                 }
@@ -523,12 +521,12 @@ class TypeModelFromGrammar(
         }
     }
 
-    private fun propertyNameFor(et: StructuredRuleType, ruleItem: RuleItem, ruleItemType: RuleType): String {
+    private fun propertyNameFor(et: StructuredRuleType, ruleItem: RuleItem, ruleItemType: TypeDefinition): String {
         return when (_configuration) {
             null -> when (ruleItem) {
                 is EmptyRule -> error("should not happen")
                 is Terminal -> when (ruleItemType) {
-                    is StringType -> UNNAMED_PRIMITIVE_PROPERTY_NAME
+                    is PrimitiveType -> UNNAMED_PRIMITIVE_PROPERTY_NAME
                     is ListSimpleType -> UNNAMED_LIST_PROPERTY_NAME
                     is ListSeparatedType -> UNNAMED_LIST_PROPERTY_NAME
                     is TupleType -> UNNAMED_TUPLE_PROPERTY_NAME

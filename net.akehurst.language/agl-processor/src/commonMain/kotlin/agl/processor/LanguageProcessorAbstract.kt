@@ -21,6 +21,7 @@ import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.formatter.FormatterSimple
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
+import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
@@ -36,13 +37,12 @@ import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.typemodel.TypeModel
-import net.akehurst.language.api.typemodel.typeModel
 
 internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : Any>(
 ) : LanguageProcessor<AsmType, ContextType> {
@@ -76,16 +76,16 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     //    res?.asm
     //}
 
-    override val typeModel: TypeModel by lazy {
+    override val typeModel: GrammarTypeModel by lazy {
         val res = configuration.typeModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
-        res?.asm?: typeModel("","<Empty>"){}
+        res?.asm ?: grammarTypeModel("", "<Empty>") {}
     }
 
     override val scopeModel: ScopeModel by lazy {
         val res = configuration.scopeModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
-        res?.asm?: ScopeModelAgl()
+        res?.asm ?: ScopeModelAgl()
     }
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? by lazy {
@@ -100,7 +100,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         res?.asm
     }
 
-    override val formatterModel: AglFormatterModel?by lazy {
+    override val formatterModel: AglFormatterModel? by lazy {
         val res = configuration.formatterResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
         res?.asm
@@ -112,7 +112,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         FormatterSimple<AsmType>(res?.asm)
     }
 
-    override fun usedAutomatonFor(goalRuleName:String):ParserStateSet = (this.parser as ScanOnDemandParser).runtimeRuleSet.usedAutomatonFor(goalRuleName)
+    override fun usedAutomatonFor(goalRuleName: String): ParserStateSet = (this.parser as ScanOnDemandParser).runtimeRuleSet.usedAutomatonFor(goalRuleName)
 
     override fun interrupt(message: String) {
         this.parser.interrupt(message)
@@ -233,7 +233,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 }
             }
         }
-        return ExpectedAtResultDefault(items,  IssueHolder(LanguageProcessorPhase.ALL))
+        return ExpectedAtResultDefault(items, IssueHolder(LanguageProcessorPhase.ALL))
     }
 
     /*

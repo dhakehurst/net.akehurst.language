@@ -19,12 +19,10 @@ package net.akehurst.language.agl.automaton
 import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 
 internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
-
 
     private val grammar = AglGrammarGrammar
     private val converterToRuntimeRules = ConverterToRuntimeRules(grammar)

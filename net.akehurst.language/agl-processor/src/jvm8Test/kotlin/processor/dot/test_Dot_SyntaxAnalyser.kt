@@ -16,14 +16,15 @@
 package net.akehurst.language.processor.dot
 
 
+import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.typemodel.StringType
-import net.akehurst.language.api.typemodel.TypeModelTest
-import net.akehurst.language.api.typemodel.asString
+import net.akehurst.language.typemodel.api.asString
+import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -37,14 +38,14 @@ class test_Dot_SyntaxAnalyser {
     }
 
     @Test
-    fun typeModel() {
+    fun dotTypeModel() {
         val actual = processor.typeModel
-        val expected = net.akehurst.language.api.typemodel.typeModel("net.akehurst.language.example.dot", "Dot") {
+        val expected = grammarTypeModel("net.akehurst.language.example.dot", "Dot") {
             // graph = STRICT? type ID? '{' stmt_list '}' ;
             elementType("graph", "Graph") {
-                propertyStringType("STRICT", true, 0)
-                propertyStringType("type", false, 1)
-                propertyStringType("ID", true, 2)
+                propertyPrimitiveType("STRICT", "String", true, 0)
+                propertyPrimitiveType("type", "String", false, 1)
+                propertyPrimitiveType("ID", "String", true, 2)
                 propertyListTypeOf("stmt_list", "stmt1", false, 3)
             }
             // stmt_list = stmt1 * ;
@@ -95,12 +96,12 @@ class test_Dot_SyntaxAnalyser {
             }
             elementType("", "functionCallOrIndex") {
                 // functionCall = NAME '(' argumentList ')' ;
-                propertyStringType("NAME", false, 0)
-                propertyListSeparatedTypeOf("argumentList", "argument", StringType, false, 2)
+                propertyPrimitiveType("NAME", "String", false, 0)
+                propertyListSeparatedTypeOf("argumentList", "argument", "String", false, 2)
             }
             elementType("argumentList", "argumentList") {
                 // argumentList = [ argument / ',' ]* ;
-                propertyListSeparatedTypeOf("argument", "argument", StringType, false, 0)
+                propertyListSeparatedTypeOf("argument", "argument", "String", false, 0)
             }
             elementType("argument", "argument") {
                 // argument = expression | colonOperator ;
@@ -108,7 +109,7 @@ class test_Dot_SyntaxAnalyser {
             }
             elementType("", "prefixExpression") {
                 // prefixExpression = prefixOperator expression ;
-                propertyStringType("prefixOperator", false, 0)
+                propertyPrimitiveType("prefixOperator", "String", false, 0)
                 propertyElementTypeOf("expression", "expression", false, 1)
             }
             stringTypeFor("prefixOperator")
@@ -118,7 +119,7 @@ class test_Dot_SyntaxAnalyser {
             //}
             elementType("", "infixExpression") {
                 // infixExpression =  [ expression / infixOperator ]2+ ;
-                propertyListSeparatedTypeOf("expression", "expression", StringType, false, 0)
+                propertyListSeparatedTypeOf("expression", "expression", "String", false, 0)
             }
             stringTypeFor("infixOperator")
             //elementType("infixOperator") {
@@ -131,22 +132,22 @@ class test_Dot_SyntaxAnalyser {
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
             elementType("", "colonOperator") {
-                propertyStringType("COLON", false, 0)
+                propertyPrimitiveType("COLON", "String", false, 0)
             }
             elementType("", "matrix") {
                 // matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
-                propertyListSeparatedTypeOf("row", "row", StringType, false, 1)
+                propertyListSeparatedTypeOf("row", "row", "String", false, 1)
             }
             elementType("", "row") {
                 // row = expression (','? expression)* ;
                 propertyElementTypeOf("expression", "expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
-                    propertyStringTypeUnnamed(true, 0)
+                    propertyPrimitiveType(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, "String", true, 0)
                     propertyElementTypeOf("expression", "expression", false, 1)
                 }
             }
             elementType("", "literalExpression") {
-                propertyStringType("literalValue", false, 0)
+                propertyPrimitiveType("literalValue", "String", false, 0)
             }
             stringTypeFor("literalValue")
             //elementType("literalValue") {
@@ -160,7 +161,7 @@ class test_Dot_SyntaxAnalyser {
             //}
             elementType("", "rootVariable") {
                 // rootVariable = NAME ;
-                propertyStringType("NAME", false, 0)
+                propertyPrimitiveType("NAME", "String", false, 0)
             }
             stringTypeFor("number")
             //elementType("number") {

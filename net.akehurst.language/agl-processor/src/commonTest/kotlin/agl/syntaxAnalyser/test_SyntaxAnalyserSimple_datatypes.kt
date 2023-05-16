@@ -17,6 +17,8 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
+import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
+import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
@@ -25,9 +27,6 @@ import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.typemodel.StringType
-import net.akehurst.language.api.typemodel.TypeModelTest
-import net.akehurst.language.api.typemodel.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -79,7 +78,7 @@ class test_SyntaxAnalyserSimple_datatypes {
     @Test
     fun typeModel() {
         val actual = processor.typeModel
-        val expected = typeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test") {
             //unit = declaration* ;
             elementType("unit", "Unit") {
                 propertyListTypeOf("declaration", "Declaration", false, 0)
@@ -90,30 +89,30 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
             // primitive = 'primitive' ID ;
             elementType("primitive", "Primitive") {
-                propertyStringType("id", false, 1)
+                propertyPrimitiveType("id", "String", false, 1)
             }
             // datatype = 'datatype' ID '{' property* '}' ;
             elementType("datatype", "Datatype") {
-                propertyStringType("id", false, 1)
+                propertyPrimitiveType("id", "String", false, 1)
                 propertyListTypeOf("property", "Property", false, 3)
             }
             // property = ID ':' typeReference ;
             elementType("property", "Property") {
-                propertyStringType("id", false, 0)
+                propertyPrimitiveType("id", "String", false, 0)
                 propertyElementTypeOf("typeReference", "TypeReference", false, 2)
             }
             // typeReference = type typeArguments? ;
             elementType("typeReference", "TypeReference") {
-                propertyStringType("type", false, 0)
+                propertyPrimitiveType("type", "String", false, 0)
                 propertyElementTypeOf("typeArguments", "TypeArguments", true, 1)
             }
             // typeArguments = '<' [typeReference / ',']+ '>' ;
             elementType("typeArguments", "TypeArguments") {
-                propertyListSeparatedTypeOf("typeReference", "TypeReference", StringType, false, 1)
+                propertyListSeparatedTypeOf("typeReference", "TypeReference", "String", false, 1)
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test

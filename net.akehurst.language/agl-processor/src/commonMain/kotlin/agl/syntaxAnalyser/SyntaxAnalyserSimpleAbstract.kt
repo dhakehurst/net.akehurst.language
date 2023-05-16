@@ -27,13 +27,14 @@ import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.grammar.Choice
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.typemodel.*
+import net.akehurst.language.typemodel.api.*
 
 /**
  * TypeName <=> RuleName
@@ -42,7 +43,7 @@ import net.akehurst.language.api.typemodel.*
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
 abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
-    val typeModel: TypeModel,
+    val typeModel: GrammarTypeModel,
     val scopeModel: ScopeModel
 ) : SyntaxAnalyser<A> {
 
@@ -152,7 +153,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
     private fun createValueFromBranch(target: SPPTBranch, path: AsmElementPath, typeUse: TypeUsage): Any? {//, scope: ScopeSimple<AsmElementPath>?): Any? {
         val type = typeUse.type//typeModel.findTypeUsageForRule(target.name) ?: argType
         return when (type) {
-            is StringType -> createStringValueFromBranch(target)
+            is PrimitiveType -> createStringValueFromBranch(target)
 
             is AnyType -> {
                 val actualType = this.findTypeForRule(target.name) ?: error("Internal Error: cannot find actual type for ${target.name}")

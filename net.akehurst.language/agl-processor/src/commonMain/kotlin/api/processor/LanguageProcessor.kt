@@ -16,17 +16,16 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.typemodel.TypeModel
 
 /**
  * A LanguageProcessor is used to process a sentence using a given grammar.
@@ -38,7 +37,7 @@ import net.akehurst.language.api.typemodel.TypeModel
  */
 interface LanguageProcessor<AsmType : Any, ContextType : Any> {
 
-    val issues:IssueCollection
+    val issues: IssueCollection
 
     val grammar: Grammar?
 
@@ -52,20 +51,20 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     /**
      * model of the types instantiated by syntaxAnalysis for the LanguageDefinition of this LanguageProcessor
      */
-    val typeModel: TypeModel
+    val typeModel: GrammarTypeModel
 
     /*
      * model of the scopes and references for the LanguageDefinition of this LanguageProcessor
      */
     val scopeModel: ScopeModel
 
-    val formatterModel : AglFormatterModel?
+    val formatterModel: AglFormatterModel?
 
-    val syntaxAnalyser:SyntaxAnalyser<AsmType>?
+    val syntaxAnalyser: SyntaxAnalyser<AsmType>?
 
-    val semanticAnalyser:SemanticAnalyser<AsmType, ContextType>?
+    val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
 
-    val formatter:Formatter<AsmType>?
+    val formatter: Formatter<AsmType>?
 
     /**
      * can be called from a different thread to stop the parser
@@ -75,19 +74,19 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     /**
      * get the default options for this parser
      */
-    fun parseOptionsDefault() : ParseOptions
+    fun parseOptionsDefault(): ParseOptions
 
     /**
      * get the default options for this language processor
      */
-    fun optionsDefault() : ProcessOptions<AsmType, ContextType>
+    fun optionsDefault(): ProcessOptions<AsmType, ContextType>
 
     /**
      * build the parser before use. Optional, but will speed up the first use of the parser.
      */
     fun buildFor(options: ParseOptions? = null): LanguageProcessor<AsmType, ContextType>
 
-    fun usedAutomatonFor(goalRuleName:String): Automaton
+    fun usedAutomatonFor(goalRuleName: String): Automaton
 
     /**
      * Specifically scan the sentence using the terminal rules found in the grammar

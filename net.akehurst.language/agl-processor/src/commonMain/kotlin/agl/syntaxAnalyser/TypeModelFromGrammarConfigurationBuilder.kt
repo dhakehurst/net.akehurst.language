@@ -17,11 +17,11 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.api.grammar.*
-import net.akehurst.language.api.typemodel.*
+import net.akehurst.language.typemodel.api.*
 
 interface TypeModelFromGrammarConfiguration {
     fun typeNameFor(rule: GrammarRule): String
-    fun propertyNameFor(ruleItem: RuleItem, ruleItemType: RuleType): String
+    fun propertyNameFor(ruleItem: RuleItem, ruleItemType: TypeDefinition): String
 }
 
 fun String.lower() = when {
@@ -31,10 +31,10 @@ fun String.lower() = when {
 
 class TypeModelFromGrammarConfigurationDefault() : TypeModelFromGrammarConfiguration {
     override fun typeNameFor(rule: GrammarRule): String = rule.name.replaceFirstChar { it.titlecase() }
-    override fun propertyNameFor(ruleItem: RuleItem, ruleItemType: RuleType): String {
+    override fun propertyNameFor(ruleItem: RuleItem, ruleItemType: TypeDefinition): String {
         val baseName = when (ruleItem) {
             is Terminal -> when (ruleItemType) {
-                is StringType -> TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
+                is PrimitiveType -> TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
                 is ListSimpleType -> TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME
                 is ListSeparatedType -> TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME
                 is TupleType -> TypeModelFromGrammar.UNNAMED_TUPLE_PROPERTY_NAME
@@ -50,7 +50,7 @@ class TypeModelFromGrammarConfigurationDefault() : TypeModelFromGrammarConfigura
         return when (ruleItemType) {
             is NothingType -> baseName
             is AnyType -> baseName
-            is StringType -> baseName
+            is PrimitiveType -> baseName
             is UnnamedSuperTypeType -> baseName
             is ListSimpleType -> when (ruleItem) {
                 is NonTerminal -> ruleItem.name.lower()

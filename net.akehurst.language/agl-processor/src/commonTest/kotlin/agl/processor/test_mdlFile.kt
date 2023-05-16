@@ -15,7 +15,8 @@
  */
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.typemodel.TypeModelTest
+import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
+import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -71,16 +72,16 @@ grammar Mdl {
     }
 
     @Test
-    fun typeModel() {
+    fun mdlTypeModel() {
         val actual = processor.typeModel
-        val expected = net.akehurst.language.api.typemodel.typeModel("test", "Mdl") {
+        val expected = grammarTypeModel("test", "Mdl") {
             //file = section+ ;
             elementType("file", "File") {
                 propertyListTypeOf("section", "Section", false, 0)
             }
             //section = IDENTIFIER '{' content* '}' ;
             elementType("section", "Section") {
-                propertyStringType("identifier", false, 0)
+                propertyPrimitiveType("identifier", "String", false, 0)
                 propertyListTypeOf("content", "Content", false, 1)
             }
             //content = section | parameter ;
@@ -89,7 +90,7 @@ grammar Mdl {
             }
             //parameter = IDENTIFIER value ;
             elementType("parameter", "Parameter") {
-                propertyStringType("identifier", false, 0)
+                propertyPrimitiveType("identifier", "String", false, 0)
                 propertyElementTypeOf("value", "Value", false, 1)
             }
             //value = stringList | matrix | identifier | literal ;
@@ -98,18 +99,18 @@ grammar Mdl {
             }
             //identifier = IDENTIFIER ;
             elementType("identifier", "Identifier") {
-                propertyStringType("identifier", false, 0)
+                propertyPrimitiveType("identifier", "String", false, 0)
             }
             //matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
             //row = [literal / ',']+ | literal+ ;
 
             //stringList = DOUBLE_QUOTE_STRING+ ;
             elementType("stringList", "StringList") {
-                propertyListType("double_quoted_string", false, 0) { stringType() }
+                propertyListType("double_quoted_string", false, 0) { primitiveType("String") }
             }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test

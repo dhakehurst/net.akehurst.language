@@ -16,14 +16,15 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.processor.SentenceContext
-import net.akehurst.language.api.typemodel.*
+import net.akehurst.language.typemodel.api.*
 
 // used by other languages that reference rules  in a grammar
 
 class ContextFromTypeModel(
 ) : SentenceContext<String> {
-    constructor(typeModel: TypeModel) : this() {
+    constructor(typeModel: GrammarTypeModel) : this() {
         createScopeFrom(typeModel)
     }
 
@@ -38,7 +39,7 @@ class ContextFromTypeModel(
         this.rootScope = ScopeSimple<String>(null, "", "")
     }
 
-    fun createScopeFrom(typeModel: TypeModel) {
+    fun createScopeFrom(typeModel: GrammarTypeModel) {
         val scope = ScopeSimple<String>(null, "", typeModel.name)
         typeModel.allRuleNameToType.forEach {
             scope.addToScope(it.value.type.name, TYPE_NAME_FOR_TYPES, it.value.type.name)
@@ -46,7 +47,7 @@ class ContextFromTypeModel(
             when (type) {
                 is NothingType -> Unit
                 is AnyType -> Unit
-                is StringType -> Unit
+                is PrimitiveType -> Unit
                 is ListSimpleType -> Unit
                 is ListSeparatedType -> Unit
                 is UnnamedSuperTypeType -> Unit
