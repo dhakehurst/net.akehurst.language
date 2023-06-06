@@ -71,7 +71,7 @@ object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<AsmSimple, C
         asm
     }
 
-    override val syntaxAnalyser: SyntaxAnalyser<AsmSimple> = SyntaxAnalyserSimple(TypeModelFromGrammar(grammar), scopeModel)
+    override val syntaxAnalyser: SyntaxAnalyser<AsmSimple> = SyntaxAnalyserSimple(TypeModelFromGrammar.createFrom(grammar), scopeModel)
     override val semanticAnalyser: SemanticAnalyser<AsmSimple, ContextSimple> = SemanticAnalyserSimple(scopeModel)
     override val formatter: Formatter<AsmSimple> = FormatterSimple(null)
     override val automata: Map<String, Automaton> = mapOf(

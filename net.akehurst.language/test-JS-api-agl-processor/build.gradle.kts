@@ -1,5 +1,3 @@
-
-
 dependencies {
     "jsTestImplementation"(project(":agl-processor"))
 }
@@ -21,14 +19,14 @@ configure<org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension> {
         }
         browser {
             testTask {
-               //inputFileProperty.set(file("src/test/javascript/test.js"))
+                //inputFileProperty.set(file("src/test/javascript/test.js"))
             }
         }
     }
 }
-tasks.named<Copy>("jsTestTestDevelopmentExecutableCompileSync") {
-    duplicatesStrategy = DuplicatesStrategy.WARN
-}
+//tasks.named<Copy>("jsTestTestDevelopmentExecutableCompileSync") {
+//    duplicatesStrategy = DuplicatesStrategy.WARN
+//}
 tasks.create<Copy>("overwriteTestEntryFile") {
     mustRunAfter("compileTestDevelopmentExecutableKotlinJs")
     from("src/test/javascript")

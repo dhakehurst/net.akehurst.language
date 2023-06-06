@@ -18,17 +18,20 @@ package net.akehurst.language.agl.syntaxAnalyser
 
 
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelAbstract
+import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelStdLib
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.grammarTypeModel.StringType
 import net.akehurst.language.typemodel.api.*
 
 class TypeModelFromGrammar(
     namespace: String,
-    name: String
-) : GrammarTypeModelAbstract(namespace, name) {
-    constructor(grammar: Grammar, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration) : this(listOf(grammar), configuration)
-    constructor(grammars: List<Grammar>, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration)
-            : this(grammars.last().namespace.qualifiedName, grammars.last().name) {
+    name: String,
+    rootTypeName: String,
+    imports: Set<TypeModel> = setOf(GrammarTypeModelStdLib)
+) : GrammarTypeModelAbstract(namespace, name, rootTypeName, imports) {
+    //constructor(grammar: Grammar, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration) : this(listOf(grammar), configuration)
+    private constructor(grammars: List<Grammar>, rootTypeName: String, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration)
+            : this(grammars.last().namespace.qualifiedName, grammars.last().name, rootTypeName) {
         this._configuration = configuration
         grammars.forEach { g ->
             this.grammar = g
@@ -52,6 +55,19 @@ class TypeModelFromGrammar(
         const val UNNAMED_CHOICE_PROPERTY_NAME = "\$choice"
 
         val defaultConfiguration = TypeModelFromGrammarConfigurationDefault()
+
+        fun createFrom(
+            grammar: Grammar,
+            defaultGoalRuleName: String? = null,
+            configuration: TypeModelFromGrammarConfiguration = defaultConfiguration
+        ): TypeModelFromGrammar {
+            //val namespace = grammar.namespace
+            //val name = grammar.name
+            val goalRuleName = defaultGoalRuleName ?: grammar.grammarRule.first { it.isSkip.not() }.name
+            val goalRule = grammar.findNonTerminalRule(goalRuleName) ?: error("Cannot find grammar rule '$goalRuleName'")
+            val rootTypeName = configuration.typeNameFor(goalRule)
+            return TypeModelFromGrammar(listOf(grammar), rootTypeName)
+        }
     }
 
     // GrammarRule.name -> ElementType
@@ -204,7 +220,7 @@ class TypeModelFromGrammar(
                 }
 
                 is Embedded -> {
-                    val embTmfg = TypeModelFromGrammar(listOf(ruleItem.embeddedGrammarReference.resolved!!)) //TODO: check for null
+                    val embTmfg = TypeModelFromGrammar.createFrom(ruleItem.embeddedGrammarReference.resolved!!) //TODO: check for null
                     val embTm = embTmfg
                     embTm.findTypeUsageForRule(ruleItem.name) ?: error("Should never happen")
                 }

@@ -18,31 +18,42 @@
 package net.akehurst.language.agl.grammarTypeModel
 
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
-import net.akehurst.language.typemodel.api.ElementType
+import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.TypeUsage
 import net.akehurst.language.typemodel.simple.TypeModelAbstract
 
+object GrammarTypeModelStdLib : TypeModelAbstract("grammar", "std", null, emptySet<TypeModel>()) {
+    init {
+        super.findOrCreatePrimitiveTypeNamed("String")
+    }
+}
+
 class GrammarTypeModelSimple(
     namespace: String,
-    name: String
-) : GrammarTypeModelAbstract(namespace, name)
+    name: String,
+    rootTypeName: String,
+    imports: Set<TypeModel>
+) : GrammarTypeModelAbstract(namespace, name, rootTypeName, imports)
 
 abstract class GrammarTypeModelAbstract(
     namespace: String,
-    name: String
-) : TypeModelAbstract(namespace, name), GrammarTypeModel {
+    name: String,
+    rootTypeName: String,
+    imports: Set<TypeModel>
+) : TypeModelAbstract(namespace, name, rootTypeName, imports), GrammarTypeModel {
 
     fun addTypeFor(grammarRuleName: String, typeUse: TypeUsage) {
         this.allRuleNameToType[grammarRuleName] = typeUse
         super.allTypesByName[typeUse.type.name] = typeUse.type
     }
 
+    /*
     fun findOrCreateTypeFor(grammarRuleName: String, typeName: String): ElementType {
         val existing = findOrCreateElementTypeNamed(typeName)
         this.allRuleNameToType[grammarRuleName] = TypeUsage.ofType(existing)
         return existing
     }
-
+*/
     override var allRuleNameToType = mutableMapOf<String, TypeUsage>()
 
     override fun findTypeUsageForRule(ruleName: String): TypeUsage? = allRuleNameToType[ruleName]

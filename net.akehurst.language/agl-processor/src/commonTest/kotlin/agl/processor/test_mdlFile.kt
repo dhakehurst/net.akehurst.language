@@ -74,7 +74,7 @@ grammar Mdl {
     @Test
     fun mdlTypeModel() {
         val actual = processor.typeModel
-        val expected = grammarTypeModel("test", "Mdl") {
+        val expected = grammarTypeModel("test", "Mdl", "File") {
             //file = section+ ;
             elementType("file", "File") {
                 propertyListTypeOf("section", "Section", false, 0)

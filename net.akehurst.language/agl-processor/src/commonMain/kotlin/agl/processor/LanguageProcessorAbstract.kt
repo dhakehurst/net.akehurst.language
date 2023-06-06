@@ -79,7 +79,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     override val typeModel: GrammarTypeModel by lazy {
         val res = configuration.typeModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
-        res?.asm ?: grammarTypeModel("", "<Empty>") {}
+        res?.asm ?: grammarTypeModel("", "<Empty>", "None") {}
     }
 
     override val scopeModel: ScopeModel by lazy {

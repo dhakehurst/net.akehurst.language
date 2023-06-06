@@ -118,7 +118,7 @@ grammar Mscript {
     @Test
     fun mscript_typeModel() {
         val actual = sut.typeModel
-        val expected = grammarTypeModel("com.yakindu.modelviewer.parser", "Mscript") {
+        val expected = grammarTypeModel("com.yakindu.modelviewer.parser", "Mscript", "Script") {
             elementType("script", "Script") {
                 // script = statementList ;
                 propertyListSeparatedTypeOf("statementList", "Line", "String", false, 0)

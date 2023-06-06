@@ -64,10 +64,10 @@ class test_SemanticAnalyserSimple_datatypes {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
             assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
-            TypeModelFromGrammar(result.asm!!.last())
+            TypeModelFromGrammar.createFrom(result.asm!!.last())
         }
         val scopeModel = ScopeModelAgl.fromString(
-            ContextFromTypeModel(TypeModelFromGrammar(grammar)),
+            ContextFromTypeModel(TypeModelFromGrammar.createFrom(grammar)),
             """
                 identify Unit by §nothing
                 scope Unit {

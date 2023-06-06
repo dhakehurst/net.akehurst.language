@@ -13,7 +13,6 @@ dependencies {
 
 kotlin {
     js("js") {
-        binaries.library()
         compilations["main"].packageJson {
             customField(
                 "author", mapOf(

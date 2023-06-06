@@ -61,7 +61,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
             assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
-            TypeModelFromGrammar(result.asm!!.last())
+            TypeModelFromGrammar.createFrom(result.asm!!.last())
         }
         val scopeModel = ScopeModelAgl()
         val syntaxAnalyser = SyntaxAnalyserSimple(typeModel, scopeModel)
@@ -78,7 +78,7 @@ class test_SyntaxAnalyserSimple_datatypes {
     @Test
     fun typeModel() {
         val actual = processor.typeModel
-        val expected = grammarTypeModel("test", "Test") {
+        val expected = grammarTypeModel("test", "Test", "Unit") {
             //unit = declaration* ;
             elementType("unit", "Unit") {
                 propertyListTypeOf("declaration", "Declaration", false, 0)

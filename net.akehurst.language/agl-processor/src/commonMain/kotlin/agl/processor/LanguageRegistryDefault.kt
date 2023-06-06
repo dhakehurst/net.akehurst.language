@@ -21,7 +21,10 @@ import net.akehurst.language.agl.agl.grammar.scopes.AglScopesSemanticAnalyser
 import net.akehurst.language.agl.agl.grammar.style.AglStyleSemanticAnalyser
 import net.akehurst.language.agl.grammar.format.AglFormatGrammar
 import net.akehurst.language.agl.grammar.format.AglFormatSyntaxAnalyser
-import net.akehurst.language.agl.grammar.grammar.*
+import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
+import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
+import net.akehurst.language.agl.grammar.grammar.AglGrammarSyntaxAnalyser
+import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.agl.grammar.scopes.AglScopesGrammar
 import net.akehurst.language.agl.grammar.scopes.AglScopesSyntaxAnalyser
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
@@ -30,7 +33,6 @@ import net.akehurst.language.agl.grammar.style.AglStyleSyntaxAnalyser
 import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammar.Namespace
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.style.AglStyleModel
@@ -66,7 +68,7 @@ class LanguageRegistryDefault : GrammarRegistry {
                 configuration = Agl.configuration {
                     targetGrammarName(AglGrammarGrammar.name)
                     defaultGoalRuleName(AglGrammarGrammar.goalRuleName)
-                    typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(AglGrammarGrammar), IssueHolder(LanguageProcessorPhase.ALL)) }
+                    typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.createFrom(AglGrammarGrammar), IssueHolder(LanguageProcessorPhase.ALL)) }
                     scopeModelResolver { ProcessResultDefault(ScopeModelAgl(), IssueHolder(LanguageProcessorPhase.ALL)) }
                     syntaxAnalyserResolver { ProcessResultDefault(AglGrammarSyntaxAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
                     semanticAnalyserResolver { ProcessResultDefault(AglGrammarSemanticAnalyser(this@LanguageRegistryDefault), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -90,10 +92,10 @@ class LanguageRegistryDefault : GrammarRegistry {
                 configuration = Agl.configuration {
                     targetGrammarName(AglScopesGrammar.name)
                     defaultGoalRuleName(AglScopesGrammar.goalRuleName)
-                    typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(AglScopesGrammar), IssueHolder(LanguageProcessorPhase.ALL)) }
+                    typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.createFrom(AglScopesGrammar), IssueHolder(LanguageProcessorPhase.ALL)) }
                     scopeModelResolver { ProcessResultDefault(ScopeModelAgl(), IssueHolder(LanguageProcessorPhase.ALL)) }
                     syntaxAnalyserResolver { ProcessResultDefault(AglScopesSyntaxAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
-                    semanticAnalyserResolver { ProcessResultDefault(AglScopesSemanticAnalyser(),IssueHolder(LanguageProcessorPhase.ALL)) }
+                    semanticAnalyserResolver { ProcessResultDefault(AglScopesSemanticAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
                     formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                     styleResolver {
                         Agl.fromString(
@@ -107,7 +109,7 @@ class LanguageRegistryDefault : GrammarRegistry {
             //    it.syntaxAnalyser?.configure(
             //        configurationContext = ContextFromGrammar(AglScopesGrammar),
             //    )
-           // }
+            // }
         )
 
         override val formatter = this@LanguageRegistryDefault.registerFromDefinition(
@@ -118,7 +120,7 @@ class LanguageRegistryDefault : GrammarRegistry {
                 configuration = Agl.configuration {
                     targetGrammarName(AglFormatGrammar.name)
                     defaultGoalRuleName(AglFormatGrammar.goalRuleName)
-                    typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(AglFormatGrammar),IssueHolder(LanguageProcessorPhase.ALL)) }
+                    typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.createFrom(AglFormatGrammar), IssueHolder(LanguageProcessorPhase.ALL)) }
                     scopeModelResolver { ProcessResultDefault(ScopeModelAgl(), IssueHolder(LanguageProcessorPhase.ALL)) }
                     syntaxAnalyserResolver { ProcessResultDefault(AglFormatSyntaxAnalyser(it.typeModel!!, it.scopeModel!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                     semanticAnalyserResolver { ProcessResultDefault(AglFormatSemanticAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -142,9 +144,9 @@ class LanguageRegistryDefault : GrammarRegistry {
                 configuration = Agl.configuration {
                     targetGrammarName(AglStyleGrammar.name)
                     defaultGoalRuleName(AglStyleGrammar.goalRuleName)
-                    typeModelResolver { ProcessResultDefault(TypeModelFromGrammar(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+                    typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.createFrom(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                     scopeModelResolver { ProcessResultDefault(ScopeModelAgl(), IssueHolder(LanguageProcessorPhase.ALL)) }
-                    syntaxAnalyserResolver { ProcessResultDefault(AglStyleSyntaxAnalyser(),IssueHolder(LanguageProcessorPhase.ALL)) }
+                    syntaxAnalyserResolver { ProcessResultDefault(AglStyleSyntaxAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
                     semanticAnalyserResolver { ProcessResultDefault(AglStyleSemanticAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
                     //formatterResolver {  }
                     styleResolver {
@@ -215,7 +217,7 @@ class LanguageRegistryDefault : GrammarRegistry {
         }
     }
 
-    fun findGrammarOrNull(qualifiedName:String):Grammar? = _grammars[qualifiedName]
+    fun findGrammarOrNull(qualifiedName: String): Grammar? = _grammars[qualifiedName]
 
     override fun findGrammarOrNull(localNamespace: Namespace, nameOrQName: String): Grammar? =
         findGrammarOrNull("${localNamespace.qualifiedName}.$nameOrQName") ?: findGrammarOrNull(nameOrQName)

@@ -235,16 +235,16 @@ fun AsmElementReference.equalTo(other: AsmElementReference): Boolean {
 
 abstract class AsmSimpleTreeWalker {
     abstract fun root(root: AsmElementSimple)
-    abstract fun beforeElement(element: AsmElementSimple)
-    abstract fun afterElement(element: AsmElementSimple)
+    abstract fun beforeElement(propertyName: String?, element: AsmElementSimple)
+    abstract fun afterElement(propertyName: String?, element: AsmElementSimple)
     abstract fun property(property: AsmElementProperty)
 }
 
 fun AsmSimple.traverseDepthFirst(callback: AsmSimpleTreeWalker) {
-    fun traverse(element: Any?) {
+    fun traverse(propertyName: String?, element: Any?) {
         when (element) {
             is AsmElementSimple -> {
-                callback.beforeElement(element)
+                callback.beforeElement(propertyName, element)
                 val props = element.properties.values.sortedWith { a, b ->
                     val aIdx = a.childIndex
                     val bIdx = b.childIndex
@@ -257,14 +257,14 @@ fun AsmSimple.traverseDepthFirst(callback: AsmSimpleTreeWalker) {
                 for (prop in props) {
                     callback.property(prop)
                     val pv = prop.value
-                    traverse(pv)
+                    traverse(prop.name, pv)
                 }
-                callback.afterElement(element)
+                callback.afterElement(propertyName, element)
             }
 
-            is List<*> -> element.forEach { lv -> traverse(lv) }
+            is List<*> -> element.forEach { lv -> traverse(propertyName, lv) }
             else -> Unit
         }
     }
-    this.rootElements.forEach { traverse(it) }
+    this.rootElements.forEach { traverse(null, it) }
 }

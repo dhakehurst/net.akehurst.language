@@ -21,8 +21,14 @@ import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.grammarTypeModel.StringType
 import net.akehurst.language.typemodel.api.*
 
-fun grammarTypeModel(namespace: String, name: String, init: GrammarTypeModelBuilder.() -> Unit): GrammarTypeModel {
-    val b = GrammarTypeModelBuilder(namespace, name)
+fun grammarTypeModel(
+    namespace: String,
+    name: String,
+    rootTypeName: String,
+    imports: Set<TypeModel> = setOf(GrammarTypeModelStdLib),
+    init: GrammarTypeModelBuilder.() -> Unit
+): GrammarTypeModel {
+    val b = GrammarTypeModelBuilder(namespace, name, rootTypeName, imports)
     b.init()
     val m = b.build()
     return m
@@ -31,10 +37,12 @@ fun grammarTypeModel(namespace: String, name: String, init: GrammarTypeModelBuil
 @TypeModelDslMarker
 class GrammarTypeModelBuilder(
     val namespace: String,
-    val name: String
+    val name: String,
+    rootTypeName: String,
+    imports: Set<TypeModel>
 ) {
 
-    private val _model = GrammarTypeModelSimple(namespace, name)
+    private val _model = GrammarTypeModelSimple(namespace, name, rootTypeName, imports)
     private val _typeReferences = mutableListOf<TypeUsageReferenceBuilder>()
 
     val StringType: PrimitiveType get() = _model.StringType

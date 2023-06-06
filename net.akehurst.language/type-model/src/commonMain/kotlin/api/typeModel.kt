@@ -21,6 +21,8 @@ interface TypeModel {
 
     val namespace: String
     val name: String
+    val rootTypeName: String?
+    val imports: Set<TypeModel>
 
     val qualifiedName: String
 
@@ -28,6 +30,10 @@ interface TypeModel {
      * TypeDefinition.name --> TypeDefinition
      */
     val allTypesByName: Map<String, TypeDefinition>
+
+    val elementType: Set<ElementType>
+
+    val primitiveType: Set<PrimitiveType>
 
     fun findTypeNamed(typeName: String): TypeDefinition?
 
@@ -45,6 +51,11 @@ sealed class TypeDefinition {
     open val qualifiedName: String = name
     open val typeParameters: List<String> = emptyList()
 
+    /**
+     * information about this type
+     */
+    var metaInfo = mutableMapOf<String, String>()
+
     abstract fun signature(context: TypeModel?, currentDepth: Int = 0): String
 
     fun asString(context: TypeModel): String = when (this) {
@@ -58,7 +69,8 @@ sealed class TypeDefinition {
         is TupleType -> signature(context, 0)
         is ElementType -> {
             val sups = if (this.supertypes.isEmpty()) "" else " : " + this.supertypes.sortedBy { it.signature(context, 0) }.joinToString { it.signature(context, 0) }
-            val props = this.property.values.sortedBy { it.childIndex }.joinToString { it.name + ":" + it.typeUse.signature(context, 0) }
+            val props = this.property.values.sortedBy { it.childIndex }
+                .joinToString { it.name + ":" + it.typeUse.signature(context, 0) }
             "${name}${sups} { $props }"
         }
     }
@@ -158,8 +170,23 @@ class PrimitiveType(
     val use = TypeUsage.ofType(this)
     val useNullable = TypeUsage.ofType(this, emptyList(), true)
 
-    override fun signature(context: TypeModel?, currentDepth: Int): String =
-        if (context == typeModel) name else "${typeModel.qualifiedName}.$name"
+    override val qualifiedName: String get() = "${typeModel.qualifiedName}.$name"
+
+    override fun signature(context: TypeModel?, currentDepth: Int): String = when {
+        null == context -> qualifiedName
+        context == this.typeModel -> name
+        context.imports.contains(this.typeModel) -> name
+        else -> qualifiedName
+    }
+
+    override fun hashCode(): Int = qualifiedName.hashCode()
+    override fun equals(other: Any?): Boolean = when {
+        other !is PrimitiveType -> false
+        this.qualifiedName != other.qualifiedName -> false
+        else -> true
+    }
+
+    override fun toString(): String = qualifiedName
 }
 
 sealed class StructuredRuleType : TypeDefinition() {
@@ -224,7 +251,7 @@ data class ElementType(
     override val name: String
 ) : StructuredRuleType() {
 
-    override val qualifiedName: String = typeModel.qualifiedName + "." + name
+    override val qualifiedName: String get() = "${typeModel.qualifiedName}.$name"
 
     override var typeParameters = mutableListOf<String>()
 
@@ -235,7 +262,12 @@ data class ElementType(
     override val property = mutableMapOf<String, PropertyDeclaration>()
     private val _propertyIndex = mutableListOf<PropertyDeclaration>()
 
-    override fun signature(context: TypeModel?, currentDepth: Int): String = if (context == typeModel) name else "${typeModel.qualifiedName}.$name"
+    override fun signature(context: TypeModel?, currentDepth: Int): String = when {
+        null == context -> qualifiedName
+        context == this.typeModel -> name
+        context.imports.contains(this.typeModel) -> name
+        else -> qualifiedName
+    }
 
     fun addSuperType(type: ElementType) {
         (this.supertypes as MutableSet).add(type)
@@ -247,6 +279,15 @@ data class ElementType(
         this.property[propertyDeclaration.name] = propertyDeclaration
         this._propertyIndex.add(propertyDeclaration)
     }
+
+    override fun hashCode(): Int = qualifiedName.hashCode()
+    override fun equals(other: Any?): Boolean = when {
+        other !is PrimitiveType -> false
+        this.qualifiedName != other.qualifiedName -> false
+        else -> true
+    }
+
+    override fun toString(): String = qualifiedName
 }
 
 data class TypeUsage(
@@ -304,6 +345,11 @@ data class PropertyDeclaration(
         owner.addProperty(this)
     }
 
+    /**
+     * information about this property
+     */
+    var metaInfo = mutableMapOf<String, String>()
+
     override fun toString(): String {
         val nullable = if (typeUse.nullable) "?" else ""
         return "${owner.name}.$name: ${typeUse.type.name}$nullable [$childIndex]"
@@ -311,9 +357,12 @@ data class PropertyDeclaration(
 }
 
 fun TypeModel.asString(): String {
-    val types = this.allTypesByName.entries.sortedBy { it.key }.joinToString(separator = "\n") { it.value.asString(this) }
+    val types = this.allTypesByName.entries.sortedBy { it.key }
+        .joinToString(prefix = "  ", separator = "\n  ") { it.value.asString(this) }
+    val importstr = this.imports.joinToString(prefix = "  ", separator = "\n  ") { "import ${it.qualifiedName}.*" }
     val s = """
     typemodel '$namespace.$name' {
+    $importstr
     $types
     }
     """.trimIndent()

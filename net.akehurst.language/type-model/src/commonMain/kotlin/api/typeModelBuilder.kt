@@ -17,14 +17,21 @@
 
 package net.akehurst.language.typemodel.api
 
+import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.simple.TypeModelSimple
 import kotlin.reflect.KClass
 
 @DslMarker
 annotation class TypeModelDslMarker
 
-fun typeModel(namespace: String, name: String, init: TypeModelBuilder.() -> Unit): TypeModel {
-    val b = TypeModelBuilder(namespace, name)
+fun typeModel(
+    namespace: String,
+    name: String,
+    rootTypeName: String? = null,
+    imports: Set<TypeModel> = setOf(SimpleTypeModelStdLib),
+    init: TypeModelBuilder.() -> Unit
+): TypeModel {
+    val b = TypeModelBuilder(namespace, name, rootTypeName, imports)
     b.init()
     val m = b.build()
     return m
@@ -33,16 +40,22 @@ fun typeModel(namespace: String, name: String, init: TypeModelBuilder.() -> Unit
 @TypeModelDslMarker
 class TypeModelBuilder(
     val namespace: String,
-    val name: String
+    val name: String,
+    val rootTypeName: String?,
+    imports: Set<TypeModel>
 ) {
 
-    private val _model = TypeModelSimple(namespace, name)
+    private val _model = TypeModelSimple(namespace, name, rootTypeName, imports)
     private val _typeReferences = mutableListOf<TypeUsageReferenceBuilder>()
 
     fun primitiveType(typeName: String): PrimitiveType = _model.findOrCreatePrimitiveTypeNamed(typeName)
 
-    fun listTypeOf(elementTypeName: String): TypeUsage {
-        val elementType = _model.findOrCreateElementTypeNamed(elementTypeName)
+    /**
+     * create a list type of the indicated typeName
+     * if typeName is not already defined, it will be defined as an ElementType
+     */
+    fun listTypeOf(typeName: String): TypeUsage {
+        val elementType = _model.findTypeNamed(typeName) ?: _model.findOrCreateElementTypeNamed(typeName)
         return ListSimpleType.ofType(TypeUsage.ofType(elementType))
     }
 
@@ -51,13 +64,13 @@ class TypeModelBuilder(
     }
 
     fun listSeparatedTypeOf(itemTypeName: String, separatorType: TypeDefinition): TypeUsage {
-        val itemType = _model.findOrCreateElementTypeNamed(itemTypeName)
+        val itemType = _model.findTypeNamed(itemTypeName) ?: _model.findOrCreateElementTypeNamed(itemTypeName)
         return ListSeparatedType.ofType(TypeUsage.ofType(itemType), TypeUsage.ofType(separatorType))
     }
 
     fun listSeparatedTypeOf(itemTypeName: String, separatorTypeName: String): TypeUsage {
-        val itemType = _model.findOrCreateElementTypeNamed(itemTypeName)
-        val separatorType = _model.findOrCreateElementTypeNamed(separatorTypeName)
+        val itemType = _model.findTypeNamed(itemTypeName) ?: _model.findOrCreateElementTypeNamed(itemTypeName)
+        val separatorType = _model.findTypeNamed(separatorTypeName) ?: _model.findOrCreateElementTypeNamed(separatorTypeName)
         return listSeparatedTypeOf(itemType, separatorType)
     }
 
@@ -113,8 +126,8 @@ abstract class StructuredTypeBuilder(
 
     // ListSeparated
     fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-        val itemType = _model.findOrCreateElementTypeNamed(itemTypeName)!!
-        val separatorType = _model.findOrCreateElementTypeNamed(separatorTypeName)!!
+        val itemType = _model.findTypeNamed(itemTypeName) ?: _model.findOrCreateElementTypeNamed(itemTypeName)!!
+        val separatorType = _model.findTypeNamed(itemTypeName) ?: _model.findOrCreateElementTypeNamed(separatorTypeName)!!
         return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
     }
 
@@ -230,18 +243,18 @@ class TypeUsageReferenceBuilder(
         when (_refClass) {
             PrimitiveType::class -> {
                 val ref = _refs.first()
-                val t = _model.allTypesByName[ref] ?: error("Type not found: '$ref'")
+                val t = _model.findTypeNamed(ref) ?: error("Type not found: '$ref'")
                 _args.add(TypeUsage.ofType(t, emptyList(), nullable))
             }
 
             ElementType::class -> {
                 val ref = _refs.first()
-                val t = _model.allTypesByName[ref] ?: error("Type not found: '$ref'")
+                val t = _model.findTypeNamed(ref) ?: error("Type not found: '$ref'")
                 _args.add(TypeUsage.ofType(t, emptyList(), nullable))
             }
 
             UnnamedSuperTypeType::class -> {
-                val subtypes = _refs.map { _model.allTypesByName[it] ?: error("Type not found: '$it'") }
+                val subtypes = _refs.map { _model.findTypeNamed(it) ?: error("Type not found: '$it'") }
                 val stu = subtypes.map { TypeUsage.ofType(it) }
                 val t = UnnamedSuperTypeType(stu, false)
                 _args.add(TypeUsage.ofType(t, emptyList(), nullable))

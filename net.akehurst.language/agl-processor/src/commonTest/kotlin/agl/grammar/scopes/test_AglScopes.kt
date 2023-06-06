@@ -37,7 +37,7 @@ class test_AglScopes {
     @Test
     fun typeModel() {
         val actual = aglProc.typeModel
-        val expected = grammarTypeModel("net.akehurst.language.agl", "AglScopes") {
+        val expected = grammarTypeModel("net.akehurst.language.agl", "AglScopes", "Declarations") {
             // declarations = rootIdentifiables scopes references?
             elementType("declarations", "Declarations") {
                 propertyListTypeOf("rootIdentifiables", "Identifiable", false, 0)
@@ -158,7 +158,7 @@ class test_AglScopes {
         val result = aglProc.process(
             sentence = text,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar(grammar))) }
+                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar.createFrom(grammar))) }
             }
         )
 
@@ -190,7 +190,7 @@ class test_AglScopes {
         val result = aglProc.process(
             sentence = text,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar(grammar))) }
+                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar.createFrom(grammar))) }
             }
         )
 
@@ -230,7 +230,7 @@ class test_AglScopes {
         val result = aglProc.process(
             sentence = text,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar(grammar))) }
+                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar.createFrom(grammar))) }
             }
         )
 
@@ -268,7 +268,7 @@ class test_AglScopes {
         val result = aglProc.process(
             sentence = text,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar(grammar))) }
+                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar.createFrom(grammar))) }
             }
         )
 
@@ -316,7 +316,7 @@ class test_AglScopes {
         val result = aglProc.process(
             sentence = text,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar(grammar))) }
+                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar.createFrom(grammar))) }
             }
         )
 
@@ -363,7 +363,7 @@ class test_AglScopes {
         val result = aglProc.process(
             sentence = text,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar(grammar))) }
+                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar.createFrom(grammar))) }
             }
         )
 
@@ -399,7 +399,7 @@ class test_AglScopes {
         val result = aglProc.process(
             sentence = text,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar(grammar))) }
+                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar.createFrom(grammar))) }
             }
         )
 

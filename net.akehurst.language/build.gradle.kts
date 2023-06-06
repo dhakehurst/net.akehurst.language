@@ -17,14 +17,15 @@
 import com.github.gmazzo.gradle.plugins.BuildConfigExtension
 import org.gradle.internal.jvm.Jvm
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 plugins {
-    kotlin("multiplatform") version ("1.8.21") apply false
+    kotlin("multiplatform") version ("1.9.0-Beta") apply false
     id("org.jetbrains.dokka") version ("1.8.10") apply false
     id("com.github.gmazzo.buildconfig") version ("3.1.0") apply false
     id("nu.studer.credentials") version ("3.0")
-    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version ("1.8.21") apply false
+    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version ("1.9.0-Beta") apply false
 }
 val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8
 val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8
@@ -96,6 +97,14 @@ subprojects {
             }
         }
         js("js", IR) {
+            binaries.library()
+            generateTypeScriptDefinitions()
+            tasks.withType<KotlinJsCompile>().configureEach {
+                kotlinOptions {
+                    moduleKind = "es"
+                    useEsClasses = true
+                }
+            }
             nodejs {
                 testTask {
                     useMocha {

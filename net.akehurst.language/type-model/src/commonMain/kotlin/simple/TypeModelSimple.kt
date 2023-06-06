@@ -17,31 +17,44 @@
 
 package net.akehurst.language.typemodel.simple
 
-import net.akehurst.language.typemodel.api.ElementType
-import net.akehurst.language.typemodel.api.PrimitiveType
-import net.akehurst.language.typemodel.api.TypeDefinition
-import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.api.*
+
+object SimpleTypeModelStdLib : TypeModelAbstract("simple", "std", null, emptySet<TypeModel>()) {
+    val String = TypeUsage.ofType(super.findOrCreatePrimitiveTypeNamed("String"))
+    val Boolean = TypeUsage.ofType(super.findOrCreatePrimitiveTypeNamed("Boolean"))
+    val Integer = TypeUsage.ofType(super.findOrCreatePrimitiveTypeNamed("Integer"))
+    val Real = TypeUsage.ofType(super.findOrCreatePrimitiveTypeNamed("Real"))
+    val Timestamp = TypeUsage.ofType(super.findOrCreatePrimitiveTypeNamed("Timestamp"))
+}
 
 class TypeModelSimple(
     namespace: String,
-    name: String
-) : TypeModelAbstract(namespace, name) {
+    name: String,
+    rootTypeName: String?,
+    imports: Set<TypeModel> = setOf(SimpleTypeModelStdLib)
+) : TypeModelAbstract(namespace, name, rootTypeName, imports) {
 
 }
 
 abstract class TypeModelAbstract(
     override val namespace: String,
-    override val name: String
+    override val name: String,
+    override val rootTypeName: String?,
+    override val imports: Set<TypeModel>
 ) : TypeModel {
 
-    override val qualifiedName get() = "$namespace.$name"
+    override val qualifiedName get() = if (namespace.isBlank()) name else "$namespace.$name"
 
     override val allTypesByName = mutableMapOf<String, TypeDefinition>()
 
-    override fun findTypeNamed(typeName: String): TypeDefinition? = allTypesByName[typeName]
+    override val elementType: Set<ElementType> get() = allTypesByName.values.filterIsInstance<ElementType>().toSet()
+
+    override val primitiveType: Set<PrimitiveType> get() = allTypesByName.values.filterIsInstance<PrimitiveType>().toSet()
+
+    override fun findTypeNamed(typeName: String): TypeDefinition? = allTypesByName[typeName] ?: imports.firstNotNullOfOrNull { it.findTypeNamed(typeName) }
 
     override fun findOrCreatePrimitiveTypeNamed(typeName: String): PrimitiveType {
-        val existing = findTypeNamed(typeName)
+        val existing = findTypeNamed(typeName) ?: imports.firstNotNullOfOrNull { it.findOrCreatePrimitiveTypeNamed(typeName) }
         return if (null == existing) {
             val t = PrimitiveType(this, typeName)
             this.allTypesByName[typeName] = t
@@ -52,7 +65,7 @@ abstract class TypeModelAbstract(
     }
 
     override fun findOrCreateElementTypeNamed(typeName: String): ElementType {
-        val existing = findTypeNamed(typeName)
+        val existing = findTypeNamed(typeName) //?: imports.firstNotNullOfOrNull { it.findOrCreatePrimitiveTypeNamed(typeName) }
         return if (null == existing) {
             val t = ElementType(this, typeName)
             this.allTypesByName[typeName] = t

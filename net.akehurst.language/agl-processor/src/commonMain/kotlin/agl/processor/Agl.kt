@@ -28,7 +28,6 @@ import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
 import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.asm.AsmSimple
-import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.processor.*
 
@@ -40,15 +39,15 @@ object Agl {
     val registry = LanguageRegistryDefault()
 
     fun configurationDefault(): LanguageProcessorConfiguration<AsmSimple, ContextSimple> = Agl.configuration {
-            targetGrammarName(null) //use default
-            defaultGoalRuleName(null) //use default
-            typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar(listOf(p.grammar!!)), IssueHolder(LanguageProcessorPhase.ALL)) }
-            scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.typeModel!!), "") }
-            syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserSimple(p.typeModel!!, p.scopeModel!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-            semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
-            styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar(p.grammar!!), "") }
-            formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.typeModel!!), "") }
-        }
+        targetGrammarName(null) //use default
+        defaultGoalRuleName(null) //use default
+        typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar.createFrom(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+        scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.typeModel!!), "") }
+        syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserSimple(p.typeModel!!, p.scopeModel!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+        semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+        styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar(p.grammar!!), "") }
+        formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.typeModel!!), "") }
+    }
 
     /**
      * build a set of options for a parser
@@ -74,7 +73,10 @@ object Agl {
      * build a configuration for a language processor
      * (does not set the configuration, they must be passed as argument)
      */
-    fun <AsmType : Any, ContextType : Any> configuration(base:LanguageProcessorConfiguration<AsmType, ContextType>?=null, init: LanguageProcessorConfigurationBuilder<AsmType, ContextType>.() -> Unit): LanguageProcessorConfiguration<AsmType, ContextType> {
+    fun <AsmType : Any, ContextType : Any> configuration(
+        base: LanguageProcessorConfiguration<AsmType, ContextType>? = null,
+        init: LanguageProcessorConfigurationBuilder<AsmType, ContextType>.() -> Unit
+    ): LanguageProcessorConfiguration<AsmType, ContextType> {
         val b = LanguageProcessorConfigurationBuilder<AsmType, ContextType>(base)
         b.init()
         return b.build()
@@ -110,7 +112,7 @@ object Agl {
         val config = Agl.configuration {
             targetGrammarName(null) //use default
             defaultGoalRuleName(null) //use default
-            typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar(listOf(p.grammar!!)), IssueHolder(LanguageProcessorPhase.ALL)) }
+            typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar.createFrom(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
             scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.typeModel!!), scopeModelStr ?: "") }
             syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserSimple(p.typeModel!!, p.scopeModel!!), IssueHolder(LanguageProcessorPhase.ALL)) }
             semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
