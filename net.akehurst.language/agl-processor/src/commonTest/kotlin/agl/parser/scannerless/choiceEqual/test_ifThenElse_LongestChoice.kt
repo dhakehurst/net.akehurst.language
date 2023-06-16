@@ -56,9 +56,11 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
 
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("\"[a-zA-Z]+\"","'if'"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("\"[a-zA-Z]+\"", "'if'"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -81,11 +83,11 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -107,11 +109,11 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -142,11 +144,11 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -199,11 +201,11 @@ internal class test_ifThenElse_LongestChoice : test_ScanOnDemandParserAbstract()
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 2,
-                expectedTrees = arrayOf(expected1)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected1)
         )
     }
 

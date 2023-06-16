@@ -18,7 +18,9 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.parser.InputFromString
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsNonTerminal
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsTerminal
 import net.akehurst.language.agl.sppt.SPPTBranchFromTreeData
 import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.agl.sppt.ToStringVisitor
@@ -73,7 +75,7 @@ internal class GrowingNodeIndex(
     val state: ParserState get() = this.runtimeState.state
 
     val isLeaf: Boolean get() = this.runtimeState.state.isLeaf
-    val isEmptyMatch: Boolean get() = this.runtimeState.state.isAtEnd && this.startPosition == this.nextInputPosition
+    val isEmptyMatch: Boolean get() = this.startPosition == this.nextInputPosition
 
     override fun hashCode(): Int = _hashCode
 

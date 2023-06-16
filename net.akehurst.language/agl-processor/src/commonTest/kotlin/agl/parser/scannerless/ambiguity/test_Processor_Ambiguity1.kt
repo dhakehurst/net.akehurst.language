@@ -56,7 +56,7 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
             ), issues.errors
         )
     }
@@ -70,11 +70,11 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -83,22 +83,22 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
         val sentence = "aa"
 
         val expected1 = """
-            S|1 {
+            S {
               S1 {
                 'a'
                 S { 'a' }
-                B|1 { §empty }
-                B|1 { §empty }
+                B { §empty }
+                B { §empty }
               }
             }
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected1)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected1)
         )
     }
 
@@ -129,11 +129,11 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
-                expectedTrees = arrayOf(expected1)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
+            expectedTrees = arrayOf(expected1)
         )
     }
 
@@ -153,11 +153,11 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 2,
-                expectedTrees = arrayOf(expected1)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected1)
         )
     }
 
@@ -236,11 +236,11 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
-                expectedTrees = arrayOf(expected5)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1, //TODO: can we make this 1 by merging states?
+            expectedTrees = arrayOf(expected5)
         )
     }
 }

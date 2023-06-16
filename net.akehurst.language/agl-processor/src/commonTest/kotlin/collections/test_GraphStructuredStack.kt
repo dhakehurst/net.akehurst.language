@@ -24,7 +24,13 @@ class test_GraphStructuredStack {
 
     @Test
     fun construct() {
-        val sut = GraphStructuredStack<Int>()
+        val sut = GraphStructuredStack<Int>(binaryHeap { parent, child ->
+            when {
+                parent < child -> 1
+                parent > child -> -1
+                else -> 0
+            }
+        })
 
         assertNotNull(sut)
 
@@ -32,7 +38,13 @@ class test_GraphStructuredStack {
 
     @Test
     fun peek_empty() {
-        val sut = GraphStructuredStack<Int>()
+        val sut = GraphStructuredStack<Int>(binaryHeap { parent, child ->
+            when {
+                parent < child -> 1
+                parent > child -> -1
+                else -> 0
+            }
+        })
 
         val actual = sut.peek(1)
 
@@ -41,7 +53,13 @@ class test_GraphStructuredStack {
 
     @Test
     fun pop_empty() {
-        val sut = GraphStructuredStack<Int>()
+        val sut = GraphStructuredStack<Int>(binaryHeap { parent, child ->
+            when {
+                parent < child -> 1
+                parent > child -> -1
+                else -> 0
+            }
+        })
 
         val actual = sut.pop(1)
 
@@ -50,9 +68,15 @@ class test_GraphStructuredStack {
 
     @Test
     fun push_empty() {
-        val sut = GraphStructuredStack<Int>()
+        val sut = GraphStructuredStack<Int>(binaryHeap { parent, child ->
+            when {
+                parent < child -> 1
+                parent > child -> -1
+                else -> 0
+            }
+        })
 
-        sut.push(0,1)
+        sut.push(0, 1)
 
         assertEquals(emptySet(), sut.peek(0))
         assertEquals(setOf(0), sut.peek(1))
@@ -60,10 +84,16 @@ class test_GraphStructuredStack {
 
     @Test
     fun push_toNext() {
-        val sut = GraphStructuredStack<Int>()
-        sut.push(0,1)
+        val sut = GraphStructuredStack<Int>(binaryHeap { parent, child ->
+            when {
+                parent < child -> 1
+                parent > child -> -1
+                else -> 0
+            }
+        })
+        sut.push(0, 1)
 
-        sut.push(1,2)
+        sut.push(1, 2)
 
         assertEquals(emptySet(), sut.peek(0))
         assertEquals(setOf(0), sut.peek(1))
@@ -72,10 +102,16 @@ class test_GraphStructuredStack {
 
     @Test
     fun push_additionalToRoot() {
-        val sut = GraphStructuredStack<Int>()
-        sut.push(0,1)
+        val sut = GraphStructuredStack<Int>(binaryHeap { parent, child ->
+            when {
+                parent < child -> 1
+                parent > child -> -1
+                else -> 0
+            }
+        })
+        sut.push(0, 1)
 
-        sut.push(0,2)
+        sut.push(0, 2)
 
         assertEquals(emptySet(), sut.peek(0))
         assertEquals(setOf(0), sut.peek(1))
@@ -84,11 +120,17 @@ class test_GraphStructuredStack {
 
     @Test
     fun push_toNextAfterFork() {
-        val sut = GraphStructuredStack<Int>()
-        sut.push(0,1)
-        sut.push(0,2)
+        val sut = GraphStructuredStack<Int>(binaryHeap { parent, child ->
+            when {
+                parent < child -> 1
+                parent > child -> -1
+                else -> 0
+            }
+        })
+        sut.push(0, 1)
+        sut.push(0, 2)
 
-        sut.push(1,3)
+        sut.push(1, 3)
 
         assertEquals(emptySet(), sut.peek(0))
         assertEquals(setOf(0), sut.peek(1))
@@ -98,34 +140,46 @@ class test_GraphStructuredStack {
 
     @Test
     fun push_toMergeAfterFork() {
-        val sut = GraphStructuredStack<Int>()
-        sut.push(0,1)
-        sut.push(0,2)
-        sut.push(1,3)
+        val sut = GraphStructuredStack<Int>(binaryHeap { parent, child ->
+            when {
+                parent < child -> 1
+                parent > child -> -1
+                else -> 0
+            }
+        })
+        sut.push(0, 1)
+        sut.push(0, 2)
+        sut.push(1, 3)
 
-        sut.push(2,3)
+        sut.push(2, 3)
 
         assertEquals(emptySet(), sut.peek(0))
         assertEquals(setOf(0), sut.peek(1))
         assertEquals(setOf(0), sut.peek(2))
-        assertEquals(setOf(1,2), sut.peek(3))
+        assertEquals(setOf(1, 2), sut.peek(3))
     }
 
     @Test
     fun push_toAdditionalAfterDiamond() {
-        val sut = GraphStructuredStack<Int>()
-        sut.push(0,1)
-        sut.push(0,2)
-        sut.push(1,3)
-        sut.push(2,3)
+        val sut = GraphStructuredStack<Int>(binaryHeap { parent, child ->
+            when {
+                parent < child -> 1
+                parent > child -> -1
+                else -> 0
+            }
+        })
+        sut.push(0, 1)
+        sut.push(0, 2)
+        sut.push(1, 3)
+        sut.push(2, 3)
 
-        sut.push(3,4)
-        sut.push(2,5)
+        sut.push(3, 4)
+        sut.push(2, 5)
 
         assertEquals(emptySet(), sut.peek(0))
         assertEquals(setOf(0), sut.peek(1))
         assertEquals(setOf(0), sut.peek(2))
-        assertEquals(setOf(1,2), sut.peek(3))
+        assertEquals(setOf(1, 2), sut.peek(3))
         assertEquals(setOf(3), sut.peek(4))
         assertEquals(setOf(2), sut.peek(5))
     }

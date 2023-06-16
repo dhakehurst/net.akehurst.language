@@ -46,12 +46,12 @@ class test_Java8_Singles_antlrOptm {
                 aglOptions = Agl.options {
                     semanticAnalysis {
                         // switch off ambiguity analysis for performance
-                        option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
+                        option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }
                 }
             ).processor!!
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
-            //proc.buildFor(forRule) //TODO: use build
+            //proc.buildFor(Agl.parseOptions { goalRuleName(forRule) }) //TODO: use build
             return proc
         }
     }

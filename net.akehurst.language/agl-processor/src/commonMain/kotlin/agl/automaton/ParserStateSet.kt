@@ -39,11 +39,13 @@ internal class ParserStateSet(
     internal val runtimeTransitionCalculator = RuntimeTransitionCalculator(this)
 
     var preBuilt = preBuilt; private set
-    internal val buildCache: BuildCache by lazy {when (automatonKind) {
-        AutomatonKind.LOOKAHEAD_NONE -> TODO() //BuildCacheLC0(this)
-        AutomatonKind.LOOKAHEAD_SIMPLE -> TODO()
-        AutomatonKind.LOOKAHEAD_1 -> BuildCacheLC1(this)
-    }}
+    internal val buildCache: BuildCache by lazy {
+        when (automatonKind) {
+            AutomatonKind.LOOKAHEAD_NONE -> TODO() //BuildCacheLC0(this)
+            AutomatonKind.LOOKAHEAD_SIMPLE -> TODO()
+            AutomatonKind.LOOKAHEAD_1 -> BuildCacheLC1(this)
+        }
+    }
 
     val usedRules: Set<RuntimeRule> by lazy { calcUsedRules(this.startState.runtimeRules.first()) }
     val usedTerminalRules: Set<RuntimeRule> by lazy { this.usedRules.filter { it.isTerminal }.toSet() }
@@ -246,11 +248,11 @@ internal class ParserStateSet(
                 used
             }
 
-            rule.ruleNumber > 0 && done[rule.ruleNumber] -> used
+            rule.ruleNumber >= 0 && done[rule.ruleNumber] -> used
             else -> when {
                 rule.isNonTerminal -> {
                     used.add(rule)
-                    if (rule.ruleNumber > 0) done[rule.ruleNumber] = true
+                    if (rule.ruleNumber >= 0) done[rule.ruleNumber] = true
                     for (sr in rule.rhsItems) {
                         calcUsedRules(sr, used, done)
                     }

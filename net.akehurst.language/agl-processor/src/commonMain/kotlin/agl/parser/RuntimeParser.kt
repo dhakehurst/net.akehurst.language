@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.parser
 
-import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.agl.api.messages.Message
 import net.akehurst.language.agl.automaton.*
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
@@ -24,12 +23,13 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
 import net.akehurst.language.agl.runtime.graph.TreeDataComplete
-import net.akehurst.language.agl.runtime.structure.RuntimePreferenceRule
 import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RuntimePreferenceRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
+import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParserTerminatedException
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -173,7 +173,7 @@ internal class RuntimeParser(
         }
         if (true) {
             if (Debug.OUTPUT_RUNTIME) debug(Debug.IndentDelta.NONE) { "--- ${debugCount++} --------------------------------------------------------" }
-            this.graph._growingHeadHeap.forEach {
+            this.graph._gss.heads.forEach {
                 val chains = it.chains()
                 chains.forEach { chain ->
                     val str = chain.joinToString(separator = "-->") {
@@ -194,7 +194,7 @@ internal class RuntimeParser(
 
         var steps = 0
         val progressSteps = lazyMutableMapNonNull<GrowingNodeIndex, Int> { 0 }
-        val doneEmpties = mutableSetOf<ParserState>()
+        val doneEmpties = mutableSetOf<Pair<ParserState, Set<GrowingNodeIndex>>>()
 
         val currentNextInputPosition = this.graph.nextHeadNextInputPosition
         while (this.graph.hasNextHead && this.graph.nextHeadNextInputPosition <= currentNextInputPosition) {
@@ -206,10 +206,16 @@ internal class RuntimeParser(
             }
 
             val head = this.graph.peekNextHead
-            if (head.isEmptyMatch && doneEmpties.contains(head.state)) {
+
+            //TODO: move empty checking stuff to doWidth
+            if (head.isEmptyMatch && doneEmpties.contains(Pair(head.state, graph.previousOf(head)))) {
                 //don't do it again
-                doneEmpties.add(head.state)
+                val prev = this.graph.dropStackWithHead(head)
+                //prev.forEach { this.graph._gss._growingHeadHeap[it] = it } //TODO: should not do this here
             } else {
+                if (head.isEmptyMatch) {
+                    doneEmpties.add(Pair(head.state, graph.previousOf(head)))
+                }
                 growHead(head, possibleEndOfText, growArgs)
                 steps++
             }
@@ -235,7 +241,7 @@ internal class RuntimeParser(
     private fun growGoal(head: GrowingNodeIndex, possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Boolean {
         return if (head.isComplete) {
             graph.recordGoal(head)
-            graph.dropGrowingHead(head)
+            graph.dropStackWithHead(head)
             if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
             false
         } else {
@@ -252,7 +258,7 @@ internal class RuntimeParser(
                 if (b) transTaken.add(tr)
                 grown = grown || b
             }
-            if (transTaken.size > 1) ambiguity(head,transTaken,possibleEndOfText)
+            if (transTaken.size > 1) ambiguity(head, transTaken, possibleEndOfText)
             if (grown.not()) doNoTransitionsTaken(head)
             grown
         }
@@ -275,7 +281,7 @@ internal class RuntimeParser(
                 grown = grown || b
             }
         }
-        if (transTaken.size > 1) ambiguity(head,transTaken,possibleEndOfText)
+        if (transTaken.size > 1) ambiguity(head, transTaken, possibleEndOfText)
         if (grown.not()) doNoTransitionsTaken(head)
         return grown
     }
@@ -314,24 +320,24 @@ internal class RuntimeParser(
         when {
             headGrownHeight.not() && headGrownGraft.not() -> doNoTransitionsTaken(head)
             headGrownHeight && headGrownGraft.not() -> {
-                graph.dropGrowingHead(head)
+                graph.dropStackWithHead(head)
                 if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
             }
 
             headGrownHeight.not() && headGrownGraft -> {
-                graph.dropGrowingHead(head)
+                graph.dropStackWithHead(head)
                 if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
             }
 
             headGrownHeight && headGrownGraft -> {
-                graph.dropGrowingHead(head)
+                graph.dropStackWithHead(head)
                 if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $head" }
             }
         }
 
         dropPrevs.forEach {
             if (it.value) {
-                graph.dropGrowingHead(it.key)
+                graph.dropStackWithHead(it.key)
                 if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $it" }
             } else {
                 doNoTransitionsTaken(it.key)
@@ -346,16 +352,16 @@ internal class RuntimeParser(
 //            possibleEndOfText.size > 1 -> TODO()
 //            runtimeLhs.size > 1 -> TODO()
             else -> {
-                val lh:LookaheadSetPart = lookahead.map { it.guard.part }.fold(LookaheadSetPart.EMPTY){acc,it->acc.union(it)}
-                val eot = possibleEndOfText.map { it.part }.fold(LookaheadSetPart.EMPTY){acc,it->acc.union(it)}
-                val rt:LookaheadSetPart = runtimeLhs.map { it.part }.fold(LookaheadSetPart.EMPTY){acc,it->acc.union(it)}
+                val lh: LookaheadSetPart = lookahead.map { it.guard.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+                val eot = possibleEndOfText.map { it.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+                val rt: LookaheadSetPart = runtimeLhs.map { it.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                 //possibleEndOfText.flatMap { eot ->
                 //    runtimeLhs.map { rt ->
-                        val lookingAt:Boolean = this.graph.isLookingAt(lh, eot, rt, position)
-                        val resolved = lh.resolve(eot, rt)
-                        Pair(lookingAt, resolved)
-               //     }
-               // }
+                val lookingAt: Boolean = this.graph.isLookingAt(lh, eot, rt, position)
+                val resolved = lh.resolve(eot, rt)
+                Pair(lookingAt, resolved)
+                //     }
+                // }
             }
         }
 
@@ -374,7 +380,7 @@ internal class RuntimeParser(
             else -> transitions.mapNotNull {
                 val lh = matchedLookahead(head.nextInputPositionAfterSkip, it.lookahead, possibleEndOfText, previous.runtimeState.runtimeLookaheadSet)
                 when {
-                    lh.first -> Pair(it,lh.second)
+                    lh.first -> Pair(it, lh.second)
                     else -> null
                 }
             }
@@ -404,10 +410,10 @@ internal class RuntimeParser(
             ambiguity(head, trans2, possibleEndOfText)
         }
         val grouped = trans2.groupBy { it.to.runtimeRulesSet }
-        for (it in grouped) {
+        for (grp in grouped) {
             when {
-                1 == it.value.size -> {
-                    val tr = it.value[0]
+                1 == grp.value.size -> {
+                    val tr = grp.value[0]
                     when (tr.action) {
                         ParseAction.HEIGHT -> {
                             val b = doHeight(head, previous, tr, possibleEndOfText, growArgs)
@@ -429,7 +435,7 @@ internal class RuntimeParser(
                 }
 
                 else -> {
-                    val trgs = it.value.filter { it.action == ParseAction.GRAFT }
+                    val trgs = grp.value.filter { it.action == ParseAction.GRAFT }
                         // if multiple GRAFT trans to same rule, prefer left most target
                         .sortedWith(Comparator { t1, t2 ->
                             val p1 = t1.to.rulePositions.first().position
@@ -443,7 +449,7 @@ internal class RuntimeParser(
                                 else -> 0// should never happen !
                             }
                         })
-                    val trhs = it.value.filter { it.action == ParseAction.HEIGHT }
+                    val trhs = grp.value.filter { it.action == ParseAction.HEIGHT }
                     if (trgs.isNotEmpty() && trhs.isNotEmpty()) {
                         var doneIt = false
                         var i = 0
@@ -461,7 +467,7 @@ internal class RuntimeParser(
                             ++i
                         }
                     } else {
-                        for (tr in it.value) {
+                        for (tr in grp.value) {
                             when (tr.action) {
                                 ParseAction.HEIGHT -> {
                                     val b = doHeight(head, previous, tr, possibleEndOfText, growArgs)
@@ -522,6 +528,7 @@ internal class RuntimeParser(
                             }
                         }
                     }
+
                     2 > transitions.size -> transitions.map { it.first }
                     else -> {
                         val precedence = transitions.flatMap { (tr, lh) ->
@@ -873,7 +880,7 @@ internal class RuntimeParser(
                     }
                     if (growArgs.noLookahead || hasLh) {
                         val startPosition = l.startPosition
-                        val nextInputPosition = l.nextInputPosition
+                        val nextInputPosition = l.nextInputPosition //TODO: should just be/pass nextInputPositionAfterSkip
                         if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "For $head, taking: $transition" }
                         this.graph.pushToStackOf(head, transition.to, setOf(LookaheadSet.EMPTY), startPosition, nextInputPosition, skipData)
                     } else {
@@ -1111,18 +1118,18 @@ internal class RuntimeParser(
         }
     }
 
-    private fun ambiguity(head: GrowingNodeIndex, trans:Collection<Transition>,possibleEndOfText: Set<LookaheadSet>) {
+    private fun ambiguity(head: GrowingNodeIndex, trans: Collection<Transition>, possibleEndOfText: Set<LookaheadSet>) {
         val from = head.runtimeState.state.runtimeRules.joinToString(separator = ",") { it.tag }
         val ambigStr = trans.map { tr ->
-            val lh:LookaheadSetPart = tr.lookahead.map { it.guard.part }.fold(LookaheadSetPart.EMPTY){acc,it->acc.union(it)}
-            val eot = possibleEndOfText.map { it.part }.fold(LookaheadSetPart.EMPTY){acc,it->acc.union(it)}
-            val rt:LookaheadSetPart = head.runtimeState.runtimeLookaheadSet.map { it.part }.fold(LookaheadSetPart.EMPTY){acc,it->acc.union(it)}
-            val lhr = lh.resolve(eot,rt).fullContent
+            val lh: LookaheadSetPart = tr.lookahead.map { it.guard.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+            val eot = possibleEndOfText.map { it.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+            val rt: LookaheadSetPart = head.runtimeState.runtimeLookaheadSet.map { it.part }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+            val lhr = lh.resolve(eot, rt).fullContent
             "${tr.to.rulePositions.map { "(${it.rule.tag},${it.option})" }} on ${lhr.map { it.tag }}"
         }
         val ambigOn = trans.map { it.action }.toSet()
         val ambigOnStr = ambigOn.joinToString(separator = "/") { "$it" }
-        val into = when(ambigStr.size) {
+        val into = when (ambigStr.size) {
             1 -> ambigStr.first()
             else -> ambigStr.joinToString(prefix = "\n    ", separator = "\n    ", postfix = "\n") { it }
         }

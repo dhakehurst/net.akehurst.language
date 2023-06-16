@@ -34,7 +34,7 @@ internal class test_Processor_Ambiguity1b : test_ScanOnDemandParserAbstract() {
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("a")
-                concatenation{ literal("a"); ref("S"); ref("B"); ref("B") }
+                concatenation { literal("a"); ref("S"); ref("B"); ref("B") }
             }
             multi("B", 0, 1, "'b'")
             literal("'b'", "b")
@@ -50,7 +50,7 @@ internal class test_Processor_Ambiguity1b : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
             ), issues.errors
         )
     }
@@ -64,11 +64,11 @@ internal class test_Processor_Ambiguity1b : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -86,11 +86,11 @@ internal class test_Processor_Ambiguity1b : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected1)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected1)
         )
     }
 
@@ -117,11 +117,11 @@ internal class test_Processor_Ambiguity1b : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
-                expectedTrees = arrayOf(expected1)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
+            expectedTrees = arrayOf(expected1)
         )
     }
 
@@ -139,11 +139,11 @@ internal class test_Processor_Ambiguity1b : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 2,
-                expectedTrees = arrayOf(expected1)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected1)
         )
     }
 
@@ -222,11 +222,11 @@ internal class test_Processor_Ambiguity1b : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 2, //TODO: can we make this 1 by merging states?
-                expectedTrees = arrayOf(expected5)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1, //TODO: can we make this 1 by merging states?
+            expectedTrees = arrayOf(expected5)
         )
     }
 }

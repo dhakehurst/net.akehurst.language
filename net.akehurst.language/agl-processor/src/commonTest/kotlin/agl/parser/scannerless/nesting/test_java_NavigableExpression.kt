@@ -18,7 +18,6 @@ package net.akehurst.language.parser.scanondemand.nesting
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
@@ -40,16 +39,16 @@ internal class test_java_NavigableExpression : test_ScanOnDemandParserAbstract()
 
     private companion object {
         val rrs = runtimeRuleSet {
-            choice("NavigableExpression",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("NavigableExpression", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("MethodReference")
                 ref("GenericMethodInvocation")
             }
             concatenation("MethodReference") { ref("MethodInvocation"); literal("::"); ref("IDENTIFIER") }
             concatenation("GenericMethodInvocation") { ref("optTypeArguments"); ref("MethodInvocation"); }
-            concatenation("MethodInvocation") { ref("IDENTIFIER"); literal("("); ref("Expression"); literal(")")}
-            multi("optTypeArguments",0,1,"TypeArguments")
+            concatenation("MethodInvocation") { ref("IDENTIFIER"); literal("("); ref("Expression"); literal(")") }
+            multi("optTypeArguments", 0, 1, "TypeArguments")
             concatenation("TypeArguments") { literal("<>") }
-            choice("Expression",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("Expression", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("Postfix")
                 ref("IDENTIFIER")
             }
@@ -76,11 +75,11 @@ internal class test_java_NavigableExpression : test_ScanOnDemandParserAbstract()
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 2,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -110,7 +109,7 @@ internal class test_java_NavigableExpression : test_ScanOnDemandParserAbstract()
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2,
+            expectedNumGSSHeads = 1,
             expectedTrees = arrayOf(expected)
         )
     }

@@ -156,7 +156,7 @@ internal class test_Processor_Ambiguity4 : test_ScanOnDemandParserAbstract() {
             ),
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2,
+            expectedNumGSSHeads = 1,
             printAutomaton = false,
             expectedTrees = arrayOf(expected)
         )
@@ -278,7 +278,7 @@ internal class test_Processor_Ambiguity4 : test_ScanOnDemandParserAbstract() {
             ),
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2,
+            expectedNumGSSHeads = 1,
             printAutomaton = false,
             expectedTrees = arrayOf(expected)
         )

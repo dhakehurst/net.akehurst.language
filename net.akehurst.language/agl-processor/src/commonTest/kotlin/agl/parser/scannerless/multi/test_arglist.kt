@@ -14,83 +14,111 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.parser.scanondemand.examples
+package net.akehurst.language.parser.scanondemand.multi
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.fail
 
-internal class test_AhoSetiUlman_4_54 : test_ScanOnDemandParserAbstract() {
+internal class test_arglist : test_ScanOnDemandParserAbstract() {
 
-    // S = CC ;
-    // C = cC | d ;
+    // S = 'a' ( 'c' 'a' )* ;
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("S") { ref("C"); ref("C") }
-            choice("C", RuntimeRuleChoiceKind.PRIORITY_LONGEST) {
-                ref("cC")
-                literal("d")
-            }
-            concatenation("cC") { literal("c"); ref("C") }
+            concatenation("S") { literal("a"); ref("tail") }
+            multi("tail", 0, -1, "ca")
+            concatenation("ca") { literal("c"); literal("a"); }
         }
         val goal = "S"
     }
 
     @Test
-    fun c_fails() {
-        val sentence = "c"
+    fun empty_fails() {
+        val sentence = ""
 
         val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "c^", setOf("'c'", "'d'"))
+                parseError(InputLocation(0, 1, 1, 1), "^''", setOf("a"))
             ), issues.errors
         )
     }
 
     @Test
-    fun d_fails() {
-        val sentence = "d"
+    fun a() {
+        val sentence = "a"
+
+        val expected = """
+            S { 'a' tail { §empty } }
+        """.trimIndent()
+
+        super.test(rrs, goal, sentence, 1, expected)
+    }
+
+    @Test
+    fun aa_fails() {
+        val sentence = "aa"
 
         val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "d^", setOf("'c'", "'d'"))
+                parseError(InputLocation(0, 1, 1, 1), "^''", setOf("n"))
             ), issues.errors
         )
     }
 
-
     @Test
-    fun dd() {
-        val sentence = "dd"
+    fun aca() {
+        val sentence = "aca"
 
         val expected = """
-            S { C|1 { 'd' } C|1 { 'd' } }
-        """.trimIndent()
-
-        super.test(rrs, goal, sentence, 1, expected)
-
-    }
-
-
-    @Test
-    fun dcd() {
-        fail("when converting to String get java.lang.OutOfMemoryError: Java heap space: failed reallocation of scalar replaced objects")
-        val sentence = "dcd"
-
-        val expected = """
-            S { C { 'd' } C{ C|1 { 'c' C { 'd' } } } }
+            S { 'a' tail { ca { 'c' 'a' } } }
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)
     }
 
+
+    @Test
+    fun acacacaca() {
+        val sentence = "acacacaca"
+
+        val expected = """
+            S { 'a' tail { ca { 'c' 'a' } ca { 'c' 'a' } ca { 'c' 'a' } ca { 'c' 'a' } } }
+        """.trimIndent()
+
+        super.test(rrs, goal, sentence, 1, expected)
+    }
+
+    @Test
+    fun a50() {
+        val sentence = "a" + "ca".repeat(50)
+
+        val expected = "S { 'a' tail { " + "ca { 'c' 'a' } ".repeat(50) + " } }"
+
+        super.test(rrs, goal, sentence, 1, expected)
+    }
+
+    @Test
+    fun a500() {
+        val sentence = "a" + "ca".repeat(500)
+
+        val expected = "S { 'a' tail { " + "ca { 'c' 'a' } ".repeat(500) + " } }"
+
+        super.test(rrs, goal, sentence, 1, expected)
+    }
+
+    @Test
+    fun a2000() {
+        val sentence = "a" + "ca".repeat(2000)
+
+        val expected = "S { 'a' tail { " + "ca { 'c' 'a' } ".repeat(2000) + " } }"
+
+        super.test(rrs, goal, sentence, 1, expected)
+    }
 }
