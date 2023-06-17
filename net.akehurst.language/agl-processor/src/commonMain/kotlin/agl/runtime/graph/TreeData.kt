@@ -18,18 +18,18 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.util.Debug
 
-internal class TreeData<GN>(
+internal class TreeData<GN, CN : TreeDataComplete.Companion.CompleteNode>(
     val forStateSetNumber: Int
 ) {
 
-    val complete = TreeDataComplete(forStateSetNumber)
+    val complete = TreeDataComplete<CN>(forStateSetNumber)
 
-    val growingChildren: Map<GN, List<CompleteNodeIndex>> get() = this._growingChildren
+    val growingChildren: Map<GN, List<CN>> get() = this._growingChildren
 
-    fun preferred(node: CompleteNodeIndex): CompleteNodeIndex? = this.complete.preferred(node)
+    fun preferred(node: CN): CN? = this.complete.preferred(node)
 
-    fun start(gni: GN, initialSkipData: TreeDataComplete?) {
-        val growing = mutableListOf<CompleteNodeIndex>()
+    fun start(gni: GN, initialSkipData: TreeDataComplete<CN>?) {
+        val growing = mutableListOf<CN>()
         this.setGrowingChildren(gni, growing)
         this.complete.start(initialSkipData)
     }
@@ -51,19 +51,19 @@ internal class TreeData<GN>(
         }
     }
     */
-
-    private fun removeTreeComplete(node: CompleteNodeIndex) {
-        val childrenOfRemoved = this.complete.completeChildren[node]
-        this.complete.remove(node)
-        if (node.isEmbedded) {
-            //nothing to remove, children stored in other TreeData
-        } else {
-            childrenOfRemoved?.entries?.forEach { (optionList, children) ->
-                children.forEach { child -> decrementParents(child) }
+    /*
+        private fun removeTreeComplete(node: CN) {
+            val childrenOfRemoved = this.complete.completeChildren[node]
+            this.complete.remove(node)
+            if (node.isEmbedded) {
+                //nothing to remove, children stored in other TreeData
+            } else {
+                childrenOfRemoved?.entries?.forEach { (optionList, children) ->
+                    children.forEach { child -> decrementParents(child) }
+                }
             }
         }
-    }
-
+    */
     /*
         private fun removeTreeGrowing(node: GN) {
             val childrenOfRemoved = this.removeGrowingNode(node)
@@ -72,18 +72,18 @@ internal class TreeData<GN>(
 
         fun hasGrowingParent(node: GN): Boolean = (_numberOfParents[node.complete] ?: 0) > 0
     */
-    fun setEmbeddedChild(parent: CompleteNodeIndex, child: CompleteNodeIndex) {
+    fun setEmbeddedChild(parent: CN, child: CN) {
         val completeChildren = listOf(child)
         this.complete.setChildren(parent, completeChildren, true)  //might it ever not be preferred!
     }
 
-    fun setFirstChildForComplete(parent: CompleteNodeIndex, child: CompleteNodeIndex, isAlternative: Boolean) {
+    fun setFirstChildForComplete(parent: CN, child: CN, isAlternative: Boolean) {
         val completeChildren = listOf(child)
         this.complete.setChildren(parent, completeChildren, isAlternative)
         this.incrementParents(child)
     }
 
-    fun setFirstChildForGrowing(parent: GN, child: CompleteNodeIndex) {
+    fun setFirstChildForGrowing(parent: GN, child: CN) {
         var growing = this._growingChildren[parent]
         if (null == growing) {
             growing = mutableListOf(child)
@@ -96,7 +96,7 @@ internal class TreeData<GN>(
         this.incrementParents(child)
     }
 
-    fun setNextChildForCompleteParent(oldParent: GN, newParent: CompleteNodeIndex, nextChild: CompleteNodeIndex, isAlternative: Boolean) {
+    fun setNextChildForCompleteParent(oldParent: GN, newParent: CN, nextChild: CN, isAlternative: Boolean) {
         val children = this._growingChildren[oldParent]!! //should never be null //TODO: remove it
         //val nextChildIndex = oldParent.numNonSkipChildren
         val nextChildIndex = children.size
@@ -112,7 +112,7 @@ internal class TreeData<GN>(
         cpy.forEach { this.incrementParents(it) }
     }
 
-    fun setNextChildForGrowingParent(oldParent: GN, newParent: GN, nextChild: CompleteNodeIndex) {
+    fun setNextChildForGrowingParent(oldParent: GN, newParent: GN, nextChild: CN) {
         val children = this._growingChildren[oldParent]!! //should never be null //TODO: remove it
         //val nextChildIndex = newParent.numNonSkipChildren - 1
         val nextChildIndex = children.size
@@ -127,7 +127,7 @@ internal class TreeData<GN>(
         cpy.forEach { this.incrementParents(it) }
     }
 
-    fun inGrowingParentChildAt(parent: GN, childIndex: Int): CompleteNodeIndex? {
+    fun inGrowingParentChildAt(parent: GN, childIndex: Int): CN? {
         val children = this._growingChildren[parent]
         return if (null == children) {
             null
@@ -140,17 +140,17 @@ internal class TreeData<GN>(
         }
     }
 
-    fun setUserGoalChildrenAfterInitialSkip(nug: CompleteNodeIndex, userGoalChildren: List<CompleteNodeIndex>) {
+    fun setUserGoalChildrenAfterInitialSkip(nug: CN, userGoalChildren: List<CN>) {
         this.complete.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
     }
 
-    fun setSkipDataAfter(leafNodeIndex: CompleteNodeIndex, skipData: TreeDataComplete) {
+    fun setSkipDataAfter(leafNodeIndex: CN, skipData: TreeDataComplete<CN>) {
         this.complete.setSkipDataAfter(leafNodeIndex, skipData)
     }
 
     override fun hashCode(): Int = this.forStateSetNumber
     override fun equals(other: Any?): Boolean = when {
-        other !is TreeData<*> -> false
+        other !is TreeData<*, *> -> false
         else -> other.forStateSetNumber == this.forStateSetNumber
     }
 
@@ -158,35 +158,36 @@ internal class TreeData<GN>(
 
     // --- Implementation ---
 
-    private val _growingChildren = mutableMapOf<GN, List<CompleteNodeIndex>>()
-    private val _numberOfParents = mutableMapOf<CompleteNodeIndex, Int>()
+    private val _growingChildren = mutableMapOf<GN, List<CN>>()
+    private val _numberOfParents = mutableMapOf<CN, Int>()
 
-    private fun hasParents(child: CompleteNodeIndex) = (this._numberOfParents[child] ?: 0) != 0
+    private fun hasParents(child: CN) = (this._numberOfParents[child] ?: 0) != 0
 
-    private fun incrementParents(child: CompleteNodeIndex) {
+    private fun incrementParents(child: CN) {
         val n = this._numberOfParents[child] ?: 0
         this._numberOfParents[child] = n + 1
     }
 
-    private fun decrementParents(child: CompleteNodeIndex) {
-        val n = this._numberOfParents[child]
-        when (n) {
-            null -> error("Internal Error: can't remove child with no recorded parents")
-            1 -> {
-                removeTreeComplete(child)
-                this._numberOfParents.remove(child)
+    /*
+        private fun decrementParents(child: CN) {
+            val n = this._numberOfParents[child]
+            when (n) {
+                null -> error("Internal Error: can't remove child with no recorded parents")
+                1 -> {
+                    removeTreeComplete(child)
+                    this._numberOfParents.remove(child)
+                }
+
+                else -> this._numberOfParents[child] = n - 1
             }
-
-            else -> this._numberOfParents[child] = n - 1
         }
-    }
-
-    private fun setGrowingChildren(parent: GN, children: List<CompleteNodeIndex>) {
+    */
+    private fun setGrowingChildren(parent: GN, children: List<CN>) {
         if (Debug.OUTPUT_TREE_DATA) Debug.debug(Debug.IndentDelta.NONE) { "Set growing children: $parent = $children" }
         this._growingChildren[parent] = children
     }
 
-    private fun removeGrowingNode(gni: GN): List<CompleteNodeIndex>? {
+    private fun removeGrowingNode(gni: GN): List<CN>? {
         if (Debug.OUTPUT_TREE_DATA) Debug.debug(Debug.IndentDelta.NONE) { "Remove growing parent: $gni" }
         return _growingChildren.remove(gni)
     }

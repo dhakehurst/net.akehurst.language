@@ -36,7 +36,7 @@ import net.akehurst.language.agl.util.Debug
   - size of a list ( only relevant for MULTI and SEPARATED_LIST)
  */
 internal class GrowingNodeIndex(
-    treeData: TreeDataComplete,
+    treeData: TreeDataComplete<CompleteNodeIndex>,
     val runtimeState: RuntimeState,
     val startPosition: Int,
     val nextInputPosition: Int,
@@ -60,7 +60,7 @@ internal class GrowingNodeIndex(
     }
 
     val complete by lazy {
-        treeData.createCompleteNodeIndex(runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this, childrenPriorities)
+        CompleteNodeIndex(treeData, runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this, childrenPriorities)
     }
 
     private val _hashCode = arrayOf(runtimeState, startPosition, nextInputPosition, numNonSkipChildren).contentHashCode()
@@ -113,20 +113,21 @@ internal class GrowingNodeIndex(
  *  - nextInputPosition
  */
 internal class CompleteNodeIndex(
-    val treeData: TreeDataComplete,
+    val treeData: TreeDataComplete<CompleteNodeIndex>,
     // only RuntimeRules are needed for comparisons, but priority needed in order to resolve priorities, but it should not be part of identity
     val state: ParserState,
-    val startPosition: Int,
-    val nextInputPosition: Int,
+    override val startPosition: Int,
+    override val nextInputPosition: Int,
     val nextInputPositionAfterSkip: Int,
     val gni: GrowingNodeIndex?, // the GNI used to create this, used when dropping
     val childrenPriorities: List<List<Int>>?
-) {
+) : TreeDataComplete.Companion.CompleteNode {
 
     init {
         if (Debug.CHECK) check(state.rulePositions.all { it.isAtEnd })
     }
 
+    override val rule: RuntimeRule get() = this.state.firstRule
     val runtimeRulesSet: Set<RuntimeRule> get() = this.state.runtimeRulesSet
     val rulePositions get() = this.state.rulePositions
 
@@ -143,7 +144,7 @@ internal class CompleteNodeIndex(
     val isEmptyMatch: Boolean get() = this.startPosition == this.nextInputPosition
     val hasSkipData: Boolean get() = this.nextInputPosition != nextInputPositionAfterSkip
 
-    val optionList: List<Int> get() = this.state.priorityList
+    override val optionList: List<Int> get() = this.state.priorityList
     val priorityList: List<Int> get() = this.state.priorityList
 
     override fun hashCode(): Int = this._hashCode_cache

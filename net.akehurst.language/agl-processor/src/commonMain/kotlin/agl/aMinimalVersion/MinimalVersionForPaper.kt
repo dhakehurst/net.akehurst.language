@@ -21,13 +21,13 @@ import net.akehurst.language.agl.automaton.*
 import net.akehurst.language.agl.collections.GraphStructuredStack
 import net.akehurst.language.agl.collections.binaryHeap
 import net.akehurst.language.agl.parser.InputFromString
-import net.akehurst.language.agl.runtime.graph.CompleteNodeIndex
 import net.akehurst.language.agl.runtime.graph.TreeData
 import net.akehurst.language.agl.runtime.graph.TreeDataComplete
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.sppt.SPPTFromTreeData
 import net.akehurst.language.api.automaton.ParseAction
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.collections.LazyMutableMapNonNull
+import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.collections.mutableQueueOf
 
 internal class Automaton(
     val runtimeRuleSet: RuntimeRuleSet,
@@ -69,6 +69,15 @@ internal data class GSSNode(
     val isEmptyMatch get() = this.startPosition == this.nextInputPositionAfterSkip
 }
 
+internal data class CompleteNode(
+    override val rule: RuntimeRule,
+    override val startPosition: Int,
+    override val nextInputPosition: Int,
+) : TreeDataComplete.Companion.CompleteNode {
+    override val optionList: List<Int>
+        get() = listOf(0)// TODO("not implemented")
+}
+
 internal class MinimalVersionForPaper private constructor(
     val goalRule: RuntimeRule,
     val automaton: Automaton,
@@ -99,6 +108,8 @@ internal class MinimalVersionForPaper private constructor(
                 .also { it.setRhs(RuntimeRuleRhsListSimple(it, 1, -1, skipChoiceRule)) }
             return Automaton(runtimeRuleSet, skipMultiRule)
         }
+
+        private val GSSNode.complete get() = CompleteNode(this.state.rp.rule, this.startPosition, this.nextInputPositionAfterSkip)
 
         private fun GraphStructuredStack<GSSNode>.setRoot(
             state: State,
@@ -137,7 +148,7 @@ internal class MinimalVersionForPaper private constructor(
             return nn
         }
 
-        fun TreeData<GSSNode>.setFirstChildForParent(parent: GSSNode, child: CompleteNodeIndex, isAlternative: Boolean) {
+        fun TreeData<GSSNode, CompleteNode>.setFirstChildForParent(parent: GSSNode, child: CompleteNode, isAlternative: Boolean) {
             if (parent.isComplete) {
                 this.setFirstChildForComplete(parent.complete, child, isAlternative)
             } else {
@@ -145,10 +156,10 @@ internal class MinimalVersionForPaper private constructor(
             }
         }
 
-        private fun TreeData<GSSNode>.setNextChildInParent(
+        private fun TreeData<GSSNode, CompleteNode>.setNextChildInParent(
             oldParent: GSSNode,
             newParent: GSSNode,
-            nextChild: CompleteNodeIndex,
+            nextChild: CompleteNode,
             isAlternative: Boolean
         ) {
             if (newParent.isComplete) {
@@ -160,11 +171,9 @@ internal class MinimalVersionForPaper private constructor(
 
     }
 
-    private val GSSNode.complete get() = CompleteNodeIndex(sppf, ParserState())
-
 
     val ss = automaton.startState
-    var sppf = TreeData<GSSNode>(automaton.number)
+    var sppf = TreeData<GSSNode, CompleteNode>(automaton.number)
     val gss = GraphStructuredStack<GSSNode>(binaryHeap { parent, child ->
         //val _growingHeadHeap: BinaryHeapFifo<GrowingNodeIndex, GrowingNode> = binaryHeapFifo { parent, child ->
         // Ordering rules:
@@ -215,19 +224,19 @@ internal class MinimalVersionForPaper private constructor(
 
     lateinit var input: InputFromString
 
-    fun parse(sentence: String): SharedPackedParseTree {
+    fun parse(sentence: String): TreeDataComplete<CompleteNode> {
         this.input = InputFromString(-1, sentence)
         val td = this.parseAt(0, LookaheadSetPart.EOT)
-        val sppt = td?.let { SPPTFromTreeData(td, input, -1, -1) } ?: error("Parse Failed")
+        val sppt = td ?: error("Parse Failed")
         return sppt
     }
 
     fun reset() {
         this.gss.clear()
-        this.sppf = TreeData<GSSNode>(automaton.number)
+        this.sppf = TreeData(automaton.number)
     }
 
-    private fun parseAt(position: Int, peot: LookaheadSetPart): TreeDataComplete? {
+    private fun parseAt(position: Int, peot: LookaheadSetPart): TreeDataComplete<CompleteNode>? {
         val startRp = automaton.startState.rp // G = . S
         val stNd = gss.setRoot(ss, peot, position, position, 0)
         val initialSkipData = tryParseSkip(position, peot)
@@ -263,7 +272,7 @@ internal class MinimalVersionForPaper private constructor(
         }
     }
 
-    private fun recordGoal(sppf: TreeData<GSSNode>, hd: GSSNode) {
+    private fun recordGoal(sppf: TreeData<GSSNode, CompleteNode>, hd: GSSNode) {
         sppf.complete.setRoot(hd.complete)
         gss.dropStack(hd)
     }
@@ -379,7 +388,7 @@ internal class MinimalVersionForPaper private constructor(
         return if (null != lf) {
             val slh = tr.lh.resolve(peot, hd.rlh)
             val skipData = tryParseSkip(lf.nextInputPosition, slh)
-            val nip = if (null != skipData) skipData.nextInputPosition!! else lf.nextInputPosition
+            val nip = if (null != skipData) skipData.root!!.nextInputPosition!! else lf.nextInputPosition
             if (input.isLookingAtAnyOf(slh, nip)) {
                 val rlh = LookaheadSetPart.EMPTY
                 val nn = gss.pushNode(hd, tr.target, rlh, lf.startPosition, nip, 0)
@@ -424,7 +433,7 @@ internal class MinimalVersionForPaper private constructor(
         TODO()
     }
 
-    private fun tryParseSkip(position: Int, slh: LookaheadSetPart): TreeDataComplete? {
+    private fun tryParseSkip(position: Int, slh: LookaheadSetPart): TreeDataComplete<CompleteNode>? {
         return if (null == skipParser) {
             null
         } else {
@@ -436,6 +445,7 @@ internal class MinimalVersionForPaper private constructor(
 
     // Automaton
     fun transitionsIncomplete(hd: State, pv: State): Set<Transition> {
+        clearCache()
         val pe = when {
             hd.rp.isGoal -> LookaheadSetPart.EOT
             else -> LookaheadSetPart.RT
@@ -457,8 +467,26 @@ internal class MinimalVersionForPaper private constructor(
         return merge(trans)
     }
 
-    fun transitionsComplete(head: State, previous: State, prevPrev: State): Set<Transition> {
-        TODO()
+    fun transitionsComplete(hd: State, pv: State, pp: State): Set<Transition> {
+        val trans = parentInContext(pp.rp, pv.rp, hd.rp.rule).map { pn ->
+            val action = when {
+                pn.rulePosition.isGoal -> ParseAction.GOAL
+                pn.firstPosition -> ParseAction.HEIGHT
+                else -> ParseAction.GRAFT
+            }
+            val tgt = pn.rulePosition
+            val lh = pn.expectedAt
+            val up = pn.parentExpectedAt
+            Transition(
+                hd,
+                State(automaton, tgt),
+                action,
+                lh,
+                up,
+                setOf(pv)
+            )
+        }.toSet()
+        return merge(trans)
     }
 
     fun merge(trans: Set<Transition>): Set<Transition> {
@@ -475,7 +503,95 @@ internal class MinimalVersionForPaper private constructor(
         return m
     }
 
-    fun firstTerminalInContext(context: RulePosition, rulePosition: RulePosition, parentFollow: LookaheadSetPart): Set<FirstTerminalInfo> {
-        TODO()
+    fun firstTerminalInContext(pv: RulePosition, rp: RulePosition, parentFollow: LookaheadSetPart): Set<FirstTerminalInfo> {
+        val graph = ClosureGraph(pv, rp, parentFollow)
+        return if (graph.root.rulePosition.isGoal && graph.root.rulePosition.isAtEnd) {
+            emptySet()
+        } else {
+            processClosure(graph)
+            this._firstTerminal[pv][rp]
+        }
+    }
+
+    fun parentInContext(pp: RulePosition, pv: RulePosition, cr: RuntimeRule): Set<ParentNext> {
+        processClosure(ClosureGraph(pp, pv, LookaheadSetPart.RT))
+        val ctx = pv
+        return this._parentInContext[ctx][cr]
+    }
+
+    fun processClosure(graph: ClosureGraph) {
+        val todoList = mutableQueueOf<ClosureItem>()
+        todoList.enqueue(graph.root)
+        while (todoList.isNotEmpty) {
+            val cls = todoList.dequeue()
+            for (item in cls.rulePosition.items) {
+                when {
+                    item.isTerminal -> graph.addChild(cls, item.asTerminalRulePosition)
+                    item.isNonTerminal -> {
+                        val childRps = item.rulePositionsAtStart
+                        for (childRp in childRps) {
+                            val child = graph.addChild(cls, childRp)
+                            if (null != child) {
+                                todoList.enqueue(child)
+                            }
+                        }
+                    }
+
+                    else -> error("Internal Error: should never happen")
+                }
+            }
+        }
+        graph.resolveAllChildParentInfo()
+
+        // cache stuff
+        for (dwn in graph.root.downInfo) {
+            cacheFirstTerminalInContext(graph.root.context, graph.root.rulePosition, dwn)
+            cachePossibleContext(graph.root.rulePosition, graph.root.context)
+        }
+        for (cls in graph.nonRootClosures) {
+            if (cls.downInfo.isEmpty()) {
+                cachePossibleContext(cls.rulePosition, cls.context)
+            } else {
+                when {
+                    cls.rulePosition.isAtStart ||
+                            cls.rulePosition.isTerminal -> {
+                        cacheParentInContext(cls.context, cls.rulePosition.rule, cls.parentNext)
+                        cachePossibleContext(cls.rulePosition, cls.context)
+                    }
+
+                    else -> cls.downInfo.forEach { dwn ->
+                        cacheFirstTerminalInContext(cls.context, cls.rulePosition, dwn)
+                        cachePossibleContext(cls.rulePosition, cls.context)
+                    }
+                }
+            }
+        }
+    }
+
+    //cache
+    // prev/context -> ( RulePosition -> Set<Terminal-RuntimeRule> )
+    private val _firstTerminal = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RulePosition, MutableSet<FirstTerminalInfo>>> { lazyMutableMapNonNull { hashSetOf() } }
+
+    // prev/context -> ( TerminalRule -> ParentRulePosition )
+    private val _parentInContext = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<ParentNext>>> { lazyMutableMapNonNull { hashSetOf() } }
+
+    private val _possibleContexts = lazyMutableMapNonNull<RulePosition, MutableSet<RulePosition>> { hashSetOf() }
+
+    fun clearCache() {
+        _firstTerminal.clear()
+        _parentInContext.clear()
+        _possibleContexts.clear()
+    }
+
+    fun cachePossibleContext(rp: RulePosition, ctx: RulePosition) {
+        this._possibleContexts[rp].add(ctx)
+    }
+
+    fun cacheFirstTerminalInContext(ctx: RulePosition, rp: RulePosition, fti: FirstTerminalInfo) {
+        this._firstTerminal[ctx][rp].add(fti)
+    }
+
+    fun cacheParentInContext(ctx: RulePosition, cr: RuntimeRule, pn: Set<ParentNext>) {
+        this._parentInContext[ctx][cr].addAll(pn)
     }
 }

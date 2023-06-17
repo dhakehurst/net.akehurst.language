@@ -16,52 +16,54 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.automaton.LookaheadSet
-import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.util.Debug
 
-internal class TreeDataComplete(
+internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
     val forStateSetNumber: Int
 ) {
 
-    // --- used to create SPPT ---
+    companion object {
+        interface CompleteNode {
+            val rule: RuntimeRule
+            val startPosition: Int
+            val nextInputPosition: Int
 
-    val completeChildren: Map<CompleteNodeIndex, Map<List<Int>, List<CompleteNodeIndex>>> get() = this._complete
-    var root: CompleteNodeIndex? = null; private set
-    var initialSkip: TreeDataComplete? = null; private set
+            val optionList: List<Int>
+        }
 
-    // needed when parsing embedded sentences and skip
-    val startPosition: Int? get() = root?.startPosition
-    val nextInputPosition: Int? get() = root?.nextInputPosition
+        private data class PreferredNode(
+            val rule: RuntimeRule,
+            val startPosition: Int
+        )
 
-    fun createCompleteNodeIndex(
-        state: ParserState,
-        startPosition: Int,
-        nextInputPosition: Int,
-        nextInputPositionAfterSkip: Int,
-        growingNodeIndex: GrowingNodeIndex?,
-        childrenPriorities:List<List<Int>>?
-    ): CompleteNodeIndex {
-        return CompleteNodeIndex(this, state, startPosition, nextInputPosition, nextInputPositionAfterSkip, growingNodeIndex,childrenPriorities)
+        private val CompleteNode.preferred get() = PreferredNode(this.rule, this.startPosition)
     }
 
-    fun setUserGoalChildrenAfterInitialSkip(nug: CompleteNodeIndex, userGoalChildren: List<CompleteNodeIndex>) {
+    // --- used to create SPPT ---
+
+    val completeChildren: Map<CN, Map<List<Int>, List<CN>>> get() = this._complete
+    var root: CN? = null; private set
+    var initialSkip: TreeDataComplete<CN>? = null; private set
+
+    // needed when parsing embedded sentences and skip
+    //val startPosition: Int? get() = root?.startPosition
+    //val nextInputPosition: Int? get() = root?.nextInputPosition
+
+    fun setUserGoalChildrenAfterInitialSkip(nug: CN, userGoalChildren: List<CN>) {
         this._complete[nug] = mutableMapOf(listOf(0) to userGoalChildren.toMutableList())
     }
 
-    fun childrenFor(runtimeRule: RuntimeRule, startPosition: Int, nextInputPosition: Int): List<Pair<List<Int>, List<CompleteNodeIndex>>> {
+    fun childrenFor(runtimeRule: RuntimeRule, startPosition: Int, nextInputPosition: Int): List<Pair<List<Int>, List<CN>>> {
         val keys = this._complete.keys.filter {
-            it.startPosition == startPosition
-                    && it.nextInputPosition == nextInputPosition
-                    && it.runtimeRulesSet.contains(runtimeRule)
+            it.startPosition == startPosition && it.nextInputPosition == nextInputPosition && it.rule == runtimeRule
         }
         return when (keys.size) {
             0 -> emptyList()
             1 -> this._complete[keys[0]]!!.entries.map { Pair(it.key, it.value) }
             else -> {
                 val preferred = keys[0].preferred
-                if (Debug.CHECK) check( keys.all { it.preferred == preferred } )
+                if (Debug.CHECK) check(keys.all { it.preferred == preferred })
                 if (_preferred.containsKey(preferred)) {
                     this._complete[_preferred[preferred]]!!.entries.map { Pair(it.key, it.value) }
                 } else {
@@ -73,15 +75,17 @@ internal class TreeDataComplete(
         }
     }
 
-    fun skipChildrenAfter(nodeIndex: CompleteNodeIndex) = this._skipDataAfter[nodeIndex]
+    fun skipChildrenAfter(nodeIndex: CN) = this._skipDataAfter[nodeIndex]
 
     // --- private implementation ---
 
     // index --> map-of-alternatives (optionList,lists-of-children)
     //maybe optimise because only ambiguous choice nodes have multiple child options
-    private val _complete = mutableMapOf<CompleteNodeIndex, MutableMap<List<Int>, List<CompleteNodeIndex>>>()
-    private val _preferred = mutableMapOf<PreferredChildIndex, CompleteNodeIndex>()
-    private val _skipDataAfter = hashMapOf<CompleteNodeIndex, TreeDataComplete>()
+    private val _complete = mutableMapOf<CN, MutableMap<List<Int>, List<CN>>>()
+
+    // map startPosition -> CN
+    private val _preferred = mutableMapOf<PreferredNode, CN>()
+    private val _skipDataAfter = hashMapOf<CN, TreeDataComplete<CN>>()
 
     // --- used only by TreeData ---
     fun reset() {
@@ -92,36 +96,36 @@ internal class TreeDataComplete(
         this._skipDataAfter.clear()
     }
 
-    fun preferred(node: CompleteNodeIndex): CompleteNodeIndex? = this._preferred[node.preferred]
+    fun preferred(node: CN): CN? = this._preferred[node.preferred]
 
-    fun setRoot(root: CompleteNodeIndex) {
+    fun setRoot(root: CN) {
         this.root = root
     }
 
-    fun start(initialSkipData: TreeDataComplete?) {
+    fun start(initialSkipData: TreeDataComplete<CN>?) {
         this.initialSkip = initialSkipData
     }
 
-    fun remove(node: CompleteNodeIndex) {
+    fun remove(node: CN) {
         this._complete.remove(node)
         this._preferred.remove(node.preferred)
         this._skipDataAfter.remove(node)
     }
 
-    private fun setEmbeddedChild(parent: CompleteNodeIndex, child: CompleteNodeIndex) {
+    private fun setEmbeddedChild(parent: CN, child: CN) {
         val completeChildren = listOf(child)
         this.setCompletedBy(parent, completeChildren, true)  //might it ever not be preferred!
     }
 
-    fun setChildren(parent: CompleteNodeIndex, completeChildren: List<CompleteNodeIndex>, isAlternative: Boolean) {
+    fun setChildren(parent: CN, completeChildren: List<CN>, isAlternative: Boolean) {
         this.setCompletedBy(parent, completeChildren, isAlternative)
     }
 
-    fun setSkipDataAfter(leafNodeIndex: CompleteNodeIndex, skipData: TreeDataComplete) {
+    fun setSkipDataAfter(leafNodeIndex: CN, skipData: TreeDataComplete<CN>) {
         _skipDataAfter[leafNodeIndex] = skipData
     }
 
-    private fun setCompletedBy(parent: CompleteNodeIndex, children: List<CompleteNodeIndex>, isAlternative: Boolean) {
+    private fun setCompletedBy(parent: CN, children: List<CN>, isAlternative: Boolean) {
         var alternatives = this._complete[parent]
         if (null == alternatives) {
             alternatives = mutableMapOf(parent.optionList to children)
@@ -146,7 +150,7 @@ internal class TreeDataComplete(
 
     override fun hashCode(): Int = this.forStateSetNumber
     override fun equals(other: Any?): Boolean = when {
-        other !is TreeDataComplete -> false
+        other !is TreeDataComplete<*> -> false
         else -> other.forStateSetNumber == this.forStateSetNumber
     }
 

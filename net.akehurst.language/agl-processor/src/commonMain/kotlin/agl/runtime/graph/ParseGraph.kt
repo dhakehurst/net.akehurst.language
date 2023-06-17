@@ -207,7 +207,7 @@ internal class ParseGraph(
     }
     */
 
-    var treeData = TreeData<GrowingNodeIndex>(stateSetNumber)
+    var treeData = TreeData<GrowingNodeIndex, CompleteNodeIndex>(stateSetNumber)
 
     val goals: Set<CompleteNodeIndex> get() = this._goals
 
@@ -320,7 +320,7 @@ internal class ParseGraph(
         this._goals.clear()
         //TODO: don't want to create new one of these each time we parse skip
         // but currently can't reuse it as it carries the skip data
-        this.treeData = TreeData<GrowingNodeIndex>(stateSetNumber)
+        this.treeData = TreeData(stateSetNumber)
     }
 
     /**
@@ -639,8 +639,8 @@ internal class ParseGraph(
     /**
      * START
      */
-    fun start(goalState: ParserState, startPosition: Int, runtimeLookahead: Set<LookaheadSet>, initialSkipData: TreeDataComplete?): GrowingNodeIndex {
-        val nextInputPositionAfterSkip = initialSkipData?.nextInputPosition ?: startPosition
+    fun start(goalState: ParserState, startPosition: Int, runtimeLookahead: Set<LookaheadSet>, initialSkipData: TreeDataComplete<CompleteNodeIndex>?): GrowingNodeIndex {
+        val nextInputPositionAfterSkip = initialSkipData?.root?.nextInputPosition ?: startPosition
         val st = this.createGrowingNodeIndex(goalState, runtimeLookahead, nextInputPositionAfterSkip, nextInputPositionAfterSkip, nextInputPositionAfterSkip, 0, null)
         //val goalGN = this.createGrowingNode(st)
         this._gss.root(st)
@@ -659,7 +659,7 @@ internal class ParseGraph(
         runtimeLookaheadSet: Set<LookaheadSet>,
         startPosition: Int,
         nextInputPosition: Int,
-        skipData: TreeDataComplete?
+        skipData: TreeDataComplete<CompleteNodeIndex>?
     ): Boolean {
         //val oldHead = toProcess.growingNode
         //val previous = toProcess.previous
@@ -667,7 +667,7 @@ internal class ParseGraph(
         //    toProcess.remainingHead?.let { this._gss.push(toProcess.remainingHead, previous) }
         //    this._gss.push(previous, oldHead)
         //}
-        val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: nextInputPosition
+        val nextInputPositionAfterSkip = skipData?.root?.nextInputPosition ?: nextInputPosition
         val newHead = this.createGrowingNodeIndex(newState, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0, null)
         if (null != skipData) {
             this.treeData.setSkipDataAfter(newHead.complete, skipData)
@@ -688,8 +688,8 @@ internal class ParseGraph(
         runtimeLookaheadSet: Set<LookaheadSet>,
         startPosition: Int,
         nextInputPosition: Int,
-        embeddedTreeData: TreeDataComplete,
-        skipData: TreeDataComplete?
+        embeddedTreeData: TreeDataComplete<CompleteNodeIndex>,
+        skipData: TreeDataComplete<CompleteNodeIndex>?
     ): Boolean {
         //val oldHead = toProcess.growingNode
         //val previous = toProcess.previous
@@ -697,13 +697,13 @@ internal class ParseGraph(
         //    toProcess.remainingHead?.let { this._gss.push(toProcess.remainingHead, previous) }
         //    this._gss.push(previous, oldHead)
         //}
-        val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: nextInputPosition
+        val nextInputPositionAfterSkip = skipData?.root?.nextInputPosition ?: nextInputPosition
         val newHead = this.createGrowingNodeIndex(newState, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0, null)
         if (null != skipData) {
             this.treeData.setSkipDataAfter(newHead.complete, skipData)
         }
         val embGoal = embeddedTreeData.root!!
-        val children = embeddedTreeData.childrenFor(embGoal.firstRule, embeddedTreeData.startPosition!!, embeddedTreeData.nextInputPosition!!)
+        val children = embeddedTreeData.childrenFor(embGoal.firstRule, embeddedTreeData.root?.startPosition!!, embeddedTreeData.root?.nextInputPosition!!)
         val child = children.first().second[0]
         this.treeData.setEmbeddedChild(newHead.complete, child)
         this.addGrowingHead(head, newHead)

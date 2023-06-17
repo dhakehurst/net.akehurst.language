@@ -18,7 +18,6 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.CompleteNodeIndex
-import net.akehurst.language.agl.runtime.graph.TreeData
 import net.akehurst.language.agl.runtime.graph.TreeDataComplete
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.sppt.SPPTBranch
@@ -29,7 +28,7 @@ import net.akehurst.language.api.sppt.SPPTNode
 //TODO: currently this has to be public, because otherwise kotlin does not
 // use the non-mangled names for properties - necessary for tree serialisation
 /*internal */ class SPPTBranchFromTreeData internal constructor(
-    private val _treeData: TreeDataComplete,
+    private val _treeData: TreeDataComplete<CompleteNodeIndex>,
     input: InputFromString,
     runtimeRule: RuntimeRule,
     option: Int,
@@ -50,8 +49,8 @@ import net.akehurst.language.api.sppt.SPPTNode
                 val rp = when (child.rulePositions.size) {
                     1 -> child.rulePositions[0]
                     else -> {
-                        val possChild = this.runtimeRule.rulePositions.filter { it.position==childIndx}.first { prioList.contains(it.option) }
-                        child.rulePositions.first { possChild.items.contains(it.rule)  }
+                        val possChild = this.runtimeRule.rulePositions.filter { it.position == childIndx }.first { prioList.contains(it.option) }
+                        child.rulePositions.first { possChild.items.contains(it.rule) }
                     }
                 }
                 when {
@@ -64,17 +63,26 @@ import net.akehurst.language.api.sppt.SPPTNode
                                 child.treeData.root!!.nextInputPosition
                             )
                             val userGoal = goalChildren.first().second[0]
-                            val startPositionBeforeInitialSkip = td.startPosition ?: userGoal.startPosition
+                            val startPositionBeforeInitialSkip = td.root!!.startPosition ?: userGoal.startPosition
 
                             val sg = td.completeChildren[td.root]!!.values.first().get(0)
                             val skipChildren = td.completeChildren[sg]!!.values.first().map {
                                 td.completeChildren[it]!!.values.first().get(0)
                             }
-                            val nug =child.treeData.createCompleteNodeIndex(userGoal.state, startPositionBeforeInitialSkip, userGoal.nextInputPosition, td.nextInputPosition!!, null, null)
+                            val nug = CompleteNodeIndex(
+                                child.treeData,
+                                userGoal.state,
+                                startPositionBeforeInitialSkip,
+                                userGoal.nextInputPosition,
+                                td.root!!.nextInputPosition!!,
+                                null,
+                                null
+                            )
                             val userGoalChildren = skipChildren + child.treeData.completeChildren[userGoal]!!.values.first()
                             child.treeData.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
                             listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, nug.startPosition, nug.nextInputPosition, -1))
                         }
+
                         else -> {
                             val eolPositions = emptyList<Int>() //TODO calc ?
                             listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
@@ -122,6 +130,7 @@ import net.akehurst.language.api.sppt.SPPTNode
                                 )
                             ) + skipNodes
                         }
+
                         else -> listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
                     }
 

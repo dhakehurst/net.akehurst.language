@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.agl.agl.parser
+package net.akehurst.language.agl.aMinimalVersion
 
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.processor.Agl
@@ -33,7 +33,7 @@ class test_MinimalVersionForPaper {
         for (s in sentences) {
             println("---- '$s' ----")
             val actual = sut.parse(s)
-            println(sut.automaton.usedAutomatonToString())
+            //println(sut.automaton.usedAutomatonToString())
             assertNotNull(actual)
         }
     }

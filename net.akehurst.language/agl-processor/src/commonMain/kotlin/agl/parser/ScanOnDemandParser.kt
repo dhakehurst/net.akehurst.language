@@ -225,7 +225,7 @@ internal class ScanOnDemandParser(
                     if (lg.runtimeState.isAtEnd) {
                         val runtimeLookahead = setOf(LookaheadSet.EOT)
                         val skipData = rp.parseSkipIfAny(lg.nextInputPosition, runtimeLookahead, LookaheadSet.ANY, possibleEndOfText, RuntimeParser.normalArgs)
-                        val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: lg.nextInputPosition
+                        val nextInputPositionAfterSkip = skipData?.root?.nextInputPositionAfterSkip ?: lg.nextInputPosition
                         setOf(Pair(nextInputPositionAfterSkip, setOf(RuntimeRuleSet.END_OF_TEXT)))
                     } else {
                         val trs = lg.runtimeState.transitions(rp.stateSet.startState, rp.stateSet.startState)
@@ -396,7 +396,7 @@ internal class ScanOnDemandParser(
                     else -> {
                         val trlh = transition.lookahead.map { it.guard }.reduce { acc, e -> acc.union(rp.stateSet, e) } //TODO:reduce to 1 in SM
                         val skipData = rp.parseSkipIfAny(l.nextInputPosition, runtimeLookahead, trlh, possibleEndOfText, RuntimeParser.normalArgs)
-                        val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: l.nextInputPosition
+                        val nextInputPositionAfterSkip = skipData?.root?.nextInputPositionAfterSkip ?: l.nextInputPosition
 
                         val expected = transition.lookahead
                             .flatMap { lh -> possibleEndOfText.flatMap { eot -> runtimeLookahead.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }
