@@ -17,7 +17,11 @@
 
 package net.akehurst.language.agl.aMinimalVersion
 
-import net.akehurst.language.agl.automaton.*
+import net.akehurst.language.agl.automaton.ClosureGraph
+import net.akehurst.language.agl.automaton.ClosureItem
+import net.akehurst.language.agl.automaton.FirstTerminalInfo
+import net.akehurst.language.agl.automaton.LookaheadSetPart
+import net.akehurst.language.agl.automaton.ParentNext
 import net.akehurst.language.agl.collections.GraphStructuredStack
 import net.akehurst.language.agl.collections.binaryHeap
 import net.akehurst.language.agl.parser.InputFromString
@@ -568,13 +572,9 @@ internal class MinimalVersionForPaper private constructor(
         }
     }
 
-    //cache
-    // prev/context -> ( RulePosition -> Set<Terminal-RuntimeRule> )
+    // ----- cache -----
     private val _firstTerminal = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RulePosition, MutableSet<FirstTerminalInfo>>> { lazyMutableMapNonNull { hashSetOf() } }
-
-    // prev/context -> ( TerminalRule -> ParentRulePosition )
     private val _parentInContext = lazyMutableMapNonNull<RulePosition, LazyMutableMapNonNull<RuntimeRule, MutableSet<ParentNext>>> { lazyMutableMapNonNull { hashSetOf() } }
-
     private val _possibleContexts = lazyMutableMapNonNull<RulePosition, MutableSet<RulePosition>> { hashSetOf() }
 
     fun clearCache() {
