@@ -28,7 +28,7 @@ internal class TreeData<GN, CN : TreeDataComplete.Companion.CompleteNode>(
 
     fun preferred(node: CN): CN? = this.complete.preferred(node)
 
-    fun start(gni: GN, initialSkipData: TreeDataComplete<CN>?) {
+    fun initialise(gni: GN, initialSkipData: TreeDataComplete<CN>?) {
         val growing = mutableListOf<CN>()
         this.setGrowingChildren(gni, growing)
         this.complete.start(initialSkipData)

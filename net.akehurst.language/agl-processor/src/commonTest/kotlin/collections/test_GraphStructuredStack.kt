@@ -46,7 +46,7 @@ class test_GraphStructuredStack {
             }
         })
 
-        val actual = sut.peek(1)
+        val actual = sut.peekPrevious(1)
 
         assertEquals(emptySet(), actual)
     }
@@ -78,8 +78,8 @@ class test_GraphStructuredStack {
 
         sut.push(0, 1)
 
-        assertEquals(emptySet(), sut.peek(0))
-        assertEquals(setOf(0), sut.peek(1))
+        assertEquals(emptySet(), sut.peekPrevious(0))
+        assertEquals(setOf(0), sut.peekPrevious(1))
     }
 
     @Test
@@ -95,9 +95,9 @@ class test_GraphStructuredStack {
 
         sut.push(1, 2)
 
-        assertEquals(emptySet(), sut.peek(0))
-        assertEquals(setOf(0), sut.peek(1))
-        assertEquals(setOf(1), sut.peek(2))
+        assertEquals(emptySet(), sut.peekPrevious(0))
+        assertEquals(setOf(0), sut.peekPrevious(1))
+        assertEquals(setOf(1), sut.peekPrevious(2))
     }
 
     @Test
@@ -113,9 +113,9 @@ class test_GraphStructuredStack {
 
         sut.push(0, 2)
 
-        assertEquals(emptySet(), sut.peek(0))
-        assertEquals(setOf(0), sut.peek(1))
-        assertEquals(setOf(0), sut.peek(2))
+        assertEquals(emptySet(), sut.peekPrevious(0))
+        assertEquals(setOf(0), sut.peekPrevious(1))
+        assertEquals(setOf(0), sut.peekPrevious(2))
     }
 
     @Test
@@ -132,10 +132,10 @@ class test_GraphStructuredStack {
 
         sut.push(1, 3)
 
-        assertEquals(emptySet(), sut.peek(0))
-        assertEquals(setOf(0), sut.peek(1))
-        assertEquals(setOf(0), sut.peek(2))
-        assertEquals(setOf(1), sut.peek(3))
+        assertEquals(emptySet(), sut.peekPrevious(0))
+        assertEquals(setOf(0), sut.peekPrevious(1))
+        assertEquals(setOf(0), sut.peekPrevious(2))
+        assertEquals(setOf(1), sut.peekPrevious(3))
     }
 
     @Test
@@ -153,10 +153,10 @@ class test_GraphStructuredStack {
 
         sut.push(2, 3)
 
-        assertEquals(emptySet(), sut.peek(0))
-        assertEquals(setOf(0), sut.peek(1))
-        assertEquals(setOf(0), sut.peek(2))
-        assertEquals(setOf(1, 2), sut.peek(3))
+        assertEquals(emptySet(), sut.peekPrevious(0))
+        assertEquals(setOf(0), sut.peekPrevious(1))
+        assertEquals(setOf(0), sut.peekPrevious(2))
+        assertEquals(setOf(1, 2), sut.peekPrevious(3))
     }
 
     @Test
@@ -176,11 +176,11 @@ class test_GraphStructuredStack {
         sut.push(3, 4)
         sut.push(2, 5)
 
-        assertEquals(emptySet(), sut.peek(0))
-        assertEquals(setOf(0), sut.peek(1))
-        assertEquals(setOf(0), sut.peek(2))
-        assertEquals(setOf(1, 2), sut.peek(3))
-        assertEquals(setOf(3), sut.peek(4))
-        assertEquals(setOf(2), sut.peek(5))
+        assertEquals(emptySet(), sut.peekPrevious(0))
+        assertEquals(setOf(0), sut.peekPrevious(1))
+        assertEquals(setOf(0), sut.peekPrevious(2))
+        assertEquals(setOf(1, 2), sut.peekPrevious(3))
+        assertEquals(setOf(3), sut.peekPrevious(4))
+        assertEquals(setOf(2), sut.peekPrevious(5))
     }
 }

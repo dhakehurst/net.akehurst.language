@@ -221,7 +221,7 @@ internal class ParseGraph(
 
     val nextHeadNextInputPosition: Int
         get() {
-            val root = this._gss.peekRoot
+            val root = this._gss.peekFirstHead
             return when {
                 null == root -> Int.MAX_VALUE
                 //root.state.isGoal -> -1
@@ -229,7 +229,7 @@ internal class ParseGraph(
             }
         }
 
-    val peekNextHead get() = this._gss.peekRoot!!
+    val peekNextHead get() = this._gss.peekFirstHead!!
 
     val isEmpty: Boolean get() = _gss.isEmpty
 
@@ -277,12 +277,12 @@ internal class ParseGraph(
 
     fun peekAllNextToProcess(): List<ToProcessTriple> = this._gss.heads.flatMap {
         val gn = it
-        val previous = this._gss.peek(gn)
+        val previous = this._gss.peekPrevious(gn)
         if (previous.isEmpty()) {
             listOf(ToProcessTriple(gn, null, null))
         } else {
             previous.flatMap { prev ->
-                val heads = this._gss.peek(prev)
+                val heads = this._gss.peekPrevious(prev)
                 if (heads.isEmpty()) {
                     listOf(ToProcessTriple(gn, prev, null))
                 } else {
@@ -293,12 +293,12 @@ internal class ParseGraph(
     }
 
     fun peekTripleFor(gn: GrowingNodeIndex): List<ToProcessTriple> {
-        val previous = this._gss.peek(gn)
+        val previous = this._gss.peekPrevious(gn)
         return if (previous.isEmpty()) {
             listOf(ToProcessTriple(gn, null, null))
         } else {
             previous.flatMap { prev ->
-                val heads = this._gss.peek(prev)
+                val heads = this._gss.peekPrevious(prev)
                 if (heads.isEmpty()) {
                     listOf(ToProcessTriple(gn, prev, null))
                 } else {
@@ -634,7 +634,7 @@ internal class ParseGraph(
         }
     }
 
-    fun previousOf(gn: GrowingNodeIndex): Set<GrowingNodeIndex> = this._gss.peek(gn)
+    fun previousOf(gn: GrowingNodeIndex): Set<GrowingNodeIndex> = this._gss.peekPrevious(gn)
 
     /**
      * START
@@ -644,7 +644,7 @@ internal class ParseGraph(
         val st = this.createGrowingNodeIndex(goalState, runtimeLookahead, nextInputPositionAfterSkip, nextInputPositionAfterSkip, nextInputPositionAfterSkip, 0, null)
         //val goalGN = this.createGrowingNode(st)
         this._gss.root(st)
-        this.treeData.start(st, initialSkipData)
+        this.treeData.initialise(st, initialSkipData)
         return st
     }
 
@@ -703,7 +703,8 @@ internal class ParseGraph(
             this.treeData.setSkipDataAfter(newHead.complete, skipData)
         }
         val embGoal = embeddedTreeData.root!!
-        val children = embeddedTreeData.childrenFor(embGoal.firstRule, embeddedTreeData.root?.startPosition!!, embeddedTreeData.root?.nextInputPosition!!)
+//        val children = embeddedTreeData.childrenFor(embGoal.firstRule, embeddedTreeData.root?.startPosition!!, embeddedTreeData.root?.nextInputPosition!!)
+        val children = embeddedTreeData.childrenFor(embeddedTreeData.root!!)
         val child = children.first().second[0]
         this.treeData.setEmbeddedChild(newHead.complete, child)
         this.addGrowingHead(head, newHead)
@@ -1055,7 +1056,7 @@ internal class ParseGraph(
     }
 
     private fun prevOfToString(n: GrowingNodeIndex): String {
-        val prev = this._gss.peek(n).toList()
+        val prev = this._gss.peekPrevious(n).toList()
         return when {
             prev.isEmpty() -> ""
             1 == prev.size -> {

@@ -33,7 +33,7 @@ class GraphStructuredStack<E>(val _growingHeadHeap: BinaryHeap<E, E>, previous: 
     val isEmpty: Boolean get() = _previous.isEmpty() && _count.isEmpty() && _growingHeadHeap.isEmpty()
     val numberOfHeads get() = this._growingHeadHeap.size
     val hasNextHead: Boolean get() = this._growingHeadHeap.isNotEmpty()
-    val peekRoot: E? get() = this._growingHeadHeap.peekRoot
+    val peekFirstHead: E? get() = this._growingHeadHeap.peekRoot
     val heads get() = this._growingHeadHeap.toList() //TODO: maybe not performant
     fun extractRoot() = this._growingHeadHeap.extractRoot()!!
 
@@ -119,7 +119,7 @@ class GraphStructuredStack<E>(val _growingHeadHeap: BinaryHeap<E, E>, previous: 
 
     fun contains(head: E): Boolean = _previous.containsKey(head)
 
-    fun peek(head: E): Set<E> = _previous[head]?.toMutableSet() ?: emptySet()
+    fun peekPrevious(head: E): Set<E> = _previous[head]?.toMutableSet() ?: emptySet()
 
     fun pop(head: E): Set<E> {
         this._growingHeadHeap.remove(head)
@@ -203,7 +203,7 @@ class GraphStructuredStack<E>(val _growingHeadHeap: BinaryHeap<E, E>, previous: 
         }
     */
     private fun prevOfToString(n: E): String {
-        val prev = this.peek(n).toList()
+        val prev = this.peekPrevious(n).toList()
         return when {
             prev.isEmpty() -> ""
             1 == prev.size -> {

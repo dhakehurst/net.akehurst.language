@@ -33,11 +33,7 @@ internal class SPPTFromTreeData(
 
     override val root: SPPTNode
         get() {
-            val goalChildren = _treeData.childrenFor(
-                _treeData.root!!.firstRule,
-                _treeData.root!!.startPosition,
-                _treeData.root!!.nextInputPosition
-            )
+            val goalChildren = _treeData.childrenFor(_treeData.root!!)
             val userGoal = goalChildren.first().second[0]
             val userGoalOptionList = userGoal.optionList //TODO: will ther ever by more than 1 element?
             //TODO: if goal is a leaf !

@@ -17,11 +17,7 @@
 
 package net.akehurst.language.agl.aMinimalVersion
 
-import net.akehurst.language.agl.automaton.ClosureGraph
-import net.akehurst.language.agl.automaton.ClosureItem
-import net.akehurst.language.agl.automaton.FirstTerminalInfo
-import net.akehurst.language.agl.automaton.LookaheadSetPart
-import net.akehurst.language.agl.automaton.ParentNext
+import net.akehurst.language.agl.automaton.*
 import net.akehurst.language.agl.collections.GraphStructuredStack
 import net.akehurst.language.agl.collections.binaryHeap
 import net.akehurst.language.agl.parser.InputFromString
@@ -42,15 +38,72 @@ internal class Automaton(
     }
 
     val number = nextNumber++
+    private val _states = mutableMapOf<RulePosition, State>()
+    val states get() = _states.values
 
     val goalRule by lazy { runtimeRuleSet.goalRuleFor[userGoalRule] }
-    val startState = State(this, RulePosition(goalRule, 0, 0))
+    val startState = createState(RulePosition(goalRule, 0, 0))
+
+    fun createState(rp: RulePosition): State {
+        var s = _states[rp]
+        return if (null == s) {
+            s = State(this, rp)
+            _states[rp] = s
+            s
+        } else {
+            s
+        }
+    }
+
+    fun usedAutomatonToString(withStates: Boolean = false): String {
+        val b = StringBuilder()
+        val states = this.states
+        val transitions = states.flatMap { it.outTransitions }.toSet()
+
+        //b.append("UsedRules: ${this.usedRules.size}  States: ${states.size}  Transitions: ${transitions.size} ")
+        b.append(" States: ${states.size}  Transitions: ${transitions.size} ")
+        b.append("\n")
+
+        if (withStates) {
+            states.forEach {
+                val str = "$it {${it.outTransitions.flatMap { it.context }.map { it.number }}}"
+                b.append(str).append("\n")
+            }
+        }
+
+        transitions.sortedBy { it.source.rp.toString() }.sortedBy { it.target.rp.toString() }
+            .forEach { tr ->
+                val prev = tr.source.outTransitions.flatMap { it.context }.toSet()
+                    .map { it.number } //transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }
+                    .sorted()
+                val frStr = "${tr.source.number}:(${tr.source.rp})"
+                val toStr = "${tr.target.number}:${tr.target.rp}"
+                val trStr = "$frStr --> $toStr"
+                val lh = "[${tr.lh.fullContent.joinToString { it.tag }}]"
+                val up = "(${tr.up.fullContent.joinToString { it.tag }})"
+                b.append(" ${tr.action} ")
+                b.append(trStr)
+                b.append(lh)
+                b.append(up)
+                b.append(" {${prev.joinToString()}} ")
+                b.append("\n")
+            }
+
+        return b.toString()
+    }
 }
 
 internal data class State(
     val automaton: Automaton,
     val rp: RulePosition
-)
+) {
+    val number: Int = automaton.states.size - 1
+    val outTransitions = mutableSetOf<Transition>()
+
+    fun addOutTrans(trans: Set<Transition>) {
+        outTransitions.addAll(trans)
+    }
+}
 
 internal data class Transition(
     val source: State,
@@ -59,14 +112,15 @@ internal data class Transition(
     val lh: LookaheadSetPart,
     val up: LookaheadSetPart,
     val context: Set<State>
-)
+) {
+}
 
 internal data class GSSNode(
     val state: State,
     val rlh: LookaheadSetPart,
     val startPosition: Int,
     val nextInputPositionAfterSkip: Int,
-    val numNonSkipChildren: Int
+//    val numNonSkipChildren: Int
 ) {
     val isGoal get() = this.state.rp.isGoal
     val isComplete get() = this.state.rp.isAtEnd
@@ -82,21 +136,20 @@ internal data class CompleteNode(
         get() = listOf(0)// TODO("not implemented")
 }
 
-internal class MinimalVersionForPaper private constructor(
-    val goalRule: RuntimeRule,
+internal class MinimalParser private constructor(
     val automaton: Automaton,
     val skipAutomaton: Automaton?
 ) {
 
     companion object {
-        const val TRACE = true
+        const val TRACE = false
 
-        fun parser(goalRuleName: String, runtimeRuleSet: RuntimeRuleSet): MinimalVersionForPaper {
+        fun parser(goalRuleName: String, runtimeRuleSet: RuntimeRuleSet): MinimalParser {
             val userGoalRule = runtimeRuleSet.findRuntimeRule(goalRuleName)
             val automaton = Automaton(runtimeRuleSet, userGoalRule)
             val skipAutomaton = skipAutomaton(runtimeRuleSet)
             val goalRule = runtimeRuleSet.findRuntimeRule(goalRuleName)
-            return MinimalVersionForPaper(goalRule, automaton, skipAutomaton)
+            return MinimalParser(automaton, skipAutomaton)
         }
 
         private fun skipAutomaton(runtimeRuleSet: RuntimeRuleSet): Automaton {
@@ -120,14 +173,14 @@ internal class MinimalVersionForPaper private constructor(
             rlh: LookaheadSetPart,
             sp: Int,
             nip: Int,
-            nc: Int
+//            nc: Int
         ): GSSNode {
             val nn = GSSNode(
                 state = state,
                 rlh = rlh,
                 startPosition = sp,
                 nextInputPositionAfterSkip = nip,
-                numNonSkipChildren = nc, //used in TreeData to get index of next child
+//                numNonSkipChildren = nc, //used in TreeData to get index of next child
             )
             this.root(nn)
             return nn
@@ -139,14 +192,14 @@ internal class MinimalVersionForPaper private constructor(
             rlh: LookaheadSetPart,
             sp: Int,
             nip: Int,
-            nc: Int
+//            nc: Int
         ): GSSNode {
             val nn = GSSNode(
                 state = state,
                 rlh = rlh,
                 startPosition = sp,
                 nextInputPositionAfterSkip = nip,
-                numNonSkipChildren = nc, //used in TreeData to get index of next child
+//                numNonSkipChildren = nc, //used in TreeData to get index of next child
             )
             this.push(prev, nn)
             return nn
@@ -214,21 +267,12 @@ internal class MinimalVersionForPaper private constructor(
         }
     })
 
-    val skipParser: MinimalVersionForPaper? by lazy {
-        skipAutomaton?.let {
-            MinimalVersionForPaper(
-                skipAutomaton.userGoalRule,
-                skipAutomaton,
-                null
-            )
-        }?.also {
-            it.input = this.input
-        }
-    }
+    val skipParser: MinimalParser? by lazy { skipAutomaton?.let { MinimalParser(skipAutomaton, null) }?.also { it.input = this.input } }
 
     lateinit var input: InputFromString
 
     fun parse(sentence: String): TreeDataComplete<CompleteNode> {
+        this.reset()
         this.input = InputFromString(-1, sentence)
         val td = this.parseAt(0, LookaheadSetPart.EOT)
         val sppt = td ?: error("Parse Failed")
@@ -240,16 +284,17 @@ internal class MinimalVersionForPaper private constructor(
         this.sppf = TreeData(automaton.number)
     }
 
-    private fun parseAt(position: Int, peot: LookaheadSetPart): TreeDataComplete<CompleteNode>? {
+    private fun parseAt(position: Int, eot: LookaheadSetPart): TreeDataComplete<CompleteNode>? {
         val startRp = automaton.startState.rp // G = . S
-        val stNd = gss.setRoot(ss, peot, position, position, 0)
-        val initialSkipData = tryParseSkip(position, peot)
-        sppf.start(stNd, initialSkipData)
+        val stNd = gss.setRoot(ss, eot, position, position)//, 0)
+        val slh = firstTerminals(ss.rp, ss.rp, eot).map { it.terminalRule }.let { LookaheadSetPart.createFromRuntimeRules(it.toSet()) }
+        val initialSkipData = tryParseSkip(position, slh)
+        sppf.initialise(stNd, initialSkipData)
 
         val currentNextInputPosition = position
         val doneEmpties = mutableSetOf<State>()
         while (gss.hasNextHead) {
-            val hd = gss.peekRoot!!
+            val hd = gss.peekFirstHead!!
             if (TRACE) println("Head: $hd")
             if (hd.nextInputPositionAfterSkip > currentNextInputPosition) {
                 doneEmpties.clear()
@@ -263,9 +308,9 @@ internal class MinimalVersionForPaper private constructor(
                 }
                 when {
                     hd.isGoal && hd.isComplete -> recordGoal(sppf, hd)
-                    hd.isGoal && hd.isComplete.not() -> growIncomplete2(hd, ss, peot)
-                    hd.isComplete.not() -> growIncomplete(hd, peot)
-                    hd.isComplete -> growComplete(hd, peot)
+                    hd.isGoal && hd.isComplete.not() -> growIncomplete2(hd, ss, eot)
+                    hd.isComplete.not() -> growIncomplete(hd, eot)
+                    hd.isComplete -> growComplete(hd, eot)
                 }
             }
         }
@@ -282,7 +327,7 @@ internal class MinimalVersionForPaper private constructor(
     }
 
     private fun growIncomplete(hd: GSSNode, peot: LookaheadSetPart) {
-        for (pv in gss.peek(hd)) {
+        for (pv in gss.peekPrevious(hd)) {
             growIncomplete2(hd, pv.state, peot)
         }
     }
@@ -305,10 +350,10 @@ internal class MinimalVersionForPaper private constructor(
         var headGrownHeight = false
         var headGrownGraft = false
         val dropPrevs = mutableMapOf<GSSNode, Boolean>()
-        for (pv in gss.peek(hd)) {
+        for (pv in gss.peekPrevious(hd)) {
             var prevGrownHeight = false
             var prevGrownGraft = false
-            val pps = gss.peek(pv)
+            val pps = gss.peekPrevious(pv)
             if (pps.isEmpty()) {
                 val (h, g) = growComplete2(hd, pv, null, peot)
                 prevGrownHeight = prevGrownHeight || h
@@ -378,8 +423,8 @@ internal class MinimalVersionForPaper private constructor(
         val nip = hd.nextInputPositionAfterSkip
         return if (input.isLookingAtAnyOf(lh, nip)) {
             val rlh = pv.rlh
-            val nc = pv.numNonSkipChildren + 1
-            val nn = gss.setRoot(tr.target, rlh, hd.startPosition, hd.nextInputPositionAfterSkip, nc)
+//            val nc = pv.numNonSkipChildren + 1
+            val nn = gss.setRoot(tr.target, rlh, hd.startPosition, hd.nextInputPositionAfterSkip)//, nc)
             sppf.setNextChildInParent(pv, nn, hd.complete, false)
             true
         } else {
@@ -395,7 +440,7 @@ internal class MinimalVersionForPaper private constructor(
             val nip = if (null != skipData) skipData.root!!.nextInputPosition!! else lf.nextInputPosition
             if (input.isLookingAtAnyOf(slh, nip)) {
                 val rlh = LookaheadSetPart.EMPTY
-                val nn = gss.pushNode(hd, tr.target, rlh, lf.startPosition, nip, 0)
+                val nn = gss.pushNode(hd, tr.target, rlh, lf.startPosition, nip)//, 0)
                 if (null != skipData) sppf.setSkipDataAfter(nn.complete, skipData)
                 true
             } else {
@@ -411,7 +456,7 @@ internal class MinimalVersionForPaper private constructor(
         val nip = hd.nextInputPositionAfterSkip
         return if (input.isLookingAtAnyOf(lh, nip)) {
             val rlh = tr.up!!.resolve(peot, pv.rlh)
-            val parent = gss.pushNode(pv, tr.target, rlh, hd.startPosition, hd.nextInputPositionAfterSkip, 1)
+            val parent = gss.pushNode(pv, tr.target, rlh, hd.startPosition, hd.nextInputPositionAfterSkip)//, 1)
             sppf.setFirstChildForParent(parent, hd.complete, false)
             true
         } else {
@@ -424,8 +469,8 @@ internal class MinimalVersionForPaper private constructor(
         val nip = hd.nextInputPositionAfterSkip
         return if (input.isLookingAtAnyOf(lh, nip)) {
             val rlh = pv.rlh
-            val nc = pv.numNonSkipChildren + 1
-            val nn = gss.pushNode(pp!!, tr.target, rlh, hd.startPosition, hd.nextInputPositionAfterSkip, nc)
+//            val nc = pv.numNonSkipChildren + 1
+            val nn = gss.pushNode(pp!!, tr.target, rlh, pv.startPosition, hd.nextInputPositionAfterSkip)//, nc)
             sppf.setNextChildInParent(pv, nn, hd.complete, false)
             true
         } else {
@@ -454,21 +499,23 @@ internal class MinimalVersionForPaper private constructor(
             hd.rp.isGoal -> LookaheadSetPart.EOT
             else -> LookaheadSetPart.RT
         }
-        val trans = firstTerminalInContext(pv.rp, hd.rp, pe).map {
+        val trans = firstTerminals(pv.rp, hd.rp, pe).map {
             val action = when {
                 it.terminalRule.isEmbedded -> ParseAction.EMBED
                 else -> ParseAction.WIDTH
             }
             Transition(
                 hd,
-                State(automaton, it.terminalRule.asTerminalRulePosition),
+                automaton.createState(it.terminalRule.asTerminalRulePosition),
                 action,
                 it.parentExpectedAt,
                 LookaheadSetPart.EMPTY,
                 setOf(pv)
             )
         }.toSet()
-        return merge(trans)
+        val trs = merge(trans)
+        hd.addOutTrans(trs)
+        return trs
     }
 
     fun transitionsComplete(hd: State, pv: State, pp: State): Set<Transition> {
@@ -483,14 +530,16 @@ internal class MinimalVersionForPaper private constructor(
             val up = pn.parentExpectedAt
             Transition(
                 hd,
-                State(automaton, tgt),
+                automaton.createState(tgt),
                 action,
                 lh,
                 up,
                 setOf(pv)
             )
         }.toSet()
-        return merge(trans)
+        val trs = merge(trans)
+        hd.addOutTrans(trs)
+        return trs
     }
 
     fun merge(trans: Set<Transition>): Set<Transition> {
@@ -507,7 +556,12 @@ internal class MinimalVersionForPaper private constructor(
         return m
     }
 
-    fun firstTerminalInContext(pv: RulePosition, rp: RulePosition, parentFollow: LookaheadSetPart): Set<FirstTerminalInfo> {
+    /**
+     * for an incomplete rule compute
+     * the next terminal in the given context
+     * and the lookahead set of terminals expected after it.
+     */
+    fun firstTerminals(pv: RulePosition, rp: RulePosition, parentFollow: LookaheadSetPart): Set<FirstTerminalInfo> {
         val graph = ClosureGraph(pv, rp, parentFollow)
         return if (graph.root.rulePosition.isGoal && graph.root.rulePosition.isAtEnd) {
             emptySet()
@@ -517,6 +571,13 @@ internal class MinimalVersionForPaper private constructor(
         }
     }
 
+    /**
+     * for a complete rule compute
+     * the next rule-position in possible parents for the given context
+     * whether it is a first position in the parent
+     * the lookahead (set of terminals expected after the next rule position in parent
+     * the set of terminals expected at the end of the parent rule
+     */
     fun parentInContext(pp: RulePosition, pv: RulePosition, cr: RuntimeRule): Set<ParentNext> {
         processClosure(ClosureGraph(pp, pv, LookaheadSetPart.RT))
         val ctx = pv

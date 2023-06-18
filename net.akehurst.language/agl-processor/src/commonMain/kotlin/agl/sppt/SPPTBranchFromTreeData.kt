@@ -42,7 +42,13 @@ import net.akehurst.language.api.sppt.SPPTNode
     // --- SPPTBranch ---
 
     override val childrenAlternatives: Set<List<SPPTNode>> by lazy {
-        val alternatives = this._treeData.childrenFor(runtimeRule, startPosition, nextInputPosition)
+        val alternatives = this._treeData.childrenFor(object : TreeDataComplete.Companion.CompleteNode {
+            override val rule: RuntimeRule get() = runtimeRule
+            override val startPosition: Int get() = startPosition
+            override val nextInputPosition: Int get() = nextInputPosition
+            override val optionList: List<Int> get() = emptyList()
+        }
+        )
         val r: Set<List<SPPTNode>> = alternatives.map { (prioList, alt) ->
             val chNodeList: List<SPPTNode> = alt.flatMapIndexed { childIndx, child ->
                 //val possChildren = this.runtimeRule.rulePositionsAt[childIndx].filter { it.option == this.option }
@@ -57,11 +63,7 @@ import net.akehurst.language.api.sppt.SPPTNode
                     this.isEmbedded -> when {
                         null != child.treeData.initialSkip -> {
                             val td = child.treeData.initialSkip!!
-                            val goalChildren = child.treeData.childrenFor(
-                                child.treeData.root!!.firstRule,
-                                child.treeData.root!!.startPosition,
-                                child.treeData.root!!.nextInputPosition
-                            )
+                            val goalChildren = child.treeData.childrenFor(child.treeData.root!!)
                             val userGoal = goalChildren.first().second[0]
                             val startPositionBeforeInitialSkip = td.root!!.startPosition ?: userGoal.startPosition
 

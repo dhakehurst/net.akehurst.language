@@ -18,6 +18,13 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.collections.MutableStack
+
+interface TreeDepthFirst<CN> {
+    fun leaf(node: CN)
+    fun beginBranch(node: CN, opt: Int)
+    fun endBranch(node: CN, opt: Int)
+}
 
 internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
     val forStateSetNumber: Int
@@ -54,9 +61,9 @@ internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
         this._complete[nug] = mutableMapOf(listOf(0) to userGoalChildren.toMutableList())
     }
 
-    fun childrenFor(runtimeRule: RuntimeRule, startPosition: Int, nextInputPosition: Int): List<Pair<List<Int>, List<CN>>> {
+    fun childrenFor(branch: TreeDataComplete.Companion.CompleteNode): List<Pair<List<Int>, List<CN>>> {
         val keys = this._complete.keys.filter {
-            it.startPosition == startPosition && it.nextInputPosition == nextInputPosition && it.rule == runtimeRule
+            it.startPosition == branch.startPosition && it.nextInputPosition == branch.nextInputPosition && it.rule == branch.rule
         }
         return when (keys.size) {
             0 -> emptyList()
@@ -145,6 +152,30 @@ internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
                 alternatives.clear()
             }
             alternatives[parent.optionList] = children
+        }
+    }
+
+    fun traverseTreeDepthFirst(callback: TreeDepthFirst<CN>) {
+        val stack = MutableStack<Triple<Boolean, Int, CN>>()
+        stack.push(Triple(false, 0, root!!))
+        while (stack.isNotEmpty) {
+            val (done, opt, n) = stack.pop()
+            if (n.rule.isTerminal) {
+                callback.leaf(n)
+            } else {
+                if (done) {
+                    callback.endBranch(n, opt)
+                } else {
+                    stack.push(Triple(true, opt, n))
+                    callback.beginBranch(n, opt)
+                    val alternatives = this.childrenFor(n)
+                    for (alt in alternatives) {
+                        for (ch in alt.second.reversed()) {
+                            stack.push(Triple(false, alt.first.first(), ch))
+                        }
+                    }
+                }
+            }
         }
     }
 
