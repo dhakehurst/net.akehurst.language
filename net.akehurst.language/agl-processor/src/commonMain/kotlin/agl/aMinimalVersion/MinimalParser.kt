@@ -272,7 +272,7 @@ internal class MinimalParser private constructor(
     lateinit var input: InputFromString
 
     fun parse(sentence: String): TreeDataComplete<CompleteNode> {
-        this.reset()
+        //this.reset()
         this.input = InputFromString(-1, sentence)
         val td = this.parseAt(0, LookaheadSetPart.EOT)
         val sppt = td ?: error("Parse Failed")
