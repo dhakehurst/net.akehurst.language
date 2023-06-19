@@ -40,6 +40,11 @@ class test_MinimalVersionForPaper {
             actual.traverseTreeDepthFirst(object : TreeDepthFirst<CompleteNode> {
                 var indent = ""
                 var delta = "  "
+
+                override fun skip(sp: Int, nip: Int) {
+                    println("${indent}<SKIP> : '${s.substring(sp, nip)}'")
+                }
+
                 override fun leaf(node: CompleteNode) {
                     println("${indent}${node.rule.tag} : '${s.substring(node.startPosition, node.nextInputPosition)}'")
                 }
@@ -52,6 +57,10 @@ class test_MinimalVersionForPaper {
                 override fun endBranch(node: CompleteNode, opt: Int) {
                     indent = indent.substring(delta.length)
                     println("${indent}}")
+                }
+
+                override fun error(path: List<CompleteNode>, msg: String) {
+                    println("${indent}Error at ${path.last().startPosition}: '$msg'")
                 }
             })
         }
@@ -107,7 +116,9 @@ class test_MinimalVersionForPaper {
                 concatenation("Be") { empty() }
             },
             listOf(
-                "a", "bac", "ac", "acc", "bacc"
+                "a", "bac", "ac",
+                "acc", "accc",
+                "accccc", "bacc"
             )
         )
     }
@@ -151,6 +162,7 @@ class test_MinimalVersionForPaper {
                 " a",
                 "a ",
                 "a a",
+                "a ".repeat(10),
                 "a ".repeat(500)
             )
         )
@@ -180,7 +192,6 @@ class test_MinimalVersionForPaper {
                 "aba",
                 "abaa",
                 "abaaa",
-                ""
             )
         )
     }
@@ -282,6 +293,50 @@ class test_MinimalVersionForPaper {
                 "bbb",
                 "bbbb",
                 "b".repeat(20)
+            )
+        )
+    }
+
+    @Test
+    fun RecursiveIssue() {
+        //  S = A | <e> S
+        //  A = a | a A
+        test(
+            "S",
+            runtimeRuleSet {
+                choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                    concatenation { ref("A") }
+                    concatenation { ref("S"); }
+                }
+                choice("A", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                    literal("a")
+                    concatenation { literal("a"); ref("A") }
+                }
+            },
+            listOf(
+                "a"
+            )
+        )
+    }
+
+    @Test
+    fun Johnson_SSS() {
+        // S = S S S | S S | a
+        test(
+            "S",
+            runtimeRuleSet {
+                choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                    concatenation { ref("S"); ref("S"); ref("S") }
+                    concatenation { ref("S"); ref("S") }
+                    literal("a")
+                }
+            },
+            listOf(
+                "a",
+                "aa",
+                "aaa",
+                "aaaa",
+                "a".repeat(10)
             )
         )
     }

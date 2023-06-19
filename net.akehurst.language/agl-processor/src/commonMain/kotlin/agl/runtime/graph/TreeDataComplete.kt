@@ -21,9 +21,11 @@ import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.collections.MutableStack
 
 interface TreeDepthFirst<CN> {
+    fun skip(sp: Int, nip: Int)
     fun leaf(node: CN)
     fun beginBranch(node: CN, opt: Int)
     fun endBranch(node: CN, opt: Int)
+    fun error(path: List<CN>, msg: String)
 }
 
 internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
@@ -42,7 +44,9 @@ internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
         private data class PreferredNode(
             val rule: RuntimeRule,
             val startPosition: Int
-        )
+        ) {
+            override fun toString(): String = "PN(${rule.tag},$startPosition)"
+        }
 
         private val CompleteNode.preferred get() = PreferredNode(this.rule, this.startPosition)
     }
@@ -156,22 +160,39 @@ internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
     }
 
     fun traverseTreeDepthFirst(callback: TreeDepthFirst<CN>) {
+        val path = MutableStack<CN>()
         val stack = MutableStack<Triple<Boolean, Int, CN>>()
         stack.push(Triple(false, 0, root!!))
         while (stack.isNotEmpty) {
             val (done, opt, n) = stack.pop()
             if (n.rule.isTerminal) {
                 callback.leaf(n)
+                val sd = this._skipDataAfter[n]
+                if (null != sd) {
+                    callback.skip(sd.root!!.startPosition, sd.root!!.nextInputPosition)
+                }
             } else {
                 if (done) {
                     callback.endBranch(n, opt)
+                    path.pop()
                 } else {
                     stack.push(Triple(true, opt, n))
                     callback.beginBranch(n, opt)
-                    val alternatives = this.childrenFor(n)
-                    for (alt in alternatives) {
-                        for (ch in alt.second.reversed()) {
-                            stack.push(Triple(false, alt.first.first(), ch))
+                    if (n == root!!) {
+                        if (null != initialSkip) {
+                            callback.skip(initialSkip!!.root!!.startPosition, initialSkip!!.root!!.nextInputPosition)
+                        }
+                    }
+                    if (path.elements.contains(n)) {
+                        path.push(n)
+                        callback.error(path.elements, "Loop in Tree, Grammar has a recursive path that does not consume any input.")
+                    } else {
+                        path.push(n)
+                        val alternatives = this.childrenFor(n)
+                        for (alt in alternatives) {
+                            for (ch in alt.second.reversed()) {
+                                stack.push(Triple(false, alt.first.first(), ch))
+                            }
                         }
                     }
                 }

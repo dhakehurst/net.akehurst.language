@@ -16,22 +16,22 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.api.automaton.ParseAction
 
 internal data class LookaheadSetPart(
     val includesRT: Boolean,
-    val includesEOT:Boolean,
-    val matchANY:Boolean,
+    val includesEOT: Boolean,
+    val matchANY: Boolean,
     val content: Set<RuntimeRule>
 ) {
     companion object {
         val EMPTY = LookaheadSetPart(false, false, false, emptySet())
         val RT = LookaheadSetPart(true, false, false, emptySet())
         val ANY = LookaheadSetPart(false, false, true, emptySet())
-        val EOT = LookaheadSetPart(false, true, false,emptySet())
+        val EOT = LookaheadSetPart(false, true, false, emptySet())
 
-        fun createFromRuntimeRules(fullContent:Set<RuntimeRule>): LookaheadSetPart {
+        fun createFromRuntimeRules(fullContent: Set<RuntimeRule>): LookaheadSetPart {
             val includeRT = fullContent.contains(RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD)
             val includeEOT = fullContent.contains(RuntimeRuleSet.END_OF_TEXT)
             val matchAny = fullContent.contains(RuntimeRuleSet.ANY_LOOKAHEAD)
@@ -39,12 +39,12 @@ internal data class LookaheadSetPart(
             return LookaheadSetPart(includeRT, includeEOT, matchAny, content)
         }
 
-        fun Collection<LookaheadSetPart>.unionAll() = this.fold(LookaheadSetPart.EMPTY){acc,it->acc.union(it)}
+        fun Collection<LookaheadSetPart>.unionAll() = this.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
     }
 
     val regex by lazy {
         val str = this.content.joinToString(prefix = "(", separator = ")|(", postfix = ")") {
-            when(it.rhs) {
+            when (it.rhs) {
                 is RuntimeRuleRhsLiteral -> "\\Q${(it.rhs as RuntimeRuleRhsLiteral).value}\\E"
                 is RuntimeRuleRhsPattern -> (it.rhs as RuntimeRuleRhsPattern).pattern
                 else -> error("Internal Error: rhs not a literal that can be joined to a regex")
@@ -53,17 +53,18 @@ internal data class LookaheadSetPart(
         Regex(str)
     }
 
-    val fullContent:Set<RuntimeRule> get() {
-        val cont = mutableSetOf<RuntimeRule>()
-        if (this.includesRT) cont.add(RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD)
-        if (this.includesEOT) cont.add(RuntimeRuleSet.END_OF_TEXT)
-        if (this.matchANY) cont.add(RuntimeRuleSet.ANY_LOOKAHEAD)
-        cont.addAll(this.content)
-        return cont
-    }
+    val fullContent: Set<RuntimeRule>
+        get() {
+            val cont = mutableSetOf<RuntimeRule>()
+            if (this.includesRT) cont.add(RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD)
+            if (this.includesEOT) cont.add(RuntimeRuleSet.END_OF_TEXT)
+            if (this.matchANY) cont.add(RuntimeRuleSet.ANY_LOOKAHEAD)
+            cont.addAll(this.content)
+            return cont
+        }
 
-    val isEmpty:Boolean get() = !this.includesRT && !this.includesEOT && !this.matchANY && this.content.isEmpty()
-    val isNotEmpty:Boolean get() = !this.isEmpty
+    val isEmpty: Boolean get() = !this.includesRT && !this.includesEOT && !this.matchANY && this.content.isEmpty()
+    val isNotEmpty: Boolean get() = !this.isEmpty
 
     fun resolve(eotLookahead: LookaheadSetPart, runtimeLookahead: LookaheadSetPart): LookaheadSetPart {
         return when {
@@ -76,16 +77,19 @@ internal data class LookaheadSetPart(
                     val eot = eotLookahead.includesEOT || runtimeLookahead.includesEOT
                     LookaheadSetPart(false, eot, false, resolvedContent)
                 }
+
                 this.includesEOT -> {
                     val resolvedContent = this.content.union(eotLookahead.content)
                     val eot = eotLookahead.includesEOT
                     LookaheadSetPart(false, eot, false, resolvedContent)
                 }
+
                 this.includesRT -> {
                     val resolvedContent = this.content.union(runtimeLookahead.content)
                     val eot = runtimeLookahead.includesEOT
                     LookaheadSetPart(false, eot, false, resolvedContent)
                 }
+
                 else -> {
                     LookaheadSetPart(false, false, false, this.content)
                 }
@@ -111,25 +115,32 @@ internal data class LookaheadSetPart(
         )
     }
 
-    fun containsAll(other: LookaheadSetPart):Boolean = when {
+    fun unionContent(additionalContent: Set<RuntimeRule>): LookaheadSetPart {
+        val rt = this.includesRT
+        val eot = this.includesEOT
+        val ma = this.matchANY
+        return LookaheadSetPart(rt, eot, ma, this.content.union(additionalContent))
+    }
+
+    fun containsAll(other: LookaheadSetPart): Boolean = when {
         this.matchANY -> true
         this.includesEOT.not() && other.includesEOT -> false
         this.includesRT.not() && other.includesRT -> false
         else -> this.fullContent.containsAll(other.fullContent)
     }
 
-    override fun toString(): String = "LHS(${this.fullContent.joinToString{it.tag}})"
+    override fun toString(): String = "LHS(${this.fullContent.joinToString { it.tag }})"
 }
 
 internal data class LookaheadInfoPart(
-    val guard:LookaheadSetPart,
-    val up:LookaheadSetPart
+    val guard: LookaheadSetPart,
+    val up: LookaheadSetPart
 ) {
     companion object {
-        val EMPTY = LookaheadInfoPart(LookaheadSetPart.EMPTY,LookaheadSetPart.EMPTY)
+        val EMPTY = LookaheadInfoPart(LookaheadSetPart.EMPTY, LookaheadSetPart.EMPTY)
         fun merge(initial: Set<LookaheadInfoPart>): Set<LookaheadInfoPart> = merge2(initial)
         fun merge1(initial: Set<LookaheadInfoPart>): Set<LookaheadInfoPart> {
-            return when(initial.size) {
+            return when (initial.size) {
                 1 -> initial
                 else -> {
                     val merged = initial
@@ -145,7 +156,7 @@ internal data class LookaheadInfoPart(
                             val up = me.value.map { it.up }.reduce { acc, l -> acc.union(l) }
                             LookaheadInfoPart(guard, up)
                         }.toSet()
-                    when(merged.size) {
+                    when (merged.size) {
                         1 -> merged
                         else -> {
                             val sortedMerged = merged.sortedByDescending { it.guard.fullContent.size }
@@ -174,12 +185,13 @@ internal data class LookaheadInfoPart(
                 }
             }
         }
+
         fun merge2(initial: Set<LookaheadInfoPart>): Set<LookaheadInfoPart> {
-            var r = LookaheadInfoPart(LookaheadSetPart.EMPTY,LookaheadSetPart.EMPTY)
+            var r = LookaheadInfoPart(LookaheadSetPart.EMPTY, LookaheadSetPart.EMPTY)
             initial.forEach { lh ->
                 val g = r.guard.union(lh.guard)
                 val u = r.up.union(lh.up)
-                r = LookaheadInfoPart(g,u)
+                r = LookaheadInfoPart(g, u)
             }
             return setOf(r)
         }
@@ -188,15 +200,16 @@ internal data class LookaheadInfoPart(
 }
 
 internal data class TransInfo(
-    val prev:Set<Set<RulePosition>>,
+    val prev: Set<Set<RulePosition>>,
     val action: ParseAction,
-    val to:Set<RulePosition>,
+    val to: Set<RulePosition>,
     val lookahead: Set<LookaheadInfoPart>
 )
+
 internal data class StateInfo(
     val rulePositions: Set<RulePosition>
 ) {
-    var possibleTrans:Set<TransInfo> = emptySet()
+    var possibleTrans: Set<TransInfo> = emptySet()
     val possiblePrev: Set<Set<RulePosition>> get() = possibleTrans.flatMap { it.prev }.toSet()
 }
 
@@ -209,10 +222,10 @@ internal data class WidthInfo(
 internal data class HeightGraftInfo(
     val action: ParseAction,
     val parentNext: List<RulePosition>, // to state
-    val lhs:Set<LookaheadInfoPart>
+    val lhs: Set<LookaheadInfoPart>
 ) {
     override fun toString(): String {
-        val lhsStr = lhs.joinToString(separator = "|") { "[${it.guard.fullContent.joinToString {  it.tag }}](${it.up.fullContent.joinToString {  it.tag }})" }
+        val lhsStr = lhs.joinToString(separator = "|") { "[${it.guard.fullContent.joinToString { it.tag }}](${it.up.fullContent.joinToString { it.tag }})" }
         return "HeightGraftInfo(action=$action, parentNext=$parentNext, lhs=$lhsStr)"
     }
 }
