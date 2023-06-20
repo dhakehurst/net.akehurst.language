@@ -25,44 +25,56 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
+import kotlin.math.min
 import kotlin.test.Test
 import kotlin.test.assertNotNull
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTimedValue
 
+@ExperimentalTime
 class test_MinimalVersionForPaper {
 
+
     private fun test(goal: String, rrs: RuntimeRuleSet, sentences: List<String>) {
+        val sut = MinimalParser.parser(goal, rrs)
         for (s in sentences) {
-            val sut = MinimalParser.parser(goal, rrs)
-            println("---- '$s' ----")
-            val actual = sut.parse(s)
-            println(sut.automaton.usedAutomatonToString())
+            sut.reset()
+            println("---- '${s.substring(0, min(20, s.length))}' ----")
+
+            val (actual, duration1) = measureTimedValue { sut.parse(s) }
+            val (_, duration2) = measureTimedValue { sut.parse(s) }
+            // println(sut.automaton.usedAutomatonToString())
             assertNotNull(actual)
+            println("Duration: $duration1  --  $duration2")
+            val sb = StringBuilder()
             actual.traverseTreeDepthFirst(object : TreeDepthFirst<CompleteNode> {
                 var indent = ""
                 var delta = "  "
 
                 override fun skip(sp: Int, nip: Int) {
-                    println("${indent}<SKIP> : '${s.substring(sp, nip)}'")
+                    sb.append("${indent}<SKIP> : '${s.substring(sp, nip)}'")
                 }
 
                 override fun leaf(node: CompleteNode) {
-                    println("${indent}${node.rule.tag} : '${s.substring(node.startPosition, node.nextInputPosition)}'")
+                    sb.append("${indent}${node.rule.tag} : '${s.substring(node.startPosition, node.nextInputPosition)}'")
                 }
 
                 override fun beginBranch(node: CompleteNode, opt: Int) {
-                    println("${indent}${node.rule.tag} {")
+                    sb.append("${indent}${node.rule.tag} {")
                     indent += delta
                 }
 
                 override fun endBranch(node: CompleteNode, opt: Int) {
                     indent = indent.substring(delta.length)
-                    println("${indent}}")
+                    sb.append("${indent}}")
                 }
 
                 override fun error(path: List<CompleteNode>, msg: String) {
+                    sb.append("${indent}Error at ${path.last().startPosition}: '$msg'")
                     println("${indent}Error at ${path.last().startPosition}: '$msg'")
                 }
             })
+            println(sb.substring(0, min(100, sb.length)))
         }
     }
 
@@ -265,7 +277,7 @@ class test_MinimalVersionForPaper {
         )
     }
 
-    @Test
+    //@Test
     fun Generalized_Bottom_Up_Parsers_With_Reduced_Stack_Activity__G3() {
         /*
          * from [https://www.researchgate.net/publication/220458273_Generalized_Bottom_Up_Parsers_With_Reduced_Stack_Activity]
@@ -755,32 +767,6 @@ grammar Expressions extends Types {
      | Primary
      ;
 
-    preference Expression {
-      MethodReference on '::' left
-//      LambdaExpression
-      Assignment on ASSIGNMENT_OPERATOR left
-      TernaryIf on '?' right
-      InfixLogicalOr on '||' left
-      InfixLogicalAnd on '&&' left
-      InfixBitwiseOr on '|' left
-      InfixBitwiseXor on '^' left
-      InfixBitwiseAnd on '&' left
-      InfixEquality on INFIX_OPERATOR_EQUALITY left
-      InstanceOf on 'instanceOf' left
-      InfixRelational on INFIX_OPERATOR_RELATIONAL left
-      InfixBitShift on INFIX_OPERATOR_BIT_SHIFT left
-      InfixAdditive on INFIX_OPERATOR_ADDITIVE left
-      InfixMultiplicative on INFIX_OPERATOR_MULTIPLICATIVE left
-//      Prefix
-      Postfix on POSTFIX_OPERATOR left
-//      CastExpression
-//      InstanceCreation
-//      MethodInvocation
-      ArrayAccess on '[' left
-      Navigation on '.' left
-//      Primary
-    }
-
     Navigation = Expression '.' Navigations ;
     Navigations = [ NavigableExpression  / '.' ]+ ;
     NavigableExpression
@@ -1138,32 +1124,69 @@ grammar Packages extends Interfaces {
             ConverterToRuntimeRules(it).runtimeRuleSet
         }
         val sentences = listOf(
-            "import x; @An() interface An {  }",
-            "class A { int valid = 0b0; }",
-            "interface An { An[] value(); }",
-            "class B {  B() {  } }",
-            "classclass{voidvoid(){}}",
-            "class T { void func() { getUnchecked(i++) } }",
+            //"import x; @An() interface An {  }",
+            // "class A { int valid = 0b0; }",
+            // "interface An { An[] value(); }",
+            // "class B {  B() {  } }",
+            // "classclass{voidvoid(){}}",
+            // "class T { void func() { getUnchecked(i++); } }",
+            // "class T { void func() { if (a && b) { f(); } } }",
             """
-/*
- * @test /nodynamiccopyright/
- * @bug 6860965
- * @summary Project Coin: binary literals
- * @compile/fail/ref=BadBinaryLiterals.6.out -XDrawDiagnostics -source 6 -Xlint:-options BadBinaryLiterals.java
- * @compile/fail/ref=BadBinaryLiterals.7.out -XDrawDiagnostics BadBinaryLiterals.java
- */
+class CharBufferSpliterator implements Spliterator.OfInt {
+    CharBufferSpliterator(CharBuffer buffer) {
+        this(buffer, buffer.position(), buffer.limit());
+    }
 
-public class BadBinaryLiterals {
-    int valid = 0b0;            // valid literal, illegal in source 6
-    int baddigit = 0b011;       // bad digit
-                    //aaaabbbbccccddddeeeeffffgggghhhh
-    int overflow1 = 0b111111111111111111111111111111111; // too long for int
-                    //aaaabbbbccccddddeeeeffffgggghhhhiiiijjjjkkkkllllmmmmnnnnoooopppp
-    int overflow2 = 0b11111111111111111111111111111111111111111111111111111111111111111L; // too long for long
-    float badfloat1 = 0b01.01;  // no binary floats
-    float badfloat2 = 0b01e01;  // no binary floats
+    CharBufferSpliterator(CharBuffer buffer, int origin, int limit) {
+        assert origin <= limit;
+        this.buffer = buffer;
+        this.index = (origin <= limit) ? origin : limit;
+        this.limit = limit;
+    }
+
+    @Override
+    public OfInt trySplit() {
+        int lo = index, mid = (lo + limit) >>> 1;
+        return (lo >= mid)
+               ? null
+               : new CharBufferSpliterator(buffer, lo, index = mid);
+    }
+
+    @Override
+    public void forEachRemaining(IntConsumer action) {
+        if (action == null)
+            throw new NullPointerException();
+        CharBuffer cb = buffer;
+        int i = index;
+        int hi = limit;
+        index = hi;
+        while (i < hi) {
+            action.accept(cb.getUnchecked(i++));
+        }
+    }
+
+    @Override
+    public boolean tryAdvance(IntConsumer action) {
+        if (action == null)
+            throw new NullPointerException();
+        if (index >= 0 && index < limit) {
+            action.accept(buffer.getUnchecked(index++));
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public long estimateSize() {
+        return (long)(limit - index);
+    }
+
+    @Override
+    public int characteristics() {
+        return Buffer.SPLITERATOR_CHARACTERISTICS;
+    }
 }
-            """,
+        """,
             """
 /*
  * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.

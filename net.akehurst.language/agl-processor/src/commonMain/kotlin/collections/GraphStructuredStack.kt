@@ -18,7 +18,11 @@ package net.akehurst.language.agl.collections
 
 import net.akehurst.language.agl.util.Debug
 
-class GraphStructuredStack<E>(val _growingHeadHeap: BinaryHeap<E, E>, previous: MutableMap<E, MutableSet<E>>, count: MutableMap<E, Int>) {
+class GraphStructuredStack<E>(
+    val _growingHeadHeap: BinaryHeap<E, E>,
+    previous: MutableMap<E, MutableSet<E>>,
+    count: MutableMap<E, Int>
+) {
     constructor(headHeap: BinaryHeap<E, E>) : this(headHeap, hashMapOf<E, MutableSet<E>>(), hashMapOf<E, Int>()) //no need to preserve insertion order
 
     // TODO: is the fifo version faster ? it might help with processing heads in a better order!
@@ -38,6 +42,7 @@ class GraphStructuredStack<E>(val _growingHeadHeap: BinaryHeap<E, E>, previous: 
     fun extractRoot() = this._growingHeadHeap.extractRoot()!!
 
     fun clear() {
+        this._count.clear()
         this._previous.clear()
         this._growingHeadHeap.clear()
     }

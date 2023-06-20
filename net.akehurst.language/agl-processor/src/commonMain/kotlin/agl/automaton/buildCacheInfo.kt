@@ -129,7 +129,7 @@ internal data class LookaheadSetPart(
         else -> this.fullContent.containsAll(other.fullContent)
     }
 
-    override fun toString(): String = "LHS(${this.fullContent.joinToString { it.tag }})"
+    override fun toString(): String = "LHS(${this.fullContent.sortedBy { it.tag }.joinToString { it.tag }})"
 }
 
 internal data class LookaheadInfoPart(

@@ -61,7 +61,7 @@ internal class Automaton(
     fun createState(rp: RulePosition): State {
         var s = _states[rp]
         return if (null == s) {
-            s = State(this, rp)
+            s = State(this, this._states.size, rp)
             _states[rp] = s
             s
         } else {
@@ -72,7 +72,7 @@ internal class Automaton(
     fun usedAutomatonToString(withStates: Boolean = false): String {
         val b = StringBuilder()
         val states = this.states
-        val transitions = states.flatMap { it.outTransitions }.toSet()
+        val transitions = states.flatMap { it.allOutTransition }.toSet()
 
         //b.append("UsedRules: ${this.usedRules.size}  States: ${states.size}  Transitions: ${transitions.size} ")
         b.append(" States: ${states.size}  Transitions: ${transitions.size} ")
@@ -80,14 +80,14 @@ internal class Automaton(
 
         if (withStates) {
             states.forEach {
-                val str = "$it {${it.outTransitions.flatMap { it.context }.map { it.number }}}"
+                val str = "$it {${it.allOutTransition.flatMap { it.context }.map { it.number }}}"
                 b.append(str).append("\n")
             }
         }
 
         transitions.sortedBy { it.source.rp.toString() }.sortedBy { it.target.rp.toString() }
             .forEach { tr ->
-                val prev = tr.source.outTransitions.flatMap { it.context }.toSet()
+                val prev = tr.source.allOutTransition.flatMap { it.context }.toSet()
                     .map { it.number } //transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }
                     .sorted()
                 val frStr = "${tr.source.number}:(${tr.source.rp})"
@@ -107,26 +107,42 @@ internal class Automaton(
     }
 
     override fun hashCode(): Int = this.number
-    override fun equals(other: Any?): Boolean = when (other) {
-        !is Automaton -> false
-        else -> this.number == other.number
+    override fun equals(other: Any?): Boolean = when {
+        other !is Automaton -> false
+        this.number != other.number -> false
+        else -> true
     }
 
     override fun toString(): String = "$number"
 }
 
-internal data class State(
+internal class State(
     val automaton: Automaton,
+    val number: Int,
     val rp: RulePosition
 ) {
-    val number: Int = automaton.states.size
-    val outTransitions = mutableSetOf<Transition>()
+    val outTransitionsByKey = mutableMapOf<State, Set<Transition>>()
+    val allOutTransition get() = outTransitionsByKey.values.flatten().toSet()
 
-    fun addOutTrans(trans: Set<Transition>) {
-        val t = Automaton.merge(trans + outTransitions)
-        outTransitions.clear()
-        outTransitions.addAll(t)
+    fun outTransFor(key: State): Set<Transition>? {
+        return outTransitionsByKey[key]
     }
+
+    fun addOutTrans(key: State, trans: Set<Transition>) {
+        val existing = outTransFor(key) ?: emptySet()
+        val t = Automaton.merge(trans + existing)
+        outTransitionsByKey[key] = t
+    }
+
+    override fun hashCode(): Int = arrayOf(automaton.number, this.number).contentHashCode()
+    override fun equals(other: Any?): Boolean = when {
+        other !is State -> false
+        this.automaton.number != other.automaton.number -> false
+        this.number != other.number -> false
+        else -> true
+    }
+
+    override fun toString(): String = "$number/${automaton.number} $rp"
 }
 
 internal data class Transition(
@@ -237,6 +253,8 @@ internal class MinimalParser private constructor(
             return nn
         }
 
+        val CompleteNode.length get() = this.nextInputPosition - this.startPosition
+
         fun TreeData<GSSNode, CompleteNode>.setFirstChildForParent(parent: GSSNode, child: CompleteNode, isAlternative: Boolean) {
             if (parent.isComplete) {
                 this.setFirstChildForComplete(parent.complete, child, isAlternative)
@@ -316,12 +334,7 @@ internal class MinimalParser private constructor(
             parent.nip > child.nip -> -1
             else -> when {
                 // 2) shift before reduce (reduce happens if state.isAtEnd)
-                parent.state.rp.isAtEnd && child.state.rp.isAtEnd -> when {
-                    // startPosition higher number first
-                    parent.sp < child.sp -> -1
-                    parent.sp > child.sp -> 1
-                    else -> 0
-                }
+                parent.state.rp.isAtEnd && child.state.rp.isAtEnd -> 0
 
                 parent.state.rp.isAtEnd -> -1 // shift child first
                 child.state.rp.isAtEnd -> 1 // shift parent first
@@ -338,27 +351,35 @@ internal class MinimalParser private constructor(
     val skipTerms by lazy { automaton.runtimeRuleSet.skipTerminals }
     val skipParser: MinimalParser? by lazy { skipAutomaton?.let { MinimalParser(skipAutomaton, true, null) }?.also { it.input = this.input } }
 
-    lateinit var input: InputFromString
+    var input: InputFromString? = null
 
     fun parse(sentence: String): TreeDataComplete<CompleteNode> {
         //this.reset()
         this.input = InputFromString(-1, sentence)
+        this.skipParser?.input = this.input
         val td = this.parseAt(0, LookaheadSetPart.EOT)
         val sppt = td ?: error("Parse Failed")
         return sppt
     }
 
     fun reset() {
+        this.input = null
+        this.skipParser?.input = null
         this.gss.clear()
         this.sppf = TreeData(automaton.number)
     }
 
     private fun parseAt(position: Int, eot: LookaheadSetPart): TreeDataComplete<CompleteNode>? {
-        val slh = firstTerminals(ss.rp, ss.rp, eot)
-            .filterNot { it.terminalRule.isEmptyTerminal }
-            .map { it.terminalRule }
-            .let { LookaheadSetPart.createFromRuntimeRules(it.toSet()) }
-        val initialSkipData = tryParseSkip(position, slh)
+        val initialSkipData = if (null == skipParser) {
+            null
+        } else {
+            val slh = firstTerminals(ss.rp, ss.rp, eot)
+                .filterNot { it.terminalRule.isEmptyTerminal }
+                .map { it.terminalRule }
+                .let { LookaheadSetPart.createFromRuntimeRules(it.toSet()) }
+                .union(eot)
+            tryParseSkip(position, slh)
+        }
         val nip = initialSkipData?.root?.nextInputPosition ?: position
         val stNd = gss.setRoot(ss, eot, position, nip)//, 0)
         sppf.initialise(stNd, initialSkipData)
@@ -375,7 +396,7 @@ internal class MinimalParser private constructor(
             if (hd.isEmptyMatch && doneEmpties.contains(Pair(hd.state, gss.peekPrevious(hd)))) {
                 //don't do it again
                 gss.dropStack(hd)
-                traceDrop(hd)
+                if (TRACE) traceDrop(hd)
             } else {
                 if (hd.isEmptyMatch) {
                     doneEmpties.add(Pair(hd.state, gss.peekPrevious(hd)))
@@ -497,7 +518,7 @@ internal class MinimalParser private constructor(
     private fun doGoal(hd: GSSNode, pv: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
         val lh = tr.lh.resolve(peot, pv.rlh)
         val nip = hd.nip
-        return if (input.isLookingAtAnyOf(lh, nip)) {
+        return if (input!!.isLookingAtAnyOf(lh, nip)) {
             val rlh = pv.rlh
 //            val nc = pv.numNonSkipChildren + 1
             val nn = gss.setRoot(tr.target, rlh, hd.sp, hd.nip)//, nc)
@@ -509,12 +530,12 @@ internal class MinimalParser private constructor(
     }
 
     private fun doWidth(hd: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
-        val lf = input.findOrTryCreateLeaf(tr.target.rp.rule, hd.nip)
+        val lf = input!!.findOrTryCreateLeaf(tr.target.rp.rule, hd.nip)
         return if (null != lf) {
             val slh = tr.lh.resolve(peot, hd.rlh)
             val skipData = tryParseSkip(lf.nextInputPosition, slh)
             val nip = if (null != skipData) skipData.root!!.nextInputPosition!! else lf.nextInputPosition
-            if (input.isLookingAtAnyOf(slh, nip)) {
+            if (input!!.isLookingAtAnyOf(slh, nip)) {
                 val rlh = LookaheadSetPart.EMPTY
                 val nn = gss.pushNode(hd, tr.target, rlh, lf.startPosition, nip)//, 0)
                 if (null != skipData) sppf.setSkipDataAfter(nn.complete, skipData)
@@ -530,11 +551,27 @@ internal class MinimalParser private constructor(
     private fun doHeight(hd: GSSNode, pv: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
         val lh = tr.lh.resolve(peot, pv.rlh)
         val nip = hd.nip
-        return if (input.isLookingAtAnyOf(lh, nip)) {
-            val rlh = tr.up!!.resolve(peot, pv.rlh)
+        return if (input!!.isLookingAtAnyOf(lh, nip)) {
+            val rlh = tr.up.resolve(peot, pv.rlh)
             val parent = gss.pushNode(pv, tr.target, rlh, hd.sp, hd.nip)//, 1)
-            sppf.setFirstChildForParent(parent, hd.complete, false)
-            true
+            if (parent.isComplete) {
+                val existing = sppf.preferred(parent.complete)
+                if (null == existing) {
+                    sppf.setFirstChildForParent(parent, hd.complete, false)
+                    true
+                } else {
+                    if (existing.length > parent.complete.length) {
+                        // keep existing
+                        false
+                    } else {
+                        sppf.setFirstChildForParent(parent, hd.complete, false)
+                        true
+                    }
+                }
+            } else {
+                sppf.setFirstChildForParent(parent, hd.complete, false)
+                true
+            }
         } else {
             false
         }
@@ -543,12 +580,28 @@ internal class MinimalParser private constructor(
     private fun doGraft(hd: GSSNode, pv: GSSNode, pp: GSSNode?, tr: Transition, peot: LookaheadSetPart): Boolean {
         val lh = tr.lh.resolve(peot, pv.rlh)
         val nip = hd.nip
-        return if (input.isLookingAtAnyOf(lh, nip)) {
+        return if (input!!.isLookingAtAnyOf(lh, nip)) {
             val rlh = pv.rlh
 //            val nc = pv.numNonSkipChildren + 1
             val nn = gss.pushNode(pp!!, tr.target, rlh, pv.sp, hd.nip)//, nc)
-            sppf.setNextChildInParent(pv, nn, hd.complete, false)
-            true
+            if (nn.isComplete) {
+                val existing = sppf.preferred(nn.complete)
+                if (null == existing) {
+                    sppf.setNextChildInParent(pv, nn, hd.complete, false)
+                    true
+                } else {
+                    if (existing.length > nn.complete.length) {
+                        // keep existing
+                        false
+                    } else {
+                        sppf.setNextChildInParent(pv, nn, hd.complete, false)
+                        true
+                    }
+                }
+            } else {
+                sppf.setNextChildInParent(pv, nn, hd.complete, false)
+                true
+            }
         } else {
             false
         }
@@ -580,59 +633,71 @@ internal class MinimalParser private constructor(
             null
         } else {
             skipParser!!.reset()
+            skipParser!!.input = this.input
             skipParser!!.parseAt(position, slh)
         }
     }
 
-
     // Automaton
     fun transitionsIncomplete(hd: State, pv: State): Set<Transition> {
-        clearCache()
-        val pe = when {
-            hd.rp.isGoal -> LookaheadSetPart.EOT
-            else -> LookaheadSetPart.RT
-        }
-        val trans = firstTerminals(pv.rp, hd.rp, pe).map {
-            val action = when {
-                it.terminalRule.isEmbedded -> ParseAction.EMBED
-                else -> ParseAction.WIDTH
+        val key = pv
+        val trans = hd.outTransFor(key)
+        return if (null == trans) {
+            clearCache()
+            val pe = when {
+                hd.rp.isGoal -> LookaheadSetPart.EOT
+                else -> LookaheadSetPart.RT
             }
-            Transition(
-                hd,
-                automaton.createState(it.terminalRule.asTerminalRulePosition),
-                action,
-                it.parentExpectedAt,
-                LookaheadSetPart.EMPTY,
-                setOf(pv)
-            )
-        }.toSet()
-        val trs = Automaton.merge(trans)
-        hd.addOutTrans(trs)
-        return hd.outTransitions
+            val ts = firstTerminals(pv.rp, hd.rp, pe).map {
+                val action = when {
+                    it.terminalRule.isEmbedded -> ParseAction.EMBED
+                    else -> ParseAction.WIDTH
+                }
+                Transition(
+                    hd,
+                    automaton.createState(it.terminalRule.asTerminalRulePosition),
+                    action,
+                    it.parentExpectedAt,
+                    LookaheadSetPart.EMPTY,
+                    setOf(pv)
+                )
+            }.toSet()
+            val trs = Automaton.merge(ts)
+            hd.addOutTrans(key, trs)
+            hd.outTransitionsByKey[key]!!
+        } else {
+            trans
+        }
     }
 
     fun transitionsComplete(hd: State, pv: State, pp: State): Set<Transition> {
-        val trans = parentInContext(pp.rp, pv.rp, hd.rp.rule).map { pn ->
-            val action = when {
-                pn.rulePosition.isGoal -> ParseAction.GOAL
-                pn.firstPosition -> ParseAction.HEIGHT
-                else -> ParseAction.GRAFT
-            }
-            val tgt = pn.rulePosition
-            val lh = pn.expectedAt
-            val up = pn.parentExpectedAt
-            Transition(
-                hd,
-                automaton.createState(tgt),
-                action,
-                lh,
-                up,
-                setOf(pv)
-            )
-        }.toSet()
-        val trs = Automaton.merge(trans)
-        hd.addOutTrans(trs)
-        return hd.outTransitions
+        val key = pv//Pair(pv, pp)
+        val trans = hd.outTransFor(key)
+        return if (null == trans) {
+            val ts = parentInContext(pp.rp, pv.rp, hd.rp.rule).map { pn ->
+                val action = when {
+                    pn.rulePosition.isGoal -> ParseAction.GOAL
+                    pn.firstPosition -> ParseAction.HEIGHT
+                    else -> ParseAction.GRAFT
+                }
+                val tgt = pn.rulePosition
+                val lh = pn.expectedAt
+                val up = pn.parentExpectedAt
+                Transition(
+                    hd,
+                    automaton.createState(tgt),
+                    action,
+                    lh,
+                    up,
+                    setOf(pv)
+                )
+            }.toSet()
+            val trs = Automaton.merge(ts)
+            hd.addOutTrans(key, trs)
+            hd.outTransitionsByKey[key]!!
+        } else {
+            trans
+        }
     }
 
 

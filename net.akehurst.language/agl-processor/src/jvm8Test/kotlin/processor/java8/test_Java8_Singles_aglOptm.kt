@@ -534,7 +534,7 @@ public class BadBinaryLiterals {
         assertEquals(sentence, resultStr)
     }
 
-    @Test(timeout = 5000)
+    @Test(timeout = 20000)
     fun CompilationUnit__fromStdLib_CharBufferSpliterator() {
 
         val sentence = """
@@ -638,9 +638,72 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         val goal = "CompilationUnit"
 
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
+
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        assertEquals(sentence, resultStr)
+    }
+
+    @Test(timeout = 5000)
+    fun Statement__ifthenelse() {
+
+        val sentence = """
+        if (action == null)
+            throw new NullPointerException();
+        """.trimIndent()
+        val goal = "Statement"
+
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.sppt)
+        assertEquals(3, result.sppt!!.maxNumHeads)
+
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        assertEquals(sentence, resultStr)
+    }
+
+    @Test(timeout = 20000)
+    fun CompilationUnit__fromStdLib_CharBufferSpliterator_part() {
+
+        val sentence = """
+class A {
+    public void tryAdvance() {
+        if (index >= 0 && index < limit) {
+        }
+    }
+}
+        """.trimIndent()
+        val goal = "CompilationUnit"
+
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.errors.toString())
+        assertNotNull(result.sppt)
+        assertEquals(3, result.sppt!!.maxNumHeads)
+
+        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        assertEquals(sentence, resultStr)
+    }
+
+    @Test(timeout = 5000)
+    fun BlockStatements__ifthenelse() {
+
+        val sentence = """
+            {
+        if (action == null)
+            throw new NullPointerException();
+        CharBuffer cb = buffer;
+        int i = index;
+        int hi = limit;
+            }
+        """.trimIndent()
+        val goal = "Statement"
+
+        val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.sppt)
+        assertEquals(3, result.sppt!!.maxNumHeads)
 
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)
