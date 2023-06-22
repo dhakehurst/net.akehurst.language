@@ -16,6 +16,20 @@
 
 package net.akehurst.language.api.sppt
 
+data class SpptPathNode(
+    val ruleName: String,
+    val startPosition: Int,
+    val nextInputPosition: Int
+)
+
+interface SpptWalker {
+    fun skip(startPosition: Int, nextInputPosition: Int)
+    fun leaf(ruleName: String, startPosition: Int, nextInputPosition: Int)
+    fun beginBranch(option: Int, ruleName: String, startPosition: Int, nextInputPosition: Int)
+    fun endBranch(opt: Int, ruleName: String, startPosition: Int, nextInputPosition: Int)
+    fun error(msg: String, path: () -> List<SpptPathNode>)
+}
+
 /**
  * A Shared Packed Parse Forest is a collection of parse trees which share Nodes when possible. There is a Root Node. Each Node in a tree is either a Leaf or an
  * Branch. An Branch contains a Set of Lists of child Nodes. Each list of child nodes is an alternative possible list of children for the Branch
@@ -38,6 +52,9 @@ interface SharedPackedParseTree {
      * The root of the tree
      */
     val root: SPPTNode
+
+    fun traverseTreeDepthFirst(callback: SpptWalker)
+
 
     /**
      * Determines if there is an equivalent tree in this forest for every tree in the other forest.

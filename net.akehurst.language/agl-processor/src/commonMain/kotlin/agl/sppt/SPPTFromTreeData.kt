@@ -23,6 +23,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.sppt.SpptWalker
 
 internal class SPPTFromTreeData(
     private val _treeData: TreeDataComplete<CompleteNodeIndex>,
@@ -30,6 +31,10 @@ internal class SPPTFromTreeData(
     override val seasons: Int,
     override val maxNumHeads: Int
 ) : SharedPackedParseTree {
+
+    override fun traverseTreeDepthFirst(callback: SpptWalker) {
+        this._treeData.traverseTreeDepthFirst(callback)
+    }
 
     override val root: SPPTNode
         get() {

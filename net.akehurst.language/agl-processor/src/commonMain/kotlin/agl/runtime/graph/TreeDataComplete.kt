@@ -18,15 +18,10 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.api.sppt.SpptPathNode
+import net.akehurst.language.api.sppt.SpptWalker
 import net.akehurst.language.collections.MutableStack
 
-interface TreeDepthFirst<CN> {
-    fun skip(sp: Int, nip: Int)
-    fun leaf(node: CN)
-    fun beginBranch(node: CN, opt: Int)
-    fun endBranch(node: CN, opt: Int)
-    fun error(path: List<CN>, msg: String)
-}
 
 internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
     val forStateSetNumber: Int
@@ -97,6 +92,7 @@ internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
     // map startPosition -> CN
     private val _preferred = mutableMapOf<PreferredNode, CN>()
     private val _skipDataAfter = hashMapOf<CN, TreeDataComplete<CN>>()
+    private val _embeddedFor = hashMapOf<CN, TreeDataComplete<CN>>()
 
     // --- used only by TreeData ---
     fun reset() {
@@ -136,6 +132,10 @@ internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
         _skipDataAfter[leafNodeIndex] = skipData
     }
 
+    fun setEmbeddedTreeFor(n: CN, treeData: TreeDataComplete<CN>) {
+        _embeddedFor[n] = treeData
+    }
+
     private fun setCompletedBy(parent: CN, children: List<CN>, isAlternative: Boolean) {
         var alternatives = this._complete[parent]
         if (null == alternatives) {
@@ -159,25 +159,30 @@ internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
         }
     }
 
-    fun traverseTreeDepthFirst(callback: TreeDepthFirst<CN>) {
+    fun traverseTreeDepthFirst(callback: SpptWalker) {
         val path = MutableStack<CN>()
         val stack = MutableStack<Triple<Boolean, Int, CN>>()
         stack.push(Triple(false, 0, root!!))
         while (stack.isNotEmpty) {
             val (done, opt, n) = stack.pop()
             if (n.rule.isTerminal) {
-                callback.leaf(n)
-                val sd = this._skipDataAfter[n]
-                if (null != sd) {
-                    callback.skip(sd.root!!.startPosition, sd.root!!.nextInputPosition)
+                if (n.rule.isEmbedded) {
+                    val ed = this._embeddedFor[n] ?: error("Cannot find embedded TreeData for '$n'")
+                    ed.traverseTreeDepthFirst(callback)
+                } else {
+                    callback.leaf(n.rule.tag, n.startPosition, n.nextInputPosition)
+                    val sd = this._skipDataAfter[n]
+                    if (null != sd) {
+                        callback.skip(sd.root!!.startPosition, sd.root!!.nextInputPosition)
+                    }
                 }
             } else {
                 if (done) {
-                    callback.endBranch(n, opt)
+                    callback.endBranch(opt, n.rule.tag, n.startPosition, n.nextInputPosition)
                     path.pop()
                 } else {
                     stack.push(Triple(true, opt, n))
-                    callback.beginBranch(n, opt)
+                    callback.beginBranch(opt, n.rule.tag, n.startPosition, n.nextInputPosition)
                     if (n == root!!) {
                         if (null != initialSkip) {
                             callback.skip(initialSkip!!.root!!.startPosition, initialSkip!!.root!!.nextInputPosition)
@@ -185,7 +190,9 @@ internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
                     }
                     if (path.elements.contains(n)) {
                         path.push(n)
-                        callback.error(path.elements, "Loop in Tree, Grammar has a recursive path that does not consume any input.")
+                        callback.error("Loop in Tree, Grammar has a recursive path that does not consume any input.") {
+                            path.elements.map { SpptPathNode(it.rule.tag, it.startPosition, it.nextInputPosition) }
+                        }
                     } else {
                         path.push(n)
                         val alternatives = this.childrenFor(n)

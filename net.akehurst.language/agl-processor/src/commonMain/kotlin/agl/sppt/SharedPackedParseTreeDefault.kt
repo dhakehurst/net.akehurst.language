@@ -20,6 +20,7 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.sppt.SpptWalker
 
 //TODO: currently this has to be public, because otherwise kotlin does not
 // use the non-mangled names for properties
@@ -31,6 +32,10 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 
     init {
         root.tree = this
+    }
+
+    override fun traverseTreeDepthFirst(callback: SpptWalker) {
+        TODO("not implemented")
     }
 
     override fun contains(other: SharedPackedParseTree): Boolean {

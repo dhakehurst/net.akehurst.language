@@ -18,10 +18,6 @@ package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.agl.automaton.FirstOf
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.runtime.structure.RulePosition
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsChoice
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.collections.MapNotNull
 import net.akehurst.language.collections.lazyMutableMapNonNull
@@ -73,7 +69,7 @@ internal interface ClosureItem {
     val graph: ClosureGraph
     val rulePosition: RulePosition
     val context: RulePosition
-    val expectedAt:LookaheadSetPart
+    val expectedAt: LookaheadSetPart
     val parentExpectedAt: LookaheadSetPart
 
     val children: Set<ClosureItem>
@@ -142,12 +138,12 @@ internal class ClosureGraph(
 
         private val firstOf = FirstOf()
 
-        fun expectedAt(rp:RulePosition, parentExpectedAt: LookaheadSetPart) :LookaheadSetPart = when {
+        fun expectedAt(rp: RulePosition, parentExpectedAt: LookaheadSetPart): LookaheadSetPart = when {
             rp.isAtEnd -> parentExpectedAt
             else -> {
-                val nexts =rp.next()
+                val nexts = rp.next()
                 if (Debug.CHECK) check(nexts.isNotEmpty()) { "Internal Error: if not a terminal and not atEnd rulePosition.next() should never be empty" }
-                val allNextExpectedAt =  nexts.map { firstOf.expectedAt(it, parentExpectedAt) }
+                val allNextExpectedAt = nexts.map { firstOf.expectedAt(it, parentExpectedAt) }
                 allNextExpectedAt.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
             }
         }
@@ -182,7 +178,7 @@ internal class ClosureGraph(
             final override val expectedAt: LookaheadSetPart = expectedAt(rulePosition, parentExpectedAt)
 
             override val children: Set<ClosureItem> get() = this.graph.childrenOf(this)
-            override val parents:Set<ClosureItem> get() = graph.parentsOf(this)
+            override val parents: Set<ClosureItem> get() = graph.parentsOf(this)
 
             override val shortString: List<String> get() = this.shortStringRec(mutableSetOf())
 
@@ -232,6 +228,7 @@ internal class ClosureGraph(
                             rp.isAtEnd -> "${rr.tag}[ER]"
                             else -> "${rr.tag}[${rp.position}]"
                         }
+
                         is RuntimeRuleRhsChoice -> "${rr.tag}.${rp.option}"
                         is RuntimeRuleRhsListSimple -> when {
                             rp.isAtStart -> rr.tag + ".b"
@@ -277,17 +274,16 @@ internal class ClosureGraph(
                 }
             }
 
-            //val _id = arrayOf(rulePosition, context, expectedAt, parentExpectedAt)
             val _id = arrayOf(rulePosition, context, parentExpectedAt)
             override fun hashCode(): Int = _id.contentHashCode()
             override fun equals(other: Any?): Boolean = when {
                 other !is ClosureItem -> false
                 this.rulePosition != other.rulePosition -> false
                 this.context != other.context -> false
-//                this.expectedAt != other.expectedAt -> false
                 this.parentExpectedAt != other.parentExpectedAt -> false
                 else -> true
             }
+
             override fun toString(): String = "$rulePosition[${parentExpectedAt}]"//{${upInfo.parentNextContextFirstOf}}"
 
         }
@@ -331,7 +327,7 @@ internal class ClosureGraph(
 
     }
 
-    private val _childrenOf = lazyMutableMapNonNull<ClosureItem, MapNotNull<Int,MutableSet<ClosureItem>>> { lazyMutableMapNonNull {mutableSetOf()} }
+    private val _childrenOf = lazyMutableMapNonNull<ClosureItem, MapNotNull<Int, MutableSet<ClosureItem>>> { lazyMutableMapNonNull { mutableSetOf() } }
     private val _parentsOf = lazyMutableMapNonNull<ClosureItem, MutableSet<ClosureItem>> { mutableSetOf() }
 
     // so we can test ClosureGraph
@@ -346,11 +342,12 @@ internal class ClosureGraph(
 
     val root = ClosureItemRootGraph(this, rootContext, rootRulePosition, rootParentFollow)
 
-    val nonRootClosures: Set<ClosureItem> get() {
-        //create copy, because queries to _parentsOf might create additional entries
-        // and thus a ConcurrentModificationException whilst iterating over nonRootClosures
-        return _parentsOf.keys.toMutableSet()
-    }
+    val nonRootClosures: Set<ClosureItem>
+        get() {
+            //create copy, because queries to _parentsOf might create additional entries
+            // and thus a ConcurrentModificationException whilst iterating over nonRootClosures
+            return _parentsOf.keys.toMutableSet()
+        }
 
     fun resolveAllChildParentInfo() {
         this.root.resolveDown()
@@ -363,8 +360,8 @@ internal class ClosureGraph(
     fun parentsOf(child: ClosureItem): Set<ClosureItem> = this._parentsOf[child]
 
     fun addParentOf(child: ClosureItemChild, parent: ClosureItem): Boolean {
-         this._childrenOf[parent][parent.rulePosition.position].add(child)
-         return _parentsOf[child].add(parent)
+        this._childrenOf[parent][parent.rulePosition.position].add(child)
+        return _parentsOf[child].add(parent)
     }
 
 

@@ -125,14 +125,14 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
         }
 
     override val processorObservers = mutableListOf<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>()
-    override val grammarStrObservers = mutableListOf<(String?, String?) -> Unit>()
-    override val grammarObservers = mutableListOf<(Grammar?, Grammar?) -> Unit>()
-    override val scopeStrObservers = mutableListOf<(String?, String?) -> Unit>()
-    override val scopeModelObservers = mutableListOf<(ScopeModel?, ScopeModel?) -> Unit>()
-    override val formatterStrObservers = mutableListOf<(String?, String?) -> Unit>()
-    override val formatterObservers = mutableListOf<(AglFormatterModel?, AglFormatterModel?) -> Unit>()
-    override val styleStrObservers = mutableListOf<(String?, String?) -> Unit>()
-    override val styleObservers = mutableListOf<(AglStyleModel?, AglStyleModel?) -> Unit>()
+    override val grammarStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
+    override val grammarObservers = mutableListOf<(oldValue: Grammar?, newValue: Grammar?) -> Unit>()
+    override val scopeStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
+    override val scopeModelObservers = mutableListOf<(oldValue: ScopeModel?, newValue: ScopeModel?) -> Unit>()
+    override val formatterStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
+    override val formatterObservers = mutableListOf<(oldValue: AglFormatterModel?, newValue: AglFormatterModel?) -> Unit>()
+    override val styleStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
+    override val styleObservers = mutableListOf<(oldValue: AglStyleModel?, newValue: AglStyleModel?) -> Unit>()
 
     override fun toString(): String = identity
 

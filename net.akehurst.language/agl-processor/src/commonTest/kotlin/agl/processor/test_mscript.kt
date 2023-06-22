@@ -42,7 +42,7 @@ grammar Mscript {
          leaf SINGLE_LINE_COMMENT = "(?:%[^{].+${'$'})|(?:%${'$'})" ;
 
     script = statementList ;
-    statementList = [line / "\R"]* ;
+    statementList = [line / "[\r\n]+"]* ;
     // if we treat '\n' as part of the WHITESPACE skip rule, we get ambiguity in statements
     line = [statement / ';']* ';'? ;
 

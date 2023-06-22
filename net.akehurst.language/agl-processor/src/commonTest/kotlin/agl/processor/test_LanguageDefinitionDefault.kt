@@ -111,6 +111,15 @@ class test_LanguageDefinitionDefault {
     }
 
     @Test
+    fun modifyObservers() {
+        sut.grammarStrObservers.add { s1: String?, s2: String? ->
+            println("Grammar changed: $s1, $s2")
+        }
+
+        sut.grammarStr = "something new"
+    }
+
+    @Test
     fun grammarStr_change_null_to_null() {
         sut.grammarStr = null
         assertNull(sut.grammarStr)

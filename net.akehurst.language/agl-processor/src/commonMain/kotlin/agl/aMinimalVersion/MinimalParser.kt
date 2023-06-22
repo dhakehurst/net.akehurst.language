@@ -322,24 +322,18 @@ internal class MinimalParser private constructor(
         // Ordering rules:
         // 1) nextInputPosition lower number first
         // 2) shift before reduce (reduce happens if state.isAtEnd)
-        // 3) choice point order - how to order diff choice points?
-        // 4) choice last
-        // 5) high priority first if same choice point...else !!
-        //TODO: how do we ensure lower choices are done first ?
+        // 3) startPosition lower number first
         when {
-//            parent.startPosition == child.startPosition && parent.state.firstRule.isEmptyTerminal -> -1
-//            parent.startPosition == child.startPosition && child.state.firstRule.isEmptyTerminal -> 1
             // 1) nextInputPosition lower number first
             parent.nip < child.nip -> 1
             parent.nip > child.nip -> -1
             else -> when {
                 // 2) shift before reduce (reduce happens if state.isAtEnd)
                 parent.state.rp.isAtEnd && child.state.rp.isAtEnd -> 0
-
                 parent.state.rp.isAtEnd -> -1 // shift child first
                 child.state.rp.isAtEnd -> 1 // shift parent first
                 else -> when {
-                    // startPosition higher number first
+                    // 3) startPosition higher number first
                     parent.sp < child.sp -> -1
                     parent.sp > child.sp -> 1
                     else -> 0
@@ -350,6 +344,7 @@ internal class MinimalParser private constructor(
 
     val skipTerms by lazy { automaton.runtimeRuleSet.skipTerminals }
     val skipParser: MinimalParser? by lazy { skipAutomaton?.let { MinimalParser(skipAutomaton, true, null) }?.also { it.input = this.input } }
+    val embedded = mutableMapOf<Pair<RuntimeRuleSet, RuntimeRule>, MinimalParser>()
 
     var input: InputFromString? = null
 
@@ -384,7 +379,7 @@ internal class MinimalParser private constructor(
         val stNd = gss.setRoot(ss, eot, position, nip)//, 0)
         sppf.initialise(stNd, initialSkipData)
 
-        var currentNextInputPosition = position
+        var currentNextInputPosition = nip
         val doneEmpties = mutableSetOf<Pair<State, Set<GSSNode>>>()
         while (gss.hasNextHead) {
             val hd = gss.peekFirstHead!!
@@ -504,7 +499,7 @@ internal class MinimalParser private constructor(
                 }
 
                 ParseAction.GRAFT -> {
-                    val b = doGraft(hd, pv, pp, tr, peot)
+                    val b = doGraft(hd, pv, pp!!, tr, peot)
                     grownGraft = grownGraft || b
                     if (TRACE) traceTrans(hd, pv, pp, tr, b)
                 }
@@ -517,11 +512,8 @@ internal class MinimalParser private constructor(
 
     private fun doGoal(hd: GSSNode, pv: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
         val lh = tr.lh.resolve(peot, pv.rlh)
-        val nip = hd.nip
-        return if (input!!.isLookingAtAnyOf(lh, nip)) {
-            val rlh = pv.rlh
-//            val nc = pv.numNonSkipChildren + 1
-            val nn = gss.setRoot(tr.target, rlh, hd.sp, hd.nip)//, nc)
+        return if (input!!.isLookingAtAnyOf(lh, hd.nip)) {
+            val nn = gss.setRoot(tr.target, pv.rlh, hd.sp, hd.nip)//, nc)
             sppf.setNextChildInParent(pv, nn, hd.complete, false)
             true
         } else {
@@ -577,10 +569,9 @@ internal class MinimalParser private constructor(
         }
     }
 
-    private fun doGraft(hd: GSSNode, pv: GSSNode, pp: GSSNode?, tr: Transition, peot: LookaheadSetPart): Boolean {
+    private fun doGraft(hd: GSSNode, pv: GSSNode, pp: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
         val lh = tr.lh.resolve(peot, pv.rlh)
-        val nip = hd.nip
-        return if (input!!.isLookingAtAnyOf(lh, nip)) {
+        return if (input!!.isLookingAtAnyOf(lh, hd.nip)) {
             val rlh = pv.rlh
 //            val nc = pv.numNonSkipChildren + 1
             val nn = gss.pushNode(pp!!, tr.target, rlh, pv.sp, hd.nip)//, nc)
@@ -611,7 +602,14 @@ internal class MinimalParser private constructor(
         val embeddedRhs = tr.target.rp.rule.rhs as RuntimeRuleRhsEmbedded
         val embeddedRRS = embeddedRhs.embeddedRuntimeRuleSet
         val embeddedGoal = embeddedRhs.embeddedStartRule
-        val embeddedParser = MinimalParser.parser(embeddedGoal.tag, embeddedRRS)
+        val key = Pair(embeddedRRS, embeddedGoal)
+        val embeddedParser = if (embedded.containsKey(key)) {
+            embedded[key]!!
+        } else {
+            val p = MinimalParser.parser(embeddedGoal.tag, embeddedRRS)
+            embedded[key] = p
+            p
+        }
         embeddedParser.input = this.input
         val embeddedEOT = tr.lh.unionContent(this.skipTerms).resolve(peot, hd.rlh)
         val embed = embeddedParser.parseAt(hd.nip, embeddedEOT)
@@ -621,6 +619,7 @@ internal class MinimalParser private constructor(
             val nip = if (null != skipData) skipData.root!!.nextInputPosition!! else embed.root!!.nextInputPosition
             val rlh = LookaheadSetPart.EMPTY
             val nn = gss.pushNode(hd, tr.target, rlh, embed.root!!.startPosition, nip)//, 0)
+            sppf.complete.setEmbeddedTreeFor(nn.complete, embed)
             if (null != skipData) sppf.setSkipDataAfter(nn.complete, skipData)
             true
         } else {
@@ -639,7 +638,7 @@ internal class MinimalParser private constructor(
     }
 
     // Automaton
-    fun transitionsIncomplete(hd: State, pv: State): Set<Transition> {
+    private fun transitionsIncomplete(hd: State, pv: State): Set<Transition> {
         val key = pv
         val trans = hd.outTransFor(key)
         return if (null == trans) {
@@ -670,11 +669,11 @@ internal class MinimalParser private constructor(
         }
     }
 
-    fun transitionsComplete(hd: State, pv: State, pp: State): Set<Transition> {
+    private fun transitionsComplete(hd: State, pv: State, pp: State): Set<Transition> {
         val key = pv//Pair(pv, pp)
         val trans = hd.outTransFor(key)
         return if (null == trans) {
-            val ts = parentInContext(pp.rp, pv.rp, hd.rp.rule).map { pn ->
+            val ts = parentsInContext(pp.rp, pv.rp, hd.rp.rule).map { pn ->
                 val action = when {
                     pn.rulePosition.isGoal -> ParseAction.GOAL
                     pn.firstPosition -> ParseAction.HEIGHT
@@ -700,18 +699,16 @@ internal class MinimalParser private constructor(
         }
     }
 
-
     /**
      * for an incomplete rule compute
      * the next terminal in the given context
      * and the lookahead set of terminals expected after it.
      */
-    fun firstTerminals(pv: RulePosition, rp: RulePosition, parentFollow: LookaheadSetPart): Set<FirstTerminalInfo> {
-        val graph = ClosureGraph(pv, rp, parentFollow)
-        return if (graph.root.rulePosition.isGoal && graph.root.rulePosition.isAtEnd) {
+    private fun firstTerminals(pv: RulePosition, rp: RulePosition, parentFollow: LookaheadSetPart): Set<FirstTerminalInfo> {
+        return if (rp.isGoal && rp.isAtEnd) {
             emptySet()
         } else {
-            processClosure(graph)
+            processClosure(ClosureGraph(pv, rp, parentFollow))
             this._firstTerminal[pv][rp]
         }
     }
@@ -723,13 +720,13 @@ internal class MinimalParser private constructor(
      * the lookahead (set of terminals expected after the next rule position in parent
      * the set of terminals expected at the end of the parent rule
      */
-    fun parentInContext(pp: RulePosition, pv: RulePosition, cr: RuntimeRule): Set<ParentNext> {
+    private fun parentsInContext(pp: RulePosition, pv: RulePosition, cr: RuntimeRule): Set<ParentNext> {
         processClosure(ClosureGraph(pp, pv, LookaheadSetPart.RT))
         val ctx = pv
         return this._parentInContext[ctx][cr]
     }
 
-    fun processClosure(graph: ClosureGraph) {
+    private fun processClosure(graph: ClosureGraph) {
         val todoList = mutableQueueOf<ClosureItem>()
         todoList.enqueue(graph.root)
         while (todoList.isNotEmpty) {

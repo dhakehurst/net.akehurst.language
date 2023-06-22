@@ -16,7 +16,7 @@
 
 package net.akehurst.language.collections
 
-internal fun <T> mutableStackOf(vararg elements: T): MutableStack<T> {
+fun <T> mutableStackOf(vararg elements: T): MutableStack<T> {
     val stack = MutableStack<T>()
     elements.forEach {
         stack.push(it)
@@ -24,7 +24,7 @@ internal fun <T> mutableStackOf(vararg elements: T): MutableStack<T> {
     return stack
 }
 
-internal class Stack<T>(
+class Stack<T>(
     val elements: List<T> = emptyList()
 ) {
 
@@ -45,13 +45,13 @@ internal class Stack<T>(
     fun clone() = Stack(elements)
 
     override fun hashCode(): Int = elements.hashCode()
-    override fun equals(other: Any?): Boolean = when(other) {
+    override fun equals(other: Any?): Boolean = when (other) {
         !is Stack<*> -> false
-        else -> this.elements==other.elements
+        else -> this.elements == other.elements
     }
 }
 
-internal class MutableStack<T>() {
+class MutableStack<T>() {
     private val list = mutableListOf<T>()
 
     val size: Int get() = this.list.size

@@ -20,11 +20,12 @@ package net.akehurst.language.agl.aMinimalVersion
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.runtime.graph.TreeDepthFirst
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
+import net.akehurst.language.api.sppt.SpptPathNode
+import net.akehurst.language.api.sppt.SpptWalker
 import kotlin.math.min
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -34,8 +35,7 @@ import kotlin.time.measureTimedValue
 @ExperimentalTime
 class test_MinimalVersionForPaper {
 
-
-    private fun test(goal: String, rrs: RuntimeRuleSet, sentences: List<String>) {
+    private fun test(goal: String, rrs: RuntimeRuleSet, sentences: List<String>, maxOut: Int = 100) {
         val sut = MinimalParser.parser(goal, rrs)
         for (s in sentences) {
             sut.reset()
@@ -47,39 +47,41 @@ class test_MinimalVersionForPaper {
             assertNotNull(actual)
             println("Duration: $duration1  --  $duration2")
             val sb = StringBuilder()
-            actual.traverseTreeDepthFirst(object : TreeDepthFirst<CompleteNode> {
+            actual.traverseTreeDepthFirst(object : SpptWalker {
                 var indent = ""
                 var delta = "  "
 
-                override fun skip(sp: Int, nip: Int) {
-                    sb.append("${indent}<SKIP> : '${s.substring(sp, nip)}'")
+                override fun skip(startPosition: Int, nextInputPosition: Int) {
+                    sb.append("${indent}<SKIP> : '${s.substring(startPosition, nextInputPosition)}'")
                 }
 
-                override fun leaf(node: CompleteNode) {
-                    sb.append("${indent}${node.rule.tag} : '${s.substring(node.startPosition, node.nextInputPosition)}'")
+                override fun leaf(ruleName: String, startPosition: Int, nextInputPosition: Int) {
+                    sb.append("${indent}${ruleName} : '${s.substring(startPosition, nextInputPosition)}'\n")
                 }
 
-                override fun beginBranch(node: CompleteNode, opt: Int) {
-                    sb.append("${indent}${node.rule.tag} {")
+                override fun beginBranch(option: Int, ruleName: String, startPosition: Int, nextInputPosition: Int) {
+                    sb.append("${indent}${ruleName}${if (0 == option) "" else "$option"} {\n")
                     indent += delta
                 }
 
-                override fun endBranch(node: CompleteNode, opt: Int) {
+                override fun endBranch(opt: Int, ruleName: String, startPosition: Int, nextInputPosition: Int) {
                     indent = indent.substring(delta.length)
-                    sb.append("${indent}}")
+                    sb.append("${indent}}\n")
                 }
 
-                override fun error(path: List<CompleteNode>, msg: String) {
-                    sb.append("${indent}Error at ${path.last().startPosition}: '$msg'")
-                    println("${indent}Error at ${path.last().startPosition}: '$msg'")
+                override fun error(msg: String, path: () -> List<SpptPathNode>) {
+                    val p = path()
+                    sb.append("${indent}Error at ${p.last().startPosition}: '$msg'")
+                    println("${indent}Error at ${p.last().startPosition}: '$msg'")
                 }
             })
-            println(sb.substring(0, min(100, sb.length)))
+            println(sb.substring(0, min(maxOut, sb.length)))
         }
     }
 
     @Test
     fun concatenation_literal_abc() {
+        // S = a b c
         test(
             "S",
             runtimeRuleSet {
@@ -93,18 +95,23 @@ class test_MinimalVersionForPaper {
 
     @Test
     fun bodmas_exprOpExprRules_root_choiceEqual() {
+        // S = E
+        // E = R | M | A
+        // R = v
+        // M = E * E
+        // A = E + E
         test(
             "S",
             runtimeRuleSet {
-                concatenation("S") { ref("expr") }
-                choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                    ref("root")
-                    ref("mul")
-                    ref("add")
+                concatenation("S") { ref("E") }
+                choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                    ref("R")
+                    ref("M")
+                    ref("A")
                 }
-                concatenation("root") { literal("v") }
-                concatenation("mul") { ref("expr"); literal("*"); ref("expr") }
-                concatenation("add") { ref("expr"); literal("+"); ref("expr") }
+                concatenation("R") { literal("v") }
+                concatenation("M") { ref("E"); literal("*"); ref("E") }
+                concatenation("A") { ref("E"); literal("+"); ref("E") }
             },
             listOf("v", "v+v", "v*v", "v+v*v", "v*v+v", "v+v*v*v+v+v")
         )
@@ -182,6 +189,12 @@ class test_MinimalVersionForPaper {
 
     @Test
     fun ScottJohnstone_RightNulled_1() {
+        // S = abAa | aBAa | aba
+        // abAa = a b A a
+        // aBAa = a B A a
+        // aba = a b a
+        // A = a | a A
+        // B = b
         test(
             "S",
             runtimeRuleSet {
@@ -277,7 +290,7 @@ class test_MinimalVersionForPaper {
         )
     }
 
-    //@Test
+    @Test
     fun Generalized_Bottom_Up_Parsers_With_Reduced_Stack_Activity__G3() {
         /*
          * from [https://www.researchgate.net/publication/220458273_Generalized_Bottom_Up_Parsers_With_Reduced_Stack_Activity]
@@ -311,7 +324,7 @@ class test_MinimalVersionForPaper {
 
     @Test
     fun RecursiveIssue() {
-        //  S = A | <e> S
+        //  S = A | S
         //  A = a | a A
         test(
             "S",
@@ -348,6 +361,7 @@ class test_MinimalVersionForPaper {
                 "aa",
                 "aaa",
                 "aaaa",
+                "aaaaa",
                 "a".repeat(10)
             )
         )
@@ -482,6 +496,48 @@ class test_MinimalVersionForPaper {
                 "bbba",
                 "bbbb",
             )
+        )
+    }
+
+    @Test
+    fun For_paper_Emebdded() {
+        //  S = <e> | S a
+        val emb = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { empty() }
+                concatenation { literal("a"); ref("S"); }
+            }
+        }
+        // S = d | BS
+        // B = b I::S b | c I::S c
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { literal("d") }
+                concatenation { ref("B"); ref("S") }
+            }
+            choice("B", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { literal("b"); ref("E"); literal("b") }
+                concatenation { literal("c"); ref("E"); literal("c") }
+            }
+            embedded("E", emb, emb.findRuntimeRule("S"))
+        }
+
+        val sentences = listOf(
+            "d",
+            "babd",
+            "cacd",
+            "baaaabd",
+            "caaaacd",
+            "babcacd",
+            "baaaabcaaaacd",
+            "caaaacbaaaabd",
+        )
+
+        test(
+            "S",
+            rrs,
+            sentences,
+            1000
         )
     }
 

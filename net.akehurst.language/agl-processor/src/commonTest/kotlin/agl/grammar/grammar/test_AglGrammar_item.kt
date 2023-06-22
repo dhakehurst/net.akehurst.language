@@ -44,7 +44,7 @@ class test_AglGrammar_item {
         return spptParser.addTree(treeString)
     }
 
-    private fun test(sentence:String, goal:String, expected:String) {
+    private fun test(sentence: String, goal: String, expected: String) {
         val result = parse(goal, sentence)
         val expSppt = sppt(expected)
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -841,7 +841,7 @@ rule { grammarRule {
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
-        assertEquals(2, result.sppt!!.maxNumHeads)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
     @Test
@@ -860,10 +860,10 @@ rule { grammarRule {
                 }
                 IDENTIFIER : 'r' WHITESPACE : ' '
                 '=' WHITESPACE : ' '
-                rhs|1 { concatenation {  concatenationItem { simpleItem|1 { nonTerminal {  
+                rhs|1 { concatenation {  concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal {  
                     IDENTIFIER : 'a'
                     WHITESPACE : ' '
-                } } } } }
+                } } } } } }
                 ';'
             } }
         """.trimIndent()
@@ -907,7 +907,7 @@ rule { grammarRule {
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
-        assertEquals(2, result.sppt!!.maxNumHeads)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
     @Test
@@ -1118,7 +1118,7 @@ grammar {
   WHITESPACE : ' '
   IDENTIFIER : 'Test'
   WHITESPACE : ' '
-  extends { §empty }
+  extendsOpt { §empty }
   '{'
   WHITESPACE : ' '
   rules { rule { grammarRule {
@@ -1160,7 +1160,7 @@ grammar {
   WHITESPACE : ' '
   IDENTIFIER : 'Test'
   WHITESPACE : ' '
-  extends { §empty }
+  extendsOpt { §empty }
   '{'
   WHITESPACE : ' '
   rules { rule { grammarRule {
