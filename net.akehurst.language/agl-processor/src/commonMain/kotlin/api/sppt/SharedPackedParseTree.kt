@@ -16,18 +16,49 @@
 
 package net.akehurst.language.api.sppt
 
-data class SpptPathNode(
-    val ruleName: String,
-    val startPosition: Int,
+import net.akehurst.language.agl.api.runtime.Rule
+
+interface SpptDataNode {
+    val rule: Rule
+    val startPosition: Int
     val nextInputPosition: Int
+    val optionInParent: Int
+}
+
+data class IndexOfTotal(
+    val index: Int,
+    val total: Int
 )
+
+interface SpptDataNodeInfo {
+    val node: SpptDataNode
+
+    val option: IndexOfTotal
+    val child: IndexOfTotal
+
+    val numChildren: Int
+    val numSkipChildren: Int
+}
 
 interface SpptWalker {
     fun skip(startPosition: Int, nextInputPosition: Int)
-    fun leaf(ruleName: String, startPosition: Int, nextInputPosition: Int)
-    fun beginBranch(option: Int, ruleName: String, startPosition: Int, nextInputPosition: Int)
-    fun endBranch(opt: Int, ruleName: String, startPosition: Int, nextInputPosition: Int)
-    fun error(msg: String, path: () -> List<SpptPathNode>)
+    fun leaf(nodeInfo: SpptDataNodeInfo)
+
+    /**
+     * @param optionOfTotal Pair number indicating which of the parents options this branch is of how many
+     * @param ruleName name/tag of the matched rule
+     * @param startPosition
+     * @param nextInputPosition
+     * @param numChildren how many children there are
+     */
+    fun beginBranch(nodeInfo: SpptDataNodeInfo)
+
+    fun endBranch(nodeInfo: SpptDataNodeInfo)
+
+    fun beginEmbedded(nodeInfo: SpptDataNodeInfo)
+    fun endEmbedded(nodeInfo: SpptDataNodeInfo)
+
+    fun error(msg: String, path: () -> List<SpptDataNode>)
 }
 
 /**
@@ -53,7 +84,7 @@ interface SharedPackedParseTree {
      */
     val root: SPPTNode
 
-    fun traverseTreeDepthFirst(callback: SpptWalker)
+    fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean)
 
 
     /**
@@ -84,5 +115,5 @@ interface SharedPackedParseTree {
      */
     val toStringAll: String
 
-    fun toStringAllWithIndent(indentIncrement: String): String
+    fun toStringAllWithIndent(indentIncrement: String, skipDataAsTree: Boolean = false): String
 }

@@ -27,6 +27,7 @@ import test.assertEqualsWarning
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.measureTimedValue
 
 internal abstract class test_ScanOnDemandParserAbstract(val build: Boolean = false) {
     fun test(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int, vararg expectedTrees: String): SharedPackedParseTree? {
@@ -64,18 +65,21 @@ internal abstract class test_ScanOnDemandParserAbstract(val build: Boolean = fal
         println("${this::class.simpleName} - '$sentence'")
         val parser = ScanOnDemandParser(rrs as RuntimeRuleSet)
         if (build) parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
-        val result = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
+        val (result, duration) = measureTimedValue {
+            parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
+        }
+        println("Duration: $duration")
         if (printAutomaton) println(rrs.usedAutomatonToString(goal))
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString()) //TODO: check all, not error
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         val sppt = SPPTParserDefault(rrs, embeddedRuntimeRuleSets)
         expectedTrees.forEach { sppt.addTree(it) }
         val expected = sppt.tree
-        assertEquals(expected.toStringAllWithIndent("  "), result.sppt!!.toStringAllWithIndent("  "))
+        assertEquals(expected.toStringAllWithIndent("  ", true).trim(), result.sppt!!.toStringAllWithIndent("  ", true).trim())
         assertEquals(expected, result.sppt)
         //FIXME: add back this assert
         assertEqualsWarning(expectedNumGSSHeads, result.sppt!!.maxNumHeads, "Too many heads on GSS")
-        assertTrue(parser.runtimeDataIsEmpty)
+        assertTrue(parser.runtimeDataIsEmpty, "Runtime data not empty")
         return result.sppt
     }
 

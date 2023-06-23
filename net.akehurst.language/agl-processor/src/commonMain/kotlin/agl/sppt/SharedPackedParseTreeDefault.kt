@@ -34,7 +34,7 @@ import net.akehurst.language.api.sppt.SpptWalker
         root.tree = this
     }
 
-    override fun traverseTreeDepthFirst(callback: SpptWalker) {
+    override fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean) {
         TODO("not implemented")
     }
 
@@ -70,10 +70,10 @@ import net.akehurst.language.api.sppt.SpptWalker
     }
 
     override val toStringAll: String by lazy {
-        this.toStringAllWithIndent("")
+        this.toStringAllWithIndent("", true)
     }
 
-    override fun toStringAllWithIndent(indentIncrement: String): String {
+    override fun toStringAllWithIndent(indentIncrement: String, skipDataAsTree: Boolean): String {
         val visitor = ToStringVisitor("\n", indentIncrement)
         val all: Set<String> = visitor.visitTree(this, "  ")
         val total = all.size

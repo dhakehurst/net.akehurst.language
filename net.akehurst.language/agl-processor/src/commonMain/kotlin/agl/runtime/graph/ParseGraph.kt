@@ -562,36 +562,11 @@ internal class ParseGraph(
         }
     }
 
-    private fun mergeDecisionOnChildrenPriority(existingParent: CompleteNodeIndex, newParent: CompleteNodeIndex, ifEqual: () -> MergeOptions): MergeOptions {
-        val existingPriority = existingParent.childrenPriorities ?: emptyList()
-        val newPriority = newParent.childrenPriorities ?: emptyList()
-        val existingSize = existingPriority.size
-        val newSize = newPriority.size
-
-        for (chIdx in 0 until maxOf(existingSize, newSize)) {
-            val exChPrio = if (chIdx < existingSize) existingPriority[chIdx] else emptyList()
-            val nwChPrio = if (chIdx < newSize) newPriority[chIdx] else emptyList()
-            val exChPrioSize = exChPrio.size
-            val nwChPrioSize = nwChPrio.size
-            for (p in 0 until maxOf(exChPrioSize, nwChPrioSize)) {
-                val e = if (p < exChPrioSize) exChPrio[p] else 0
-                val n = if (p < nwChPrioSize) nwChPrio[p] else 0
-                when {
-                    e > n -> return MergeOptions.PREFER_EXISTING
-                    e < n -> return MergeOptions.PREFER_NEW
-                    else -> Unit
-                }
-            }
-        }
-        return ifEqual()
-    }
-
     private fun areSame(existingParent: CompleteNodeIndex, newParent: CompleteNodeIndex): Boolean {
         return when {
             existingParent.startPosition != newParent.startPosition -> false
             existingParent.nextInputPosition != newParent.nextInputPosition -> false
             existingParent.state != newParent.state -> false
-            existingParent.childrenPriorities != newParent.childrenPriorities -> false
             else -> true
         }
     }
@@ -608,17 +583,13 @@ internal class ParseGraph(
                     RuntimeRuleChoiceKind.NONE -> error("should never happen")
                     RuntimeRuleChoiceKind.LONGEST_PRIORITY -> mergeDecisionOnLength(existingParent, newParent) {
                         mergeDecisionOnPriority(existingParent, newParent) {
-                            mergeDecisionOnChildrenPriority(existingParent, newParent) {
-                                MergeOptions.UNDECIDABLE
-                            }
+                            MergeOptions.UNDECIDABLE
                         }
                     }
 
                     RuntimeRuleChoiceKind.PRIORITY_LONGEST -> mergeDecisionOnPriority(existingParent, newParent) {
-                        mergeDecisionOnChildrenPriority(existingParent, newParent) {
-                            mergeDecisionOnLength(existingParent, newParent) {
-                                MergeOptions.UNDECIDABLE
-                            }
+                        mergeDecisionOnLength(existingParent, newParent) {
+                            MergeOptions.UNDECIDABLE
                         }
                     }
 
@@ -627,9 +598,7 @@ internal class ParseGraph(
             }
 
             else -> mergeDecisionOnLength(existingParent, newParent) {
-                mergeDecisionOnChildrenPriority(existingParent, newParent) {
-                    MergeOptions.UNDECIDABLE
-                }
+                MergeOptions.UNDECIDABLE
             }
         }
     }
@@ -706,7 +675,8 @@ internal class ParseGraph(
 //        val children = embeddedTreeData.childrenFor(embGoal.firstRule, embeddedTreeData.root?.startPosition!!, embeddedTreeData.root?.nextInputPosition!!)
         val children = embeddedTreeData.childrenFor(embeddedTreeData.root!!)
         val child = children.first().second[0]
-        this.treeData.setEmbeddedChild(newHead.complete, child)
+        this.treeData.setEmbeddedChild(newHead.complete, child, embeddedTreeData)
+
         this.addGrowingHead(head, newHead)
         return true
     }

@@ -68,6 +68,7 @@ class test_Dot(val data: Data) {
         assertTrue(result.issues.errors.isEmpty())
         val resultStr = result.sppt!!.asString
         assertEquals(this.data.text, resultStr)
+        println(result.sppt!!.toStringAllWithIndent("  "))
     }
 
     @Test

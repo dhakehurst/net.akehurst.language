@@ -1,0 +1,90 @@
+/*
+ * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+package net.akehurst.language.agl.agl.sppt
+
+import net.akehurst.language.api.sppt.SpptDataNode
+import net.akehurst.language.api.sppt.SpptDataNodeInfo
+import net.akehurst.language.api.sppt.SpptWalker
+
+class SpptWalkerToString(
+    val sentence: String,
+    val indentDelta: String
+) : SpptWalker {
+    private var currentIndent = ""
+    private val sb = StringBuilder()
+
+    val output get() = sb.toString()
+
+    override fun skip(startPosition: Int, nextInputPosition: Int) {
+        val matchedText = sentence.substring(startPosition, nextInputPosition).replace("\n", "\u23CE").replace("\t", "\u2B72")
+        sb.append("${currentIndent}<SKIP> : '$matchedText'\n")
+    }
+
+    override fun leaf(nodeInfo: SpptDataNodeInfo) {
+        val chNum = nodeInfo.child.index
+        val siblings = nodeInfo.child.total
+        val ind = if (siblings == 1) "" else currentIndent
+        val eol = if (siblings == 1) " " else "\n"
+        val matchedText = sentence.substring(nodeInfo.node.startPosition, nodeInfo.node.nextInputPosition).replace("\n", "\u23CE").replace("\t", "\u2B72")
+        when {
+            nodeInfo.node.rule.isEmptyTerminal -> sb.append("${ind}${nodeInfo.node.rule.tag}$eol")
+            nodeInfo.node.rule.isPattern -> sb.append("${ind}${nodeInfo.node.rule.tag} : '${matchedText}'$eol")
+            else -> sb.append("${ind}'${matchedText}'$eol")
+        }
+    }
+
+    override fun beginBranch(nodeInfo: SpptDataNodeInfo) {
+        val option = nodeInfo.option.index
+        val total = nodeInfo.option.total
+        val chNum = nodeInfo.child.index
+        val siblings = nodeInfo.child.total
+        val totChildren = nodeInfo.numChildren + nodeInfo.numSkipChildren
+        val eol = if (totChildren == 1) " " else "\n"
+        if (siblings == 1) {
+            sb.append("${nodeInfo.node.rule.tag} {$eol")
+        } else {
+            sb.append("${currentIndent}${nodeInfo.node.rule.tag} {$eol")
+        }
+        if (totChildren != 1) currentIndent += indentDelta
+    }
+
+    override fun endBranch(nodeInfo: SpptDataNodeInfo) {
+        val chNum = nodeInfo.child.index
+        val siblings = nodeInfo.child.total
+        val totChildren = nodeInfo.numChildren + nodeInfo.numSkipChildren
+        val eol = if (siblings == 1) " " else "\n"
+        if (totChildren != 1) currentIndent = currentIndent.substring(indentDelta.length)
+        val ind = if (totChildren == 1) "" else currentIndent
+        sb.append("${ind}}$eol")
+    }
+
+    override fun beginEmbedded(nodeInfo: SpptDataNodeInfo) {
+        this.beginBranch(nodeInfo)
+    }
+
+    override fun endEmbedded(nodeInfo: SpptDataNodeInfo) {
+        this.endBranch(nodeInfo)
+    }
+
+
+    override fun error(msg: String, path: () -> List<SpptDataNode>) {
+        val p = path()
+        sb.append("${currentIndent}Error at ${p.last().startPosition}: '$msg'")
+        println("${currentIndent}Error at ${p.last().startPosition}: '$msg'")
+    }
+}

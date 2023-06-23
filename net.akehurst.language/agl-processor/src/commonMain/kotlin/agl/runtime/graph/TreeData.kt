@@ -17,8 +17,9 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.api.sppt.SpptDataNode
 
-internal class TreeData<GN, CN : TreeDataComplete.Companion.CompleteNode>(
+internal class TreeData<GN, CN : SpptDataNode>(
     val forStateSetNumber: Int
 ) {
 
@@ -72,9 +73,10 @@ internal class TreeData<GN, CN : TreeDataComplete.Companion.CompleteNode>(
 
         fun hasGrowingParent(node: GN): Boolean = (_numberOfParents[node.complete] ?: 0) > 0
     */
-    fun setEmbeddedChild(parent: CN, child: CN) {
+    fun setEmbeddedChild(parent: CN, child: CN, embeddedTreeData: TreeDataComplete<CN>) {
         val completeChildren = listOf(child)
         this.complete.setChildren(parent, completeChildren, true)  //might it ever not be preferred!
+        this.complete.setEmbeddedTreeFor(parent, embeddedTreeData)
     }
 
     fun setFirstChildForComplete(parent: CN, child: CN, isAlternative: Boolean) {

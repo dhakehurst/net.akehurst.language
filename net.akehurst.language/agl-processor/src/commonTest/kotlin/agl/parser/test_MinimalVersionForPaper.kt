@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.aMinimalVersion
 
+import net.akehurst.language.agl.agl.sppt.SpptWalkerToString
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.processor.Agl
@@ -24,8 +25,6 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
-import net.akehurst.language.api.sppt.SpptPathNode
-import net.akehurst.language.api.sppt.SpptWalker
 import kotlin.math.min
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -46,36 +45,10 @@ class test_MinimalVersionForPaper {
             // println(sut.automaton.usedAutomatonToString())
             assertNotNull(actual)
             println("Duration: $duration1  --  $duration2")
-            val sb = StringBuilder()
-            actual.traverseTreeDepthFirst(object : SpptWalker {
-                var indent = ""
-                var delta = "  "
-
-                override fun skip(startPosition: Int, nextInputPosition: Int) {
-                    sb.append("${indent}<SKIP> : '${s.substring(startPosition, nextInputPosition)}'")
-                }
-
-                override fun leaf(ruleName: String, startPosition: Int, nextInputPosition: Int) {
-                    sb.append("${indent}${ruleName} : '${s.substring(startPosition, nextInputPosition)}'\n")
-                }
-
-                override fun beginBranch(option: Int, ruleName: String, startPosition: Int, nextInputPosition: Int) {
-                    sb.append("${indent}${ruleName}${if (0 == option) "" else "$option"} {\n")
-                    indent += delta
-                }
-
-                override fun endBranch(opt: Int, ruleName: String, startPosition: Int, nextInputPosition: Int) {
-                    indent = indent.substring(delta.length)
-                    sb.append("${indent}}\n")
-                }
-
-                override fun error(msg: String, path: () -> List<SpptPathNode>) {
-                    val p = path()
-                    sb.append("${indent}Error at ${p.last().startPosition}: '$msg'")
-                    println("${indent}Error at ${p.last().startPosition}: '$msg'")
-                }
-            })
-            println(sb.substring(0, min(maxOut, sb.length)))
+            val walker = SpptWalkerToString(s, "  ")
+            actual.traverseTreeDepthFirst(walker, true)
+            val out = walker.output
+            println(out.substring(0, min(maxOut, out.length)))
         }
     }
 
@@ -1180,13 +1153,13 @@ grammar Packages extends Interfaces {
             ConverterToRuntimeRules(it).runtimeRuleSet
         }
         val sentences = listOf(
-            //"import x; @An() interface An {  }",
-            // "class A { int valid = 0b0; }",
-            // "interface An { An[] value(); }",
-            // "class B {  B() {  } }",
-            // "classclass{voidvoid(){}}",
-            // "class T { void func() { getUnchecked(i++); } }",
-            // "class T { void func() { if (a && b) { f(); } } }",
+            "import x; @An() interface An {  }",
+            "class A { int valid = 0b0; }",
+            "interface An { An[] value(); }",
+            "class B {  B() {  } }",
+            "classclass{voidvoid(){}}",
+            "class T { void func() { getUnchecked(i++); } }",
+            "class T { void func() { if (a && b) { f(); } } }",
             """
 class CharBufferSpliterator implements Spliterator.OfInt {
     CharBufferSpliterator(CharBuffer buffer) {

@@ -201,13 +201,16 @@ class LanguageRegistryDefault : GrammarRegistry {
         return findOrNull("$localNamespace.$nameOrQName") ?: findOrNull(nameOrQName)
     }
 
-    fun <AsmType : Any, ContextType : Any> findOrPlaceholder(identity: String): LanguageDefinition<AsmType, ContextType> {
+    fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
+        identity: String,
+        aglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = Agl.registry.agl.grammar.processor?.optionsDefault(),
+    ): LanguageDefinition<AsmType, ContextType> {
         val existing = this.findOrNull<AsmType, ContextType>(identity)
         return if (null == existing) {
             val placeholder = LanguageDefinitionDefault<AsmType, ContextType>(
                 identity = identity,
                 grammarStrArg = null,
-                aglOptions = Agl.registry.agl.grammar.processor?.optionsDefault(),
+                aglOptions = aglOptions,
                 buildForDefaultGoal = false,
                 configuration = LanguageProcessorConfigurationDefault()
             )

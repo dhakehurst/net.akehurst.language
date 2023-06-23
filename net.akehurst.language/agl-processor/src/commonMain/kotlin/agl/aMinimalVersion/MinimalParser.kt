@@ -25,6 +25,7 @@ import net.akehurst.language.agl.runtime.graph.TreeData
 import net.akehurst.language.agl.runtime.graph.TreeDataComplete
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.automaton.ParseAction
+import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.collections.LazyMutableMapNonNull
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.collections.mutableQueueOf
@@ -173,8 +174,8 @@ internal data class CompleteNode(
     override val rule: RuntimeRule,
     override val startPosition: Int,
     override val nextInputPosition: Int,
-) : TreeDataComplete.Companion.CompleteNode {
-    override val optionList: List<Int> get() = listOf(0)// TODO("not implemented")
+) : SpptDataNode {
+    override val optionInParent: Int = 0 // TODO("not implemented")
 
     override fun toString(): String = "CompleteNode(${rule.tag},$startPosition,$nextInputPosition)"
 }

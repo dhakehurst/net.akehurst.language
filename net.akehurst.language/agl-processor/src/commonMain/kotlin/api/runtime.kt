@@ -21,11 +21,21 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 
 interface RuleSet {
     companion object {
-        fun build(init:RuleSetBuilder.()->Unit) : RuleSet = runtimeRuleSet(init)
+        fun build(init: RuleSetBuilder.() -> Unit): RuleSet = runtimeRuleSet(init)
     }
 }
 
 interface Rule {
+    val tag: String
+
+    /**
+     * Empty, Literal, Pattern, Embedded
+     */
+    val isTerminal: Boolean
+    val isEmptyTerminal: Boolean
+    val isLiteral: Boolean
+    val isPattern: Boolean
+    val isEmbedded: Boolean
 }
 
 @DslMarker
@@ -33,9 +43,9 @@ internal annotation class RuntimeRuleSetDslMarker
 
 @RuntimeRuleSetDslMarker
 interface RuleSetBuilder {
-    fun concatenation(ruleName:String, isSkip: Boolean = false, init: ConcatenationBuilder.() -> Unit)
-    fun choiceLongest(ruleName:String, isSkip: Boolean = false, init: ChoiceBuilder.() -> Unit)
-    fun choicePriority(ruleName:String, isSkip: Boolean = false, init: ChoiceBuilder.() -> Unit)
+    fun concatenation(ruleName: String, isSkip: Boolean = false, init: ConcatenationBuilder.() -> Unit)
+    fun choiceLongest(ruleName: String, isSkip: Boolean = false, init: ChoiceBuilder.() -> Unit)
+    fun choicePriority(ruleName: String, isSkip: Boolean = false, init: ChoiceBuilder.() -> Unit)
 }
 
 @RuntimeRuleSetDslMarker
@@ -43,7 +53,7 @@ interface ConcatenationBuilder {
     fun empty()
     fun literal(value: String)
     fun pattern(pattern: String)
-    fun ref(name:String)
+    fun ref(name: String)
 }
 
 @RuntimeRuleSetDslMarker

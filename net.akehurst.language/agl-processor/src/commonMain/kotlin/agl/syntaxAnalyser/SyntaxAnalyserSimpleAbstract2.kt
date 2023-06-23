@@ -39,7 +39,7 @@ import net.akehurst.language.typemodel.api.*
  * @param scopeDefinition TypeNameDefiningScope -> Map<TypeNameDefiningSomethingReferencable, referencableProperty>
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
-abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
+abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
     val typeModel: GrammarTypeModel,
     val scopeModel: ScopeModel
 ) : SyntaxAnalyser<A> {
@@ -70,23 +70,6 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
     }
 
     override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<A> {
-    }
-
-    fun transform1(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<A> {
-        this._mapToGrammar = mapToGrammar
-        _asm = AsmSimple()
-        val path = AsmElementPath.ROOT + (_asm!!.rootElements.size).toString()
-        val value = this.createValue(sppt.root, path)
-        if (null == value) {
-            _asm?.addRoot("<null>")
-        } else {
-            _asm?.addRoot(value)
-        }
-
-        return SyntaxAnalysisResultDefault(_asm as A?, _issues, locationMap)
-    }
-
-    fun transform2(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<A> {
         this._mapToGrammar = mapToGrammar
         _asm = AsmSimple()
         val path = AsmElementPath.ROOT + (_asm!!.rootElements.size).toString()

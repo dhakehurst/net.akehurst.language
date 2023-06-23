@@ -22,9 +22,9 @@ import net.akehurst.language.api.processor.AutomatonKind
 
 internal class ParserState(
     val number: StateNumber,
-    val rulePositions: List<RulePosition>, //must be a list so that we can index against Growing children
+    val rulePositions: List<RulePosition>, //must be a list (not a set) so that we can index against Growing children
     val stateSet: ParserStateSet
-)  {
+) {
 
     companion object {
         fun LookaheadSetPart.lhs(stateSet: ParserStateSet): LookaheadSet {
@@ -48,8 +48,8 @@ internal class ParserState(
     val choiceKindList: List<RuntimeRuleChoiceKind> by lazy {
         this.rulePositions.mapNotNull {
             val rhs = it.rule.rhs
-            when(rhs) {
-                is RuntimeRuleRhsChoice-> rhs.choiceKind
+            when (rhs) {
+                is RuntimeRuleRhsChoice -> rhs.choiceKind
                 else -> null
             }
         }.toSet().toList()

@@ -25,6 +25,7 @@ import net.akehurst.language.agl.sppt.SPPTBranchFromTreeData
 import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.agl.sppt.ToStringVisitor
 import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.api.sppt.SpptDataNode
 
 
 /*
@@ -60,7 +61,7 @@ internal class GrowingNodeIndex(
     }
 
     val complete by lazy {
-        CompleteNodeIndex(treeData, runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this, childrenPriorities)
+        CompleteNodeIndex(treeData, runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)
     }
 
     private val _hashCode = arrayOf(runtimeState, startPosition, nextInputPosition, numNonSkipChildren).contentHashCode()
@@ -119,9 +120,8 @@ internal class CompleteNodeIndex(
     override val startPosition: Int,
     override val nextInputPosition: Int,
     val nextInputPositionAfterSkip: Int,
-    val gni: GrowingNodeIndex?, // the GNI used to create this, used when dropping
-    val childrenPriorities: List<List<Int>>?
-) : TreeDataComplete.Companion.CompleteNode {
+    val gni: GrowingNodeIndex? // the GNI used to create this, used when dropping
+) : SpptDataNode {
 
     init {
         if (Debug.CHECK) check(state.rulePositions.all { it.isAtEnd })
@@ -132,7 +132,7 @@ internal class CompleteNodeIndex(
     val rulePositions get() = this.state.rulePositions
 
     //private val _hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode()
-    private val _hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition, childrenPriorities).contentHashCode()
+    private val _hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode()
 
     //TODO: don't store data twice..also prefer not to create 2 objects!
     val preferred by lazy { PreferredChildIndex(runtimeRulesSet, startPosition) }
@@ -144,7 +144,7 @@ internal class CompleteNodeIndex(
     val isEmptyMatch: Boolean get() = this.startPosition == this.nextInputPosition
     val hasSkipData: Boolean get() = this.nextInputPosition != nextInputPositionAfterSkip
 
-    override val optionList: List<Int> get() = this.state.priorityList
+    override val optionInParent: Int get() = this.state.priorityList[0]
     val priorityList: List<Int> get() = this.state.priorityList
 
     override fun hashCode(): Int = this._hashCode_cache
@@ -166,7 +166,7 @@ internal class CompleteNodeIndex(
                 postfix = ")",
                 separator = ","
             ) { it.tag }
-        }|${optionList}-${childrenPriorities}}"
+        }|${optionInParent}}"
     }
 
     //useful during debug

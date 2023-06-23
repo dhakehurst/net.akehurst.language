@@ -191,4 +191,19 @@ internal class test_leftRecursive_a : test_ScanOnDemandParserAbstract() {
         )
     }
 
+    //@Test // IntelliJ/Junit infrastructure cant seem to cope
+    fun aWS5000() {
+        val sentence = "a ".repeat(5000)
+
+        val expected = "S { ".repeat(4999) + "S { 'a' WS { \"\\s+\" : ' ' } }" + "'a' WS { \"\\s+\" : ' ' } }".repeat(4999)
+
+        super.test(
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
+        )
+    }
+
 }

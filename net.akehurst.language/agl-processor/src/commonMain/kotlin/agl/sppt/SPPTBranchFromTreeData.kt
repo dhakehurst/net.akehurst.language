@@ -20,10 +20,7 @@ import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.CompleteNodeIndex
 import net.akehurst.language.agl.runtime.graph.TreeDataComplete
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.api.sppt.SPPTBranch
-import net.akehurst.language.api.sppt.SPPTException
-import net.akehurst.language.api.sppt.SPPTLeaf
-import net.akehurst.language.api.sppt.SPPTNode
+import net.akehurst.language.api.sppt.*
 
 //TODO: currently this has to be public, because otherwise kotlin does not
 // use the non-mangled names for properties - necessary for tree serialisation
@@ -42,11 +39,11 @@ import net.akehurst.language.api.sppt.SPPTNode
     // --- SPPTBranch ---
 
     override val childrenAlternatives: Set<List<SPPTNode>> by lazy {
-        val alternatives = this._treeData.childrenFor(object : TreeDataComplete.Companion.CompleteNode {
+        val alternatives = this._treeData.childrenFor(object : SpptDataNode {
             override val rule: RuntimeRule get() = runtimeRule
             override val startPosition: Int get() = startPosition
             override val nextInputPosition: Int get() = nextInputPosition
-            override val optionList: List<Int> get() = emptyList()
+            override val optionInParent: Int get() = 0
         }
         )
         val r: Set<List<SPPTNode>> = alternatives.map { (prioList, alt) ->
@@ -55,7 +52,7 @@ import net.akehurst.language.api.sppt.SPPTNode
                 val rp = when (child.rulePositions.size) {
                     1 -> child.rulePositions[0]
                     else -> {
-                        val possChild = this.runtimeRule.rulePositions.filter { it.position == childIndx }.first { prioList.contains(it.option) }
+                        val possChild = this.runtimeRule.rulePositions.filter { it.position == childIndx }.first { prioList == it.option }
                         child.rulePositions.first { possChild.items.contains(it.rule) }
                     }
                 }
@@ -77,7 +74,6 @@ import net.akehurst.language.api.sppt.SPPTNode
                                 startPositionBeforeInitialSkip,
                                 userGoal.nextInputPosition,
                                 td.root!!.nextInputPosition!!,
-                                null,
                                 null
                             )
                             val userGoalChildren = skipChildren + child.treeData.completeChildren[userGoal]!!.values.first()
@@ -93,7 +89,7 @@ import net.akehurst.language.api.sppt.SPPTNode
 
                     child.isEmbedded -> when {
                         child.hasSkipData -> {
-                            val skipData = this._treeData.skipChildrenAfter(child)
+                            val skipData = this._treeData.skipDataAfter(child)
                             val skipChildren = skipData?.let {
                                 val sr = skipData.completeChildren[skipData.root]!!.values.first().get(0)
                                 val c = skipData.completeChildren[sr]!!.values.first().map {
@@ -112,7 +108,7 @@ import net.akehurst.language.api.sppt.SPPTNode
                                         skch.treeData,
                                         this.input,
                                         skch.firstRule,
-                                        skch.optionList[0],
+                                        skch.optionInParent,
                                         skch.startPosition,
                                         skch.nextInputPosition,
                                         -1
@@ -138,7 +134,7 @@ import net.akehurst.language.api.sppt.SPPTNode
 
                     rp.isTerminal -> when {
                         child.hasSkipData -> {
-                            val skipData = this._treeData.skipChildrenAfter(child)
+                            val skipData = this._treeData.skipDataAfter(child)
                             val skipChildren = skipData?.let {
                                 val sr = skipData.completeChildren[skipData.root]!!.values.first().get(0)
                                 val c = skipData.completeChildren[sr]!!.values.first().map {
@@ -157,7 +153,7 @@ import net.akehurst.language.api.sppt.SPPTNode
                                         skch.treeData,
                                         this.input,
                                         skch.firstRule,
-                                        skch.optionList[0],
+                                        skch.optionInParent,
                                         skch.startPosition,
                                         skch.nextInputPosition,
                                         -1

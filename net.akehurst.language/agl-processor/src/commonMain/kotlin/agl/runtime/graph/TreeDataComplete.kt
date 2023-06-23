@@ -16,39 +16,29 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.util.Debug
-import net.akehurst.language.api.sppt.SpptPathNode
+import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.api.sppt.SpptWalker
-import net.akehurst.language.collections.MutableStack
 
-
-internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
+internal class TreeDataComplete<CN : SpptDataNode>(
     val forStateSetNumber: Int
 ) {
 
     companion object {
-        interface CompleteNode {
-            val rule: RuntimeRule
-            val startPosition: Int
-            val nextInputPosition: Int
-
-            val optionList: List<Int>
-        }
-
         private data class PreferredNode(
-            val rule: RuntimeRule,
+            val rule: Rule,
             val startPosition: Int
         ) {
             override fun toString(): String = "PN(${rule.tag},$startPosition)"
         }
 
-        private val CompleteNode.preferred get() = PreferredNode(this.rule, this.startPosition)
+        private val SpptDataNode.preferred get() = PreferredNode(this.rule, this.startPosition)
     }
 
     // --- used to create SPPT ---
 
-    val completeChildren: Map<CN, Map<List<Int>, List<CN>>> get() = this._complete
+    val completeChildren: Map<CN, Map<Int, List<CN>>> get() = this._complete
     var root: CN? = null; private set
     var initialSkip: TreeDataComplete<CN>? = null; private set
 
@@ -57,10 +47,10 @@ internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
     //val nextInputPosition: Int? get() = root?.nextInputPosition
 
     fun setUserGoalChildrenAfterInitialSkip(nug: CN, userGoalChildren: List<CN>) {
-        this._complete[nug] = mutableMapOf(listOf(0) to userGoalChildren.toMutableList())
+        this._complete[nug] = mutableMapOf(0 to userGoalChildren.toMutableList())
     }
 
-    fun childrenFor(branch: TreeDataComplete.Companion.CompleteNode): List<Pair<List<Int>, List<CN>>> {
+    fun childrenFor(branch: SpptDataNode): List<Pair<Int, List<CN>>> {
         val keys = this._complete.keys.filter {
             it.startPosition == branch.startPosition && it.nextInputPosition == branch.nextInputPosition && it.rule == branch.rule
         }
@@ -81,13 +71,14 @@ internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
         }
     }
 
-    fun skipChildrenAfter(nodeIndex: CN) = this._skipDataAfter[nodeIndex]
+    fun skipDataAfter(nodeIndex: SpptDataNode) = this._skipDataAfter[nodeIndex]
+    fun embeddedFor(nodeIndex: SpptDataNode) = this._embeddedFor[nodeIndex]
 
     // --- private implementation ---
 
     // index --> map-of-alternatives (optionList,lists-of-children)
     //maybe optimise because only ambiguous choice nodes have multiple child options
-    private val _complete = mutableMapOf<CN, MutableMap<List<Int>, List<CN>>>()
+    private val _complete = mutableMapOf<CN, MutableMap<Int, List<CN>>>()
 
     // map startPosition -> CN
     private val _preferred = mutableMapOf<PreferredNode, CN>()
@@ -101,6 +92,7 @@ internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
         this._complete.clear()
         this._preferred.clear()
         this._skipDataAfter.clear()
+        this._embeddedFor.clear()
     }
 
     fun preferred(node: CN): CN? = this._preferred[node.preferred]
@@ -139,7 +131,7 @@ internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
     private fun setCompletedBy(parent: CN, children: List<CN>, isAlternative: Boolean) {
         var alternatives = this._complete[parent]
         if (null == alternatives) {
-            alternatives = mutableMapOf(parent.optionList to children)
+            alternatives = mutableMapOf(parent.optionInParent to children)
             this._complete[parent] = alternatives
             if (isAlternative) {
                 //ensure other is not preferred
@@ -155,56 +147,13 @@ internal class TreeDataComplete<CN : TreeDataComplete.Companion.CompleteNode>(
                 this._preferred[parent.preferred] = parent
                 alternatives.clear()
             }
-            alternatives[parent.optionList] = children
+            alternatives[parent.optionInParent] = children
         }
     }
 
-    fun traverseTreeDepthFirst(callback: SpptWalker) {
-        val path = MutableStack<CN>()
-        val stack = MutableStack<Triple<Boolean, Int, CN>>()
-        stack.push(Triple(false, 0, root!!))
-        while (stack.isNotEmpty) {
-            val (done, opt, n) = stack.pop()
-            if (n.rule.isTerminal) {
-                if (n.rule.isEmbedded) {
-                    val ed = this._embeddedFor[n] ?: error("Cannot find embedded TreeData for '$n'")
-                    ed.traverseTreeDepthFirst(callback)
-                } else {
-                    callback.leaf(n.rule.tag, n.startPosition, n.nextInputPosition)
-                    val sd = this._skipDataAfter[n]
-                    if (null != sd) {
-                        callback.skip(sd.root!!.startPosition, sd.root!!.nextInputPosition)
-                    }
-                }
-            } else {
-                if (done) {
-                    callback.endBranch(opt, n.rule.tag, n.startPosition, n.nextInputPosition)
-                    path.pop()
-                } else {
-                    stack.push(Triple(true, opt, n))
-                    callback.beginBranch(opt, n.rule.tag, n.startPosition, n.nextInputPosition)
-                    if (n == root!!) {
-                        if (null != initialSkip) {
-                            callback.skip(initialSkip!!.root!!.startPosition, initialSkip!!.root!!.nextInputPosition)
-                        }
-                    }
-                    if (path.elements.contains(n)) {
-                        path.push(n)
-                        callback.error("Loop in Tree, Grammar has a recursive path that does not consume any input.") {
-                            path.elements.map { SpptPathNode(it.rule.tag, it.startPosition, it.nextInputPosition) }
-                        }
-                    } else {
-                        path.push(n)
-                        val alternatives = this.childrenFor(n)
-                        for (alt in alternatives) {
-                            for (ch in alt.second.reversed()) {
-                                stack.push(Triple(false, alt.first.first(), ch))
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean) {
+        val walker = TreeDataWalkerDepthFirst<CN>(this)
+        walker.traverse(callback, skipDataAsTree)
     }
 
     override fun hashCode(): Int = this.forStateSetNumber
