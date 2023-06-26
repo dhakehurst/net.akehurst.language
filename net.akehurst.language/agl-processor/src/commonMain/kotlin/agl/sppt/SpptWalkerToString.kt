@@ -49,25 +49,31 @@ class SpptWalkerToString(
     }
 
     override fun beginBranch(nodeInfo: SpptDataNodeInfo) {
-        val option = nodeInfo.option.index
-        val total = nodeInfo.option.total
+        val option = nodeInfo.alt.index
+        val total = nodeInfo.alt.totalMatched
         val chNum = nodeInfo.child.index
         val siblings = nodeInfo.child.total
         val totChildren = nodeInfo.numChildren + nodeInfo.numSkipChildren
         val eol = if (totChildren == 1) " " else "\n"
-        if (siblings == 1) {
-            sb.append("${nodeInfo.node.rule.tag} {$eol")
+        val tag = if (nodeInfo.alt.totalMatched == 1) {
+            nodeInfo.node.rule.tag
         } else {
-            sb.append("${currentIndent}${nodeInfo.node.rule.tag} {$eol")
+            "${nodeInfo.node.rule.tag}|${nodeInfo.alt.option}"
+        }
+        if (siblings == 1) {
+            sb.append("$tag {$eol")
+        } else {
+            sb.append("${currentIndent}$tag {$eol")
         }
         if (totChildren != 1) currentIndent += indentDelta
     }
 
     override fun endBranch(nodeInfo: SpptDataNodeInfo) {
         val chNum = nodeInfo.child.index
-        val siblings = nodeInfo.child.total
+        val siblings = nodeInfo.child.total + (nodeInfo.alt.totalMatched - 1)
         val totChildren = nodeInfo.numChildren + nodeInfo.numSkipChildren
         val eol = if (siblings == 1) " " else "\n"
+//        if (nodeInfo.alt.index + 1 == nodeInfo.alt.totalMatched)
         if (totChildren != 1) currentIndent = currentIndent.substring(indentDelta.length)
         val ind = if (totChildren == 1) "" else currentIndent
         sb.append("${ind}}$eol")

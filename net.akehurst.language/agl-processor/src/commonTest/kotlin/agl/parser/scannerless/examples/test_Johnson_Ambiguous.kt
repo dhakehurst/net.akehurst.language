@@ -34,21 +34,13 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
     /**
      * S = S S S || S S || 'a' ;
      */
-    /**
-     * S = S1 || S2 || 'a' ;
-     * S1 = S S S ;
-     * S2 = S S ;
-     */
-
     private companion object {
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.AMBIGUOUS) {
-                ref("S1")
-                ref("S2")
+                concatenation { ref("S"); ref("S"); ref("S") }
+                concatenation { ref("S"); ref("S") }
                 literal("a")
             }
-            concatenation("S1") { ref("S"); ref("S"); ref("S") }
-            concatenation("S2") { ref("S"); ref("S") }
         }
         val goal = "S"
     }
@@ -89,10 +81,8 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S|1 {
-              S2 {
                 S|2 { 'a' }
                 S|2 { 'a' }
-              }
             }
         """.trimIndent()
 
@@ -111,22 +101,20 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
 
         val expected1 = """
             S {
-              S1 {
                 S { 'a' }
                 S { 'a' }
                 S { 'a' }
-              }
             }
         """.trimIndent()
 
         val expected2 = """
-             S { S2 {
-                S { S2 {
+             S {
+                S {
                     S { 'a' }
                     S { 'a' }
-                  } }
+                  }
                 S { 'a' }
-              } }
+              }
         """
 
         super.test(
@@ -143,53 +131,53 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
         val sentence = "aaaa"
 
         val expected1 = """
-         S { S2 {
-            S { S2 {
+         S {
+            S {
                 S { 'a' }
                 S { 'a' }
-              } }
-            S { S2 {
+              }
+            S {
                 S { 'a' }
                 S { 'a' }
-              } }
-          } }
+              }
+          }
         """.trimIndent()
 
         val expected2 = """
-            S { S2 {
-              S { S2 {
-                S { S2 {
+            S {
+              S {
+                S {
                   S { 'a' }
                   S { 'a' }
-                } }
+                }
                 S { 'a' }
-              } }
+              }
               S { 'a' }
-            } }
+            }
         """.trimIndent()
 
         val expected3 = """
-            S { S2 {
-              S { S2 {
-                 S { S1 {
+            S {
+              S {
+                 S {
                     S { 'a' }
                     S { 'a' }
                     S { 'a' }
-                 } }
+                 }
                  S { 'a' }
-              } }
-            } }
+              }
+            }
         """.trimIndent()
 
         val expected4 = """
-            S { S1 {
-              S { S2 {
+            S {
+              S {
                 S { 'a' }
                 S { 'a' }
-              } }
+              }
               S { 'a' }
               S { 'a' }
-            } }
+            }
         """.trimIndent()
 
         super.test(
@@ -207,11 +195,9 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S {
-              S1 {
                 S { 'a' }
                 S { 'a' }
                 S { 'a' }
-              }
             }
         """.trimIndent()
 

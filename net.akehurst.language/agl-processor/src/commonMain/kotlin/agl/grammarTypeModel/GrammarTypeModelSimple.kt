@@ -56,5 +56,8 @@ abstract class GrammarTypeModelAbstract(
 */
     override var allRuleNameToType = mutableMapOf<String, TypeUsage>()
 
+    override val allTypesByRuleName: Collection<Pair<String, TypeUsage>>
+        get() = allRuleNameToType.entries.map { Pair(it.key, it.value) }
+
     override fun findTypeUsageForRule(ruleName: String): TypeUsage? = allRuleNameToType[ruleName]
 }

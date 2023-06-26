@@ -95,7 +95,7 @@ internal class TreeDataComplete<CN : SpptDataNode>(
         this._embeddedFor.clear()
     }
 
-    fun preferred(node: CN): CN? = this._preferred[node.preferred]
+    fun preferred(node: SpptDataNode): SpptDataNode? = this._preferred[node.preferred]
 
     fun setRoot(root: CN) {
         this.root = root
@@ -131,7 +131,7 @@ internal class TreeDataComplete<CN : SpptDataNode>(
     private fun setCompletedBy(parent: CN, children: List<CN>, isAlternative: Boolean) {
         var alternatives = this._complete[parent]
         if (null == alternatives) {
-            alternatives = mutableMapOf(parent.optionInParent to children)
+            alternatives = mutableMapOf(parent.option to children)
             this._complete[parent] = alternatives
             if (isAlternative) {
                 //ensure other is not preferred
@@ -147,7 +147,7 @@ internal class TreeDataComplete<CN : SpptDataNode>(
                 this._preferred[parent.preferred] = parent
                 alternatives.clear()
             }
-            alternatives[parent.optionInParent] = children
+            alternatives[parent.option] = children
         }
     }
 

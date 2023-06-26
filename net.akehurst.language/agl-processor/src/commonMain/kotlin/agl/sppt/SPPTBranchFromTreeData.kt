@@ -38,21 +38,21 @@ import net.akehurst.language.api.sppt.*
 
     // --- SPPTBranch ---
 
-    override val childrenAlternatives: Set<List<SPPTNode>> by lazy {
+    override val childrenAlternatives: Map<Int, List<SPPTNode>> by lazy {
         val alternatives = this._treeData.childrenFor(object : SpptDataNode {
             override val rule: RuntimeRule get() = runtimeRule
             override val startPosition: Int get() = startPosition
             override val nextInputPosition: Int get() = nextInputPosition
-            override val optionInParent: Int get() = 0
+            override val option: Int get() = 0
         }
         )
-        val r: Set<List<SPPTNode>> = alternatives.map { (prioList, alt) ->
-            val chNodeList: List<SPPTNode> = alt.flatMapIndexed { childIndx, child ->
+        val r: Map<Int, List<SPPTNode>> = alternatives.map { (alt, children) ->
+            val chNodeList: List<SPPTNode> = children.flatMapIndexed { childIndx, child ->
                 //val possChildren = this.runtimeRule.rulePositionsAt[childIndx].filter { it.option == this.option }
                 val rp = when (child.rulePositions.size) {
                     1 -> child.rulePositions[0]
                     else -> {
-                        val possChild = this.runtimeRule.rulePositions.filter { it.position == childIndx }.first { prioList == it.option }
+                        val possChild = this.runtimeRule.rulePositions.filter { it.position == childIndx }.first { alt == it.option }
                         child.rulePositions.first { possChild.items.contains(it.rule) }
                     }
                 }
@@ -108,7 +108,7 @@ import net.akehurst.language.api.sppt.*
                                         skch.treeData,
                                         this.input,
                                         skch.firstRule,
-                                        skch.optionInParent,
+                                        skch.option,
                                         skch.startPosition,
                                         skch.nextInputPosition,
                                         -1
@@ -153,7 +153,7 @@ import net.akehurst.language.api.sppt.*
                                         skch.treeData,
                                         this.input,
                                         skch.firstRule,
-                                        skch.optionInParent,
+                                        skch.option,
                                         skch.startPosition,
                                         skch.nextInputPosition,
                                         -1
@@ -199,12 +199,12 @@ import net.akehurst.language.api.sppt.*
                 }
 
             }
-            chNodeList
-        }.toSet()
+            Pair(alt, chNodeList)
+        }.associate { it }
         r
     }
 
-    override val children: List<SPPTNode> get() = this.childrenAlternatives.first()
+    override val children: List<SPPTNode> get() = this.childrenAlternatives.entries.sortedBy { it.key }.last().value
 
     override val nonSkipChildren: List<SPPTNode> by lazy { //TODO: maybe not use lazy
         this.children.filter { !it.isSkip }
@@ -229,10 +229,10 @@ import net.akehurst.language.api.sppt.*
                 // for each alternative list of other children, check there is a matching list
                 // of children in this alternative children
                 var allOthersAreContained = true // if no other children alternatives contain is a match
-                for (otherChildren in other.childrenAlternatives) {
+                for ((alt, otherChildren) in other.childrenAlternatives.entries.sortedBy { it.key }) {
                     // for each of this alternative children, find one that 'contains' otherChildren
                     var foundContainMatch = false
-                    for (thisChildren in this.childrenAlternatives) {
+                    for ((alt, thisChildren) in this.childrenAlternatives.entries.sortedBy { it.key }) {
                         if (thisChildren.size == otherChildren.size) {
                             // for each pair of nodes, one from each of otherChildren thisChildren
                             // check thisChildrenNode contains otherChildrenNode

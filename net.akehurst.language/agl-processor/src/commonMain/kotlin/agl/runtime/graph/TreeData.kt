@@ -27,7 +27,7 @@ internal class TreeData<GN, CN : SpptDataNode>(
 
     val growingChildren: Map<GN, List<CN>> get() = this._growingChildren
 
-    fun preferred(node: CN): CN? = this.complete.preferred(node)
+    fun preferred(node: CN): CN? = (this.complete.preferred(node) as CN?)
 
     fun initialise(gni: GN, initialSkipData: TreeDataComplete<CN>?) {
         val growing = mutableListOf<CN>()

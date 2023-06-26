@@ -31,6 +31,8 @@ interface TypeModel {
      */
     val allTypesByName: Map<String, TypeDefinition>
 
+    val allTypes: Collection<TypeDefinition>
+
     val elementType: Set<ElementType>
 
     val primitiveType: Set<PrimitiveType>

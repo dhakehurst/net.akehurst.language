@@ -139,9 +139,9 @@ internal class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val expected2 = """
-         S { S1 {
+         S|0 { S1 {
             'a'
-            bOpt|1 { §empty }
+            bOpt { §empty }
           } }
         """.trimIndent()
 
@@ -150,7 +150,7 @@ internal class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
             goal = goal,
             sentence = sentence,
             expectedNumGSSHeads = 1,
-            expectedTrees = arrayOf(expected1, expected2)
+            expectedTrees = arrayOf(expected2, expected1)
         )
 
     }

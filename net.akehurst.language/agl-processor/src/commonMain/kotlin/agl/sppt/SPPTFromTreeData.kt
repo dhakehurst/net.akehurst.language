@@ -41,7 +41,7 @@ internal class SPPTFromTreeData(
         get() {
             val goalChildren = _treeData.childrenFor(_treeData.root!!)
             val userGoal = goalChildren.first().second[0]
-            val userGoalOption = userGoal.optionInParent //TODO: will ther ever by more than 1 element?
+            val userGoalOption = userGoal.option //TODO: will ther ever by more than 1 element?
             //TODO: if goal is a leaf !
 
             val startPositionBeforeInitialSkip = _treeData.initialSkip?.root?.startPosition ?: userGoal.startPosition

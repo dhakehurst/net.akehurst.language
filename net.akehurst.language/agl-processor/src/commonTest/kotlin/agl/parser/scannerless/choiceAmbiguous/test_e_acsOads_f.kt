@@ -34,7 +34,7 @@ internal class test_e_acsOads_f : test_ScanOnDemandParserAbstract() {
     // ads1 = acs 'd' 'a'
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("S") { literal("e"); ref("ambig"); literal("f")  }
+            concatenation("S") { literal("e"); ref("ambig"); literal("f") }
             choice("ambig", RuntimeRuleChoiceKind.AMBIGUOUS) {
                 ref("ads")
                 ref("acs")
@@ -51,11 +51,13 @@ internal class test_e_acsOads_f : test_ScanOnDemandParserAbstract() {
     fun empty_fails() {
         val sentence = ""
 
-        val (sppt,issues)=super.testFail(rrs,goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("'e'"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'e'"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -79,11 +81,11 @@ internal class test_e_acsOads_f : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -108,11 +110,11 @@ internal class test_e_acsOads_f : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -121,19 +123,19 @@ internal class test_e_acsOads_f : test_ScanOnDemandParserAbstract() {
         val sentence = "eaf"
 
         val expected1 = """
-            S { 'e' ambig { acs { 'a' } } 'f' }
+            S { 'e' ambig|1 { acs { 'a' } } 'f' }
         """.trimIndent()
 
         val expected2 = """
-            S { 'e' ambig { ads { 'a' } } 'f' }
+            S { 'e' ambig|0 { ads { 'a' } } 'f' }
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected1,expected2)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected1, expected2)
         )
     }
 }

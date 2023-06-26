@@ -47,6 +47,8 @@ abstract class TypeModelAbstract(
 
     override val allTypesByName = mutableMapOf<String, TypeDefinition>()
 
+    override val allTypes: Collection<TypeDefinition> get() = allTypesByName.values
+
     override val elementType: Set<ElementType> get() = allTypesByName.values.filterIsInstance<ElementType>().toSet()
 
     override val primitiveType: Set<PrimitiveType> get() = allTypesByName.values.filterIsInstance<PrimitiveType>().toSet()

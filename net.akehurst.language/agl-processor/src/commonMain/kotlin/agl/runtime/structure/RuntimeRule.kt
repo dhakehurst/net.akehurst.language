@@ -83,6 +83,7 @@ internal class RuntimeRule(
         }
 
     val isChoice get() = this.rhs is RuntimeRuleRhsChoice
+    val isChoiceAmbiguous get() = this.isChoice && (this.rhs as RuntimeRuleRhsChoice).choiceKind == RuntimeRuleChoiceKind.AMBIGUOUS
     val isList get() = this.rhs is RuntimeRuleRhsList
 
     @Deprecated("use 'rhs is'")

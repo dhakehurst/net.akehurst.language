@@ -16,23 +16,7 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.collections.mutableListSeparated
-import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
-import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.util.Debug
-import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.analyser.SyntaxAnalyser
-import net.akehurst.language.api.asm.*
-import net.akehurst.language.api.grammar.Choice
-import net.akehurst.language.api.grammar.GrammarItem
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.sppt.*
-import net.akehurst.language.typemodel.api.*
-
+/*
 /**
  * TypeName <=> RuleName
  *
@@ -110,7 +94,7 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
     }
 
 
-    private fun createValue(target: SPPTNode, path: AsmElementPath): Any? {
+    private fun createValue(target: SpptDataNode, path: AsmElementPath): Any? {
         val elType = this.findTypeForRule(target.name)
         return when {
             null == elType -> {
@@ -121,7 +105,7 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
         }
     }
 
-    private fun createValue(target: SPPTNode, path: AsmElementPath, type: TypeUsage): Any? {
+    private fun createValue(target: SpptDataNode, path: AsmElementPath, type: TypeUsage): Any? {
         val nonOptTarget = when {
             type.nullable -> when (target) {
                 is SPPTBranch -> target.asBranch.nonSkipChildren[0]
@@ -144,12 +128,12 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
         return v
     }
 
-    private fun createValueFromLeaf(target: SPPTLeaf): String? = when {
+    private fun createValueFromLeaf(target: SpptDataNode): String? = when {
         target.isEmptyLeaf -> null
         else -> target.nonSkipMatchedText
     }
 
-    private fun createValueFromBranch(target: SPPTBranch, path: AsmElementPath, typeUse: TypeUsage): Any? {//, scope: ScopeSimple<AsmElementPath>?): Any? {
+    private fun createValueFromBranch(target: SpptDataNode, path: AsmElementPath, typeUse: TypeUsage): Any? {//, scope: ScopeSimple<AsmElementPath>?): Any? {
         val type = typeUse.type//typeModel.findTypeUsageForRule(target.name) ?: argType
         return when (type) {
             is PrimitiveType -> createStringValueFromBranch(target)
@@ -289,12 +273,12 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
         }
     }
 
-    private fun createStringValueFromBranch(target: SPPTNode): String? = when {
+    private fun createStringValueFromBranch(target: SpptDataNode): String? = when {
         target.isEmptyMatch -> null
         else -> target.nonSkipMatchedText
     }
 
-    private fun createListSimpleValueFromBranch(target: SPPTNode, path: AsmElementPath, type: TypeUsage): List<*> {
+    private fun createListSimpleValueFromBranch(target: SpptDataNode, path: AsmElementPath, type: TypeUsage): List<*> {
         if (Debug.CHECK) check(type.type is ListSimpleType)
         return when {
             target.isEmptyLeaf -> emptyList<Any>()
@@ -312,7 +296,7 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
         }
     }
 
-    private fun createListSeparatedValueFromBranch(target: SPPTNode, path: AsmElementPath, type: TypeUsage): List<*> {
+    private fun createListSeparatedValueFromBranch(target: SpptDataNode, path: AsmElementPath, type: TypeUsage): List<*> {
         if (Debug.CHECK) check(type.type is ListSeparatedType)
         return when {
             target.isEmptyLeaf -> emptyList<Any>()
@@ -349,16 +333,7 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
             isRef -> el.setPropertyFromDeclaration(declaration, value, true)
             else -> el.setPropertyFromDeclaration(declaration, value, false)
         }
-
     }
-    /*
-    private fun setPropertyOrReference(el: AsmElementSimple, name:String, value: Any?) {
-        val isRef = this.isReference(el, name)
-        when {
-            isRef -> el.setProperty(name, value, true)
-            else -> el.setProperty(name, value, false)
-        }
-
-    }
-     */
 }
+
+ */

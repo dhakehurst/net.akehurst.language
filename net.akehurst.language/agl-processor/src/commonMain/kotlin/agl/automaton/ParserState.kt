@@ -41,7 +41,7 @@ internal class ParserState(
     //TODO: fast at runtime if not lazy
     val rulePositionIdentity = rulePositions.map { it.identity }.toSet()
     val runtimeRules: List<RuntimeRule> by lazy { this.rulePositions.map { it.rule as RuntimeRule }.toList() }
-    val runtimeRulesSet: Set<RuntimeRule> by lazy { this.rulePositions.map { it.rule as RuntimeRule }.toSet() }
+    val runtimeRulesAsSet: Set<RuntimeRule> by lazy { this.rulePositions.map { it.rule as RuntimeRule }.toSet() }
     val optionList: List<Int> by lazy { this.rulePositions.map { it.option }.toList() }
     val priorityList: List<Int> get() = optionList
     val positionList: List<Int> by lazy { this.rulePositions.map { it.position }.toList() }

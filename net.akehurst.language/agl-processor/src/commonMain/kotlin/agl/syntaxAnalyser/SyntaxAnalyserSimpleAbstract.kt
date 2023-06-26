@@ -70,9 +70,6 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
     }
 
     override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<A> {
-    }
-
-    fun transform1(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<A> {
         this._mapToGrammar = mapToGrammar
         _asm = AsmSimple()
         val path = AsmElementPath.ROOT + (_asm!!.rootElements.size).toString()
@@ -85,47 +82,6 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
 
         return SyntaxAnalysisResultDefault(_asm as A?, _issues, locationMap)
     }
-
-    fun transform2(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<A> {
-        this._mapToGrammar = mapToGrammar
-        _asm = AsmSimple()
-        val path = AsmElementPath.ROOT + (_asm!!.rootElements.size).toString()
-
-        val callback = object : SpptWalker {
-            override fun skip(startPosition: Int, nextInputPosition: Int) {
-                TODO("not implemented")
-            }
-
-            override fun leaf(nodeInfo: SpptDataNodeInfo) {
-                TODO("not implemented")
-            }
-
-            override fun beginBranch(nodeInfo: SpptDataNodeInfo) {
-                TODO("not implemented")
-            }
-
-            override fun endBranch(nodeInfo: SpptDataNodeInfo) {
-                TODO("not implemented")
-            }
-
-            override fun beginEmbedded(nodeInfo: SpptDataNodeInfo) {
-                TODO("not implemented")
-            }
-
-            override fun endEmbedded(nodeInfo: SpptDataNodeInfo) {
-                TODO("not implemented")
-            }
-
-            override fun error(msg: String, path: () -> List<SpptDataNode>) {
-                TODO("not implemented")
-            }
-
-        }
-        sppt.traverseTreeDepthFirst(callback, false)
-
-        return SyntaxAnalysisResultDefault(_asm as A?, _issues, locationMap)
-    }
-
 
     private fun createValue(target: SPPTNode, path: AsmElementPath): Any? {
         val elType = this.findTypeForRule(target.name)

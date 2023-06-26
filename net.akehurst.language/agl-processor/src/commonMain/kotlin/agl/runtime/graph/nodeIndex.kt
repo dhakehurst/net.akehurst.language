@@ -128,14 +128,14 @@ internal class CompleteNodeIndex(
     }
 
     override val rule: RuntimeRule get() = this.state.firstRule
-    val runtimeRulesSet: Set<RuntimeRule> get() = this.state.runtimeRulesSet
+    val runtimeRulesAsSet: Set<RuntimeRule> get() = this.state.runtimeRulesAsSet
     val rulePositions get() = this.state.rulePositions
 
     //private val _hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode()
-    private val _hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode()
+    private val _hashCode_cache = arrayOf(treeData, runtimeRulesAsSet, option, startPosition, nextInputPosition).contentHashCode()
 
     //TODO: don't store data twice..also prefer not to create 2 objects!
-    val preferred by lazy { PreferredChildIndex(runtimeRulesSet, startPosition) }
+    val preferred by lazy { PreferredChildIndex(runtimeRulesAsSet, startPosition) }
 
     val highestPriorityRule get() = this.state.rulePositions.maxBy { it.option }.rule as RuntimeRule
     val firstRule: RuntimeRule by lazy { this.state.rulePositions[0].rule as RuntimeRule }
@@ -144,7 +144,7 @@ internal class CompleteNodeIndex(
     val isEmptyMatch: Boolean get() = this.startPosition == this.nextInputPosition
     val hasSkipData: Boolean get() = this.nextInputPosition != nextInputPositionAfterSkip
 
-    override val optionInParent: Int get() = this.state.priorityList[0]
+    override val option: Int get() = this.state.priorityList[0]
     val priorityList: List<Int> get() = this.state.priorityList
 
     override fun hashCode(): Int = this._hashCode_cache
@@ -154,24 +154,24 @@ internal class CompleteNodeIndex(
         other.startPosition != this.startPosition -> false
         other.nextInputPosition != this.nextInputPosition -> false
         //other.rulePositions != this.rulePositions -> false
-        other.runtimeRulesSet != this.runtimeRulesSet -> false
-        //other.childrenPriorities != this.childrenPriorities -> false
+        other.runtimeRulesAsSet != this.runtimeRulesAsSet -> false
+        other.option != this.option -> false
         else -> true
     }
 
     override fun toString(): String {
         return "CNI{(${this.treeData.forStateSetNumber}),$startPosition-$nextInputPosition,${
-            runtimeRulesSet.joinToString(
+            runtimeRulesAsSet.joinToString(
                 prefix = "(",
                 postfix = ")",
                 separator = ","
             ) { it.tag }
-        }|${optionInParent}}"
+        }|${option}}"
     }
 
     //useful during debug
     fun toStringTree(input: InputFromString): String {
-        val runtimeRules = state.runtimeRulesSet
+        val runtimeRules = state.runtimeRulesAsSet
         val nodes = when {
             state.isLeaf -> runtimeRules.map { rr ->
                 SPPTLeafFromInput(input, rr, this.startPosition, this.nextInputPosition, 0)

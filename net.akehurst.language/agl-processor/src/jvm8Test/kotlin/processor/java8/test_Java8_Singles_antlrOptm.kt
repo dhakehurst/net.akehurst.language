@@ -331,7 +331,7 @@ public class BadBinaryLiterals {
 
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         // println( t.toStringAll )
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)

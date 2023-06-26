@@ -410,7 +410,7 @@ internal class RuntimeParser(
         if (trans2.size > 1) {
             ambiguity(head, trans2, possibleEndOfText)
         }
-        val grouped = trans2.groupBy { it.to.runtimeRulesSet }
+        val grouped = trans2.groupBy { it.to.runtimeRulesAsSet }
         for (grp in grouped) {
             when {
                 1 == grp.value.size -> {
@@ -504,7 +504,7 @@ internal class RuntimeParser(
                 when {
                     null == precRules -> {
                         //if no explicit preference, prefer GRAFT over HEIGHT for same rule
-                        val toGrp = transitions.groupBy { it.first.to.runtimeRulesSet }
+                        val toGrp = transitions.groupBy { it.first.to.runtimeRulesAsSet }
                         toGrp.flatMap {
                             val actGrp = it.value.groupBy { it.first.action }
                             when {

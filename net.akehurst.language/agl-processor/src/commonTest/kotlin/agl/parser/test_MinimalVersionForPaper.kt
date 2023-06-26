@@ -34,7 +34,7 @@ import kotlin.time.measureTimedValue
 @ExperimentalTime
 class test_MinimalVersionForPaper {
 
-    private fun test(goal: String, rrs: RuntimeRuleSet, sentences: List<String>, maxOut: Int = 100) {
+    private fun test(goal: String, rrs: RuntimeRuleSet, sentences: List<String>, maxOut: Int = 1000) {
         val sut = MinimalParser.parser(goal, rrs)
         for (s in sentences) {
             sut.reset()
@@ -324,6 +324,29 @@ class test_MinimalVersionForPaper {
             "S",
             runtimeRuleSet {
                 choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                    concatenation { ref("S"); ref("S"); ref("S") }
+                    concatenation { ref("S"); ref("S") }
+                    literal("a")
+                }
+            },
+            listOf(
+                "a",
+                "aa",
+                "aaa",
+                "aaaa",
+                "aaaaa",
+                "a".repeat(10)
+            )
+        )
+    }
+
+    @Test
+    fun Johnson_SSS_Ambiguous() {
+        // S = S S S || S S || a
+        test(
+            "S",
+            runtimeRuleSet {
+                choice("S", RuntimeRuleChoiceKind.AMBIGUOUS) {
                     concatenation { ref("S"); ref("S"); ref("S") }
                     concatenation { ref("S"); ref("S") }
                     literal("a")

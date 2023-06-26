@@ -170,14 +170,25 @@ internal data class GSSNode(
     val isEmptyMatch get() = this.sp == this.nip
 }
 
-internal data class CompleteNode(
+internal class CompleteNode(
     override val rule: RuntimeRule,
     override val startPosition: Int,
     override val nextInputPosition: Int,
+    override val option: Int
 ) : SpptDataNode {
-    override val optionInParent: Int = 0 // TODO("not implemented")
 
-    override fun toString(): String = "CompleteNode(${rule.tag},$startPosition,$nextInputPosition)"
+    private val _hashCode_cache = arrayOf(rule, /*option,*/ startPosition, nextInputPosition).contentHashCode()
+    override fun hashCode(): Int = _hashCode_cache
+    override fun equals(other: Any?): Boolean = when {
+        other !is CompleteNode -> false
+        this.startPosition != other.startPosition -> false
+        this.nextInputPosition != other.nextInputPosition -> false
+        //this.option != other.option -> false
+        this.rule != other.rule -> false
+        else -> true
+    }
+
+    override fun toString(): String = "CN(${rule.tag}|${option},$startPosition-$nextInputPosition)"
 }
 
 internal class MinimalParser private constructor(
@@ -215,7 +226,7 @@ internal class MinimalParser private constructor(
             }
         }
 
-        private val GSSNode.complete get() = CompleteNode(this.state.rp.rule, this.sp, this.nip)
+        private val GSSNode.complete get() = CompleteNode(this.state.rp.rule, this.sp, this.nip, this.state.rp.option)
 
         private fun GraphStructuredStack<GSSNode>.setRoot(
             state: State,
@@ -256,22 +267,17 @@ internal class MinimalParser private constructor(
 
         val CompleteNode.length get() = this.nextInputPosition - this.startPosition
 
-        fun TreeData<GSSNode, CompleteNode>.setFirstChildForParent(parent: GSSNode, child: CompleteNode, isAlternative: Boolean) {
+        fun TreeData<GSSNode, CompleteNode>.setFirstChildForParent(parent: GSSNode, child: CompleteNode) {
             if (parent.isComplete) {
-                this.setFirstChildForComplete(parent.complete, child, isAlternative)
+                this.setFirstChildForComplete(parent.complete, child, parent.state.rp.rule.isChoiceAmbiguous)
             } else {
                 this.setFirstChildForGrowing(parent, child)
             }
         }
 
-        private fun TreeData<GSSNode, CompleteNode>.setNextChildInParent(
-            oldParent: GSSNode,
-            newParent: GSSNode,
-            nextChild: CompleteNode,
-            isAlternative: Boolean
-        ) {
+        private fun TreeData<GSSNode, CompleteNode>.setNextChildInParent(oldParent: GSSNode, newParent: GSSNode, nextChild: CompleteNode) {
             if (newParent.isComplete) {
-                this.setNextChildForCompleteParent(oldParent, newParent.complete, nextChild, isAlternative)
+                this.setNextChildForCompleteParent(oldParent, newParent.complete, nextChild, newParent.state.rp.rule.isChoiceAmbiguous)
             } else {
                 this.setNextChildForGrowingParent(oldParent, newParent, nextChild)
             }
@@ -515,7 +521,7 @@ internal class MinimalParser private constructor(
         val lh = tr.lh.resolve(peot, pv.rlh)
         return if (input!!.isLookingAtAnyOf(lh, hd.nip)) {
             val nn = gss.setRoot(tr.target, pv.rlh, hd.sp, hd.nip)//, nc)
-            sppf.setNextChildInParent(pv, nn, hd.complete, false)
+            sppf.setNextChildInParent(pv, nn, hd.complete)
             true
         } else {
             false
@@ -546,23 +552,26 @@ internal class MinimalParser private constructor(
         val nip = hd.nip
         return if (input!!.isLookingAtAnyOf(lh, nip)) {
             val rlh = tr.up.resolve(peot, pv.rlh)
-            val parent = gss.pushNode(pv, tr.target, rlh, hd.sp, hd.nip)//, 1)
-            if (parent.isComplete) {
-                val existing = sppf.preferred(parent.complete)
+            val nn = gss.pushNode(pv, tr.target, rlh, hd.sp, hd.nip)//, 1)
+            if (nn.isComplete) {
+                val existing = sppf.preferred(nn.complete)
                 if (null == existing) {
-                    sppf.setFirstChildForParent(parent, hd.complete, false)
+                    sppf.setFirstChildForParent(nn, hd.complete)
                     true
                 } else {
-                    if (existing.length > parent.complete.length) {
-                        // keep existing
-                        false
-                    } else {
-                        sppf.setFirstChildForParent(parent, hd.complete, false)
-                        true
+                    when {
+                        existing.length > nn.complete.length -> {
+                            false
+                        }
+
+                        else -> {
+                            sppf.setFirstChildForParent(nn, hd.complete)
+                            true
+                        }
                     }
                 }
             } else {
-                sppf.setFirstChildForParent(parent, hd.complete, false)
+                sppf.setFirstChildForParent(nn, hd.complete)
                 true
             }
         } else {
@@ -579,19 +588,22 @@ internal class MinimalParser private constructor(
             if (nn.isComplete) {
                 val existing = sppf.preferred(nn.complete)
                 if (null == existing) {
-                    sppf.setNextChildInParent(pv, nn, hd.complete, false)
+                    sppf.setNextChildInParent(pv, nn, hd.complete)
                     true
                 } else {
-                    if (existing.length > nn.complete.length) {
-                        // keep existing
-                        false
-                    } else {
-                        sppf.setNextChildInParent(pv, nn, hd.complete, false)
-                        true
+                    when {
+                        existing.length > nn.complete.length -> {
+                            false
+                        }
+
+                        else -> {
+                            sppf.setNextChildInParent(pv, nn, hd.complete)
+                            true
+                        }
                     }
                 }
             } else {
-                sppf.setNextChildInParent(pv, nn, hd.complete, false)
+                sppf.setNextChildInParent(pv, nn, hd.complete)
                 true
             }
         } else {

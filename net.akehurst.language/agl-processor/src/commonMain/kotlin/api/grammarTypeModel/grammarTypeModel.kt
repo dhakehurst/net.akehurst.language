@@ -27,6 +27,8 @@ interface GrammarTypeModel : TypeModel {
      */
     val allRuleNameToType: Map<String, TypeUsage>
 
+    val allTypesByRuleName: Collection<Pair<String, TypeUsage>>
+
     fun findTypeUsageForRule(ruleName: String): TypeUsage?
 }
 

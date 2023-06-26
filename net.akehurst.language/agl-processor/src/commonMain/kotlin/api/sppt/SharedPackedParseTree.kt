@@ -22,19 +22,25 @@ interface SpptDataNode {
     val rule: Rule
     val startPosition: Int
     val nextInputPosition: Int
-    val optionInParent: Int
+    val option: Int
 }
 
-data class IndexOfTotal(
+data class ChildInfo(
     val index: Int,
     val total: Int
+)
+
+data class AltInfo(
+    val option: Int,
+    val index: Int,
+    val totalMatched: Int
 )
 
 interface SpptDataNodeInfo {
     val node: SpptDataNode
 
-    val option: IndexOfTotal
-    val child: IndexOfTotal
+    val alt: AltInfo
+    val child: ChildInfo
 
     val numChildren: Int
     val numSkipChildren: Int
