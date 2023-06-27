@@ -65,7 +65,7 @@ internal class test_AhoSetiUlman_Ex_4_58 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"a^",setOf("'c'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -76,7 +76,7 @@ internal class test_AhoSetiUlman_Ex_4_58 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"b^",setOf("'c'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -87,7 +87,7 @@ internal class test_AhoSetiUlman_Ex_4_58 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^c",setOf("'a'","'b'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -98,7 +98,7 @@ internal class test_AhoSetiUlman_Ex_4_58 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(2,3,1,1),"ac^",setOf("'d'","'e'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test

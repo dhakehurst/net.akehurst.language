@@ -18,7 +18,6 @@ package net.akehurst.language.parser.scanondemand.ambiguity
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.parser.scanondemand.embedded.test_embeddedSupersetSkip
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -69,7 +68,7 @@ internal class test_Processor_Ambiguity4 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^''", setOf("n"))
-            ), issues.error
+            ), issues.errors
         )
     }
 
@@ -101,7 +100,7 @@ internal class test_Processor_Ambiguity4 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'s'"))
-            ), issues.error
+            ), issues.errors
         )
     }
 
@@ -157,7 +156,7 @@ internal class test_Processor_Ambiguity4 : test_ScanOnDemandParserAbstract() {
             ),
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2,
+            expectedNumGSSHeads = 1,
             printAutomaton = false,
             expectedTrees = arrayOf(expected)
         )
@@ -242,7 +241,7 @@ internal class test_Processor_Ambiguity4 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(6, 7, 1, 1), "s'n'{r^''{}}", setOf("n"))
-            ), issues.error
+            ), issues.errors
         )
     }
 
@@ -279,7 +278,7 @@ internal class test_Processor_Ambiguity4 : test_ScanOnDemandParserAbstract() {
             ),
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2,
+            expectedNumGSSHeads = 1,
             printAutomaton = false,
             expectedTrees = arrayOf(expected)
         )
@@ -295,7 +294,7 @@ internal class test_Processor_Ambiguity4 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(9, 10, 1, 1), "s'n'{p{}r^''{}}", setOf("n"))
-            ), issues.error
+            ), issues.errors
         )
 
     }

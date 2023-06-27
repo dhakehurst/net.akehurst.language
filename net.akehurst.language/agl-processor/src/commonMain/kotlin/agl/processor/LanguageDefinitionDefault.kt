@@ -34,24 +34,20 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     configuration,
 ) {
 
+    override val isModifiable: Boolean = true
+
     override var grammarStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             val res = Agl.grammarFromString<List<Grammar>, GrammarContext>(newValue, aglOptions)
             this._issues.addAll(res.issues)
             this.grammar = when {
-                res.issues.error.isNotEmpty() -> null
-                null == targetGrammarName ->res.asm?.firstOrNull()
-                else -> res.asm?.firstOrNull { it.name == this.targetGrammarName }
+                res.issues.errors.isNotEmpty() -> null
+                null == targetGrammarName ->res.asm?.lastOrNull()
+                else -> res.asm?.lastOrNull { it.name == this.targetGrammarName }
             }
             grammarStrObservers.forEach { it.invoke(oldValue, newValue) }
         }
     }
-
-    init {
-        grammarStr = grammarStrArg
-    }
-
-    override val isModifiable: Boolean = true
 
     override var scopeModelStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
         if (oldValue != newValue) {
@@ -88,5 +84,9 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                 }
             }
         }
+    }
+
+    init {
+        grammarStr = grammarStrArg
     }
 }

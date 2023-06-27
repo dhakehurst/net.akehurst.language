@@ -16,14 +16,15 @@
 package net.akehurst.language.processor.dot
 
 
+import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.api.typeModel.StringType
-import net.akehurst.language.api.typeModel.TypeModelTest
-import net.akehurst.language.api.typeModel.asString
+import net.akehurst.language.typemodel.api.asString
+import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -37,50 +38,47 @@ class test_Dot_SyntaxAnalyser {
     }
 
     @Test
-    fun typeModel() {
+    fun dotTypeModel() {
         val actual = processor.typeModel
-        val expected = net.akehurst.language.api.typeModel.typeModel("net.akehurst.language.example.dot","Dot") {
-            elementType("graph") {
-                // graph = STRICT? type ID? '{' stmt_list '}' ;
-                propertyStringType("STRICT", true, 0)
-                propertyStringType("type", false, 1)
-                propertyStringType("ID", true, 2)
-                propertyListTypeOf("stmt_list", "stmt1",false, 3)
+        val expected = grammarTypeModel("net.akehurst.language.example.dot", "Dot", "Graph") {
+            // graph = STRICT? type ID? '{' stmt_list '}' ;
+            elementType("graph", "Graph") {
+                propertyPrimitiveType("STRICT", "String", true, 0)
+                propertyPrimitiveType("type", "String", false, 1)
+                propertyPrimitiveType("ID", "String", true, 2)
+                propertyListTypeOf("stmt_list", "stmt1", false, 3)
             }
-            elementType("statementList") {
-                // statementList = [line / "\R"]* ;
-                propertyListSeparatedTypeOf("line", "line", StringType, false, 0)
+            // stmt_list = stmt1 * ;
+            listTypeOf("stmt_list", "Stmt1")
+            // stmt1 = stmt  ';'? ;
+            elementType("stmt1", "Stmt1") {
+                propertyElementTypeOf("stmt", "Stmt", false, 0)
             }
-            elementType("line") {
-                // line = [statement / ';']* ';'? ;
-                propertyListSeparatedTypeOf("statement", "statement", StringType, false, 0)
-                propertyStringTypeUnnamed(true, 1)
+            // 	stmt
+            //	    = node_stmt
+            //      | edge_stmt
+            //      | attr_stmt
+            //      | ID '=' ID
+            //      | subgraph
+            //      ;
+            elementType("stmt", "Stmt") {
+                subTypes("Node_stmt", "Edge_stmt", "Attr_stmt", "Subgraph")
             }
-            elementType("statement") {
-                // statement
-                //   = conditional
-                //   | assignment
-                //   | expressionStatement
-                //   //TODO: others
-                //   ;
-                subTypes("conditional", "assignment", "expressionStatement")
+            // node_stmt = node_id attr_lists? ;
+            elementType("node_stmt", "Node_stmt") {
+                propertyElementTypeOf("node_id", "Node_id", false, 1)
+                propertyElementTypeOf("attr_lists", "Attr_lists", true, 1)
             }
-            elementType("conditional") {
-                // conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
-                propertyElementTypeOf("expression", "expression", false, 1)
-                propertyListSeparatedTypeOf("statementList", "line", StringType, false, 3)
-                propertyListSeparatedTypeOf("statementList2", "line", StringType, false, 5)
+            // node_id = ID port? ;
+            elementType("node_id", "Node_id") {
+                propertyElementTypeOf("id", "Id", false, 0)
+                propertyElementTypeOf("port", "Port", true, 1)
             }
-            elementType("assignment") {
-                // assignment = rootVariable '=' expression ;
-                propertyElementTypeOf("rootVariable", "rootVariable", false, 0)
-                propertyElementTypeOf("expression", "expression", false, 2)
-            }
-            elementType("expressionStatement") {
+            elementType("", "expressionStatement") {
                 // expressionStatement = expression ;
                 propertyElementTypeOf("expression", "expression", false, 0)
             }
-            elementType("expression") {
+            elementType("", "expression") {
                 // expression
                 //   = rootVariable
                 //   | literalExpression
@@ -92,28 +90,26 @@ class test_Dot_SyntaxAnalyser {
                 //   ;
                 subTypes("rootVariable", "literalExpression", "matrix", "functionCallOrIndex", "prefixExpression", "infixExpression", "groupExpression")
             }
-            elementType("groupExpression") {
+            elementType("", "groupExpression") {
                 // groupExpression = '(' expression ')' ;
-                //superType("expression")
                 propertyElementTypeOf("expression", "expression", false, 1)
             }
-            elementType("functionCallOrIndex") {
+            elementType("", "functionCallOrIndex") {
                 // functionCall = NAME '(' argumentList ')' ;
-                //superType("expression")
-                propertyStringType("NAME", false, 0)
-                propertyListSeparatedTypeOf("argumentList", "argument", StringType, false, 2)
+                propertyPrimitiveType("NAME", "String", false, 0)
+                propertyListSeparatedTypeOf("argumentList", "argument", "String", false, 2)
             }
-            elementType("argumentList") {
+            elementType("argumentList", "argumentList") {
                 // argumentList = [ argument / ',' ]* ;
-                propertyListSeparatedTypeOf("argument", "argument", StringType, false, 0)
+                propertyListSeparatedTypeOf("argument", "argument", "String", false, 0)
             }
-            elementType("argument") {
+            elementType("argument", "argument") {
                 // argument = expression | colonOperator ;
                 subTypes("expression", "colonOperator")
             }
-            elementType("prefixExpression") {
+            elementType("", "prefixExpression") {
                 // prefixExpression = prefixOperator expression ;
-                propertyStringType("prefixOperator", false, 0)
+                propertyPrimitiveType("prefixOperator", "String", false, 0)
                 propertyElementTypeOf("expression", "expression", false, 1)
             }
             stringTypeFor("prefixOperator")
@@ -121,9 +117,9 @@ class test_Dot_SyntaxAnalyser {
             // prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
-            elementType("infixExpression") {
+            elementType("", "infixExpression") {
                 // infixExpression =  [ expression / infixOperator ]2+ ;
-                propertyListSeparatedTypeOf("expression", "expression", StringType, false, 0)
+                propertyListSeparatedTypeOf("expression", "expression", "String", false, 0)
             }
             stringTypeFor("infixOperator")
             //elementType("infixOperator") {
@@ -135,23 +131,23 @@ class test_Dot_SyntaxAnalyser {
             //        ;
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
-            elementType("colonOperator") {
-                propertyStringType("COLON", false, 0)
+            elementType("", "colonOperator") {
+                propertyPrimitiveType("COLON", "String", false, 0)
             }
-            elementType("matrix") {
+            elementType("", "matrix") {
                 // matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
-                propertyListSeparatedTypeOf("row", "row", StringType, false, 1)
+                propertyListSeparatedTypeOf("row", "row", "String", false, 1)
             }
-            elementType("row") {
+            elementType("", "row") {
                 // row = expression (','? expression)* ;
                 propertyElementTypeOf("expression", "expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
-                    propertyStringTypeUnnamed(true, 0)
+                    propertyPrimitiveType(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, "String", true, 0)
                     propertyElementTypeOf("expression", "expression", false, 1)
                 }
             }
-            elementType("literalExpression") {
-                propertyStringType("literalValue", false, 0)
+            elementType("", "literalExpression") {
+                propertyPrimitiveType("literalValue", "String", false, 0)
             }
             stringTypeFor("literalValue")
             //elementType("literalValue") {
@@ -163,9 +159,9 @@ class test_Dot_SyntaxAnalyser {
             //      ;
             //    propertyUnnamedPrimitiveType(PrimitiveType.ANY, false, 0)
             //}
-            elementType("rootVariable") {
+            elementType("", "rootVariable") {
                 // rootVariable = NAME ;
-                propertyStringType("NAME", false, 0)
+                propertyPrimitiveType("NAME", "String", false, 0)
             }
             stringTypeFor("number")
             //elementType("number") {
@@ -178,7 +174,7 @@ class test_Dot_SyntaxAnalyser {
     }
 
     @Test
-    fun t1() {
+    fun one_node() {
 
         val sentence = """
             graph {
@@ -192,20 +188,19 @@ class test_Dot_SyntaxAnalyser {
         assertNotNull(actual)
 
         val expected = asmSimple {
-            root("Graph") {
+            element("Graph") {
                 propertyString("strict", null)
                 propertyString("type", "graph")
                 propertyString("id", null)
                 propertyListOfElement("stmt_list") {
                     element("Stmt1") {
-                        propertyElementExplicitType("stmt","Node_stmt") {
-                                propertyElementExplicitType("node_id", "Node_id") {
-                                    propertyString("id","a")
-                                    propertyString("port", null)
-                                }
-                                propertyString("attr_lists", null)
+                        propertyElementExplicitType("stmt", "Node_stmt") {
+                            propertyElementExplicitType("node_id", "Node_id") {
+                                propertyString("id", "a")
+                                propertyString("port", null)
                             }
-                        propertyUnnamedString(null)
+                            propertyString("attr_lists", null)
+                        }
                     }
                 }
             }
@@ -214,7 +209,7 @@ class test_Dot_SyntaxAnalyser {
     }
 
     @Test
-    fun t2() {
+    fun one_edge() {
 
         val sentence = """
             graph {
@@ -229,7 +224,7 @@ class test_Dot_SyntaxAnalyser {
     }
 
     @Test
-    fun t3() {
+    fun psg() {
         val sentence = """
         // file and comments taken from [https://graphviz.gitlab.io/_pages/Gallery/directed/psg.html]
 /*
@@ -286,7 +281,7 @@ digraph g {
         val result = processor.process(sentence)
         val actual = result.asm?.rootElements?.firstOrNull()
         assertNotNull(actual)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 
 }

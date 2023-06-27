@@ -59,7 +59,7 @@ internal class test_IETELE_VC : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'v'", "'i'"))
-            ), issues.error
+            ), issues.errors
         )
     }
 

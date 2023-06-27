@@ -18,7 +18,7 @@
 pluginManagement {
     repositories {
         mavenLocal {
-            content{
+            content {
                 includeGroupByRegex("net\\.akehurst.+")
             }
         }
@@ -28,6 +28,7 @@ pluginManagement {
 
 rootProject.name = file(".").name
 
+include("type-model")
 include("agl-processor")
 include("test-generated-parser")
 include("test-Java-api-agl-processor")

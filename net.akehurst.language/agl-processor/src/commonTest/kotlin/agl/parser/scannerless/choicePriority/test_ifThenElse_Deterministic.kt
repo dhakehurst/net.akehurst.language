@@ -39,7 +39,7 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
 
     private companion object {
         val rrs = runtimeRuleSet {
-            pattern("WS","\\s+",true)
+            pattern("WS", "\\s+", true)
             concatenation("S") { ref("expr") }
             choice("expr", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("var")
@@ -62,9 +62,11 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
 
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^", setOf("var","'if'"))
-        ),issues.error)
+        assertEquals(
+            listOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^", setOf("var", "'if'"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -94,11 +96,11 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
         // currently the "if var then" bit ends up on diff states
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -123,11 +125,11 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -163,11 +165,11 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 2,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -203,11 +205,11 @@ internal class test_ifThenElse_Priority : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 

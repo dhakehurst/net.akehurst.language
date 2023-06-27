@@ -33,7 +33,7 @@ internal class CountTreesVisitor : SharedPackedParseTreeVisitor<Int, Unit> {
 
     override fun visitBranch(target: SPPTBranch, arg: Unit): Int {
         var currentCount: Int = 0
-        for (children in target.childrenAlternatives) {
+        for ((alt, children) in target.childrenAlternatives.entries.sortedBy { it.key }) {
             if (children.isEmpty()) {
                 currentCount += 1
             } else {

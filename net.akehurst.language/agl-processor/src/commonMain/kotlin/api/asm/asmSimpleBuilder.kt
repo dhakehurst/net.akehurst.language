@@ -18,14 +18,18 @@ package net.akehurst.language.api.asm
 
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.syntaxAnalyser.*
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
+import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
+import net.akehurst.language.agl.syntaxAnalyser.createReferenceLocalToScope
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.typeModel.TupleType
+import net.akehurst.language.typemodel.api.TupleType
 
 @DslMarker
 annotation class AsmSimpleBuilderMarker
 
-fun asmSimple(scopeModel: ScopeModelAgl = ScopeModelAgl(), context: ContextSimple? = null, resolveReferences:Boolean=true, init: AsmSimpleBuilder.() -> Unit): AsmSimple {
+fun asmSimple(scopeModel: ScopeModelAgl = ScopeModelAgl(), context: ContextSimple? = null, resolveReferences: Boolean = true, init: AsmSimpleBuilder.() -> Unit): AsmSimple {
     val b = AsmSimpleBuilder(scopeModel, context, resolveReferences)
     b.init()
     return b.build()
@@ -35,24 +39,51 @@ fun asmSimple(scopeModel: ScopeModelAgl = ScopeModelAgl(), context: ContextSimpl
 class AsmSimpleBuilder(
     private val _scopeModel: ScopeModelAgl,
     private val _context: ContextSimple?,
-    private val resolveReferences:Boolean
+    private val resolveReferences: Boolean
 ) {
 
     private val _asm = AsmSimple()
     private val _scopeMap = mutableMapOf<AsmElementPath, ScopeSimple<AsmElementPath>>()
 
-    fun root(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
+    fun string(value: String) {
+        _asm.addRoot(value)
+    }
+
+    fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
         val path = AsmElementPath.ROOT + (_asm.rootElements.size).toString()
         val b = AsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, path, typeName, true, _context?.rootScope)
         b.init()
         return b.build()
     }
 
+    fun listOfString(vararg items: String): List<String> {
+        val path = AsmElementPath.ROOT + (_asm.rootElements.size).toString()
+        val list = items.asList()
+        _asm.addRoot(list)
+        return list
+    }
+
+    fun list(init: ListAsmElementSimpleBuilder.() -> Unit): List<Any> {
+        val path = AsmElementPath.ROOT + (_asm.rootElements.size).toString()
+        val b = ListAsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, path, _context?.rootScope)
+        b.init()
+        val list = b.build()
+        _asm.addRoot(list)
+        return list
+    }
+
+    private fun resolveReferences(issues: IssueHolder, o: Any?, locationMap: Map<Any, InputLocation>?, context: ScopeSimple<AsmElementPath>?) {
+        when (o) {
+            is AsmElementSimple -> _scopeModel.resolveReferencesElement(issues, o, locationMap, context?.rootScope)
+            is List<*> -> o.forEach { resolveReferences(issues, it, locationMap, context) }
+        }
+    }
+
     fun build(): AsmSimple {
         val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
         if (resolveReferences) {
             _asm.rootElements.forEach { el ->
-                _scopeModel.resolveReferencesElement(issues, el, emptyMap(), _context?.rootScope)
+                resolveReferences(issues, el, emptyMap(), _context?.rootScope)
             }
         }
         if (issues.all.isEmpty()) {
@@ -91,21 +122,23 @@ class AsmElementSimpleBuilder(
     }
 
     private fun _property(name: String, value: Any?) {
-        _element.setProperty(name, value, false)
+        _element.setProperty(name, value, false, 0)//TODO childIndex
     }
 
     fun propertyUnnamedString(value: String?) = this._property(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, value)
     fun propertyString(name: String, value: String?) = this._property(name, value)
     fun propertyNull(name: String) = this._property(name, null)
-    fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElementExplicitType(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, typeName, init)
-    fun propertyTuple(name:String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple =propertyElementExplicitType(name, TupleType.INSTANCE_NAME, init)
+    fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple =
+        propertyElementExplicitType(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, typeName, init)
+
+    fun propertyTuple(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElementExplicitType(name, TupleType.INSTANCE_NAME, init)
     fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElementExplicitType(name, name, init)
     fun propertyElementExplicitType(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
         val newPath = _element.asmPath + name
         val b = AsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, newPath, typeName, false, _elementScope)
         b.init()
         val el = b.build()
-        this._element.setProperty(name, el, false)
+        this._element.setProperty(name, el, false, 0)//TODO childIndex
         return el
     }
 
@@ -117,12 +150,12 @@ class AsmElementSimpleBuilder(
         val b = ListAsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, newPath, _elementScope)
         b.init()
         val list = b.build()
-        this._element.setProperty(name, list, false)
+        this._element.setProperty(name, list, false, 0)//TODO childIndex
         return list
     }
 
     fun reference(name: String, elementReference: String) {
-        _element.setProperty(name, elementReference, true)
+        _element.setProperty(name, elementReference, true, 0)//TODO childIndex
     }
 
     fun build(): AsmElementSimple {
@@ -152,7 +185,7 @@ class ListAsmElementSimpleBuilder(
 
     private val _list = mutableListOf<Any>()
 
-    fun string(value: String){
+    fun string(value: String) {
         _list.add(value)
     }
 
@@ -173,7 +206,7 @@ class ListAsmElementSimpleBuilder(
         return el
     }
 
-    fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple =element(TupleType.INSTANCE_NAME, init)
+    fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = element(TupleType.INSTANCE_NAME, init)
 
 
     fun build(): List<Any> {

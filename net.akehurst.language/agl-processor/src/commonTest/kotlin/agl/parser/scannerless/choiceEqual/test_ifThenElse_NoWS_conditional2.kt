@@ -42,7 +42,7 @@ internal class test_ifThenElse_NoWS_conditional2 : test_ScanOnDemandParserAbstra
                 concatenation { literal("if"); ref("expr"); literal("then"); ref("expr") }
             }
             concatenation("var") { ref("VAR") }
-            pattern("VAR","U|V|W|X|Y|Z")
+            pattern("VAR", "U|V|W|X|Y|Z")
             //preferenceFor("expr") {
             //    rightOption("conditional", 0, setOf("'then'"))
             //    rightOption("conditional", 1,  setOf("'then'","'else'"))
@@ -57,9 +57,11 @@ internal class test_ifThenElse_NoWS_conditional2 : test_ScanOnDemandParserAbstra
 
         val (sppt, issues) = super.testFail(rrs, goal, sentence, expectedNumGSSHeads = 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("VAR","'if'"))
-        ),issues.error)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("VAR", "'if'"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -84,11 +86,11 @@ internal class test_ifThenElse_NoWS_conditional2 : test_ScanOnDemandParserAbstra
         //NOTE: season 35, long expression is dropped in favour of the shorter one!
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -110,11 +112,11 @@ internal class test_ifThenElse_NoWS_conditional2 : test_ScanOnDemandParserAbstra
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -145,11 +147,11 @@ internal class test_ifThenElse_NoWS_conditional2 : test_ScanOnDemandParserAbstra
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -180,11 +182,11 @@ internal class test_ifThenElse_NoWS_conditional2 : test_ScanOnDemandParserAbstra
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -197,7 +199,7 @@ internal class test_ifThenElse_NoWS_conditional2 : test_ScanOnDemandParserAbstra
               expr {
                 conditional {
                     'if'
-                    expr { var { VAR : 'W' } }
+                    expr { var { VAR : 'U' } }
                     'then'
                     expr {
                       conditional {

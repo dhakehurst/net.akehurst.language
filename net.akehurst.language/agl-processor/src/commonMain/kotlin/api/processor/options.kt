@@ -20,11 +20,9 @@ import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.formatter.AglFormatterModel
-import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.style.AglStyleModel
-import net.akehurst.language.api.style.AglStyleRule
-import net.akehurst.language.api.typeModel.TypeModel
 
 /**
  * Options to configure the building of a language processor
@@ -37,8 +35,8 @@ import net.akehurst.language.api.typeModel.TypeModel
 
 //typealias GrammarResolver = () -> ProcessResult<Grammar>
 typealias ScopeModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<ScopeModel>
-typealias TypeModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<TypeModel>
-typealias SyntaxAnalyserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<SyntaxAnalyser<AsmType, ContextType>>
+typealias TypeModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<GrammarTypeModel>
+typealias SyntaxAnalyserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<SyntaxAnalyser<AsmType>>
 typealias SemanticAnalyserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<SemanticAnalyser<AsmType, ContextType>>
 typealias FormatterResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<AglFormatterModel>
 typealias StyleResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<AglStyleModel>
@@ -68,7 +66,6 @@ interface ParseOptions {
  */
 interface SyntaxAnalysisOptions<AsmType : Any, ContextType : Any> {
     var active: Boolean
-    var context: ContextType?
 }
 
 /**
@@ -77,6 +74,7 @@ interface SyntaxAnalysisOptions<AsmType : Any, ContextType : Any> {
 interface SemanticAnalysisOptions<AsmType : Any, ContextType : Any> {
     var active: Boolean
     var locationMap: Map<Any, InputLocation>
+    var context: ContextType?
     val options: Map<String, Any>
 }
 

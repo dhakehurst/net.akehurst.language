@@ -22,7 +22,7 @@ import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 
-operator fun IssueCollection.plus(other: IssueCollection):IssueHolder {
+operator fun IssueCollection.plus(other: IssueCollection): IssueHolder {
     val issues = IssueHolder(LanguageProcessorPhase.ALL)
     issues.addAll(this)
     issues.addAll(other)
@@ -30,37 +30,41 @@ operator fun IssueCollection.plus(other: IssueCollection):IssueHolder {
 }
 
 class IssueHolder(
-    val phase: LanguageProcessorPhase
+    private val defaultPhase: LanguageProcessorPhase
 ) : IssueCollection {
 
     private val _issues = mutableSetOf<LanguageIssue>()
 
     override val all: Set<LanguageIssue> get() = _issues
-    override val error: List<LanguageIssue> get() = _issues.filter { it.kind == LanguageIssueKind.ERROR }
-    override val warning: List<LanguageIssue> get() = _issues.filter { it.kind == LanguageIssueKind.WARNING }
-    override val information: List<LanguageIssue> get() = _issues.filter { it.kind == LanguageIssueKind.INFORMATION }
+    override val errors: List<LanguageIssue> get() = _issues.filter { it.kind == LanguageIssueKind.ERROR }
+    override val warnings: List<LanguageIssue> get() = _issues.filter { it.kind == LanguageIssueKind.WARNING }
+    override val informations: List<LanguageIssue> get() = _issues.filter { it.kind == LanguageIssueKind.INFORMATION }
 
     fun clear() {
         _issues.clear()
     }
 
-    fun info(location: InputLocation?, message: String, data: Any? = null) {
-        _issues.add(LanguageIssue(LanguageIssueKind.INFORMATION, phase, location, message, data))
+    fun raise(kind: LanguageIssueKind, phase: LanguageProcessorPhase, location: InputLocation?, message: String, data: Any? = null) {
+        _issues.add(LanguageIssue(kind, phase, location, message, data))
     }
 
-    fun warn(location: InputLocation?, message: String, data: Any? = null) {
-        _issues.add(LanguageIssue(LanguageIssueKind.WARNING, phase, location, message, data))
-    }
+    fun info(location: InputLocation?, message: String, data: Any? = null) =
+        raise(LanguageIssueKind.INFORMATION, defaultPhase, location, message, data)
 
-    fun error(location: InputLocation?, message: String, data: Any? = null) {
-        _issues.add(LanguageIssue(LanguageIssueKind.ERROR, phase, location, message, data))
-    }
 
-    fun addAll(other:IssueCollection) {
+    fun warn(location: InputLocation?, message: String, data: Any? = null) =
+        raise(LanguageIssueKind.WARNING, defaultPhase, location, message, data)
+
+
+    fun error(location: InputLocation?, message: String, data: Any? = null) =
+        raise(LanguageIssueKind.ERROR, defaultPhase, location, message, data)
+
+
+    fun addAll(other: IssueCollection) {
         this._issues.addAll(other.all)
     }
 
-    override val size: Int = this._issues.size
+    override val size: Int get() = this._issues.size
     override fun iterator(): Iterator<LanguageIssue> = this._issues.iterator()
     override fun isEmpty(): Boolean = this._issues.isEmpty()
     override fun contains(element: LanguageIssue): Boolean = this._issues.contains(element)

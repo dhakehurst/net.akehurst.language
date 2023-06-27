@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.parser
 
-import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.automaton.Transition
@@ -30,8 +29,11 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
 import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.processor.AutomatonKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.ParseResult
 import kotlin.math.max
 
 internal class ScanOnDemandParser(
@@ -66,7 +68,7 @@ internal class ScanOnDemandParser(
         var totalWork = maxNumHeads
 
         var lastToTryWidth = emptyList<GrowingNodeIndex>()
-        while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
+        while (rp.graph.hasNextHead && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
             if (Debug.OUTPUT_RUNTIME) println("$seasons ===================================")
             val steps = rp.grow3(possibleEndOfText, RuntimeParser.normalArgs)
             seasons += steps
@@ -83,7 +85,7 @@ internal class ScanOnDemandParser(
         } else {
             //val nextExpected = this.findNextExpectedAfterError2(rp, lastToTryWidth, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
             val nextExpected = this.findNextExpectedAfterError3(input, rp.failedReasons, rp.stateSet.automatonKind, rp.stateSet)
-           addParseIssue(input, rp, nextExpected, seasons, maxNumHeads)
+            addParseIssue(input, rp, nextExpected, seasons, maxNumHeads)
             val sppt = null//rp.longestLastGrown?.let{ SharedPackedParseTreeDefault(it, seasons, maxNumHeads) }
             ParseResultDefault(sppt, this._issues)
         }
@@ -93,7 +95,7 @@ internal class ScanOnDemandParser(
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val s0 = runtimeRuleSet.fetchStateSetFor(goalRuleName, automatonKind).startState
         val skipStateSet = runtimeRuleSet.skipParserStateSet
-        return RuntimeParser(s0.stateSet, skipStateSet, goalRule, input,_issues)
+        return RuntimeParser(s0.stateSet, skipStateSet, goalRule, input, _issues)
     }
 
     private fun addParseIssue(
@@ -223,7 +225,7 @@ internal class ScanOnDemandParser(
                     if (lg.runtimeState.isAtEnd) {
                         val runtimeLookahead = setOf(LookaheadSet.EOT)
                         val skipData = rp.parseSkipIfAny(lg.nextInputPosition, runtimeLookahead, LookaheadSet.ANY, possibleEndOfText, RuntimeParser.normalArgs)
-                        val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: lg.nextInputPosition
+                        val nextInputPositionAfterSkip = skipData?.root?.nextInputPositionAfterSkip ?: lg.nextInputPosition
                         setOf(Pair(nextInputPositionAfterSkip, setOf(RuntimeRuleSet.END_OF_TEXT)))
                     } else {
                         val trs = lg.runtimeState.transitions(rp.stateSet.startState, rp.stateSet.startState)
@@ -394,7 +396,7 @@ internal class ScanOnDemandParser(
                     else -> {
                         val trlh = transition.lookahead.map { it.guard }.reduce { acc, e -> acc.union(rp.stateSet, e) } //TODO:reduce to 1 in SM
                         val skipData = rp.parseSkipIfAny(l.nextInputPosition, runtimeLookahead, trlh, possibleEndOfText, RuntimeParser.normalArgs)
-                        val nextInputPositionAfterSkip = skipData?.nextInputPosition ?: l.nextInputPosition
+                        val nextInputPositionAfterSkip = skipData?.root?.nextInputPositionAfterSkip ?: l.nextInputPosition
 
                         val expected = transition.lookahead
                             .flatMap { lh -> possibleEndOfText.flatMap { eot -> runtimeLookahead.flatMap { rt -> lh.guard.resolve(eot, rt).fullContent } } }
@@ -441,6 +443,7 @@ internal class ScanOnDemandParser(
                     val exp = fr.transition.runtimeGuard.expectedWhenFailed(fr.prevNumNonSkipChildren)
                     Pair(input.locationFor(fr.position, 0), exp)
                 }
+
                 is FailedParseReasonLookahead -> {
                     val expected: Set<RuntimeRule> = fr.possibleEndOfText.flatMap { eot ->
                         fr.runtimeLhs.flatMap { rt ->

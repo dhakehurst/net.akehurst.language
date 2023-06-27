@@ -65,7 +65,7 @@ internal class test_bodmas_exprOpExprRules_root_choiceEqual_rightAssoc : test_Sc
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'v'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test

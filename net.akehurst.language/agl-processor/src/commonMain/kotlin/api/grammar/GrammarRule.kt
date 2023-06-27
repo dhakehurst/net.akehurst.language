@@ -16,13 +16,29 @@
 
 package net.akehurst.language.api.grammar
 
-interface GrammarRule: GrammarItem {
+interface PreferenceRule : GrammarItem {
+    val grammar: Grammar
+    val forItem: SimpleItem
+    val optionList: List<PreferenceOption>
+}
+
+interface PreferenceOption {
+
+    enum class Associativity { LEFT, RIGHT }
+
+    val item: NonTerminal
+    val choiceNumber:Int
+    val onTerminals: List<SimpleItem>
+    val associativity: Associativity
+}
+
+interface GrammarRule : GrammarItem {
     val grammar: Grammar
     val name: String
     val isOverride: Boolean
     val isSkip: Boolean
     val isLeaf: Boolean
-    val isOneEmebedded:Boolean
+    val isOneEmebedded: Boolean
     var rhs: RuleItem
     val nodeType: NodeType
 

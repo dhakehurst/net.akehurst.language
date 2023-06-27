@@ -23,38 +23,38 @@ package net.akehurst.language.api.sppt;
  */
 interface SPPTBranch : SPPTNode {
 
-	/**
-	 * the set of alternative children for this branch
-	 */
-	val childrenAlternatives: Set<List<SPPTNode>>
+    /**
+     * the set of alternative children for this branch
+     */
+    val childrenAlternatives: Map<Int, List<SPPTNode>>
 
-	// --- convienience methods ---
-	/**
-	 * the first one of the children alternatives of this branch.
-	 */
-	val children: List<SPPTNode>
+    // --- convienience methods ---
+    /**
+     * the first one of the children alternatives of this branch.
+     */
+    val children: List<SPPTNode>
 
-	/**
-	 * the first one of the children alternatives of this branch with all skip nodes removed.
-	 */
-	val nonSkipChildren: List<SPPTNode>
+    /**
+     * the first one of the children alternatives of this branch with all skip nodes removed.
+     */
+    val nonSkipChildren: List<SPPTNode>
 
-	/**
-	 * @param index of required child
-	 * @return index'th non skip child (in first one of the children alternatives)
-	 */
-	fun nonSkipChild(index: Int): SPPTNode
+    /**
+     * @param index of required child
+     * @return index'th non skip child (in first one of the children alternatives)
+     */
+    fun nonSkipChild(index: Int): SPPTNode
 
-	/**
-	 * @param index
-	 * @return the index'th non skip child (in first one of the children alternatives) of this Branch but assumes the child is also a Branch and casts the result.
-	 */
-	fun branchChild(index: Int): SPPTBranch
+    /**
+     * @param index
+     * @return the index'th non skip child (in first one of the children alternatives) of this Branch but assumes the child is also a Branch and casts the result.
+     */
+    fun branchChild(index: Int): SPPTBranch
 
-	/**
-	 * Filters out any children that are skip nodes or not branches
-	 *
-	 * all children that are branches and non skip (in first one of the children alternatives)
-	 */
-	 val branchNonSkipChildren: List<SPPTBranch>
+    /**
+     * Filters out any children that are skip nodes or not branches
+     *
+     * all children that are branches and non skip (in first one of the children alternatives)
+     */
+    val branchNonSkipChildren: List<SPPTBranch>
 }

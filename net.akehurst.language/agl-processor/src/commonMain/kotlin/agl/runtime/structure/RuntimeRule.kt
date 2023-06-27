@@ -41,7 +41,7 @@ internal class RuntimeRule(
     // not sure if I really want to add the data to this class as only used for AsmSimple not runtime use?
 
     val isExplicitlyNamed: Boolean get() = this.name != null
-    val tag: String get() = this.name ?: if (this.isTerminal) this.rhs.toString() else error("Internal Error: no tag")
+    override val tag: String get() = this.name ?: if (this.isTerminal) this.rhs.toString() else error("Internal Error: no tag")
 
     /*
     val emptyRuleItem: RuntimeRule
@@ -52,14 +52,15 @@ internal class RuntimeRule(
 */
 
     val isGoal get() = this.rhs is RuntimeRuleRhsGoal
-    val isEmptyTerminal get() = this.rhs is RuntimeRuleRhsEmpty
-    val isEmbedded get() = this.rhs is RuntimeRuleRhsEmbedded
-    val isPattern get() = this.rhs is RuntimeRuleRhsPattern
+    override val isEmptyTerminal get() = this.rhs is RuntimeRuleRhsEmpty
+    override val isEmbedded get() = this.rhs is RuntimeRuleRhsEmbedded
+    override val isPattern get() = this.rhs is RuntimeRuleRhsPattern
+    override val isLiteral get() = this.rhs is RuntimeRuleRhsLiteral
 
     /**
      * Empty, Literal, Pattern, Embedded
      */
-    val isTerminal
+    override val isTerminal
         get() = when (this.rhs) {
             is RuntimeRuleRhsNonTerminal -> false
             is RuntimeRuleRhsEmpty -> true
@@ -82,6 +83,7 @@ internal class RuntimeRule(
         }
 
     val isChoice get() = this.rhs is RuntimeRuleRhsChoice
+    val isChoiceAmbiguous get() = this.isChoice && (this.rhs as RuntimeRuleRhsChoice).choiceKind == RuntimeRuleChoiceKind.AMBIGUOUS
     val isList get() = this.rhs is RuntimeRuleRhsList
 
     @Deprecated("use 'rhs is'")

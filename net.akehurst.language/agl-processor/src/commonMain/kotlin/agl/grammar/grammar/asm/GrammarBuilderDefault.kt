@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.grammar.grammar.asm
 
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.collections.lazyMutableMapNonNull
 
@@ -34,15 +33,15 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
     }
 
     fun rule(name: String): RuleBuilder {
-        return RuleBuilder(RuleDefault(grammar, name, false, false, false))
+        return RuleBuilder(GrammarRuleDefault(grammar, name, false, false, false))
     }
 
     fun skip(name: String, isLeaf: Boolean = false): RuleBuilder {
-        return RuleBuilder(RuleDefault(this.grammar, name, false, true, isLeaf))
+        return RuleBuilder(GrammarRuleDefault(this.grammar, name, false, true, isLeaf))
     }
 
     fun leaf(name: String): RuleBuilder {
-        return RuleBuilder(RuleDefault(this.grammar, name, false, false, true))
+        return RuleBuilder(GrammarRuleDefault(this.grammar, name, false, false, true))
     }
 
     fun terminalLiteral(value: String): Terminal {
@@ -53,7 +52,7 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
         return TerminalDefault(value, true)
     }
 
-    fun embed(embeddedGrammarName:String, embeddedGoalName:String) : Embedded {
+    fun embed(embeddedGrammarName: String, embeddedGoalName: String): Embedded {
         val qn = embeddedGrammarName
         val embeddedGrammarRef = GrammarReferenceDefault(namespace, embeddedGrammarName)
         return EmbeddedDefault(embeddedGoalName, embeddedGrammarRef)
@@ -87,7 +86,8 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 
         fun choiceLongestFromConcatenationItem(vararg alternative: ConcatenationItem) {
             val alternativeConcats = alternative.map { ConcatenationDefault(listOf(it)) }
-            this.rule.rhs = ChoiceLongestDefault(alternativeConcats);
+//            this.rule.rhs = ChoiceLongestDefault(alternativeConcats);
+            this.rule.rhs = ChoiceLongestDefault(alternative.asList());
         }
 
         fun choicePriority(vararg alternative: Concatenation) {
@@ -95,13 +95,16 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
             this.rule.rhs = ChoicePriorityDefault(alternative.asList());
         }
 
+        fun optional(item: SimpleItem) {
+            this.rule.rhs = OptionalItemDefault(item)
+        }
+
         fun multi(min: Int, max: Int, item: SimpleItem) {
             this.rule.rhs = SimpleListDefault(min, max, item)
         }
 
-        //TODO: original only allows separator to be a TerminalLiteral here,  I think any Terminal is ok though!
         fun separatedList(min: Int, max: Int, separator: SimpleItem, item: SimpleItem) {
-            this.rule.rhs = SeparatedListDefault(min, max, item, separator)//, SeparatedListKind.Flat)
+            this.rule.rhs = SeparatedListDefault(min, max, item, separator)
         }
     }
 }

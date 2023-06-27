@@ -1,8 +1,27 @@
+/*
+ * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package test;
 
 import kotlin.Pair;
 import kotlin.Unit;
 import net.akehurst.language.agl.processor.Agl;
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple;
+import net.akehurst.language.api.asm.AsmSimple;
 import net.akehurst.language.api.processor.*;
 import net.akehurst.language.api.sppt.SharedPackedParseTree;
 import org.junit.Assert;
@@ -27,6 +46,7 @@ public class test_Agl {
 
         String expected = "2023";
         Assert.assertEquals(expected, actual);
+
     }
 
     @Test
@@ -38,19 +58,19 @@ public class test_Agl {
 
     @Test
     public void processorFromString_withConfigDefault() {
-        LanguageProcessorConfiguration<Object,Object> config = Agl.INSTANCE.configurationDefault();
+        LanguageProcessorConfiguration<AsmSimple, ContextSimple> config = Agl.INSTANCE.configurationDefault();
 
-        LanguageProcessor<Object,Object> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null).getProcessor();
+        LanguageProcessor<AsmSimple, ContextSimple> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null).getProcessor();
 
         Assert.assertNotNull(proc);
     }
 
     @Test
     public void processorFromString_withConfigSet() {
-        LanguageProcessorConfiguration<Object,Object> config = Agl.INSTANCE.configuration( KotlinFromJava.toKotlin(b-> {
-            b.targetGrammarName("");
+        LanguageProcessorConfiguration<Object,Object> config = Agl.INSTANCE.configuration(null, b-> {
+            b.targetGrammarName("Test");
             return Unit.INSTANCE;
-        }));
+        });
 
         LanguageProcessor<Object,Object> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null).getProcessor();
 

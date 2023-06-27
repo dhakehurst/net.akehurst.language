@@ -19,7 +19,6 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.regex.regexMatcher
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.regex.RegexMatcher
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.MutableStack
@@ -31,7 +30,7 @@ internal class SPPTParserDefault(
 ) : SPPTParser {
 
     private val WS = regexMatcher("\\s+")
-    private val EMPTY = regexMatcher("§empty")
+    private val EMPTY = regexMatcher("§empty|<EMPTY>")
     private val QNAME = regexMatcher("[a-zA-Z_§][.a-zA-Z_0-9§]*")
     private val ID = regexMatcher("[a-zA-Z_§][a-zA-Z_0-9§]*")
     private val EMBED = regexMatcher("::")
@@ -59,8 +58,8 @@ internal class SPPTParserDefault(
         val qualifier get() = this.full.substringBefore(".", "")
     }
 
-    private data class RuleReference(val qname:QName?, val name: String) {
-        val isQualified get() = null!=this.qname
+    private data class RuleReference(val qname: QName?, val name: String) {
+        val isQualified get() = null != this.qname
     }
 
     private data class NodeStart(
@@ -156,6 +155,7 @@ internal class SPPTParserDefault(
                     val emptyNode = this.emptyLeaf(ruleStartThatIsEmpty.ref.name, input, sentenceStartPosition, sentenceNextInputPosition)
                     childrenStack.peek().add(emptyNode)
                 }
+
                 scanner.hasNext(ID) -> {
                     val scanned = scanner.next(ID)
                     val ntRef = if (scanner.hasNext(EMBED)) {
@@ -166,7 +166,7 @@ internal class SPPTParserDefault(
                         this.runtimeRuleSetInUse.push(embrrs)
                         RuleReference(QName(scanned), n)
                     } else {
-                        RuleReference(null,scanned)
+                        RuleReference(null, scanned)
                     }
                     val option = if (scanner.hasNext(OPTION)) {
                         val optionStr = scanner.next(OPTION)
@@ -177,10 +177,12 @@ internal class SPPTParserDefault(
                     }
                     nodeNamesStack.push(NodeStart(ntRef, option, sentenceStartPosition, sentenceNextInputPosition))
                 }
+
                 scanner.hasNext(CHILDREN_START) -> {
                     scanner.next(CHILDREN_START)
                     childrenStack.push(ArrayList<SPPTNode>())
                 }
+
                 scanner.hasNext(LITERAL) -> {
                     val leafName = scanner.next(LITERAL).replace("\\'", "'")
                     val text = leafName.substring(1, leafName.length - 1)
@@ -210,6 +212,7 @@ internal class SPPTParserDefault(
                         childrenStack.peek().add(leaf)
                     }
                 }
+
                 scanner.hasNext(PATTERN) -> {
                     val leafName = scanner.next(PATTERN).replace("\\'", "'")
                     val text = leafName.substring(1, leafName.length - 1)
@@ -239,6 +242,7 @@ internal class SPPTParserDefault(
                         childrenStack.peek().add(leaf)
                     }
                 }
+
                 scanner.hasNext(COLON) -> {
                     scanner.next(COLON)
                     while (scanner.hasNext(WS)) {
@@ -255,6 +259,7 @@ internal class SPPTParserDefault(
                     //sentenceLocation = input.nextLocation(location, leaf.matchedText.length)
                     childrenStack.peek().add(leaf)
                 }
+
                 scanner.hasNext(CHILDREN_END) -> {
                     scanner.next(CHILDREN_END)
                     /* only used in testing no need to - if (Debug.CHECK) */ check(nodeNamesStack.isEmpty.not()) { "Error parsing tree at position line:${scanner.line},column:${scanner.column}" }
@@ -271,6 +276,7 @@ internal class SPPTParserDefault(
                     }
                     childrenStack.peek().add(node)
                 }
+
                 else -> {
                     val before = treeAsString.substring(maxOf(0, scanner.position - 5), scanner.position)
                     val after = treeAsString.substring(scanner.position, minOf(treeAsString.length, scanner.position + 5))
@@ -316,14 +322,14 @@ internal class SPPTParserDefault(
         val startPosition = children.firstOrNull()?.startPosition ?: 0
         val nextInputPosition = children.lastOrNull()?.nextInputPosition ?: 0
         val n = SPPTBranchFromInput(input, rr, option, startPosition, nextInputPosition, 0)
-        n.childrenAlternatives.add(children)
+        n.childrenAlternatives[option] = (children)
 
         var existing: SPPTBranch? = this.findBranch(n.identity, n.matchedTextLength)
         if (null == existing) {
             this.cacheNode(n)
             existing = n
         } else {
-            (existing as SPPTBranchFromInput).childrenAlternatives.add(n.children)
+            (existing as SPPTBranchFromInput).childrenAlternatives[option] = (n.children)
         }
 
         return existing
@@ -334,14 +340,14 @@ internal class SPPTParserDefault(
         val startPosition = children.firstOrNull()?.startPosition ?: 0
         val nextInputPosition = children.lastOrNull()?.nextInputPosition ?: 0
         val n = SPPTBranchFromInput(input, rr, option, startPosition, nextInputPosition, 0)
-        n.childrenAlternatives.add(children)
+        n.childrenAlternatives[option] = (children)
 
         var existing: SPPTBranch? = this.findBranch(n.identity, n.matchedTextLength)
         if (null == existing) {
             this.cacheNode(n)
             existing = n
         } else {
-            (existing as SPPTBranchFromInput).childrenAlternatives.add(n.children)
+            (existing as SPPTBranchFromInput).childrenAlternatives[option] = n.children
         }
 
         return existing

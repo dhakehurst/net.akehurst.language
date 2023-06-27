@@ -35,14 +35,12 @@ class ScopeModelAgl
         val ROOT_SCOPE_TYPE_NAME = "§root"
         val IDENTIFY_BY_NOTHING = "§nothing"
 
-        fun fromString(context: SentenceContext<GrammarItem>, aglScopeModelSentence:String): ProcessResult<ScopeModelAgl> {
+        fun fromString(context: SentenceContext<String>, aglScopeModelSentence:String): ProcessResult<ScopeModelAgl> {
             val proc = Agl.registry.agl.scopes.processor ?: error("Scopes language not found!")
             return proc.process(
                 sentence = aglScopeModelSentence,
                 Agl.options {
-                    syntaxAnalysis {
-                        context(context)
-                    }
+                    semanticAnalysis { context(context) }
                 }
             )
         }
@@ -98,7 +96,7 @@ class ScopeModelAgl
                     } else if (v is AsmElementReference) {
                         val typeNames = this.getReferredToTypeNameFor(el.typeName, prop.name)
                         val referreds: List<AsmElementPath> = typeNames.mapNotNull {
-                            elScope.findOrNull(v.reference, it) as AsmElementPath?
+                            elScope.findOrNull(v.reference, it)
                         }
                         if (1 < referreds.size) {
                             issues.warn(
@@ -115,7 +113,7 @@ class ScopeModelAgl
                             )
                         } else {
                             val rel = el.asm.index[referred]
-                            el.getPropertyAsReferenceOrNull(prop.name)?.value = rel
+                            v.value = rel
                         }
 
                     } else {

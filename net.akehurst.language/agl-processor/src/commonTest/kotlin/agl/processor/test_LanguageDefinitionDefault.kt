@@ -16,11 +16,11 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
@@ -30,7 +30,7 @@ import kotlin.test.*
 
 class test_LanguageDefinitionDefault {
 
-    lateinit var sut:LanguageDefinition<AsmSimple, ContextSimple>
+    lateinit var sut: LanguageDefinition<AsmSimple, ContextSimple>
 
     val grammarStrObserverCalled = mutableListOf<Pair<String?, String?>>()
     val grammarStrObserver: (String?, String?) -> Unit = { old, new -> grammarStrObserverCalled.add(Pair(old, new)) }
@@ -95,12 +95,12 @@ class test_LanguageDefinitionDefault {
             Agl.configuration {
                 targetGrammarName(null)
                 defaultGoalRuleName(null)
-                typeModelResolver {  ProcessResultDefault(TypeModelFromGrammar(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                scopeModelResolver { ProcessResultDefault(null,IssueHolder(LanguageProcessorPhase.ALL)) }
+                typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.createFrom(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+                scopeModelResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                 syntaxAnalyserResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
-                semanticAnalyserResolver {  ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
-                formatterResolver {  ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
-                styleResolver {  ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
+                semanticAnalyserResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
+                formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
+                styleResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
             }
         )
 
@@ -108,6 +108,15 @@ class test_LanguageDefinitionDefault {
         assertNotNull(def.grammar)
         assertNotNull(def.processor)
         assertTrue(sut.issues.isEmpty())
+    }
+
+    @Test
+    fun modifyObservers() {
+        sut.grammarStrObservers.add { s1: String?, s2: String? ->
+            println("Grammar changed: $s1, $s2")
+        }
+
+        sut.grammarStr = "something new"
     }
 
     @Test
@@ -140,7 +149,7 @@ class test_LanguageDefinitionDefault {
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0, 1, 1, 1), "^xxxxx", setOf("'namespace'"))
             ), sut.issues.all
         )
-        assertEquals(listOf(Pair<String?, String?>(null,g)),grammarStrObserverCalled)
+        assertEquals(listOf(Pair<String?, String?>(null, g)), grammarStrObserverCalled)
         assertEquals(emptyList(), grammarObserverCalled)
         assertEquals(emptyList(), scopeStrObserverCalled)
         assertEquals(emptyList(), scopeModelObserverCalled)
@@ -163,14 +172,14 @@ class test_LanguageDefinitionDefault {
                 LanguageIssue(
                     LanguageIssueKind.ERROR,
                     LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                    InputLocation(26, 27, 1, 11),
+                    InputLocation(34, 35, 1, 3),
                     "Grammar 'XX' not found",
                     null
                 )
             ), sut.issues.all
         )
 
-        assertEquals(listOf(Pair<String?, String?>(null,g)),grammarStrObserverCalled)
+        assertEquals(listOf(Pair<String?, String?>(null, g)), grammarStrObserverCalled)
         assertEquals(emptyList(), grammarObserverCalled)
         assertEquals(emptyList(), scopeStrObserverCalled)
         assertEquals(emptyList(), scopeModelObserverCalled)
@@ -193,7 +202,7 @@ class test_LanguageDefinitionDefault {
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(32, 33, 1, 1), "GrammarRule 'b' not found in grammar 'Test'", null)
             ), sut.issues.all
         )
-        assertEquals(listOf(Pair<String?, String?>(null,g)),grammarStrObserverCalled)
+        assertEquals(listOf(Pair<String?, String?>(null, g)), grammarStrObserverCalled)
         assertEquals(emptyList(), grammarObserverCalled)
         assertEquals(emptyList(), scopeStrObserverCalled)
         assertEquals(emptyList(), scopeModelObserverCalled)
@@ -214,7 +223,7 @@ class test_LanguageDefinitionDefault {
         assertNotNull(sut.processor)
         assertTrue(sut.issues.isEmpty())
 
-        assertEquals(listOf(Pair<String?, String?>(null,g)),grammarStrObserverCalled)
+        assertEquals(listOf(Pair<String?, String?>(null, g)), grammarStrObserverCalled)
         assertEquals(listOf(Pair<Grammar?, Grammar?>(null, sut.grammar)), grammarObserverCalled)
         assertEquals(emptyList(), scopeStrObserverCalled)
         assertEquals(emptyList(), scopeModelObserverCalled)
@@ -239,7 +248,7 @@ class test_LanguageDefinitionDefault {
         assertNull(sut.processor)
         assertTrue(sut.issues.isEmpty())
 
-        assertEquals(listOf(Pair<String?, String?>(g,null)),grammarStrObserverCalled)
+        assertEquals(listOf(Pair<String?, String?>(g, null)), grammarStrObserverCalled)
         assertEquals(listOf(Pair<Grammar?, Grammar?>(oldGrammar, null)), grammarObserverCalled)
         assertEquals(emptyList(), scopeStrObserverCalled)
         assertEquals(emptyList(), scopeModelObserverCalled)
@@ -265,7 +274,7 @@ class test_LanguageDefinitionDefault {
         assertNotNull(sut.processor)
         assertTrue(sut.issues.isEmpty())
 
-        assertEquals(emptyList(),grammarStrObserverCalled)
+        assertEquals(emptyList(), grammarStrObserverCalled)
         assertEquals(emptyList(), grammarObserverCalled)
         assertEquals(emptyList(), scopeStrObserverCalled)
         assertEquals(emptyList(), scopeModelObserverCalled)
@@ -291,7 +300,7 @@ class test_LanguageDefinitionDefault {
         assertNotNull(sut.processor)
         assertTrue(sut.issues.isEmpty())
 
-        assertEquals(listOf(Pair<String?, String?>(g1,g2)),grammarStrObserverCalled)
+        assertEquals(listOf(Pair<String?, String?>(g1, g2)), grammarStrObserverCalled)
         assertEquals(listOf(Pair<Grammar?, Grammar?>(oldGrammar, sut.grammar)), grammarObserverCalled)
         assertEquals(emptyList(), scopeStrObserverCalled)
         assertEquals(emptyList(), scopeModelObserverCalled)
@@ -347,5 +356,79 @@ class test_LanguageDefinitionDefault {
     fun aglOptions_change_null_to_value() {
         sut.grammarStr = null
         TODO()
+    }
+
+    @Test
+    fun checkReferencesWork() {
+        val grammarStr = """
+            namespace test
+            
+            grammar Test {
+                skip leaf WS = "\s+" ;
+                skip leaf COMMENT = "//[^\n]*(\n)" ;
+            
+                unit = declaration* ;
+                declaration = datatype | primitive | collection ;
+                primitive = 'primitive' ID ;
+                collection = 'collection' ID typeParameters? ;
+                typeParameters = '<' typeParameterList '>' ;
+                typeParameterList = [ID / ',']+ ;
+                datatype = 'datatype' ID '{' property* '}' ;
+                property = ID ':' typeReference ;
+                typeReference = type typeArguments? ;
+                typeArguments = '<' typeArgumentList '>' ;
+                typeArgumentList = [typeReference / ',']+ ;
+            
+                leaf ID = "[A-Za-z_][A-Za-z0-9_]*" ;
+                leaf type = ID;
+            }
+        """
+        val scopeStr = """
+                identify Unit by §nothing
+                scope Unit {
+                    identify Primitive by id
+                    identify Datatype by id
+                    identify Collection by id
+                }
+                references {
+                    in TypeReference property type refers-to Primitive|Datatype|Collection
+                }
+            """
+        val sentence = """
+            primitive String
+            datatype A {
+                a : String
+            }
+        """.trimIndent()
+
+        sut.grammarStr = grammarStr
+        sut.scopeModelStr = scopeStr
+        val result = sut.processor!!.process(sentence)
+
+        val expected = asmSimple {
+            element("Unit") {
+                propertyListOfElement("declaration") {
+                    element("Primitive") {
+                        propertyString("id", "String")
+                    }
+                    element("Datatype") {
+                        propertyString("id", "A")
+                        propertyListOfElement("property") {
+                            element("Property") {
+                                propertyString("id", "a")
+                                propertyElementExplicitType("typeReference", "TypeReference") {
+                                    reference("type", "String")
+                                    propertyNull("typeArguments")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        assertNotNull(result.asm)
+        assertTrue(result.issues.isEmpty())
+        assertEquals(expected.asString("  "), result.asm!!.asString("  "))
     }
 }

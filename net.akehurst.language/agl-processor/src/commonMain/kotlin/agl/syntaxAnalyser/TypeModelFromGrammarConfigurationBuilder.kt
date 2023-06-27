@@ -16,33 +16,57 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.api.grammar.GrammarRule
-import net.akehurst.language.api.grammar.SimpleItem
-import net.akehurst.language.api.typeModel.RuleType
+import net.akehurst.language.api.grammar.*
+import net.akehurst.language.typemodel.api.*
 
-class TypeModelFromGrammarConfiguration(
-    val typeNameFor:(rule:GrammarRule)->String,
-    val propertyNameFor:(ruleItem: SimpleItem, ruleItemType:RuleType)->String
-)
+interface TypeModelFromGrammarConfiguration {
+    fun typeNameFor(rule: GrammarRule): String
+    fun propertyNameFor(ruleItem: RuleItem, ruleItemType: TypeDefinition): String
+}
 
-@DslMarker
-annotation class TypeModelFromGrammarConfigurationBuilderMarker
+fun String.lower() = when {
+    this.uppercase() == this -> this.lowercase()
+    else -> this.replaceFirstChar { it.lowercase() }
+}
 
-@TypeModelFromGrammarConfigurationBuilderMarker
-class TypeModelFromGrammarConfigurationBuilder {
+class TypeModelFromGrammarConfigurationDefault() : TypeModelFromGrammarConfiguration {
+    override fun typeNameFor(rule: GrammarRule): String = rule.name.replaceFirstChar { it.titlecase() }
+    override fun propertyNameFor(ruleItem: RuleItem, ruleItemType: TypeDefinition): String {
+        val baseName = when (ruleItem) {
+            is Terminal -> when (ruleItemType) {
+                is PrimitiveType -> TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
+                is ListSimpleType -> TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME
+                is ListSeparatedType -> TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME
+                is TupleType -> TypeModelFromGrammar.UNNAMED_TUPLE_PROPERTY_NAME
+                else -> TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
+            }
 
-    private lateinit var _typeNameFor:(rule:GrammarRule)->String
-    private lateinit var _propertyNameFor:(ruleItem: SimpleItem, ruleItemType:RuleType)->String
+            is Embedded -> ruleItem.embeddedGoalName.lower()
+            is NonTerminal -> ruleItem.name.lower()
+            is Group -> TypeModelFromGrammar.UNNAMED_GROUP_PROPERTY_NAME
+            is Choice -> TypeModelFromGrammar.UNNAMED_CHOICE_PROPERTY_NAME
+            else -> error("Internal error, unhandled subtype of SimpleItem")
+        }.replaceFirstChar { it.lowercase() }
+        return when (ruleItemType) {
+            is NothingType -> baseName
+            is AnyType -> baseName
+            is PrimitiveType -> baseName
+            is UnnamedSuperTypeType -> baseName
+            is ListSimpleType -> when (ruleItem) {
+                is NonTerminal -> ruleItem.name.lower()
+                is Terminal -> TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME
+                is Group -> TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME
+                else -> "${baseName}List"
+            }
 
-    fun typeNameFor(func:(rule:GrammarRule)->String) {
-        _typeNameFor = func
-    }
+            is ListSeparatedType -> when (ruleItem) {
+                is NonTerminal -> ruleItem.name.lower()
+                is Terminal -> TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME
+                else -> "${baseName}List"
+            }
 
-    fun propertyNameFor(func:(ruleItem: SimpleItem, ruleItemType:RuleType)->String) {
-        _propertyNameFor = func
-    }
-
-    fun build() : TypeModelFromGrammarConfiguration {
-        return TypeModelFromGrammarConfiguration(_typeNameFor, _propertyNameFor)
+            is TupleType -> baseName
+            is ElementType -> baseName
+        }
     }
 }

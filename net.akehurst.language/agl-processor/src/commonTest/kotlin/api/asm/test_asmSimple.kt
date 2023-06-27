@@ -24,11 +24,11 @@ class test_asmSimple {
     @Test
     fun xxxxx() {
         val asm = AsmSimple()
-        val el = AsmElementSimple(AsmElementPath("/"),asm,"Test")
-       // el.zzzzz = "hello"
+        val el = AsmElementSimple(AsmElementPath("/"), asm, "Test")
+        // el.zzzzz = "hello"
 
         //assertEquals("hello",el.zzzzz)
-        assertEquals(emptyMap(),el.properties)
+        assertEquals(emptyMap(), el.properties)
     }
 
 }

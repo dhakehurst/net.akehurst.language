@@ -52,7 +52,7 @@ internal class test_abOcLiteral : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^", setOf("'a'","'c'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -63,7 +63,7 @@ internal class test_abOcLiteral : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"a^", setOf("'b'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -96,7 +96,7 @@ internal class test_abOcLiteral : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(2,3,1,1),"ab^c", setOf("<EOT>"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test

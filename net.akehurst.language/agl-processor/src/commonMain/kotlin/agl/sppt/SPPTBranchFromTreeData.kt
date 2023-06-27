@@ -18,18 +18,14 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.CompleteNodeIndex
-import net.akehurst.language.agl.runtime.graph.TreeData
 import net.akehurst.language.agl.runtime.graph.TreeDataComplete
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.api.sppt.SPPTBranch
-import net.akehurst.language.api.sppt.SPPTException
-import net.akehurst.language.api.sppt.SPPTLeaf
-import net.akehurst.language.api.sppt.SPPTNode
+import net.akehurst.language.api.sppt.*
 
 //TODO: currently this has to be public, because otherwise kotlin does not
 // use the non-mangled names for properties - necessary for tree serialisation
 /*internal */ class SPPTBranchFromTreeData internal constructor(
-    private val _treeData: TreeDataComplete,
+    private val _treeData: TreeDataComplete<CompleteNodeIndex>,
     input: InputFromString,
     runtimeRule: RuntimeRule,
     option: Int,
@@ -42,39 +38,49 @@ import net.akehurst.language.api.sppt.SPPTNode
 
     // --- SPPTBranch ---
 
-    override val childrenAlternatives: Set<List<SPPTNode>> by lazy {
-        val alternatives = this._treeData.childrenFor(runtimeRule, startPosition, nextInputPosition)
-        val r: Set<List<SPPTNode>> = alternatives.map { (prioList, alt) ->
-            val chNodeList: List<SPPTNode> = alt.flatMapIndexed { childIndx, child ->
+    override val childrenAlternatives: Map<Int, List<SPPTNode>> by lazy {
+        val alternatives = this._treeData.childrenFor(object : SpptDataNode {
+            override val rule: RuntimeRule get() = runtimeRule
+            override val startPosition: Int get() = startPosition
+            override val nextInputPosition: Int get() = nextInputPosition
+            override val option: Int get() = 0
+        }
+        )
+        val r: Map<Int, List<SPPTNode>> = alternatives.map { (alt, children) ->
+            val chNodeList: List<SPPTNode> = children.flatMapIndexed { childIndx, child ->
                 //val possChildren = this.runtimeRule.rulePositionsAt[childIndx].filter { it.option == this.option }
                 val rp = when (child.rulePositions.size) {
                     1 -> child.rulePositions[0]
                     else -> {
-                        val possChild = this.runtimeRule.rulePositions.filter { it.position==childIndx}.first { prioList.contains(it.option) }
-                        child.rulePositions.first { possChild.items.contains(it.rule)  }
+                        val possChild = this.runtimeRule.rulePositions.filter { it.position == childIndx }.first { alt == it.option }
+                        child.rulePositions.first { possChild.items.contains(it.rule) }
                     }
                 }
                 when {
                     this.isEmbedded -> when {
                         null != child.treeData.initialSkip -> {
                             val td = child.treeData.initialSkip!!
-                            val goalChildren = child.treeData.childrenFor(
-                                child.treeData.root!!.firstRule,
-                                child.treeData.root!!.startPosition,
-                                child.treeData.root!!.nextInputPosition
-                            )
+                            val goalChildren = child.treeData.childrenFor(child.treeData.root!!)
                             val userGoal = goalChildren.first().second[0]
-                            val startPositionBeforeInitialSkip = td.startPosition ?: userGoal.startPosition
+                            val startPositionBeforeInitialSkip = td.root!!.startPosition ?: userGoal.startPosition
 
                             val sg = td.completeChildren[td.root]!!.values.first().get(0)
                             val skipChildren = td.completeChildren[sg]!!.values.first().map {
                                 td.completeChildren[it]!!.values.first().get(0)
                             }
-                            val nug =child.treeData.createCompleteNodeIndex(userGoal.state, startPositionBeforeInitialSkip, userGoal.nextInputPosition, td.nextInputPosition!!, null, null)
+                            val nug = CompleteNodeIndex(
+                                child.treeData,
+                                userGoal.state,
+                                startPositionBeforeInitialSkip,
+                                userGoal.nextInputPosition,
+                                td.root!!.nextInputPosition!!,
+                                null
+                            )
                             val userGoalChildren = skipChildren + child.treeData.completeChildren[userGoal]!!.values.first()
                             child.treeData.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
                             listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, nug.startPosition, nug.nextInputPosition, -1))
                         }
+
                         else -> {
                             val eolPositions = emptyList<Int>() //TODO calc ?
                             listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
@@ -83,7 +89,7 @@ import net.akehurst.language.api.sppt.SPPTNode
 
                     child.isEmbedded -> when {
                         child.hasSkipData -> {
-                            val skipData = this._treeData.skipChildrenAfter(child)
+                            val skipData = this._treeData.skipDataAfter(child)
                             val skipChildren = skipData?.let {
                                 val sr = skipData.completeChildren[skipData.root]!!.values.first().get(0)
                                 val c = skipData.completeChildren[sr]!!.values.first().map {
@@ -102,7 +108,7 @@ import net.akehurst.language.api.sppt.SPPTNode
                                         skch.treeData,
                                         this.input,
                                         skch.firstRule,
-                                        skch.optionList[0],
+                                        skch.option,
                                         skch.startPosition,
                                         skch.nextInputPosition,
                                         -1
@@ -122,12 +128,13 @@ import net.akehurst.language.api.sppt.SPPTNode
                                 )
                             ) + skipNodes
                         }
+
                         else -> listOf(SPPTBranchFromTreeData(child.treeData, this.input, rp.rule as RuntimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
                     }
 
                     rp.isTerminal -> when {
                         child.hasSkipData -> {
-                            val skipData = this._treeData.skipChildrenAfter(child)
+                            val skipData = this._treeData.skipDataAfter(child)
                             val skipChildren = skipData?.let {
                                 val sr = skipData.completeChildren[skipData.root]!!.values.first().get(0)
                                 val c = skipData.completeChildren[sr]!!.values.first().map {
@@ -146,7 +153,7 @@ import net.akehurst.language.api.sppt.SPPTNode
                                         skch.treeData,
                                         this.input,
                                         skch.firstRule,
-                                        skch.optionList[0],
+                                        skch.option,
                                         skch.startPosition,
                                         skch.nextInputPosition,
                                         -1
@@ -192,12 +199,12 @@ import net.akehurst.language.api.sppt.SPPTNode
                 }
 
             }
-            chNodeList
-        }.toSet()
+            Pair(alt, chNodeList)
+        }.associate { it }
         r
     }
 
-    override val children: List<SPPTNode> get() = this.childrenAlternatives.first()
+    override val children: List<SPPTNode> get() = this.childrenAlternatives.entries.sortedBy { it.key }.last().value
 
     override val nonSkipChildren: List<SPPTNode> by lazy { //TODO: maybe not use lazy
         this.children.filter { !it.isSkip }
@@ -222,10 +229,10 @@ import net.akehurst.language.api.sppt.SPPTNode
                 // for each alternative list of other children, check there is a matching list
                 // of children in this alternative children
                 var allOthersAreContained = true // if no other children alternatives contain is a match
-                for (otherChildren in other.childrenAlternatives) {
+                for ((alt, otherChildren) in other.childrenAlternatives.entries.sortedBy { it.key }) {
                     // for each of this alternative children, find one that 'contains' otherChildren
                     var foundContainMatch = false
-                    for (thisChildren in this.childrenAlternatives) {
+                    for ((alt, thisChildren) in this.childrenAlternatives.entries.sortedBy { it.key }) {
                         if (thisChildren.size == otherChildren.size) {
                             // for each pair of nodes, one from each of otherChildren thisChildren
                             // check thisChildrenNode contains otherChildrenNode

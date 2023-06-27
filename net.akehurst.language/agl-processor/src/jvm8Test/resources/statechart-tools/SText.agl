@@ -59,7 +59,13 @@ TransitionReaction = StextTrigger? ('/' ReactionEffectList)? ('#' TransitionProp
 
 StextTrigger = ReactionTrigger | DefaultTrigger;
 
-ReactionTrigger = ((EventSpec ("," EventSpec)* ('['Guard ']')?) | ('[' Guard ']'));
+ReactionTrigger = (
+                    (
+                       EventSpec ("," EventSpec)* ('['Guard ']')?
+                    )
+                    |
+                    ( '[' Guard ']' )
+                  );
 
 DefaultTrigger = ('default' | 'else');
 

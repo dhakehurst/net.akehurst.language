@@ -24,6 +24,7 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class test_StatechartTools_Singles {
 
@@ -31,14 +32,14 @@ class test_StatechartTools_Singles {
         private val grammarStr1 = this::class.java.getResource("/statechart-tools/Expressions.agl")?.readText() ?: error("File not found")
         private val grammarStr2 = this::class.java.getResource("/statechart-tools/SText.agl")?.readText() ?: error("File not found")
 
-        private val formatterStr= """
+        private val formatterStr = """
            AssignmentExpression -> "§expression §assignmentOperator §expression2"
-           FeatureCall -> "§elementReferenceExpression"
+           FeatureCall -> "§elementReferenceExpression§\§list"
            ElementReferenceExpression -> "§id"
            PrimitiveValueExpression -> "§literal"
            
 
-        """.replace("§","\$")
+        """.replace("§", "\$")
 
         // must create processor for 'Expressions' so that SText can extend it
         val exprProcessor = Agl.processorFromStringDefault(
@@ -53,11 +54,11 @@ class test_StatechartTools_Singles {
     }
 
     @Test
-    fun ConditionalExpression_integer() {
+    fun Expression_integer() {
         val goal = "Expression"
         val sentence = "integer"
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
-        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.asm, result.issues.toString())
         assertEquals(0, result.issues.size)
 
         val resultStr = processor.formatAsm(result.asm!!).sentence
@@ -101,12 +102,72 @@ class test_StatechartTools_Singles {
     }
 
     @Test
-    fun ScopeDeclaration_integer_AS_97() {
+    fun ScopeDeclaration_var_MyVar_integer() {
+        val goal = "ScopeDeclaration"
+        val sentence = "var MyVar : integer"
+        val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
+        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+
+        val resultStr = processor.formatAsm(result.asm!!).sentence
+        assertEquals(sentence, resultStr)
+    }
+
+    @Test
+    fun ScopeDeclaration_var_MyVar_integer_AS_97() {
         val goal = "ScopeDeclaration"
         val sentence = "var MyVar : integer = 97"
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
         assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
+
+        val resultStr = processor.formatAsm(result.asm!!).sentence
+        assertEquals(sentence, resultStr)
+    }
+
+    @Test
+    fun Expression_a_bF() {
+        val goal = "Expression"
+        val sentence = "a.b()"
+        val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
+        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+
+        val resultStr = processor.formatAsm(result.asm!!).sentence
+        assertEquals(sentence, resultStr)
+    }
+
+    @Test
+    fun Expression_a_bA() {
+        val goal = "Expression"
+        val sentence = "a.b[1]"
+        val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
+        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+
+        val resultStr = processor.formatAsm(result.asm!!).sentence
+        assertEquals(sentence, resultStr)
+    }
+
+    @Test
+    fun ReactionTrigger_exit() {
+        val goal = "ReactionTrigger"
+        val sentence = "exit"
+        val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.asm)
+
+        val resultStr = processor.formatAsm(result.asm!!).sentence
+        assertEquals(sentence, resultStr)
+    }
+
+    @Test
+    fun StextTrigger_else() {
+        val goal = "StextTrigger"
+        val sentence = "else"
+        val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
+        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.asm)
 
         val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)

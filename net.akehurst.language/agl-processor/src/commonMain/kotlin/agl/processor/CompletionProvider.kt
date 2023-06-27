@@ -21,7 +21,7 @@ import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 
 class CompletionProvider(
-        val targetGrammar:Grammar
+    val targetGrammar: Grammar
 ) {
 
     fun provideFor(item: RuleItem, desiredDepth: Int): List<CompletionItem> {
@@ -47,15 +47,24 @@ class CompletionProvider(
                     }
                     items
                 }
+
                 is Terminal -> when {
-                    item.owningRule.isLeaf -> listOf(CompletionItem(CompletionItemKind.LITERAL,item.owningRule.name, item.owningRule.name))  //TODO: generate text/example from regEx
-                    item.isPattern -> listOf(CompletionItem(CompletionItemKind.PATTERN,item.owningRule.name, item.value)) //TODO: generate text/example from regEx
-                    else -> listOf(CompletionItem(CompletionItemKind.LITERAL,item.owningRule.name, item.value))
+                    item.owningRule.isLeaf -> listOf(
+                        CompletionItem(
+                            CompletionItemKind.LITERAL,
+                            item.owningRule.name,
+                            item.owningRule.name
+                        )
+                    )  //TODO: generate text/example from regEx
+                    item.isPattern -> listOf(CompletionItem(CompletionItemKind.PATTERN, item.owningRule.name, item.value)) //TODO: generate text/example from regEx
+                    else -> listOf(CompletionItem(CompletionItemKind.LITERAL, item.owningRule.name, item.value))
                 }
+
                 is NonTerminal -> {
                     //TODO: handle overridden vs embedded rules!
                     getItems(item.referencedRule(this.targetGrammar).rhs, desiredDepth - 1, done + item)
                 }
+
                 is SeparatedList -> {
                     val items = getItems(item.item, desiredDepth, done + item)
                     if (item.min == 0) {
@@ -64,6 +73,7 @@ class CompletionProvider(
                         items + emptyList<CompletionItem>()
                     }
                 }
+
                 is SimpleList -> {
                     val items = getItems(item.item, desiredDepth, done + item)
                     if (item.min == 0) {
@@ -72,7 +82,8 @@ class CompletionProvider(
                         items + emptyList<CompletionItem>()
                     }
                 }
-                is Group -> getItems(item.choice, desiredDepth, done + item)
+
+                is Group -> getItems(item.groupedContent, desiredDepth, done + item)
                 else -> error("not yet supported!")
             }
         }

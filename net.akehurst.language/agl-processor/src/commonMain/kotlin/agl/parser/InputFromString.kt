@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.parser
 
 import agl.runtime.graph.CompletedNodesStore
+import net.akehurst.language.agl.automaton.LookaheadSetPart
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.api.parser.InputLocation
@@ -93,28 +94,36 @@ internal class InputFromString(
     fun eolPositions(text: String): List<Int> = EOL_PATTERN.findAll(text).map { it.range.first }.toList()
 
     // seems faster to match literal with regex than substring and startsWith
-    private val isLookingAt_cache = hashMapOf<Pair<Int,RuntimeRule>,Boolean>()
-    fun isLookingAt(position: Int, terminalRule: RuntimeRule):Boolean {
-        val r = isLookingAt_cache[Pair(position,terminalRule)]
-        return if (null!=r) {
-             r
+    private val isLookingAt_cache = hashMapOf<Pair<Int, RuntimeRule>, Boolean>()
+    fun isLookingAt(position: Int, terminalRule: RuntimeRule): Boolean {
+        val r = isLookingAt_cache[Pair(position, terminalRule)]
+        return if (null != r) {
+            r
         } else {
             val rhs = terminalRule.rhs
             val matched = when {
                 this.isEnd(position) -> if (terminalRule == RuntimeRuleSet.END_OF_TEXT) true else false //TODO: do we need this
                 rhs is RuntimeRuleRhsPattern -> rhs.regex.matchesAt(this.text, position)
-                rhs is RuntimeRuleRhsLiteral ->this.text.regionMatches(position, rhs.value, 0, rhs.value.length)
+                rhs is RuntimeRuleRhsLiteral -> this.text.regionMatches(position, rhs.value, 0, rhs.value.length)
                 else -> error("Internal Error: not handled")
             }
-            isLookingAt_cache[Pair(position,terminalRule)] = matched
+            isLookingAt_cache[Pair(position, terminalRule)] = matched
             matched
+        }
+    }
+
+    fun isLookingAtAnyOf(lh: LookaheadSetPart, position: Int): Boolean {
+        return when {
+            lh.includesRT -> error("lookahead must be real lookahead values, <RT> must be resolved")
+            lh.includesEOT && this.isEnd(position) -> true
+            else -> lh.content.any { this.isLookingAt(position, it) }
         }
     }
 
     private fun matchLiteral(position: Int, terminalRule: RuntimeRule): RegexMatcher.MatchResult? {
         //val stext = this.text.substring(position)
         //val match = stext.startsWith(patternText)//regionMatches(position, patternText, 0, patternText.length, false)
-        val match = this.isLookingAt(position,terminalRule)
+        val match = this.isLookingAt(position, terminalRule)
         return if (match) {
             val text = (terminalRule.rhs as RuntimeRuleRhsLiteral).value
             val eolPositions = emptyList<Int>() //this.eolPositions(text)

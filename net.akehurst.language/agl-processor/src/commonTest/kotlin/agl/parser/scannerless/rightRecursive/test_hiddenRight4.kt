@@ -75,33 +75,39 @@ internal class test_hiddenRight4 : test_ScanOnDemandParserAbstract() {
     fun empty_fails() {
         val sentence = ""
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-        ),issues.error)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), issues.errors
+        )
     }
 
     @Test
     fun a_fails() {
         val sentence = "a"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"a^",setOf("'b'"))
-        ),issues.error)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'"))
+            ), issues.errors
+        )
     }
 
     @Test
     fun ab_fails() {
         val sentence = "ab"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(2,3,1,1),"ab^",setOf("'c'"))
-        ),issues.error)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'c'"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -152,11 +158,11 @@ internal class test_hiddenRight4 : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -225,7 +231,7 @@ internal class test_hiddenRight4 : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2,
+            expectedNumGSSHeads = 1,
             expectedTrees = arrayOf(expected)
         )
     }

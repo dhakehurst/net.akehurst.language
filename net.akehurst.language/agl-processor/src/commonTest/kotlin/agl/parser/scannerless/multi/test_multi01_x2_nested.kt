@@ -31,7 +31,7 @@ internal class test_multi01_x2_nested : test_ScanOnDemandParserAbstract() {
     // B = 'b'?
     // V = "[a-c]"
     private companion object {
-         val rrs = runtimeRuleSet {
+        val rrs = runtimeRuleSet {
             concatenation("S") { ref("AB"); ref("V"); literal("d") }
             concatenation("AB") { ref("A"); ref("B") }
             multi("A", 0, 1, "'a'")
@@ -48,11 +48,13 @@ internal class test_multi01_x2_nested : test_ScanOnDemandParserAbstract() {
 
         val sentence = ""
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^", setOf("'a'","'b'","V"))
-        ),issues.error)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'", "'b'", "V"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -71,11 +73,11 @@ internal class test_multi01_x2_nested : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 2,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -95,11 +97,11 @@ internal class test_multi01_x2_nested : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 2,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 

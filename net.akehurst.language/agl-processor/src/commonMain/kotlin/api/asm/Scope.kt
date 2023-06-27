@@ -16,10 +16,15 @@
 
 package net.akehurst.language.api.asm
 
+import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
+
 /**
  * E - type of elements in the scope
  */
 interface Scope<AsmElementIdType> {
+
+    val childScopes:Map<String, ScopeSimple<AsmElementIdType>>
+
     fun isMissing(referableName:String, typeName:String): Boolean
 
 }

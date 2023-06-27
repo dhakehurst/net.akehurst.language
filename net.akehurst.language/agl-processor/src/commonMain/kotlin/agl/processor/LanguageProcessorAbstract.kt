@@ -17,8 +17,11 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.agl.parser.Scanner
+import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.formatter.FormatterSimple
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
+import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
+import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
@@ -27,22 +30,19 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.sppt.SPPTParserDefault
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
-import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.typeModel.TypeModel
 
 internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : Any>(
 ) : LanguageProcessor<AsmType, ContextType> {
@@ -68,7 +68,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         SPPTParserDefault((parser as ScanOnDemandParser).runtimeRuleSet, embeddedRuntimeRuleSets)
     }
 
-    protected val defaultGoalRuleName: String? by lazy { configuration.defaultGoalRuleName ?: grammar.rule.first { it.isSkip.not() }.name }
+    protected val defaultGoalRuleName: String? by lazy { configuration.defaultGoalRuleName ?: grammar.grammarRule.first { it.isSkip.not() }.name }
 
     //override val grammar: Grammar? by lazy {
     //    val res = configuration.grammarResolver?.invoke()
@@ -76,19 +76,19 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     //    res?.asm
     //}
 
-    override val typeModel: TypeModel? by lazy {
+    override val typeModel: GrammarTypeModel by lazy {
         val res = configuration.typeModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
-        res?.asm
+        res?.asm ?: grammarTypeModel("", "<Empty>", "None") {}
     }
 
-    override val scopeModel: ScopeModel? by lazy {
+    override val scopeModel: ScopeModel by lazy {
         val res = configuration.scopeModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
-        res?.asm
+        res?.asm ?: ScopeModelAgl()
     }
 
-    override val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>? by lazy {
+    override val syntaxAnalyser: SyntaxAnalyser<AsmType>? by lazy {
         val res = configuration.syntaxAnalyserResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
         res?.asm
@@ -100,7 +100,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         res?.asm
     }
 
-    override val formatterModel: AglFormatterModel?by lazy {
+    override val formatterModel: AglFormatterModel? by lazy {
         val res = configuration.formatterResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
         res?.asm
@@ -111,6 +111,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         res?.let { this.issues.addAll(res.issues) }
         FormatterSimple<AsmType>(res?.asm)
     }
+
+    override fun usedAutomatonFor(goalRuleName: String): ParserStateSet = (this.parser as ScanOnDemandParser).runtimeRuleSet.usedAutomatonFor(goalRuleName)
 
     override fun interrupt(message: String) {
         this.parser.interrupt(message)
@@ -146,10 +148,10 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         options: ProcessOptions<AsmType, ContextType>?
     ): SyntaxAnalysisResult<AsmType> { //Triple<AsmType?, List<LanguageIssue>, Map<Any, InputLocation>> {
         val opts = defaultOptions(options)
-        val sa: SyntaxAnalyser<AsmType, ContextType> = this.syntaxAnalyser
-            ?: SyntaxAnalyserSimple(this.typeModel, this.scopeModel) as SyntaxAnalyser<AsmType, ContextType>
+        val sa: SyntaxAnalyser<AsmType> = this.syntaxAnalyser
+            ?: SyntaxAnalyserSimple(this.typeModel!!, this.scopeModel!!) as SyntaxAnalyser<AsmType>
         sa.clear()
-        return sa.transform(sppt, this.mapToGrammar, opts.syntaxAnalysis.context)
+        return sa.transform(sppt, this.mapToGrammar)
     }
 
     override fun semanticAnalysis(
@@ -161,7 +163,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             ?: SemanticAnalyserSimple(this.scopeModel) as SemanticAnalyser<AsmType, ContextType>
         semAnalyser.clear()
         val lm = opts.semanticAnalysis.locationMap ?: emptyMap<Any, InputLocation>()
-        return semAnalyser.analyse(asm, lm, opts.syntaxAnalysis.context, opts.semanticAnalysis.options)
+        return semAnalyser.analyse(asm, lm, opts.semanticAnalysis.context, opts.semanticAnalysis.options)
     }
 
     override fun process(
@@ -231,7 +233,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 }
             }
         }
-        return ExpectedAtResultDefault(items,  IssueHolder(LanguageProcessorPhase.ALL))
+        return ExpectedAtResultDefault(items, IssueHolder(LanguageProcessorPhase.ALL))
     }
 
     /*

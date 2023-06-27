@@ -67,7 +67,7 @@ internal class test_nested_optionals : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'i'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test

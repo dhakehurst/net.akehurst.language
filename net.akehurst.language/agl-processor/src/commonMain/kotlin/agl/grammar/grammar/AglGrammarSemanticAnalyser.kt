@@ -16,10 +16,10 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.agl.api.automaton.ParseAction
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
@@ -59,9 +59,9 @@ class AglGrammarSemanticAnalyser(
         return emptyList()
     }
 
-    override fun analyse(asm: List<Grammar>, locationMap: Map<Any, InputLocation>?, context: GrammarContext?, options:Map<String,Any>): SemanticAnalysisResult {
+    override fun analyse(asm: List<Grammar>, locationMap: Map<Any, InputLocation>?, context: GrammarContext?, options: Map<String, Any>): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
-        this._analyseAmbiguities = options[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? ?: true
+        this._analyseAmbiguities = options[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? ?: false
 
         asm.forEach { languageRegistry.register(it) }
 
@@ -73,7 +73,7 @@ class AglGrammarSemanticAnalyser(
         grammarList.forEach { grammar ->
             this.checkExtendsExist(grammar.extends)
             this.checkNonTerminalReferencesExist(grammar)
-            if (issues.error.isEmpty() && _analyseAmbiguities) {
+            if (issues.errors.isEmpty() && _analyseAmbiguities) {
                 this.checkForAmbiguities(grammar, automatonKind)
             }
         }
@@ -95,7 +95,7 @@ class AglGrammarSemanticAnalyser(
     }
 
     private fun checkNonTerminalReferencesExist(grammar: Grammar) {
-        grammar.rule.forEach {
+        grammar.grammarRule.forEach {
             val rhs = it.rhs
             this.checkRuleItem(grammar, rhs)
         }
@@ -124,7 +124,7 @@ class AglGrammarSemanticAnalyser(
             }
 
             is Group -> {
-                rhs.choice.alternative.forEach { checkRuleItem(grammar, it) }
+                checkRuleItem(grammar, rhs.groupedContent)
             }
 
             is SimpleList -> {
@@ -139,12 +139,12 @@ class AglGrammarSemanticAnalyser(
     }
 
     private fun checkForAmbiguities(grammar: Grammar, automatonKind: AutomatonKind) {
-        val itemsSet = mutableSetOf<LanguageIssue>()
+        //val itemsSet = mutableSetOf<LanguageIssue>()
         //TODO: find a way to reuse RuntimeRuleSet rather than re compute here
         val conv = ConverterToRuntimeRules(grammar)
         val rrs = conv.runtimeRuleSet
         //TODO: pass in goalRuleName
-        val goalRuleName = grammar.rule.first { it.isSkip.not() }.name
+        val goalRuleName = grammar.grammarRule.first { it.isSkip.not() }.name
         //TODO: optionally do this...as it builds the automaton..we don't always want to build it!
         // and if built want to  reuse the build
         val automaton = rrs.automatonFor(goalRuleName, automatonKind)
@@ -169,13 +169,13 @@ class AglGrammarSemanticAnalyser(
                             when {
                                 //(tr1.action == Transition.ParseAction.WIDTH && tr2.action == Transition.ParseAction.WIDTH && tr1.to != tr2.to) -> Unit // no error
                                 else -> {
-                                    val lhg1 = tr1.lookahead.map { it.guard.part }.reduce{ acc,it -> acc.intersect(it) }
-                                    val lhg2 = tr2.lookahead.map { it.guard.part }.reduce{ acc,it -> acc.intersect(it) }
+                                    val lhg1 = tr1.lookahead.map { it.guard.part }.reduce { acc, it -> acc.intersect(it) }
+                                    val lhg2 = tr2.lookahead.map { it.guard.part }.reduce { acc, it -> acc.intersect(it) }
                                     val lhi = lhg1.intersect(lhg2)
                                     if (lhi.isNotEmpty) {
                                         val ori1 = conv.originalRuleItemFor(tr1.to.runtimeRules.first().runtimeRuleSetNumber, tr1.to.runtimeRules.first().ruleNumber) //FIXME
                                         val ori2 = conv.originalRuleItemFor(tr2.to.runtimeRules.first().runtimeRuleSetNumber, tr2.to.runtimeRules.first().ruleNumber) //FIXME
-                                        val or1 = ori1.owningRule
+                                        //val or1 = ori1.owningRule
                                         val or2 = ori2.owningRule
                                         val lhStr = lhi.fullContent.map { it.tag }
                                         val msg = "Ambiguity on $lhStr with ${or2.name}"

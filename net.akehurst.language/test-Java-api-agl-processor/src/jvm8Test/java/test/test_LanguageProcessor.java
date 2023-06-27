@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package test;
 
 import kotlin.Unit;
@@ -23,7 +40,13 @@ public class test_LanguageProcessor {
             + "  W = 'world' '!' ;" + EOL
             + "}";
 
-    private static final LanguageProcessor<AsmSimple, ContextSimple> proc = Agl.INSTANCE.processorFromStringDefault(grammarStr, null);
+    private static final LanguageProcessor<AsmSimple, ContextSimple> proc = Agl.INSTANCE.processorFromStringDefault(
+            grammarStr,
+            null,
+            null,
+            null,
+            null
+    ).getProcessor();
 
     @Test
     public void scan() {
@@ -56,10 +79,10 @@ public class test_LanguageProcessor {
     @Test
     public void parse_buildOptions() {
 
-        ParseResult result = proc.parse("world !", Agl.INSTANCE.parseOptions( KotlinFromJava.toKotlin(b-> {
+        ParseResult result = proc.parse("world !", Agl.INSTANCE.parseOptions( b-> {
             b.goalRuleName("W");
             return Unit.INSTANCE;
-        })));
+        }));
 
         Assert.assertNotNull(result.getSppt());
         System.out.println(result.getSppt().getToStringAll());

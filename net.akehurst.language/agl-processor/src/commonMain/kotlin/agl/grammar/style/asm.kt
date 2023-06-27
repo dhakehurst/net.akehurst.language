@@ -15,7 +15,6 @@
  */
 package net.akehurst.language.agl.grammar.style
 
-import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.processor.ProcessResult
@@ -27,16 +26,25 @@ internal class AglStyleModelDefault(
     override val rules: List<AglStyleRule>
 ) : AglStyleModel {
     companion object {
-        fun fromString(context: SentenceContext<GrammarItem>, aglStyleModelSentence:String): ProcessResult<AglStyleModel> {
+        fun fromString(context: SentenceContext<String>, aglStyleModelSentence:String): ProcessResult<AglStyleModel> {
             val proc = Agl.registry.agl.style.processor ?: error("Scopes language not found!")
             return proc.process(
                 sentence = aglStyleModelSentence,
                 Agl.options {
-                    syntaxAnalysis {
-                        context(context)
-                    }
+                    semanticAnalysis { context(context) }
                 }
             )
+        }
+    }
+
+    override fun toString(): String {
+        return rules.joinToString(separator = "\n") {
+            val stylesStr = it.styles.values.joinToString(separator = "\n  ") { "${it.name}: ${it.value};" }
+            """
+${it.selector.joinToString { it }} {
+  $stylesStr
+}
+""".trimIndent()
         }
     }
 }

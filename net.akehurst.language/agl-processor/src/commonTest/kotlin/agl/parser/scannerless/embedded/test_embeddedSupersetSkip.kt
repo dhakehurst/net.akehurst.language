@@ -18,9 +18,6 @@ package net.akehurst.language.parser.scanondemand.embedded
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -58,7 +55,7 @@ internal class test_embeddedSupersetSkip : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test
@@ -70,7 +67,7 @@ internal class test_embeddedSupersetSkip : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^d", setOf("'a'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test
@@ -82,7 +79,7 @@ internal class test_embeddedSupersetSkip : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test
@@ -94,7 +91,7 @@ internal class test_embeddedSupersetSkip : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'b'","'c'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test

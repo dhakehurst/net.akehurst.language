@@ -50,7 +50,7 @@ internal class test_abcz_OR_abc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -61,7 +61,7 @@ internal class test_abcz_OR_abc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"a^",setOf("'b'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test

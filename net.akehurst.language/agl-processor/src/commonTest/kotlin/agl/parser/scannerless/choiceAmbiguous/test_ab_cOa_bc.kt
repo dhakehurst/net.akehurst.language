@@ -49,55 +49,65 @@ internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
     fun empty_fails() {
         val sentence = ""
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-        ),issues.error)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), issues.errors
+        )
     }
 
     @Test
     fun a_fails() {
         val sentence = "a"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"a^",setOf("'b'"))
-        ),issues.error)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'"))
+            ), issues.errors
+        )
     }
 
     @Test
     fun b_fails() {
         val sentence = "b"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^b",setOf("'a'"))
-        ),issues.error)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^b", setOf("'a'"))
+            ), issues.errors
+        )
     }
 
     @Test
     fun c_fails() {
         val sentence = "c"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^c",setOf("'a'"))
-        ),issues.error)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^c", setOf("'a'"))
+            ), issues.errors
+        )
     }
 
     @Test
     fun ab_fails() {
         val sentence = "ab"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(2,3,1,1),"ab^",setOf("'c'"))
-        ),issues.error)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'c'"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -105,25 +115,25 @@ internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
         val sentence = "abc"
 
         val expected1 = """
-         S { ab_c {
+         S|0 { ab_c {
             ab { 'a' 'b' }
             'c'
           } }
         """.trimIndent()
 
         val expected2 = """
-         S { a_bc {
+         S|1 { a_bc {
             'a'
             bc { 'b' 'c' }
           } }
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected1,expected2)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected1, expected2)
         )
     }
 

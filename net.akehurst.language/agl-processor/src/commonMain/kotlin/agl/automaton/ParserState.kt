@@ -22,9 +22,9 @@ import net.akehurst.language.api.processor.AutomatonKind
 
 internal class ParserState(
     val number: StateNumber,
-    val rulePositions: List<RulePosition>, //must be a list so that we can index against Growing children
+    val rulePositions: List<RulePosition>, //must be a list (not a set) so that we can index against Growing children
     val stateSet: ParserStateSet
-)  {
+) {
 
     companion object {
         fun LookaheadSetPart.lhs(stateSet: ParserStateSet): LookaheadSet {
@@ -41,15 +41,15 @@ internal class ParserState(
     //TODO: fast at runtime if not lazy
     val rulePositionIdentity = rulePositions.map { it.identity }.toSet()
     val runtimeRules: List<RuntimeRule> by lazy { this.rulePositions.map { it.rule as RuntimeRule }.toList() }
-    val runtimeRulesSet: Set<RuntimeRule> by lazy { this.rulePositions.map { it.rule as RuntimeRule }.toSet() }
+    val runtimeRulesAsSet: Set<RuntimeRule> by lazy { this.rulePositions.map { it.rule as RuntimeRule }.toSet() }
     val optionList: List<Int> by lazy { this.rulePositions.map { it.option }.toList() }
     val priorityList: List<Int> get() = optionList
     val positionList: List<Int> by lazy { this.rulePositions.map { it.position }.toList() }
     val choiceKindList: List<RuntimeRuleChoiceKind> by lazy {
         this.rulePositions.mapNotNull {
             val rhs = it.rule.rhs
-            when(rhs) {
-                is RuntimeRuleRhsChoice-> rhs.choiceKind
+            when (rhs) {
+                is RuntimeRuleRhsChoice -> rhs.choiceKind
                 else -> null
             }
         }.toSet().toList()

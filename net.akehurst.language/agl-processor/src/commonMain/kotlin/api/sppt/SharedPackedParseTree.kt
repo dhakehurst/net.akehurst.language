@@ -16,6 +16,58 @@
 
 package net.akehurst.language.api.sppt
 
+import net.akehurst.language.agl.api.runtime.Rule
+
+interface SpptDataNode {
+    val rule: Rule
+    val startPosition: Int
+    val nextInputPosition: Int
+    val option: Int
+}
+
+data class ChildInfo(
+    val index: Int,
+    val total: Int
+)
+
+data class AltInfo(
+    val option: Int,
+    val index: Int,
+    val totalMatched: Int
+)
+
+interface SpptDataNodeInfo {
+    val node: SpptDataNode
+
+    val alt: AltInfo
+    val child: ChildInfo
+
+    val numChildrenAlternatives: Map<Int, Int>
+    val totalChildrenFromAllAlternatives: Int
+    val numSkipChildren: Int
+}
+
+interface SpptWalker {
+    fun skip(startPosition: Int, nextInputPosition: Int)
+    fun leaf(nodeInfo: SpptDataNodeInfo)
+
+    /**
+     * @param optionOfTotal Pair number indicating which of the parents options this branch is of how many
+     * @param ruleName name/tag of the matched rule
+     * @param startPosition
+     * @param nextInputPosition
+     * @param numChildren how many children there are
+     */
+    fun beginBranch(nodeInfo: SpptDataNodeInfo)
+
+    fun endBranch(nodeInfo: SpptDataNodeInfo)
+
+    fun beginEmbedded(nodeInfo: SpptDataNodeInfo)
+    fun endEmbedded(nodeInfo: SpptDataNodeInfo)
+
+    fun error(msg: String, path: () -> List<SpptDataNode>)
+}
+
 /**
  * A Shared Packed Parse Forest is a collection of parse trees which share Nodes when possible. There is a Root Node. Each Node in a tree is either a Leaf or an
  * Branch. An Branch contains a Set of Lists of child Nodes. Each list of child nodes is an alternative possible list of children for the Branch
@@ -38,6 +90,9 @@ interface SharedPackedParseTree {
      * The root of the tree
      */
     val root: SPPTNode
+
+    fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean)
+
 
     /**
      * Determines if there is an equivalent tree in this forest for every tree in the other forest.
@@ -67,5 +122,5 @@ interface SharedPackedParseTree {
      */
     val toStringAll: String
 
-    fun toStringAllWithIndent(indentIncrement: String): String
+    fun toStringAllWithIndent(indentIncrement: String, skipDataAsTree: Boolean = false): String
 }

@@ -46,12 +46,12 @@ class test_Java8_Singles_antlrOptm {
                 aglOptions = Agl.options {
                     semanticAnalysis {
                         // switch off ambiguity analysis for performance
-                        option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
+                        option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }
                 }
             ).processor!!
             val forRule = if (toUpper) "CompilationUnit" else "compilationUnit"
-            //proc.buildFor(forRule) //TODO: use build
+            //proc.buildFor(Agl.parseOptions { goalRuleName(forRule) }) //TODO: use build
             return proc
         }
     }
@@ -174,7 +174,7 @@ class test_Java8_Singles_antlrOptm {
                         "'='", "'+='", "'-='", "'*='", "'/='", "'&='", "'|='", "'^='", "'>>='", "'>>>='", "'<<='", "'%='", "'::'"
                     )
                 )
-            ), result.issues.error
+            ), result.issues.errors
         )
 
     }
@@ -211,7 +211,7 @@ public class BadBinaryLiterals {
                     "...t1 = 0b01.^01;  // no...",
                     setOf("IDENTIFIER", "THIS", "SUPER", "NEW", "'<'")
                 )
-            ), result.issues.error
+            ), result.issues.errors
         )
 
     }
@@ -331,7 +331,7 @@ public class BadBinaryLiterals {
 
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         // println( t.toStringAll )
         val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
         assertEquals(sentence, resultStr)

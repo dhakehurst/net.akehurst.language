@@ -16,7 +16,8 @@
 
 package net.akehurst.language.api.asm
 
-import net.akehurst.language.api.typeModel.PropertyDeclaration
+import net.akehurst.language.api.asm.AsmSimple.Companion.asStringAny
+import net.akehurst.language.typemodel.api.PropertyDeclaration
 
 data class AsmElementPath(val value: String) {
     companion object {
@@ -26,20 +27,38 @@ data class AsmElementPath(val value: String) {
     operator fun plus(segment: String) = if (this == ROOT) AsmElementPath("/$segment") else AsmElementPath("$value/$segment")
 }
 
-open class AsmSimple {
+open class AsmSimple() {
+
+    companion object {
+        internal fun Any.asStringAny(indent: String, currentIndent: String = ""): String = when (this) {
+            is String -> "'$this'"
+            is List<*> -> when (this.size) {
+                0 -> "[]"
+                1 -> "[${this[0]?.asStringAny(indent, currentIndent)}]"
+                else -> {
+                    val newIndent = currentIndent + indent
+                    this.joinToString(separator = "\n$newIndent", prefix = "[\n$newIndent", postfix = "\n$currentIndent]") { it?.asStringAny(indent, newIndent) ?: "null" }
+                }
+            }
+
+            is AsmElementSimple -> this.asString(indent, currentIndent)
+            else -> error("property value type not handled '${this::class}'")
+        }
+    }
+
     private var _nextElementId = 0
 
-    val rootElements: List<AsmElementSimple> = mutableListOf()
+    val rootElements: List<Any> = mutableListOf()
     val index = mutableMapOf<AsmElementPath, AsmElementSimple>()
 
-    fun addRoot(root: AsmElementSimple) {
+    fun addRoot(root: Any) {
         (rootElements as MutableList).add(root)
     }
 
     fun createElement(asmPath: AsmElementPath, typeName: String) = AsmElementSimple(asmPath, this, typeName)
 
     fun asString(indent: String, currentIndent: String = ""): String = this.rootElements.joinToString(separator = "\n") {
-        it.asString(indent, currentIndent)
+        it.asStringAny(indent, currentIndent)
     }
 
 }
@@ -52,6 +71,7 @@ class AsmElementSimple(
     private var _properties = mutableMapOf<String, AsmElementProperty>()
 
     val properties: Map<String, AsmElementProperty> = _properties
+    val propertiesOrdered get() = properties.values.sortedBy { it.childIndex }
 
     init {
         this.asm.index[asmPath] = this
@@ -72,24 +92,26 @@ class AsmElementSimple(
     fun getPropertyAsList(name: String): List<Any> = getProperty(name) as List<Any>
     fun getPropertyAsListOfElement(name: String): List<AsmElementSimple> = getProperty(name) as List<AsmElementSimple>
 
-    fun setPropertyAsString(name: String, value: String?) = setProperty(name, value, false)
-    fun setPropertyAsListOfString(name: String, value: List<String>?) = setProperty(name, value, false)
-    fun setPropertyAsAsmElement(name: String, value: AsmElementSimple?, isReference: Boolean) = setProperty(name, value, isReference)
-    fun setProperty(name: String, value: Any?, isReference: Boolean) {
+    /*
+        fun setPropertyAsString(name: String, value: String?) = setProperty(name, value, false)
+        fun setPropertyAsListOfString(name: String, value: List<String>?) = setProperty(name, value, false)
+        fun setPropertyAsAsmElement(name: String, value: AsmElementSimple?, isReference: Boolean) = setProperty(name, value, isReference)
+    */
+    fun setProperty(name: String, value: Any?, isReference: Boolean, childIndex: Int) {
         if (isReference) {
             val ref = AsmElementReference(value as String, null)
-            _properties[name] = AsmElementProperty(name, null, ref, true)
+            _properties[name] = AsmElementProperty(name, childIndex, ref, true)
         } else {
-            _properties[name] = AsmElementProperty(name, null, value, false)
+            _properties[name] = AsmElementProperty(name, childIndex, value, false)
         }
     }
 
     fun setPropertyFromDeclaration(declaration: PropertyDeclaration, value: Any?, isReference: Boolean) {
         if (isReference) {
             val ref = AsmElementReference(value as String, null)
-            _properties[declaration.name] = AsmElementProperty(declaration.name, declaration, ref, true)
+            _properties[declaration.name] = AsmElementProperty(declaration.name, declaration.childIndex, ref, true)
         } else {
-            _properties[declaration.name] = AsmElementProperty(declaration.name, declaration, value, false)
+            _properties[declaration.name] = AsmElementProperty(declaration.name, declaration.childIndex, value, false)
         }
     }
 
@@ -97,31 +119,17 @@ class AsmElementSimple(
         value.forEach { this._properties[it.name] = it }
     }
 
-    private fun Any.asStringAny(indent: String, currentIndent: String = ""): String = when (this) {
-        is String -> "'$this'"
-        is List<*> -> when (this.size) {
-            0 -> "[]"
-            1 -> "[${this[0]?.asStringAny(indent, currentIndent)}]"
-            else -> {
-                val newIndent = currentIndent + indent
-                this.joinToString(separator = "\n$newIndent", prefix = "[\n$newIndent", postfix = "\n$currentIndent]") { it?.asStringAny(indent, newIndent) ?: "null" }
-            }
-        }
-
-        is AsmElementSimple -> this.asString(indent, currentIndent)
-        else -> error("property value type not handled '${this::class}'")
-    }
-
     fun asString(indent: String, currentIndent: String = ""): String {
         val newIndent = currentIndent + indent
         val propsStr = this.properties.values.joinToString(separator = "\n$newIndent", prefix = "{\n$newIndent", postfix = "\n$currentIndent}") {
             if (it.isReference) {
                 val ref = it.value as AsmElementReference
-                if (null == ref.value) {
-                    "${it.name} = <unresolved> &${ref.reference}"
-                } else {
-                    "${it.name} = &${ref.reference} : ${ref.value?.typeName}"
-                }
+                //if (null == ref.value) {
+                //    "${it.name} = <unresolved> &${ref.reference}"
+                //} else {
+                //    "${it.name} = &${ref.reference} : ${ref.value?.typeName}"
+                //}
+                "${it.name} = $ref"
             } else if (null == it.value) {
                 "${it.name} = null"
             } else {
@@ -146,15 +154,15 @@ class AsmElementReference(
     val reference: String,
     var value: AsmElementSimple?
 ) {
-    override fun toString(): String {
-        val resolved = if (null == value) "<unresolved> " else ""
-        return "$resolved&$reference"
+    override fun toString(): String = when (value) {
+        null -> "<unresolved> &$reference"
+        else -> "&{'${value!!.asmPath.value}' : ${value!!.typeName}}"
     }
 }
 
 class AsmElementProperty(
     val name: String,
-    val declaration: PropertyDeclaration?,
+    val childIndex: Int,
     val value: Any?,
     val isReference: Boolean
 ) {
@@ -175,23 +183,6 @@ val AsmElementSimple.children: List<AsmElementSimple>
         .flatMap { if (it.value is List<*>) it.value else listOf(it.value) }
         .filterIsInstance<AsmElementSimple>()
 
-
-/**
- * detailed comparison of elements an properties
- */
-fun AsmSimple.equalTo(other: AsmSimple): Boolean {
-    return when {
-        this.rootElements.size != other.rootElements.size -> false
-        else -> {
-            for (i in 0..this.rootElements.size) {
-                val t = this.rootElements[i]
-                val o = other.rootElements[i]
-                if (t.equalTo(o).not()) return false
-            }
-            return true
-        }
-    }
-}
 
 fun AsmElementSimple.equalTo(other: AsmElementSimple): Boolean {
     return when {
@@ -244,36 +235,36 @@ fun AsmElementReference.equalTo(other: AsmElementReference): Boolean {
 
 abstract class AsmSimpleTreeWalker {
     abstract fun root(root: AsmElementSimple)
-    abstract fun beforeElement(element: AsmElementSimple)
-    abstract fun afterElement(element: AsmElementSimple)
+    abstract fun beforeElement(propertyName: String?, element: AsmElementSimple)
+    abstract fun afterElement(propertyName: String?, element: AsmElementSimple)
     abstract fun property(property: AsmElementProperty)
 }
 
 fun AsmSimple.traverseDepthFirst(callback: AsmSimpleTreeWalker) {
-    fun traverse(element: Any?) {
+    fun traverse(propertyName: String?, element: Any?) {
         when (element) {
             is AsmElementSimple -> {
-                callback.beforeElement(element)
+                callback.beforeElement(propertyName, element)
                 val props = element.properties.values.sortedWith { a, b ->
-                    val aDecl = a.declaration
-                    val bDecl = b.declaration
+                    val aIdx = a.childIndex
+                    val bIdx = b.childIndex
                     when {
-                        aDecl == null || bDecl == null -> 0
-                        aDecl.childIndex > bDecl.childIndex -> 1
-                        aDecl.childIndex < bDecl.childIndex -> -1
+                        aIdx > bIdx -> 1
+                        aIdx < bIdx -> -1
                         else -> 0
                     }
                 }
                 for (prop in props) {
                     callback.property(prop)
                     val pv = prop.value
-                    traverse(pv)
+                    traverse(prop.name, pv)
                 }
-                callback.afterElement(element)
+                callback.afterElement(propertyName, element)
             }
 
-            is List<*> -> element.forEach { lv -> traverse(lv) }
+            is List<*> -> element.forEach { lv -> traverse(propertyName, lv) }
+            else -> Unit
         }
     }
-    this.rootElements.forEach { traverse(it) }
+    this.rootElements.forEach { traverse(null, it) }
 }

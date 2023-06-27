@@ -20,8 +20,6 @@ import net.akehurst.language.agl.grammar.format.AglFormatterModelDefault
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.AsmSimple
-import net.akehurst.language.api.asm.asmSimple
-import net.akehurst.language.api.typeModel.TypeModelBuilder
 
 @DslMarker
 annotation class FormatModelDslMarker
@@ -33,13 +31,14 @@ fun formatModel(init: FormatModelBuilder.() -> Unit): AglFormatterModel {
 }
 
 @FormatModelDslMarker
-class FormatModelBuilder {
+class FormatModelBuilder(
+) {
 
     private val _asm = AsmSimple()
     private val _ruleList = mutableListOf<AsmElementSimple>()
     private val rules = _asm.createElement(AsmElementPath(""), "Unit").also {
         _asm.addRoot(it)
-        it.setProperty("ruleList", _ruleList, false)
+        it.setProperty("ruleList", _ruleList, false,0)//TODO childIndex
     }
 
     fun rule(forTypeName: String, init: FormatExpressionBuilder.() -> Unit) {
@@ -48,9 +47,9 @@ class FormatModelBuilder {
         val expr = b.build()
         val formatRuleElement = _asm.createElement(AsmElementPath(""), "FormatRule")
         val typeReference = _asm.createElement(AsmElementPath(""), "TypeReference")
-        typeReference.setProperty("identifier", forTypeName, false)
-        formatRuleElement.setProperty("typeReference", typeReference, false)
-        formatRuleElement.setProperty("formatExpression", expr, false)
+        typeReference.setProperty("identifier", forTypeName, false,0)//TODO childIndex
+        formatRuleElement.setProperty("typeReference", typeReference, false,0)//TODO childIndex
+        formatRuleElement.setProperty("formatExpression", expr, false,0)//TODO childIndex
         _ruleList.add(formatRuleElement)
     }
 
@@ -71,7 +70,7 @@ class FormatExpressionBuilder(
             asmPath = AsmElementPath(""),
             typeName = "LiteralString"
         )
-        el.setProperty("literal_string", value, false)
+        el.setProperty("literal_string", value, false,0)//TODO childIndex
         _exp = el
     }
 

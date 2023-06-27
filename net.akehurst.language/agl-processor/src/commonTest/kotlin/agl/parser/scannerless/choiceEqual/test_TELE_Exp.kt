@@ -48,7 +48,7 @@ internal class test_TELE_Exp : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("'v'","'t'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.api.automaton
+package net.akehurst.language.api.automaton
 
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.automaton.automaton
@@ -31,6 +31,8 @@ interface Automaton {
             init: AutomatonBuilder.() -> Unit
         ): Automaton = automaton(rrs as RuntimeRuleSet, automatonKind, userGoalRule, isSkip, init)
     }
+
+    fun asString(withStates:Boolean=false):String
 }
 
 enum class ParseAction {

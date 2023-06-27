@@ -53,7 +53,7 @@ internal class test_aObc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^",setOf("'a'","'b'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -80,7 +80,7 @@ internal class test_aObc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"a^b",setOf("<EOT>"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -91,7 +91,7 @@ internal class test_aObc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"a^bc",setOf("<EOT>"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -118,7 +118,7 @@ internal class test_aObc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"b^",setOf("'c'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -129,7 +129,7 @@ internal class test_aObc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^c",setOf("'a'","'b'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -140,7 +140,7 @@ internal class test_aObc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^d",setOf("'a'","'b'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
 

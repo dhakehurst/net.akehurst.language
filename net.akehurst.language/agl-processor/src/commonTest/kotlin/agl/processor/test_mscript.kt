@@ -15,16 +15,16 @@
  */
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
+import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
+import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.typeModel.StringType
-import net.akehurst.language.api.typeModel.TypeModelTest
-import net.akehurst.language.api.typeModel.asString
-import net.akehurst.language.api.typeModel.typeModel
+import net.akehurst.language.typemodel.api.asString
 import kotlin.test.*
 
 class test_mscript {
@@ -42,7 +42,7 @@ grammar Mscript {
          leaf SINGLE_LINE_COMMENT = "(?:%[^{].+${'$'})|(?:%${'$'})" ;
 
     script = statementList ;
-    statementList = [line / "\R"]* ;
+    statementList = [line / "[\r\n]+"]* ;
     // if we treat '\n' as part of the WHITESPACE skip rule, we get ambiguity in statements
     line = [statement / ';']* ';'? ;
 
@@ -118,21 +118,20 @@ grammar Mscript {
     @Test
     fun mscript_typeModel() {
         val actual = sut.typeModel
-        val expected = typeModel("com.yakindu.modelviewer.parser", "Mscript") {
-            elementType("Script") {
+        val expected = grammarTypeModel("com.yakindu.modelviewer.parser", "Mscript", "Script") {
+            elementType("script", "Script") {
                 // script = statementList ;
-                propertyListSeparatedTypeOf("statementList", "line", StringType, false, 0)
+                propertyListSeparatedTypeOf("statementList", "Line", "String", false, 0)
             }
-            elementType("StatementList") {
+            elementType("statementList", "StatementList") {
                 // statementList = [line / "\R"]* ;
-                propertyListSeparatedTypeOf("line", "line", StringType, false, 0)
+                propertyListSeparatedTypeOf("line", "Line", "String", false, 0)
             }
-            elementType("Line") {
+            elementType("line", "Line") {
                 // line = [statement / ';']* ';'? ;
-                propertyListSeparatedTypeOf("statement", "statement", StringType, false, 0)
-                propertyStringTypeUnnamed(true, 1)
+                propertyListSeparatedTypeOf("statement", "Statement", "String", false, 0)
             }
-            elementType("Statement") {
+            elementType("statement", "Statement") {
                 // statement
                 //   = conditional
                 //   | assignment
@@ -141,22 +140,22 @@ grammar Mscript {
                 //   ;
                 subTypes("Conditional", "Assignment", "ExpressionStatement")
             }
-            elementType("Conditional") {
+            elementType("conditional", "Conditional") {
                 // conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
-                propertyElementTypeOf("expression", "expression", false, 1)
-                propertyListSeparatedTypeOf("statementList", "line", StringType, false, 3)
-                propertyListSeparatedTypeOf("statementList2", "line", StringType, false, 5)
+                propertyElementTypeOf("expression", "Expression", false, 1)
+                propertyListSeparatedTypeOf("statementList", "Line", "String", false, 3)
+                propertyListSeparatedTypeOf("statementList2", "Line", "String", false, 5)
             }
-            elementType("Assignment") {
+            elementType("assignment", "Assignment") {
                 // assignment = rootVariable '=' expression ;
-                propertyElementTypeOf("rootVariable", "rootVariable", false, 0)
-                propertyElementTypeOf("expression", "expression", false, 2)
+                propertyElementTypeOf("rootVariable", "RootVariable", false, 0)
+                propertyElementTypeOf("expression", "Expression", false, 2)
             }
-            elementType("ExpressionStatement") {
+            elementType("", "ExpressionStatement") {
                 // expressionStatement = expression ;
-                propertyElementTypeOf("expression", "expression", false, 0)
+                propertyElementTypeOf("expression", "Expression", false, 0)
             }
-            elementType("Expression") {
+            elementType("", "Expression") {
                 // expression
                 //   = rootVariable
                 //   | literalExpression
@@ -168,38 +167,38 @@ grammar Mscript {
                 //   ;
                 subTypes("RootVariable", "LiteralExpression", "Matrix", "FunctionCallOrIndex", "PrefixExpression", "InfixExpression", "GroupExpression")
             }
-            elementType("GroupExpression") {
+            elementType("", "GroupExpression") {
                 // groupExpression = '(' expression ')' ;
                 //superType("expression")
-                propertyElementTypeOf("expression", "expression", false, 1)
+                propertyElementTypeOf("expression", "Expression", false, 1)
             }
-            elementType("FunctionCallOrIndex") {
+            elementType("", "FunctionCallOrIndex") {
                 // functionCall = NAME '(' argumentList ')' ;
                 //superType("expression")
-                propertyStringType("name", false, 0)
-                propertyListSeparatedTypeOf("argumentList", "argument", StringType, false, 2)
+                propertyPrimitiveType("name", "String", false, 0)
+                propertyListSeparatedTypeOf("argumentList", "Argument", "String", false, 2)
             }
-            elementType("ArgumentList") {
+            elementType("", "ArgumentList") {
                 // argumentList = [ argument / ',' ]* ;
-                propertyListSeparatedTypeOf("argument", "argument", StringType, false, 0)
+                propertyListSeparatedTypeOf("argument", "Argument", "String", false, 0)
             }
-            elementType("Argument") {
+            elementType("", "Argument") {
                 // argument = expression | colonOperator ;
                 subTypes("Expression", "ColonOperator")
             }
-            elementType("PrefixExpression") {
+            elementType("", "PrefixExpression") {
                 // prefixExpression = prefixOperator expression ;
-                propertyStringType("prefixOperator", false, 0)
-                propertyElementTypeOf("expression", "expression", false, 1)
+                propertyPrimitiveType("prefixOperator", "String", false, 0)
+                propertyElementTypeOf("expression", "Expression", false, 1)
             }
             stringTypeFor("PrefixOperator")
             //elementType("prefixOperator") {
             // prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
-            elementType("InfixExpression") {
+            elementType("", "InfixExpression") {
                 // infixExpression =  [ expression / infixOperator ]2+ ;
-                propertyListSeparatedTypeOf("expression", "expression", StringType, false, 0)
+                propertyListSeparatedTypeOf("expression", "Expression", "String", false, 0)
             }
             stringTypeFor("InfixOperator")
             //elementType("infixOperator") {
@@ -211,23 +210,23 @@ grammar Mscript {
             //        ;
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
-            elementType("ColonOperator") {
-                propertyStringType("colon", false, 0)
+            elementType("", "ColonOperator") {
+                propertyPrimitiveType("colon", "String", false, 0)
             }
-            elementType("Matrix") {
+            elementType("", "Matrix") {
                 // matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
-                propertyListSeparatedTypeOf("row", "row", StringType, false, 1)
+                propertyListSeparatedTypeOf("row", "Row", "String", false, 1)
             }
-            elementType("Row") {
+            elementType("", "Row") {
                 // row = expression (','? expression)* ;
                 propertyElementTypeOf("expression", "Expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
-                    propertyStringTypeUnnamed(true, 0)
+                    propertyPrimitiveType(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, "String", true, 0)
                     propertyElementTypeOf("expression", "Expression", false, 1)
                 }
             }
-            elementType("LiteralExpression") {
-                propertyStringType("literalValue", false, 0)
+            elementType("", "LiteralExpression") {
+                propertyPrimitiveType("literalValue", "String", false, 0)
             }
             stringTypeFor("LiteralValue")
             //elementType("literalValue") {
@@ -239,9 +238,9 @@ grammar Mscript {
             //      ;
             //    propertyUnnamedPrimitiveType(PrimitiveType.ANY, false, 0)
             //}
-            elementType("RootVariable") {
+            elementType("", "RootVariable") {
                 // rootVariable = NAME ;
-                propertyStringType("name", false, 0)
+                propertyPrimitiveType("name", "String", false, 0)
             }
             stringTypeFor("Number")
             //elementType("number") {
@@ -250,7 +249,7 @@ grammar Mscript {
             //}
         }
         assertEquals(expected.asString(), actual?.asString())
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
@@ -260,7 +259,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
 
     }
 
@@ -276,7 +275,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
 
     }
 
@@ -287,7 +286,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("rootVariable") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("rootVariable", result.sppt!!.root.name)
     }
 
@@ -298,7 +297,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("expression", result.sppt!!.root.name)
     }
 
@@ -309,7 +308,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("BOOLEAN") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("BOOLEAN", result.sppt!!.root.name)
     }
 
@@ -320,7 +319,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("expression", result.sppt!!.root.name)
     }
 
@@ -331,7 +330,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("REAL", result.sppt!!.root.name)
     }
 
@@ -342,7 +341,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("REAL", result.sppt!!.root.name)
     }
 
@@ -353,7 +352,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("REAL", result.sppt!!.root.name)
     }
 
@@ -364,7 +363,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("REAL") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("REAL", result.sppt!!.root.name)
     }
 
@@ -382,7 +381,7 @@ grammar Mscript {
             )
         )
         assertNull(result.sppt)
-        assertEquals(expIssues, result.issues.error)
+        assertEquals(expIssues, result.issues.errors)
 
     }
 
@@ -392,7 +391,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("INTEGER") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("INTEGER", result.sppt!!.root.name)
     }
 
@@ -402,7 +401,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("SINGLE_QUOTE_STRING") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.root.name)
     }
 
@@ -412,7 +411,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("SINGLE_QUOTE_STRING") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.root.name)
     }
 
@@ -423,7 +422,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("SINGLE_QUOTE_STRING") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.root.name)
     }
 
@@ -434,7 +433,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("matrix", result.sppt!!.root.name)
     }
 
@@ -445,7 +444,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("matrix", result.sppt!!.root.name)
     }
 
@@ -456,7 +455,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("matrix", result.sppt!!.root.name)
     }
 
@@ -467,7 +466,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("row") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("row", result.sppt!!.root.name)
     }
 
@@ -478,7 +477,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("matrix", result.sppt!!.root.name)
     }
 
@@ -489,7 +488,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("matrix", result.sppt!!.root.name)
     }
 
@@ -500,7 +499,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("matrix", result.sppt!!.root.name)
     }
 
@@ -510,7 +509,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("matrix") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals("matrix", result.sppt!!.root.name)
     }
 
@@ -521,7 +520,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("argumentList") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 
     @Test
@@ -531,7 +530,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 
     @Test
@@ -541,7 +540,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 
     @Test
@@ -551,7 +550,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 
     @Test
@@ -561,7 +560,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 
     @Test
@@ -571,7 +570,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 
     @Test
@@ -581,7 +580,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 
     @Test
@@ -591,7 +590,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 
     @Test
@@ -601,7 +600,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 
     @Test
@@ -614,7 +613,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 
     @Test
@@ -624,7 +623,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 
     @Test
@@ -634,7 +633,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 
     @Test
@@ -644,7 +643,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 
     @Test
@@ -654,7 +653,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("expression") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 
     @Test
@@ -664,7 +663,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 
     @Test
@@ -675,7 +674,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
 
     }
 
@@ -685,7 +684,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
 
     }
 
@@ -696,7 +695,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("functionCallOrIndex") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
 
     }
 
@@ -707,7 +706,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("statement") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
 
     }
 
@@ -718,7 +717,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("line") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
 
     }
 
@@ -729,7 +728,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("statementList") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
 
     }
 
@@ -740,7 +739,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
 
     }
 
@@ -755,7 +754,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
 
     }
 
@@ -766,7 +765,7 @@ grammar Mscript {
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
 
     }
 
@@ -777,7 +776,7 @@ grammar Mscript {
         val result = sut.process(text, Agl.options { parse { goalRuleName("script") } })
 
         val expected = asmSimple {
-            root("Script") {
+            element("Script") {
                 propertyListOfElement("statementList") {
                     element("Line") {
                         propertyListOfElement("statement") {
@@ -792,7 +791,7 @@ grammar Mscript {
                                                     propertyString("name", "gcbh")
                                                 }
                                                 element("LiteralExpression") {
-                                                    propertyString("literalValue","'xxx'")
+                                                    propertyString("literalValue", "'xxx'")
                                                 }
                                             }
                                         }
@@ -800,14 +799,13 @@ grammar Mscript {
                                 }
                             }
                         }
-                        propertyUnnamedString(null)
                     }
                 }
             }
         }
 
         assertNotNull(result.asm)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         assertEquals(expected.asString(" "), result.asm?.asString(" "))
     }
 

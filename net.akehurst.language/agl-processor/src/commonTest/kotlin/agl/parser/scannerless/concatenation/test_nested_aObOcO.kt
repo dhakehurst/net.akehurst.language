@@ -51,7 +51,7 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0,1,1,1),"^", setOf("'a'","'b'","'c'","'t'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test
@@ -63,7 +63,7 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0,1,1,1),"^d", setOf("'a'","'b'","'c'","'t'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test
@@ -145,7 +145,7 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1,2,1,1),"b^a", setOf("'c'","'t'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test
@@ -203,7 +203,7 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1,2,1,1),"a^dc", setOf("'b'","'c'","'t'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test
@@ -215,7 +215,7 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(2,3,1,1),"ab^d", setOf("'c'","'t'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test
@@ -227,7 +227,7 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(3,4,1,1),"abc^d", setOf("'t'"))
-            ), issues.error)
+            ), issues.errors)
     }
 
     @Test
@@ -310,6 +310,6 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1,2,1,1),"c^b", setOf("'t'"))
-            ), issues.error)
+            ), issues.errors)
     }
 }

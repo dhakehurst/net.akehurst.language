@@ -82,7 +82,7 @@ internal class test_nonTerm_a0n : test_ScanOnDemandParserAbstract() {
         )
         assertEquals(listOf(
             LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(1,2,1,1),"a^a", setOf("<EOT>","','"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -114,7 +114,7 @@ internal class test_nonTerm_a0n : test_ScanOnDemandParserAbstract() {
         )
         assertEquals(listOf(
             LanguageIssue(LanguageIssueKind.ERROR,LanguageProcessorPhase.PARSE, InputLocation(3,4,1,1),"a,a^a", setOf("<EOT>","','"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test

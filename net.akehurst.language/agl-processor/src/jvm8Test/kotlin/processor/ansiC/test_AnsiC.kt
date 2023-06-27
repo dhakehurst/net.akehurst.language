@@ -79,7 +79,7 @@ class test_AnsiC(val data: Data) {
     fun test() {
         val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName("expression") })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         val resultStr = result.sppt!!.asString
         assertEquals(this.data.text, resultStr)
     }

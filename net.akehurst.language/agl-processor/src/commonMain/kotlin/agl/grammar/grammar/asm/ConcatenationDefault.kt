@@ -16,36 +16,4 @@
 
 package net.akehurst.language.agl.grammar.grammar.asm
 
-import net.akehurst.language.api.grammar.*
 
-class ConcatenationDefault(override val items: List<ConcatenationItem>) : RuleItemAbstract(), Concatenation {
-
-   override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
-		this._owningRule = rule
-		this.index = indices
-		var i: Int = 0
-		this.items.forEach {
-			val nextIndex: List<Int> = indices + (i++)
-			it.setOwningRule(rule, nextIndex)
-		}
-	}
-	
-	override fun subItem(index: Int): RuleItem {
-		return this.items.get(index)
-	}
-	
-	override val allTerminal: Set<Terminal> by lazy {
-		this.items.flatMap { it.allTerminal }.toSet()
-	}
-
-	override val allNonTerminal: Set<NonTerminal> by lazy {
-		this.items.flatMap { it.allNonTerminal }.toSet()
-	}
-
-	override val allEmbedded: Set<Embedded> by lazy {
-		this.items.flatMap { it.allEmbedded }.toSet()
-	}
-
-	override fun toString(): String = this.items.joinToString(separator = " ")
-
-}

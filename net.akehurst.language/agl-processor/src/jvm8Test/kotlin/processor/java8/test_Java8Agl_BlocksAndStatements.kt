@@ -18,8 +18,6 @@ package net.akehurst.language.agl.processor.java8
 
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.asm.AsmSimple
-import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
@@ -94,7 +92,7 @@ class test_Java8Agl_BlocksAndStatements(val data: Data) {
     fun parse() {
         val result = processor.parse(this.data.text)
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         val resultStr = result.sppt!!.asString
         assertEquals(this.data.text, resultStr)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -104,7 +102,7 @@ class test_Java8Agl_BlocksAndStatements(val data: Data) {
     fun process() {
         val result = processor.process(this.data.text)
         assertNotNull(result.asm)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         val resultStr = result.asm!!.asString(" ", "")
         //assertEquals(this.data.text, resultStr)
         assertEquals(1, result.asm?.rootElements?.size)

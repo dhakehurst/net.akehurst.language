@@ -16,7 +16,6 @@
 package net.akehurst.language.agl.processor.thirdparty.projectIT
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.LanguageProcessorException
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,13 +35,13 @@ class test_ProjectIT(val data: Data) {
 
     companion object {
 
-        fun getResourceFiles(path: String): List<String> = getResourceAsStream(path).use{
-            if(it == null) emptyList()
+        fun getResourceFiles(path: String): List<String> = getResourceAsStream(path).use {
+            if (it == null) emptyList()
             else BufferedReader(InputStreamReader(it)).readLines()
         }
 
         private fun getResourceAsStream(resource: String): InputStream? =
-            object{}.javaClass.getResourceAsStream(resource)
+            object {}.javaClass.getResourceAsStream(resource)
                 ?: resource::class.java.getResourceAsStream(resource)
 
         private val grammarStr = this::class.java.getResource("/projectIT/PiEditGrammar.agl")?.readText() ?: error("File not found")
@@ -73,14 +72,14 @@ class test_ProjectIT(val data: Data) {
         }
     }
 
-    data class Data(val file: String, val text: String, val valid:Boolean)
+    data class Data(val file: String, val text: String, val valid: Boolean)
 
     @Test
     fun test() {
-        if(data.valid) {
+        if (data.valid) {
             val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName("projectionGroup") })
-            assertNotNull(result.sppt, "$data\n"+result.issues.joinToString(separator = "\n") { "$it" })
-            assertTrue(result.issues.isEmpty())
+            assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+            assertNotNull(result.sppt)
             val resultStr = result.sppt!!.asString
             assertEquals(this.data.text, resultStr)
             println(result.sppt!!.toStringAll)

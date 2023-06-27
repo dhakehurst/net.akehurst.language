@@ -51,7 +51,7 @@ interface ScopeModel {
  * e.g. as whitesapce
  *
  */
-interface SyntaxAnalyser<out AsmType:Any, in ContextType:Any> { //TODO: make transform type argument here maybe!
+interface SyntaxAnalyser<out AsmType:Any> { //TODO: make transform type argument here maybe!
 
     /**
      * Map of ASM items to an InputLocation. Should contain content after 'process' is called
@@ -72,5 +72,5 @@ interface SyntaxAnalyser<out AsmType:Any, in ContextType:Any> { //TODO: make tra
      * map the tree into an instance of the targetType
      *
      */
-    fun transform(sppt: SharedPackedParseTree, mapToGrammar:(Int,Int)->RuleItem, context: ContextType?): SyntaxAnalysisResult<AsmType>
+    fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<AsmType>
 }

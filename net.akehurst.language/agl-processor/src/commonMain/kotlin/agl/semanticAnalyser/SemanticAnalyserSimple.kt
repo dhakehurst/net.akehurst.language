@@ -20,7 +20,6 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
-import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
 import net.akehurst.language.agl.syntaxAnalyser.createReferenceLocalToScope
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
@@ -50,16 +49,21 @@ class SemanticAnalyserSimple(
         return emptyList()
     }
 
-    override fun analyse(asm: AsmSimple, locationMap: Map<Any, InputLocation>?, context: ContextSimple?, options:Map<String,Any>): SemanticAnalysisResult {
+    override fun analyse(asm: AsmSimple, locationMap: Map<Any, InputLocation>?, context: ContextSimple?, options: Map<String, Any>): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
 
         this.buildScope(asm, context?.rootScope)
 
-        asm.rootElements.forEach {
-            _scopeModel?.resolveReferencesElement(_issues, it, locationMap, context?.rootScope)
-        }
+        asm.rootElements.forEach { resolveReferences(it, locationMap, context) }
 
         return SemanticAnalysisResultDefault(this._issues)
+    }
+
+    private fun resolveReferences(o: Any?, locationMap: Map<Any, InputLocation>?, context: ContextSimple?) {
+        when (o) {
+            is AsmElementSimple -> _scopeModel?.resolveReferencesElement(_issues, o, locationMap, context?.rootScope)
+            is List<*> -> o.forEach { resolveReferences(it, locationMap, context) }
+        }
     }
 
     private fun buildScope(asm: AsmSimple, rootScope: ScopeSimple<AsmElementPath>?) {
@@ -74,14 +78,14 @@ class SemanticAnalyserSimple(
                     addToScope(currentScope.peek(), root)
                 }
 
-                override fun beforeElement(element: AsmElementSimple) {
+                override fun beforeElement(propertyName: String?, element: AsmElementSimple) {
                     val scope = currentScope.peek()
                     addToScope(scope, element)
                     val chScope = createScope(scope, element)
                     currentScope.push(chScope)
                 }
 
-                override fun afterElement(element: AsmElementSimple) {
+                override fun afterElement(propertyName: String?, element: AsmElementSimple) {
                     currentScope.pop()
                 }
 

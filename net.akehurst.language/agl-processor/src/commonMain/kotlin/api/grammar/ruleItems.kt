@@ -18,7 +18,7 @@ package net.akehurst.language.api.grammar
 
 interface RuleItem {
     val owningRule: GrammarRule
-	fun setOwningRule(rule: GrammarRule, indices: List<Int>) //TODO: make internal not on interface
+    fun setOwningRule(rule: GrammarRule, indices: List<Int>) //TODO: make internal not on interface
     val allTerminal: Set<Terminal>
     val allNonTerminal: Set<NonTerminal>
     val allEmbedded: Set<Embedded>
@@ -26,34 +26,42 @@ interface RuleItem {
 }
 
 interface Choice : RuleItem {
-    val alternative: List<Concatenation>
+    val alternative: List<RuleItem>
 }
+
 interface Concatenation : RuleItem {
-    val items: List<ConcatenationItem>
+    val items: List<RuleItem>
 }
+
 interface ConcatenationItem : RuleItem
 
 interface ChoiceEqual : Choice
 interface ChoicePriority : Choice
 interface ChoiceAmbiguous : Choice
 
+interface OptionalItem : ConcatenationItem {
+    val item: RuleItem
+}
+
 interface SimpleItem : ConcatenationItem
 interface ListOfItems : ConcatenationItem {
     val min: Int
     val max: Int
-    val item: SimpleItem
+    val item: RuleItem
 }
 
 interface SimpleList : ListOfItems
 interface SeparatedList : ListOfItems {
-    val separator: SimpleItem
-   // val associativity: SeparatedListKind
+    val separator: RuleItem
+    // val associativity: SeparatedListKind
 }
+
 enum class SeparatedListKind { Flat, Left, Right }
 
 interface Group : SimpleItem {
-    val choice: Choice
+    val groupedContent: RuleItem
 }
+
 interface TangibleItem : SimpleItem {
     val name: String
 }
@@ -63,10 +71,12 @@ interface Terminal : TangibleItem, GrammarItem {
     val isPattern: Boolean
     val value: String
 }
+
 interface NonTerminal : TangibleItem {
-    fun referencedRuleOrNull(targetGrammar: Grammar) : GrammarRule?
+    fun referencedRuleOrNull(targetGrammar: Grammar): GrammarRule?
     fun referencedRule(targetGrammar: Grammar): GrammarRule
 }
+
 interface Embedded : TangibleItem {
     /**
      *  Name of the nonTerminal to start from in the embedded Grammar

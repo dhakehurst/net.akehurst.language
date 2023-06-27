@@ -24,7 +24,7 @@ import kotlin.test.Test
 internal class test_GTB : test_ScanOnDemandParserAbstract() {
 
     /*
-     * from [https://ac.els-cdn.com/S1571066104052211/1-s2.0-S1571066104052211-main.pdf?_tid=ebfa8627-2763-446d-b750-084833f9dd4c&acdnat=1548755247_c9590c54393a9cf75f34499780c7b400]
+     * from [https://www.researchgate.net/publication/222194445_The_Grammar_Tool_Box_A_Case_Study_Comparing_GLR_Parsing_Algorithms]
      * The Grammar Tool Box: A Case Study Comparing GLR Parsing Algorithms, Adrian Johnstone, Elizabeth Scott, Giorgios Economopoulos
      *
      * S = 'a' | A B | A 'z' ;
@@ -35,7 +35,7 @@ internal class test_GTB : test_ScanOnDemandParserAbstract() {
 
     private companion object {
         val rrs = runtimeRuleSet {
-            choice("S",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("a")
                 ref("S1")
                 ref("S2")
@@ -43,7 +43,7 @@ internal class test_GTB : test_ScanOnDemandParserAbstract() {
             concatenation("S1") { ref("A"); ref("B") }
             concatenation("S2") { ref("A"); literal("z") }
             concatenation("A") { literal("a") }
-            choice("B",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("B", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("b")
                 ref("be")
             }
@@ -73,11 +73,11 @@ internal class test_GTB : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -92,11 +92,11 @@ internal class test_GTB : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -111,11 +111,11 @@ internal class test_GTB : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 }

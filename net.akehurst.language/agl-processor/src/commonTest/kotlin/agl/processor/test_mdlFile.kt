@@ -15,8 +15,8 @@
  */
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.grammar.format.test_AglFormat
-import net.akehurst.language.api.typeModel.TypeModelTest
+import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
+import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -72,33 +72,50 @@ grammar Mdl {
     }
 
     @Test
-    fun typeModel() {
+    fun mdlTypeModel() {
         val actual = processor.typeModel
-        val expected = net.akehurst.language.api.typeModel.typeModel("test", "Mdl") {
+        val expected = grammarTypeModel("test", "Mdl", "File") {
             //file = section+ ;
-            elementType("File") {
-                propertyListTypeOf("section","Section",false,0)
+            elementType("file", "File") {
+                propertyListTypeOf("section", "Section", false, 0)
             }
             //section = IDENTIFIER '{' content* '}' ;
-
+            elementType("section", "Section") {
+                propertyPrimitiveType("identifier", "String", false, 0)
+                propertyListTypeOf("content", "Content", false, 1)
+            }
             //content = section | parameter ;
-
+            elementType("content", "Content") {
+                subTypes("Section", "Parameter")
+            }
             //parameter = IDENTIFIER value ;
-
+            elementType("parameter", "Parameter") {
+                propertyPrimitiveType("identifier", "String", false, 0)
+                propertyElementTypeOf("value", "Value", false, 1)
+            }
             //value = stringList | matrix | identifier | literal ;
+            elementType("value", "Value") {
+                subTypes("StringList", "Matrix", "Identifier", "Literal")
+            }
             //identifier = IDENTIFIER ;
+            elementType("identifier", "Identifier") {
+                propertyPrimitiveType("identifier", "String", false, 0)
+            }
             //matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
             //row = [literal / ',']+ | literal+ ;
 
             //stringList = DOUBLE_QUOTE_STRING+ ;
+            elementType("stringList", "StringList") {
+                propertyListType("double_quoted_string", false, 0) { primitiveType("String") }
+            }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
     @Test
     fun literal_BOOLEAN() {
-        val result = processor.parse("on",  Agl.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("on", Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -113,7 +130,7 @@ grammar Mdl {
 
     @Test
     fun literal_INTEGER() {
-        val result = processor.parse("1",  Agl.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("1", Agl.parseOptions { goalRuleName("literal") })
         val expected = processor.spptParser.parse(
             """
             literal { INTEGER : '1' }
@@ -127,7 +144,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_1() {
-        val result = processor.parse("3.14",  Agl.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("3.14", Agl.parseOptions { goalRuleName("literal") })
         val expected = processor.spptParser.parse(
             """
             literal { REAL : '3.14' }
@@ -141,7 +158,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_2() {
-        val result = processor.parse(".14",  Agl.parseOptions { goalRuleName("literal") })
+        val result = processor.parse(".14", Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -156,7 +173,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_3() {
-        val result = processor.parse("3.14e-05",  Agl.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("3.14e-05", Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -171,7 +188,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_4() {
-        val result = processor.parse("3.0e5",  Agl.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("3.0e5", Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -186,7 +203,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_5() {
-        val result = processor.parse(".3e5",  Agl.parseOptions { goalRuleName("literal") })
+        val result = processor.parse(".3e5", Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -201,7 +218,7 @@ grammar Mdl {
 
     @Test
     fun literal_REAL_6() {
-        val result = processor.parse("1e-05",  Agl.parseOptions { goalRuleName("literal") })
+        val result = processor.parse("1e-05", Agl.parseOptions { goalRuleName("literal") })
 
         val expected = processor.spptParser.parse(
             """
@@ -216,11 +233,11 @@ grammar Mdl {
 
     @Test
     fun stringList_1() {
-        val result = processor.parse("\"hello\"",  Agl.parseOptions { goalRuleName("stringList") })
+        val result = processor.parse("\"hello\"", Agl.parseOptions { goalRuleName("stringList") })
 
         val expected = processor.spptParser.parse(
             """
-            stringList { §stringList§multi1 { DOUBLE_QUOTE_STRING : '"hello"' } }
+            stringList { DOUBLE_QUOTE_STRING : '"hello"' }
         """.trimIndent()
         )
 
@@ -231,14 +248,14 @@ grammar Mdl {
 
     @Test
     fun stringList_2() {
-        val result = processor.parse("\"hello\" \"world\"",  Agl.parseOptions { goalRuleName("stringList") })
+        val result = processor.parse("\"hello\" \"world\"", Agl.parseOptions { goalRuleName("stringList") })
 
         val expected = processor.spptParser.parse(
             """
-            stringList { §stringList§multi1 {
+            stringList { 
                 DOUBLE_QUOTE_STRING : '"hello"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"world"'
-            } }
+            }
         """.trimIndent()
         )
 
@@ -249,15 +266,15 @@ grammar Mdl {
 
     @Test
     fun stringList_3() {
-        val result = processor.parse("\"aa\" \"bb\" \"cc\"",  Agl.parseOptions { goalRuleName("stringList") })
+        val result = processor.parse("\"aa\" \"bb\" \"cc\"", Agl.parseOptions { goalRuleName("stringList") })
 
         val expected = processor.spptParser.parse(
             """
-            stringList { §stringList§multi1 {
+            stringList { 
                 DOUBLE_QUOTE_STRING : '"aa"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"bb"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"cc"'
-            } }
+            }
         """.trimIndent()
         )
 
@@ -268,7 +285,7 @@ grammar Mdl {
 
     @Test
     fun value_stringList_1() {
-        val result = processor.parse("\"hello\"",  Agl.parseOptions { goalRuleName("value") })
+        val result = processor.parse("\"hello\"", Agl.parseOptions { goalRuleName("value") })
 
         val expected = processor.spptParser.parse(
             """
@@ -276,7 +293,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
@@ -287,10 +304,10 @@ grammar Mdl {
 
         val expected = processor.spptParser.parse(
             """
-            value { stringList { §stringList§multi1 {
+            value { stringList { 
                 DOUBLE_QUOTE_STRING : '"hello"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"world"'
-            } } }
+            } }
         """.trimIndent()
         )
 
@@ -305,11 +322,11 @@ grammar Mdl {
 
         val expected = processor.spptParser.parse(
             """
-            value { stringList { §stringList§multi1 {
+            value { stringList { 
                 DOUBLE_QUOTE_STRING : '"aa"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"bb"' WHITESPACE : ' '
                 DOUBLE_QUOTE_STRING : '"cc"'
-            } } }
+            } }
         """.trimIndent()
         )
 
@@ -365,7 +382,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
@@ -388,7 +405,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
@@ -408,7 +425,7 @@ grammar Mdl {
         )
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
 
@@ -476,7 +493,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
@@ -520,7 +537,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
     }
@@ -562,7 +579,7 @@ grammar Mdl {
         """.trimIndent()
         )
 
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
 
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
@@ -586,7 +603,7 @@ grammar Mdl {
         )
 
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         //assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
         assertEquals("section", result.sppt!!.root.name)
         //TODO

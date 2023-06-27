@@ -14,19 +14,27 @@
  * limitations under the License.
  */
 
-import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import com.github.gmazzo.gradle.plugins.BuildConfigExtension
+import org.gradle.internal.jvm.Jvm
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 plugins {
-    kotlin("multiplatform") version ("1.8.10") apply false
-    id("org.jetbrains.dokka") version ("1.8.10") apply false
-    id("com.github.gmazzo.buildconfig") version("3.1.0") apply false
+    kotlin("multiplatform") version ("1.9.0-RC") apply false
+    id("org.jetbrains.dokka") version ("1.8.20") apply false
+    id("com.github.gmazzo.buildconfig") version ("3.1.0") apply false
     id("nu.studer.credentials") version ("3.0")
-    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version("1.8.10") apply false
+    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version ("1.9.0-RC") apply false
 }
-val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8
-val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8
+val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9
+val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9
 val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
+
+println("===============================================")
+println("Gradle: ${GradleVersion.current()}")
+println("JVM: ${Jvm.current()} '${Jvm.current().javaHome}'")
+println("===============================================")
 
 allprojects {
     val version_project: String by project
@@ -49,7 +57,7 @@ subprojects {
 
     repositories {
         mavenLocal {
-            content{
+            content {
                 includeGroupByRegex("net\\.akehurst.+")
             }
         }
@@ -60,9 +68,9 @@ subprojects {
         val now = java.time.Instant.now()
         fun fBbuildStamp(): String = java.time.format.DateTimeFormatter.ISO_DATE_TIME.withZone(java.time.ZoneId.of("UTC")).format(now)
         fun fBuildDate(): String = java.time.format.DateTimeFormatter.ofPattern("yyyy-MMM-dd").withZone(java.time.ZoneId.of("UTC")).format(now)
-        fun fBuildTime(): String= java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss z").withZone(java.time.ZoneId.of("UTC")).format(now)
+        fun fBuildTime(): String = java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss z").withZone(java.time.ZoneId.of("UTC")).format(now)
 
-        packageName("${project.group}.${project.name.replace("-",".")}")
+        packageName("${project.group}.${project.name.replace("-", ".")}")
         buildConfigField("String", "version", "\"${project.version}\"")
         buildConfigField("String", "buildStamp", "\"${fBbuildStamp()}\"")
         buildConfigField("String", "buildDate", "\"${fBuildDate()}\"")
@@ -70,25 +78,34 @@ subprojects {
     }
 
     configure<KotlinMultiplatformExtension> {
-
         jvm("jvm8") {
-            val main by compilations.getting {
-                compilerOptions.configure {
-                    languageVersion.set(kotlin_languageVersion)
-                    apiVersion.set(kotlin_apiVersion)
-                    jvmTarget.set(jvmTargetVersion)
+            compilations {
+                val main by getting {
+                    compilerOptions.configure {
+                        languageVersion.set(kotlin_languageVersion)
+                        apiVersion.set(kotlin_apiVersion)
+                        jvmTarget.set(jvmTargetVersion)
+                    }
                 }
-            }
-            val test by compilations.getting {
-                compilerOptions.configure {
-                    languageVersion.set(kotlin_languageVersion)
-                    apiVersion.set(kotlin_apiVersion)
-                    jvmTarget.set(jvmTargetVersion)
+                val test by getting {
+                    compilerOptions.configure {
+                        languageVersion.set(kotlin_languageVersion)
+                        apiVersion.set(kotlin_apiVersion)
+                        jvmTarget.set(jvmTargetVersion)
+                    }
                 }
             }
         }
         js("js", IR) {
-            nodejs{
+            binaries.library()
+            generateTypeScriptDefinitions()
+            tasks.withType<KotlinJsCompile>().configureEach {
+                kotlinOptions {
+                    moduleKind = "es"
+                    useEsClasses = true
+                }
+            }
+            nodejs {
                 testTask {
                     useMocha {
                         timeout = "5000"
@@ -116,6 +133,70 @@ subprojects {
         }
     }
 
+    // --- Add TestFixtures to be built into 'main' TODO: update when fixed in kotlin
+    configurations {
+        val jvm8TestFixture by creating { extendsFrom(configurations["jvm8TestImplementation"]) }
+        val jsTestFixture by creating { extendsFrom(configurations["jsTestImplementation"]) }
+    }
+    @OptIn(ExperimentalKotlinGradlePluginApi::class)
+    configure<KotlinMultiplatformExtension> {
+        val COMMON_TEST_FIXTURE = "commonTestFixture"
+        sourceSets {
+            val commonTestFixture = create(COMMON_TEST_FIXTURE) {
+                dependencies {
+                    implementation(kotlin("test"))
+                    implementation(kotlin("test-annotations-common"))
+                }
+            }
+        }
+        targets {
+            val jvm8 by getting {
+                val tgt = this
+                compilations {
+                    val main by getting
+                    val test by getting
+                    val testFixture by creating {
+                        this.associateWith(main)
+                        defaultSourceSet { dependsOn(sourceSets[COMMON_TEST_FIXTURE]) }
+                        test.associateWith(this)
+                    }
+                    tasks.register<Jar>("jvm8TestFixtureJar") {
+                        group = "build"
+                        archiveAppendix.set("jvm8")
+                        archiveClassifier.set("testFixture")
+                        from(testFixture.output)
+                    }.also {
+                        tasks["assemble"].dependsOn(it)
+                        artifacts.add("jvm8TestFixture", it.get()) // for 'project(...)' dependencies
+                        tgt.mavenPublication { artifact(it.get()) }
+                    }
+                }
+            }
+            val js by getting {
+                val tgt = this
+                compilations {
+                    val main by getting
+                    val test by getting
+                    val testFixture by creating {
+                        this.associateWith(main)
+                        defaultSourceSet { dependsOn(sourceSets[COMMON_TEST_FIXTURE]) }
+                        test.associateWith(this)
+                    }
+                    tasks.register<Jar>("jsTestFixtureJar") {
+                        group = "build"
+                        archiveAppendix.set("js")
+                        archiveClassifier.set("testFixture")
+                        from(testFixture.output)
+                    }.also {
+                        tasks["assemble"].dependsOn(it)
+                        artifacts.add("jsTestFixture", it.get()) // for 'project(...)' dependencies
+                        tgt.mavenPublication { artifact(it.get()) }
+                    }
+                }
+            }
+        }
+    }
+
     //val dokkaHtml by tasks.getting(org.jetbrains.dokka.gradle.DokkaTask::class)
 
     val javadocJar: TaskProvider<Jar> by tasks.registering(Jar::class) {
@@ -123,7 +204,7 @@ subprojects {
         archiveClassifier.set("javadoc")
         //from(dokkaHtml.outputDirectory)
     }
-    tasks.named("publish").get().dependsOn("javadocJar")
+    //tasks.named("publish").get().dependsOn("javadocJar")
 
     dependencies {
         "commonTestImplementation"(kotlin("test"))
@@ -138,6 +219,8 @@ subprojects {
         ?: error("Must set project property with Sonatype Password (-P SONATYPE_PASSWORD=<...> or set in ~/.gradle/gradle.properties)")
     project.ext.set("signing.password", sonatype_pwd)
 
+    //tasks.named("publishJsPublicationToMavenLocal").get().dependsOn("signJvm8Publication")
+
     configure<PublishingExtension> {
         repositories {
             maven {
@@ -151,7 +234,7 @@ subprojects {
             }
         }
         publications.withType<MavenPublication> {
-            artifact(javadocJar.get())
+            //artifact(javadocJar.get())
 
             pom {
                 name.set("AGL Processor")

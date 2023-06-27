@@ -27,7 +27,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
 
 typealias BranchHandler<T> = (SPPTBranch, List<SPPTBranch>, Any?) -> T
 
-abstract class SyntaxAnalyserAbstract<out AsmType:Any, in ContextType:Any> : SyntaxAnalyser<AsmType, ContextType>, SharedPackedParseTreeVisitor<Any, Any?> {
+abstract class SyntaxAnalyserAbstract<out AsmType : Any> : SyntaxAnalyser<AsmType>, SharedPackedParseTreeVisitor<Any, Any?> {
 
     private var grammarLoader: GrammarLoader? = null
     private val branchHandlers: MutableMap<String, BranchHandler<*>> = mutableMapOf()
@@ -44,16 +44,17 @@ abstract class SyntaxAnalyserAbstract<out AsmType:Any, in ContextType:Any> : Syn
     }
 
     protected fun <T> transformBranch(branch: SPPTBranch, arg: Any?): T {
-        return this.transformBranchOpt(branch, arg) ?: error("cannot transform ${branch}")
+        val asm = this.visitBranch(branch, arg) as T
+        this.locationMap[asm as Any] = branch.location
+        return asm
     }
 
-    protected fun <T> transformBranchOpt(branch: SPPTBranch?, arg: Any?): T? {
-        return if (null == branch){
-            null
-        }else {
-            val asm = this.visitBranch(branch, arg) as T
-            this.locationMap[asm as Any] = branch.location
-            asm
+    protected fun <T> transformBranchOpt(branch: SPPTBranch, arg: Any?): T? {
+        return when {
+            branch.isOptional.not() -> error("Branch is not optional - corresponding rule item must be optional, e.g. 'x?'")
+            1 < branch.branchNonSkipChildren.size -> error("Branch looks like a list rather than optional - corresponding rule item must be optional, e.g. 'x?'")
+            branch.branchNonSkipChildren.isEmpty() -> null
+            else -> transformBranch(branch.branchNonSkipChildren[0], arg)
         }
     }
 
@@ -72,11 +73,11 @@ abstract class SyntaxAnalyserAbstract<out AsmType:Any, in ContextType:Any> : Syn
         val handler = this.findBranchHandler<Any>(branchName)
         val branchChildren = target.branchNonSkipChildren// .stream().map(it -> it.getIsEmpty() ? null :
         // it).collect(Collectors.toList());
-        try {
-            return handler.invoke(target, branchChildren, arg)
-        } catch (e: Exception) {
-            error("Exception trying to transform ${target}: ${e.message}")
-        }
+        //try {
+        return handler.invoke(target, branchChildren, arg)
+        // } catch (e: Exception) {
+        //     error("Exception trying to transform ${target}: ${e.message}")
+        // }
     }
 
 }

@@ -62,12 +62,19 @@ class test_Dot(val data: Data) {
     }
 
     @Test
-    fun test() {
+    fun parse() {
         val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName("graph") })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
         val resultStr = result.sppt!!.asString
         assertEquals(this.data.text, resultStr)
+        println(result.sppt!!.toStringAllWithIndent("  "))
     }
 
+    @Test
+    fun process() {
+        val result = processor.process(this.data.text, Agl.options { parse { goalRuleName("graph") } })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.asm)
+    }
 }

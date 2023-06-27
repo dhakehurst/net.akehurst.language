@@ -17,10 +17,10 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.agl.automaton.FirstOf
-import net.akehurst.language.agl.api.automaton.Automaton
 import net.akehurst.language.agl.automaton.ParserState.Companion.lhs
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.processor.AutomatonKind
 
 internal class ParserStateSet(
@@ -39,11 +39,13 @@ internal class ParserStateSet(
     internal val runtimeTransitionCalculator = RuntimeTransitionCalculator(this)
 
     var preBuilt = preBuilt; private set
-    internal val buildCache: BuildCache by lazy {when (automatonKind) {
-        AutomatonKind.LOOKAHEAD_NONE -> TODO() //BuildCacheLC0(this)
-        AutomatonKind.LOOKAHEAD_SIMPLE -> TODO()
-        AutomatonKind.LOOKAHEAD_1 -> BuildCacheLC1(this)
-    }}
+    internal val buildCache: BuildCache by lazy {
+        when (automatonKind) {
+            AutomatonKind.LOOKAHEAD_NONE -> TODO() //BuildCacheLC0(this)
+            AutomatonKind.LOOKAHEAD_SIMPLE -> TODO()
+            AutomatonKind.LOOKAHEAD_1 -> BuildCacheLC1(this)
+        }
+    }
 
     val usedRules: Set<RuntimeRule> by lazy { calcUsedRules(this.startState.runtimeRules.first()) }
     val usedTerminalRules: Set<RuntimeRule> by lazy { this.usedRules.filter { it.isTerminal }.toSet() }
@@ -195,7 +197,7 @@ internal class ParserStateSet(
 
     internal fun createLookaheadSet(part: LookaheadSetPart): LookaheadSet = createLookaheadSet(part.includesRT, part.includesEOT, part.matchANY, part.content)
 
-    fun precedenceRulesFor(sourceState: ParserState): PrecedenceRules? =
+    fun precedenceRulesFor(sourceState: ParserState): RuntimePreferenceRule? =
         sourceState.runtimeRules.map { src -> this.runtimeRuleSet.precedenceRulesFor(src) }.firstOrNull() //FIXME: if more than one rule ?
 
     fun build(): ParserStateSet {
@@ -246,11 +248,11 @@ internal class ParserStateSet(
                 used
             }
 
-            rule.ruleNumber > 0 && done[rule.ruleNumber] -> used
+            rule.ruleNumber >= 0 && done[rule.ruleNumber] -> used
             else -> when {
                 rule.isNonTerminal -> {
                     used.add(rule)
-                    if (rule.ruleNumber > 0) done[rule.ruleNumber] = true
+                    if (rule.ruleNumber >= 0) done[rule.ruleNumber] = true
                     for (sr in rule.rhsItems) {
                         calcUsedRules(sr, used, done)
                     }
@@ -320,12 +322,14 @@ internal class ParserStateSet(
         else -> false
     }
 
+    override fun asString(withStates: Boolean) = usedAutomatonToString(withStates)
+
     fun usedAutomatonToString(withStates: Boolean = false): String {
         val b = StringBuilder()
         val states = this.allBuiltStates
         val transitions = states.flatMap { it.outTransitions.allBuiltTransitions }
 
-        b.append("States: ${states.size}  Transitions: ${transitions.size} ")
+        b.append("UsedRules: ${this.usedRules.size}  States: ${states.size}  Transitions: ${transitions.size} ")
         b.append("\n")
 
         if (withStates) {

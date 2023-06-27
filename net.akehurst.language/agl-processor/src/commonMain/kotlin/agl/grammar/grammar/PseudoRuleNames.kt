@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package net.akehurst.language.agl.agl.grammar.grammar
 
 import net.akehurst.language.api.grammar.*
@@ -47,34 +64,22 @@ internal class PseudoRuleNames(val grammar: Grammar) {
 
     private fun pseudoRulesFor(item: RuleItem): Set<Pair<RuleItem, String>> {
         return when (item) {
-            is Choice -> item.alternative.flatMap { pseudoRulesFor(it) }.toSet()
-
-            is Concatenation -> when (item.items.size) {
-                1 -> item.items.flatMap { pseudoRulesFor(it) }.toSet()
-                else -> item.items.flatMap { pseudoRulesFor(it) }.toSet() + Pair(item, createChoiceRuleName(item.owningRule.name))
-            }
-
-            is ConcatenationItem -> when (item) {
-                is SimpleItem -> when (item) {
-                    is Group -> pseudoRulesFor(item.choice) + Pair(item, createGroupRuleName(item.owningRule.name))
-                    is TangibleItem -> when (item) {
-                        is Embedded -> setOf(Pair(item, createEmbeddedRuleName(item.embeddedGrammarReference.resolved!!.name, item.embeddedGoalName)))
-                        is Terminal -> emptySet()
-                        is NonTerminal -> emptySet()
-                        is EmptyRule -> emptySet()
-                        else -> error("Internal Error: subtype of ${TangibleItem::class.simpleName} ${item::class.simpleName} not handled")
-                    }
-
-                    else -> error("Internal Error: subtype of ${SimpleItem::class.simpleName} ${item::class.simpleName} not handled")
-                }
-
-                is ListOfItems -> when (item) {
-                    is SimpleList -> pseudoRulesFor(item.item) + Pair(item, createSimpleListRuleName(item.owningRule.name))
-                    is SeparatedList -> pseudoRulesFor(item.item) + pseudoRulesFor(item.separator) + Pair(item, createSeparatedListRuleName(item.owningRule.name))
-                    else -> error("Internal Error: subtype of ${ListOfItems::class.simpleName} ${item::class.simpleName} not handled")
-                }
-
-                else -> error("Internal Error: subtype of ${ConcatenationItem::class.simpleName} ${item::class.simpleName} not handled")
+            is Embedded -> setOf(Pair(item, createEmbeddedRuleName(item.embeddedGrammarReference.resolved!!.name, item.embeddedGoalName)))
+            is Terminal -> emptySet()
+            is NonTerminal -> emptySet()
+            is EmptyRule -> emptySet()
+            is Choice -> item.alternative.flatMap { pseudoRulesFor(it) }.toSet() + Pair(item, createChoiceRuleName(item.owningRule.name))
+            is Concatenation -> item.items.flatMap { pseudoRulesFor(it) }.toSet()
+            //is Concatenation -> when (item.items.size) {
+            //    1 -> item.items.flatMap { pseudoRulesFor(it) }.toSet()
+            //    else -> item.items.flatMap { pseudoRulesFor(it) }.toSet() + Pair(item, createChoiceRuleName(item.owningRule.name))
+            // }
+            is OptionalItem -> pseudoRulesFor(item.item) + Pair(item, createOptionalItemRuleName(item.owningRule.name))
+            is SimpleList -> pseudoRulesFor(item.item) + Pair(item, createSimpleListRuleName(item.owningRule.name))
+            is SeparatedList -> pseudoRulesFor(item.item) + pseudoRulesFor(item.separator) + Pair(item, createSeparatedListRuleName(item.owningRule.name))
+            is Group -> when (item.groupedContent) {
+                is Choice -> pseudoRulesFor(item.groupedContent) + Pair(item, createChoiceRuleName(item.owningRule.name))
+                else -> pseudoRulesFor(item.groupedContent) + Pair(item, createGroupRuleName(item.owningRule.name))
             }
 
             else -> error("Internal Error: subtype of ${RuleItem::class.simpleName} ${item::class.simpleName} not handled")
@@ -101,6 +106,14 @@ internal class PseudoRuleNames(val grammar: Grammar) {
         n++
         _nextChoiceNumber[parentRuleName] = n
         return "§${parentRuleName.removePrefix("§")}§choice$n" //TODO: include original rule name fo easier debug
+    }
+
+
+    private fun createOptionalItemRuleName(parentRuleName: String): String {
+        var n = _nextSimpleListNumber[parentRuleName] ?: 0
+        n++
+        _nextSimpleListNumber[parentRuleName] = n
+        return "§${parentRuleName.removePrefix("§")}§opt$n" //TODO: include original rule name fo easier debug
     }
 
     private fun createSimpleListRuleName(parentRuleName: String): String {

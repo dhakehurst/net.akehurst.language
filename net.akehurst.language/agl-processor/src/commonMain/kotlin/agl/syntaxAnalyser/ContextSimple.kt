@@ -29,6 +29,15 @@ class ContextSimple() : SentenceContext<AsmElementPath> {
      */
     override var rootScope = ScopeSimple<AsmElementPath>(null, "", ScopeModelAgl.ROOT_SCOPE_TYPE_NAME)
 
+    override fun hashCode(): Int = rootScope.hashCode()
+
+    override fun equals(other: Any?): Boolean = when {
+        other !is ContextSimple -> false
+        this.rootScope != other.rootScope -> false
+        else -> true
+    }
+
+    override fun toString(): String = "ContextSimple"
 }
 
 fun ScopeModelAgl.createReferenceLocalToScope(scope: ScopeSimple<AsmElementPath>, element: AsmElementSimple): String? {
@@ -42,37 +51,37 @@ fun ScopeModelAgl.createReferenceLocalToScope(scope: ScopeSimple<AsmElementPath>
 
 class ScopeSimple<AsmElementIdType>(
     val parent: ScopeSimple<AsmElementIdType>?,
-    val forReferenceInParent:String,
-    val forTypeName:String
+    val forReferenceInParent: String,
+    val forTypeName: String
 ) : Scope<AsmElementIdType> {
 
     //should only be usde for rootScope
     val scopeMap = mutableMapOf<AsmElementIdType, ScopeSimple<AsmElementIdType>>()
 
-    private val _childScopes = mutableMapOf<String,ScopeSimple<AsmElementIdType>>()
+    private val _childScopes = mutableMapOf<String, ScopeSimple<AsmElementIdType>>()
 
     // typeName -> referableName -> item
-    private val _items: MutableMap<String,MutableMap<String,AsmElementIdType>> = mutableMapOf()
+    private val _items: MutableMap<String, MutableMap<String, AsmElementIdType>> = mutableMapOf()
 
-    val rootScope:ScopeSimple<AsmElementIdType> by lazy {
+    val rootScope: ScopeSimple<AsmElementIdType> by lazy {
         var s = this
-        while(null!=s.parent) s = s.parent!!
+        while (null != s.parent) s = s.parent!!
         s
     }
 
     // accessor needed for serialisation which assumes mutableMap for deserialisation
-    val childScopes:Map<String,ScopeSimple<AsmElementIdType>> = _childScopes
+    override val childScopes: Map<String, ScopeSimple<AsmElementIdType>> = _childScopes
 
     // accessor needed for serialisation which assumes mutableMap for deserialisation
-    val items:Map<String,Map<String,AsmElementIdType>> = _items
+    val items: Map<String, Map<String, AsmElementIdType>> = _items
 
-    val path:List<String> by lazy {
-        if (null==parent) emptyList() else parent.path + forReferenceInParent
+    val path: List<String> by lazy {
+        if (null == parent) emptyList() else parent.path + forReferenceInParent
     }
 
-    fun createOrGetChildScope(forReferenceInParent:String, forTypeName:String, elementId:AsmElementIdType): ScopeSimple<AsmElementIdType> {
+    fun createOrGetChildScope(forReferenceInParent: String, forTypeName: String, elementId: AsmElementIdType): ScopeSimple<AsmElementIdType> {
         var child = this._childScopes[forReferenceInParent]
-        if (null==child) {
+        if (null == child) {
             child = ScopeSimple<AsmElementIdType>(this, forReferenceInParent, forTypeName)
             this._childScopes[forReferenceInParent] = child
         }
@@ -80,21 +89,31 @@ class ScopeSimple<AsmElementIdType>(
         return child
     }
 
-    fun addToScope(referableName:String, typeName:String, asmElementId:AsmElementIdType) {
+    fun addToScope(referableName: String, typeName: String, asmElementId: AsmElementIdType) {
         var m = this._items[typeName]
-        if (null==m) {
+        if (null == m) {
             m = mutableMapOf()
             this._items[typeName] = m
         }
-        m[referableName]=asmElementId
+        m[referableName] = asmElementId
     }
 
-    fun findOrNull(referableName:String, typeName:String):AsmElementIdType? = this._items[typeName]?.get(referableName)
+    fun findOrNull(referableName: String, typeName: String): AsmElementIdType? = this._items[typeName]?.get(referableName)
 
-    override fun isMissing(referableName:String, typeName:String):Boolean = null==this.findOrNull(referableName,typeName)
+    override fun isMissing(referableName: String, typeName: String): Boolean = null == this.findOrNull(referableName, typeName)
+
+    override fun hashCode(): Int = arrayOf(parent, forReferenceInParent, forTypeName).contentHashCode()
+
+    override fun equals(other: Any?): Boolean = when {
+        other !is ScopeSimple<*> -> false
+        parent != other.parent -> false
+        forReferenceInParent != other.forReferenceInParent -> false
+        forTypeName != other.forTypeName -> false
+        else -> true
+    }
 
     override fun toString(): String = when {
-        null==parent -> "/$forTypeName"
+        null == parent -> "/$forTypeName"
         else -> "$parent/$forTypeName"
     }
 }

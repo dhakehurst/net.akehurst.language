@@ -27,17 +27,15 @@ import net.akehurst.language.api.processor.SentenceContext
 
 class AglFormatterModelDefault(
     val asm: AsmSimple?
-) : AsmSimple(), AglFormatterModel {
+) :  AglFormatterModel {
 
     companion object {
-        fun fromString(context: SentenceContext<GrammarItem>, aglFormatterModelSentence: String): ProcessResult<AglFormatterModel> {
+        fun fromString(context: SentenceContext<String>, aglFormatterModelSentence: String): ProcessResult<AglFormatterModel> {
             val proc = Agl.registry.agl.formatter.processor ?: error("Formatter language not found!")
             return proc.process(
                 sentence = aglFormatterModelSentence,
                 Agl.options {
-                    syntaxAnalysis {
-                        context(context)
-                    }
+                    semanticAnalysis { context(context) }
                 }
             )
         }
@@ -49,7 +47,7 @@ class AglFormatterModelDefault(
     override val rules: Map<String, AglFormatterRule> by lazy {
         when (asm) {
             null -> emptyMap()
-            else -> asm.rootElements[0].getPropertyAsList("ruleList").associate {
+            else -> (asm.rootElements[0] as AsmElementSimple).getPropertyAsList("ruleList").associate {
                 when (it) {
                     is AsmElementSimple -> {
                         val rule = AglFormatterRuleDefault(this,it)

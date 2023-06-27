@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package net.akehurst.language.agl.agl.grammar.format
 
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
@@ -12,7 +29,7 @@ import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.processor.SentenceContext
 
-class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatterModel, SentenceContext<GrammarItem>> {
+class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatterModel, SentenceContext<String>> {
     override fun clear() {
 
     }
@@ -21,7 +38,7 @@ class AglFormatSemanticAnalyser : SemanticAnalyser<AglFormatterModel, SentenceCo
         return emptyList()
     }
 
-    override fun analyse(asm: AglFormatterModel, locationMap: Map<Any, InputLocation>?, context: SentenceContext<GrammarItem>?, options:Map<String,Any>): SemanticAnalysisResult {
+    override fun analyse(asm: AglFormatterModel, locationMap: Map<Any, InputLocation>?, context: SentenceContext<String>?, options:Map<String,Any>): SemanticAnalysisResult {
         return SemanticAnalysisResultDefault(IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
     }
 }

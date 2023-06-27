@@ -95,6 +95,6 @@ internal class test_pattern__a_z : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(0,1,1,1),"^d", setOf("\"[a-c]\""))
-        ),issues.error)
+        ),issues.errors)
     }
 }

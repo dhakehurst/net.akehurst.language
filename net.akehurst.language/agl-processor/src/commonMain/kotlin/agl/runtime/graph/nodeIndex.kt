@@ -18,11 +18,14 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.ParserState
 import net.akehurst.language.agl.parser.InputFromString
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsNonTerminal
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsTerminal
 import net.akehurst.language.agl.sppt.SPPTBranchFromTreeData
 import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.agl.sppt.ToStringVisitor
 import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.api.sppt.SpptDataNode
 
 
 /*
@@ -34,7 +37,7 @@ import net.akehurst.language.agl.util.Debug
   - size of a list ( only relevant for MULTI and SEPARATED_LIST)
  */
 internal class GrowingNodeIndex(
-    treeData: TreeDataComplete,
+    treeData: TreeDataComplete<CompleteNodeIndex>,
     val runtimeState: RuntimeState,
     val startPosition: Int,
     val nextInputPosition: Int,
@@ -58,7 +61,7 @@ internal class GrowingNodeIndex(
     }
 
     val complete by lazy {
-        treeData.createCompleteNodeIndex(runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this, childrenPriorities)
+        CompleteNodeIndex(treeData, runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip, this)
     }
 
     private val _hashCode = arrayOf(runtimeState, startPosition, nextInputPosition, numNonSkipChildren).contentHashCode()
@@ -73,7 +76,7 @@ internal class GrowingNodeIndex(
     val state: ParserState get() = this.runtimeState.state
 
     val isLeaf: Boolean get() = this.runtimeState.state.isLeaf
-    val isEmptyMatch: Boolean get() = this.runtimeState.state.isAtEnd && this.startPosition == this.nextInputPosition
+    val isEmptyMatch: Boolean get() = this.startPosition == this.nextInputPosition
 
     override fun hashCode(): Int = _hashCode
 
@@ -111,28 +114,28 @@ internal class GrowingNodeIndex(
  *  - nextInputPosition
  */
 internal class CompleteNodeIndex(
-    val treeData: TreeDataComplete,
+    val treeData: TreeDataComplete<CompleteNodeIndex>,
     // only RuntimeRules are needed for comparisons, but priority needed in order to resolve priorities, but it should not be part of identity
     val state: ParserState,
-    val startPosition: Int,
-    val nextInputPosition: Int,
+    override val startPosition: Int,
+    override val nextInputPosition: Int,
     val nextInputPositionAfterSkip: Int,
-    val gni: GrowingNodeIndex?, // the GNI used to create this, used when dropping
-    val childrenPriorities: List<List<Int>>?
-) {
+    val gni: GrowingNodeIndex? // the GNI used to create this, used when dropping
+) : SpptDataNode {
 
     init {
         if (Debug.CHECK) check(state.rulePositions.all { it.isAtEnd })
     }
 
-    val runtimeRulesSet: Set<RuntimeRule> get() = this.state.runtimeRulesSet
+    override val rule: RuntimeRule get() = this.state.firstRule
+    val runtimeRulesAsSet: Set<RuntimeRule> get() = this.state.runtimeRulesAsSet
     val rulePositions get() = this.state.rulePositions
 
     //private val _hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode()
-    private val _hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition, childrenPriorities).contentHashCode()
+    private val _hashCode_cache = arrayOf(treeData, runtimeRulesAsSet, /*option,*/ startPosition, nextInputPosition).contentHashCode()
 
     //TODO: don't store data twice..also prefer not to create 2 objects!
-    val preferred by lazy { PreferredChildIndex(runtimeRulesSet, startPosition) }
+    val preferred by lazy { PreferredChildIndex(runtimeRulesAsSet, startPosition) }
 
     val highestPriorityRule get() = this.state.rulePositions.maxBy { it.option }.rule as RuntimeRule
     val firstRule: RuntimeRule by lazy { this.state.rulePositions[0].rule as RuntimeRule }
@@ -141,7 +144,7 @@ internal class CompleteNodeIndex(
     val isEmptyMatch: Boolean get() = this.startPosition == this.nextInputPosition
     val hasSkipData: Boolean get() = this.nextInputPosition != nextInputPositionAfterSkip
 
-    val optionList: List<Int> get() = this.state.priorityList
+    override val option: Int get() = this.state.priorityList[0]
     val priorityList: List<Int> get() = this.state.priorityList
 
     override fun hashCode(): Int = this._hashCode_cache
@@ -151,24 +154,24 @@ internal class CompleteNodeIndex(
         other.startPosition != this.startPosition -> false
         other.nextInputPosition != this.nextInputPosition -> false
         //other.rulePositions != this.rulePositions -> false
-        other.runtimeRulesSet != this.runtimeRulesSet -> false
-        //other.childrenPriorities != this.childrenPriorities -> false
+        other.runtimeRulesAsSet != this.runtimeRulesAsSet -> false
+        //other.option != this.option -> false
         else -> true
     }
 
     override fun toString(): String {
         return "CNI{(${this.treeData.forStateSetNumber}),$startPosition-$nextInputPosition,${
-            runtimeRulesSet.joinToString(
+            runtimeRulesAsSet.joinToString(
                 prefix = "(",
                 postfix = ")",
                 separator = ","
             ) { it.tag }
-        }|${optionList}-${childrenPriorities}}"
+        }|${option}}"
     }
 
     //useful during debug
     fun toStringTree(input: InputFromString): String {
-        val runtimeRules = state.runtimeRulesSet
+        val runtimeRules = state.runtimeRulesAsSet
         val nodes = when {
             state.isLeaf -> runtimeRules.map { rr ->
                 SPPTLeafFromInput(input, rr, this.startPosition, this.nextInputPosition, 0)

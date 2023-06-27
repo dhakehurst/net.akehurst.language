@@ -18,7 +18,6 @@ package net.akehurst.language.agl.processor.dot
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.processor.AutomatonKind
@@ -35,6 +34,11 @@ class test_Dot_Singles {
         private val grammarStr = this::class.java.getResource("/dot/Dot.agl")?.readText() ?: error("File not found")
         var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
 
+    }
+
+    @Test()
+    fun scan() {
+        processor.scan("graph { }")
     }
 
     @Test
@@ -69,37 +73,41 @@ class test_Dot_Singles {
         < <xml >xxxx</xml> >
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt,result.issues.joinToString(separator = "\n") { "$it" })
-        assertTrue(result.issues.error.isEmpty())
+        assertNotNull(result.sppt, result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty())
         println(result.sppt!!.toStringAll)
 
-        val expected = processor.spptParser.parse("""
+        val expected = processor.spptParser.parse(
+            """
             ID { HTML {
-              '<' WHITESPACE : ' '
-              §Xml§elementContent§embedded1 { Xml::elementContent {
+              '<'
+              WHITESPACE : ' '
+              §Xml§elementContent§embedded1 { elementContent {
                 startTag {
                   '<'
-                  §startTag§multi1 { §empty }
+                  §startTag§opt1 { §empty }
                   NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xml' }
-                  §startTag§multi2 { WS { "\s+" : ' ' } }
+                  §startTag§opt2 { WS { "\s+" : ' ' } }
                   §startTag§multi3 { §empty }
                   '>'
                 }
-                content { §content§multi1 { §content§group1 { CHARDATA { "[^<]+" : 'xxxx' } } } }
+                content { §content§choice1 { CHARDATA { "[^<]+" : 'xxxx' } } }
                 endTag {
                   '</'
-                  §endTag§multi1 { §empty }
+                  §endTag§opt1 { §empty }
                   NAME { "[a-zA-Z][a-zA-Z0-9]*" : 'xml' }
-                  §endTag§multi2 { §empty }
+                  §endTag§opt2 { §empty }
                   '>'
                 }
-              } } WHITESPACE : ' '
+              } }
+              WHITESPACE : ' '
               '>'
             } }
-        """.trimIndent())
+        """.trimIndent()
+        )
         val actual = result.sppt!!
-        assertEquals(expected.toStringAll,actual.toStringAll)
-        assertEquals(expected,actual)
+        assertEquals(expected.toStringAll, actual.toStringAll)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -153,7 +161,7 @@ class test_Dot_Singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 
     @Test
@@ -178,7 +186,7 @@ class test_Dot_Singles {
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
     }
 
@@ -188,7 +196,7 @@ class test_Dot_Singles {
         val sentence = "graph[a=a ]; node [b=b c=c]; edge[];"
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 
     @Test
@@ -646,7 +654,7 @@ digraph G {
 
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 
     @Test
@@ -941,6 +949,6 @@ digraph G {
 
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.error.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
     }
 }

@@ -15,10 +15,8 @@
  */
 package net.akehurst.language.agl.grammar.style
 
-import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
-import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammar.RuleItem
@@ -31,7 +29,7 @@ import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.style.AglStyleRule
 
 
-internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<AglStyleModel, SentenceContext<GrammarItem>> {
+internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<AglStyleModel> {
 
     companion object {
         //not sure if this should be here or in grammar object
@@ -51,36 +49,8 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<AglStyleModel, SentenceCo
         return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: SentenceContext<GrammarItem>?): SyntaxAnalysisResult<AglStyleModel> {
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<AglStyleModel> {
         val rules: List<AglStyleRule> = this.rules(sppt.root.asBranch, sppt.root.asBranch.branchNonSkipChildren, "")
-
-        //TODO: should this be semanticAnalysis ?
-        if (null != context) {
-            rules.forEach { rule ->
-                rule.selector.forEach { sel ->
-                    if (KEYWORD_STYLE_ID == sel) {
-                        //it is ok
-                    } else {
-                        if (context.rootScope.isMissing(sel, ContextFromGrammar.GRAMMAR_RULE_CONTEXT_TYPE_NAME) &&
-                            context.rootScope.isMissing(sel, ContextFromGrammar.GRAMMAR_TERMINAL_CONTEXT_TYPE_NAME)
-                        ) {
-                            val loc = this.locationMap[rule]
-                            if (sel.startsWith("'") && sel.endsWith("'")) {
-                                _issues.error(loc, "Terminal Literal ${sel} not found for style rule")
-                            } else if (sel.startsWith("\"") && sel.endsWith("\"")) {
-                                _issues.error(loc, "Terminal Pattern ${sel} not found for style rule")
-
-                            } else {
-                                _issues.error(loc, "GrammarRule '${sel}' not found for style rule")
-                            }
-                        } else {
-                            //no issues
-                        }
-                    }
-                }
-            }
-        }
-
         return SyntaxAnalysisResultDefault(AglStyleModelDefault(rules), _issues,locationMap)
     }
 

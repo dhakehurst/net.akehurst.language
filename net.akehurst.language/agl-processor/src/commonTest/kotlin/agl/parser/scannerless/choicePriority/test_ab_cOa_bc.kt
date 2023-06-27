@@ -60,7 +60,7 @@ internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^", setOf("'a'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -71,7 +71,7 @@ internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(1,2,1,1),"a^", setOf("'b'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -82,7 +82,7 @@ internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^b", setOf("'a'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -93,7 +93,7 @@ internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(0,1,1,1),"^c", setOf("'a'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test
@@ -104,7 +104,7 @@ internal class test_ab_cOa_bc : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(listOf(
             parseError(InputLocation(2,3,1,1),"ab^", setOf("'c'"))
-        ),issues.error)
+        ),issues.errors)
     }
 
     @Test

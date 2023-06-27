@@ -16,7 +16,6 @@
 package net.akehurst.language.agl.processor.natural
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -88,8 +87,8 @@ class test_NaturalLanguage(val data: Data) {
             }
         }
         val result = processor.parse(this.data.sentence, Agl.parseOptions { goalRuleName(data.goal) })
-        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.sppt, result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
         val resultStr = result.sppt!!.asString
         assertEquals(this.data.sentence, resultStr)

@@ -16,27 +16,27 @@
 package net.akehurst.language.agl.grammar.format
 
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
-import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimpleAbstract
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SyntaxAnalyser
-import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.typeModel.TypeModel
 
 internal class AglFormatSyntaxAnalyser(
-     typeModel: TypeModel?,
-     scopeModel: ScopeModel?
-) : SyntaxAnalyserSimpleAbstract<AglFormatterModelDefault, SentenceContext<GrammarItem>>(typeModel, scopeModel) {
+    val typeModel: GrammarTypeModel,
+    val scopeModel: ScopeModel
+) : SyntaxAnalyser<AglFormatterModel> {
 
+    private val _sa = SyntaxAnalyserSimple(typeModel, scopeModel)
+
+    override val locationMap: Map<Any, InputLocation> get() = _sa.locationMap
 
     override fun clear() {
         //TODO("not implemented")
@@ -47,9 +47,9 @@ internal class AglFormatSyntaxAnalyser(
         return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: SentenceContext<GrammarItem>?): SyntaxAnalysisResult<AglFormatterModelDefault> {
-        val res = super.transform(sppt, mapToGrammar, context)
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<AglFormatterModel> {
+        val res = _sa.transform(sppt, mapToGrammar)
         val asm = AglFormatterModelDefault(res.asm)
-        return SyntaxAnalysisResultDefault(asm, res.issues, super.locationMap)
+        return SyntaxAnalysisResultDefault(asm, res.issues, this.locationMap)
     }
 }

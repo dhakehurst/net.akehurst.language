@@ -30,7 +30,7 @@ import kotlin.properties.Delegates
 abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     grammar: Grammar?,
     buildForDefaultGoal: Boolean,
-    configuration: LanguageProcessorConfiguration<AsmType, ContextType>,
+    override var configuration: LanguageProcessorConfiguration<AsmType, ContextType>,
 ) : LanguageDefinition<AsmType, ContextType> {
 
     abstract override val identity: String
@@ -69,7 +69,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
             }
         }
 
-    override val syntaxAnalyser: SyntaxAnalyser<AsmType, ContextType>?
+    override val syntaxAnalyser: SyntaxAnalyser<AsmType>?
         get() = this.processor?.syntaxAnalyser
 
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
@@ -100,7 +100,22 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     abstract override var styleStr: String?
 
     override var style: AglStyleModel?
-        get() = _style
+        get() {
+            return if (null == _style) {
+                _styleResolver?.let {
+                    val p = this.processor
+                    if (null == p) {
+                        null
+                    } else {
+                        val r = it.invoke(p)
+                        _issues.addAll(r.issues)
+                        r.asm
+                    }
+                }
+            } else {
+                _style
+            }
+        }
         set(value) {
             val oldValue = _style
             if (oldValue != value) {
@@ -110,14 +125,14 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
         }
 
     override val processorObservers = mutableListOf<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>()
-    override val grammarStrObservers = mutableListOf<(String?, String?) -> Unit>()
-    override val grammarObservers = mutableListOf<(Grammar?, Grammar?) -> Unit>()
-    override val scopeStrObservers = mutableListOf<(String?, String?) -> Unit>()
-    override val scopeModelObservers = mutableListOf<(ScopeModel?, ScopeModel?) -> Unit>()
-    override val formatterStrObservers = mutableListOf<(String?, String?) -> Unit>()
-    override val formatterObservers = mutableListOf<(AglFormatterModel?, AglFormatterModel?) -> Unit>()
-    override val styleStrObservers = mutableListOf<(String?, String?) -> Unit>()
-    override val styleObservers = mutableListOf<(AglStyleModel?, AglStyleModel?) -> Unit>()
+    override val grammarStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
+    override val grammarObservers = mutableListOf<(oldValue: Grammar?, newValue: Grammar?) -> Unit>()
+    override val scopeStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
+    override val scopeModelObservers = mutableListOf<(oldValue: ScopeModel?, newValue: ScopeModel?) -> Unit>()
+    override val formatterStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
+    override val formatterObservers = mutableListOf<(oldValue: AglFormatterModel?, newValue: AglFormatterModel?) -> Unit>()
+    override val styleStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
+    override val styleObservers = mutableListOf<(oldValue: AglStyleModel?, newValue: AglStyleModel?) -> Unit>()
 
     override fun toString(): String = identity
 
@@ -136,9 +151,10 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
                 scopeModelResolver = this._scopeModelResolver,
                 syntaxAnalyserResolver = this._syntaxAnalyserResolver,
                 semanticAnalyserResolver = this._semanticAnalyserResolver,
-                formatterResolver = this._formatterResolver
+                formatterResolver = this._formatterResolver,
+                //styleResolver = this._styleResolver //not used to create processor
             )
-            val proc = Agl.processorFromGrammar(g,config)
+            val proc = Agl.processorFromGrammar(g, config)
             if (buildForDefaultGoal) proc.buildFor(null) //null options will use default goal
             processorObservers.forEach { it(null, proc) }
             proc

@@ -50,14 +50,14 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("oP"); ref("oT") }
-            multi("oP",0,1,"P")
-            multi("oT",0,1,"T")
-            concatenation("P") { ref("oA"); literal("p")}
+            multi("oP", 0, 1, "P")
+            multi("oT", 0, 1, "T")
+            concatenation("P") { ref("oA"); literal("p") }
             concatenation("T") { ref("oA"); literal("t") }
-            multi("oA",0,1,"A")
+            multi("oA", 0, 1, "A")
             concatenation("A") { literal("a"); literal("n"); ref("oG") }
-            multi("oG",0,1,"G")
-            concatenation("G") { literal("s"); ref("oA")}
+            multi("oG", 0, 1, "G")
+            concatenation("G") { literal("s"); ref("oA") }
             preferenceFor("<EMPTY>") {
                 leftOption("oA", 1, setOf("'t'"))
                 leftOption("oP", 1, setOf("'t'"))
@@ -133,7 +133,7 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2,
+            expectedNumGSSHeads = 1,
             expectedTrees = arrayOf(expected)
         )
     }
@@ -167,7 +167,7 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2,
+            expectedNumGSSHeads = 1,
             expectedTrees = arrayOf(expected)
         )
     }
@@ -208,7 +208,7 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
             rrs = rrs,
             goal = goal,
             sentence = sentence,
-            expectedNumGSSHeads = 2,
+            expectedNumGSSHeads = 1,
             expectedTrees = arrayOf(expected)
         )
     }

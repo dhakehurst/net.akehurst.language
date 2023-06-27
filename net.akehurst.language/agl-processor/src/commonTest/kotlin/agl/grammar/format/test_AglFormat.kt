@@ -19,10 +19,9 @@ import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.format.FormatModelTest
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.formatter.formatModel
-import net.akehurst.language.api.typeModel.TypeModelTest
-import net.akehurst.language.api.typeModel.typeModel
+import net.akehurst.language.typemodel.api.typeModel
+import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -32,9 +31,9 @@ class test_AglFormat {
         val aglProc = Agl.registry.agl.formatter.processor!!
     }
 
-    private fun test(sentence:String, expected:AglFormatterModel) {
+    private fun test(sentence: String, expected: AglFormatterModel) {
         val result = aglProc.process(sentence)
-        assertNotNull(result.asm, result.issues.joinToString(separator = "\n") { "$it" })
+        assertNotNull(result.asm, result.issues.toString())
         assertTrue(result.issues.isEmpty())
         FormatModelTest.assertEqual(expected, result.asm)
     }
@@ -42,30 +41,14 @@ class test_AglFormat {
     @Test
     fun typeModel() {
         val actual = aglProc.typeModel
-        val expected = typeModel("net.akehurst.language.agl","AglFormat") {
-            elementType("declarations") {
-                propertyListTypeOf("rootIdentifiables","identifiable",false,0)
-                propertyListTypeOf("scopes","scope",false,1)
-                propertyListTypeOf("references","references",true,2)
-            }
-            elementType("rootIdentifiables") {
-                propertyListTypeOf("identifiable","identifiable",false,0)
-            }
-            elementType("scopes") {
-                propertyListTypeOf("scope","scope",false,0)
-            }
-            elementType("scope") {
-                propertyElementTypeOf("typeReference","typeReference",false,0)
-                propertyListTypeOf("identifiables","identifiable",false,1)
-            }
-            elementType("identifiables") {
-                propertyListTypeOf("identifiable","identifiable",false,0)
-            }
-            elementType("identifiable") {
-                propertyElementTypeOf("typeReference","typeReference",false,0)
-                propertyStringType("propertyReferenceOrNothing",false,1)
-            }
-            //TODO
+        val expected = typeModel("net.akehurst.language.agl", "AglFormat") {
+            //unit = ruleList ;
+            //ruleList = [formatRule]* ;
+            //formatRule = typeReference '->' formatExpression ;
+            //formatExpression
+            // = stringExpression
+            // | whenExpression
+            // ;
         }
 
         TypeModelTest.assertEquals(expected, actual)
@@ -81,7 +64,7 @@ class test_AglFormat {
         val expected = formatModel {
         }
 
-       test(sentence, expected)
+        test(sentence, expected)
 
     }
 

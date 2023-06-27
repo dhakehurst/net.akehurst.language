@@ -30,7 +30,7 @@ import kotlin.test.assertTrue
 
 internal class test_TreeData {
 
-    val graph = ParseGraph(InputFromString(0,""),0)
+    val graph = ParseGraph(InputFromString(0, ""), 0)
 
     @Test
     fun construct() {
@@ -38,8 +38,8 @@ internal class test_TreeData {
         assertTrue(graph.treeData.complete.completeChildren.isEmpty())
         assertTrue(graph.treeData.growingChildren.isEmpty())
         assertNull(graph.treeData.complete.initialSkip)
-        assertNull(graph.treeData.complete.startPosition)
-        assertNull(graph.treeData.complete.nextInputPosition)
+        assertNull(graph.treeData.complete.root!!.startPosition)
+        assertNull(graph.treeData.complete.root!!.nextInputPosition)
     }
 
     @Test
@@ -68,7 +68,7 @@ internal class test_TreeData {
             graph.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 1, 1, 1, null),
             graph.createGrowingNodeIndex(state_S, setOf(LookaheadSet.ANY), 0, 1, 1, 1, null).complete
         )
-        graph.treeData.complete.setRoot(graph.treeData.complete.createCompleteNodeIndex(state_Ge, 0, 1, 1,null, null))
+        graph.treeData.complete.setRoot(CompleteNodeIndex(graph.treeData.complete, state_Ge, 0, 1, 1, null))
 
         val expected = sppt.addTree(
             """
@@ -102,7 +102,7 @@ internal class test_TreeData {
         val state_a = SM.createState(listOf(RulePosition(rule_a, 0, RulePosition.END_OF_RULE)))
         val state_b = SM.createState(listOf(RulePosition(rule_b, 0, RulePosition.END_OF_RULE)))
         val state_c = SM.createState(listOf(RulePosition(rule_c, 0, RulePosition.END_OF_RULE)))
-        val sut = TreeData(0)
+        val sut = TreeData<GrowingNodeIndex, CompleteNodeIndex>(0)
 
         val sentence = "abc"
 
@@ -110,12 +110,12 @@ internal class test_TreeData {
             graph.createGrowingNodeIndex(state_S1, setOf(LookaheadSet.ANY), 0, 1, 1, 1, null),
             graph.createGrowingNodeIndex(state_a, setOf(LookaheadSet.ANY), 0, 1, 1, 0, null).complete,
         )
-        sut.setInGrowingParentChildAt(
+        sut.setNextChildForGrowingParent(
             graph.createGrowingNodeIndex(state_S1, setOf(LookaheadSet.ANY), 0, 1, 1, 1, null),
             graph.createGrowingNodeIndex(state_S2, setOf(LookaheadSet.ANY), 0, 2, 2, 2, null),
             graph.createGrowingNodeIndex(state_b, setOf(LookaheadSet.ANY), 1, 2, 2, 0, null).complete,
         )
-        sut.setInGrowingParentChildAt(
+        sut.setNextChildForGrowingParent(
             graph.createGrowingNodeIndex(state_S2, setOf(LookaheadSet.ANY), 0, 2, 2, 2, null),
             graph.createGrowingNodeIndex(state_S3, setOf(LookaheadSet.ANY), 0, 3, 3, 3, null),
             graph.createGrowingNodeIndex(state_c, setOf(LookaheadSet.ANY), 2, 3, 3, 0, null).complete,
@@ -124,7 +124,7 @@ internal class test_TreeData {
             graph.createGrowingNodeIndex(state_Ge, setOf(LookaheadSet.ANY), 0, 3, 3, 1, null),
             graph.createGrowingNodeIndex(state_S3, setOf(LookaheadSet.ANY), 0, 3, 3, 1, null).complete,
         )
-        graph.treeData.complete.setRoot(graph.treeData.complete.createCompleteNodeIndex(state_Ge,0, 3, 3,null, null))
+        graph.treeData.complete.setRoot(CompleteNodeIndex(graph.treeData.complete, state_Ge, 0, 3, 3, null))
 
         val expected = sppt.addTree(
             """

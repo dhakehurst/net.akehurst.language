@@ -18,20 +18,18 @@ package net.akehurst.language.api.format
 
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.formatter.AglFormatterRule
-import net.akehurst.language.api.typeModel.TypeModelTest
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.test.fail
 
 object FormatModelTest {
 
     fun assertEqual(expected: AglFormatterModel?, actual: AglFormatterModel?) {
         when {
-            (expected==null && actual==null) -> Unit // pass
-            expected==null -> fail()
-            actual==null -> fail()
+            (expected == null && actual == null) -> Unit // pass
+            expected == null -> fail()
+            actual == null -> fail()
             else -> {
-                assertEquals(expected.rules.size, actual.rules.size,"number of rules in AglFormatterModel is different")
+                assertEquals(expected.rules.size, actual.rules.size, "number of rules in AglFormatterModel is different")
                 for (k in expected.rules.keys) {
                     val expEl = expected.rules[k]
                     val actEl = actual.rules[k]
@@ -41,7 +39,7 @@ object FormatModelTest {
         }
     }
 
-    private fun fmAssertEquals(expected: AglFormatterRule?, actual: AglFormatterRule?, source:String) {
+    private fun fmAssertEquals(expected: AglFormatterRule?, actual: AglFormatterRule?, source: String) {
         when {
             null == expected || null == actual -> fail("should never be null")
 //TODO

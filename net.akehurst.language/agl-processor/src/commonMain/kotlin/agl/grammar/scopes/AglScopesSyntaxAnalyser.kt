@@ -17,7 +17,6 @@ package net.akehurst.language.agl.grammar.scopes
 
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
-import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammar.RuleItem
@@ -26,7 +25,7 @@ import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.sppt.SPPTBranch
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl, SentenceContext<GrammarItem>> {
+class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl> {
 
     data class PropertyValue(
         val asmObject: Any,
@@ -46,67 +45,8 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl, SentenceContext<Gr
         return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem, context: SentenceContext<GrammarItem>?): SyntaxAnalysisResult<ScopeModelAgl> {
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<ScopeModelAgl> {
         val asm = this.declarations(sppt.root.asBranch)
-
-        if (null != context) {
-            asm.scopes.forEach { (k, scope) ->
-                val msgStart = if (ScopeModelAgl.ROOT_SCOPE_TYPE_NAME == scope.scopeFor) {
-                    //do nothing
-                    "In root scope"
-                } else {
-                    if (context.rootScope.isMissing(scope.scopeFor, "GrammarRule")) {
-                        val loc = this.locationMap[PropertyValue(scope, "typeReference")]
-                        issues.error(loc, "GrammarRule '${scope.scopeFor}' not found for scope")
-                    } else {
-                        //OK
-                    }
-                    "In scope for '${scope.scopeFor}' GrammarRule"
-                }
-                scope.identifiables.forEach { identifiable ->
-                    when {
-                        context.rootScope.isMissing(identifiable.typeName, "GrammarRule") -> {
-                            val loc = this.locationMap[PropertyValue(identifiable, "typeReference")]
-                            issues.error(loc, "$msgStart '${identifiable.typeName}' not found as identifiable type")
-                        }
-                        ScopeModelAgl.IDENTIFY_BY_NOTHING == identifiable.propertyName -> {
-                            //OK
-                        }
-                        else -> {
-                            // only check this if the typeName is valid - else it is always invalid
-                            //TODO: check this in context of typeName GrammarRule
-                            if (context.rootScope.isMissing(identifiable.propertyName, "GrammarRule")) {
-                                val loc = this.locationMap[PropertyValue(identifiable, "propertyName")]
-                                issues.error(
-                                    loc,
-                                    "$msgStart '${identifiable.propertyName}' not found for identifying property of '${identifiable.typeName}'"
-                                )
-                            } else {
-                                //OK
-                            }
-                        }
-                    }
-                }
-            }
-
-            asm.references.forEach { ref ->
-                if (context.rootScope.isMissing(ref.inTypeName, "GrammarRule")) {
-                    val loc = this.locationMap[PropertyValue(ref, "in")]
-                    issues.error(loc, "Referring type GrammarRule '${ref.inTypeName}' not found")
-                }
-                if (context.rootScope.isMissing(ref.referringPropertyName, "GrammarRule")) {
-                    val loc = this.locationMap[PropertyValue(ref, "propertyReference")]
-                    issues.error(loc, "For reference in '${ref.inTypeName}' referring property GrammarRule '${ref.referringPropertyName}' not found")
-                }
-                ref.refersToTypeName.forEachIndexed { i, n ->
-                    if (context.rootScope.isMissing(n, "GrammarRule")) {
-                        val loc = this.locationMap[PropertyValue(ref, "typeReferences[$i]")]
-                        issues.error(loc, "For reference in '${ref.inTypeName}' referred to type GrammarRule '$n' not found")
-                    }
-                }
-            }
-        }
-
         return SyntaxAnalysisResultDefault(asm, issues,locationMap)
     }
 
@@ -192,20 +132,21 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl, SentenceContext<Gr
         val inTypeName = this.typeReference(node.branchChild(0))
         val referringPropertyName = this.typeReference(node.branchChild(1))
         val typeReferences = this.typeReferences(node.branchChild(2))
-        val def = ReferenceDefinition(inTypeName, referringPropertyName, typeReferences)
+        val def = ReferenceDefinition(inTypeName, referringPropertyName, typeReferences.map { it.first })
         this.locationMap[def] = node.location
         locationMap[PropertyValue(def, "in")] = node.branchChild(0).location
         locationMap[PropertyValue(def, "propertyReference")] = node.branchChild(1).location
-        node.branchChild(2).branchNonSkipChildren.forEachIndexed { i, n ->
-            locationMap[PropertyValue(def, "typeReferences[$i]")] = n.location
+        typeReferences.forEachIndexed { i, n ->
+            locationMap[PropertyValue(def, "typeReferences[$i]")] = n.second
         }
         return def
     }
 
     // typeReferences = [typeReferences / ',']+
-    private fun typeReferences(node: SPPTBranch): List<String> {
-        return node.branchNonSkipChildren.map {
-            this.typeReference(it.asBranch)
+    private fun typeReferences(node: SPPTBranch): List<Pair<String,InputLocation>> {
+        return node.branchNonSkipChildren.mapIndexed { i, n ->
+            val ref = this.typeReference(n.asBranch)
+            Pair(ref,n.location)
         }
     }
 

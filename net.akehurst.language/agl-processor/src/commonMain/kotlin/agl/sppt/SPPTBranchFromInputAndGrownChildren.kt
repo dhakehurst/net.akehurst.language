@@ -28,12 +28,12 @@ import net.akehurst.language.api.sppt.SPPTNode
 //TODO: currently this has to be public, because otherwise kotlin does not
 // use the non-mangled names for properties
 /*internal */ class SPPTBranchFromInputAndGrownChildren internal constructor(
-        input: InputFromString,
-        runtimeRule: RuntimeRule,
-        option: Int,
-        startPosition: Int,               // can't use children.first.startPosition, there may not be any children
-        nextInputPosition: Int,          // don't use children.sumBy { it.matchedTextLength }, it requires unwanted iteration
-        priority: Int
+    input: InputFromString,
+    runtimeRule: RuntimeRule,
+    option: Int,
+    startPosition: Int,               // can't use children.first.startPosition, there may not be any children
+    nextInputPosition: Int,          // don't use children.sumBy { it.matchedTextLength }, it requires unwanted iteration
+    priority: Int
 ) : SPPTNodeFromInputAbstract(input, runtimeRule, option, startPosition, nextInputPosition, priority), SPPTBranch {
 
     // option -> children
@@ -41,12 +41,14 @@ import net.akehurst.language.api.sppt.SPPTNode
 
     // --- SPPTBranch ---
 
-    override val childrenAlternatives: Set<List<SPPTNode>>
-        get() = this.grownChildrenAlternatives.entries.map {
-            it.value[RuleOptionId(this.runtimeRule, it.key)]
-        }.toSet()
-
-    override val children: List<SPPTNode> get() = this.childrenAlternatives.first()
+    override val childrenAlternatives: Map<Int, List<SPPTNode>>
+        get() {
+            TODO()
+            this.grownChildrenAlternatives.entries.map {
+                it.value[RuleOptionId(this.runtimeRule, it.key)]
+            }.toSet()
+        }
+    override val children: List<SPPTNode> get() = this.childrenAlternatives.entries.sortedBy { it.key }.last().value
 
     override val nonSkipChildren: List<SPPTNode> by lazy { //TODO: maybe not use lazy
         this.children.filter { !it.isSkip }
@@ -73,10 +75,10 @@ import net.akehurst.language.api.sppt.SPPTNode
                 // for each alternative list of other children, check there is a matching list
                 // of children in this alternative children
                 var allOthersAreContained = true // if no other children alternatives contain is a match
-                for (otherChildren in other.childrenAlternatives) {
+                for ((alt, otherChildren) in other.childrenAlternatives.entries.sortedBy { it.key }) {
                     // for each of this alternative children, find one that 'contains' otherChildren
                     var foundContainMatch = false
-                    for (thisChildren in this.childrenAlternatives) {
+                    for ((alt, thisChildren) in this.childrenAlternatives.entries.sortedBy { it.key }) {
                         if (thisChildren.size == otherChildren.size) {
                             // for each pair of nodes, one from each of otherChildren thisChildren
                             // check thisChildrenNode contains otherChildrenNode
@@ -136,7 +138,7 @@ import net.akehurst.language.api.sppt.SPPTNode
         return r
     }
 
-    override fun hashCode(): Int = (((this.runtimeRuleSetNumber*31)+this.runtimeRuleNumber)*31)+this.startPosition
+    override fun hashCode(): Int = (((this.runtimeRuleSetNumber * 31) + this.runtimeRuleNumber) * 31) + this.startPosition
 
     override fun equals(other: Any?): Boolean {
         if (other !is SPPTBranch) {

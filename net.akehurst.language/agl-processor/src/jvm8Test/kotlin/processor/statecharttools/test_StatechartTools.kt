@@ -16,7 +16,6 @@
 package net.akehurst.language.agl.processor.statecharttools
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -74,8 +73,8 @@ class test_StatechartTools(val data: Data) {
     @Test
     fun parse() {
         val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName(data.ruleName) })
-        assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { "$it" })
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.sppt, result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         val resultStr = result.sppt!!.asString
         assertEquals(this.data.text, resultStr)
     }
@@ -83,7 +82,7 @@ class test_StatechartTools(val data: Data) {
     @Test
     fun process() {
         val result = processor.process(this.data.text, Agl.options { parse { goalRuleName(data.ruleName) } })
-        assertNotNull(result.asm, result.issues.joinToString(separator = "\n") { "$it" })
-        assertTrue(result.issues.isEmpty())
+        assertNotNull(result.asm, result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
 }
