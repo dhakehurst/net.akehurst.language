@@ -23,19 +23,18 @@ import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.fail
 
 internal class test_AB_ESB : test_ScanOnDemandParserAbstract() {
 
-    //  S = A B | E S B
+    //  S = E S B | A B
     //  A = a | a A
     //  B = b | E
     //  E = e | <e>
     private companion object {
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                concatenation { ref("A"); ref("B") }
                 concatenation { ref("E"); ref("S"); ref("B") }
+                concatenation { ref("A"); ref("B") }
             }
             choice("A", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 literal("a")
@@ -61,7 +60,7 @@ internal class test_AB_ESB : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "c^", setOf("'c'", "'d'"))
+                parseError(InputLocation(1, 2, 1, 1), "^c", setOf("'a'", "'e'"))
             ), issues.errors
         )
     }
@@ -74,32 +73,40 @@ internal class test_AB_ESB : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "d^", setOf("'c'", "'d'"))
+                parseError(InputLocation(1, 2, 1, 1), "^d", setOf("'a'", "'e'"))
             ), issues.errors
         )
     }
-
 
     @Test
     fun a() {
         val sentence = "a"
 
         val expected = """
-            S { A { 'a' } }
+            S {
+              A { 'a' }
+              B { E { <EMPTY> } }
+            }
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)
 
     }
 
-
     @Test
-    fun dcd() {
-        fail("when converting to String get java.lang.OutOfMemoryError: Java heap space: failed reallocation of scalar replaced objects")
-        val sentence = "dcd"
+    fun eab() {
+        // fail("when converting to String get java.lang.OutOfMemoryError: Java heap space: failed reallocation of scalar replaced objects")
+        val sentence = "eab"
 
         val expected = """
-            S { C { 'd' } C{ C|1 { 'c' C { 'd' } } } }
+            S {
+              E { 'e' }
+              S { 
+                A { 'a' }
+                B { E { <EMPTY> } }
+              }
+              B { 'b' }
+            }
         """.trimIndent()
 
         super.test(rrs, goal, sentence, 1, expected)

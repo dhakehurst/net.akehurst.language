@@ -43,7 +43,7 @@ internal class test_arglist : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^''", setOf("a"))
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
             ), issues.errors
         )
     }
@@ -67,7 +67,7 @@ internal class test_arglist : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^''", setOf("n"))
+                parseError(InputLocation(0, 1, 1, 1), "a^a", setOf("<EOT>", "'c'"))
             ), issues.errors
         )
     }

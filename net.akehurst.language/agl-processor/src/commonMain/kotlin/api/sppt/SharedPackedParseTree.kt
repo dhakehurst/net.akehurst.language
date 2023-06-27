@@ -42,7 +42,8 @@ interface SpptDataNodeInfo {
     val alt: AltInfo
     val child: ChildInfo
 
-    val numChildren: Int
+    val numChildrenAlternatives: Map<Int, Int>
+    val totalChildrenFromAllAlternatives: Int
     val numSkipChildren: Int
 }
 

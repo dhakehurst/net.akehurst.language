@@ -81,8 +81,8 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
 
         val expected = """
             S|1 {
-                S|2 { 'a' }
-                S|2 { 'a' }
+                S { 'a' }
+                S { 'a' }
             }
         """.trimIndent()
 
@@ -100,7 +100,7 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
         val sentence = "aaa"
 
         val expected1 = """
-            S {
+            S|0 {
                 S { 'a' }
                 S { 'a' }
                 S { 'a' }
@@ -108,7 +108,7 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val expected2 = """
-             S {
+             S|1 {
                 S {
                     S { 'a' }
                     S { 'a' }
@@ -131,12 +131,12 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
         val sentence = "aaaa"
 
         val expected1 = """
-         S {
-            S {
+         S|1 {
+            S|1 {
                 S { 'a' }
                 S { 'a' }
               }
-            S {
+            S|1 {
                 S { 'a' }
                 S { 'a' }
               }
@@ -144,15 +144,15 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val expected2 = """
-            S {
-              S {
-                S {
-                  S { 'a' }
-                  S { 'a' }
+            S|1 {
+              S|1 {
+                S|1 {
+                  S|2 { 'a' }
+                  S|2 { 'a' }
                 }
-                S { 'a' }
+                S|2 { 'a' }
               }
-              S { 'a' }
+              S|2 { 'a' }
             }
         """.trimIndent()
 
@@ -170,13 +170,13 @@ internal class test_Johnson_Ambiguous : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val expected4 = """
-            S {
-              S {
-                S { 'a' }
-                S { 'a' }
+            S|0 {
+              S|1 {
+                S|2 { 'a' }
+                S|2 { 'a' }
               }
-              S { 'a' }
-              S { 'a' }
+              S|2 { 'a' }
+              S|2 { 'a' }
             }
         """.trimIndent()
 

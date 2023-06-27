@@ -132,7 +132,7 @@ internal class CompleteNodeIndex(
     val rulePositions get() = this.state.rulePositions
 
     //private val _hashCode_cache = arrayOf(treeData, runtimeRulesSet, startPosition, nextInputPosition).contentHashCode()
-    private val _hashCode_cache = arrayOf(treeData, runtimeRulesAsSet, option, startPosition, nextInputPosition).contentHashCode()
+    private val _hashCode_cache = arrayOf(treeData, runtimeRulesAsSet, /*option,*/ startPosition, nextInputPosition).contentHashCode()
 
     //TODO: don't store data twice..also prefer not to create 2 objects!
     val preferred by lazy { PreferredChildIndex(runtimeRulesAsSet, startPosition) }
@@ -155,7 +155,7 @@ internal class CompleteNodeIndex(
         other.nextInputPosition != this.nextInputPosition -> false
         //other.rulePositions != this.rulePositions -> false
         other.runtimeRulesAsSet != this.runtimeRulesAsSet -> false
-        other.option != this.option -> false
+        //other.option != this.option -> false
         else -> true
     }
 

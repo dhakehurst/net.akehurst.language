@@ -52,10 +52,10 @@ class SpptWalkerToString(
         val option = nodeInfo.alt.index
         val total = nodeInfo.alt.totalMatched
         val chNum = nodeInfo.child.index
-        val siblings = nodeInfo.child.total
-        val totChildren = nodeInfo.numChildren + nodeInfo.numSkipChildren
-        val eol = if (totChildren == 1) " " else "\n"
-        val tag = if (nodeInfo.alt.totalMatched == 1) {
+        val siblings = nodeInfo.child.total + (nodeInfo.alt.totalMatched - 1)
+        val totChildren = nodeInfo.totalChildrenFromAllAlternatives + nodeInfo.numSkipChildren           //FIXME: not correct for skip !
+        val eol = if (totChildren <= 1) " " else "\n"
+        val tag = if (nodeInfo.alt.totalMatched <= 1) {
             nodeInfo.node.rule.tag
         } else {
             "${nodeInfo.node.rule.tag}|${nodeInfo.alt.option}"
@@ -71,7 +71,7 @@ class SpptWalkerToString(
     override fun endBranch(nodeInfo: SpptDataNodeInfo) {
         val chNum = nodeInfo.child.index
         val siblings = nodeInfo.child.total + (nodeInfo.alt.totalMatched - 1)
-        val totChildren = nodeInfo.numChildren + nodeInfo.numSkipChildren
+        val totChildren = nodeInfo.totalChildrenFromAllAlternatives + nodeInfo.numSkipChildren //FIXME: not correct for skip !
         val eol = if (siblings == 1) " " else "\n"
 //        if (nodeInfo.alt.index + 1 == nodeInfo.alt.totalMatched)
         if (totChildren != 1) currentIndent = currentIndent.substring(indentDelta.length)

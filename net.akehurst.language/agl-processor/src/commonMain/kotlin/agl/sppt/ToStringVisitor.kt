@@ -82,7 +82,7 @@ internal class ToStringVisitor(val lineSeparator: String, val indentIncrement: S
 
                                 else -> {
                                     val childs = children.map { result.pop() }
-                                    val cs = childs.joinToString(separator = this.lineSeparator) { it.joinToString() }
+                                    val cs = childs.joinToString(separator = this.lineSeparator) { it.joinToString(separator = this.lineSeparator) }
                                     val rs = "${prefix2}${this.lineSeparator}$cs${this.lineSeparator}${indent}}"
                                     r.add(rs)
                                 }
