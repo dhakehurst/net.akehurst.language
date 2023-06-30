@@ -24,40 +24,64 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.Duration
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import kotlin.io.path.createFile
+
+actual fun runTest(block: suspend () -> Unit):Unit = kotlinx.coroutines.runBlocking{ block() }
 
 object Results {
 
     data class Result(
-            val success: Boolean,
-            val col: String,
-            val fileData: FileData,
-            val value: Duration
+        val success: Boolean,
+        val col: String,
+        val fileData: FileData,
+        val value: Duration
     )
 
-    val results = mutableMapOf<Int, Result>()
+    val resultsByCol = mutableMapOf<String, MutableMap<Int, Result>>()
 
     fun reset() {
-        this.results.clear()
+        this.resultsByCol.clear()
     }
 
     @Synchronized
     fun log(success: Boolean, col: String, fileData: FileData, value: Duration) {
         val res = Result(success, col, fileData, value)
-        this.results[fileData.index] = res
+        val results = if (resultsByCol.containsKey(col)) {
+            resultsByCol[col]!!
+        } else {
+            val m = mutableMapOf<Int, Result>()
+            resultsByCol[col] = m
+            m
+        }
+        results[fileData.index] = res
     }
 
     @Synchronized
     fun logError(col: String, fileData: FileData) {
         val res = Result(false, col, fileData, Duration.ZERO)
-        this.results[fileData.index] = res
+        val results = if (resultsByCol.containsKey(col)) {
+            resultsByCol[col]!!
+        } else {
+            val m = mutableMapOf<Int, Result>()
+            resultsByCol[col] = m
+            m
+        }
+        results[fileData.index] = res
+    }
+
+    private fun dateTimeNow(): String {
+        val t = ZonedDateTime.now()
+        return t.format(DateTimeFormatter.ISO_DATE_TIME).substringBefore(".").replace(":", "_")
     }
 
     fun write() {
         try {
-            val resultsFile = Paths.get("../results/results.xlsx")
+            val resultsFileIn = Paths.get("../results/results_Empty.xlsx")
             ZipSecureFile.setMinInflateRatio(0.00009)
-            var wb: Workbook? = if (resultsFile.toFile().exists()) {
-                WorkbookFactory.create(Files.newInputStream(resultsFile))
+            val wb: Workbook? = if (resultsFileIn.toFile().exists()) {
+                WorkbookFactory.create(Files.newInputStream(resultsFileIn))
             } else {
                 XSSFWorkbook()
             }
@@ -67,18 +91,20 @@ object Results {
             }
             sheet = wb.getSheetAt(0)
 
-            for (result in this.results.values.sortedBy { it.fileData.index }) {
-                write(wb, sheet, result.success, result.col, result.fileData, result.value)
+            for (results in this.resultsByCol.values) {
+                for (result in results.values.sortedBy { it.fileData.index }) {
+                    write(wb, sheet, result.success, result.col, result.fileData, result.value)
+                }
             }
-
-            Files.newOutputStream(resultsFile).use { fileOut -> wb.write(fileOut) }
-
-        } catch (ex: Exception) {
+            val resultsFileOut = Paths.get("../results/results_${dateTimeNow()}.xlsx")
+            resultsFileOut.createFile()
+            Files.newOutputStream(resultsFileOut).use { fileOut -> wb.write(fileOut) }
+        } catch (ex: Throwable) {
             throw RuntimeException("Error logging results", ex)
         }
     }
 
-    fun write(wb: Workbook, sheet: Sheet, success: Boolean, col: String, fileData: FileData, value: Duration) {
+    private fun write(wb: Workbook, sheet: Sheet, success: Boolean, col: String, fileData: FileData, value: Duration) {
         try {
             val headerFont = wb.createFont()
             headerFont.bold = true
@@ -121,9 +147,9 @@ object Results {
                 cell.cellStyle = headerCellStyle
                 colNum = cell.columnIndex
             }
-            var rowNum = fileData.index + 1 //+1 for headings
+            val rowNum = fileData.index + 1 //+1 for headings
             var valueRow = sheet.getRow(rowNum)
-            if (null==valueRow) {
+            if (null == valueRow) {
                 valueRow = sheet.createRow(rowNum)
                 val c1 = valueRow.createCell(0)
                 c1.setCellValue(fileData.path.toString())

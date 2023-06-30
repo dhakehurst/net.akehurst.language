@@ -18,14 +18,16 @@ package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.processor.LanguageProcessorConfiguration
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.ProcessOptions
 import kotlin.properties.Delegates
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     override val identity: String,
     grammarStrArg: String?,
-    aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
+    private val aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
     buildForDefaultGoal: Boolean,
     configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
@@ -34,30 +36,19 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     configuration,
 ) {
 
+    private var _doObservableUpdates = true
+
     override val isModifiable: Boolean = true
 
     override var grammarStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
-        if (oldValue != newValue) {
-            val res = Agl.grammarFromString<List<Grammar>, GrammarContext>(newValue, aglOptions)
-            this._issues.addAll(res.issues)
-            this.grammar = when {
-                res.issues.errors.isNotEmpty() -> null
-                null == targetGrammarName ->res.asm?.lastOrNull()
-                else -> res.asm?.lastOrNull { it.name == this.targetGrammarName }
-            }
-            grammarStrObservers.forEach { it.invoke(oldValue, newValue) }
+        if (_doObservableUpdates) {
+            updateGrammarStr(oldValue, newValue)
         }
     }
 
     override var scopeModelStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
-        if (oldValue != newValue) {
-            super._scopeModelResolver = {
-                if (null == newValue) {
-                    ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
-                } else {
-                    Agl.registry.agl.scopes.processor!!.process(newValue)
-                }
-            }
+        if (_doObservableUpdates) {
+            updateScopeModelStr(oldValue, newValue)
         }
     }
 
@@ -75,6 +66,55 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         }
     */
     override var styleStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
+        if (_doObservableUpdates) {
+            updateStyleStr(oldValue, newValue)
+        }
+    }
+
+    init {
+        grammarStr = grammarStrArg
+    }
+
+    override fun update(grammarStr: String?, scopeModelStr: String?, styleStr: String?) {
+        this._doObservableUpdates = false
+        val oldGrammarStr = this.grammarStr
+        val oldScopeModelStr = this.scopeModelStr
+        val oldStyleStr = this.styleStr
+        this.grammarStr = grammarStr
+        this.scopeModelStr = scopeModelStr
+        this.styleStr = styleStr
+        updateGrammarStr(grammarStr, oldGrammarStr)
+        updateScopeModelStr(scopeModelStr, oldScopeModelStr)
+        updateStyleStr(styleStr, oldStyleStr)
+        this._doObservableUpdates = true
+    }
+
+    private fun updateGrammarStr(oldValue: String?, newValue: String?) {
+        if (oldValue != newValue) {
+            val res = Agl.grammarFromString<List<Grammar>, GrammarContext>(newValue, aglOptions)
+            this._issues.addAll(res.issues)
+            this.grammar = when {
+                res.issues.errors.isNotEmpty() -> null
+                null == targetGrammarName -> res.asm?.lastOrNull()
+                else -> res.asm?.lastOrNull { it.name == this.targetGrammarName }
+            }
+            grammarStrObservers.forEach { it.invoke(oldValue, newValue) }
+        }
+    }
+
+    private fun updateScopeModelStr(oldValue: String?, newValue: String?) {
+        if (oldValue != newValue) {
+            super._scopeModelResolver = {
+                if (null == newValue) {
+                    ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
+                } else {
+                    Agl.registry.agl.scopes.processor!!.process(newValue)
+                }
+            }
+        }
+    }
+
+    private fun updateStyleStr(oldValue: String?, newValue: String?) {
         if (oldValue != newValue) {
             super._styleResolver = {
                 if (null == newValue) {
@@ -84,9 +124,5 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                 }
             }
         }
-    }
-
-    init {
-        grammarStr = grammarStrArg
     }
 }

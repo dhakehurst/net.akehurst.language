@@ -102,7 +102,7 @@ class Java8_compare_Test_aglOptm_perf(val file: FileData) {
 
     @Ignore
     @ExperimentalTime
-    @Test
+    //@Test
     fun agl_compilationUnit() {
         val t1 = parse(file, agl1)
         val t2 = parse(file, agl2)

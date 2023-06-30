@@ -44,9 +44,8 @@ internal class Automaton(
                 val action = me.key.third
                 val to = me.key.second
                 val lh = me.value.map { it.lh }.reduce { acc, it -> acc.union(it) }
-                val up = me.value.map { it.up }.reduce { acc, it -> acc.union(it) }
-                val ctx = me.value.flatMap { it.context }.toSet()
-                Transition(from, to, action, lh, up, ctx)
+                val up = me.value.map { it.up }.reduce { acc, it -> acc.union(it) } //FIXME: should really only merge if one is subset of the other
+                Transition(from, to, action, lh, up)
             }.toSet()
             return m
         }
@@ -86,21 +85,20 @@ internal class Automaton(
             }
         }
 
-        transitions.sortedBy { it.source.rp.toString() }.sortedBy { it.target.rp.toString() }
+        transitions
+            .sortedWith(compareBy({ it.source.number }, { it.target.number }))
             .forEach { tr ->
-                val prev = tr.source.allOutTransition.flatMap { it.context }.toSet()
-                    .map { it.number } //transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }
-                    .sorted()
-                val frStr = "${tr.source.number}:(${tr.source.rp})"
+                val prevStr = tr.context.joinToString(prefix = "", postfix = "") { "${it.number}" }
+                val frStr = "${tr.source.number}:${tr.source.rp}"
                 val toStr = "${tr.target.number}:${tr.target.rp}"
                 val trStr = "$frStr --> $toStr"
                 val lh = "[${tr.lh.fullContent.joinToString { it.tag }}]"
                 val up = "(${tr.up.fullContent.joinToString { it.tag }})"
-                b.append(" ${tr.action} ")
                 b.append(trStr)
+                b.append(" ${tr.action} ")
                 b.append(lh)
                 b.append(up)
-                b.append(" {${prev.joinToString()}} ")
+                b.append(" {$prevStr} ")
                 b.append("\n")
             }
 
@@ -122,20 +120,32 @@ internal class State(
     val number: Int,
     val rp: RulePosition
 ) {
-    val outTransitionsByKey = mutableMapOf<State, Set<Transition>>()
-    val allOutTransition get() = outTransitionsByKey.values.flatten().toSet()
+    val outCompleteTransitionsByCtx = mutableMapOf<Pair<State, State>, Set<Transition>>()
+    val outIncompleteTransitionsByCtx = mutableMapOf<State, Set<Transition>>()
+    val allOutTransition get() = (outCompleteTransitionsByCtx + outIncompleteTransitionsByCtx).values.flatten().toSet()
 
-    fun outTransFor(key: State): Set<Transition>? {
-        return outTransitionsByKey[key]
+    fun outCompleteTransForCtx(key: Pair<State, State>): Set<Transition>? = outCompleteTransitionsByCtx[key]
+    fun outIncompleteTransForCtx(ctx: State): Set<Transition>? = outIncompleteTransitionsByCtx[ctx]
+
+    fun addOutCompleteTrans(key: Pair<State, State>, trans: Set<Transition>) = trans.forEach { mergeCompleteTransFor(key, it) }
+    fun addOutIncompleteTrans(key: State, trans: Set<Transition>) = trans.forEach { mergeIncompleteTransFor(key, it) }
+
+    private fun mergeCompleteTransFor(key: Pair<State, State>, tran: Transition) {
+        val existing = outCompleteTransForCtx(key) ?: emptySet()
+        val merged = Automaton.merge(existing + tran)
+        outCompleteTransitionsByCtx[key] = merged
+
     }
 
-    fun addOutTrans(key: State, trans: Set<Transition>) {
-        val existing = outTransFor(key) ?: emptySet()
-        val t = Automaton.merge(trans + existing)
-        outTransitionsByKey[key] = t
+    private fun mergeIncompleteTransFor(key: State, tran: Transition) {
+        val existing = outIncompleteTransForCtx(key) ?: emptySet()
+        val merged = Automaton.merge(existing + tran)
+        outIncompleteTransitionsByCtx[key] = merged
+
     }
 
-    override fun hashCode(): Int = arrayOf(automaton.number, this.number).contentHashCode()
+    private val _hashCode_cache = arrayOf(automaton.number, this.number).contentHashCode()
+    override fun hashCode(): Int = _hashCode_cache
     override fun equals(other: Any?): Boolean = when {
         other !is State -> false
         this.automaton.number != other.automaton.number -> false
@@ -151,11 +161,28 @@ internal data class Transition(
     val target: State,
     val action: ParseAction,
     val lh: LookaheadSetPart,
-    val up: LookaheadSetPart,
-    val context: Set<State>
+    val up: LookaheadSetPart
 ) {
 
-    override fun toString(): String = "${source.rp} -$action[${lh}]($up)-> ${target.rp} {${context.joinToString { it.rp.toString() }}}"
+    val context
+        get() = when {
+            source.rp.isAtEnd -> source.outCompleteTransitionsByCtx.entries.filter { it.value.contains(this) }.map { it.key.first }.toSet()
+            else -> source.outIncompleteTransitionsByCtx.entries.filter { it.value.contains(this) }.map { it.key }.toSet()
+        }
+
+    private val _hashCode_cache = arrayOf(source, target, action, lh, up).contentHashCode()
+    override fun hashCode(): Int = _hashCode_cache
+    override fun equals(other: Any?): Boolean = when {
+        other !is Transition -> false
+        this.source.number != other.source.number -> false
+        this.target != other.target -> false
+        this.action != other.action -> false
+        this.lh != other.lh -> false
+        this.up != other.up -> false
+        else -> true
+    }
+
+    override fun toString(): String = "${source.rp} --> ${target.rp} $action[${lh}]($up) {${context.joinToString { it.rp.toString() }}}"
 }
 
 internal data class GSSNode(
@@ -431,7 +458,7 @@ internal class MinimalParser private constructor(
 
     private fun growIncomplete2(hd: GSSNode, pv: State, peot: LookaheadSetPart) {
         var grown = false
-        val trans = transitionsIncomplete(hd.state, pv).filter { it.context.contains(pv) }
+        val trans = transitionsIncomplete(hd.state, pv)
         for (tr in trans) {
             val b = when (tr.action) {
                 ParseAction.WIDTH -> doWidth(hd, tr, peot)
@@ -490,7 +517,7 @@ internal class MinimalParser private constructor(
         var grownHeight = false
         var grownGraft = false
         val pps = pp?.state ?: ss
-        val trans = transitionsComplete(hd.state, pv.state, pps).filter { it.context.contains(pv.state) }
+        val trans = transitionsComplete(hd.state, pv.state, pps)
         for (tr in trans) {
             when (tr.action) {
                 ParseAction.GOAL -> {
@@ -653,7 +680,7 @@ internal class MinimalParser private constructor(
     // Automaton
     private fun transitionsIncomplete(hd: State, pv: State): Set<Transition> {
         val key = pv
-        val trans = hd.outTransFor(key)
+        val trans = hd.outIncompleteTransForCtx(key)
         return if (null == trans) {
             clearCache()
             val pe = when {
@@ -665,26 +692,20 @@ internal class MinimalParser private constructor(
                     it.terminalRule.isEmbedded -> ParseAction.EMBED
                     else -> ParseAction.WIDTH
                 }
-                Transition(
-                    hd,
-                    automaton.createState(it.terminalRule.asTerminalRulePosition),
-                    action,
-                    it.parentExpectedAt,
-                    LookaheadSetPart.EMPTY,
-                    setOf(pv)
-                )
+                val tgt = automaton.createState(it.terminalRule.asTerminalRulePosition)
+                Transition(hd, tgt, action, it.parentExpectedAt, LookaheadSetPart.EMPTY)
             }.toSet()
             val trs = Automaton.merge(ts)
-            hd.addOutTrans(key, trs)
-            hd.outTransitionsByKey[key]!!
+            hd.addOutIncompleteTrans(key, trs)
+            hd.outIncompleteTransForCtx(key)!!
         } else {
             trans
         }
     }
 
     private fun transitionsComplete(hd: State, pv: State, pp: State): Set<Transition> {
-        val key = pv//Pair(pv, pp)
-        val trans = hd.outTransFor(key)
+        val key = Pair(pv, pp)
+        val trans = hd.outCompleteTransForCtx(key)
         return if (null == trans) {
             val ts = parentsInContext(pp.rp, pv.rp, hd.rp.rule).map { pn ->
                 val action = when {
@@ -694,19 +715,15 @@ internal class MinimalParser private constructor(
                 }
                 val tgt = pn.rulePosition
                 val lh = pn.expectedAt
-                val up = pn.parentExpectedAt
-                Transition(
-                    hd,
-                    automaton.createState(tgt),
-                    action,
-                    lh,
-                    up,
-                    setOf(pv)
-                )
+                val up = when (action) {
+                    ParseAction.HEIGHT -> pn.parentExpectedAt
+                    else -> LookaheadSetPart.EMPTY
+                }
+                Transition(hd, automaton.createState(tgt), action, lh, up)
             }.toSet()
             val trs = Automaton.merge(ts)
-            hd.addOutTrans(key, trs)
-            hd.outTransitionsByKey[key]!!
+            hd.addOutCompleteTrans(key, trs)
+            hd.outCompleteTransForCtx(key)!!
         } else {
             trans
         }

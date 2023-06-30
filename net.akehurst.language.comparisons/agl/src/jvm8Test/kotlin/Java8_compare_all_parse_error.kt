@@ -86,7 +86,7 @@ class Java8_compare_all_parse_error(val file: FileData) {
 
     @Ignore
     @ExperimentalTime
-    @Test
+    //@Test
     fun compare() {
         val t1 = parse(file, aglSpec, "CompilationUnit")
         val t2 = parse(file, aglOptm, "CompilationUnit")

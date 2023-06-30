@@ -36,31 +36,34 @@ public class test_antlr4_Java8_optm {
 
     @Parameterized.Parameters(name = "{index}: {0}")
     public static Collection<FileData> getFiles() {
-        var files = Java8TestFiles.INSTANCE.getFiles(); // 144 failed!
+        var files = Java8TestFiles.INSTANCE.getFiles().subList(0, 5300);
         totalFiles = files.size();
         return files;
     }
 
     static antlr4.optm.Java8ParserOpt.CompilationUnitContext parseWithAntlr4Optm(final FileData file) {
         try {
-            final Lexer lexer = new antlr4.optm.Java8LexerOpt(input);
-            final CommonTokenStream tokens = new CommonTokenStream(lexer);
 
-            //pre cache
-            final antlr4.optm.Java8ParserOpt p1 = new antlr4.optm.Java8ParserOpt(tokens);
-            p1.setErrorHandler(new BailErrorStrategy());
-            p1.compilationUnit();
+            try (TimeLogger timer = new TimeLogger("antlr4_optm-fst", file)) {
+                final Lexer lexer = new antlr4.optm.Java8LexerOpt(input);
+                final CommonTokenStream tokens = new CommonTokenStream(lexer);
+                final antlr4.optm.Java8ParserOpt p1 = new antlr4.optm.Java8ParserOpt(tokens);
+                p1.setErrorHandler(new BailErrorStrategy());
+                p1.compilationUnit();
+                timer.success();
+            }
 
-            tokens.seek(0);
-            final antlr4.optm.Java8ParserOpt p = new antlr4.optm.Java8ParserOpt(tokens);
-            p.setErrorHandler(new BailErrorStrategy());
-            try (TimeLogger timer = new TimeLogger("antlr4_optm", file)) {
-                antlr4.optm.Java8ParserOpt.CompilationUnitContext r = p.compilationUnit();
+            try (TimeLogger timer = new TimeLogger("antlr4_optm-snd", file)) {
+                final Lexer lexer = new antlr4.optm.Java8LexerOpt(input);
+                final CommonTokenStream tokens = new CommonTokenStream(lexer);
+                final antlr4.optm.Java8ParserOpt p2 = new antlr4.optm.Java8ParserOpt(tokens);
+                p2.setErrorHandler(new BailErrorStrategy());
+                antlr4.optm.Java8ParserOpt.CompilationUnitContext r = p2.compilationUnit();
                 timer.success();
                 return r;
             }
         } catch (ParseCancellationException | RecognitionException e) {
-            Results.INSTANCE.logError("antlr4_optm", file);
+            Results.INSTANCE.logError("antlr4_optm-fst", file);
             Assert.assertTrue(file.isError());
             return null;
         }

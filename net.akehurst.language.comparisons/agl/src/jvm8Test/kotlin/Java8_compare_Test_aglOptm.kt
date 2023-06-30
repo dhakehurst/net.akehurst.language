@@ -81,15 +81,18 @@ class Java8_compare_Test_aglOptm(val file: FileData) {
         val aglProcessor = createAndBuildProcessor("/agl/Java8AglOptm.agl")
         fun parseWithJava8Agl(file: FileData): SharedPackedParseTree? {
             return try {
-                aglProcessor.parse( input!!,Agl.parseOptions { goalRuleName("CompilationUnit") })
-                TimeLogger(col, file).use { timer ->
+                TimeLogger("${col}-fst", file).use { timer ->
+                    aglProcessor.parse(input!!, Agl.parseOptions { goalRuleName("CompilationUnit") })
+                    timer.success()
+                }
+                TimeLogger("${col}-snd", file).use { timer ->
                     val res = aglProcessor.parse( input!!,Agl.parseOptions { goalRuleName("CompilationUnit") })
                     timer.success()
                     res.sppt
                 }
             } catch (e: ParseFailedException) {
                 println("Error: ${e.message}")
-                Results.logError(col, file)
+                Results.logError("${col}-fst", file)
                 assertTrue(file.isError)
                 null
             }

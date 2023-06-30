@@ -24,7 +24,6 @@ import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.math.min
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -42,7 +41,7 @@ class test_MinimalVersionForPaper {
 
             val (actual, duration1) = measureTimedValue { sut.parse(s) }
             val (_, duration2) = measureTimedValue { sut.parse(s) }
-            // println(sut.automaton.usedAutomatonToString())
+            println(sut.automaton.usedAutomatonToString(true))
             assertNotNull(actual)
             println("Duration: $duration1  --  $duration2")
             val walker = SpptWalkerToString(s, "  ")
@@ -432,12 +431,13 @@ class test_MinimalVersionForPaper {
                 concatenation { literal("a"); ref("S"); }
             }
         }
-        println(rrs.fullAutomatonToString("S", AutomatonKind.LOOKAHEAD_1))
+        //println(rrs.fullAutomatonToString("S", AutomatonKind.LOOKAHEAD_1))
 
         test(
             "S",
             rrs,
             listOf(
+                "",
                 "a",
                 "aa",
                 "aaa",
@@ -496,7 +496,7 @@ class test_MinimalVersionForPaper {
     }
 
     @Test
-    fun For_paper_Emebdded() {
+    fun For_paper_Emebdded_Rrec() {
         //  S = <e> | S a
         val emb = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
@@ -504,7 +504,7 @@ class test_MinimalVersionForPaper {
                 concatenation { literal("a"); ref("S"); }
             }
         }
-        // S = d | BS
+        // S = d | B S
         // B = b I::S b | c I::S c
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
@@ -527,6 +527,50 @@ class test_MinimalVersionForPaper {
             "babcacd",
             "baaaabcaaaacd",
             "caaaacbaaaabd",
+        )
+
+        test(
+            "S",
+            rrs,
+            sentences,
+            1000
+        )
+    }
+
+    @Test
+    fun For_paper_Emebdded_Lrec() {
+        //  S = <e> | a S
+        val emb = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { empty() }
+                concatenation { literal("a"); ref("S"); }
+            }
+        }
+        // S = B | S B
+        // B = b I::S b | c I::S c
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("B") }
+                concatenation { ref("S"); ref("B") }
+            }
+            choice("B", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { literal("b"); ref("E"); literal("b") }
+                concatenation { literal("c"); ref("E"); literal("c") }
+            }
+            embedded("E", emb, emb.findRuntimeRule("S"))
+        }
+
+        val sentences = listOf(
+            //"bab",
+            //"cac",
+            "babbabbab",
+            "baaaab",
+            "caaaac",
+            "babcac",
+            "babbabbab",
+            "caccaccac",
+            "baaaabcaaaac",
+            "caaaacbaaaab",
         )
 
         test(

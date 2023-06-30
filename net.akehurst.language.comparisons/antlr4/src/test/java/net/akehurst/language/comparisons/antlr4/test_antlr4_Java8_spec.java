@@ -36,32 +36,32 @@ public class test_antlr4_Java8_spec {
 
     @Parameterized.Parameters(name = "{index}: {0}")
     public static Collection<FileData> getFiles() {
-        var files = Java8TestFiles.INSTANCE.getFiles();//.subList(0, 1270); // after 3306 we get java.lang.OutOfMemoryError: Java heap space
+        var files = Java8TestFiles.INSTANCE.getFiles().subList(0, 3300); // after 3500 we get java.lang.OutOfMemoryError: Java heap space
         totalFiles = files.size();
         return files;
     }
 
     static antlr4.spec.Java8ParserSpec.CompilationUnitContext parseWithAntlr4Spec(final FileData file) {
         try {
-            final Lexer lexer = new antlr4.spec.Java8LexerSpec(input);
-            final CommonTokenStream tokens = new CommonTokenStream(lexer);
-
-            //pre cache
-            final antlr4.spec.Java8ParserSpec p1 = new antlr4.spec.Java8ParserSpec(tokens);
-            p1.setErrorHandler(new BailErrorStrategy());
-            p1.compilationUnit();
-
-            tokens.seek(0);
-            final antlr4.spec.Java8ParserSpec p = new antlr4.spec.Java8ParserSpec(tokens);
-            p.setErrorHandler(new BailErrorStrategy());
-
-            try (TimeLogger timer = new TimeLogger("antlr4_spec", file)) {
-                antlr4.spec.Java8ParserSpec.CompilationUnitContext r = p.compilationUnit();
+            try (TimeLogger timer = new TimeLogger("antlr4_spec-fst", file)) {
+                final Lexer lexer = new antlr4.spec.Java8LexerSpec(input);
+                final CommonTokenStream tokens = new CommonTokenStream(lexer);
+                final antlr4.spec.Java8ParserSpec p1 = new antlr4.spec.Java8ParserSpec(tokens);
+                p1.setErrorHandler(new BailErrorStrategy());
+                p1.compilationUnit();
+                timer.success();
+            }
+            try (TimeLogger timer = new TimeLogger("antlr4_spec-snd", file)) {
+                final Lexer lexer = new antlr4.spec.Java8LexerSpec(input);
+                final CommonTokenStream tokens = new CommonTokenStream(lexer);
+                final antlr4.spec.Java8ParserSpec p2 = new antlr4.spec.Java8ParserSpec(tokens);
+                p2.setErrorHandler(new BailErrorStrategy());
+                antlr4.spec.Java8ParserSpec.CompilationUnitContext r = p2.compilationUnit();
                 timer.success();
                 return r;
             }
         } catch (ParseCancellationException | RecognitionException e) {
-            Results.INSTANCE.logError("antlr4_spec", file);
+            Results.INSTANCE.logError("antlr4_spec-fst", file);
             Assert.assertTrue(file.isError());
             return null;
         }

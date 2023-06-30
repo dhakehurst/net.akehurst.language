@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+plugins {
+	kotlin("multiplatform") version ("1.9.0-RC") apply false
+}
 
 allprojects {
 
