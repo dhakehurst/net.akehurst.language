@@ -16,29 +16,42 @@
 package net.akehurst.language.comparisons.agl
 
 import korlibs.io.file.std.StandardPaths
+import korlibs.memory.Platform
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.comparisons.common.FileDataCommon
-import net.akehurst.language.comparisons.common.Java8TestFilesCommon
-import net.akehurst.language.comparisons.common.ResultsCommon
-import net.akehurst.language.comparisons.common.myResourcesVfs
+import net.akehurst.language.api.processor.ParseOptions
+import net.akehurst.language.comparisons.common.*
+import kotlin.math.min
 import kotlin.time.measureTime
 
-const val col = "agl_optm"
-var totalFiles = 0
+val maxFiles = 6000 //for testing tests with less files
 
-suspend fun files(): Collection<FileDataCommon> {
-    val f = Java8TestFilesCommon.files().subList(0, 5)//300) // after this we get java.lang.OutOfMemoryError: Java heap space
-    totalFiles = f.size
-    println("Number of files to test against: ${f.size}")
-    return f
+suspend fun output(msg: String) {
+    runTest {
+        println(msg)
+    }
+}
+
+suspend fun javaFiles(numFiles: Int, skipPatterns: Set<Regex>): Collection<FileDataCommon> {
+    val f = FilesCommon.javaFiles("nogit/javaTestFiles.txt", skipPatterns) { it.endsWith(".java") }
+    val nf = min(min(numFiles, maxFiles), f.size)
+    output("Number of files to test against: $nf of ${f.size}")
+    return f.subList(0, nf)
+}
+
+suspend fun files(rootDirInfo: String, numFiles: Int, skipPatterns: Set<Regex>, filter: (path: String) -> Boolean): Collection<FileDataCommon> {
+    val f = FilesCommon.filesRecursiveFromDir(rootDirInfo, skipPatterns, filter)
+    val nf = min(min(numFiles, maxFiles), f.size)
+    val sub = f.subList(0, nf)
+    output("Number of files to test against: $nf of ${f.size}")
+    return sub
 }
 
 suspend fun createAndBuildProcessor(aglFile: String): LanguageProcessor<AsmSimple, ContextSimple> {
-    println(StandardPaths.cwd)
+    output(StandardPaths.cwd)
     val javaGrammarStr = myResourcesVfs[aglFile].readString()
     val res = Agl.processorFromString<AsmSimple, ContextSimple>(
         grammarDefinitionStr = javaGrammarStr,
@@ -53,34 +66,72 @@ suspend fun createAndBuildProcessor(aglFile: String): LanguageProcessor<AsmSimpl
     return res.processor!!
 }
 
-fun parseWithJava8Agl(aglProcessor: LanguageProcessor<AsmSimple, ContextSimple>, file: FileDataCommon, input: String) {
+// split to enable separate profile view on each parse
+fun parse1(aglProcessor: LanguageProcessor<AsmSimple, ContextSimple>, opts: ParseOptions, input: String) = measureTime {
+    aglProcessor.parse(input, opts)
+}
+
+fun parse2(aglProcessor: LanguageProcessor<AsmSimple, ContextSimple>, opts: ParseOptions, input: String) = measureTime {
+    aglProcessor.parse(input, opts)
+}
+
+fun parseTwiceAndMeasure(parserCode: String, aglProcessor: LanguageProcessor<AsmSimple, ContextSimple>, goalRule: String, file: FileDataCommon, input: String) {
     try {
-        val tm1 = measureTime {
-            aglProcessor.parse(input, Agl.parseOptions { goalRuleName("CompilationUnit") })
-        }
-        ResultsCommon.log(true, "${col}-T1", file, tm1)
-        val tm2 = measureTime {
-            aglProcessor.parse(input, Agl.parseOptions { goalRuleName("CompilationUnit") })
-        }
-        ResultsCommon.log(true, "${col}-T2", file, tm2)
+        val opts = Agl.parseOptions { goalRuleName(goalRule) }
+        val tm1 = parse1(aglProcessor, opts, input)
+        ResultsCommon.log(true, "${parserCode}-T1-$kotlinTarget", file, tm1)
+        val tm2 = parse2(aglProcessor, opts, input)
+        ResultsCommon.log(true, "${parserCode}-T2-$kotlinTarget", file, tm2)
     } catch (e: Throwable) {
         println("Error: ${e.message}")
-        ResultsCommon.logError("${col}-T1", file)
+        ResultsCommon.logError("${parserCode}-T1-$kotlinTarget", file)
     }
 }
+
+suspend fun parseJavaFiles(parserCode: String, numFiles: Int, grammarFile: String, goalRule: String) {
+    output("----- $parserCode -----")
+    ResultsCommon.reset()
+    val aglProcessor = createAndBuildProcessor(grammarFile)
+    // geting skip patterns like this only works because for the given test grammars, skip is all defined by terminals
+    val skipPatterns = aglProcessor.grammar!!.allResolvedSkipTerminal.map { Regex(it.value) }.toSet()
+    val files = javaFiles(numFiles, skipPatterns)
+    val totalFiles = files.size
+    for (file in files) {
+        output("File: ${file.index} of $totalFiles ")
+        val input = file.path.readString()
+        parseTwiceAndMeasure(parserCode, aglProcessor, goalRule, file, input)
+    }
+
+    ResultsCommon.write("$parserCode-$kotlinTarget")
+}
+
+suspend fun parseFiles(parserCode: String, numFiles: Int, grammarFile: String, goalRule: String, rootDirInfo: String, ext: String) {
+    output("----- $parserCode -----")
+    ResultsCommon.reset()
+    val aglProcessor = createAndBuildProcessor(grammarFile)
+    // geting skip patterns like this only works because for the given test grammars, skip is all defined by terminals
+    val skipPatterns = aglProcessor.grammar!!.allResolvedSkipTerminal.map { Regex(it.value) }.toSet()
+    val files = files(rootDirInfo, numFiles, skipPatterns) { it.endsWith(".$ext") }
+    val totalFiles = files.size
+    for (file in files) {
+        output("File: ${file.index} of $totalFiles ")
+        val input = file.path.readString()
+        parseTwiceAndMeasure(parserCode, aglProcessor, goalRule, file, input)
+    }
+
+    ResultsCommon.write(parserCode)
+}
+
 
 suspend fun runTests() {
-    val aglProcessor = createAndBuildProcessor("agl/Java8AglOptm.agl")
+    parseFiles("stchrt", 500, "agl/Statechart.agl", "statechart", "nogit/statechartTestFiles.txt", "sctxt")
+    parseFiles("dot", 500, "agl/Dot.agl", "graph", "nogit/dotTestFiles.txt", "dot")
 
-    ResultsCommon.reset()
-
-    for (file in files()) {
-        println("File: ${file.index} of $totalFiles ")
-        val input = file.path.readString()
-        parseWithJava8Agl(aglProcessor, file, input)
-    }
-
-    ResultsCommon.write(col)
+    parseJavaFiles("ant_optm",4800, "agl/Java8AntlrOptm.agl", "compilationUnit")
+    parseJavaFiles("agl_optm", 5300, "agl/Java8AglOptm.agl", "CompilationUnit")
+    parseJavaFiles("agl_spec",5240, "agl/Java8AglSpec.agl", "CompilationUnit")
+    parseJavaFiles("ant_spec",3500, "agl/Java8AntlrSpec.agl", "compilationUnit")
 }
+
 
 expect suspend fun main()

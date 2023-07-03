@@ -67,14 +67,12 @@ internal class ScanOnDemandParser(
         var maxNumHeads = rp.graph.numberOfHeads
         var totalWork = maxNumHeads
 
-        var lastToTryWidth = emptyList<GrowingNodeIndex>()
         while (rp.graph.hasNextHead && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
             if (Debug.OUTPUT_RUNTIME) println("$seasons ===================================")
             val steps = rp.grow3(possibleEndOfText, RuntimeParser.normalArgs)
             seasons += steps
             maxNumHeads = max(maxNumHeads, rp.graph.numberOfHeads)
             totalWork += rp.graph.numberOfHeads
-            lastToTryWidth = rp.lastToTryWidthTrans
         }
 
         val match = rp.graph.treeData.complete
@@ -192,7 +190,7 @@ internal class ScanOnDemandParser(
         // for anything not transitioning to empty do the width then try H or G
         rp.resetGraphToLastGrown(trips)//lastGrown)
         //val lgs1 =rp.growNonEmptyWidthForError(possibleEndOfText, RuntimeParser.Companion.GrowArgs(false, true, false, true))
-        val lgs2 = rp.growHeightOrGraftForError(possibleEndOfText, RuntimeParser.Companion.GrowArgs(false, true, true, false))
+        val lgs2 = rp.growHeightOrGraftForError(possibleEndOfText, RuntimeParser.heightGraftOnly)
         val triples = when {
             lgs2.isNotEmpty() -> lgs2 //.flatMap { it.triples }.toSet()
             //    lgs1.isNotEmpty() -> lgs1.flatMap { it.triples }.toSet()
@@ -238,7 +236,8 @@ internal class ScanOnDemandParser(
                                     ParseAction.WIDTH,
                                     ParseAction.EMBED -> {
                                         //TODO: find failure in embedded parser!
-                                        val embLastDropped = rp.embeddedLastDropped[tr]?.flatMap { it.triples } //TODO: change this to lastGrown
+
+                                        val embLastDropped = null //rp.embeddedLastDropped[tr]?.flatMap { it.triples } //TODO: change this to lastGrown
                                         if (null == embLastDropped) {
                                             // try grab 'to' token, if nothing then that is error else lookahead is error
                                             val l = input.findOrTryCreateLeaf(tr.to.firstRule, lg.nextInputPosition)
@@ -271,11 +270,12 @@ internal class ScanOnDemandParser(
                                                 }
                                             }
                                         } else {
-                                            val (embeddedParser, embeddedEOT) = rp.createEmbeddedRuntimeParser(possibleEndOfText, lg.runtimeState.runtimeLookaheadSet, tr)
-                                            embeddedParser.resetGraphToLastGrown(embLastDropped)
-                                            val embLgs = embeddedParser.growHeightOrGraftForError(embeddedEOT, RuntimeParser.normalArgs) //TODO: maybe diff args
-                                            val embTriples = embLgs //.flatMap { it.triples }.toSet()
-                                            possErrors(embTriples, embeddedParser, input, embeddedEOT)
+                                            //val (embeddedParser, embeddedEOT) = rp.createEmbeddedRuntimeParser(possibleEndOfText, lg.runtimeState.runtimeLookaheadSet, tr)
+                                            //embeddedParser.resetGraphToLastGrown(embLastDropped)
+                                            // val embLgs = embeddedParser.growHeightOrGraftForError(embeddedEOT, RuntimeParser.normalArgs) //TODO: maybe diff args
+                                            // val embTriples = embLgs //.flatMap { it.triples }.toSet()
+                                            // possErrors(embTriples, embeddedParser, input, embeddedEOT)
+                                            null
                                         }
                                     }
 
@@ -306,13 +306,13 @@ internal class ScanOnDemandParser(
                                 ParseAction.EMBED -> {
                                     //TODO: find failure in embedded parser!
                                     rp.resetGraphToLastGrown(listOf(ParseGraph.Companion.ToProcessTriple(lg, prev, prevPrev)))
-                                    val ld = rp.growNonEmptyWidthForError(possibleEndOfText, RuntimeParser.Companion.GrowArgs(false, true, false, true))
+                                    val ld = rp.growNonEmptyWidthForError(possibleEndOfText, RuntimeParser.forPossErrors)
                                     val nip = if (ld.isEmpty()) {
                                         rp.lastToGrow.maxOf { it.growingNode.nextInputPosition }
                                     } else {
                                         ld.maxOf { it.nextInputPosition }
                                     }
-                                    val embLastDropped = rp.embeddedLastDropped[tr]?.flatMap { it.triples } //TODO: change this to lastGrown
+                                    val embLastDropped = null //rp.embeddedLastDropped[tr]?.flatMap { it.triples } //TODO: change this to lastGrown
                                     if (null == embLastDropped) {
 
                                         val expected = tr.lookahead
@@ -325,14 +325,12 @@ internal class ScanOnDemandParser(
                                         }
 
                                     } else {
-                                        val (embeddedParser, embeddedEOT) = rp.createEmbeddedRuntimeParser(possibleEndOfText, lg.runtimeState.runtimeLookaheadSet, tr)
-                                        embeddedParser.resetGraphToLastGrown(embLastDropped)
-                                        val embLgs = embeddedParser.growHeightOrGraftForError(
-                                            embeddedEOT,
-                                            RuntimeParser.Companion.GrowArgs(false, true, false, true)
-                                        ) //TODO: maybe diff args
-                                        val embTriples = embLgs //.flatMap { it.triples }.toSet()
-                                        possErrors(embTriples, embeddedParser, input, embeddedEOT)
+                                        // val (embeddedParser, embeddedEOT) = rp.createEmbeddedRuntimeParser(possibleEndOfText, lg.runtimeState.runtimeLookaheadSet, tr)
+                                        //  embeddedParser.resetGraphToLastGrown(embLastDropped)
+                                        //  val embLgs = embeddedParser.growHeightOrGraftForError(embeddedEOT, RuntimeParser.forPossErrors) //TODO: maybe diff args
+                                        //  val embTriples = embLgs //.flatMap { it.triples }.toSet()
+                                        //  possErrors(embTriples, embeddedParser, input, embeddedEOT)
+                                        null
                                     }
                                 }
 
@@ -559,10 +557,8 @@ internal class ScanOnDemandParser(
         rp.start(0, possibleEndOfText)
         var seasons = 1
 
-        var lastToTryWidth = emptyList<GrowingNodeIndex>()
         while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
             rp.grow3(possibleEndOfText, RuntimeParser.normalArgs) //TODO: maybe no need to build tree!
-            lastToTryWidth = rp.lastToTryWidthTrans
             seasons++
         }
         /*

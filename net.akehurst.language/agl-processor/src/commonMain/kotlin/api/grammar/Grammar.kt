@@ -23,8 +23,8 @@ interface GrammarItem {
 interface GrammarReference {
     val localNamespace: Namespace
     val nameOrQName: String
-    val resolved:Grammar?
-    fun resolveAs(resolved:Grammar)
+    val resolved: Grammar?
+    fun resolveAs(resolved: Grammar)
 }
 
 /**
@@ -77,6 +77,11 @@ interface Grammar {
      * the Set of all terminals in this grammar and those that this grammar extends
      */
     val allResolvedTerminal: Set<Terminal>
+
+    /**
+     * the Set of all terminals that are part of skip rules in this grammar and those that this grammar extends
+     */
+    val allResolvedSkipTerminal: Set<Terminal>
 
     val allResolvedEmbeddedRules: Set<Embedded>
 

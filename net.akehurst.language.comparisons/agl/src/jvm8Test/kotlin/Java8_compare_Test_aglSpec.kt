@@ -30,7 +30,6 @@ import org.junit.*
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.IOException
-import java.nio.file.Files
 import kotlin.test.assertTrue
 
 @RunWith(Parameterized::class)

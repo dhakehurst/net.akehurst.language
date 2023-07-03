@@ -1,0 +1,92 @@
+namespace net.akehurst.language.example.dot
+
+grammar Xml {
+
+	skip COMMENT = "<!-- [.]* -->" ;
+
+	file = element? ;
+
+	element = elementEmpty | elementContent ;
+	elementEmpty = '<' WS? NAME WS? attribute* '/>' ;
+    elementContent = startTag content endTag ;
+	startTag = '<' WS? NAME WS? attribute* '>' ;
+	endTag = '</' WS? NAME WS? '>' ;
+
+	content = (CHARDATA | element)* ;
+
+	attribute = NAME WS? '=' WS? string WS? ;
+	string = DOUBLE_QUOTE_STRING | SINGLE_QUOTE_STRING ;
+	WS = "\s+" ;
+	CHARDATA = "[^<]+" ;
+	NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
+	DOUBLE_QUOTE_STRING = "\"([^\"\\]|\.)*\"" ;
+	SINGLE_QUOTE_STRING = "['][^']*[']" ;
+}
+
+grammar Dot  {
+
+    skip leaf WHITESPACE = "\s+" ;
+	skip leaf MULTI_LINE_COMMENT = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
+	skip leaf SINGLE_LINE_COMMENT = "//[^\n\r]*" ;
+	skip leaf C_PREPROCESSOR = "#[^\n\r]*" ;
+
+	graph =
+	  STRICT? type ID? '{' stmt_list '}'
+	;
+    type = GRAPH | DIGRAPH ;
+
+	stmt_list = stmt1 * ;
+    stmt1 = stmt  ';'? ;
+	stmt =
+	    node_stmt
+      | edge_stmt
+      | attr_stmt
+      | ID '=' ID
+      | subgraph
+      ;
+
+    node_stmt = node_id attr_lists? ;
+    node_id = ID port? ;
+    port =
+        ':' ID (':' compass_pt)?
+      | ':' compass_pt
+      ;
+    leaf compass_pt	= 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw' | 'c' | '_' ;
+
+    edge_stmt =	edge_list attr_lists? ;
+    edge_list = [edge_end / EDGEOP ]2+ ;
+    edge_end = node_id | subgraph ;
+    leaf EDGEOP = '--' | '->' ;
+
+    attr_stmt = attr_type attr_lists ;
+    attr_type = GRAPH | NODE | EDGE ;
+    attr_lists = attr_list+ ;
+    attr_list = '[' attr_list_content ']' ;
+    attr_list_content = [ attr / a_list_sep ]* ;
+    attr = ID '=' ID ;
+    a_list_sep = (';' | ',')? ;
+
+    subgraph = subgraph_id? '{' stmt_list '}' ;
+    subgraph_id = SUBGRAPH ID? ;
+
+
+	leaf STRICT = "[Ss][Tt][Rr][Ii][Cc][Tt]";
+	leaf GRAPH = "[Gg][Rr][Aa][Pp][Hh]" ;
+	leaf DIGRAPH = "[Dd][Ii][Gg][Rr][Aa][Pp][Hh]" ;
+	leaf SUBGRAPH = "[Ss][Uu][Bb][Gg][Rr][Aa][Pp][Hh]" ;
+	leaf NODE = "[Nn][Oo][Dd][Ee]" ;
+    leaf EDGE = "[Ee][Dd][Gg][Ee]" ;
+
+	ID =
+	  ALPHABETIC_ID
+	| NUMERAL
+	| DOUBLE_QUOTE_STRING
+	| HTML
+	;
+
+	leaf ALPHABETIC_ID = "[a-zA-Z_][a-zA-Z_0-9]*" ; //"[a-zA-Z\200-\377_][a-zA-Z\200-\377_0-9]*" ;
+
+	leaf NUMERAL = "[-+]?([0-9]+([.][0-9]+)?|([.][0-9]+))" ;
+	leaf DOUBLE_QUOTE_STRING = "\"(?:[^\"\\]|\\.)*\"" ;
+	HTML = '<' Xml::elementContent '>' ;
+}

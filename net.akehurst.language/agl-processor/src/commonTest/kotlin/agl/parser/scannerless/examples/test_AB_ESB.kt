@@ -60,7 +60,7 @@ internal class test_AB_ESB : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "^c", setOf("'a'", "'e'"))
+                parseError(InputLocation(0, 1, 1, 1), "^c", setOf("'a'", "'e'"))
             ), issues.errors
         )
     }
@@ -73,7 +73,7 @@ internal class test_AB_ESB : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1, 2, 1, 1), "^d", setOf("'a'", "'e'"))
+                parseError(InputLocation(0, 1, 1, 1), "^d", setOf("'a'", "'e'"))
             ), issues.errors
         )
     }

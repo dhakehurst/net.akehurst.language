@@ -29,7 +29,7 @@ internal data class RuleOption(
 
 internal class RulePosition(
     val rule: RuntimeRule,
-    val option:Int,
+    val option: Int,
     val position: Int
 ) {
     companion object {
@@ -69,7 +69,7 @@ internal class RulePosition(
         else -> rule.rhs.nextRulePositions(this)
     }
 
-    private val _hashCode get() = arrayOf(this.rule, this.option, this.position).contentHashCode()
+    private val _hashCode = arrayOf(this.rule, this.option, this.position).contentHashCode()
     override fun hashCode(): Int = _hashCode
 
     override fun equals(other: Any?): Boolean = when {
@@ -87,9 +87,9 @@ internal class RulePosition(
             else -> rule.tag
         }
         val rhs = rule.rhs
-        val o = when(rhs) {
+        val o = when (rhs) {
             is RuntimeRuleRhsTerminal -> option
-            is RuntimeRuleRhsNonTerminal -> when(rhs) {
+            is RuntimeRuleRhsNonTerminal -> when (rhs) {
                 is RuntimeRuleRhsGoal -> option
                 is RuntimeRuleRhsConcatenation -> option
                 is RuntimeRuleRhsChoice -> option
@@ -105,9 +105,9 @@ internal class RulePosition(
             -1 -> "ER"
             else -> position.toString()
         }
-        val p = when(rhs) {
+        val p = when (rhs) {
             is RuntimeRuleRhsTerminal -> pos
-            is RuntimeRuleRhsNonTerminal -> when(rhs) {
+            is RuntimeRuleRhsNonTerminal -> when (rhs) {
                 is RuntimeRuleRhsGoal -> pos
                 is RuntimeRuleRhsConcatenation -> pos
                 is RuntimeRuleRhsChoice -> pos
@@ -118,7 +118,8 @@ internal class RulePosition(
                         END_OF_RULE -> "ER"
                         else -> pos
                     }
-                    is RuntimeRuleRhsListSeparated ->when (position) {
+
+                    is RuntimeRuleRhsListSeparated -> when (position) {
                         START_OF_RULE -> "BR"
                         POSITION_SLIST_SEPARATOR -> "LS"
                         POSITION_SLIST_ITEM -> "LI"

@@ -70,10 +70,14 @@ object ResultsCommon {
             val sorted = this.resultsByIndex.entries.sortedBy { it.key }
             val lines = mutableListOf<String>()
             val header = this.resultsByIndex.values.first().values.joinToString { it.col }
-            lines.add(header)
+            lines.add("index, numChars, numCharsCompressedSkip, $header")
             for (entry in sorted) {
-                val l = entry.value.values.joinToString { "${it.value.inWholeMicroseconds}" }
-                lines.add(l)
+                val durations = entry.value.values.joinToString { "${it.value.inWholeMicroseconds}" }
+                val fe = entry.value.values.first()
+                val index = fe.fileData.index
+                val numChars = fe.fileData.chars
+                val numCharsNoComments = fe.fileData.charsNoComments
+                lines.add("$index, $numChars, $numCharsNoComments, $durations")
             }
             val resultsFileOut = rootFs["${name}_${dateTimeNow()}.csv"]
             resultsFileOut.ensureParents()

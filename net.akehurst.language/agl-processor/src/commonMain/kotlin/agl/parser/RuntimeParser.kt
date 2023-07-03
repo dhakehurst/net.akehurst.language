@@ -52,10 +52,13 @@ internal class RuntimeParser(
             val buildTree: Boolean,
             val noLookahead: Boolean,
             val heightGraftOnly: Boolean,
-            val nonEmptyWidthOnly: Boolean
+            val nonEmptyWidthOnly: Boolean,
+            val reportErrors: Boolean
         )
 
-        val normalArgs = GrowArgs(true, false, false, false)
+        val normalArgs = GrowArgs(true, false, false, false, true)
+        val forPossErrors = GrowArgs(false, true, false, true, false)
+        val heightGraftOnly = GrowArgs(false, true, true, false, false)
     }
 
     val graph = ParseGraph(input, this.stateSet.number)
@@ -64,9 +67,10 @@ internal class RuntimeParser(
     val canGrow: Boolean get() = this.graph.canGrow
 
     var lastToGrow = listOf<ParseGraph.Companion.ToProcessTriple>()
-    val lastDropped = mutableSetOf<ParseGraph.Companion.NextToProcess>()
-    val embeddedLastDropped = mutableMapOf<Transition, Set<ParseGraph.Companion.NextToProcess>>()
-    val lastToTryWidthTrans = mutableListOf<GrowingNodeIndex>()
+
+    //val lastDropped = mutableSetOf<ParseGraph.Companion.NextToProcess>()
+    //val embeddedLastDropped = mutableMapOf<Transition, Set<ParseGraph.Companion.NextToProcess>>()
+    //val lastToTryWidthTrans = mutableListOf<GrowingNodeIndex>()
     val failedReasons = mutableListOf<FailedParseReason>()
 
     private var interruptedMessage: String? = null
@@ -189,8 +193,7 @@ internal class RuntimeParser(
 
     fun grow3(possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Int {
         this.failedReasons.clear()
-        this.lastToTryWidthTrans.clear()
-        this.lastDropped.clear()
+        //this.lastDropped.clear()
         this.lastToGrow = this.graph.peekAllNextToProcess()
 
         var steps = 0
@@ -259,7 +262,7 @@ internal class RuntimeParser(
                 if (b) transTaken.add(tr)
                 grown = grown || b
             }
-            if (transTaken.size > 1) ambiguity(head, transTaken, possibleEndOfText)
+            if (growArgs.reportErrors && transTaken.size > 1) ambiguity(head, transTaken, possibleEndOfText)
             if (grown.not()) doNoTransitionsTaken(head)
             grown
         }
@@ -282,7 +285,7 @@ internal class RuntimeParser(
                 grown = grown || b
             }
         }
-        if (transTaken.size > 1) ambiguity(head, transTaken, possibleEndOfText)
+        if (growArgs.reportErrors && transTaken.size > 1) ambiguity(head, transTaken, possibleEndOfText)
         if (grown.not()) doNoTransitionsTaken(head)
         return grown
     }
@@ -407,7 +410,7 @@ internal class RuntimeParser(
         val trans2 = resolvePrecedence(transWithValidLookahead, head)
         if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${trans2.joinToString(separator = "\n") { "  $it" }}" }
         //val grouped = transitions.groupBy { it.to.runtimeRulesSet }
-        if (trans2.size > 1) {
+        if (growArgs.reportErrors && trans2.size > 1) {
             ambiguity(head, trans2, possibleEndOfText)
         }
         val grouped = trans2.groupBy { it.to.runtimeRulesAsSet }
@@ -876,9 +879,9 @@ internal class RuntimeParser(
                             this.graph.isLookingAt(lh, eot, rt, nextInputPositionAfterSkip)
                         }
                     }
-                    if (transition.to.firstRule.isEmptyTerminal.not()) {
-                        recordLastToTryWidthTrans(head)
-                    }
+                    //if (transition.to.firstRule.isEmptyTerminal.not()) {
+                    //    recordLastToTryWidthTrans(head)
+                    //}
                     if (growArgs.noLookahead || hasLh) {
                         val startPosition = l.startPosition
                         val nextInputPosition = l.nextInputPosition //TODO: should just be/pass nextInputPositionAfterSkip
@@ -1121,7 +1124,7 @@ internal class RuntimeParser(
                     )
                 } else {
                     //  could not parse embedded
-                    this.embeddedLastDropped[transition] = embeddedParser.lastDropped
+                    //this.embeddedLastDropped[transition] = embeddedParser.lastDropped
                     recordFailedEmbedded(head.nextInputPosition, transition, embeddedParser.failedReasons)
                     false
                 }
@@ -1146,10 +1149,6 @@ internal class RuntimeParser(
         }
         val loc = input.locationFor(head.nextInputPositionAfterSkip, 1)
         _issues.raise(LanguageIssueKind.WARNING, LanguageProcessorPhase.GRAMMAR, loc, "Ambiguity in parse (on $ambigOnStr): ($from) into $into", ambigOn)
-    }
-
-    private fun recordLastToTryWidthTrans(head: GrowingNodeIndex) {
-        this.lastToTryWidthTrans.add(head)
     }
 
     private fun recordFailedWidthTo(position: Int, transition: Transition) {

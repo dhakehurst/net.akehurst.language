@@ -17,10 +17,8 @@ package net.akehurst.language.comparisons.common
 
 import korlibs.io.file.VfsFile
 import korlibs.io.file.fullNameWithoutExtension
-import korlibs.io.file.std.StandardPaths
 import korlibs.io.file.std.localVfs
 import korlibs.io.file.std.resourcesVfs
-import kotlinx.coroutines.flow.filter
 
 data class FileDataCommon(
     val index: Int,
@@ -30,16 +28,34 @@ data class FileDataCommon(
     val isError: Boolean
 )
 
-object Java8TestFilesCommon {
+object FilesCommon {
 
-    suspend fun files(): List<FileDataCommon> {
+    suspend fun filesRecursiveFromDir(rootInfoFile: String, skipPatterns: Set<Regex>, filter: (path: String) -> Boolean): List<FileDataCommon> {
+        val testFiles = resourcesVfs[rootInfoFile].readString()
+        val rootFs = localVfs(testFiles)
+        val allFilteredFiles = getPathsRecursive(rootFs, filter)
+        val path_size = allFilteredFiles.map { Pair(rootFs[it.path], it.stat().size) }.associate { it }
+        val data = path_size.map { (path, size) ->
+            val chars = countChars(path, skipPatterns)
+            FileDataCommon(0, path, chars.first, chars.second, false)
+        }
+        val sorted = data.sortedBy { it.chars }
+        var index = 0
+        val files = sorted.map {
+            FileDataCommon(index++, it.path, it.chars, it.charsNoComments, it.isError)
+        }
+        return files
+    }
+
+    suspend fun javaFiles(rootInfoFile: String, skipPatterns: Set<Regex>, filter: (path: String) -> Boolean): List<FileDataCommon> {
         // You must create this file and add the full path to the folder containing the javaTestFiles
-        val javaTestFiles = resourcesVfs["nogit/javaTestFiles.txt"].readString()
+        val javaTestFiles = resourcesVfs[rootInfoFile].readString()
         val rootFs = localVfs(javaTestFiles)
-        val javaFiles = rootFs.listRecursiveSimple().filter { it.path.endsWith(".java") }
+        //val javaFiles = rootFs.listRecursiveSimple().filter { it.path.endsWith(".java") }
+        val javaFiles = getPathsRecursive(rootFs, filter)
         val path_size = javaFiles.map { Pair(rootFs[it.path], it.stat().size) }.associate { it }
         val data = path_size.map { (path, size) ->
-            val chars = countChars(path)
+            val chars = countChars(path, skipPatterns)
             val isError = containsError(path)
             FileDataCommon(0, path, chars.first, chars.second, isError)
         }
@@ -51,12 +67,16 @@ object Java8TestFilesCommon {
         return files
     }
 
-    private suspend fun countChars(path: VfsFile): Pair<Int, Int> {
-        val text = path.readString()
+    private suspend fun countChars(path: VfsFile, skipPatterns: Set<Regex>): Pair<Int, Int> {
+        var text = path.readString()
+        val rawLength = text.length
+        for (pat in skipPatterns) {
+            text = text.replace(pat, " ") //replace any skip match with single char
+        }
         //remove comments
-        val rem = text.replace(Regex("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"), "")
-        val rem2 = rem.replace(Regex("//[^\n]*$"), "")
-        return Pair(text.length, rem2.length)
+        //val rem = text.replace(Regex("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"), "")
+        //val rem2 = rem.replace(Regex("//[^\n]*$"), "")
+        return Pair(rawLength, text.length)
     }
 
     private suspend fun containsError(path: VfsFile): Boolean {

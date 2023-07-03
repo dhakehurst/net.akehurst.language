@@ -15,9 +15,7 @@
  */
 package net.akehurst.language.comparisons.agl
 
-import korlibs.io.async.runBlockingNoSuspensions
 import korlibs.io.file.std.StandardPaths
-import korlibs.io.file.std.resourcesVfs
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
@@ -34,7 +32,7 @@ class test_Java8_aglOptm {
         var totalFiles = 0
 
         suspend fun files(): Collection<FileDataCommon> {
-            val f = Java8TestFilesCommon.files().subList(0, 5)//300) // after this we get java.lang.OutOfMemoryError: Java heap space
+            val f = FilesCommon.files().subList(0, 5)//300) // after this we get java.lang.OutOfMemoryError: Java heap space
             totalFiles = f.size
             println("Number of files to test against: ${f.size}")
             return f

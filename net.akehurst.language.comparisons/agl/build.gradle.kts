@@ -11,6 +11,9 @@ val version_agl:String by project
 kotlin {
 	jvm("jvm8") {
 		compilations {
+			mainRun {
+				mainClass.set("net.akehurst.language.comparisons.agl.MainKt")
+			}
 			val main by getting {
 				compilerOptions.configure {
 					languageVersion.set(kotlin_languageVersion)
@@ -32,8 +35,8 @@ kotlin {
 		generateTypeScriptDefinitions()
 		tasks.withType<KotlinJsCompile>().configureEach {
 			kotlinOptions {
-				moduleKind = "es"
-				useEsClasses = true
+			//	moduleKind = "es"
+			//	useEsClasses = true
 			}
 		}
 		nodejs {
@@ -42,7 +45,6 @@ kotlin {
 		}
 	}
 }
-
 
 dependencies {
 	"commonMainImplementation"(kotlin("test"))
