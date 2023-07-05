@@ -59,6 +59,7 @@ interface LanguageProcessorConfiguration<AsmType : Any, ContextType : Any> {
 interface ParseOptions {
     var goalRuleName: String?
     var automatonKind: AutomatonKind
+    var reportErrors: Boolean
 }
 
 /**

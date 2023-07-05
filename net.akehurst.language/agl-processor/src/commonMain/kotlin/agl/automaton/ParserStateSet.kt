@@ -229,7 +229,8 @@ internal class ParserStateSet(
                 val action = ti.action
                 val to = this.fetchCompatibleState(ti.to.toList()) ?: error("Internal error, state not created for ${ti.to}")
                 val lhs = ti.lookahead.map { Lookahead(it.guard.lhs(this), it.up.lhs(this)) }.toSet()
-                state.outTransitions.createTransition(previousStates.toSet(), state, action, to, lhs)
+                TODO("need prevPrev")
+                //state.outTransitions.createTransition(previousStates.toSet(), state, action, to, lhs)
             }
         }
     }
@@ -334,7 +335,7 @@ internal class ParserStateSet(
 
         if (withStates) {
             states.forEach {
-                val str = "$it {${it.outTransitions.allPrevious.map { it.number.value }}}"
+                val str = "$it {${it.outTransitions.allPrevious.joinToString { it.toString() }}}"
                 b.append(str).append("\n")
             }
         }
@@ -342,8 +343,7 @@ internal class ParserStateSet(
         transitions.sortedBy { it.from.rulePositions.toString() }.sortedBy { it.to.rulePositions.toString() }
             .forEach { tr ->
                 val prev = tr.from.outTransitions.previousFor(tr)
-                    .map { it.number.value } //transitionsByPrevious.entries.filter { it.value?.contains(tr) ?: false }.map { it.key?.number?.value }
-                    .sorted()
+                    .joinToString { it.toString() }
                 val frStr = "${tr.from.number.value}:(${tr.from.rulePositions.joinToString { "$it" }})"
                 val toStr = "${tr.to.number.value}:${tr.to.rulePositions}"
                 val trStr = "$frStr --> $toStr"
@@ -351,7 +351,7 @@ internal class ParserStateSet(
                 b.append(" ${tr.action} ")
                 b.append(trStr)
                 b.append(lh)
-                b.append(" {${prev.joinToString()}} ")
+                b.append(" {${prev}} ")
                 b.append("\n")
             }
 

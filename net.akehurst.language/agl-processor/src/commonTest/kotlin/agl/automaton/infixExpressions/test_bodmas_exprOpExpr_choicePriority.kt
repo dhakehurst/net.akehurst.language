@@ -58,7 +58,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
     @Test
     fun automaton_parse_v() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "v", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "v")
         assertNotNull(result.sppt)
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -86,7 +86,7 @@ internal class test_bodmas_exprOpExpr_choicePriority : test_AutomatonAbstract() 
     fun automaton_parse_vav() {
         //given
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "vav", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "vav")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt)
         assertEquals(0, result.issues.size)

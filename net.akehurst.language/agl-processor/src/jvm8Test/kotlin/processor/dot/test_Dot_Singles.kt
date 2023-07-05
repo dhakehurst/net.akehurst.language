@@ -20,7 +20,6 @@ import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
-import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -264,7 +263,7 @@ class test_Dot_Singles {
         val parser = ScanOnDemandParser(converterToRuntimeRules.runtimeRuleSet)
 
         //fails at season 9 with edge_list
-        val result = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal(goal, sentence)
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }

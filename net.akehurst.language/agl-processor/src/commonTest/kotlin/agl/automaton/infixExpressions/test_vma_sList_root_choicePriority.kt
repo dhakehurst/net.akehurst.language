@@ -65,7 +65,7 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_v() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "v", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "v")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -97,7 +97,7 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_vavav() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "vavav", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "vavav")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -136,7 +136,7 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_vmvav() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "vmvav", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "vmvav")
         println(result.sppt!!.toStringAllWithIndent("  "))
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
@@ -176,7 +176,7 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_vavmvav() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "vavmvav", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "vavmvav")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -218,7 +218,7 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "v/v", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "v/v")
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, o0, SOR))      /* G = . S */
@@ -284,18 +284,18 @@ internal class test_vma_sList_root_choicePriority : test_AutomatonAbstract() {
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("v", "vav", "vavav", "vmv", "vmvmv", "vavmv", "vmvav")
         for (sen in sentences) {
-            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            val result = parser.parseForGoal("S", sen)
             if (result.issues.isNotEmpty()) result.issues.forEach { println("$sen: $it") }
         }
         val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
 
         println("--No Build Run--")
-        val result_noBuild = ScanOnDemandParser(rrs_noBuild).parseForGoal("S", "vmvav", AutomatonKind.LOOKAHEAD_1)
+        val result_noBuild = ScanOnDemandParser(rrs_noBuild).parseForGoal("S", "vmvav")
         println(result_noBuild.sppt!!.toStringAllWithIndent("  "))
 
         println("--Build Run--")
-        val result_build = ScanOnDemandParser(rrs_preBuild).parseForGoal("S", "vmvav", AutomatonKind.LOOKAHEAD_1)
+        val result_build = ScanOnDemandParser(rrs_preBuild).parseForGoal("S", "vmvav")
         println(result_build.sppt!!.toStringAllWithIndent("  "))
 
         println("--Build SM--")

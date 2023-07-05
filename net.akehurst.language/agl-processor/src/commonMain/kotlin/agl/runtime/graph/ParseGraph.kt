@@ -782,7 +782,7 @@ internal class ParseGraph(
                         }
              */
             //addAlternativeTreeData(null, parent, head)
-            val existingGrowing = this.treeData.growingChildren[parent]
+            val existingGrowing = null///his.treeData.growingChildren[parent]
             if (null == existingGrowing) { // not already growing
                 this.treeData.setFirstChildForGrowing(parent, child)
                 //createNewHeadAndKeepExisting(parent, previous)
@@ -910,7 +910,7 @@ internal class ParseGraph(
                 true
             }
              */
-            val existingGrowing = this.treeData.growingChildren[newParent]
+            val existingGrowing = null//this.treeData.growingChildren[newParent]
             if (null == existingGrowing) { // not already growing
                 if (buildSPPT) this.treeData.setNextChildForGrowingParent(previous, newParent, child) //addAlternativeTreeData(previous, newParent, head)
                 //createNewHeadAndKeepExisting(newParent, prevPrev)

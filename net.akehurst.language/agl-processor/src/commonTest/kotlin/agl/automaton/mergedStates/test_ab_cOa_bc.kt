@@ -60,7 +60,7 @@ internal class test_ab_cOa_bc : test_AutomatonAbstract() {
         val sentences = setOf("abc")
         sentences.forEach {
             val parser = ScanOnDemandParser(rrs)
-            val result = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
+            val result = parser.parseForGoal("S", it)
             assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
             assertEquals(0, result.issues.size, result.issues.joinToString("\n") { it.toString() })
             assertEquals(1, result.sppt!!.maxNumHeads)
@@ -89,17 +89,17 @@ internal class test_ab_cOa_bc : test_AutomatonAbstract() {
             trans(WIDTH) { ctx(G, o0, SOR); src(ab_c, o0, p1); tgt(c); lhg(EOT) }
             trans(WIDTH) { ctx(a_bc, o0, p1); src(bc, o0, p1); tgt(c); lhg(EOT) }
             trans(GOAL) { ctx(G, o0, SOR); src(S); tgt(G); lhg(EOT) }
-            trans(GOAL) { ctx(G, o0, SOR); src(S,o1,EOR); tgt(G); lhg(EOT) }
+            trans(GOAL) { ctx(G, o0, SOR); src(S, o1, EOR); tgt(G); lhg(EOT) }
             trans(HEIGHT) { ctx(G, o0, SOR); src(ab_c); tgt(S); lhg(EOT) }
-            trans(HEIGHT) { ctx(G, o0, SOR); src(a_bc); tgt(S,o1,EOR) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(a_bc); tgt(S, o1, EOR) }
             trans(GRAFT) { ctx(a_bc, o0, p1); src(bc); tgt(a_bc) }
-            trans(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(a_bc,o0,p1) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(a_bc, o0, p1) }
             trans(GRAFT) { ctx(ab, o0, p1); src(b); tgt(ab) }
-            trans(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(ab,o0,p1) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(a); tgt(ab, o0, p1) }
             trans(GRAFT) { ctx(ab_c, o0, p1); src(c); tgt(ab_c) }
-            trans(HEIGHT) { ctx(G, o0, SOR); src(ab); tgt(ab_c,o0,p1) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(ab); tgt(ab_c, o0, p1) }
             trans(GRAFT) { ctx(bc, o0, p1); src(c); tgt(bc) }
-            trans(HEIGHT) { ctx(a_bc, o0, p1); src(b); tgt(bc,o0,p1) }
+            trans(HEIGHT) { ctx(a_bc, o0, p1); src(b); tgt(bc, o0, p1) }
         }
 
         AutomatonTest.assertEquals(expected, actual)

@@ -66,7 +66,7 @@ internal abstract class test_ScanOnDemandParserAbstract(val build: Boolean = fal
         val parser = ScanOnDemandParser(rrs as RuntimeRuleSet)
         if (build) parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
         val (result, duration) = measureTimedValue {
-            parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
+            parser.parseForGoal(goal, sentence)
         }
         println("Duration: $duration")
         if (printAutomaton) println(rrs.usedAutomatonToString(goal))
@@ -86,7 +86,7 @@ internal abstract class test_ScanOnDemandParserAbstract(val build: Boolean = fal
     fun testFail(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int): Pair<SharedPackedParseTree?, IssueCollection> {
         val parser = ScanOnDemandParser(rrs as RuntimeRuleSet)
         if (build) parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
-        val p = parser.parseForGoal(goal, sentence, AutomatonKind.LOOKAHEAD_1)
+        val p = parser.parseForGoal(goal, sentence)
         return Pair(p.sppt, p.issues)
     }
 

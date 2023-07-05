@@ -19,7 +19,6 @@ package net.akehurst.language.parser.scanondemand
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.regex.regexMatcher
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.*
@@ -33,14 +32,14 @@ internal class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         val aglRegex = regexMatcher("a*")
 
         val regExParser = ScanOnDemandParser(
-                runtimeRuleSet {
-                    pattern("S", "a*")
-                })
+            runtimeRuleSet {
+                pattern("S", "a*")
+            })
         val charParser = ScanOnDemandParser(
-                runtimeRuleSet {
-                    multi("S", 0, -1, "'a'")
-                    literal("'a'", "a")
-                })
+            runtimeRuleSet {
+                multi("S", 0, -1, "'a'")
+                literal("'a'", "a")
+            })
     }
 
 
@@ -58,15 +57,15 @@ internal class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         val text = "a".repeat(10)
 
         // warm up the processors
-        regExParser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1)
-        charParser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1)
+        regExParser.parseForGoal(goal, text)
+        charParser.parseForGoal(goal, text)
 
         // measure
         val timeRegEx = TimeSource.Monotonic.measureTimedValue {
-            regExParser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1).sppt
+            regExParser.parseForGoal(goal, text).sppt
         }
         val timeChar = TimeSource.Monotonic.measureTimedValue {
-            charParser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1).sppt
+            charParser.parseForGoal(goal, text).sppt
         }
 
         assertEquals("S", timeRegEx.value?.root?.name)
@@ -85,14 +84,14 @@ internal class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         val text = "a".repeat(100)
 
         // warm up the processors
-        regExParser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1)
-        charParser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1)
+        regExParser.parseForGoal(goal, text)
+        charParser.parseForGoal(goal, text)
 
         val timeRegEx = TimeSource.Monotonic.measureTimedValue {
-            regExParser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1).sppt
+            regExParser.parseForGoal(goal, text).sppt
         }
         val timeChar = TimeSource.Monotonic.measureTimedValue {
-            charParser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1).sppt
+            charParser.parseForGoal(goal, text).sppt
         }
 
         assertEquals("S", timeRegEx.value?.root?.name)
@@ -111,14 +110,14 @@ internal class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         val text = "a".repeat(1000)
 
         // warm up the processors
-        regExParser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1)
-        charParser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1)
+        regExParser.parseForGoal(goal, text)
+        charParser.parseForGoal(goal, text)
 
         val timeRegEx = TimeSource.Monotonic.measureTimedValue {
-            regExParser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1).sppt
+            regExParser.parseForGoal(goal, text).sppt
         }
         val timeChar = TimeSource.Monotonic.measureTimedValue {
-            charParser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1).sppt
+            charParser.parseForGoal(goal, text).sppt
         }
 
         assertEquals("S", timeRegEx.value?.root?.name)
@@ -141,8 +140,8 @@ internal class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         for (i in 0 until 20) {
             kotlinRegEx.matches(text)
             aglRegex.match(text, 0)
-            regExParser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1)
-            charParser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1)
+            regExParser.parseForGoal(goal, text)
+            charParser.parseForGoal(goal, text)
         }
 
         val timeRegExKotlinList = mutableListOf<Duration>()
@@ -159,10 +158,10 @@ internal class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
                 aglRegex.match(text, 0)
             }
             val timeRegExParser = TimeSource.Monotonic.measureTimedValue {
-                regExParser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1).sppt
+                regExParser.parseForGoal(goal, text).sppt
             }
             val timeCharParser = TimeSource.Monotonic.measureTimedValue {
-                charParser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1).sppt
+                charParser.parseForGoal(goal, text).sppt
             }
             assertEquals("S", timeRegExParser.value?.root?.name)
             assertEquals("S", timeCharParser.value?.root?.name)
@@ -178,9 +177,9 @@ internal class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         println("regExParser = ${timeRegExParserList}")
         println("charParser = ${timeCharParserList}")
 
-        println("regExKotlin = ${timeRegExKotlinList.sumBy { it.toInt(DurationUnit.MICROSECONDS) }/count}")
-        println("regExAgl = ${timeRegExAglList.sumBy { it.toInt(DurationUnit.MICROSECONDS) }/count}")
-        println("regExParser = ${timeRegExParserList.sumBy { it.toInt(DurationUnit.MICROSECONDS) }/count}")
-        println("charParser = ${timeCharParserList.sumBy { it.toInt(DurationUnit.MICROSECONDS) }/count}")
+        println("regExKotlin = ${timeRegExKotlinList.sumBy { it.toInt(DurationUnit.MICROSECONDS) } / count}")
+        println("regExAgl = ${timeRegExAglList.sumBy { it.toInt(DurationUnit.MICROSECONDS) } / count}")
+        println("regExParser = ${timeRegExParserList.sumBy { it.toInt(DurationUnit.MICROSECONDS) } / count}")
+        println("charParser = ${timeCharParserList.sumBy { it.toInt(DurationUnit.MICROSECONDS) } / count}")
     }
 }

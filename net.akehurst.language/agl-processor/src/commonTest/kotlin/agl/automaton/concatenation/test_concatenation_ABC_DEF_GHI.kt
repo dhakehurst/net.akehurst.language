@@ -67,7 +67,7 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
     @Test
     fun parse_abcdefghi() {
         val parser = ScanOnDemandParser(rrs)
-        parser.parseForGoal("S", "abcdefghi", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "abcdefghi")
         println(rrs.usedAutomatonToString("S"))
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
@@ -99,31 +99,31 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
 
 
             trans(WIDTH) { src(G, o0, SR); tgt(a); lhg(b); ctx(G, o0, SR) }
-            trans(WIDTH) { src(AB,o0,p1); tgt(b); lhg(RT); ctx(G, o0, SR) }
-            trans(WIDTH) { src(ABC,o0,p1); tgt(cT); lhg(RT); ctx(G, o0, SR) }
-            trans(WIDTH) { src(S,o0,p1); tgt(d); lhg(e); ctx(G, o0, SR) }
-            trans(WIDTH) { src(DEF,o0,p1); tgt(e); lhg(f); ctx(DEF, o0, p1) }
-            trans(WIDTH) { src(EF,o0,p1); tgt(f); lhg(RT); ctx(S, o0, p1) }
-            trans(WIDTH) { src(S,o0,p2); tgt(gT); lhg(h); ctx(G, o0, SR) }
-            trans(WIDTH) { src(GHI,o0,p1); tgt(h); lhg(i); ctx(S,o0,p2) }
-            trans(WIDTH) { src(GHI,o0,p2); tgt(i); lhg(RT); ctx(S,o0,p2) }
+            trans(WIDTH) { src(AB, o0, p1); tgt(b); lhg(RT); ctx(G, o0, SR) }
+            trans(WIDTH) { src(ABC, o0, p1); tgt(cT); lhg(RT); ctx(G, o0, SR) }
+            trans(WIDTH) { src(S, o0, p1); tgt(d); lhg(e); ctx(G, o0, SR) }
+            trans(WIDTH) { src(DEF, o0, p1); tgt(e); lhg(f); ctx(DEF, o0, p1) }
+            trans(WIDTH) { src(EF, o0, p1); tgt(f); lhg(RT); ctx(S, o0, p1) }
+            trans(WIDTH) { src(S, o0, p2); tgt(gT); lhg(h); ctx(G, o0, SR) }
+            trans(WIDTH) { src(GHI, o0, p1); tgt(h); lhg(i); ctx(S, o0, p2) }
+            trans(WIDTH) { src(GHI, o0, p2); tgt(i); lhg(RT); ctx(S, o0, p2) }
             trans(GOAL) { src(S); tgt(G); lhg(EOT); ctx(G, o0, SR) }
 
-            trans(HEIGHT) { src(a); tgt(AB,o0,p1); lhg(setOf(b), setOf(cT)); ctx(G, o0, SR) }
-            trans(GRAFT) { src(b); tgt(AB); lhg(RT); ctx(AB,o0,p1) }
-            trans(HEIGHT) { src(AB); tgt(ABC,o0,p1); lhg(setOf(cT), setOf(d)); ctx(G, o0, SR) }
-            trans(GRAFT) { src(C); tgt(ABC); lhg(RT); ctx(ABC,o0,p1) }
-            trans(HEIGHT) { src(cT); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC,o0,p1) }
-            trans(HEIGHT) { src(d); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC,o0,p1) }
-            trans(GRAFT) { src(EF); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC,o0,p1) }
-            trans(HEIGHT) { src(e); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC,o0,p1) }
-            trans(GRAFT) { src(f); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC,o0,p1) }
-            trans(HEIGHT) { src(gT); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC,o0,p1) }
-            trans(GRAFT) { src(h); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC,o0,p1) }
-            trans(GRAFT) { src(i); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC,o0,p1) }
-            trans(HEIGHT) { src(ABC); tgt(S,o0,p2); lhg(setOf(d), setOf(RT)); ctx(G,o0,SR) }
-            trans(GRAFT) { src(DEF); tgt(S,o0,p2); lhg(setOf(gT)); ctx(ABC,o0,p1) }
-            trans(GRAFT) { src(GHI); tgt(S); lhg(setOf(RT)); ctx(S,o0,p2) }
+            trans(HEIGHT) { src(a); tgt(AB, o0, p1); lhg(setOf(b), setOf(cT)); ctx(G, o0, SR) }
+            trans(GRAFT) { src(b); tgt(AB); lhg(RT); ctx(AB, o0, p1) }
+            trans(HEIGHT) { src(AB); tgt(ABC, o0, p1); lhg(setOf(cT), setOf(d)); ctx(G, o0, SR) }
+            trans(GRAFT) { src(C); tgt(ABC); lhg(RT); ctx(ABC, o0, p1) }
+            trans(HEIGHT) { src(cT); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC, o0, p1) }
+            trans(HEIGHT) { src(d); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC, o0, p1) }
+            trans(GRAFT) { src(EF); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC, o0, p1) }
+            trans(HEIGHT) { src(e); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC, o0, p1) }
+            trans(GRAFT) { src(f); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC, o0, p1) }
+            trans(HEIGHT) { src(gT); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC, o0, p1) }
+            trans(GRAFT) { src(h); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC, o0, p1) }
+            trans(GRAFT) { src(i); tgt(C); lhg(setOf(RT), setOf(RT)); ctx(ABC, o0, p1) }
+            trans(HEIGHT) { src(ABC); tgt(S, o0, p2); lhg(setOf(d), setOf(RT)); ctx(G, o0, SR) }
+            trans(GRAFT) { src(DEF); tgt(S, o0, p2); lhg(setOf(gT)); ctx(ABC, o0, p1) }
+            trans(GRAFT) { src(GHI); tgt(S); lhg(setOf(RT)); ctx(S, o0, p2) }
         }
         AutomatonTest.assertEquals(expected, actual)
     }
@@ -134,7 +134,7 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val parser = ScanOnDemandParser(rrs)
-        parser.parseForGoal("S", "abcdefghi", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "abcdefghi")
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             val s0 = state(RP(G, 0, SOR))
@@ -183,7 +183,7 @@ internal class test_concatenation_ABC_DEF_GHI : test_AutomatonAbstract() {
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("abcdefghi")
         for (sen in sentences) {
-            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            val result = parser.parseForGoal("S", sen)
             if (result.issues.isNotEmpty()) result.issues.forEach { println(it) }
         }
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")

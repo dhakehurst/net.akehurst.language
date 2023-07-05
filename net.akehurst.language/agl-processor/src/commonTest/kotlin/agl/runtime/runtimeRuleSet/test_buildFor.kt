@@ -20,9 +20,6 @@ import net.akehurst.language.agl.automaton.AutomatonTest
 import net.akehurst.language.agl.automaton.automaton
 import net.akehurst.language.agl.automaton.test_AutomatonUtilsAbstract
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhs
-import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 
@@ -110,8 +107,8 @@ internal class test_buildFor : test_AutomatonUtilsAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         val parser = ScanOnDemandParser(rrs)
-        parser.parseForGoal("S", "ba", AutomatonKind.LOOKAHEAD_1)
-        parser.parseForGoal("S", "a", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "ba")
+        parser.parseForGoal("S", "a")
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(RP(G, o0, SOR))   // G = . S
@@ -161,8 +158,8 @@ internal class test_buildFor : test_AutomatonUtilsAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         val parser = ScanOnDemandParser(rrs)
-        parser.parseForGoal("S", "abcx", AutomatonKind.LOOKAHEAD_1)
-        parser.parseForGoal("S", "x", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "abcx")
+        parser.parseForGoal("S", "x")
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
             state(RP(G, o0, SOR))     // G = . S

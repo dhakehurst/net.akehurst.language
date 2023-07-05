@@ -19,6 +19,7 @@ package net.akehurst.language.agl.parser
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.grammar.GrammarRuleNotFoundException
 import net.akehurst.language.api.processor.AutomatonKind
+import net.akehurst.language.api.processor.ParseOptions
 import net.akehurst.language.api.processor.ParseResult
 
 internal interface Parser {
@@ -40,7 +41,9 @@ internal interface Parser {
      * @throws ParseTreeException
      * @throws GrammarRuleNotFoundException
      */
-    fun parseForGoal(goalRuleName: String, inputText: String, automatonKind: AutomatonKind): ParseResult //Pair<SharedPackedParseTree?, List<LanguageIssue>>
+    fun parseForGoal(goalRuleName: String, inputText: String): ParseResult
+
+    fun parse(sentence: String, options: ParseOptions): ParseResult
 
     /**
      * list of non-terminal or terminal runtime rules expected at the position

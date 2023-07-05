@@ -74,31 +74,14 @@ internal class ParserState(
     internal fun createLookaheadSet(includesUP: Boolean, includeEOT: Boolean, matchAny: Boolean, content: Set<RuntimeRule>): LookaheadSet =
         this.stateSet.createLookaheadSet(includesUP, includeEOT, matchAny, content)
 
-    /*
-    fun transitions(prevPrev: ParserState, previousState: ParserState, sourceState: ParserState): List<Transition> { //FIXME sourceState is always this.state when called
-        val cache: List<Transition>? = this.outTransitions.findTransitionByPrevious(previousState)
-        val trans = if (null == cache) {
-            check(this.stateSet.preBuilt.not()) { "Transitions not built for $this -previous-> $previousState -previous-> $prevPrev" }
-            //do not pass RuntimeState (in particular runtimeLookahead) into transition calculator
-            // or trans cannot be cached by ParserState. if cache by runtimeLookahead then explosion of data like LR(1)
-            val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calcFilteredTransitions(prevPrev, previousState, sourceState).toList()
-            val storedTrans = filteredTransitions.map { this.outTransitions.addTransition(setOf(previousState), it) }
-            storedTrans
-        } else {
-            cache
-        }
-        return trans
-    }
-    */
-
     fun transitionsGoal(previous: ParserState): List<Transition> {
-        val cache: List<Transition>? = this.outTransitions.findTransitionByPrevious(previous)
+        val cache: List<Transition>? = this.outTransitions.findTransitionForIncompleteByPrevious(previous)
         val trans = if (null == cache) {
             if (Debug.CHECK) check(this.stateSet.preBuilt.not()) { "Transitions not built for $this -previous-> $previous" }
             //do not pass RuntimeState (in particular runtimeLookahead) into transition calculator
             // or trans cannot be cached by ParserState. if cache by runtimeLookahead then explosion of data like LR(1)
             val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calTransitionsForGoal(this, previous).toList()
-            val storedTrans = filteredTransitions.map { this.outTransitions.addTransition(setOf(previous), it) }
+            val storedTrans = filteredTransitions.map { this.outTransitions.addTransitionForIncomplete(previous, it) }
             storedTrans
         } else {
             cache
@@ -107,13 +90,13 @@ internal class ParserState(
     }
 
     fun transitionsInComplete(previous: ParserState): List<Transition> {
-        val cache: List<Transition>? = this.outTransitions.findTransitionByPrevious(previous)
+        val cache: List<Transition>? = this.outTransitions.findTransitionForIncompleteByPrevious(previous)
         val trans = if (null == cache) {
             if (Debug.CHECK) check(this.stateSet.preBuilt.not()) { "Transitions not built for $this -previous-> $previous" }
             //do not pass RuntimeState (in particular runtimeLookahead) into transition calculator
             // or trans cannot be cached by ParserState. if cache by runtimeLookahead then explosion of data like LR(1)
             val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calcTransitionsForInComplete(this, previous).toList()
-            val storedTrans = filteredTransitions.map { this.outTransitions.addTransition(setOf(previous), it) }
+            val storedTrans = filteredTransitions.map { this.outTransitions.addTransitionForIncomplete(previous, it) }
             storedTrans
         } else {
             cache
@@ -122,13 +105,13 @@ internal class ParserState(
     }
 
     fun transitionsComplete(previous: ParserState, prevPrev: ParserState): List<Transition> {
-        val cache: List<Transition>? = this.outTransitions.findTransitionByPrevious(previous)
+        val cache: List<Transition>? = this.outTransitions.findTransitionForCompleteByPrevious(previous, prevPrev)
         val trans = if (null == cache) {
             if (Debug.CHECK) check(this.stateSet.preBuilt.not()) { "Transitions not built for $this -previous-> $previous" }
             //do not pass RuntimeState (in particular runtimeLookahead) into transition calculator
             // or trans cannot be cached by ParserState. if cache by runtimeLookahead then explosion of data like LR(1)
             val filteredTransitions = this.stateSet.runtimeTransitionCalculator.calcTransitionsForComplete(this, previous, prevPrev).toList()
-            val storedTrans = filteredTransitions.map { this.outTransitions.addTransition(setOf(previous), it) }
+            val storedTrans = filteredTransitions.map { this.outTransitions.addTransitionForComplete(previous, prevPrev, it) }
             storedTrans
         } else {
             cache

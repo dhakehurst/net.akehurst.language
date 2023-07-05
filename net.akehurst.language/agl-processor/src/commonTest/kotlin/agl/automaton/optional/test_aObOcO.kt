@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.automaton
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhs
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -58,7 +57,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
     @Test
     fun parse_a() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "a", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "a")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt)
         assertEquals(0, result.issues.size)
@@ -87,7 +86,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
             trans(WIDTH) { src(S, o0, p2); tgt(c); lhg(setOf(RT)); ctx(G, o0, SR) }
             trans(GOAL) { src(S);tgt(G); lhg(EOT); ctx(G, o0, SR) }
             trans(GRAFT) { src(cOpt, OME, ER); tgt(S); lhg(RT); ctx(S, o0, p2) }
-            trans(HEIGHT) { src(aOpt, OMI, ER); tgt(S, o0, p1); lhg(setOf(EOT, b, c),setOf(EOT)); ctx(G, o0, SR) }
+            trans(HEIGHT) { src(aOpt, OMI, ER); tgt(S, o0, p1); lhg(setOf(EOT, b, c), setOf(EOT)); ctx(G, o0, SR) }
             trans(GRAFT) { src(bOpt, OME, ER); tgt(S, o0, p2); lhg(setOf(RT, c)); ctx(S, o0, p1) }
             trans(HEIGHT) { src(a); tgt(aOpt, OMI, ER); lhg(setOf(EOT, b, c), setOf(EOT, b, c)); ctx(G, o0, SR) }
             trans(HEIGHT) { src(EMPTY); tgt(bOpt, OME, ER); lhg(setOf(RT, c), setOf(RT, c)); ctx(S, o0, p1) }
@@ -99,7 +98,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
     @Test
     fun parse_b() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "b", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "b")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt)
         assertEquals(0, result.issues.size)
@@ -140,7 +139,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
     @Test
     fun parse_c() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "c", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "c")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt)
         assertEquals(0, result.issues.size)
@@ -186,7 +185,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
         val sentences = listOf("", "a", "b", "ab", "c", "ac", "bc", "abc")
         sentences.forEach {
             val parser = ScanOnDemandParser(rrs)
-            val result = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
+            val result = parser.parseForGoal("S", it)
             assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
             assertEquals(0, result.issues.size)
             assertEquals(1, result.sppt!!.maxNumHeads)
@@ -242,7 +241,7 @@ internal class test_aObOcO : test_AutomatonAbstract() {
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("", "a", "b", "ab", "c", "ac", "bc", "abc")
         for (sen in sentences) {
-            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            val result = parser.parseForGoal("S", sen)
             if (result.issues.isNotEmpty()) {
                 println("Sentence: $sen")
                 result.issues.forEach { println(it) }

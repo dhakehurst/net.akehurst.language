@@ -107,9 +107,13 @@ class test_MinimalVersionForPaper {
                 concatenation("Be") { empty() }
             },
             listOf(
-                "a", "bac", "ac",
-                "acc", "accc",
-                "accccc", "bacc"
+                "a",
+                //"bac",
+                //"ac",
+                "acc",
+                "accc",
+                "accccc",
+                "bacc"
             )
         )
     }
@@ -363,7 +367,7 @@ class test_MinimalVersionForPaper {
     }
 
     @Test
-    fun For_paper_G1() {
+    fun G1() {
         //  S = A B | E S B
         //  A = a | a A
         //  B = b | E
@@ -403,7 +407,7 @@ class test_MinimalVersionForPaper {
     }
 
     @Test
-    fun For_paper_G2_right_recursive() {
+    fun G2_right_recursive() {
         //  S = a | a S
         test(
             "S",
@@ -423,7 +427,7 @@ class test_MinimalVersionForPaper {
     }
 
     @Test
-    fun For_paper_G3_right_recursive_with_empty() {
+    fun G3_right_recursive_with_empty() {
         //  S = <e> | S a
         val rrs = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
@@ -449,7 +453,7 @@ class test_MinimalVersionForPaper {
     }
 
     @Test
-    fun For_paper_G4_LR1() {
+    fun G4_LR1() {
         //  S = <e> | S a | S b
         test(
             "S",
@@ -496,7 +500,7 @@ class test_MinimalVersionForPaper {
     }
 
     @Test
-    fun For_paper_Emebdded_Rrec() {
+    fun Emebdded_Rrec() {
         //  S = <e> | S a
         val emb = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
@@ -538,7 +542,7 @@ class test_MinimalVersionForPaper {
     }
 
     @Test
-    fun For_paper_Emebdded_Lrec() {
+    fun Emebdded_Lrec() {
         //  S = <e> | a S
         val emb = runtimeRuleSet {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {

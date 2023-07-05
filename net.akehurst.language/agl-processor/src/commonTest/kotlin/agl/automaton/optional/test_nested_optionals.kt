@@ -36,7 +36,7 @@ internal class test_nested_optionals : test_AutomatonAbstract() {
     // must be fresh per test or automaton is not correct for different parses (due to caching)
     private val rrs = runtimeRuleSet {
         concatenation("S") { literal("i"); literal("a"); ref("Rs"); literal("z") }
-        multi("Rs",1,-1,"R")
+        multi("Rs", 1, -1, "R")
         concatenation("R") { ref("Os"); literal("i"); literal("t") }
         concatenation("Os") { ref("Bo"); ref("Co"); ref("Do") }
         multi("Bo", 0, 1, "'b'")
@@ -70,7 +70,7 @@ internal class test_nested_optionals : test_AutomatonAbstract() {
     @Test
     fun parse_iaitz() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "iaitz", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "iaitz")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -85,9 +85,9 @@ internal class test_nested_optionals : test_AutomatonAbstract() {
 
 
 
-            trans(WIDTH) { ctx(G,o0,SR); src(S,o0,p1); tgt(a); lhg(b) }
-            trans(WIDTH) { ctx(G,o0,SOR); src(G,o0,p1); tgt(i); lhg(a) }
-            trans(HEIGHT) { ctx(G,o0,SOR); src(i); tgt(S,o0,p1); lhg(a) }
+            trans(WIDTH) { ctx(G, o0, SR); src(S, o0, p1); tgt(a); lhg(b) }
+            trans(WIDTH) { ctx(G, o0, SOR); src(G, o0, p1); tgt(i); lhg(a) }
+            trans(HEIGHT) { ctx(G, o0, SOR); src(i); tgt(S, o0, p1); lhg(a) }
 
         }
         AutomatonTest.assertEquals(expected, actual)
@@ -99,10 +99,10 @@ internal class test_nested_optionals : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val sentences = listOf("iaitz","iabitz", "iacitz","iaditz","iabcditz")
+        val sentences = listOf("iaitz", "iabitz", "iacitz", "iaditz", "iabcditz")
         sentences.forEach {
             val parser = ScanOnDemandParser(rrs)
-            val result = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
+            val result = parser.parseForGoal("S", it)
             assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
             assertEquals(0, result.issues.size)
             assertEquals(1, result.sppt!!.maxNumHeads)
@@ -122,16 +122,16 @@ internal class test_nested_optionals : test_AutomatonAbstract() {
         val rrs_preBuild = rrs.clone()
 
         val parser = ScanOnDemandParser(rrs_dmdBuild)
-        val sentences = listOf("iaitz","iabitz", "iacitz","iaditz","iabcditz")
-        for(sen in sentences) {
-            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+        val sentences = listOf("iaitz", "iabitz", "iacitz", "iaditz", "iabcditz")
+        for (sen in sentences) {
+            val result = parser.parseForGoal("S", sen)
             if (result.issues.isNotEmpty()) {
                 println("Sentence: $sen")
                 result.issues.forEach { println(it) }
             }
         }
         val automaton_noBuild = rrs_dmdBuild.usedAutomatonFor("S")
-        val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)
+        val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         println("--Pre Build--")
         println(rrs_preBuild.usedAutomatonToString("S"))

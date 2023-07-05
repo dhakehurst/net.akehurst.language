@@ -52,7 +52,7 @@ internal class test_ScanOnDemandParser {
         }
         val sp = ScanOnDemandParser(rrs)
 
-        val result = sp.parseForGoal("S", "a", AutomatonKind.LOOKAHEAD_1)
+        val result = sp.parseForGoal("S", "a")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)

@@ -62,29 +62,29 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
     @Test
     fun automaton_parse_v() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "v", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "v")
         assertNotNull(result.sppt)
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(G,o0,SR)  // G = . S
-            state(v,o0,ER)  // v .
-            state(R,o0,ER)  // R = 'v' .
-            state(E,o0,ER)  // E = R .
-            state(S,o0,ER)  // S = E .
-            state(rM,o0,p1)  // M = E . 'm' E
-            state(rA,o0,p1)  // E . 'a' E
-            state(G,o0,ER)  // G = S .
+            state(G, o0, SR)  // G = . S
+            state(v, o0, ER)  // v .
+            state(R, o0, ER)  // R = 'v' .
+            state(E, o0, ER)  // E = R .
+            state(S, o0, ER)  // S = E .
+            state(rM, o0, p1)  // M = E . 'm' E
+            state(rA, o0, p1)  // E . 'a' E
+            state(G, o0, ER)  // G = S .
 
-            trans(WIDTH) { src(G,o0,SR); tgt(v); lhg(setOf(EOT,m,a)); ctx(G,o0,SR) }
-            trans(GOAL) { src(S); tgt(G); lhg(EOT); ctx(G,o0,SR) }
-            trans(HEIGHT) { src(E); tgt(rA,o0,p1); lhg(setOf(a), setOf(EOT,m,a)); ctx(G,o0,SR) }
-            trans(HEIGHT) { src(R); tgt(E); lhg(setOf(EOT,m,a), setOf(EOT,m,a)); ctx(G,o0,SR) }
-            trans(HEIGHT) { src(E); tgt(rM,o0,p1); lhg(setOf(m), setOf(EOT,m,a)); ctx(G,o0,SR) }
-            trans(HEIGHT) { src(v); tgt(R); lhg(setOf(EOT,m,a), setOf(EOT,m,a)); ctx(G,o0,SR) }
-            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G,o0,SR) }
+            trans(WIDTH) { src(G, o0, SR); tgt(v); lhg(setOf(EOT, m, a)); ctx(G, o0, SR) }
+            trans(GOAL) { src(S); tgt(G); lhg(EOT); ctx(G, o0, SR) }
+            trans(HEIGHT) { src(E); tgt(rA, o0, p1); lhg(setOf(a), setOf(EOT, m, a)); ctx(G, o0, SR) }
+            trans(HEIGHT) { src(R); tgt(E); lhg(setOf(EOT, m, a), setOf(EOT, m, a)); ctx(G, o0, SR) }
+            trans(HEIGHT) { src(E); tgt(rM, o0, p1); lhg(setOf(m), setOf(EOT, m, a)); ctx(G, o0, SR) }
+            trans(HEIGHT) { src(v); tgt(R); lhg(setOf(EOT, m, a), setOf(EOT, m, a)); ctx(G, o0, SR) }
+            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G, o0, SR) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -93,42 +93,42 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
     @Test
     fun automaton_parse_vmv() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "vmv", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "vmv")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt)
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(G,o0,SR)  // G = . S
+            state(G, o0, SR)  // G = . S
             state(v)  // v .
             state(R)  // R = 'v' .
-            state(E,o0,ER)  // E = R .
+            state(E, o0, ER)  // E = R .
             state(S)  // S = E .
-            state(rM,o0,p1)  // M = E . 'm' E
-            state(rA,o0,p1)  // E . 'a' E
+            state(rM, o0, p1)  // M = E . 'm' E
+            state(rA, o0, p1)  // E . 'a' E
             state(m)
-            state(rM,o0,p2)
+            state(rM, o0, p2)
             state(rM)
-            state(E,o1,ER)
-            state(G,o0,ER)  // G = S .
+            state(E, o1, ER)
+            state(G, o0, ER)  // G = S .
 
-            trans(WIDTH) { src(rM,o0,p1); tgt(m); lhg(v); ctx(G,o0,SR) }
-            trans(WIDTH) { src(G,o0,SR); tgt(v); lhg(setOf(EOT,m,a)); ctx(G,o0,SR) }
-            trans(WIDTH) { src(rM,o0,p2); tgt(v); lhg(setOf(RT,m,a)); ctx(G,o0,SR) }
-            trans(GOAL) { src(S); tgt(G); lhg(EOT); ctx(G,o0,SR) }
+            trans(WIDTH) { src(rM, o0, p1); tgt(m); lhg(v); ctx(G, o0, SR) }
+            trans(WIDTH) { src(G, o0, SR); tgt(v); lhg(setOf(EOT, m, a)); ctx(G, o0, SR) }
+            trans(WIDTH) { src(rM, o0, p2); tgt(v); lhg(setOf(RT, m, a)); ctx(G, o0, SR) }
+            trans(GOAL) { src(S); tgt(G); lhg(EOT); ctx(G, o0, SR) }
 
-            trans(HEIGHT) { src(E,o0,ER); tgt(rA,o0,p1); lhg(setOf(a), setOf(RT,EOT,m,a)); ctx(G,o0,SR) }
-            trans(HEIGHT) { src(R); tgt(E); lhg(setOf(EOT,m,a), setOf(EOT,m,a)); ctx(G,o0,SR) }
-            trans(HEIGHT) { src(E); tgt(rM,o0,p1); lhg(setOf(m), setOf(EOT,m,a)); ctx(G,o0,SR) }
-            trans(HEIGHT) { src(v); tgt(R); lhg(setOf(EOT,m,a), setOf(EOT,m,a)); ctx(G,o0,SR) }
-            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G,o0,SR) }
-            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G,o0,SR) }
-            trans(GRAFT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G,o0,SR) }
-            trans(GRAFT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G,o0,SR) }
-            trans(HEIGHT) { src(v); tgt(R); lhg(setOf(EOT,m,a), setOf(EOT,m,a)); ctx(G,o0,SR) }
-            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G,o0,SR) }
-            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G,o0,SR) }
+            trans(HEIGHT) { src(E, o0, ER); tgt(rA, o0, p1); lhg(setOf(a), setOf(RT, EOT, m, a)); ctx(G, o0, SR) }
+            trans(HEIGHT) { src(R); tgt(E); lhg(setOf(EOT, m, a), setOf(EOT, m, a)); ctx(G, o0, SR) }
+            trans(HEIGHT) { src(E); tgt(rM, o0, p1); lhg(setOf(m), setOf(EOT, m, a)); ctx(G, o0, SR) }
+            trans(HEIGHT) { src(v); tgt(R); lhg(setOf(EOT, m, a), setOf(EOT, m, a)); ctx(G, o0, SR) }
+            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G, o0, SR) }
+            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G, o0, SR) }
+            trans(GRAFT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G, o0, SR) }
+            trans(GRAFT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G, o0, SR) }
+            trans(HEIGHT) { src(v); tgt(R); lhg(setOf(EOT, m, a), setOf(EOT, m, a)); ctx(G, o0, SR) }
+            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G, o0, SR) }
+            trans(HEIGHT) { src(E); tgt(S); lhg(setOf(EOT), setOf(EOT)); ctx(G, o0, SR) }
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -141,7 +141,7 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
         //val sentences = listOf( "vav")
         sentences.forEach {
             println(it)
-            val result = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
+            val result = parser.parseForGoal("S", it)
             assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
             assertEquals(0, result.issues.size)
             assertEquals(1, result.sppt!!.maxNumHeads)
@@ -209,7 +209,7 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
         val sentences = listOf("v", "vav", "vavav", "vmv", "vmvmv", "vmvav", "vavmv")
         sentences.forEach {
             val parser = ScanOnDemandParser(rrs)
-            val result = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
+            val result = parser.parseForGoal("S", it)
             assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
             assertEquals(0, result.issues.size)
             assertEquals(1, result.sppt!!.maxNumHeads)
@@ -273,7 +273,7 @@ internal class test_bodmas_expreOpRules_root_choiceEqual : test_AutomatonAbstrac
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("v", "vav", "vavav", "vmv", "vmvmv", "vmvav", "vavmv")
         for (sen in sentences) {
-            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            val result = parser.parseForGoal("S", sen)
             if (result.issues.isNotEmpty()) {
                 println("Sentence: $sen")
                 result.issues.forEach { println(it) }

@@ -80,7 +80,10 @@ fun parse2(aglProcessor: LanguageProcessor<AsmSimple, ContextSimple>, opts: Pars
 
 fun parseTwiceAndMeasure(parserCode: String, aglProcessor: LanguageProcessor<AsmSimple, ContextSimple>, goalRule: String, file: FileDataCommon, input: String): Duration {
     try {
-        val opts = Agl.parseOptions { goalRuleName(goalRule) }
+        val opts = Agl.parseOptions {
+            reportErrors(false) // don't need error reporting for speed tests
+            goalRuleName(goalRule)
+        }
         val tm1 = parse1(aglProcessor, opts, input)
         ResultsCommon.log(true, "${parserCode}-T1-$kotlinTarget", file, tm1)
         val tm2 = parse2(aglProcessor, opts, input)
