@@ -16,7 +16,6 @@
 package net.akehurst.language.comparisons.agl
 
 import korlibs.io.file.std.StandardPaths
-import korlibs.memory.Platform
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
@@ -25,9 +24,13 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.ParseOptions
 import net.akehurst.language.comparisons.common.*
 import kotlin.math.min
+import kotlin.time.Duration
 import kotlin.time.measureTime
 
 val maxFiles = 6000 //for testing tests with less files
+val maxParseTimeBeforeBreak = 30 //seconds
+
+fun maxD(d1:Duration, d2:Duration) = if (d1 > d2) d1 else d2
 
 suspend fun output(msg: String) {
     runTest {
@@ -75,17 +78,19 @@ fun parse2(aglProcessor: LanguageProcessor<AsmSimple, ContextSimple>, opts: Pars
     aglProcessor.parse(input, opts)
 }
 
-fun parseTwiceAndMeasure(parserCode: String, aglProcessor: LanguageProcessor<AsmSimple, ContextSimple>, goalRule: String, file: FileDataCommon, input: String) {
+fun parseTwiceAndMeasure(parserCode: String, aglProcessor: LanguageProcessor<AsmSimple, ContextSimple>, goalRule: String, file: FileDataCommon, input: String): Duration {
     try {
         val opts = Agl.parseOptions { goalRuleName(goalRule) }
         val tm1 = parse1(aglProcessor, opts, input)
         ResultsCommon.log(true, "${parserCode}-T1-$kotlinTarget", file, tm1)
         val tm2 = parse2(aglProcessor, opts, input)
         ResultsCommon.log(true, "${parserCode}-T2-$kotlinTarget", file, tm2)
+        return maxD(tm1,tm2)
     } catch (e: Throwable) {
         println("Error: ${e.message}")
         ResultsCommon.logError("${parserCode}-T1-$kotlinTarget", file)
     }
+    return Duration.parse("0")
 }
 
 suspend fun parseJavaFiles(parserCode: String, numFiles: Int, grammarFile: String, goalRule: String) {
@@ -99,7 +104,8 @@ suspend fun parseJavaFiles(parserCode: String, numFiles: Int, grammarFile: Strin
     for (file in files) {
         output("File: ${file.index} of $totalFiles ")
         val input = file.path.readString()
-        parseTwiceAndMeasure(parserCode, aglProcessor, goalRule, file, input)
+        val md = parseTwiceAndMeasure(parserCode, aglProcessor, goalRule, file, input)
+        if (md.inWholeSeconds >= maxParseTimeBeforeBreak) break
     }
 
     ResultsCommon.write("$parserCode-$kotlinTarget")
@@ -116,7 +122,8 @@ suspend fun parseFiles(parserCode: String, numFiles: Int, grammarFile: String, g
     for (file in files) {
         output("File: ${file.index} of $totalFiles ")
         val input = file.path.readString()
-        parseTwiceAndMeasure(parserCode, aglProcessor, goalRule, file, input)
+        val md = parseTwiceAndMeasure(parserCode, aglProcessor, goalRule, file, input)
+        if (md.inWholeSeconds >= maxParseTimeBeforeBreak) break
     }
 
     ResultsCommon.write(parserCode)
@@ -124,13 +131,13 @@ suspend fun parseFiles(parserCode: String, numFiles: Int, grammarFile: String, g
 
 
 suspend fun runTests() {
-    parseFiles("stchrt", 500, "agl/Statechart.agl", "statechart", "nogit/statechartTestFiles.txt", "sctxt")
-    parseFiles("dot", 500, "agl/Dot.agl", "graph", "nogit/dotTestFiles.txt", "dot")
+    //parseFiles("stchrt", 500, "agl/Statechart.agl", "statechart", "nogit/statechartTestFiles.txt", "sctxt")
+    //parseFiles("dot", 500, "agl/Dot.agl", "graph", "nogit/dotTestFiles.txt", "dot")
 
-    parseJavaFiles("ant_optm",4800, "agl/Java8AntlrOptm.agl", "compilationUnit")
+    //parseJavaFiles("ant_optm",4800, "agl/Java8AntlrOptm.agl", "compilationUnit")
     parseJavaFiles("agl_optm", 5300, "agl/Java8AglOptm.agl", "CompilationUnit")
-    parseJavaFiles("agl_spec",5240, "agl/Java8AglSpec.agl", "CompilationUnit")
-    parseJavaFiles("ant_spec",3500, "agl/Java8AntlrSpec.agl", "compilationUnit")
+    //parseJavaFiles("agl_spec",5240, "agl/Java8AglSpec.agl", "CompilationUnit")
+    //parseJavaFiles("ant_spec",3500, "agl/Java8AntlrSpec.agl", "compilationUnit")
 }
 
 
