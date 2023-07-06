@@ -80,7 +80,7 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
     @Test
     fun parse_da() {
         val parser = ScanOnDemandParser(rrs)
-        parser.parseForGoal("S", "da", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "da")
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
@@ -95,10 +95,10 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val sentences = setOf("da","bdc","dc","bda")
+        val sentences = setOf("da", "bdc", "dc", "bda")
         val parser = ScanOnDemandParser(rrs)
         sentences.forEach {
-            val result = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
+            val result = parser.parseForGoal("S", it)
             assertNotNull(result.sppt)
         }
 
@@ -146,13 +146,13 @@ internal class test_AhoSetiUlman_Ex_4_7_5 : test_AutomatonAbstract() {
         val rrs_preBuild = rrs.clone()
 
         val parser = ScanOnDemandParser(rrs_noBuild)
-        val sentences = listOf("da","bdc","dc","bda")
-        for(sen in sentences) {
-            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
-            if (result.issues.isNotEmpty())  result.issues.forEach { println(it) }
+        val sentences = listOf("da", "bdc", "dc", "bda")
+        for (sen in sentences) {
+            val result = parser.parseForGoal("S", sen)
+            if (result.issues.isNotEmpty()) result.issues.forEach { println(it) }
         }
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
-        val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)
+        val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         println("--Pre Build--")
         println(rrs_preBuild.usedAutomatonToString("S"))

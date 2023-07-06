@@ -49,16 +49,16 @@ internal class test_multi_1_n_choice : test_AutomatonAbstract() {
         val s3 = SM.createState(listOf(RulePosition(AB, 0, RulePosition.END_OF_RULE)))
         val s4 = SM.createState(listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)))
 
-        val lhs_a = SM.createLookaheadSet(false,false, false, setOf(a))
-        val lhs_ab = SM.createLookaheadSet(false,false, false,setOf(a, b))
-        val lhs_abU = SM.createLookaheadSet(true,false, false,setOf(a, b))
-        val lhs_aT = SM.createLookaheadSet(false,true, false,setOf(a))
+        val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
+        val lhs_ab = SM.createLookaheadSet(false, false, false, setOf(a, b))
+        val lhs_abU = SM.createLookaheadSet(true, false, false, setOf(a, b))
+        val lhs_aT = SM.createLookaheadSet(false, true, false, setOf(a))
     }
 
     @Test
     fun parse_aba() {
         val parser = ScanOnDemandParser(rrs)
-        parser.parseForGoal("S", "aba", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "aba")
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {

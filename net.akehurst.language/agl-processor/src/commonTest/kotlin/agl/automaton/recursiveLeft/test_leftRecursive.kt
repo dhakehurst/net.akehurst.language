@@ -46,7 +46,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
     @Test
     fun parse_a() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "a", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "a")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -70,7 +70,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
     @Test
     fun parse_aa() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "aa", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "aa")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -101,7 +101,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
     @Test
     fun parse_aaa() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "aaa", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "aaa")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -166,7 +166,7 @@ internal class test_leftRecursive : test_AutomatonAbstract() {
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("a", "aa", "aaa", "aaaa")
         for (sen in sentences) {
-            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            val result = parser.parseForGoal("S", sen)
             if (result.issues.isNotEmpty()) result.issues.forEach { println(it) }
         }
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")

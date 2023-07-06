@@ -48,6 +48,15 @@ internal data class FirstTerminalInfo(
     val terminalRule: RuntimeRule,
     val parentExpectedAt: LookaheadSetPart
 ) {
+    private val _hashCode = arrayOf(terminalRule, parentExpectedAt).contentHashCode()
+    override fun hashCode(): Int = _hashCode
+    override fun equals(other: Any?): Boolean = when {
+        other !is FirstTerminalInfo -> false
+        other.terminalRule != this.terminalRule -> false
+        other.parentExpectedAt != this.parentExpectedAt -> false
+        else -> true
+    }
+
     override fun toString(): String = "${terminalRule.tag} $parentExpectedAt"
 }
 
@@ -175,10 +184,10 @@ internal class ClosureGraph(
 
             private var _resolveDownCalled = false
 
-            final override val expectedAt: LookaheadSetPart = expectedAt(rulePosition, parentExpectedAt)
+            final override val expectedAt: LookaheadSetPart by lazy { expectedAt(rulePosition, parentExpectedAt) }
 
-            override val children: Set<ClosureItem> get() = this.graph.childrenOf(this)
-            override val parents: Set<ClosureItem> get() = graph.parentsOf(this)
+            override val children: Set<ClosureItem> by lazy { this.graph.childrenOf(this) }
+            override val parents: Set<ClosureItem> by lazy { graph.parentsOf(this) }
 
             override val shortString: List<String> get() = this.shortStringRec(mutableSetOf())
 
@@ -193,7 +202,7 @@ internal class ClosureGraph(
                     // do nothing, terminate recursion
                     // this.downInfo already set to empty
                 } else {
-                    this.downInfo = mutableSetOf()
+                    this.downInfo = hashSetOf()
                     this._resolveDownCalled = true
                     val children = this.children //graph.startChildrenOf(this)
                     if (children.isEmpty()) {
@@ -327,8 +336,8 @@ internal class ClosureGraph(
 
     }
 
-    private val _childrenOf = lazyMutableMapNonNull<ClosureItem, MapNotNull<Int, MutableSet<ClosureItem>>> { lazyMutableMapNonNull { mutableSetOf() } }
-    private val _parentsOf = lazyMutableMapNonNull<ClosureItem, MutableSet<ClosureItem>> { mutableSetOf() }
+    private val _childrenOf = lazyMutableMapNonNull<ClosureItem, MapNotNull<Int, MutableSet<ClosureItem>>> { lazyMutableMapNonNull { hashSetOf() } }
+    private val _parentsOf = lazyMutableMapNonNull<ClosureItem, MutableSet<ClosureItem>> { hashSetOf() }
 
     // so we can test ClosureGraph
     internal val parentsOf: Map<ClosureItem, Set<ClosureItem>> get() = _parentsOf

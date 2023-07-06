@@ -19,7 +19,6 @@ package net.akehurst.language.parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -41,7 +40,7 @@ internal class test_InputLocation_singleLine {
     fun abc() {
         val sp = ScanOnDemandParser(S)
 
-        val result = sp.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        val result = sp.parseForGoal("S", "abc")
 
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -72,7 +71,7 @@ class test_InputLocation_multiLine {
     fun abc() {
         val sp = ScanOnDemandParser(S)
 
-        val result = sp.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        val result = sp.parseForGoal("S", "abc")
 
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -89,7 +88,7 @@ class test_InputLocation_multiLine {
     fun a_b_c() {
         val sp = ScanOnDemandParser(S)
 
-        val result = sp.parseForGoal("S", "a b c", AutomatonKind.LOOKAHEAD_1)
+        val result = sp.parseForGoal("S", "a b c")
 
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -114,7 +113,7 @@ class test_InputLocation_multiLine {
             a
             b
             c
-        """.trimIndent(), AutomatonKind.LOOKAHEAD_1
+        """.trimIndent()
         )
 
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
@@ -152,7 +151,7 @@ class test_InputLocation_multiLine2 {
     fun abc() {
         val sp = ScanOnDemandParser(S)
 
-        val result = sp.parseForGoal("S", "aaabbbccc", AutomatonKind.LOOKAHEAD_1)
+        val result = sp.parseForGoal("S", "aaabbbccc")
 
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -169,7 +168,7 @@ class test_InputLocation_multiLine2 {
     fun a_b_c() {
         val sp = ScanOnDemandParser(S)
 
-        val result = sp.parseForGoal("S", "aaa bbb ccc", AutomatonKind.LOOKAHEAD_1)
+        val result = sp.parseForGoal("S", "aaa bbb ccc")
 
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -193,7 +192,7 @@ class test_InputLocation_multiLine2 {
             aaa
             bbb
             ccc
-        """.trimIndent(), AutomatonKind.LOOKAHEAD_1
+        """.trimIndent()
         )
 
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
@@ -223,7 +222,7 @@ class test_InputLocation_multiLine2 {
             bbb
             ccc
         """.trimIndent()
-        val result = sp.parseForGoal("S", sentence, AutomatonKind.LOOKAHEAD_1)
+        val result = sp.parseForGoal("S", sentence)
 
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -254,7 +253,7 @@ class test_InputLocation_multiLine2 {
             aaa
               bbb
             ccc
-        """.trimIndent(), AutomatonKind.LOOKAHEAD_1
+        """.trimIndent()
         )
 
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })

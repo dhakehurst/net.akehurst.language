@@ -71,15 +71,18 @@ class Java8_compare_Test_antlrSpec(val file: FileData) {
 
         fun parseWithJava8Spec(file: FileData): SharedPackedParseTree? {
             return try {
-                specJava8Processor.parse(input!!, Agl.parseOptions { goalRuleName("compilationUnit") })
-                TimeLogger(col, file).use { timer ->
+                TimeLogger("${col}-fst", file).use { timer ->
+                    specJava8Processor.parse(input!!, Agl.parseOptions { goalRuleName("compilationUnit") })
+                    timer.success()
+                }
+                TimeLogger("${col}-snd", file).use { timer ->
                     val res = specJava8Processor.parse(input!!, Agl.parseOptions { goalRuleName("compilationUnit") })
                     timer.success()
                     res.sppt
                 }
             } catch (e: ParseFailedException) {
                 println("Error: ${e.message}")
-                Results.logError(col, file)
+                Results.logError("${col}-fst", file)
                 assertTrue(file.isError)
                 null
             }

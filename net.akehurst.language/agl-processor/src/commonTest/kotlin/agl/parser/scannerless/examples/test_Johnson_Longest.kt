@@ -20,7 +20,6 @@ import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -196,10 +195,10 @@ internal class test_Johnson_Longest : test_ScanOnDemandParserAbstract() {
         for (i in 1..25) {
             val text = "a".repeat(i)
             //warm up
-            parser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1)
+            parser.parseForGoal(goal, text)
             //time it
             val time = TimeSource.Monotonic.measureTime {
-                parser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1)
+                parser.parseForGoal(goal, text)
             }
             times.add(time)
         }

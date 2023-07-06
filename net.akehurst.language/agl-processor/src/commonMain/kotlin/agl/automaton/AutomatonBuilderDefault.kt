@@ -16,11 +16,14 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.api.automaton.*
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.api.automaton.AglAutomatonDslMarker
+import net.akehurst.language.api.automaton.AutomatonBuilder
+import net.akehurst.language.api.automaton.ParseAction
+import net.akehurst.language.api.automaton.TransitionBuilder
 import net.akehurst.language.api.processor.AutomatonKind
 
 internal fun automaton(
@@ -109,7 +112,8 @@ internal class AutomatonBuilderDefault(
         b.gpg(prevGuard)
         b.init()
         val trans = b.build()
-        from.outTransitions.addTransition(previousStates, trans)
+        TODO()
+        //from.outTransitions.addTransition(previousStates, trans)
     }
 
     override fun transition(action: ParseAction, init: TransitionBuilder.() -> Unit) {
@@ -142,7 +146,8 @@ internal class AutomatonBuilderDefault(
         }
         val lh = up.map { Lookahead(guard, it) }.toSet()
         val trans = Transition(from, to, action, lh)
-        from.outTransitions.addTransition(previousStates, trans)
+        TODO()
+//        from.outTransitions.addTransition(previousStates, trans)
     }
 
     internal fun build(): ParserStateSet {
@@ -172,11 +177,12 @@ internal class TransitionBuilderDefault internal constructor(
         _context = states
     }
 
-    fun ctx(runtimeRule: RuntimeRule, option: Int, position: Int) =ctx(RulePosition(runtimeRule, option, position))
+    fun ctx(runtimeRule: RuntimeRule, option: Int, position: Int) = ctx(RulePosition(runtimeRule, option, position))
     fun ctx(vararg rulePositions: RulePosition) {
         val states = rulePositions.map { this.stateSet.fetchState(listOf(it)) ?: error("State for $it not defined") }.toSet()
         this.ctx(states)
     }
+
     fun ctx(vararg rulePositions: Set<RulePosition>) {
         val states = rulePositions.map { this.stateSet.fetchState(it.toList()) ?: error("State for $it not defined") }.toSet()
         this.ctx(states)
@@ -242,7 +248,8 @@ internal class TransitionBuilderDefault internal constructor(
 
     internal fun build(): Transition {
         val trans = Transition(_src as ParserState, _tgt as ParserState, action, _lhg)
-        (_src as ParserState).outTransitions.addTransition(_context as Set<ParserState>, trans)
-        return trans
+        TODO()
+//        (_src as ParserState).outTransitions.addTransition(_context as Set<ParserState>, trans)
+        //      return trans
     }
 }

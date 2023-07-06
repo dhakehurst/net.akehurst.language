@@ -55,7 +55,7 @@ internal class test_abcz_OR_abcy : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_abcz() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "abcz", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "abcz")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt)
         assertEquals(0, result.issues.size)
@@ -95,7 +95,7 @@ internal class test_abcz_OR_abcy : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_abcy() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "abcy", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "abcy")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt)
         assertEquals(0, result.issues.size)
@@ -138,11 +138,11 @@ internal class test_abcz_OR_abcy : test_AutomatonAbstract() {
         val actual = rrs.buildFor("S", AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
 
-        val sentences = listOf("abcz","abcy")
+        val sentences = listOf("abcz", "abcy")
         sentences.forEach {
             val parser = ScanOnDemandParser(rrs)
-            val result = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
-            assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() } )
+            val result = parser.parseForGoal("S", it)
+            assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
             assertEquals(0, result.issues.size)
             assertEquals(1, result.sppt!!.maxNumHeads)
         }
@@ -174,12 +174,12 @@ internal class test_abcz_OR_abcy : test_AutomatonAbstract() {
 
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("abcy", "abcz")
-        for(sen in sentences) {
-            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
-            if (result.issues.isNotEmpty())  result.issues.forEach { println(it) }
+        for (sen in sentences) {
+            val result = parser.parseForGoal("S", sen)
+            if (result.issues.isNotEmpty()) result.issues.forEach { println(it) }
         }
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
-        val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)
+        val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         println("--Pre Build--")
         println(rrs_preBuild.usedAutomatonToString("S"))

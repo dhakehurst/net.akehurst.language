@@ -37,7 +37,8 @@ internal class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
 
 internal class ParseOptionsDefault(
     override var goalRuleName: String? = null,
-    override var automatonKind: AutomatonKind = AutomatonKind.LOOKAHEAD_1
+    override var automatonKind: AutomatonKind = AutomatonKind.LOOKAHEAD_1,
+    override var reportErrors: Boolean = true
 ) : ParseOptions
 
 internal class SyntaxAnalysisOptionsDefault<AsmType : Any, ContextType : Any>(
@@ -56,7 +57,7 @@ annotation class LanguageProcessorConfigurationDslMarker
 
 @LanguageProcessorConfigurationDslMarker
 class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
-    val base:LanguageProcessorConfiguration<AsmType,ContextType>?
+    val base: LanguageProcessorConfiguration<AsmType, ContextType>?
 ) {
 
     private var _targetGrammarName: String? = null
@@ -101,7 +102,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
     }
 
     fun build(): LanguageProcessorConfiguration<AsmType, ContextType> {
-        return when(base) {
+        return when (base) {
             null -> LanguageProcessorConfigurationDefault<AsmType, ContextType>(
                 _targetGrammarName,
                 _defaultGoalRuleName,
@@ -112,18 +113,20 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
                 _formatterResolver,
                 _styleResolver
             )
+
             is LanguageProcessorConfigurationDefault<AsmType, ContextType> -> {
-                _targetGrammarName?.let{ base.targetGrammarName = it }
-                _defaultGoalRuleName?.let{ base.defaultGoalRuleName = it }
-                _typeModelResolver?.let{ base.typeModelResolver = it }
-                _scopeModelResolver?.let{ base.scopeModelResolver = it }
-                _syntaxAnalyserResolver?.let{ base.syntaxAnalyserResolver = it }
-                _semanticAnalyserResolver?.let{ base.semanticAnalyserResolver = it }
-                _formatterResolver?.let{ base.formatterResolver = it }
-                _styleResolver?.let{ base.styleResolver = it }
+                _targetGrammarName?.let { base.targetGrammarName = it }
+                _defaultGoalRuleName?.let { base.defaultGoalRuleName = it }
+                _typeModelResolver?.let { base.typeModelResolver = it }
+                _scopeModelResolver?.let { base.scopeModelResolver = it }
+                _syntaxAnalyserResolver?.let { base.syntaxAnalyserResolver = it }
+                _semanticAnalyserResolver?.let { base.semanticAnalyserResolver = it }
+                _formatterResolver?.let { base.formatterResolver = it }
+                _styleResolver?.let { base.styleResolver = it }
 
                 base
             }
+
             else -> error("Cannot override LanguageProcessorConfiguration of type ${base::class.simpleName}")
         }
     }
@@ -166,6 +169,7 @@ class ProcessOptionsBuilder<AsmType : Any, ContextType : Any> {
 class ParseOptionsBuilder {
     private var _goalRuleName: String? = null
     private var _automatonKind: AutomatonKind = AutomatonKind.LOOKAHEAD_1
+    private var _reportErrors: Boolean = true
 
     fun goalRuleName(value: String?) {
         _goalRuleName = value
@@ -175,8 +179,12 @@ class ParseOptionsBuilder {
         _automatonKind = value
     }
 
+    fun reportErrors(value: Boolean) {
+        _reportErrors = value
+    }
+
     fun build(): ParseOptions {
-        return ParseOptionsDefault(_goalRuleName, _automatonKind)
+        return ParseOptionsDefault(_goalRuleName, _automatonKind, _reportErrors)
     }
 }
 

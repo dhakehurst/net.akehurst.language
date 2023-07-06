@@ -51,16 +51,16 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
         val s5 = SM.createState(listOf(RulePosition(G, 0, RulePosition.END_OF_RULE)))
         val s6 = SM.createState(listOf(RulePosition(S, 1, RulePosition.END_OF_RULE)))
 
-        val lhs_a = SM.createLookaheadSet(false, false, false,setOf(a))
-        val lhs_aU = SM.createLookaheadSet(true, false, false,setOf(a))
+        val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
+        val lhs_aU = SM.createLookaheadSet(true, false, false, setOf(a))
     }
 
     @Test
     fun parse_a_aa_aaa() {
         val parser = ScanOnDemandParser(rrs)
-        parser.parseForGoal("S", "a", AutomatonKind.LOOKAHEAD_1)
-        parser.parseForGoal("S", "aa", AutomatonKind.LOOKAHEAD_1)
-        parser.parseForGoal("S", "aaa", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "a")
+        parser.parseForGoal("S", "aa")
+        parser.parseForGoal("S", "aaa")
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
@@ -76,13 +76,13 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
-            state(G,o0,SR)
-            state(G,o0,EOR)
-            state(S,o0,EOR)
-            state(S,o1,EOR)
-            state(S1,o0,p1)
-            state(S1,o0,EOR)
-            state(a,o0,EOR)
+            state(G, o0, SR)
+            state(G, o0, EOR)
+            state(S, o0, EOR)
+            state(S, o1, EOR)
+            state(S1, o0, p1)
+            state(S1, o0, EOR)
+            state(a, o0, EOR)
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -94,13 +94,13 @@ internal class test_rightRecursive : test_AutomatonAbstract() {
         val rrs_preBuild = rrs.clone()
 
         val parser = ScanOnDemandParser(rrs_noBuild)
-        val sentences = listOf("a","aa","aaa", "aaaa")
-        for(sen in sentences) {
-            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
-            if (result.issues.isNotEmpty())  result.issues.forEach { println(it) }
+        val sentences = listOf("a", "aa", "aaa", "aaaa")
+        for (sen in sentences) {
+            val result = parser.parseForGoal("S", sen)
+            if (result.issues.isNotEmpty()) result.issues.forEach { println(it) }
         }
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
-        val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)
+        val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         println("--Pre Build--")
         println(rrs_preBuild.usedAutomatonToString("S"))

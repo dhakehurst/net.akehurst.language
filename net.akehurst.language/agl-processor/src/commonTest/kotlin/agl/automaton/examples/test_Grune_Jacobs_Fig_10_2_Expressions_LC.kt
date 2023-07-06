@@ -76,7 +76,7 @@ internal class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstrac
         val sentences = setOf("v", "vav", "vmv", "vavmv", "vmvav")
         sentences.forEach {
             val parser = ScanOnDemandParser(rrs)
-            val result = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
+            val result = parser.parseForGoal("S", it)
             assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
             assertEquals(0, result.issues.size)
             assertEquals(1, result.sppt!!.maxNumHeads)
@@ -107,9 +107,9 @@ internal class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstrac
             state(RP(T1, o1, EOR))    // T1 = T . m F
             state(RP(T1, o2, EOR))    // T1 = T m . F
 
-            trans(WIDTH) { src(G, o0, SR); tgt(o); lhg(setOf(v,o)); ctx(RP(G, o0, SOR)) }
-            trans(WIDTH) { src(E1,o0,p2); tgt(o); lhg(setOf(v,o)); ctx(RP(G, o0, SOR));  }
-            trans(WIDTH) { src(F2,o0,p1); tgt(o); lhg(setOf(v,o)); ctx(RP(G, o0, SOR));  }
+            trans(WIDTH) { src(G, o0, SR); tgt(o); lhg(setOf(v, o)); ctx(RP(G, o0, SOR)) }
+            trans(WIDTH) { src(E1, o0, p2); tgt(o); lhg(setOf(v, o)); ctx(RP(G, o0, SOR)); }
+            trans(WIDTH) { src(F2, o0, p1); tgt(o); lhg(setOf(v, o)); ctx(RP(G, o0, SOR)); }
             /*
             transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
             transition(WIDTH) { ctx(RP(G, o0, SOR)); src(); tgt(); lhg()  }
@@ -159,15 +159,15 @@ internal class test_Grune_Jacobs_Fig_10_2_Expressions_LC : test_AutomatonAbstrac
 
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("v", "vav", "vmv", "vavmv", "vmvav", "(v)")
-        for(sen in sentences) {
-            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+        for (sen in sentences) {
+            val result = parser.parseForGoal("S", sen)
             if (result.issues.isNotEmpty()) {
                 println("Sentence: $sen")
                 result.issues.forEach { println(it) }
             }
         }
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
-        val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)
+        val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         println("--Pre Build--")
         println(rrs_preBuild.usedAutomatonToString("S", true))

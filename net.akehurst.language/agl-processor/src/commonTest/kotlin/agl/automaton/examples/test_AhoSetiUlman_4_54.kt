@@ -53,7 +53,7 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
     @Test
     fun parse_dd() {
         val parser = ScanOnDemandParser(rrs)
-        parser.parseForGoal("S", "dd", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "dd")
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
@@ -87,7 +87,7 @@ internal class test_AhoSetiUlman_4_54 : test_AutomatonAbstract() {
             transition(s3, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(EOT)), setOf(RP(C1, 0, 0)))
             transition(s7, s1, s3, HEIGHT, setOf(T_c, T_d), setOf(setOf(EOT)), setOf(RP(C1, 0, 0)))
 
-            transition(s3, s2, s4, HEIGHT, setOf(EOT),setOf( setOf(EOT)), setOf(RP(C, 1, 0)))
+            transition(s3, s2, s4, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(C, 1, 0)))
             transition(s7, s2, s4, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(C, 1, 0)))
             transition(s0, s2, s4, HEIGHT, setOf(T_c, T_d), setOf(setOf(T_c, T_d)), setOf(RP(C, 1, 0)))
 

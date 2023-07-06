@@ -44,15 +44,15 @@ internal class test_multi_0_n_literal : test_AutomatonAbstract() {
         val s3 = SM.createState(listOf(RulePosition(S, 0, RulePosition.POSITION_MULIT_ITEM)))
         val s4 = SM.createState(listOf(RulePosition(S, 0, RulePosition.END_OF_RULE)))
 
-        val lhs_a = SM.createLookaheadSet(false,false, false, setOf(a))
-        val lhs_aU = SM.createLookaheadSet(true, false, false,setOf(a))
-        val lhs_aT = SM.createLookaheadSet(false,true, false, setOf(a))
+        val lhs_a = SM.createLookaheadSet(false, false, false, setOf(a))
+        val lhs_aU = SM.createLookaheadSet(true, false, false, setOf(a))
+        val lhs_aT = SM.createLookaheadSet(false, true, false, setOf(a))
     }
 
     @Test
     fun parse_aba() {
         val parser = ScanOnDemandParser(rrs)
-        parser.parseForGoal("S", "aba", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "aba")
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {
@@ -80,13 +80,13 @@ internal class test_multi_0_n_literal : test_AutomatonAbstract() {
         val rrs_preBuild = rrs.clone()
 
         val parser = ScanOnDemandParser(rrs_noBuild)
-        val sentences = listOf("","a","aa","aaa", "aaaa")
-        for(sen in sentences) {
-            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
-            if (result.issues.isNotEmpty())  result.issues.forEach { println(it) }
+        val sentences = listOf("", "a", "aa", "aaa", "aaaa")
+        for (sen in sentences) {
+            val result = parser.parseForGoal("S", sen)
+            if (result.issues.isNotEmpty()) result.issues.forEach { println(it) }
         }
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
-        val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)
+        val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         println("--Pre Build--")
         println(rrs_preBuild.usedAutomatonToString("S"))

@@ -60,7 +60,7 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
     @Test
     fun parse_xxx() {
         val parser = ScanOnDemandParser(rrs)
-        parser.parseForGoal(goal, "namespace test grammar Test { S = 'a' ; }", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal(goal, "namespace test grammar Test { S = 'a' ; }")
         val actual = parser.runtimeRuleSet.fetchStateSetFor(R_grammarDefinition, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString(goal))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, goal, false) {
@@ -89,13 +89,13 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
 
             )
         for (sen in sentences) {
-            val result = parser_noBuild.parseForGoal(goal, sen, AutomatonKind.LOOKAHEAD_1)
+            val result = parser_noBuild.parseForGoal(goal, sen)
             if (result.issues.isNotEmpty()) {
                 println("--Error: No Build--")
                 println("Sentence: $sen")
                 result.issues.forEach { println(it) }
             }
-            val result2 = parser_preBuild.parseForGoal(goal, sen, AutomatonKind.LOOKAHEAD_1)
+            val result2 = parser_preBuild.parseForGoal(goal, sen)
             if (result2.issues.isNotEmpty()) {
                 println("--Error: Pre Build--")
                 println("Sentence: $sen")

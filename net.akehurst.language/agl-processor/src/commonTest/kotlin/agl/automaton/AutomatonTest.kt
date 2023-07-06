@@ -17,20 +17,20 @@
 package net.akehurst.language.agl.automaton
 
 
-import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.collections.CollectionsTest.matches
+import net.akehurst.language.agl.runtime.structure.RuntimeRule
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.api.automaton.Automaton
-import kotlin.test.fail
 
 internal object AutomatonTest {
 
     data class MatchConfiguration(
-        val in_actual_substitue_lookahead_RT_with:Set<RuntimeRule>?=null,
-        val no_lookahead_compare : Boolean = false
+        val in_actual_substitue_lookahead_RT_with: Set<RuntimeRule>? = null,
+        val no_lookahead_compare: Boolean = false
     )
 
-    private fun <E> Set<E>.replace(anyOf:Set<E>, withReplacement:Set<E>) = this.flatMap {
+    private fun <E> Set<E>.replace(anyOf: Set<E>, withReplacement: Set<E>) = this.flatMap {
         if (anyOf.contains(it)) {
             withReplacement
         } else {
@@ -59,6 +59,7 @@ internal object AutomatonTest {
                     ) { "  $it" }
                 }"
             )
+
             actual.size > foundOther.size -> kotlin.test.fail(
                 "Elements of $setName do not match for,\nexpected: $expectedObject\n  $expected\nactual: $actualObject\n  $actual\nmissing:\n${
                     (actual - foundOther).joinToString(
@@ -66,25 +67,26 @@ internal object AutomatonTest {
                     ) { "  $it" }
                 }"
             )
+
             else -> Unit
         }
     }
 
     fun assertEquals(expected: Automaton, actual: Automaton) {
-        assertMatches(expected as ParserStateSet,actual as ParserStateSet, MatchConfiguration())
+        assertMatches(expected as ParserStateSet, actual as ParserStateSet, MatchConfiguration())
     }
 
-    fun assertMatches(expected: ParserStateSet, actual: ParserStateSet, config:MatchConfiguration=MatchConfiguration()) {
+    fun assertMatches(expected: ParserStateSet, actual: ParserStateSet, config: MatchConfiguration = MatchConfiguration()) {
         val expected_states = expected.allBuiltStates.toSet()
         val actual_states = actual.allBuiltStates.toSet()
 
         assertMatches(expected, actual, "allBuiltStates", expected_states, actual_states) { t, o -> t.matches(o) }
-        assertMatches(expected, actual, "allBuiltTransitions", expected.allBuiltTransitions.toSet(), actual.allBuiltTransitions.toSet()) { t, o -> t.matches(o,config) }
+        assertMatches(expected, actual, "allBuiltTransitions", expected.allBuiltTransitions.toSet(), actual.allBuiltTransitions.toSet()) { t, o -> t.matches(o, config) }
 
         for (exp_state in expected_states) {
             val act_state = actual_states.first { it.matches(exp_state) }
             for (exp_trans in exp_state.outTransitions.allBuiltTransitions) {
-                val act_trans = act_state.outTransitions.allBuiltTransitions.first { exp_trans.matches(it,config) }
+                val act_trans = act_state.outTransitions.allBuiltTransitions.first { exp_trans.matches(it, config) }
                 assertMatches(exp_trans, act_trans, "context", exp_trans.context, act_trans.context) { t, o -> t.matches(o) }
             }
         }
@@ -95,20 +97,24 @@ internal object AutomatonTest {
         this.from.matches(other.from).not() -> false
         this.to.matches(other.to).not() -> false
         this.action != other.action -> false
-        (!config.no_lookahead_compare && this.lookahead.matches(other.lookahead) { t, o -> t.matches(o,config) }.not()) -> false
+        (!config.no_lookahead_compare && this.lookahead.matches(other.lookahead) { t, o -> t.matches(o, config) }.not()) -> false
         else -> true
     }
 
+    private fun TransitionPrevInfoKey.matches(other: TransitionPrevInfoKey): Boolean = when {
+        this is CompleteKey && other is CompleteKey -> this.previous.matches(other.previous) && this.prevPrev.matches(other.prevPrev)
+        this is IncompleteKey && other is IncompleteKey -> this.previous.matches(other.previous)
+        else -> false
+    }
 
-
-    private fun Lookahead.matches(other: Lookahead,config: MatchConfiguration): Boolean = when {
-        this.guard.matches(other.guard,config).not() -> false
-        this.up.matches(other.up,config).not() -> false
+    private fun Lookahead.matches(other: Lookahead, config: MatchConfiguration): Boolean = when {
+        this.guard.matches(other.guard, config).not() -> false
+        this.up.matches(other.up, config).not() -> false
         else -> true
     }
 
-    private fun LookaheadSet.matches(other: LookaheadSet,config: MatchConfiguration): Boolean {
-        val substituted =config.in_actual_substitue_lookahead_RT_with?.let {
+    private fun LookaheadSet.matches(other: LookaheadSet, config: MatchConfiguration): Boolean {
+        val substituted = config.in_actual_substitue_lookahead_RT_with?.let {
             other.fullContent.replace(setOf(RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD), config.in_actual_substitue_lookahead_RT_with)
         } ?: other.fullContent
         return this.fullContent.matches(substituted) { t, o -> t.matches(o) }
@@ -122,32 +128,18 @@ internal object AutomatonTest {
             actual.outTransitions.allPrevious.size,
             "Previous States for Transitions outgoing from ${expected} do not match"
         )
+        TODO()
+        /*
         for (expected_prev in expected.outTransitions.allPrevious) {
-            val expected_trs = expected.outTransitions.findTransitionByPrevious(expected_prev) ?: emptyList()
+            val expected_trs = expected.outTransitions.findTransitionByKey(expected_prev) ?: emptyList()
             val actual_prev = actual.stateSet.fetchState(expected_prev.rulePositions) ?: fail("actual State not found for: ${expected_prev}")
-            val actual_trs = actual.outTransitions.findTransitionByPrevious(actual_prev) ?: emptyList()
+            val actual_trs = actual.outTransitions.findTransitionByKey(actual_prev) ?: emptyList()
             kotlin.test.assertEquals(expected_trs.size, actual_trs.size, "Number of Transitions outgoing from ${expected_prev} -> ${expected} do not match")
             for (i in expected_trs.indices) {
                 assertEquals(expected_prev, expected_trs[i], actual_trs[i])
             }
         }
-        /*
-        val expected_trans = expected.outTransitions.transitionsByPrevious
-        val actual_trans = actual.outTransitions.transitionsByPrevious
-        assertEquals(expected_trans.keys.map { it?.rulePositions }, actual_trans.keys.map { it?.rulePositions }, "Previous States for Transitions outgoing from ${expected} do not match")
-        assertEquals(expected_trans.size, actual_trans.size, "Number of Transitions outgoing from ${expected} do not match")
-
-        for (entry in expected_trans.entries) {
-            val actual_key = if (null==entry.key) null else actual.stateSet.states[entry.key!!.rulePositions]
-            val expected_outgoing = expected_trans[entry.key] ?: emptyList()
-            val actual_outgoing = actual_trans[actual_key] ?: emptyList()
-            assertEquals(expected_outgoing.size, actual_outgoing.size, "Number of Transitions outgoing from ${entry.key} -> ${expected} do not match")
-
-            for (i in expected_outgoing.indices) {
-                assertEquals(entry.key, expected_outgoing[i], actual_outgoing[i])
-            }
-        }
-         */
+*/
     }
 
     fun assertEquals(expPrev: ParserState, expected: Transition, actual: Transition) {

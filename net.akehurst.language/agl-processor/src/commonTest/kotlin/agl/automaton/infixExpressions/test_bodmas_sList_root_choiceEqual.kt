@@ -63,7 +63,7 @@ internal class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_v() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "v", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "v")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -95,7 +95,7 @@ internal class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_vmv() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "vmv", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "vmv")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -120,7 +120,7 @@ internal class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
         //val sentences = listOf( "vav")
         sentences.forEach {
             println(it)
-            val result = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
+            val result = parser.parseForGoal("S", it)
             assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
             assertEquals(0, result.issues.size)
             assertEquals(1, result.sppt!!.maxNumHeads)
@@ -203,7 +203,7 @@ internal class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
         val sentences = listOf("v", "vav", "vavav", "vmv", "vmvmv", "vmvav", "vavmv")
         sentences.forEach {
             val parser = ScanOnDemandParser(rrs)
-            val result = parser.parseForGoal("S", it, AutomatonKind.LOOKAHEAD_1)
+            val result = parser.parseForGoal("S", it)
             assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
             assertEquals(0, result.issues.size)
             assertEquals(1, result.sppt!!.maxNumHeads)
@@ -274,7 +274,7 @@ internal class test_bodmas_sList_root_choiceEqual : test_AutomatonAbstract() {
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("v", "vav", "vavav", "vmv", "vmvmv", "vmvav", "vavmv")
         for (sen in sentences) {
-            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            val result = parser.parseForGoal("S", sen)
             if (result.issues.isNotEmpty()) {
                 println("Sentence: $sen")
                 result.issues.forEach { println(it) }

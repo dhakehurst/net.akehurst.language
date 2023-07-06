@@ -70,4 +70,5 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val styleStrObservers: MutableList<(String?, String?) -> Unit>
     val styleObservers: MutableList<(AglStyleModel?, AglStyleModel?) -> Unit>
 
+    fun update(grammarStr: String?, scopeModelStr: String?, styleStr: String?)
 }

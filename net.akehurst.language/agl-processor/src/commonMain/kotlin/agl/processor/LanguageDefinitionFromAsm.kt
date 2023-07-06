@@ -16,15 +16,8 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.grammar.grammar.GrammarContext
-import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.processor.*
-import net.akehurst.language.util.CachedValue
-import net.akehurst.language.util.cached
-import kotlin.properties.Delegates
+import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties
 internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
@@ -49,25 +42,22 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
         set(value) {
             error("Cannot set the scopeModel of a LanguageDefinitionFromAsm using a String")
         }
-/*
-    override var aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?
-        get() = error("Cannot get the aglOptions of a LanguageDefinitionFromAsm")
-        set(value) {
-            error("Cannot set the aglOptions of a LanguageDefinitionFromAsm")
-        }
-*/
 
     override var styleStr: String?
         get() = this.style.toString() //TODO:
         set(value) {
             error("Cannot set the styleStr of a LanguageDefinitionFromAsm using a String")
         }
-/*
-    override var formatStr: String?
-        get() = this.grammar.toString() //TODO:
-        set(value) {
-            error("Cannot set the formatStr of a LanguageDefinitionFromAsm using a String")
-        }
+    /*
+        override var formatStr: String?
+            get() = this.grammar.toString() //TODO:
+            set(value) {
+                error("Cannot set the formatStr of a LanguageDefinitionFromAsm using a String")
+            }
 
- */
+     */
+
+    override fun update(grammarStr: String?, scopeModelStr: String?, styleStr: String?) {
+        error("Cannot update a LanguageDefinitionFromAsm using Strings")
+    }
 }

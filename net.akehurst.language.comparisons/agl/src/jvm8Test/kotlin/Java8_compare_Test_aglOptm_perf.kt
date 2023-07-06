@@ -23,8 +23,6 @@ import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.comparisons.common.FileData
 import net.akehurst.language.comparisons.common.Java8TestFiles
-import net.akehurst.language.comparisons.common.Results
-import net.akehurst.language.comparisons.common.TimeLogger
 import org.junit.*
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -102,7 +100,7 @@ class Java8_compare_Test_aglOptm_perf(val file: FileData) {
 
     @Ignore
     @ExperimentalTime
-    @Test
+    //@Test
     fun agl_compilationUnit() {
         val t1 = parse(file, agl1)
         val t2 = parse(file, agl2)

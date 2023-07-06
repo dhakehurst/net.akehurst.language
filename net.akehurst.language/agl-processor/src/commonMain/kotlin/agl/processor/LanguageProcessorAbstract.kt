@@ -140,7 +140,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     override fun parse(sentence: String, options: ParseOptions?): ParseResult {//Pair<SharedPackedParseTree?, List<LanguageIssue>> {
         val opts = options ?: parseOptionsDefault()
         if (null == opts.goalRuleName) opts.goalRuleName = this.defaultGoalRuleName
-        return this.parser.parseForGoal(opts.goalRuleName!!, sentence, opts.automatonKind)
+        return this.parser.parseForGoal(opts.goalRuleName!!, sentence)
     }
 
     override fun syntaxAnalysis(

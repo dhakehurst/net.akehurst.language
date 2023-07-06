@@ -20,7 +20,6 @@ import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -50,11 +49,13 @@ internal class test_Wikipedia_PEG : test_ScanOnDemandParserAbstract() {
     fun empty_fails() {
         val sentence = ""
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("'x'"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'x'"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -66,11 +67,11 @@ internal class test_Wikipedia_PEG : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -78,11 +79,13 @@ internal class test_Wikipedia_PEG : test_ScanOnDemandParserAbstract() {
     fun xx_fails() {
         val sentence = "xx"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(2,3,1,1),"xx^",setOf("'x'"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(2, 3, 1, 1), "xx^", setOf("'x'"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -94,11 +97,11 @@ internal class test_Wikipedia_PEG : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -106,11 +109,13 @@ internal class test_Wikipedia_PEG : test_ScanOnDemandParserAbstract() {
     fun xxxx() {
         val sentence = "xxxx"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(4,5,1,1),"xxxx^",setOf("'x'"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(4, 5, 1, 1), "xxxx^", setOf("'x'"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -120,11 +125,11 @@ internal class test_Wikipedia_PEG : test_ScanOnDemandParserAbstract() {
         val expected = "S { 'x' ".repeat(5) + "} 'x' ".repeat(4) + "}"
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -137,10 +142,10 @@ internal class test_Wikipedia_PEG : test_ScanOnDemandParserAbstract() {
         for (i in 1..25) {
             val text = "a".repeat(i)
             //warm up
-            parser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1)
+            parser.parseForGoal(goal, text)
             //time it
             val time = TimeSource.Monotonic.measureTime {
-                parser.parseForGoal(goal, text, AutomatonKind.LOOKAHEAD_1)
+                parser.parseForGoal(goal, text)
             }
             times.add(time)
         }

@@ -45,7 +45,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
     @Test
     fun parse_abc() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "abc")
         println(rrs.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -79,7 +79,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "abc", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "abc")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -119,7 +119,7 @@ internal class test_concatenation_abc : test_AutomatonAbstract() {
         val parser = ScanOnDemandParser(rrs_noBuild)
         val sentences = listOf("abc")
         for (sen in sentences) {
-            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
+            val result = parser.parseForGoal("S", sen)
             //val result = parser.parseForGoal("S", "", AutomatonKind.LOOKAHEAD_1)
             if (result.issues.isNotEmpty()) result.issues.forEach { println(it) }
         }

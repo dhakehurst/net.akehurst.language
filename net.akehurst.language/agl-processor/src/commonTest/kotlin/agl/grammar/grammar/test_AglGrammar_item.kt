@@ -19,7 +19,6 @@ package net.akehurst.language.agl.grammar.grammar
 import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.sppt.SPPTParserDefault
-import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.processor.ParseResult
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import kotlin.test.Test
@@ -37,7 +36,7 @@ class test_AglGrammar_item {
 
     private fun parse(goalRule: String, inputText: String): ParseResult {
         //parser.buildFor(goalRule,AutomatonKind.LOOKAHEAD_1)
-        return parser.parseForGoal(goalRule, inputText, AutomatonKind.LOOKAHEAD_1)
+        return parser.parseForGoal(goalRule, inputText)
     }
 
     private fun sppt(treeString: String): SharedPackedParseTree {

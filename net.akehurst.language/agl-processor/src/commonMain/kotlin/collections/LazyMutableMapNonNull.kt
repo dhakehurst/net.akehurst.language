@@ -16,18 +16,18 @@
 
 package net.akehurst.language.collections
 
-internal fun <K,V> lazyMutableMapNonNull(accessor: (K) -> V) = LazyMutableMapNonNull(accessor)
+internal fun <K, V> lazyMutableMapNonNull(accessor: (K) -> V) = LazyMutableMapNonNull(accessor)
 
-interface MapNotNull<K,V> : Map<K,V> {
+interface MapNotNull<K, V> : Map<K, V> {
     override fun get(key: K): V
 }
 
-internal class LazyMutableMapNonNull<K,V>(val accessor: (K) -> V) : MapNotNull<K,V>, MutableMap<K,V> {
+internal class LazyMutableMapNonNull<K, V>(val accessor: (K) -> V) : MapNotNull<K, V>, MutableMap<K, V> {
 
-    val map = mutableMapOf<K,V>()
+    val map = hashMapOf<K, V>()
 
-    override operator fun get(key:K): V {
-        return if(map.containsKey(key)) {
+    override operator fun get(key: K): V {
+        return if (map.containsKey(key)) {
             map.get(key) ?: throw Exception("This map should never contain nulls")
         } else {
             val v = accessor.invoke(key)
@@ -66,7 +66,7 @@ internal class LazyMutableMapNonNull<K,V>(val accessor: (K) -> V) : MapNotNull<K
         this.map.clear()
     }
 
-    override fun put(key: K, value: V): V? = this.map.put(key,value)
+    override fun put(key: K, value: V): V? = this.map.put(key, value)
     override fun putAll(from: Map<out K, V>) {
         this.map.putAll(from)
     }

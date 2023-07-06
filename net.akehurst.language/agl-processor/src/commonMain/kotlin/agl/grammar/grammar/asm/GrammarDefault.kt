@@ -80,6 +80,13 @@ abstract class GrammarAbstract(
         }.toSet()
     }
 
+    override val allResolvedSkipTerminal: Set<Terminal> by lazy {
+        this.allResolvedGrammarRule
+            .filter { it.isSkip }
+            .flatMap { it.rhs.allTerminal }
+            .toSet()
+    }
+
     override val allResolvedNonTerminalRule: Set<GrammarRule> by lazy {
         this.allResolvedGrammarRule.filter { it.isLeaf.not() }.toSet()
     }
@@ -108,7 +115,6 @@ abstract class GrammarAbstract(
             else -> all.first()
         }
     }
-
 
     override fun findTerminalRule(terminalPattern: String): Terminal {
         val all = this.allResolvedTerminal.filter { it.value == terminalPattern }

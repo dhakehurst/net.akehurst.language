@@ -60,7 +60,7 @@ internal class test_embedded : test_AutomatonAbstract() {
     @Test
     fun parse_aba() {
         val parser = ScanOnDemandParser(rrs)
-        parser.parseForGoal("S", "aba", AutomatonKind.LOOKAHEAD_1)
+        parser.parseForGoal("S", "aba")
         val actual = parser.runtimeRuleSet.fetchStateSetFor(S, AutomatonKind.LOOKAHEAD_1)
         println(rrs.usedAutomatonToString("S"))
         val expected = automaton(rrs, AutomatonKind.LOOKAHEAD_1, "S", false) {

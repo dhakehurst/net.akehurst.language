@@ -62,7 +62,7 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
     @Test
     fun automaton_parse_aoa() {
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "aoaoaoa", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "aoaoaoa")
         println(parser.runtimeRuleSet.usedAutomatonToString("S"))
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
@@ -80,18 +80,18 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
             val s7 = state(RP(E1, 0, 2)) /* E1 = E o . P */
             val s8 = state(RP(E1, 0, EOR))    /* E1 = E o P . */
             val s9 = state(RP(E, 1, EOR))     /* E = E1 . */
-            val s10 = state(RP(G,0,EOR))      /* G = S . */
+            val s10 = state(RP(G, 0, EOR))      /* G = S . */
 
-            transition(s0, s0, s1, WIDTH, setOf(EOT,o), setOf(), null)
-            transition(setOf(s0,s7), s1, s2, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(P, 0, SOR)))
+            transition(s0, s0, s1, WIDTH, setOf(EOT, o), setOf(), null)
+            transition(setOf(s0, s7), s1, s2, HEIGHT, setOf(EOT), setOf(setOf(EOT)), setOf(RP(P, 0, SOR)))
             //transition(s0, s2, s3, WIDTH, setOf(c, d), setOf(), null)
             //transition(s2, s3, s4, GRAFT, setOf(c, d), setOf(EOT), listOf(RP(ABC, 0, 1), RP(ABD, 0, 1)))
             //transition(s0, s4, s5, WIDTH, setOf(EOT), setOf(), null)
             //transition(s0, s4, s6, WIDTH, setOf(EOT), setOf(), null)
             //transition(s4, s5, s7, GRAFT, setOf(EOT), setOf(EOT), listOf(RP(ABC, 0, 2)))
-           // transition(s0, s7, s8, HEIGHT, setOf(EOT), setOf(EOT), listOf(RP(S, 0, 0)))
-           // transition(s0, s8, s9, GRAFT, setOf(EOT), setOf(EOT), listOf(RP(G, 0, 0)))
-           // transition(null, s9, s9, GOAL, setOf(), setOf(), null)
+            // transition(s0, s7, s8, HEIGHT, setOf(EOT), setOf(EOT), listOf(RP(S, 0, 0)))
+            // transition(s0, s8, s9, GRAFT, setOf(EOT), setOf(EOT), listOf(RP(G, 0, 0)))
+            // transition(null, s9, s9, GOAL, setOf(), setOf(), null)
         }
 
         AutomatonTest.assertEquals(expected, actual)
@@ -104,7 +104,7 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
         println(rrs.usedAutomatonToString("S"))
 
         val parser = ScanOnDemandParser(rrs)
-        val result = parser.parseForGoal("S", "aoaoaoa", AutomatonKind.LOOKAHEAD_1)
+        val result = parser.parseForGoal("S", "aoaoaoa")
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
@@ -122,13 +122,13 @@ internal class test_expressions_LLstyle : test_AutomatonAbstract() {
         val rrs_preBuild = rrs.clone()
 
         val parser = ScanOnDemandParser(rrs_noBuild)
-        val sentences = listOf("a","aoa","aoaoa","aoaoaoa")
-        for(sen in sentences) {
-            val result = parser.parseForGoal("S", sen, AutomatonKind.LOOKAHEAD_1)
-            if (result.issues.isNotEmpty())  result.issues.forEach { println(it) }
+        val sentences = listOf("a", "aoa", "aoaoa", "aoaoaoa")
+        for (sen in sentences) {
+            val result = parser.parseForGoal("S", sen)
+            if (result.issues.isNotEmpty()) result.issues.forEach { println(it) }
         }
         val automaton_noBuild = rrs_noBuild.usedAutomatonFor("S")
-        val automaton_preBuild = rrs_preBuild.buildFor("S",AutomatonKind.LOOKAHEAD_1)
+        val automaton_preBuild = rrs_preBuild.buildFor("S", AutomatonKind.LOOKAHEAD_1)
 
         println("--Pre Build--")
         println(rrs_preBuild.usedAutomatonToString("S"))
