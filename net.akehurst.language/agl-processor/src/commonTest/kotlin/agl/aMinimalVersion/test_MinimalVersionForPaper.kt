@@ -108,8 +108,8 @@ class test_MinimalVersionForPaper {
             },
             listOf(
                 "a",
-                //"bac",
-                //"ac",
+                "bac",
+                "ac",
                 "acc",
                 "accc",
                 "accccc",

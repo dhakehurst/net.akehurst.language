@@ -189,8 +189,7 @@ internal data class GSSNode(
     val state: State,
     val rlh: LookaheadSetPart,
     val sp: Int,
-    val nip: Int,
-//    val numNonSkipChildren: Int
+    val nip: Int
 ) {
     val isGoal get() = this.state.rp.isGoal
     val isComplete get() = this.state.rp.isAtEnd
@@ -201,16 +200,15 @@ internal class CompleteNode(
     override val rule: RuntimeRule,
     override val startPosition: Int,
     override val nextInputPosition: Int,
-    override val option: Int
+    override val option: Int // not part of defintion, just easy way to pass it to SPPF
 ) : SpptDataNode {
 
-    private val _hashCode_cache = arrayOf(rule, /*option,*/ startPosition, nextInputPosition).contentHashCode()
+    private val _hashCode_cache = arrayOf(rule, startPosition, nextInputPosition).contentHashCode()
     override fun hashCode(): Int = _hashCode_cache
     override fun equals(other: Any?): Boolean = when {
         other !is CompleteNode -> false
         this.startPosition != other.startPosition -> false
         this.nextInputPosition != other.nextInputPosition -> false
-        //this.option != other.option -> false
         this.rule != other.rule -> false
         else -> true
     }
