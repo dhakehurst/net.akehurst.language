@@ -17,7 +17,7 @@
 package net.akehurst.language.parser.expectedTerminalsAt
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -55,7 +55,7 @@ class test_a {
             Data(" a ", 3, listOf()),
             Data("ab", 0, listOf("'a'")),
             Data("ab", 1, listOf()),
-            Data("ab", 2, listOf()),
+            Data("ab", 2, listOf(RuntimeRuleSet.END_OF_TEXT_TAG)),
         )
     }
 

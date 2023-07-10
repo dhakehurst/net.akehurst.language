@@ -22,8 +22,8 @@ import net.akehurst.language.agl.collections.GraphStructuredStack
 import net.akehurst.language.agl.collections.binaryHeap
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.TreeData
-import net.akehurst.language.agl.runtime.graph.TreeDataComplete
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.collections.LazyMutableMapNonNull
@@ -257,15 +257,13 @@ internal class MinimalParser private constructor(
             state: State,
             rlh: LookaheadSetPart,
             sp: Int,
-            nip: Int,
-//            nc: Int
+            nip: Int
         ): GSSNode {
             val nn = GSSNode(
                 state = state,
                 rlh = rlh,
                 sp = sp,
-                nip = nip,
-//                numNonSkipChildren = nc, //used in TreeData to get index of next child
+                nip = nip
             )
             this.root(nn)
             return nn
@@ -276,15 +274,13 @@ internal class MinimalParser private constructor(
             state: State,
             rlh: LookaheadSetPart,
             sp: Int,
-            nip: Int,
-//            nc: Int
+            nip: Int
         ): GSSNode {
             val nn = GSSNode(
                 state = state,
                 rlh = rlh,
                 sp = sp,
-                nip = nip,
-//                numNonSkipChildren = nc, //used in TreeData to get index of next child
+                nip = nip
             )
             this.push(prev, nn)
             return nn
@@ -350,7 +346,6 @@ internal class MinimalParser private constructor(
     val ss = automaton.startState
     var sppf = TreeData<GSSNode, CompleteNode>(automaton.number)
     val gss = GraphStructuredStack<GSSNode>(binaryHeap { parent, child ->
-        //val _growingHeadHeap: BinaryHeapFifo<GrowingNodeIndex, GrowingNode> = binaryHeapFifo { parent, child ->
         // Ordering rules:
         // 1) nextInputPosition lower number first
         // 2) shift before reduce (reduce happens if state.isAtEnd)
@@ -608,7 +603,6 @@ internal class MinimalParser private constructor(
         val lh = tr.lh.resolve(peot, pv.rlh)
         return if (input!!.isLookingAtAnyOf(lh, hd.nip)) {
             val rlh = pv.rlh
-//            val nc = pv.numNonSkipChildren + 1
             val nn = gss.pushNode(pp!!, tr.target, rlh, pv.sp, hd.nip)//, nc)
             if (nn.isComplete) {
                 val existing = sppf.preferred(nn.complete)

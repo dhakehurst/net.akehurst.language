@@ -97,8 +97,6 @@ subprojects {
             }
         }
         js("js", IR) {
-            binaries.library()
-            generateTypeScriptDefinitions()
             tasks.withType<KotlinJsCompile>().configureEach {
                 kotlinOptions {
                     moduleKind = "es"

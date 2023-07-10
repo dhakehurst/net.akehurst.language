@@ -132,7 +132,6 @@ suspend fun parseFiles(parserCode: String, numFiles: Int, grammarFile: String, g
     ResultsCommon.write(parserCode)
 }
 
-
 suspend fun runTests() {
     //parseFiles("stchrt", 500, "agl/Statechart.agl", "statechart", "nogit/statechartTestFiles.txt", "sctxt")
     //parseFiles("dot", 500, "agl/Dot.agl", "graph", "nogit/dotTestFiles.txt", "dot")

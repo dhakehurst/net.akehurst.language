@@ -61,7 +61,8 @@ class Java8_compare_Test_aglOptm(val file: FileData) {
                 }
             )
             // no need to build because, sentence is parsed twice in the test
-            return res.processor!!
+            val proc = res.processor!!
+            return proc.buildFor(Agl.parseOptions { goalRuleName("CompilationUnit") })
         }
 
         var input: String? = null

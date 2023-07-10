@@ -177,7 +177,12 @@ class test_StatechartTools_Singles {
     fun expectedAt_TransitionSpecification_0() {
         val goal = "TransitionSpecification"
         val sentence = ""
-        val actual = processor.expectedTerminalsAt(sentence, 0, 1, Agl.options { parse { goalRuleName(goal) } })
+        val actual = processor.expectedTerminalsAt(sentence, 0, 1, Agl.options {
+            parse {
+                goalRuleName(goal)
+                //reportErrors(false)
+            }
+        })
             .items.map {
                 when (it.kind) {
                     CompletionItemKind.LITERAL -> it.text

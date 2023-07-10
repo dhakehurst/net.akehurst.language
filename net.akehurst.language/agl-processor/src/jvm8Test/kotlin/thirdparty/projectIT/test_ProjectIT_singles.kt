@@ -184,10 +184,10 @@ class test_ProjectIT_singles {
                     var : 'c' WHITESPACE : ' '
                   }
                   listInfo {
-                    §listInfo§multi1 {
+                    §listInfo§opt1 {
                       listDirection : 'horizontal' WHITESPACE : ' '
                     }
-                    §listInfo§multi2 { §listInfo§group1 {
+                    §listInfo§opt2 { §listInfo§group1 {
                       listInfoType : 'separator' WHITESPACE : ' '
                       '['
                       literal : ','
@@ -220,7 +220,7 @@ class test_ProjectIT_singles {
                     '.'
                     var : 'c' WHITESPACE : ' '
                   }
-                  tableInfo { §tableInfo§group1 { 'rows' } }
+                  tableInfo { §tableInfo§choice1 { 'rows' } }
                 } }
             """.trimIndent(),
             result.sppt!!
@@ -270,7 +270,7 @@ class test_ProjectIT_singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(20, 1, 2, 1), "^]", setOf("<EOT>"))
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(20, 1, 2, 1), "^]", setOf("<EOT>", "literal", "escapedChar", "'\${'"))
             ),
             result.issues.all
         )
@@ -311,8 +311,8 @@ class test_ProjectIT_singles {
         ]
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.toString())
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.sppt, "No SPPT !")
         checkSPPT(
             """
             projection {
@@ -344,8 +344,8 @@ class test_ProjectIT_singles {
         ]
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.toString())
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.sppt, "No SPPT !")
         checkSPPT(
             """
             projection {
@@ -358,8 +358,8 @@ class test_ProjectIT_singles {
                         'list' WHITESPACE : ' '
                         navigationExpression { var : 'name' }
                         listInfo {
-                          §listInfo§multi1 { §empty }
-                          §listInfo§multi2 { §empty }
+                          §listInfo§opt1 { §empty }
+                          §listInfo§opt2 { §empty }
                         }
                       } } }
                   '}'
@@ -382,8 +382,8 @@ class test_ProjectIT_singles {
         ]
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.toString())
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.sppt, "No SPPT !")
         checkSPPT(
             """
             projection {
@@ -401,8 +401,8 @@ class test_ProjectIT_singles {
                           var : 'c' WHITESPACE : ' '
                         }
                         listInfo {
-                          §listInfo§multi1 { §empty }
-                          §listInfo§multi2 { §empty }
+                          §listInfo§opt1 { §empty }
+                          §listInfo§opt2 { §empty }
                         }
                       } } }
                   '}'
@@ -425,8 +425,8 @@ class test_ProjectIT_singles {
         ]
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.toString())
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertNotNull(result.sppt, "No SPPT !")
         checkSPPT(
             """
             projection {
@@ -456,11 +456,11 @@ class test_ProjectIT_singles {
                             WHITESPACE : ' '
                         }
                         listInfo {
-                            §listInfo§multi1 {
+                            §listInfo§opt1 {
                             listDirection : 'horizontal'
                             WHITESPACE : ' '
                         }
-                            §listInfo§multi2 { §listInfo§group1 {
+                        §listInfo§opt2 { §listInfo§group1 {
                             listInfoType : 'separator'
                             '['
                             literal : ', '

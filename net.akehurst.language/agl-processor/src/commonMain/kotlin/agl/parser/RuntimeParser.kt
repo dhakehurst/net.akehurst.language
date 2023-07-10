@@ -23,11 +23,11 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.runtime.graph.CompleteNodeIndex
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
-import net.akehurst.language.agl.runtime.graph.TreeDataComplete
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimePreferenceRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
+import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
 import net.akehurst.language.api.automaton.ParseAction
@@ -59,6 +59,8 @@ internal class RuntimeParser(
         //val normalArgs = GrowArgs(true, false, false, false, true)
         val forPossErrors = GrowArgs(false, true, false, true, true)
         val heightGraftOnly = GrowArgs(false, true, true, false, false)
+        val forExpectedAt = GrowArgs(false, false, false, false, true)
+
     }
 
     val graph = ParseGraph(input, this.stateSet.number)

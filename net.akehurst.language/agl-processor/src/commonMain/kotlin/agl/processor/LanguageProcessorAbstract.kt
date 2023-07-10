@@ -214,7 +214,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override fun expectedTerminalsAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
         val opts = defaultOptions(options)
-        val parserExpected: Set<RuntimeRule> = this.parser.expectedAt(opts.parse.goalRuleName!!, sentence, position, opts.parse.automatonKind)
+        val parserExpected: Set<RuntimeRule> = this.parser.expectedTerminalsAt(opts.parse.goalRuleName!!, sentence, position, opts.parse.automatonKind)
         //val grammarExpected: List<RuleItem> = parserExpected
         //    .filter { it !== RuntimeRuleSet.END_OF_TEXT }
         //    .map { this._converterToRuntimeRules.originalRuleItemFor(it.runtimeRuleSetNumber, it.number) }

@@ -19,7 +19,6 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.agl.agl.sppt.SpptWalkerToString
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.CompleteNodeIndex
-import net.akehurst.language.agl.runtime.graph.TreeDataComplete
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.sppt.SPPTLeaf
 import net.akehurst.language.api.sppt.SPPTNode
@@ -27,33 +26,33 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SpptWalker
 
 internal class SPPTFromTreeData(
-    private val _treeData: TreeDataComplete<CompleteNodeIndex>,
-    private val _input: InputFromString,
+    val treeData: TreeDataComplete<CompleteNodeIndex>,
+    val input: InputFromString,
     override val seasons: Int,
     override val maxNumHeads: Int
 ) : SharedPackedParseTree {
 
     override fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean) {
-        this._treeData.traverseTreeDepthFirst(callback, skipDataAsTree)
+        this.treeData.traverseTreeDepthFirst(callback, skipDataAsTree)
     }
 
     override val root: SPPTNode
         get() {
-            val goalChildren = _treeData.childrenFor(_treeData.root!!)
+            val goalChildren = treeData.childrenFor(treeData.root!!)
             val userGoal = goalChildren.first().second[0]
             val userGoalOption = userGoal.option //TODO: will ther ever by more than 1 element?
             //TODO: if goal is a leaf !
 
-            val startPositionBeforeInitialSkip = _treeData.initialSkip?.root?.startPosition ?: userGoal.startPosition
+            val startPositionBeforeInitialSkip = treeData.initialSkip?.root?.startPosition ?: userGoal.startPosition
             //TODO: much of this code should move to TreeData I think
-            val uags = _treeData.initialSkip?.let { td ->
+            val uags = treeData.initialSkip?.let { td ->
                 val sg = td.completeChildren[td.root]!!.values.first().get(0)
                 val skipChildren = td.completeChildren[sg]!!.values.first().map {
                     td.completeChildren[it]!!.values.first().get(0)
                 }
-                val nug = CompleteNodeIndex(_treeData, userGoal.state, startPositionBeforeInitialSkip, userGoal.nextInputPosition, td.root!!.nextInputPosition!!, null)
-                val userGoalChildren = skipChildren + _treeData.completeChildren[userGoal]!!.values.first()
-                _treeData.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
+                val nug = CompleteNodeIndex(userGoal.state, startPositionBeforeInitialSkip, userGoal.nextInputPosition, td.root!!.nextInputPosition!!)
+                val userGoalChildren = skipChildren + treeData.completeChildren[userGoal]!!.values.first()
+                treeData.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
                 nug
             } ?: userGoal
 
@@ -67,15 +66,16 @@ internal class SPPTFromTreeData(
                             //    child.rulePositions.first { it.rule == possChild.item }
                         }
                     }
-                    SPPTBranchFromTreeData(uags.treeData, _input, rp.rule as RuntimeRule, rp.option, uags.startPosition, uags.nextInputPosition, -1)
+                    val uagsTreeData = this.treeData.embeddedFor(uags) ?: error("No tree-data found for $uags")
+                    SPPTBranchFromTreeData(uagsTreeData, input, rp.rule as RuntimeRule, rp.option, uags.startPosition, uags.nextInputPosition, -1)
                 }
 
                 uags.isLeaf -> {
                     val eolPositions = emptyList<Int>() //TODO calc ?
-                    SPPTLeafFromInput(_input, uags.firstRule, uags.startPosition, uags.nextInputPosition, -1)
+                    SPPTLeafFromInput(input, uags.firstRule, uags.startPosition, uags.nextInputPosition, -1)
                 }
 
-                else -> SPPTBranchFromTreeData(_treeData, _input, userGoal.highestPriorityRule, userGoalOption, startPositionBeforeInitialSkip, uags.nextInputPosition, -1)
+                else -> SPPTBranchFromTreeData(treeData, input, userGoal.highestPriorityRule, userGoalOption, startPositionBeforeInitialSkip, uags.nextInputPosition, -1)
             }
         }
 
@@ -111,7 +111,7 @@ internal class SPPTFromTreeData(
     }
 
     override val toStringAll: String by lazy {
-        this.toStringAllWithIndent("", true)
+        this.toStringAllWithIndent("  ", true)
     }
 
     fun toStringAllWithIndent1(indentIncrement: String): String {
@@ -131,8 +131,8 @@ internal class SPPTFromTreeData(
     }
 
     override fun toStringAllWithIndent(indentIncrement: String, skipDataAsTree: Boolean): String {
-        val walker = SpptWalkerToString(_input.text, indentIncrement)
-        this._treeData.traverseTreeDepthFirst(walker, skipDataAsTree)
+        val walker = SpptWalkerToString(input.text, indentIncrement)
+        this.treeData.traverseTreeDepthFirst(walker, skipDataAsTree)
         return walker.output
     }
 

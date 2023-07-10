@@ -560,11 +560,12 @@ internal class ScanOnDemandParser(
         this.runtimeParser = rp
 
         val possibleEndOfText = setOf(LookaheadSet.EOT)
-        rp.start(0, possibleEndOfText, RuntimeParser.forPossErrors)
+        val parseArgs = RuntimeParser.forExpectedAt
+        rp.start(0, possibleEndOfText, parseArgs)
         var seasons = 1
 
         while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
-            rp.grow3(possibleEndOfText, RuntimeParser.forPossErrors) //TODO: maybe no need to build tree!
+            rp.grow3(possibleEndOfText, parseArgs) //TODO: maybe no need to build tree!
             seasons++
         }
         /*
@@ -594,7 +595,7 @@ internal class ScanOnDemandParser(
                 when {
                     it.isTerminal -> listOf(it)
                     //RuntimeRuleKind.NON_TERMINAL -> this.runtimeRuleSet.firstTerminals[it.ruleNumber]
-                    else -> TODO()
+                    else -> emptyList() // TODO()
                 }
             }
             .toSet()

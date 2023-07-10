@@ -31,13 +31,6 @@ class test_Java8_aglOptm {
         const val col = "agl_optm"
         var totalFiles = 0
 
-        suspend fun files(): Collection<FileDataCommon> {
-            val f = FilesCommon.files().subList(0, 5)//300) // after this we get java.lang.OutOfMemoryError: Java heap space
-            totalFiles = f.size
-            println("Number of files to test against: ${f.size}")
-            return f
-        }
-
         suspend fun createAndBuildProcessor(aglFile: String): LanguageProcessor<AsmSimple, ContextSimple> {
             println(StandardPaths.cwd)
             val javaGrammarStr = myResourcesVfs[aglFile].readString()
@@ -55,6 +48,16 @@ class test_Java8_aglOptm {
         }
 
         lateinit var aglProcessor: LanguageProcessor<AsmSimple, ContextSimple>
+
+        suspend fun files(): Collection<FileDataCommon> {
+            val skipPatterns = aglProcessor.grammar!!.allResolvedSkipTerminal.map { Regex(it.value) }.toSet()
+            val f =  FilesCommon.javaFiles("nogit/javaTestFiles.txt", skipPatterns) { it.endsWith(".java") }
+            //val f = FilesCommon.files().subList(0, 5)//300) // after this we get java.lang.OutOfMemoryError: Java heap space
+            totalFiles = f.size
+            println("Number of files to test against: ${f.size}")
+            return f
+        }
+
         fun parseWithJava8Agl(file: FileDataCommon, input: String) {
             try {
                 val tm1 = measureTime {
