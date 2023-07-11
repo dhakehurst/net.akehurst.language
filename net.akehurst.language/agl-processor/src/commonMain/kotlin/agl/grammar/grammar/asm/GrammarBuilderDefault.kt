@@ -17,39 +17,55 @@
 package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
-import net.akehurst.language.collections.lazyMutableMapNonNull
 
 class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 
-    private val _literals = lazyMutableMapNonNull<String, Terminal>() {
-        TerminalDefault(it, false)
-    }
+    val grammar = GrammarDefault(namespace, name)
 
-    val grammar: GrammarDefault
-
-
-    init {
-        this.grammar = GrammarDefault(namespace, name)
+    private val _terminals = mutableMapOf<String, Terminal>()
+    private fun terminal(value: String, isPattern: Boolean): Terminal {
+        val t = _terminals[value]
+        return if (null == t) {
+            val tt = TerminalDefault(value, isPattern)
+            _terminals[value] = tt
+            tt.grammar = this.grammar
+            tt
+        } else {
+            if (isPattern == t.isPattern) {
+                t
+            } else {
+                error("Error terminal defined as both pattern and literal!")
+            }
+        }
     }
 
     fun rule(name: String): RuleBuilder {
-        return RuleBuilder(GrammarRuleDefault(grammar, name, false, false, false))
+        return RuleBuilder(GrammarRuleDefault(name, false, false, false).also {
+            it.grammar = this.grammar
+            this.grammar.grammarRule.add(it)
+        })
     }
 
     fun skip(name: String, isLeaf: Boolean = false): RuleBuilder {
-        return RuleBuilder(GrammarRuleDefault(this.grammar, name, false, true, isLeaf))
+        return RuleBuilder(GrammarRuleDefault(name, false, true, isLeaf).also {
+            it.grammar = this.grammar
+            this.grammar.grammarRule.add(it)
+        })
     }
 
     fun leaf(name: String): RuleBuilder {
-        return RuleBuilder(GrammarRuleDefault(this.grammar, name, false, false, true))
+        return RuleBuilder(GrammarRuleDefault(name, false, false, true).also {
+            it.grammar = this.grammar
+            this.grammar.grammarRule.add(it)
+        })
     }
 
     fun terminalLiteral(value: String): Terminal {
-        return _literals[value]
+        return terminal(value, false)
     }
 
     fun terminalPattern(value: String): Terminal {
-        return TerminalDefault(value, true)
+        return terminal(value, true)
     }
 
     fun embed(embeddedGrammarName: String, embeddedGoalName: String): Embedded {

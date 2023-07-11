@@ -16,25 +16,22 @@
 
 package net.akehurst.language.agl.grammar.grammar.asm
 
-import net.akehurst.language.api.grammar.*
+import net.akehurst.language.api.grammar.NonTerminal
+import net.akehurst.language.api.grammar.PreferenceOption
+import net.akehurst.language.api.grammar.PreferenceRule
+import net.akehurst.language.api.grammar.SimpleItem
 
 data class PreferenceRuleDefault(
-    override val grammar: GrammarDefault,
     override val forItem: SimpleItem,
     override val optionList: List<PreferenceOption>
-) : PreferenceRule {
-
-    init {
-        this.grammar.preferenceRule.add(this)
-    }
-
+) : GrammarItemAbstract(), PreferenceRule {
 
     override fun toString(): String = "preference $forItem { ... }"
 }
 
 data class PreferenceOptionDefault(
     override val item: NonTerminal,
-    override val choiceNumber:Int,
+    override val choiceNumber: Int,
     override val onTerminals: List<SimpleItem>,
     override val associativity: PreferenceOption.Associativity
 ) : PreferenceOption {

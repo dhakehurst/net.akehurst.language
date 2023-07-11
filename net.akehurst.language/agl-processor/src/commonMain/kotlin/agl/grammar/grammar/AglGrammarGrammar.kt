@@ -199,6 +199,7 @@ grammar AglGrammar {
     preferenceOption = nonTerminal choiceNumber 'on' terminalList associativity ;
     choiceNumber = POSITIVE_INTEGER? ;
     terminalList = [simpleItem / ',']+ ;
+    associativity = 'left' | 'right' ;
 }
     """.trimIndent()
 }

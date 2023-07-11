@@ -25,7 +25,7 @@ import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.sppt.SpptWalker
 import net.akehurst.language.collections.mutableStackOf
 
-typealias BranchHandler2<T> = (SpptDataNodeInfo, children: List<Any>, Any?) -> T
+typealias BranchHandler2<T> = (SpptDataNodeInfo, children: List<Any?>, Any?) -> T
 
 abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAnalyser<AsmType> {
 
@@ -37,31 +37,63 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAna
         this.branchHandlers[branchName] = handler
     }
 
-    private fun <T> findBranchHandler(branchName: String): BranchHandler2<T> {
+    private fun <T> findBranchHandler(branchName: String, begin: Boolean): BranchHandler2<T>? {
         val handler: BranchHandler2<T>? = this.branchHandlers[branchName] as BranchHandler2<T>?
-        return handler ?: error("Cannot find SyntaxAnalyser branch handler method named $branchName")
+        return when {
+            begin -> this.branchHandlers["${branchName}_begin"] as BranchHandler2<T>?
+            else -> when (handler) {
+                null -> this.branchHandlers["${branchName}_end"] as BranchHandler2<T>?
+                else -> handler
+            }
+        }
     }
 
-    fun <T> walkTree(sentence: String, treeData: TreeDataComplete<out SpptDataNode>, arg: Any?): T {
-        val stack = mutableStackOf<Any>()
+    fun <T> walkTree(sentence: String, treeData: TreeDataComplete<out SpptDataNode>, skipDataAsTree: Boolean): T {
+        val stack = mutableStackOf<Any?>()
         val walker = object : SpptWalker {
             override fun leaf(nodeInfo: SpptDataNodeInfo) {
-                val matchedText = sentence.substring(nodeInfo.node.startPosition, nodeInfo.node.nextInputPosition)
-                stack.push(matchedText)
+                when {
+                    nodeInfo.node.rule.isEmptyTerminal -> {
+                        stack.push(null)
+                    }
+
+                    else -> {
+                        val matchedText = sentence.substring(nodeInfo.node.startPosition, nodeInfo.node.nextInputPosition)
+                        stack.push(matchedText)
+                    }
+                }
             }
 
             override fun beginBranch(nodeInfo: SpptDataNodeInfo) {
-                TODO("not implemented")
+                val branchName = nodeInfo.node.rule.tag
+                val handler = this@SyntaxAnalyserFromTreeDataAbstract.findBranchHandler<Any>(branchName, true)
+                if (null == handler) {
+                    // no begin handler
+                } else {
+                    val numChildren = nodeInfo.child.index
+                    val siblings = stack.peek(numChildren)
+                    handler.invoke(nodeInfo, siblings, sentence)
+                }
             }
 
             override fun endBranch(nodeInfo: SpptDataNodeInfo) {
                 val opt = nodeInfo.alt.option
                 val numChildren = nodeInfo.numChildrenAlternatives[opt]!!
                 val children = stack.pop(numChildren)
+                val adjChildren = when {
+                    nodeInfo.node.rule.isList -> children.reversed() //listOf(children.filterNotNull())
+                    else -> children.reversed()
+                }
+
                 val branchName = nodeInfo.node.rule.tag
-                val handler = this@SyntaxAnalyserFromTreeDataAbstract.findBranchHandler<Any>(branchName)
-                val obj = handler.invoke(nodeInfo, children, arg)
-                stack.push(obj)
+                val handler = this@SyntaxAnalyserFromTreeDataAbstract.findBranchHandler<Any>(branchName, false)
+                if (null == handler) {
+                    //error("Cannot find SyntaxAnalyser branch handler method named $branchName or ${branchName}_end")
+                    stack.push(adjChildren)
+                } else {
+                    val obj = handler.invoke(nodeInfo, adjChildren, sentence)
+                    stack.push(obj)
+                }
             }
 
             override fun beginEmbedded(nodeInfo: SpptDataNodeInfo) {
@@ -77,11 +109,10 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAna
             }
 
             override fun skip(startPosition: Int, nextInputPosition: Int) {
-                TODO("not implemented")
+                //TODO: ?
             }
         }
-        treeData.traverseTreeDepthFirst(walker, true)
-
+        treeData.traverseTreeDepthFirst(walker, skipDataAsTree)
         val root = stack.pop()
         return root as T
     }

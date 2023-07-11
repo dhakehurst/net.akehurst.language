@@ -64,6 +64,8 @@ class MutableStack<T>() {
     }
 
     fun peek(): T = list.last()
+    fun peek(n: Int): List<T> = list.subList(list.size - n, list.size)
+
     fun pop(): T = list.removeLast()
     fun pop(n: Int): List<T> {
         val removed = mutableListOf<T>()

@@ -17,7 +17,7 @@
 package net.akehurst.language.api.grammar
 
 interface GrammarItem {
-
+    val grammar: Grammar
 }
 
 interface GrammarReference {

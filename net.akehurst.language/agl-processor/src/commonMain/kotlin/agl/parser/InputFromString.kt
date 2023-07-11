@@ -34,6 +34,14 @@ internal class InputFromString(
         const val contextSize = 10
         val END_OF_TEXT = 3.toChar().toString()
         val EOL_PATTERN = Regex("\n", setOf(RegexOption.MULTILINE))
+
+
+        fun locationFor(sentence: String, startPosition: Int, length: Int): InputLocation {
+            val before = sentence.substring(0, startPosition)
+            val line = before.count { it == '\n' } + 1
+            val column = startPosition - before.lastIndexOf('\n')
+            return InputLocation(startPosition, column, line, length)
+        }
     }
 
     // private var lastlocationCachePosition = -1
@@ -255,12 +263,7 @@ internal class InputFromString(
      * startPosition - 0 index position in input text
      * nextInputPosition - 0 index position of next 'token', so we can calculate length
      */
-    fun locationFor(startPosition: Int, length: Int): InputLocation {
-        val before = this.text.substring(0, startPosition)
-        val line = before.count { it == '\n' } + 1
-        val column = startPosition - before.lastIndexOf('\n')
-        return InputLocation(startPosition, column, line, length)
-    }
+    fun locationFor(startPosition: Int, length: Int): InputLocation = locationFor(this.text, startPosition, length)
 
     fun textFromUntil(startPosition: Int, nextInputPosition: Int): String {
         return this.text.substring(startPosition, nextInputPosition)

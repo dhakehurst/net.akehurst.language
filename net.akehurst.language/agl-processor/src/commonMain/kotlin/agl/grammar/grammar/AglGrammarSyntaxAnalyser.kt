@@ -203,7 +203,9 @@ internal class AglGrammarSyntaxAnalyser(
         val isSkip = type.contains("skip")
         val isLeaf = type.contains("leaf")
         val name = target.nonSkipChildren[1].nonSkipMatchedText
-        val result = GrammarRuleDefault(grammar, name, isOverride, isSkip, isLeaf).also { this.locationMap[it] = target.location }
+        val result = GrammarRuleDefault(name, isOverride, isSkip, isLeaf).also { this.locationMap[it] = target.location }
+        result.grammar = grammar
+        grammar.grammarRule.add(result)
         val rhs = this.transformBranch<RuleItem>(children[1], arg)
         result.rhs = rhs
         return result
@@ -436,7 +438,8 @@ internal class AglGrammarSyntaxAnalyser(
         val optionList = children[1].branchNonSkipChildren.map {
             this.transformBranch<PreferenceOption>(it, arg)
         }
-        return PreferenceRuleDefault(grammar, forItem, optionList)
+        val pr = PreferenceRuleDefault(forItem, optionList)
+        return pr
     }
 
     // preferenceOption = nonTerminal choiceNumber 'on' terminalList associativity ;
