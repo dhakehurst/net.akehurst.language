@@ -32,6 +32,7 @@ data class CompleteTreeDataNode(
     override val rule: Rule,
     override val startPosition: Int,
     override val nextInputPosition: Int,
+    override val nextInputNoSkip: Int,
     override val option: Int
 ) : SpptDataNode
 

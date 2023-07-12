@@ -455,6 +455,7 @@ class test_SyntaxAnalyserSimple {
         testAll(proc, tests)
     }
 
+    // --- Optional ---
     @Test // S = 'a'? ;
     fun rhs_optional_literal() {
         val grammarStr = """
@@ -568,6 +569,7 @@ class test_SyntaxAnalyserSimple {
         testAll(proc, tests)
     }
 
+    // --- ListSimple ---
     @Test //  S = 'a'* ;
     fun rhs_list_literal_nonLeaf() {
         val grammarStr = """
@@ -790,6 +792,7 @@ class test_SyntaxAnalyserSimple {
         testAll(proc, tests)
     }
 
+    // --- ListSeparated ---
     @Test // S = as ; as = ['a' / ',']* ;
     fun rhs_nonTerm_sepList_literal() {
         val grammarStr = """

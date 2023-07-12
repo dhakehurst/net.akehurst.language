@@ -79,29 +79,6 @@ class TypeModelFromGrammar(
     // temp var - changes for each Grammar processed
     private lateinit var grammar: Grammar
 
-    private fun stringTypeForRuleName(name: String): PrimitiveType {
-        val existing = _ruleToType[name]
-        return if (null == existing) {
-            val type = this.StringType
-            _ruleToType[name] = TypeUsage.ofType(type) //halt recursion
-            type
-        } else {
-            existing as PrimitiveType
-        }
-    }
-
-    private fun findOrCreateTypeForRule(rule: GrammarRule, ifCreate: () -> TypeUsage): TypeUsage {
-        val ruleName = rule.name
-        val existing = _ruleToType[ruleName]
-        return if (null == existing) {
-            val t = ifCreate.invoke()
-            _ruleToType[ruleName] = t
-            t
-        } else {
-            existing
-        }
-    }
-
     private fun findOrCreateElementType(rule: GrammarRule, ifCreate: (ElementType) -> Unit): TypeUsage {
         val ruleName = rule.name
         val existing = _ruleToType[ruleName]
@@ -116,20 +93,6 @@ class TypeModelFromGrammar(
             existing
         }
     }
-
-    /*
-        private fun createElementType(name: String): ElementType {
-            val existing = _ruleToType[name]
-            return if (null == existing) {
-                val type = ElementType(this, name)
-                _ruleToType[name] = type //halt recursion
-                type
-            } else {
-                error("Internal Error: created duplicate ElementType for '$name'")
-            }
-        }
-    */
-    private fun findElementType(rule: GrammarRule): ElementType? = _ruleToType[rule.name] as ElementType?
 
     private fun typeForGrammarRule(rule: GrammarRule): TypeUsage {
         val type = _ruleToType[rule.name]
@@ -155,52 +118,6 @@ class TypeModelFromGrammar(
         }
     }
 
-    /*
-        // Type for a GrammarRule is in some cases different than type for a rule item when part of something else in a rule
-        private fun typeForRhs(rule: GrammarRule): TypeUsage {
-            val type = _ruleToType[rule.name]
-            return if (null != type) {
-                type // return the type if it exists, also stops recursion
-            } else {
-                val rhs = rule.rhs
-                val ruleTypeUse: TypeUsage = when (rhs) {
-                    is EmptyRule -> findOrCreateElementType(rule) {}
-                    is Terminal -> typeForConcatenationRule(rule, listOf(rhs))
-                    is NonTerminal -> typeForConcatenationRule(rule, listOf(rhs))
-                    is Embedded -> typeForConcatenationRule(rule, listOf(rhs))
-                    is Concatenation -> typeForConcatenationRule(rule, rhs.items)
-                    is Choice -> typeForChoiceRule(rhs, rule)
-                    is OptionalItem -> {
-                        val t = typeForRuleItem(rhs.item)
-                        TypeUsage.ofType(t.type, t.arguments, true)
-                    }
-
-                    is SimpleList -> {
-                        when (rhs.item) {
-                            is Terminal -> typeForConcatenationRule(rule, listOf())
-                            else -> typeForConcatenationRule(rule, listOf(rhs))
-                        }
-                        //typeForSimpleList(rule, rhs)
-                    }
-
-                    is SeparatedList -> {
-                        when {
-                            rhs.item is Terminal -> typeForConcatenationRule(rule, listOf())
-                            else -> typeForConcatenationRule(rule, listOf(rhs))
-                        }
-                        //typeForConcatenationRule(rule, listOf(rhs))
-                        //typeForSeparatedList(rule, rhs)
-                    }
-
-                    is Group -> typeForGroup(rhs)
-
-                    else -> error("Internal error, unhandled subtype of rule '${rule.name}'.rhs '${rhs::class.simpleName}' when getting TypeModel from grammar '${this.qualifiedName}'")
-                }
-                _ruleToType[rule.name] = ruleTypeUse
-                ruleTypeUse
-            }
-        }
-    */
     // Type for a GrammarRule is in some cases different than type for a rule item when part of something else in a rule
     private fun typeForRuleItem(ruleItem: RuleItem, forProperty: Boolean): TypeUsage {
         val type = _typeForRuleItem[ruleItem]
@@ -332,29 +249,6 @@ class TypeModelFromGrammar(
         }
     }
 
-    /*
-        private fun typeForSimpleList(rule: GrammarRule, list: SimpleList): TypeUsage {
-            val args = mutableListOf<TypeUsage>()
-            val rt = findOrCreateTypeForRule(rule) {
-                TypeUsage.ofType(ListSimpleType, args)
-            }
-            val et = typeForRuleItem(list.item)
-            args.add(rt)
-            return rt
-        }
-
-        private fun typeForSeparatedList(rule: GrammarRule, slist: SeparatedList): TypeUsage {
-            val args = mutableListOf<TypeUsage>()
-            val rt = findOrCreateTypeForRule(rule) {
-                TypeUsage.ofType(ListSimpleType, args)
-            }
-            val itemType = typeForRuleItem(slist.item)
-            val sepType = typeForRuleItem(slist.separator)
-            args.add(itemType)
-            args.add(sepType)
-            return rt
-        }
-    */
     private fun typeForChoiceRule(choice: Choice, choiceRule: GrammarRule): TypeUsage {
         // if all choice gives ElementType then this type is a super type of all choices
         // else choices maps to properties
@@ -565,12 +459,13 @@ class TypeModelFromGrammar(
     }
 
     private fun createUniquePropertyNameFor(et: StructuredRuleType, name: String): String {
-        val nameCount = this._uniquePropertyNames[Pair(et, name)]
+        val key = Pair(et, name)
+        val nameCount = this._uniquePropertyNames[key]
         val uniqueName = if (null == nameCount) {
-            this._uniquePropertyNames[Pair(et, name)] = 2
+            this._uniquePropertyNames[key] = 2
             name
         } else {
-            this._uniquePropertyNames[Pair(et, name)] = nameCount + 1
+            this._uniquePropertyNames[key] = nameCount + 1
             "$name$nameCount"
         }
         return uniqueName

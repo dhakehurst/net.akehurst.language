@@ -37,7 +37,12 @@ interface Rule {
     val isPattern: Boolean
     val isEmbedded: Boolean
 
+    val isChoice: Boolean
     val isList: Boolean
+    val isListSimple: Boolean
+    val isListSeparated: Boolean
+
+    val isOptional: Boolean
 }
 
 @DslMarker

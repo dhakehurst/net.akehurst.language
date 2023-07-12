@@ -104,8 +104,8 @@ internal class ParseGraph(
 //            parent.startPosition == child.startPosition && parent.state.firstRule.isEmptyTerminal -> -1
 //            parent.startPosition == child.startPosition && child.state.firstRule.isEmptyTerminal -> 1
             // 1) nextInputPosition lower number first
-            parent.nextInputPosition < child.nextInputPosition -> 1
-            parent.nextInputPosition > child.nextInputPosition -> -1
+            parent.nextInputPositionAfterSkip < child.nextInputPositionAfterSkip -> 1
+            parent.nextInputPositionAfterSkip > child.nextInputPositionAfterSkip -> -1
             else -> when {
                 // 2) shift before reduce (reduce happens if state.isAtEnd)
                 parent.state.isAtEnd && child.state.isAtEnd -> when {
@@ -164,7 +164,7 @@ internal class ParseGraph(
             return when {
                 null == root -> Int.MAX_VALUE
                 //root.state.isGoal -> -1
-                else -> root.nextInputPosition//startPosition
+                else -> root.nextInputPositionAfterSkip//startPosition
             }
         }
 
@@ -328,8 +328,8 @@ internal class ParseGraph(
     }
 
     private fun mergeDecisionOnLength(existingParent: CompleteNodeIndex, newParent: CompleteNodeIndex, ifEqual: () -> MergeOptions): MergeOptions {
-        val existingLength = existingParent.nextInputPosition - existingParent.startPosition
-        val newLength = newParent.nextInputPosition - newParent.startPosition
+        val existingLength = existingParent.nextInputPositionAfterSkip - existingParent.startPosition
+        val newLength = newParent.nextInputPositionAfterSkip - newParent.startPosition
         return when {
             newLength > existingLength -> MergeOptions.PREFER_NEW
             existingLength > newLength -> MergeOptions.PREFER_EXISTING
@@ -382,7 +382,7 @@ internal class ParseGraph(
      * START
      */
     fun start(goalState: ParserState, startPosition: Int, runtimeLookahead: Set<LookaheadSet>, initialSkipData: TreeDataComplete<CompleteNodeIndex>?): GrowingNodeIndex {
-        val nextInputPositionAfterSkip = initialSkipData?.root?.nextInputPosition ?: startPosition
+        val nextInputPositionAfterSkip = initialSkipData?.root?.nextInputPositionAfterSkip ?: startPosition
         val st = this.createGrowingNodeIndex(goalState, runtimeLookahead, nextInputPositionAfterSkip, nextInputPositionAfterSkip, nextInputPositionAfterSkip, 0, null)
         this._gss.root(st)
         this.treeData.initialise(st, initialSkipData)
@@ -402,7 +402,7 @@ internal class ParseGraph(
         nextInputPosition: Int,
         skipData: TreeDataComplete<CompleteNodeIndex>?
     ): Boolean {
-        val nextInputPositionAfterSkip = skipData?.root?.nextInputPosition ?: nextInputPosition
+        val nextInputPositionAfterSkip = skipData?.root?.nextInputPositionAfterSkip ?: nextInputPosition
         val newHead = this.createGrowingNodeIndex(newState, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0, null)
         if (null != skipData) {
             this.treeData.setSkipDataAfter(newHead.complete, skipData)
@@ -426,7 +426,7 @@ internal class ParseGraph(
         embeddedTreeData: TreeDataComplete<CompleteNodeIndex>,
         skipData: TreeDataComplete<CompleteNodeIndex>?
     ): Boolean {
-        val nextInputPositionAfterSkip = skipData?.root?.nextInputPosition ?: nextInputPosition
+        val nextInputPositionAfterSkip = skipData?.root?.nextInputPositionAfterSkip ?: nextInputPosition
         val newHead = this.createGrowingNodeIndex(newState, runtimeLookaheadSet, startPosition, nextInputPosition, nextInputPositionAfterSkip, 0, null)
         if (null != skipData) {
             this.treeData.setSkipDataAfter(newHead.complete, skipData)
@@ -453,9 +453,10 @@ internal class ParseGraph(
     ): Boolean {
         if (Debug.CHECK) check(head.isComplete)
         val child = head.complete
-        val nextInputPosition = if (head.isLeaf) head.nextInputPositionAfterSkip else head.nextInputPosition
+        //val nextInputPosition = if (head.isLeaf) head.nextInputPositionAfterSkip else head.nextInputPosition
         val childrenPriorities = listOf(head.state.priorityList)
-        val parent = this.createGrowingNodeIndex(parentState, parentRuntimeLookaheadSet, head.startPosition, nextInputPosition, nextInputPosition, 1, childrenPriorities)
+        val parent =
+            this.createGrowingNodeIndex(parentState, parentRuntimeLookaheadSet, head.startPosition, head.nextInputPosition, head.nextInputPositionAfterSkip, 1, childrenPriorities)
         return if (parent.isComplete) {
             val newParent = parent.complete
             val existingComplete = this.treeData.preferred(newParent)
@@ -498,7 +499,7 @@ internal class ParseGraph(
         if (Debug.CHECK) check(head.isComplete)
         val child = head.complete
         val newParentNumNonSkipChildren = previous.numNonSkipChildren + 1
-        val nextInputPosition = if (head.isLeaf) head.nextInputPositionAfterSkip else head.nextInputPosition
+        //val nextInputPosition = if (head.isLeaf) head.nextInputPositionAfterSkip else head.nextInputPosition
         val childPrio = listOf(head.state.priorityList)
         val childrenPriorities: List<List<Int>> = previous.childrenPriorities?.plus(childPrio)
             ?: childPrio //Goal scenario
@@ -506,8 +507,8 @@ internal class ParseGraph(
             newParentState,
             newParentRuntimeLookaheadSet,
             previous.startPosition,
-            nextInputPosition,
-            nextInputPosition,
+            head.nextInputPosition,
+            head.nextInputPositionAfterSkip,
             newParentNumNonSkipChildren,
             childrenPriorities
         )
@@ -592,7 +593,7 @@ internal class ParseGraph(
     private fun doRecordGoal(goal: CompleteNodeIndex) {
         this.treeData.complete.setRoot(goal)
         this._goals.add(goal)
-        this.goalMatchedAll = this.input.isEnd(goal.nextInputPosition)
+        this.goalMatchedAll = this.input.isEnd(goal.nextInputPositionAfterSkip)
     }
 
     private fun prevOfToString(n: GrowingNodeIndex): String {

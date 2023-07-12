@@ -27,6 +27,8 @@ private interface StackData {
 private data class StackInfo(
     val done: Boolean,
     override val node: SpptDataNode,
+
+    override val parentAlt: AltInfo,
     /**
      * (option number matched, total num options matched)
      */
@@ -74,11 +76,12 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
         // handle <GOAL>
         val goal = treeData.root!!
         val userRoot = treeData.childrenFor(goal)[0].second[0]
+        val parentAlt = AltInfo(0, 0, 1) //no parent alts for root, probably not used
         when {
             userRoot.rule.isTerminal -> {
                 val urchildOfTotal = ChildInfo(0, 1)
                 val altOfTotal = AltInfo(0, 0, 1)
-                stack.push(StackInfo(false, userRoot, altOfTotal, urchildOfTotal, emptyMap(), -1))
+                stack.push(StackInfo(false, userRoot, parentAlt, altOfTotal, urchildOfTotal, emptyMap(), -1))
             }
 
             else -> {
@@ -95,7 +98,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
                     val urnumSkipChildren = numSkipChildren(treeData.initialSkip) +
                             children.filter { it.rule.isTerminal }
                                 .fold(0) { acc, it -> treeData.skipDataAfter(it)?.let { acc + numSkipChildren(it) } ?: acc }
-                    val stackData = StackInfo(true, userRoot, altOfTotal, urchildOfTotal, numChildrenAlternatives, urnumSkipChildren)
+                    val stackData = StackInfo(true, userRoot, parentAlt, altOfTotal, urchildOfTotal, numChildrenAlternatives, urnumSkipChildren)
                     altInfo.alternatives.add(Pair(stackData, children))
                 }
             }
@@ -139,11 +142,12 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
         val goal = treeData.root!!
         val skipMulti = treeData.childrenFor(goal)[0].second[0]
         val multi = treeData.childrenFor(skipMulti)[0].second
+        val parentAlt = AltInfo(0, 0, 1) //no parent alts for root, probably not used
         for (i in multi.indices.reversed()) {
             val n = multi[i]
             val childOfTotal = ChildInfo(i, multi.size + 1) //TODO: should get the 1 passed in as actual number of siblings
             val skp = treeData.childrenFor(n)[0].second[0]
-            stack.push(StackInfo(false, skp, AltInfo(0, 0, 1), childOfTotal, emptyMap(), -1))
+            stack.push(StackInfo(false, skp, parentAlt, AltInfo(0, 0, 1), childOfTotal, emptyMap(), -1))
         }
 
         while (stack.isNotEmpty) {
@@ -190,7 +194,6 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
             val children = altChildrenInfo.second
             stack.push(info)
             stack.push(nodeInfo)
-            val altOfTotal = nodeInfo.alt
             callback.beginBranch(nodeInfo)
             if (info.isRoot) {
                 this.traverseSkipData(callback, skipDataAsTree, treeData.initialSkip)
@@ -200,7 +203,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
                 val ch = children[i]
                 val childOfTotal = ChildInfo(i, totChildrenIncSkip)
                 // carry the childOfTotal, rest is unused
-                stack.push(StackInfo(false, ch, altOfTotal, childOfTotal, emptyMap(), -1))
+                stack.push(StackInfo(false, ch, nodeInfo.parentAlt, nodeInfo.alt, childOfTotal, emptyMap(), -1))
             }
         }
     }
@@ -225,7 +228,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
                     //val numChildrenAlternatives = numChildrenAlternatives(children)
                     val numSkipChildren = children.filter { it.rule.isTerminal }
                         .fold(0) { acc, it -> treeData.skipDataAfter(it)?.let { acc + numSkipChildren(it) } ?: acc }
-                    val stackData = StackInfo(true, info.node, altOfTotal, info.child, numChildrenAlternatives, numSkipChildren)
+                    val stackData = StackInfo(true, info.node, info.alt, altOfTotal, info.child, numChildrenAlternatives, numSkipChildren)
                     altInfo.alternatives.add(Pair(stackData, children))
                 }
             }
@@ -237,7 +240,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
             val ed = treeData.embeddedFor(info.node) ?: error("Cannot find embedded TreeData for '${info.node}'")
             val numChildrenAlternatives = mapOf(0 to 1) //FIXME: should recalc this from embedded data
             val numSkipChildren = treeData.skipDataAfter(info.node)?.let { numSkipChildren(it) } ?: 0
-            val stackData = StackInfo(true, info.node, info.alt, info.child, numChildrenAlternatives, numSkipChildren)
+            val stackData = StackInfo(true, info.node, info.parentAlt, info.alt, info.child, numChildrenAlternatives, numSkipChildren)
             callback.beginEmbedded(stackData)
             ed.traverseTreeDepthFirst(callback, skipDataAsTree)
             this.traverseSkipData(callback, skipDataAsTree, treeData.skipDataAfter(info.node))

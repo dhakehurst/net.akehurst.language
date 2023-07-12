@@ -155,7 +155,7 @@ internal class RuntimeParser(
 
     var debugCount = 0
     fun debugOutput() {
-        fun GrowingNodeIndex.asString() = "(s${runtimeState.state.number.value},${startPosition}-${nextInputPosition}{${numNonSkipChildren}}${
+        fun GrowingNodeIndex.asString() = "(s${runtimeState.state.number.value},${startPosition}-${nextInputPositionAfterSkip}{${numNonSkipChildren}}${
             runtimeState.state.rulePositions.joinToString()
         }${
             runtimeState.runtimeLookaheadSet.joinToString(
@@ -868,7 +868,7 @@ internal class RuntimeParser(
             parseArgs.heightGraftOnly -> false
             parseArgs.nonEmptyWidthOnly && transition.to.firstRule.isEmptyTerminal -> false
             else -> {
-                val l = this.graph.input.findOrTryCreateLeaf(transition.to.firstRule, head.nextInputPosition)
+                val l = this.graph.input.findOrTryCreateLeaf(transition.to.firstRule, head.nextInputPositionAfterSkip)
                 if (null != l) {
                     val lh = transition.lookahead.map { it.guard }.reduce { acc, e -> acc.union(this.stateSet, e) } //TODO:reduce to 1 in SM
                     val runtimeLhs = head.runtimeState.runtimeLookaheadSet
@@ -899,7 +899,7 @@ internal class RuntimeParser(
                         false
                     }
                 } else {
-                    recordFailedWidthTo(parseArgs, head.nextInputPosition, transition)
+                    recordFailedWidthTo(parseArgs, head.nextInputPositionAfterSkip, transition)
                     false
                 }
             }
@@ -960,7 +960,7 @@ internal class RuntimeParser(
                         buildSPPT = parseArgs.buildTree
                     )
                 } else {
-                    recordFailedHeightLh(parseArgs, head.nextInputPosition, transition, runtimeLhs, possibleEndOfText)
+                    recordFailedHeightLh(parseArgs, head.nextInputPositionAfterSkip, transition, runtimeLhs, possibleEndOfText)
                     false
                 }
             }
@@ -990,11 +990,11 @@ internal class RuntimeParser(
                             buildSPPT = parseArgs.buildTree
                         )
                     } else {
-                        recordFailedGraftLH(parseArgs, head.nextInputPosition, transition, runtimeLhs, possibleEndOfText)
+                        recordFailedGraftLH(parseArgs, head.nextInputPositionAfterSkip, transition, runtimeLhs, possibleEndOfText)
                         false
                     }
                 } else {
-                    recordFailedGraftRTG(parseArgs, head.nextInputPosition, transition, previous.numNonSkipChildren)
+                    recordFailedGraftRTG(parseArgs, head.nextInputPositionAfterSkip, transition, previous.numNonSkipChildren)
                     false
                 }
             }
@@ -1127,7 +1127,7 @@ internal class RuntimeParser(
                 } else {
                     //  could not parse embedded
                     //this.embeddedLastDropped[transition] = embeddedParser.lastDropped
-                    recordFailedEmbedded(parseArgs, head.nextInputPosition, transition, embeddedParser.failedReasons)
+                    recordFailedEmbedded(parseArgs, head.nextInputPositionAfterSkip, transition, embeddedParser.failedReasons)
                     false
                 }
             }

@@ -22,6 +22,7 @@ interface SpptDataNode {
     val rule: Rule
     val startPosition: Int
     val nextInputPosition: Int
+    val nextInputNoSkip: Int
     val option: Int
 }
 
@@ -39,6 +40,7 @@ data class AltInfo(
 interface SpptDataNodeInfo {
     val node: SpptDataNode
 
+    val parentAlt: AltInfo
     val alt: AltInfo
     val child: ChildInfo
 

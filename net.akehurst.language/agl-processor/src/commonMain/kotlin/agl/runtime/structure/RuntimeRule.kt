@@ -82,9 +82,15 @@ internal class RuntimeRule(
             is RuntimeRuleRhsList -> true
         }
 
-    val isChoice get() = this.rhs is RuntimeRuleRhsChoice
+    override val isChoice get() = this.rhs is RuntimeRuleRhsChoice
     val isChoiceAmbiguous get() = this.isChoice && (this.rhs as RuntimeRuleRhsChoice).choiceKind == RuntimeRuleChoiceKind.AMBIGUOUS
     override val isList get() = this.rhs is RuntimeRuleRhsList
+    override val isListSimple: Boolean get() = this.rhs is RuntimeRuleRhsListSimple
+    override val isListSeparated: Boolean get() = this.rhs is RuntimeRuleRhsListSeparated
+    override val isOptional: Boolean
+        get() = this.rhs is RuntimeRuleRhsListSimple &&
+                (this.rhs as RuntimeRuleRhsListSimple).max == 1 &&
+                (this.rhs as RuntimeRuleRhsListSimple).min == 0
 
     @Deprecated("use 'rhs is'")
     val kind

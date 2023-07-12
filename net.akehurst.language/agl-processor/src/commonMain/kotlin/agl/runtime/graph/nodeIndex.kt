@@ -59,7 +59,7 @@ internal class GrowingNodeIndex(
         CompleteNodeIndex(runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip)
     }
 
-    private val _hashCode = arrayOf(runtimeState, startPosition, nextInputPosition, numNonSkipChildren).contentHashCode()
+    private val _hashCode = arrayOf(runtimeState, startPosition, nextInputPositionAfterSkip, numNonSkipChildren).contentHashCode()
 
     val isComplete: Boolean get() = runtimeState.isAtEnd
     val isGoal: Boolean get() = runtimeState.state.isGoal
@@ -76,7 +76,7 @@ internal class GrowingNodeIndex(
         else -> when {
             this.runtimeState != other.runtimeState -> false
             this.startPosition != other.startPosition -> false
-            this.nextInputPosition != other.nextInputPosition -> false
+            this.nextInputPositionAfterSkip != other.nextInputPositionAfterSkip -> false
             this.numNonSkipChildren != other.numNonSkipChildren -> false
             else -> true
         }
@@ -89,7 +89,7 @@ internal class GrowingNodeIndex(
             postfix = "]",
             separator = "|"
         ) { it }
-        return "GNI{state=${runtimeState.state},lhs=$ctStr,sp=${startPosition},np=$nextInputPosition,len=$numNonSkipChildren}"
+        return "GNI{state=${runtimeState.state},lhs=$ctStr,sp=${startPosition},np=$nextInputPositionAfterSkip,nc=$numNonSkipChildren}"
     }
 
 }
@@ -119,7 +119,7 @@ internal class CompleteNodeIndex(
     val runtimeRulesAsSet: Set<RuntimeRule> get() = this.state.runtimeRulesAsSet
     val rulePositions get() = this.state.rulePositions
 
-    private val _hashCode_cache = arrayOf(runtimeRulesAsSet, startPosition, nextInputPosition).contentHashCode()
+    private val _hashCode_cache = arrayOf(runtimeRulesAsSet, startPosition, nextInputPositionAfterSkip).contentHashCode()
 
     val highestPriorityRule get() = this.state.rulePositions.maxBy { it.option }.rule as RuntimeRule
     val firstRule: RuntimeRule by lazy { this.state.rulePositions[0].rule as RuntimeRule }
@@ -127,6 +127,7 @@ internal class CompleteNodeIndex(
     val isEmbedded: Boolean get() = firstRule.isEmbedded //should only be one if true
     val isEmptyMatch: Boolean get() = this.startPosition == this.nextInputPosition
     val hasSkipData: Boolean get() = this.nextInputPosition != nextInputPositionAfterSkip
+    override val nextInputNoSkip get() = this.nextInputPosition
 
     override val option: Int get() = this.state.priorityList[0]
     val priorityList: List<Int> get() = this.state.priorityList
@@ -135,7 +136,7 @@ internal class CompleteNodeIndex(
     override fun equals(other: Any?): Boolean = when {
         other !is CompleteNodeIndex -> false
         other.startPosition != this.startPosition -> false
-        other.nextInputPosition != this.nextInputPosition -> false
+        other.nextInputPositionAfterSkip != this.nextInputPositionAfterSkip -> false
         other.runtimeRulesAsSet != this.runtimeRulesAsSet -> false
         else -> true
     }
