@@ -19,6 +19,7 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.collections.toSeparatedList
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
+import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
@@ -102,67 +103,98 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
             }
 
             override fun beginBranch(nodeInfo: SpptDataNodeInfo) {
-                val downData = downStack.peekOrNull()
-                val dd = when (downData) {
-                    null -> { //root
+                val dd = when {
+                    downStack.isEmpty -> { // root
                         val typeUse = this@SyntaxAnalyserSimpleAbstract2.findTypeForRule(nodeInfo.node.rule.tag)
                             ?: error("Type not found for ${nodeInfo.node.rule.tag}")
                         DownData(AsmElementPath.ROOT, typeUse)
                     }
 
                     else -> {
-                        val parentType = downData.typeUse.type
-                        when (parentType) {
-                            null -> TODO()
-                            is PrimitiveType -> downData
-
-                            is AnyType -> TODO()
-                            is NothingType -> TODO()
-                            is UnnamedSuperTypeType -> {
-                                val t = parentType.subtypes[nodeInfo.parentAlt.option]
-                                DownData(downData.path, t)
+                        //val parentPlusSoFarChildren = downStack.peek(nodeInfo.child.index + 1)
+                        val parentDownData = downStack.peek()  //parentPlusSoFarChildren.first()
+                        when {
+                            null == parentDownData -> null //error("Should not happen")
+                            parentDownData.typeUse.nullable -> {
+                                DownData(parentDownData.path, parentDownData.typeUse.notNullable)
                             }
 
-                            is ListSimpleType -> {
-                                val p = downData.path.plus(nodeInfo.child.index.toString())
-                                val t = downData.typeUse.arguments[0]
-                                DownData(p, t)
-                            }
+                            else -> {
+                                val parentType = parentDownData.typeUse.type
+                                when (parentType) {
+                                    is PrimitiveType -> parentDownData
+                                    is AnyType -> TODO()
+                                    is NothingType -> TODO()
+                                    is UnnamedSuperTypeType -> {
+                                        val t = parentType.subtypes[nodeInfo.parentAlt.option]
+                                        DownData(parentDownData.path, t)
+                                    }
 
-                            is ListSeparatedType -> {
-                                val p = downData.path.plus(nodeInfo.child.index.toString())
-                                val t = downData.typeUse.arguments[0]
-                                DownData(p, t)
-                            }
-
-                            is TupleType -> {
-                                val prop = parentType.getPropertyByIndex(nodeInfo.child.index)
-                                if (null == prop) {
-                                    // not used
-                                    null
-                                } else {
-                                    val p = downData.path.plus(prop.name)
-                                    val t = prop.typeUse
-                                    DownData(p, t)
-                                }
-                            }
-
-                            is ElementType -> {
-                                if (parentType.subtypes.isEmpty()) {
-                                    val prop = parentType.getPropertyByIndex(nodeInfo.child.index)
-                                    if (null == prop) {
-                                        // not used
-                                        null
-                                    } else {
-                                        val p = downData.path.plus(prop.name)
-                                        val t = prop.typeUse
+                                    is ListSimpleType -> {
+                                        val p = parentDownData.path.plus(nodeInfo.child.index.toString())
+                                        val t = parentDownData.typeUse.arguments[0]
                                         DownData(p, t)
                                     }
-                                } else {
-                                    //val typeUse = this@SyntaxAnalyserSimpleAbstract2.findTypeForRule(nodeInfo.node.rule.tag)
-                                    //    ?: error("Type not found for ${nodeInfo.node.rule.tag}")
-                                    val t = parentType.subtypes[nodeInfo.parentAlt.option]
-                                    DownData(downData.path, TypeUsage.ofType(t, emptyList(), downData.typeUse.nullable))
+
+                                    is ListSeparatedType -> {
+                                        val p = parentDownData.path.plus(nodeInfo.child.index.toString())
+                                        val t = parentDownData.typeUse.arguments[0]
+                                        DownData(p, t)
+                                    }
+
+                                    is TupleType -> {
+                                        val prop = parentType.getPropertyByIndex(nodeInfo.child.propertyIndex)
+                                        if (null == prop) {
+                                            null  // property not used
+                                        } else {
+                                            val p = parentDownData.path.plus(prop.name)
+                                            val t = prop.typeUse
+                                            DownData(p, t)
+                                        }
+                                    }
+
+                                    is ElementType -> {
+                                        if (parentType.subtypes.isEmpty()) {
+                                            val prop = parentType.getPropertyByIndex(nodeInfo.child.propertyIndex)
+                                            if (null == prop) {
+                                                null  // property not used
+                                            } else {
+                                                val pType = prop.typeUse.type
+                                                when {
+                                                    1 == parentType.property.size -> when (pType) {
+                                                        is ListSimpleType -> {
+                                                            val p = parentDownData.path.plus(nodeInfo.child.index.toString())
+                                                            val t = prop.typeUse //.arguments[0]
+                                                            DownData(p, t)
+                                                        }
+
+                                                        is ListSeparatedType -> {
+                                                            val p = parentDownData.path.plus(nodeInfo.child.index.toString())
+                                                            val t = prop.typeUse //.arguments[0]
+                                                            DownData(p, t)
+                                                        }
+
+                                                        else -> {
+                                                            val p = parentDownData.path.plus(prop.name)
+                                                            val t = prop.typeUse
+                                                            DownData(p, t)
+                                                        }
+                                                    }
+
+                                                    else -> {
+                                                        val p = parentDownData.path.plus(prop.name)
+                                                        val t = prop.typeUse
+                                                        DownData(p, t)
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            //val typeUse = this@SyntaxAnalyserSimpleAbstract2.findTypeForRule(nodeInfo.node.rule.tag)
+                                            //    ?: error("Type not found for ${nodeInfo.node.rule.tag}")
+                                            val t = parentType.subtypes[nodeInfo.parentAlt.option]
+                                            DownData(parentDownData.path, TypeUsage.ofType(t, emptyList(), parentDownData.typeUse.nullable))
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -178,8 +210,8 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
                 val adjChildren = children.reversed()
                 val downData = downStack.pop()
                 val value = if (null == downData) {
-                    //branch not used
-                    Unit
+                    //branch not used for element property value, push null for correct num children on stack
+                    null
                 } else {
                     createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
@@ -216,17 +248,33 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
     }
 
     private fun createValueFromBranch(sentence: String, downData: DownData, target: SpptDataNodeInfo, children: List<ChildData>): Any? {
-        val type = downData.typeUse.type //this.findTypeForRule(target.rule.tag)
-        return when (type) {
-            null -> when {
-                target.node.rule.isOptional -> children[0].value
-                target.node.rule.isList -> children.mapNotNull { it.value } //TODO: should we keep nulls ?
-                else -> children // no type, so pass up the children in case useful further up
-                //else -> error("No Type for ${target.rule.tag}")
+        val targetType = findTypeForRule(target.node.rule.tag)
+
+        return when {
+            //target.node.rule.isOptional && null == targetType -> {
+            //    val child = children[0]
+            //    child.value
+            //}
+            downData.typeUse.nullable -> {
+                val child = children[0]
+                when {
+                    null == child.value -> null
+                    else -> {
+                        val nonOptChildren = listOf(
+                            ChildData(
+                                child.nodeInfo,
+                                child.value
+                            )
+                        )
+                        //createValueFromBranch(sentence, DownData(downData.path, downData.typeUse.notNullable), child.nodeInfo, children)
+                        child.value
+                    }
+                }
+                //createValueFromBranch(sentence, DownData(downData.path, downData.typeUse.notNullable), target, children)
             }
 
             else -> {
-                //val type = typeUse.type//typeModel.findTypeUsageForRule(target.name) ?: argType
+                val type = downData.typeUse.type
                 when (type) {
                     is PrimitiveType -> {
                         createStringValueFromBranch(sentence, target)
@@ -295,27 +343,36 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
                             val el = _asm!!.createElement(downData.path, type.name)
                             for (propDecl in type.property.values) {
                                 val propType = propDecl.typeUse.type
-                                val childData = children[propDecl.childIndex]
                                 val propValue: Any? = when (propType) {
                                     is PrimitiveType -> {
+                                        val childData = children[propDecl.childIndex]
                                         createStringValueFromBranch(sentence, childData.nodeInfo)
                                     }
 
                                     is ListSimpleType -> {
                                         when {
-                                            childData.nodeInfo.node.rule.isEmptyTerminal -> emptyList<Any>()
+                                            //target.node.rule.isEmptyTerminal -> emptyList<Any>()
+                                            target.node.rule.isListSimple && target.node.option == RulePosition.OPTION_MULTI_EMPTY -> emptyList<Any>()
+                                            //childData.nodeInfo.node.rule.isEmptyTerminal -> emptyList<Any>()
                                             target.node.rule.isList -> createList(target, children.map { it.value })
-                                            childData.nodeInfo.node.rule.isList -> when {
-                                                childData.value is List<*> -> createList(childData.nodeInfo, childData.value as List<Any?>)
-                                                childData.value is AsmElementSimple -> childData.value.properties.values.first().value as List<Any?>
-                                                else -> TODO()
-                                            }
+                                            else -> {
+                                                val childData = children[propDecl.childIndex]
+                                                when {
+                                                    childData.nodeInfo.node.rule.isList -> when {
+                                                        null == childData.value -> emptyList()
+                                                        childData.value is List<*> -> createList(childData.nodeInfo, childData.value as List<Any?>)
+                                                        childData.value is AsmElementSimple -> childData.value.properties.values.first().value as List<Any?>
+                                                        else -> listOf(childData.value)
+                                                    }
 
-                                            else -> error("Internal Error: cannot create a ListSimple from '$childData'")
+                                                    else -> error("Internal Error: cannot create a ListSimple from '$childData'")
+                                                }
+                                            }
                                         }
                                     }
 
                                     is ListSeparatedType -> {
+                                        val childData = children[propDecl.childIndex]
                                         when {
                                             childData.nodeInfo.node.rule.isEmptyTerminal -> emptyList<Any>()
                                             target.node.rule.isList -> children.map { it.value }.toSeparatedList<Any, Any>()
@@ -347,7 +404,10 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
 
                                                                         }
                                     */
-                                    else -> childData.value
+                                    else -> {
+                                        val childData = children[propDecl.childIndex]
+                                        childData.value
+                                    }
                                 }
                                 setPropertyOrReferenceFromDeclaration(el, propDecl, propValue)
                             }
@@ -357,6 +417,22 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
                 }
             }
         }
+        //this.findTypeForRule(target.rule.tag)
+        /*
+        return when (type) {
+            null -> when {
+                target.node.rule.isOptional -> children[0].value
+                target.node.rule.isList -> children.mapNotNull { it.value } //TODO: should we keep nulls ?
+                else -> children // no type, so pass up the children in case useful further up
+                //else -> error("No Type for ${target.rule.tag}")
+            }
+
+            else -> {
+                //val type = typeUse.type//typeModel.findTypeUsageForRule(target.name) ?: argType
+
+            }
+        }
+         */
     }
 
     private fun createValueFor(sentence: String, type: TypeDefinition, path: AsmElementPath, childData: ChildData): Any? = when (type) {

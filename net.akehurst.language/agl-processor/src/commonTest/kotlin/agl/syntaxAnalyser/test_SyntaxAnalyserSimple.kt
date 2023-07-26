@@ -16,9 +16,12 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
+import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
+import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -60,6 +63,10 @@ class test_SyntaxAnalyserSimple {
             for (data in tests) {
                 test(proc, data)
             }
+        }
+
+        fun checkTypeModel(expected: GrammarTypeModel, actual: GrammarTypeModel) {
+            GrammarTypeModelTest.assertEquals(expected, actual)
         }
     }
 
@@ -569,6 +576,47 @@ class test_SyntaxAnalyserSimple {
         testAll(proc, tests)
     }
 
+    @Test // S = A?; A = a; leaf a = 'a';
+    fun rhs_optional_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = A? ;
+                A = a ;
+                leaf a = 'a';
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+            elementType("S", "S") {
+                propertyElementTypeOf("a", "A", true, 0)
+            }
+            elementType("A", "A") {
+                propertyPrimitiveType("a", "String", false, 0)
+            }
+        }, proc.typeModel)
+
+        val tests = mutableListOf<TestData>()
+        /*        tests.define("") {
+                    asmSimple {
+                        element("S") {
+                            propertyNull("a")
+                        }
+                    }
+                }*/
+        tests.define("a") {
+            asmSimple {
+                element("S") {
+                    propertyElementExplicitType("a", "A") {
+                        propertyString("a", "a")
+                    }
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
     // --- ListSimple ---
     @Test //  S = 'a'* ;
     fun rhs_list_literal_nonLeaf() {
@@ -759,6 +807,15 @@ class test_SyntaxAnalyserSimple {
             }
         """.trimIndent()
         val proc = testProc(grammarStr)
+
+        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+            elementType("S", "S") {
+                propertyListTypeOf("as", "String", false, 0)
+            }
+            elementType("as", "As") {
+                propertyListTypeOf("a", "String", false, 0)
+            }
+        }, proc.typeModel)
 
         val tests = mutableListOf<TestData>()
         tests.define("") {
@@ -1444,6 +1501,26 @@ class test_SyntaxAnalyserSimple {
             }
         """.trimIndent()
         val proc = testProc(grammarStr)
+
+        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+            // S = type ;
+            elementType("S", "S") {
+                propertyElementTypeOf("type", "Type", false, 0)
+            }
+            // type = NAME typeArgs? ;
+            elementType("type", "Type") {
+                propertyPrimitiveType("name", "String", false, 0)
+                propertyElementTypeOf("typeArgs", "TypeArgs", true, 1)
+            }
+            // typeArgs = '<' typeArgList '>' ;
+            elementType("typeArgs", "TypeArgs") {
+                propertyListTypeOf("typeArgList", "Type", false, 1)
+            }
+            // typeArgList = [type / ',']+ ;
+            elementType("typeArgList", "TypeArgList") {
+                propertyListTypeOf("type", "Type", false, 0)
+            }
+        }, proc.typeModel)
 
         val tests = mutableListOf<TestData>()
         tests.define("A") {

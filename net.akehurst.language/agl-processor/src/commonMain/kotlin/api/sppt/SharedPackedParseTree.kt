@@ -27,6 +27,7 @@ interface SpptDataNode {
 }
 
 data class ChildInfo(
+    val propertyIndex: Int, // property index for a list is different to child index
     val index: Int,
     val total: Int
 )

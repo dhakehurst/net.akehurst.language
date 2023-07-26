@@ -42,6 +42,7 @@ import net.akehurst.language.api.sppt.*
             override val rule: RuntimeRule get() = runtimeRule
             override val startPosition: Int get() = startPosition
             override val nextInputPosition: Int get() = nextInputPosition
+            override val nextInputNoSkip: Int get() = nextInputPosition
             override val option: Int get() = 0
         }
         )

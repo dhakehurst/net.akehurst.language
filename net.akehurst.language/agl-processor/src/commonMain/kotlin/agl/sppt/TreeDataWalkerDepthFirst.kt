@@ -79,13 +79,13 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
         val parentAlt = AltInfo(0, 0, 1) //no parent alts for root, probably not used
         when {
             userRoot.rule.isTerminal -> {
-                val urchildOfTotal = ChildInfo(0, 1)
+                val urchildOfTotal = ChildInfo(0, 0, 1)
                 val altOfTotal = AltInfo(0, 0, 1)
                 stack.push(StackInfo(false, userRoot, parentAlt, altOfTotal, urchildOfTotal, emptyMap(), -1))
             }
 
             else -> {
-                val urchildOfTotal = ChildInfo(0, 1)
+                val urchildOfTotal = ChildInfo(0, 0, 1)
                 val uralternatives = treeData.childrenFor(userRoot).sortedBy { it.first }
                 val altInfo = AlternativesInfo(userRoot, true)
                 path.push(altInfo)
@@ -145,7 +145,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
         val parentAlt = AltInfo(0, 0, 1) //no parent alts for root, probably not used
         for (i in multi.indices.reversed()) {
             val n = multi[i]
-            val childOfTotal = ChildInfo(i, multi.size + 1) //TODO: should get the 1 passed in as actual number of siblings
+            val childOfTotal = ChildInfo(i, i, multi.size + 1) //TODO: is this correct ?
             val skp = treeData.childrenFor(n)[0].second[0]
             stack.push(StackInfo(false, skp, parentAlt, AltInfo(0, 0, 1), childOfTotal, emptyMap(), -1))
         }
@@ -201,7 +201,11 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
             val totChildrenIncSkip = children.size + nodeInfo.numSkipChildren
             for (i in children.indices.reversed()) {
                 val ch = children[i]
-                val childOfTotal = ChildInfo(i, totChildrenIncSkip)
+                val propertyIndex = when {
+                    nodeInfo.node.rule.isList -> 0
+                    else -> i
+                }
+                val childOfTotal = ChildInfo(propertyIndex, i, totChildrenIncSkip)
                 // carry the childOfTotal, rest is unused
                 stack.push(StackInfo(false, ch, nodeInfo.parentAlt, nodeInfo.alt, childOfTotal, emptyMap(), -1))
             }
