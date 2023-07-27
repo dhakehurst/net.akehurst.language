@@ -72,7 +72,7 @@ class test_SyntaxAnalyserSimple {
 
     // --- Empty ---
     @Test // S =  ;
-    fun rhs_empty() {
+    fun empty() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -91,7 +91,7 @@ class test_SyntaxAnalyserSimple {
 
     // --- Literal ---
     @Test // S = 'a' ;
-    fun rhs_terminal_nonleaf_literal() {
+    fun terminal_nonleaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -109,7 +109,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = a ; leaf a = 'a' ;
-    fun rhs_terminal_leaf_literal() {
+    fun terminal_leaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -130,7 +130,7 @@ class test_SyntaxAnalyserSimple {
 
     // --- Pattern ---
     @Test //  S = "[a-z]" ;
-    fun rhs_terminal_nonLeaf_pattern() {
+    fun terminal_nonLeaf_pattern() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -148,7 +148,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = v ; leaf v = "[a-z]" ;
-    fun rhs_terminal_leaf_pattern() {
+    fun terminal_leaf_pattern() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -169,7 +169,7 @@ class test_SyntaxAnalyserSimple {
 
     // --- Concatenation ---
     @Test // S = A B C ;
-    fun rhs_concat_nonTerm_x3_literal() {
+    fun concat_nonTerm_x3_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -195,7 +195,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test
-    fun rhs_concat_nonTerm_x3_literal_with_separator() {
+    fun concat_nonTerm_x3_literal_with_separator() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -222,7 +222,7 @@ class test_SyntaxAnalyserSimple {
 
     // --- Choice ---
     @Test // S = 'a' | 'b' | 'c' ;
-    fun rhs_choice_literal() {
+    fun choice_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -239,7 +239,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = A | B | C ; A = a x; B = b x; C = c x;
-    fun rhs_choice_nonTerm() {
+    fun choice_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -284,7 +284,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = L | M ; L = 'a' | 'b' | 'c' ; M = 'x' | 'y' ;
-    fun rhs_choice_of_choice_all_literal() {
+    fun choice_of_choice_all_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -325,7 +325,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = L | M ; L = a | b | c ;  M = x | y ;
-    fun rhs_choice_of_choice_all_leaf() {
+    fun choice_of_choice_all_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -371,7 +371,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = A | B | C ; A = a x ; B = C | D ; C = c x; D = d x ;
-    fun rhs_choice_of_choice_all_concats() {
+    fun choice_of_choice_all_concats() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -418,7 +418,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = A | B | C ; A = a x ; B = c | D ; C = c ; D = d ;
-    fun rhs_choice_of_choice_mixed_literal_and_concats() {
+    fun choice_of_choice_mixed_literal_and_concats() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -464,7 +464,7 @@ class test_SyntaxAnalyserSimple {
 
     // --- Optional ---
     @Test // S = 'a'? ;
-    fun rhs_optional_literal() {
+    fun optional_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -513,7 +513,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test //S = a? ;
-    fun rhs_optional_literal_leaf() {
+    fun optional_literal_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -577,7 +577,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test // S = A?; A = a; leaf a = 'a';
-    fun rhs_optional_nonTerm() {
+    fun optional_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -598,13 +598,13 @@ class test_SyntaxAnalyserSimple {
         }, proc.typeModel)
 
         val tests = mutableListOf<TestData>()
-        /*        tests.define("") {
-                    asmSimple {
-                        element("S") {
-                            propertyNull("a")
-                        }
-                    }
-                }*/
+        tests.define("") {
+            asmSimple {
+                element("S") {
+                    propertyNull("a")
+                }
+            }
+        }
         tests.define("a") {
             asmSimple {
                 element("S") {
@@ -617,9 +617,60 @@ class test_SyntaxAnalyserSimple {
         testAll(proc, tests)
     }
 
+    @Test // S = oA; oA=A?; A = a; leaf a = 'a';
+    fun nonTerm_optional_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = oA ;
+                oA = A? ;
+                A = a ;
+                leaf a = 'a';
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+            elementType("S", "S") {
+                propertyElementTypeOf("oA", "OA", false, 0)
+            }
+            elementType("oA", "OA") {
+                propertyElementTypeOf("a", "A", true, 0)
+            }
+            elementType("A", "A") {
+                propertyPrimitiveType("a", "String", false, 0)
+            }
+        }, proc.typeModel)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("") {
+            asmSimple {
+                element("S") {
+                    propertyElementExplicitType("oA", "OA") {
+                        propertyNull("a")
+                    }
+                }
+            }
+        }
+        tests.define("a") {
+            asmSimple {
+                element("S") {
+                    propertyElementExplicitType("a", "A") {
+                        propertyElementExplicitType("oA", "OA") {
+                            propertyElementExplicitType("a", "A") {
+                                propertyString("a", "a")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
     // --- ListSimple ---
     @Test //  S = 'a'* ;
-    fun rhs_list_literal_nonLeaf() {
+    fun list_literal_nonLeaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -701,7 +752,7 @@ class test_SyntaxAnalyserSimple {
     }
 
     @Test //  S = a* ;
-    fun rhs_list_literal_leaf() {
+    fun list_literal_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -796,8 +847,132 @@ class test_SyntaxAnalyserSimple {
         testAll(proc, tests)
     }
 
+    @Test // S = A*; A = a; leaf a = 'a';
+    fun list_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = A* ;
+                A = a ;
+                leaf a = 'a';
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+            elementType("S", "S") {
+                propertyListTypeOf("a", "A", false, 0)
+            }
+            elementType("A", "A") {
+                propertyPrimitiveType("a", "String", false, 0)
+            }
+        }, proc.typeModel)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("a") {}
+                }
+            }
+        }
+        tests.define("a") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("a") {
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("aa") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("a") {
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                    }
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test // S = b A* c; A = a; leaf a = 'a';
+    fun concat_list_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = b A* c;
+                A = a ;
+                leaf a = 'a';
+                leaf b = 'b';
+                leaf c = 'c';
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+            elementType("S", "S") {
+                propertyPrimitiveType("b", "String", false, 0)
+                propertyListTypeOf("a", "A", false, 1)
+                propertyPrimitiveType("c", "String", false, 2)
+            }
+            elementType("A", "A") {
+                propertyPrimitiveType("a", "String", false, 0)
+            }
+        }, proc.typeModel)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("bc") {
+            asmSimple {
+                element("S") {
+                    propertyString("b", "b")
+                    propertyListOfElement("a") {}
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("bac") {
+            asmSimple {
+                element("S") {
+                    propertyString("b", "b")
+                    propertyListOfElement("a") {
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                    }
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("baac") {
+            asmSimple {
+                element("S") {
+                    propertyString("b", "b")
+                    propertyListOfElement("a") {
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                    }
+                    propertyString("c", "c")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
     @Test //S = as ; as = a* ;
-    fun rhs_nonTerm_multi_literal_leaf() {
+    fun nonTerm_list_literal_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -847,6 +1022,214 @@ class test_SyntaxAnalyserSimple {
             }
         }
         testAll(proc, tests)
+    }
+
+    @Test //S = abs; abs = ab*; ab = A | B;
+    fun list_of_supertype() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = abs ;
+                abs = AB* ;
+                AB = A | B ;
+                A = a ;
+                B = b ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+            elementType("S", "S") {
+                propertyListTypeOf("abs", "AB", false, 0)
+            }
+            elementType("abs", "Abs") {
+                propertyListTypeOf("ab", "AB", false, 0)
+            }
+            elementType("AB", "AB") {
+                subTypes("A", "B")
+            }
+            elementType("A", "A") {
+                propertyPrimitiveType("a", "String", false, 0)
+            }
+            elementType("B", "B") {
+                propertyPrimitiveType("b", "String", false, 0)
+            }
+        }, proc.typeModel)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("abs") {
+
+                    }
+                }
+            }
+        }
+        tests.define("a") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("abs") {
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("b") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("abs") {
+                        element("B") {
+                            propertyString("b", "b")
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("aa") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("abs") {
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("bb") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("abs") {
+                        element("B") {
+                            propertyString("b", "b")
+                        }
+                        element("B") {
+                            propertyString("b", "b")
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("ab") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("abs") {
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                        element("B") {
+                            propertyString("b", "b")
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("ababab") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("abs") {
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                        element("B") {
+                            propertyString("b", "b")
+                        }
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                        element("B") {
+                            propertyString("b", "b")
+                        }
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                        element("B") {
+                            propertyString("b", "b")
+                        }
+                    }
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test
+    fun supertype_of_list() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip WS = "\s+" ;
+                S = E ;
+                E = V | A ;
+                A = E{2+} ;
+                V = NAME ;
+                leaf NAME = "[a-zA-Z]+" ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("v") {
+            asmSimple {
+                element("S") {
+                    propertyElementExplicitType("e", "V") {
+                        propertyString("name", "v")
+                    }
+                }
+            }
+        }
+        tests.define("v w") {
+            asmSimple {
+                element("S") {
+                    propertyElementExplicitType("e", "A") {
+                        propertyListOfElement("e") {
+                            element("V") {
+                                propertyString("name", "v")
+                            }
+                            element("V") {
+                                propertyString("name", "w")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("v w x y z") {
+            asmSimple {
+                element("S") {
+                    propertyElementExplicitType("e", "A") {
+                        propertyListOfElement("e") {
+                            element("V") {
+                                propertyString("name", "v")
+                            }
+                            element("V") {
+                                propertyString("name", "w")
+                            }
+                            element("V") {
+                                propertyString("name", "x")
+                            }
+                            element("V") {
+                                propertyString("name", "y")
+                            }
+                            element("V") {
+                                propertyString("name", "z")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
     }
 
     // --- ListSeparated ---
@@ -997,6 +1380,143 @@ class test_SyntaxAnalyserSimple {
             asmSimple {
                 element("S") {
                     propertyListOfString("as", listOf("a", "a", "a", "a"))
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test //S = abs; abs = [ab / ',']*; ab = A | B;
+    fun sepList_of_supertype() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = abs ;
+                abs = [AB / ',']* ;
+                AB = A | B ;
+                A = a ;
+                B = b ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+            elementType("S", "S") {
+                propertyListTypeOf("abs", "AB", false, 0)
+            }
+            elementType("abs", "Abs") {
+                propertyListTypeOf("ab", "AB", false, 0)
+            }
+            elementType("AB", "AB") {
+                subTypes("A", "B")
+            }
+            elementType("A", "A") {
+                propertyPrimitiveType("a", "String", false, 0)
+            }
+            elementType("B", "B") {
+                propertyPrimitiveType("b", "String", false, 0)
+            }
+        }, proc.typeModel)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("abs") {
+
+                    }
+                }
+            }
+        }
+        tests.define("a") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("abs") {
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("b") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("abs") {
+                        element("B") {
+                            propertyString("b", "b")
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("a,a") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("abs") {
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("b,b") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("abs") {
+                        element("B") {
+                            propertyString("b", "b")
+                        }
+                        element("B") {
+                            propertyString("b", "b")
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("a,b") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("abs") {
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                        element("B") {
+                            propertyString("b", "b")
+                        }
+                    }
+                }
+            }
+        }
+        tests.define("a,b,a,b,a,b") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("abs") {
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                        element("B") {
+                            propertyString("b", "b")
+                        }
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                        element("B") {
+                            propertyString("b", "b")
+                        }
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                        element("B") {
+                            propertyString("b", "b")
+                        }
+                    }
                 }
             }
         }

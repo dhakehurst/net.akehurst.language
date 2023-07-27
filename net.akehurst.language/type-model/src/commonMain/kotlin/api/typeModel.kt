@@ -60,6 +60,8 @@ sealed class TypeDefinition {
 
     abstract fun signature(context: TypeModel?, currentDepth: Int = 0): String
 
+    fun typeUse(arguments: List<TypeUsage> = emptyList(), nullable: Boolean = false): TypeUsage = TypeUsage.ofType(this, arguments, nullable)
+
     fun asString(context: TypeModel): String = when (this) {
         is NothingType -> signature(context, 0)
         is PrimitiveType -> signature(context, 0)

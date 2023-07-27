@@ -43,7 +43,8 @@ import net.akehurst.language.typemodel.api.*
 
 data class DownData(
     val path: AsmElementPath,
-    val typeUse: TypeUsage
+    val typeUse: TypeUsage,
+    val compressedPT: Boolean
 )
 
 data class ChildData(
@@ -107,16 +108,33 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
                     downStack.isEmpty -> { // root
                         val typeUse = this@SyntaxAnalyserSimpleAbstract2.findTypeForRule(nodeInfo.node.rule.tag)
                             ?: error("Type not found for ${nodeInfo.node.rule.tag}")
-                        DownData(AsmElementPath.ROOT, typeUse)
+                        val t = typeUse.type
+                        when {
+                            t is ElementType && t.property.size == 1 -> {
+                                // special cases where PT is compressed for lists (and optionals)
+                                val dd2 = when {
+                                    t.property.values.first().typeUse.nullable -> DownData(AsmElementPath.ROOT, t.property.values.first().typeUse, true)
+                                    nodeInfo.node.rule.isList -> DownData(AsmElementPath.ROOT, t.property.values.first().typeUse, true)
+                                    else -> null
+                                }
+                                if (null == dd2) {
+                                    DownData(AsmElementPath.ROOT, typeUse, false)
+                                } else {
+                                    downStack.push(DownData(AsmElementPath.ROOT, typeUse, false))
+                                    dd2
+                                }
+                            }
+
+                            else -> DownData(AsmElementPath.ROOT, typeUse, false)
+                        }
                     }
 
                     else -> {
-                        //val parentPlusSoFarChildren = downStack.peek(nodeInfo.child.index + 1)
-                        val parentDownData = downStack.peek()  //parentPlusSoFarChildren.first()
+                        val parentDownData = downStack.peek()
                         when {
                             null == parentDownData -> null //error("Should not happen")
                             parentDownData.typeUse.nullable -> {
-                                DownData(parentDownData.path, parentDownData.typeUse.notNullable)
+                                DownData(parentDownData.path, parentDownData.typeUse.notNullable, false)
                             }
 
                             else -> {
@@ -127,19 +145,19 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
                                     is NothingType -> TODO()
                                     is UnnamedSuperTypeType -> {
                                         val t = parentType.subtypes[nodeInfo.parentAlt.option]
-                                        DownData(parentDownData.path, t)
+                                        DownData(parentDownData.path, t, false)
                                     }
 
                                     is ListSimpleType -> {
                                         val p = parentDownData.path.plus(nodeInfo.child.index.toString())
                                         val t = parentDownData.typeUse.arguments[0]
-                                        DownData(p, t)
+                                        DownData(p, t, false)
                                     }
 
                                     is ListSeparatedType -> {
                                         val p = parentDownData.path.plus(nodeInfo.child.index.toString())
                                         val t = parentDownData.typeUse.arguments[0]
-                                        DownData(p, t)
+                                        DownData(p, t, false)
                                     }
 
                                     is TupleType -> {
@@ -149,7 +167,7 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
                                         } else {
                                             val p = parentDownData.path.plus(prop.name)
                                             val t = prop.typeUse
-                                            DownData(p, t)
+                                            DownData(p, t, false)
                                         }
                                     }
 
@@ -159,40 +177,48 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
                                             if (null == prop) {
                                                 null  // property not used
                                             } else {
-                                                val pType = prop.typeUse.type
+                                                val p = parentDownData.path.plus(prop.name)
+                                                val t = prop.typeUse.type
                                                 when {
-                                                    1 == parentType.property.size -> when (pType) {
-                                                        is ListSimpleType -> {
-                                                            val p = parentDownData.path.plus(nodeInfo.child.index.toString())
-                                                            val t = prop.typeUse //.arguments[0]
-                                                            DownData(p, t)
+                                                    t is ElementType && t.property.size == 1 -> {
+                                                        val dd2 = when {
+                                                            t.property.values.first().typeUse.nullable -> DownData(p, t.property.values.first().typeUse, true)
+                                                            nodeInfo.node.rule.isList -> DownData(p, t.property.values.first().typeUse, true)
+                                                            else -> null
+                                                        }
+                                                        if (null == dd2) {
+                                                            DownData(p, prop.typeUse, false)
+                                                        } else {
+                                                            downStack.push(DownData(p, prop.typeUse, false))
+                                                            dd2
                                                         }
 
-                                                        is ListSeparatedType -> {
-                                                            val p = parentDownData.path.plus(nodeInfo.child.index.toString())
-                                                            val t = prop.typeUse //.arguments[0]
-                                                            DownData(p, t)
-                                                        }
-
-                                                        else -> {
-                                                            val p = parentDownData.path.plus(prop.name)
-                                                            val t = prop.typeUse
-                                                            DownData(p, t)
-                                                        }
                                                     }
 
-                                                    else -> {
-                                                        val p = parentDownData.path.plus(prop.name)
-                                                        val t = prop.typeUse
-                                                        DownData(p, t)
-                                                    }
+                                                    else -> DownData(p, prop.typeUse, false)
                                                 }
+
                                             }
                                         } else {
-                                            //val typeUse = this@SyntaxAnalyserSimpleAbstract2.findTypeForRule(nodeInfo.node.rule.tag)
-                                            //    ?: error("Type not found for ${nodeInfo.node.rule.tag}")
                                             val t = parentType.subtypes[nodeInfo.parentAlt.option]
-                                            DownData(parentDownData.path, TypeUsage.ofType(t, emptyList(), parentDownData.typeUse.nullable))
+                                            when {
+                                                t is ElementType && t.property.size == 1 -> {
+                                                    val dd2 = when {
+                                                        t.property.values.first().typeUse.nullable -> DownData(parentDownData.path, t.property.values.first().typeUse, true)
+                                                        nodeInfo.node.rule.isList -> DownData(parentDownData.path, t.property.values.first().typeUse, true)
+                                                        else -> null
+                                                    }
+                                                    if (null == dd2) {
+                                                        DownData(parentDownData.path, TypeUsage.ofType(t, emptyList(), parentDownData.typeUse.nullable), false)
+                                                    } else {
+                                                        downStack.push(DownData(parentDownData.path, TypeUsage.ofType(t, emptyList(), parentDownData.typeUse.nullable), false))
+                                                        dd2
+                                                    }
+
+                                                }
+
+                                                else -> DownData(parentDownData.path, TypeUsage.ofType(t, emptyList(), parentDownData.typeUse.nullable), false)
+                                            }
                                         }
                                     }
                                 }
@@ -208,10 +234,16 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
                 val numChildren = nodeInfo.numChildrenAlternatives[opt]!!
                 val children = stack.pop(numChildren)
                 val adjChildren = children.reversed()
-                val downData = downStack.pop()
+                val downData = when {
+                    true == downStack.peek()?.compressedPT -> {
+                        downStack.pop()
+                        downStack.pop()
+                    }
+
+                    else -> downStack.pop()
+                }
                 val value = if (null == downData) {
-                    //branch not used for element property value, push null for correct num children on stack
-                    null
+                    null //branch not used for element property value, push null for correct num children on stack
                 } else {
                     createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
@@ -260,17 +292,10 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
                 when {
                     null == child.value -> null
                     else -> {
-                        val nonOptChildren = listOf(
-                            ChildData(
-                                child.nodeInfo,
-                                child.value
-                            )
-                        )
-                        //createValueFromBranch(sentence, DownData(downData.path, downData.typeUse.notNullable), child.nodeInfo, children)
+                        val nonOptChildren = listOf(ChildData(child.nodeInfo, child.value))
                         child.value
                     }
                 }
-                //createValueFromBranch(sentence, DownData(downData.path, downData.typeUse.notNullable), target, children)
             }
 
             else -> {
@@ -320,9 +345,42 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
 
                     }
 
-                    is ListSimpleType -> createListSimpleValueFromBranch(target, downData.path, children.map { it.value }, type)
+                    is ListSimpleType -> {
+                        when {
+                            null != targetType && targetType.type !is ListSimpleType && targetType.type is ElementType -> {
+                                val propValue = when {
+                                    target.node.rule.isListSeparated -> createListSimpleValueFromBranch(
+                                        target,
+                                        downData.path,
+                                        children.map { it.value },
+                                        type
+                                    ).toSeparatedList<Any, Any>().items
 
-                    is ListSeparatedType -> createListSeparatedValueFromBranch(target, downData.path, children.map { it.value }, type)
+                                    else -> createListSimpleValueFromBranch(target, downData.path, children.map { it.value }, type)
+                                }
+                                val propDecl = (targetType.type as ElementType).property.values.first()
+                                val el = _asm!!.createElement(downData.path, targetType.type.name)
+                                setPropertyOrReferenceFromDeclaration(el, propDecl, propValue)
+                                el
+                            }
+
+                            else -> createListSimpleValueFromBranch(target, downData.path, children.map { it.value }, type)
+                        }
+                    }
+
+                    is ListSeparatedType -> {
+                        when {
+                            null != targetType && targetType.type !is ListSeparatedType && targetType.type is ElementType -> {
+                                val propValue = createListSeparatedValueFromBranch(target, downData.path, children.map { it.value }, type)
+                                val propDecl = (targetType.type as ElementType).property.values.first()
+                                val el = _asm!!.createElement(downData.path, targetType.type.name)
+                                setPropertyOrReferenceFromDeclaration(el, propDecl, propValue)
+                                el
+                            }
+
+                            else -> createListSeparatedValueFromBranch(target, downData.path, children.map { it.value }, type)
+                        }
+                    }
 
                     is TupleType -> {
                         createTupleFrom(sentence, type, downData.path, ChildData(target, children))
@@ -445,7 +503,6 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
         is TupleType -> createTupleFrom(sentence, type, path, childData)
         is ElementType -> createElementFrom(sentence, type, path, childData.value as List<ChildData>)
     }
-
 
     private fun createStringValueFromBranch(sentence: String, target: SpptDataNodeInfo): String? = when {
         target.node.startPosition == target.node.nextInputPosition -> null
