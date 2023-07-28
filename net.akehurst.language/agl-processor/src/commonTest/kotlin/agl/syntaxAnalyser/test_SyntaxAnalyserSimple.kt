@@ -50,7 +50,7 @@ class test_SyntaxAnalyserSimple {
         fun MutableList<TestData>.define(sentence: String, expected: () -> AsmSimple) = this.add(TestData(sentence, expected()))
 
         fun test(proc: LanguageProcessor<AsmSimple, ContextSimple>, data: TestData) {
-            println(data.sentence)
+            println("'${data.sentence}'")
             val result = proc.process(data.sentence)
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
             assertNotNull(result.asm)
@@ -617,6 +617,51 @@ class test_SyntaxAnalyserSimple {
         testAll(proc, tests)
     }
 
+    @Test // S = b A?; A = a; leaf a = 'a';
+    fun concat_optional_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = b A? ;
+                A = a ;
+                leaf a = 'a';
+                leaf b = 'b';
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+            elementType("S", "S") {
+                propertyPrimitiveType("b", "String", false, 0)
+                propertyElementTypeOf("a", "A", true, 1)
+            }
+            elementType("A", "A") {
+                propertyPrimitiveType("a", "String", false, 0)
+            }
+        }, proc.typeModel)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("b") {
+            asmSimple {
+                element("S") {
+                    propertyString("b", "b")
+                    propertyNull("a")
+                }
+            }
+        }
+        tests.define("ba") {
+            asmSimple {
+                element("S") {
+                    propertyString("b", "b")
+                    propertyElementExplicitType("a", "A") {
+                        propertyString("a", "a")
+                    }
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
     @Test // S = oA; oA=A?; A = a; leaf a = 'a';
     fun nonTerm_optional_nonTerm() {
         val grammarStr = """
@@ -655,11 +700,9 @@ class test_SyntaxAnalyserSimple {
         tests.define("a") {
             asmSimple {
                 element("S") {
-                    propertyElementExplicitType("a", "A") {
-                        propertyElementExplicitType("oA", "OA") {
-                            propertyElementExplicitType("a", "A") {
-                                propertyString("a", "a")
-                            }
+                    propertyElementExplicitType("oA", "OA") {
+                        propertyElementExplicitType("a", "A") {
+                            propertyString("a", "a")
                         }
                     }
                 }
@@ -1804,6 +1847,103 @@ class test_SyntaxAnalyserSimple {
         testAll(proc, tests)
     }
 
+    @Test // S = a ( ('x' | 'y') b c | d e) f ;
+    fun concat_group_choice_concat_leaf_literal_3() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a ( ('x'|'y') b c | d e) f ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+                leaf f = 'f' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("axbcf") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyTuple("\$choice") {
+                        propertyString("b", "b")
+                        propertyString("c", "c")
+                    }
+                    propertyString("f", "f")
+                }
+            }
+        }
+        tests.define("adef") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyTuple("\$choice") {
+                        propertyString("d", "d")
+                        propertyString("e", "e")
+                    }
+                    propertyString("f", "f")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
+    @Test // S = a (b c | d e)? f ;
+    fun concat_group_choice_concat_leaf_literal_4() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (b c | d e)? f ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+                leaf f = 'f' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("af") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyNull("\$choice")
+                    propertyString("f", "f")
+                }
+            }
+        }
+        tests.define("abcf") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyTuple("\$choice") {
+                        propertyString("b", "b")
+                        propertyString("c", "c")
+                    }
+                    propertyString("f", "f")
+                }
+            }
+        }
+        tests.define("adef") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyTuple("\$choice") {
+                        propertyString("d", "d")
+                        propertyString("e", "e")
+                    }
+                    propertyString("f", "f")
+                }
+            }
+        }
+        testAll(proc, tests)
+    }
+
     @Test //  S = a (b? c) e ;
     fun concat_group_concat_optional() {
         val grammarStr = """
@@ -1993,6 +2133,60 @@ class test_SyntaxAnalyserSimple {
             }
         }
         tests.define("ade") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyListOfString("\$choice", listOf("d"))
+                    propertyString("e", "e")
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test
+    fun where_root_is_UnnamedSuperType() {
+        TODO()
+    }
+
+    @Test
+    fun group_where_tuple_property_is_UnnamedSuperType() {
+        TODO()
+    }
+
+    @Test
+    fun UnnamedSuperType_of_UnnamedSuperType() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a X? e ;
+                X = R | D ;
+                R = ( ( b c ) | (c d) ) ;
+                D = ( 'x' | 'y' );
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        val tests = mutableListOf<TestData>()
+        tests.define("abce") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyTuple("x") {
+
+                    }
+                    propertyString("e", "e")
+                }
+            }
+        }
+        tests.define("axe") {
             asmSimple {
                 element("S") {
                     propertyString("a", "a")
@@ -2702,42 +2896,6 @@ class test_SyntaxAnalyserSimple {
                 }
             }
         }
-        tests.define("v*w+x*y+z") {
-            asmSimple {
-                element("S") {
-                    propertyElementExplicitType("exprList", "ExprList") {
-                        propertyElementExplicitType("expr", "Add") {
-                            propertyListOfElement("expr") {
-                                element("Mul") {
-                                    propertyListOfElement("expr") {
-                                        element("Var") {
-                                            propertyString("name", "v")
-                                        }
-                                        element("Var") {
-                                            propertyString("name", "w")
-                                        }
-                                    }
-                                }
-                                element("Mul") {
-                                    propertyListOfElement("expr") {
-                                        element("Var") {
-                                            propertyString("name", "x")
-                                        }
-                                        element("Var") {
-                                            propertyString("name", "y")
-                                        }
-                                    }
-                                }
-                                element("Var") {
-                                    propertyString("name", "z")
-                                }
-                            }
-                        }
-                        propertyUnnamedListOfElement { }
-                    }
-                }
-            }
-        }
         tests.define("v;w") {
             asmSimple {
                 element("S") {
@@ -2775,6 +2933,42 @@ class test_SyntaxAnalyserSimple {
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+        tests.define("v*w+x*y+z") {
+            asmSimple {
+                element("S") {
+                    propertyElementExplicitType("exprList", "ExprList") {
+                        propertyElementExplicitType("expr", "Add") {
+                            propertyListOfElement("expr") {
+                                element("Mul") {
+                                    propertyListOfElement("expr") {
+                                        element("Var") {
+                                            propertyString("name", "v")
+                                        }
+                                        element("Var") {
+                                            propertyString("name", "w")
+                                        }
+                                    }
+                                }
+                                element("Mul") {
+                                    propertyListOfElement("expr") {
+                                        element("Var") {
+                                            propertyString("name", "x")
+                                        }
+                                        element("Var") {
+                                            propertyString("name", "y")
+                                        }
+                                    }
+                                }
+                                element("Var") {
+                                    propertyString("name", "z")
+                                }
+                            }
+                        }
+                        propertyUnnamedListOfElement { }
                     }
                 }
             }

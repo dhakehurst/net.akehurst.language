@@ -40,7 +40,7 @@ class SpptWalkerToString(
         val siblings = nodeInfo.child.total
         val ind = if (siblings == 1) "" else currentIndent
         val eol = if (siblings == 1) " " else "\n"
-        val matchedText = sentence.substring(nodeInfo.node.startPosition, nodeInfo.node.nextInputPosition).replace("\n", "\u23CE").replace("\t", "\u2B72")
+        val matchedText = sentence.substring(nodeInfo.node.startPosition, nodeInfo.node.nextInputNoSkip).replace("\n", "\u23CE").replace("\t", "\u2B72")
         when {
             nodeInfo.node.rule.isEmptyTerminal -> sb.append("${ind}${nodeInfo.node.rule.tag}$eol")
             nodeInfo.node.rule.isPattern -> sb.append("${ind}${nodeInfo.node.rule.tag} : '${matchedText}'$eol")

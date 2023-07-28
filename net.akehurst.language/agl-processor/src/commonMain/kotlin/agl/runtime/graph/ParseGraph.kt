@@ -176,7 +176,7 @@ internal class ParseGraph(
         state: ParserState,
         runtimeLookaheadSet: Set<LookaheadSet>,
         startPosition: Int,
-        nextInputPosition: Int,
+        nextInputPositionBeforeSkip: Int,
         nextInputPositionAfterSkip: Int,
         numNonSkipChildren: Int,
         childrenPriorities: List<List<Int>>? //maybe may a map, so we can have lists of priorities of preferred descendants!
@@ -185,7 +185,7 @@ internal class ParseGraph(
         return GrowingNodeIndex(
             runtimeState = RuntimeState(state, runtimeLookaheadSet),
             startPosition = startPosition,
-            nextInputPosition = nextInputPosition,
+            nextInputPositionBeforeSkip = nextInputPositionBeforeSkip,
             nextInputPositionAfterSkip = nextInputPositionAfterSkip,
             numNonSkipChildren = listSize,
             childrenPriorities = childrenPriorities
@@ -456,7 +456,15 @@ internal class ParseGraph(
         //val nextInputPosition = if (head.isLeaf) head.nextInputPositionAfterSkip else head.nextInputPosition
         val childrenPriorities = listOf(head.state.priorityList)
         val parent =
-            this.createGrowingNodeIndex(parentState, parentRuntimeLookaheadSet, head.startPosition, head.nextInputPosition, head.nextInputPositionAfterSkip, 1, childrenPriorities)
+            this.createGrowingNodeIndex(
+                parentState,
+                parentRuntimeLookaheadSet,
+                head.startPosition,
+                head.nextInputPositionBeforeSkip,
+                head.nextInputPositionAfterSkip,
+                1,
+                childrenPriorities
+            )
         return if (parent.isComplete) {
             val newParent = parent.complete
             val existingComplete = this.treeData.preferred(newParent)
@@ -507,7 +515,7 @@ internal class ParseGraph(
             newParentState,
             newParentRuntimeLookaheadSet,
             previous.startPosition,
-            head.nextInputPosition,
+            head.nextInputPositionBeforeSkip,
             head.nextInputPositionAfterSkip,
             newParentNumNonSkipChildren,
             childrenPriorities

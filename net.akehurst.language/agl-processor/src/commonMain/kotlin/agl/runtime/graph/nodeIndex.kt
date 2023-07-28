@@ -35,7 +35,7 @@ import net.akehurst.language.api.sppt.SpptDataNode
 internal class GrowingNodeIndex(
     val runtimeState: RuntimeState,
     val startPosition: Int,
-    val nextInputPosition: Int,
+    val nextInputPositionBeforeSkip: Int,
     val nextInputPositionAfterSkip: Int,
     val numNonSkipChildren: Int, //for use with MULTI and SEPARATED_LIST
     val childrenPriorities: List<List<Int>>?
@@ -56,7 +56,7 @@ internal class GrowingNodeIndex(
     }
 
     val complete by lazy {
-        CompleteNodeIndex(runtimeState.state, startPosition, nextInputPosition, nextInputPositionAfterSkip)
+        CompleteNodeIndex(runtimeState.state, startPosition, nextInputPositionBeforeSkip, nextInputPositionAfterSkip)
     }
 
     private val _hashCode = arrayOf(runtimeState, startPosition, nextInputPositionAfterSkip, numNonSkipChildren).contentHashCode()
@@ -67,7 +67,7 @@ internal class GrowingNodeIndex(
     val state: ParserState get() = this.runtimeState.state
 
     val isLeaf: Boolean get() = this.runtimeState.state.isLeaf
-    val isEmptyMatch: Boolean get() = this.startPosition == this.nextInputPosition
+    val isEmptyMatch: Boolean get() = this.startPosition == this.nextInputPositionBeforeSkip
 
     override fun hashCode(): Int = _hashCode
 
@@ -107,7 +107,7 @@ internal class GrowingNodeIndex(
 internal class CompleteNodeIndex(
     val state: ParserState,
     override val startPosition: Int,
-    override val nextInputPosition: Int,
+    val nextInputPositionBeforeSkip: Int,
     val nextInputPositionAfterSkip: Int
 ) : SpptDataNode {
 
@@ -125,9 +125,11 @@ internal class CompleteNodeIndex(
     val firstRule: RuntimeRule by lazy { this.state.rulePositions[0].rule as RuntimeRule }
     val isLeaf: Boolean get() = firstRule.isTerminal //should only be one if true
     val isEmbedded: Boolean get() = firstRule.isEmbedded //should only be one if true
-    val isEmptyMatch: Boolean get() = this.startPosition == this.nextInputPosition
-    val hasSkipData: Boolean get() = this.nextInputPosition != nextInputPositionAfterSkip
-    override val nextInputNoSkip get() = this.nextInputPosition
+    val isEmptyMatch: Boolean get() = this.startPosition == this.nextInputPositionBeforeSkip
+    val hasSkipData: Boolean get() = this.nextInputPositionBeforeSkip != nextInputPositionAfterSkip
+
+    override val nextInputPosition: Int get() = nextInputPositionAfterSkip
+    override val nextInputNoSkip get() = this.nextInputPositionBeforeSkip
 
     override val option: Int get() = this.state.priorityList[0]
     val priorityList: List<Int> get() = this.state.priorityList
@@ -142,7 +144,7 @@ internal class CompleteNodeIndex(
     }
 
     override fun toString(): String {
-        return "CNI{$startPosition-$nextInputPosition,${
+        return "CNI{$startPosition-$nextInputPositionBeforeSkip,${
             runtimeRulesAsSet.joinToString(
                 prefix = "(",
                 postfix = ")",

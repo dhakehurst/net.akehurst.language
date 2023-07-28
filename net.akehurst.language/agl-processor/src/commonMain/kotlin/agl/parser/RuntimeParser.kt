@@ -874,7 +874,7 @@ internal class RuntimeParser(
                     val runtimeLhs = head.runtimeState.runtimeLookaheadSet
 
                     val skipData = parseSkipIfAny(l.nextInputPosition, runtimeLhs, lh, possibleEndOfText, parseArgs)
-                    val nextInputPositionAfterSkip = skipData?.root?.nextInputPosition ?: l.nextInputPosition
+                    val nextInputPositionAfterSkip = skipData?.root?.nextInputPositionBeforeSkip ?: l.nextInputPosition
 
                     val hasLh = possibleEndOfText.any { eot ->
                         runtimeLhs.any { rt ->

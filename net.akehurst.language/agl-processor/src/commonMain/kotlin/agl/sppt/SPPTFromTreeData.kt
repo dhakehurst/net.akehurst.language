@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.sppt
 
+import net.akehurst.language.agl.agl.sppt.SpptWalkerToInputSentence
 import net.akehurst.language.agl.agl.sppt.SpptWalkerToString
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.CompleteNodeIndex
@@ -50,7 +51,7 @@ internal class SPPTFromTreeData(
                 val skipChildren = td.completeChildren[sg]!!.values.first().map {
                     td.completeChildren[it]!!.values.first().get(0)
                 }
-                val nug = CompleteNodeIndex(userGoal.state, startPositionBeforeInitialSkip, userGoal.nextInputPosition, td.root!!.nextInputPosition!!)
+                val nug = CompleteNodeIndex(userGoal.state, startPositionBeforeInitialSkip, userGoal.nextInputPositionBeforeSkip, td.root!!.nextInputPositionBeforeSkip!!)
                 val userGoalChildren = skipChildren + treeData.completeChildren[userGoal]!!.values.first()
                 treeData.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
                 nug
@@ -67,15 +68,15 @@ internal class SPPTFromTreeData(
                         }
                     }
                     val uagsTreeData = this.treeData.embeddedFor(uags) ?: error("No tree-data found for $uags")
-                    SPPTBranchFromTreeData(uagsTreeData, input, rp.rule as RuntimeRule, rp.option, uags.startPosition, uags.nextInputPosition, -1)
+                    SPPTBranchFromTreeData(uagsTreeData, input, rp.rule as RuntimeRule, rp.option, uags.startPosition, uags.nextInputPositionBeforeSkip, -1)
                 }
 
                 uags.isLeaf -> {
                     val eolPositions = emptyList<Int>() //TODO calc ?
-                    SPPTLeafFromInput(input, uags.firstRule, uags.startPosition, uags.nextInputPosition, -1)
+                    SPPTLeafFromInput(input, uags.firstRule, uags.startPosition, uags.nextInputPositionBeforeSkip, -1)
                 }
 
-                else -> SPPTBranchFromTreeData(treeData, input, userGoal.highestPriorityRule, userGoalOption, startPositionBeforeInitialSkip, uags.nextInputPosition, -1)
+                else -> SPPTBranchFromTreeData(treeData, input, userGoal.highestPriorityRule, userGoalOption, startPositionBeforeInitialSkip, uags.nextInputPositionBeforeSkip, -1)
             }
         }
 
@@ -103,7 +104,10 @@ internal class SPPTFromTreeData(
     }
 
     override val asString: String by lazy {
-        SPPT2InputText().visitTree(this, "")
+        //SPPT2InputText().visitTree(this, "")
+        val walker = SpptWalkerToInputSentence(input.text)
+        this.treeData.traverseTreeDepthFirst(walker, false)
+        walker.output
     }
 
     override val countTrees: Int by lazy {

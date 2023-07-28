@@ -75,17 +75,27 @@ import net.akehurst.language.api.sppt.*
                                     //childTreeData,
                                     userGoal.state,
                                     startPositionBeforeInitialSkip,
-                                    userGoal.nextInputPosition,
-                                    td.root!!.nextInputPosition!!
+                                    userGoal.nextInputPositionBeforeSkip,
+                                    td.root!!.nextInputPositionBeforeSkip!!
                                 )
                                 val userGoalChildren = skipChildren + childTreeData.completeChildren[userGoal]!!.values.first()
                                 childTreeData.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
-                                listOf(SPPTBranchFromTreeData(childTreeData, this.input, rp.rule as RuntimeRule, rp.option, nug.startPosition, nug.nextInputPosition, -1))
+                                listOf(SPPTBranchFromTreeData(childTreeData, this.input, rp.rule as RuntimeRule, rp.option, nug.startPosition, nug.nextInputPositionBeforeSkip, -1))
                             }
 
                             else -> {
                                 val eolPositions = emptyList<Int>() //TODO calc ?
-                                listOf(SPPTBranchFromTreeData(childTreeData, this.input, rp.rule as RuntimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
+                                listOf(
+                                    SPPTBranchFromTreeData(
+                                        childTreeData,
+                                        this.input,
+                                        rp.rule as RuntimeRule,
+                                        rp.option,
+                                        child.startPosition,
+                                        child.nextInputPositionBeforeSkip,
+                                        -1
+                                    )
+                                )
                             }
                         }
                     }
@@ -106,7 +116,7 @@ import net.akehurst.language.api.sppt.*
                                     when {
                                         skch.isLeaf -> {
                                             val eolPositions = emptyList<Int>() //TODO calc ?
-                                            SPPTLeafFromInput(this.input, skch.firstRule, skch.startPosition, skch.nextInputPosition, -1)
+                                            SPPTLeafFromInput(this.input, skch.firstRule, skch.startPosition, skch.nextInputPositionBeforeSkip, -1)
                                         }
 
                                         else -> {
@@ -117,7 +127,7 @@ import net.akehurst.language.api.sppt.*
                                                 skch.firstRule,
                                                 skch.option,
                                                 skch.startPosition,
-                                                skch.nextInputPosition,
+                                                skch.nextInputPositionBeforeSkip,
                                                 -1
                                             )
                                         }
@@ -131,7 +141,7 @@ import net.akehurst.language.api.sppt.*
                                         rp.rule as RuntimeRule,
                                         rp.option,
                                         child.startPosition,
-                                        child.nextInputPosition,
+                                        child.nextInputPositionBeforeSkip,
                                         -1
                                     )
                                 ) + skipNodes
@@ -146,8 +156,8 @@ import net.akehurst.language.api.sppt.*
                                         //childTreeData,
                                         userGoal.state,
                                         userGoal.startPosition,
-                                        userGoal.nextInputPosition,
-                                        childTreeData.root!!.nextInputPosition!!
+                                        userGoal.nextInputPositionBeforeSkip,
+                                        childTreeData.root!!.nextInputPositionBeforeSkip!!
                                     )
                                 } else {
                                     val goalChildren = childTreeData.childrenFor(childTreeData.root!!)
@@ -161,14 +171,14 @@ import net.akehurst.language.api.sppt.*
                                         //childTreeData,
                                         userGoal.state,
                                         startPositionBeforeInitialSkip,
-                                        userGoal.nextInputPosition,
-                                        td.root!!.nextInputPosition!!
+                                        userGoal.nextInputPositionBeforeSkip,
+                                        td.root!!.nextInputPositionBeforeSkip!!
                                     )
                                     val userGoalChildren = skipChildren + childTreeData.completeChildren[userGoal]!!.values.first()
                                     childTreeData.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
                                     nug
                                 }
-                                listOf(SPPTBranchFromTreeData(childTreeData, this.input, ug.rule as RuntimeRule, ug.option, ug.startPosition, ug.nextInputPosition, -1))
+                                listOf(SPPTBranchFromTreeData(childTreeData, this.input, ug.rule as RuntimeRule, ug.option, ug.startPosition, ug.nextInputPositionBeforeSkip, -1))
                             }
                         }
                     }
@@ -187,7 +197,7 @@ import net.akehurst.language.api.sppt.*
                                 when {
                                     skch.isLeaf -> {
                                         val eolPositions = emptyList<Int>() //TODO calc ?
-                                        SPPTLeafFromInput(this.input, skch.firstRule, skch.startPosition, skch.nextInputPosition, -1)
+                                        SPPTLeafFromInput(this.input, skch.firstRule, skch.startPosition, skch.nextInputPositionBeforeSkip, -1)
                                     }
 
                                     else -> {
@@ -198,25 +208,25 @@ import net.akehurst.language.api.sppt.*
                                             skch.firstRule,
                                             skch.option,
                                             skch.startPosition,
-                                            skch.nextInputPosition,
+                                            skch.nextInputPositionBeforeSkip,
                                             -1
                                         )
                                     }
                                 }
                             }
                             val eolPositions = emptyList<Int>() //TODO calc ?
-                            listOf(SPPTLeafFromInput(this.input, rp.rule as RuntimeRule, child.startPosition, child.nextInputPosition, -1)) + skipNodes
+                            listOf(SPPTLeafFromInput(this.input, rp.rule as RuntimeRule, child.startPosition, child.nextInputPositionBeforeSkip, -1)) + skipNodes
                         }
 
                         else -> {
                             val eolPositions = emptyList<Int>() //TODO calc ?
-                            listOf(SPPTLeafFromInput(this.input, rp.rule as RuntimeRule, child.startPosition, child.nextInputPosition, -1))
+                            listOf(SPPTLeafFromInput(this.input, rp.rule as RuntimeRule, child.startPosition, child.nextInputPositionBeforeSkip, -1))
                         }
                     }
 
                     else -> {
                         val childTreeData = _treeData
-                        listOf(SPPTBranchFromTreeData(childTreeData, this.input, rp.rule as RuntimeRule, rp.option, child.startPosition, child.nextInputPosition, -1))
+                        listOf(SPPTBranchFromTreeData(childTreeData, this.input, rp.rule as RuntimeRule, rp.option, child.startPosition, child.nextInputPositionBeforeSkip, -1))
                     }
                 }
 

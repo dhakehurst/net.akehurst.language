@@ -58,7 +58,7 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAna
                     }
 
                     else -> {
-                        val matchedText = sentence.substring(nodeInfo.node.startPosition, nodeInfo.node.nextInputPosition)
+                        val matchedText = sentence.substring(nodeInfo.node.startPosition, nodeInfo.node.nextInputNoSkip)
                         stack.push(matchedText)
                     }
                 }

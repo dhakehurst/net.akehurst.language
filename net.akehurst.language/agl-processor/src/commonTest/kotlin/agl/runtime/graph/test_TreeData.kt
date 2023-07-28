@@ -39,7 +39,7 @@ internal class test_TreeData {
         assertTrue(graph.treeData.growingChildren.isEmpty())
         assertNull(graph.treeData.complete.initialSkip)
         assertNull(graph.treeData.complete.root!!.startPosition)
-        assertNull(graph.treeData.complete.root!!.nextInputPosition)
+        assertNull(graph.treeData.complete.root!!.nextInputPositionBeforeSkip)
     }
 
     @Test

@@ -50,6 +50,7 @@ class test_Dot_Singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
+        assertEquals(sentence, result.sppt!!.asString)
     }
 
     @Test
@@ -57,6 +58,18 @@ class test_Dot_Singles {
         val goal = "graph"
         val sentence = """
           /* a comment */
+          graph { }
+        """.trimIndent()
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
+    }
+
+    @Test
+    fun C_PREPROCESSOR() {
+        val goal = "graph"
+        val sentence = """
+          #a pre proc
           graph { }
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
