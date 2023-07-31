@@ -250,13 +250,10 @@ class TypeModelFromGrammar(
     }
 
     private fun typeForChoiceRule(choice: Choice, choiceRule: GrammarRule): TypeUsage {
-        // if all choice gives ElementType then this type is a super type of all choices
-        // else choices maps to properties
         val subtypes = choice.alternative.map { typeForRuleItem(it, false) }
         return when {
             subtypes.all { it.type is NothingType } -> TypeUsage.ofType(NothingType, emptyList(), subtypes.any { it.nullable })
             subtypes.all { it.type is PrimitiveType } -> TypeUsage.ofType(StringType, emptyList(), subtypes.any { it.nullable })
-
             subtypes.all { it.type is ElementType } -> findOrCreateElementType(choiceRule) { newType ->
                 subtypes.forEach { (it.type as ElementType).addSuperType(newType) }
             }
@@ -284,14 +281,11 @@ class TypeModelFromGrammar(
     }
 
     private fun typeForChoiceRuleItem(choice: Choice, forProperty: Boolean): TypeUsage {
-        // if all choice gives ElementType then this type is a super type of all choices
-        // else choices maps to properties
         val subtypes = choice.alternative.map { typeForRuleItem(it, forProperty) }
         return when {
             subtypes.all { it.type is NothingType } -> TypeUsage.ofType(NothingType, emptyList(), subtypes.any { it.nullable })
             subtypes.all { it.type is PrimitiveType } -> TypeUsage.ofType(StringType, emptyList(), subtypes.any { it.nullable })
             subtypes.all { it.type is ElementType } -> TypeUsage.ofType(UnnamedSuperTypeType(subtypes.map { it }, true))
-
             subtypes.all { it.type is ListSimpleType } -> { //=== PrimitiveType.LIST } -> {
                 val itemType = TypeUsage.ofType(AnyType)//TODO: compute better elementType ?
                 val choiceType = ListSimpleType.ofType(itemType)

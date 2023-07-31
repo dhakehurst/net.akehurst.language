@@ -184,7 +184,7 @@ internal class ConverterToRuntimeRules(
                     else -> this.buildCompressedRule(target, target.isSkip)
                 }
 
-                target.isOneEmebedded -> {
+                target.isOneEmbedded -> {
                     val embeddedRuleName = target.name
                     val e = if (target.rhs is Embedded) {
                         target.rhs as Embedded
@@ -210,19 +210,11 @@ internal class ConverterToRuntimeRules(
     }
 
     private fun createRhs(rule: RuntimeRule, target: RuleItem, arg: String): RuntimeRuleRhs = when (target) {
-        is EmptyRule -> {
-            RuntimeRuleRhsConcatenation(rule, listOf(RuntimeRuleSet.EMPTY))
-        }
-
-        is Terminal -> {
-            val item = this.visitTerminal(target, arg)
-            RuntimeRuleRhsConcatenation(rule, listOf(item))
-        }
-
-        //is Embedded -> this.createRhsForEmbedded(target, arg)
+        is EmptyRule -> RuntimeRuleRhsConcatenation(rule, listOf(RuntimeRuleSet.EMPTY))
+        is Terminal -> RuntimeRuleRhsConcatenation(rule, listOf(this.convertTerminal(target, arg)))
 
         is NonTerminal -> {
-            val item = this.visitNonTerminal(target, arg)
+            val item = this.convertNonTerminal(target, arg)
             RuntimeRuleRhsConcatenation(rule, listOf(item))
         }
 
@@ -253,19 +245,19 @@ internal class ConverterToRuntimeRules(
     }
 
     private fun runtimeRuleForRuleItem(target: RuleItem, arg: String): RuntimeRule = when (target) {
+        is EmptyRule -> RuntimeRuleSet.EMPTY
+        is Terminal -> this.convertTerminal(target, arg)
+        is NonTerminal -> this.convertNonTerminal(target, arg)
+        is Embedded -> this.convertEmbedded(target, arg)
         is OptionalItem -> this.createPseudoRuleForOptionalItem(target, arg)
         is SimpleList -> this.createPseudoRuleForSimpleList(target, arg)
         is SeparatedList -> this.createPseudoRuleForSeparatedList(target, arg)
         is Group -> this.createPseudoRuleForGroup(target, arg)
-        is EmptyRule -> RuntimeRuleSet.EMPTY
-        is Terminal -> this.visitTerminal(target, arg)
-        is NonTerminal -> this.visitNonTerminal(target, arg)
-        is Embedded -> this.visitEmbedded(target, arg)
         is Choice -> this.createPseudoRuleForChoice(target, arg)
-        else -> error("${target::class} is not a supported subtype of ConcatenationItem")
+        else -> error("${target::class} is not a supported subtype of RuleItem")
     }
 
-    private fun visitTerminal(target: Terminal, arg: String): RuntimeRule {
+    private fun convertTerminal(target: Terminal, arg: String): RuntimeRule {
         val existing = this.findTerminal(target.value)
         return if (null == existing) {
             val terminalRule = this.terminalRule(null, target.value, RuntimeRuleKind.TERMINAL, target.isPattern, false)
@@ -276,13 +268,13 @@ internal class ConverterToRuntimeRules(
         }
     }
 
-    private fun visitNonTerminal(target: NonTerminal, arg: String): RuntimeRule {
+    private fun convertNonTerminal(target: NonTerminal, arg: String): RuntimeRule {
         val refName = target.name
         return findNamedRule(refName)
             ?: this.visitGrammarRule(target.referencedRule(this.grammar!!), arg)
     }
 
-    private fun visitEmbedded(target: Embedded, arg: String): RuntimeRule {
+    private fun convertEmbedded(target: Embedded, arg: String): RuntimeRule {
         val existing = this.findEmbedded(target.embeddedGrammarReference.resolved!!, target.embeddedGoalName)
         return if (null == existing) {
             val embeddedRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)
@@ -350,9 +342,9 @@ internal class ConverterToRuntimeRules(
     }
 
     private fun createPseudoRuleForSeparatedList(target: SeparatedList, arg: String): RuntimeRule {
-        val listRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)//this.createSeparatedListRuleName(arg)
-        val nrule = this.nextRule(listRuleName, false)
-        nrule.setRhs(this.createRhsForSeparatedList(nrule, target, listRuleName))
+        val sListRuleName = _pseudoRuleNameGenerator.nameForRuleItem(target)//this.createSeparatedListRuleName(arg)
+        val nrule = this.nextRule(sListRuleName, false)
+        nrule.setRhs(this.createRhsForSeparatedList(nrule, target, sListRuleName))
         this.originalRuleItem[Pair(nrule.runtimeRuleSetNumber, nrule.ruleNumber)] = target
         return nrule
     }

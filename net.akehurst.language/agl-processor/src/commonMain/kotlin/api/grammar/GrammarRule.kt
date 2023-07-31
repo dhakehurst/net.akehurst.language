@@ -36,7 +36,7 @@ interface GrammarRule : GrammarItem {
     val isOverride: Boolean
     val isSkip: Boolean
     val isLeaf: Boolean
-    val isOneEmebedded: Boolean
+    val isOneEmbedded: Boolean
     var rhs: RuleItem
     val nodeType: NodeType
 

@@ -73,6 +73,8 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
     companion object {
         private const val ns = "net.akehurst.language.agl.syntaxAnalyser"
         const val CONFIGURATION_KEY_AGL_SCOPE_MODEL = "$ns.scope.model"
+
+        val PropertyDeclaration.isTheSingleProperty get() = this.owner.property.size == 1
     }
 
     private var _asm: AsmSimple? = null
@@ -266,41 +268,13 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
                 val p = when {
                     downStack.isEmpty -> AsmElementPath.ROOT
                     null == parentDownData -> AsmElementPath.ROOT.plus("<error>")  // property unused
-                    else -> {
-                        val parentType = parentDownData!!.typeUse.forChildren.type
-                        when (parentType) {
-                            is PrimitiveType -> parentDownData.path
-                            is AnyType -> TODO()
-                            is NothingType -> TODO()
-                            is UnnamedSuperTypeType -> parentDownData.path
-
-                            is ListSimpleType -> parentDownData.path.plus(nodeInfo.child.index.toString())
-
-                            is ListSeparatedType -> parentDownData.path.plus(nodeInfo.child.index.toString())
-
-                            is TupleType -> {
-                                val prop = parentType.getPropertyByIndex(nodeInfo.child.propertyIndex)
-                                prop?.let { parentDownData.path.plus(prop.name) } ?: parentDownData.path.plus("<error>")
-                            }
-
-                            is ElementType -> {
-                                when {
-                                    parentType.subtypes.isNotEmpty() -> parentDownData.path
-                                    else -> {
-                                        val prop = parentType.getPropertyByIndex(nodeInfo.child.propertyIndex)
-                                        prop?.let { parentDownData.path.plus(prop.name) } ?: parentDownData.path.plus("<error>")
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    else -> pathFor(parentDownData.path, parentDownData.typeUse.forChildren.type, nodeInfo)
                 }
                 val tu = when {
                     downStack.isEmpty -> {
                         val typeUse = this@SyntaxAnalyserSimpleAbstract2.findTypeForRule(nodeInfo.node.rule.tag)
                             ?: error("Type not found for ${nodeInfo.node.rule.tag}")
-                        val tu = typeForCompressedRules(typeUse, nodeInfo)
-                        resolveUnnamedSuperType(tu.forChildren, nodeInfo)
+                        resolveCompressed(typeUse, nodeInfo)
                     }
 
                     else -> typeForNode(parentDownData?.typeUse?.forChildren, nodeInfo)
@@ -357,64 +331,147 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
         return SyntaxAnalysisResultDefault(_asm as A?, _issues, locationMap)
     }
 
-    private fun typeForNode(parentTypeUsage: TypeUsage?, nodeInfo: SpptDataNodeInfo): NodeTypes {
-        return when {
-            null == parentTypeUsage -> NodeTypes(NothingType.use) // property unused
+    private fun pathFor(parentPath: AsmElementPath, parentType: TypeDefinition, nodeInfo: SpptDataNodeInfo): AsmElementPath {
+        return when (parentType) {
+            is PrimitiveType -> parentPath
+            is AnyType -> TODO()
+            is NothingType -> parentPath.plus("<error>")
+            is UnnamedSuperTypeType -> parentPath
+            is ListSimpleType -> parentPath.plus(nodeInfo.child.index.toString())
+            is ListSeparatedType -> parentPath.plus(nodeInfo.child.index.toString())
+            is TupleType -> {
+                val prop = parentType.getPropertyByIndex(nodeInfo.child.propertyIndex)
+                prop?.let { parentPath.plus(prop.name) } ?: parentPath.plus("<error>")
+            }
 
-            else -> when {
-                parentTypeUsage.nullable -> {
-                    resolveUnnamedSuperType(parentTypeUsage.notNullable, nodeInfo)
-                }
-
-                else -> {
-                    val parentType = parentTypeUsage.type
-                    when (parentType) {
-                        is PrimitiveType -> NodeTypes(parentTypeUsage)
-                        is AnyType -> TODO()
-                        is NothingType -> TODO()
-                        is UnnamedSuperTypeType -> {
-                            val t = parentType.subtypes[nodeInfo.parentAlt.option]
-                            val tc = typeForCompressedRules(t, nodeInfo)
-                            tc
-                        }
-
-                        is ListSimpleType -> {
-                            NodeTypes(parentTypeUsage.arguments[0])
-                        }
-
-                        is ListSeparatedType -> {
-                            val argIndex = nodeInfo.child.index % 2
-                            NodeTypes(parentTypeUsage.arguments[argIndex])
-                        }
-
-                        is TupleType -> {
-                            val prop = parentType.getPropertyByIndex(nodeInfo.child.propertyIndex)
-                            val tu = prop?.typeUse ?: NothingType.use  // property not used if prop==null
-                            resolveUnnamedSuperType(tu, nodeInfo)
-                        }
-
-                        is ElementType -> {
-                            when {
-                                parentType.subtypes.isNotEmpty() -> {
-                                    val t = parentType.subtypes[nodeInfo.parentAlt.option]
-                                    val tc = typeForCompressedRules(t.typeUse(), nodeInfo)
-                                    tc
-                                }
-
-                                else -> {
-                                    val prop = parentType.getPropertyByIndex(nodeInfo.child.propertyIndex)
-                                    val tu = prop?.typeUse ?: NothingType.use  // property not used if prop==null
-                                    resolveUnnamedSuperType(tu, nodeInfo)
-                                }
-                            }
-                        }
+            is ElementType -> {
+                when {
+                    parentType.subtypes.isNotEmpty() -> parentPath
+                    else -> {
+                        val prop = parentType.getPropertyByIndex(nodeInfo.child.propertyIndex)
+                        prop?.let { parentPath.plus(prop.name) } ?: parentPath.plus("<error>")
                     }
                 }
             }
         }
     }
 
-    private fun typeForCompressedRules(typeUsage: TypeUsage, nodeInfo: SpptDataNodeInfo): NodeTypes {
+    private fun typeForNode(parentTypeUsage: TypeUsage?, nodeInfo: SpptDataNodeInfo): NodeTypes {
+        return when {
+            null == parentTypeUsage -> NodeTypes(NothingType.use) // property unused
+            parentTypeUsage.nullable -> typeForParentOptional(parentTypeUsage, nodeInfo)
+            else -> {
+                val parentType = parentTypeUsage.type
+                when (parentType) {
+                    is PrimitiveType -> NodeTypes(parentTypeUsage)
+                    is AnyType -> TODO()
+                    is NothingType -> NodeTypes(NothingType.use) // property unused
+                    is UnnamedSuperTypeType -> typeForParentUnnamedSuperType(parentTypeUsage, nodeInfo)
+                    is ListSimpleType -> typeForParentListSimple(parentTypeUsage, nodeInfo)
+                    is ListSeparatedType -> typeForParentListSeparated(parentTypeUsage, nodeInfo)
+                    is TupleType -> typeForParentTuple(parentType, nodeInfo)
+                    is ElementType -> typeForParentElement(parentType, nodeInfo)
+                }
+            }
+        }
+    }
+
+    private fun typeForParentOptional(parentTypeUsage: TypeUsage, nodeInfo: SpptDataNodeInfo): NodeTypes {
+        // nodes map to runtime-rules, not user-rules
+        // if user-rule only had one optional item, then runtime-rule is 'compressed, i.e. no pseudo rule for the option
+        if (Debug.CHECK) check(parentTypeUsage.nullable)
+        return when {
+            nodeInfo.node.rule.isOptional -> NodeTypes(parentTypeUsage)
+            else -> {
+                NodeTypes(parentTypeUsage.notNullable)
+            }
+        }
+    }
+
+    private fun typeForParentListSimple(parentTypeUsage: TypeUsage, nodeInfo: SpptDataNodeInfo): NodeTypes {
+        // nodes map to runtime-rules, not user-rules
+        // if user-rule only had one list item, then runtime-rule is 'compressed, i.e. no pseudo rule for the list
+        if (Debug.CHECK) check(parentTypeUsage.type is ListSimpleType)
+        val itemTypeUse = parentTypeUsage.arguments[0]
+        return resolveElementSubtype(itemTypeUse, nodeInfo)
+    }
+
+    private fun typeForParentListSeparated(parentTypeUsage: TypeUsage, nodeInfo: SpptDataNodeInfo): NodeTypes {
+        // nodes map to runtime-rules, not user-rules
+        // if user-rule only had one slist item, then runtime-rule is 'compressed, i.e. no pseudo rule for the slist
+        if (Debug.CHECK) check(parentTypeUsage.type is ListSeparatedType)
+        val index = nodeInfo.child.index % 2
+        val childTypeUse = parentTypeUsage.arguments[index]
+        return resolveElementSubtype(childTypeUse, nodeInfo)
+    }
+
+    private fun typeForParentUnnamedSuperType(parentTypeUsage: TypeUsage, nodeInfo: SpptDataNodeInfo): NodeTypes {
+        if (Debug.CHECK) check(parentTypeUsage.nullable)
+        val tu = (parentTypeUsage.type as UnnamedSuperTypeType).subtypes[nodeInfo.parentAlt.option]
+        return resolveCompressed(tu, nodeInfo)
+    }
+
+    private fun typeForParentTuple(parentType: TupleType, nodeInfo: SpptDataNodeInfo): NodeTypes {
+        val prop = parentType.getPropertyByIndex(nodeInfo.child.propertyIndex)
+        return typeForProperty(prop, nodeInfo)
+    }
+
+    private fun typeForParentElement(parentType: ElementType, nodeInfo: SpptDataNodeInfo): NodeTypes {
+        return when {
+            parentType.subtypes.isNotEmpty() -> {
+                val t = parentType.subtypes[nodeInfo.parentAlt.option]
+                return resolveCompressed(t.typeUse(), nodeInfo)
+            }
+
+            else -> {
+                val prop = parentType.getPropertyByIndex(nodeInfo.child.propertyIndex)
+                typeForProperty(prop, nodeInfo)
+            }
+        }
+    }
+
+    private fun resolveElementSubtype(typeUse: TypeUsage, nodeInfo: SpptDataNodeInfo): NodeTypes {
+        val type = typeUse.type
+        return when {
+            type is ElementType && type.subtypes.isNotEmpty() -> {
+                val t = type.subtypes[nodeInfo.alt.option]
+                NodeTypes(t.typeUse())
+            }
+
+            else -> NodeTypes(typeUse)
+        }
+    }
+
+    private fun typeForProperty(prop: PropertyDeclaration?, nodeInfo: SpptDataNodeInfo): NodeTypes {
+        return when {
+            null == prop -> NodeTypes(NothingType.use) // property unused
+            prop.typeUse.nullable -> NodeTypes(prop.typeUse)//typeForOptional(propTypeUse, nodeInfo)
+            else -> {
+                val propType = prop.typeUse.type
+                when (propType) {
+                    is PrimitiveType -> NodeTypes(prop.typeUse)
+                    is AnyType -> TODO()
+                    is NothingType -> NodeTypes(NothingType.use)
+                    is UnnamedSuperTypeType -> {
+                        val tu = resolveUnnamedSuperTypeSubtype(prop.typeUse, nodeInfo)
+                        when (tu.type) {
+                            is TupleType -> NodeTypes(tu)
+                            else -> NodeTypes(prop.typeUse)
+                        }
+                        //NodeTypes(tu)
+                        //NodeTypes(prop.typeUse)//typeForUnnamedSuperType(propTypeUse, nodeInfo)
+                    }
+
+                    is ListSimpleType -> NodeTypes(prop.typeUse)
+                    is ListSeparatedType -> NodeTypes(prop.typeUse)
+                    is TupleType -> NodeTypes(prop.typeUse)
+                    is ElementType -> NodeTypes(prop.typeUse)
+                }
+            }
+        }
+    }
+
+    private fun resolveCompressed(typeUsage: TypeUsage, nodeInfo: SpptDataNodeInfo): NodeTypes {
         val type = typeUsage.type
         return when {
             type is ElementType && type.property.size == 1 -> {
@@ -431,18 +488,15 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
         }
     }
 
-    private fun resolveUnnamedSuperType(typeUsage: TypeUsage, nodeInfo: SpptDataNodeInfo): NodeTypes {
+    private fun resolveUnnamedSuperTypeSubtype(typeUse: TypeUsage, nodeInfo: SpptDataNodeInfo): TypeUsage {
+        val type = typeUse.type
         return when {
-            typeUsage.type is UnnamedSuperTypeType -> {
-                val t = (typeUsage.type as UnnamedSuperTypeType).subtypes[nodeInfo.alt.option]
-                when {
-                    nodeInfo.node.rule.isOptional -> NodeTypes(typeUsage)
-                    t.type is TupleType -> NodeTypes(TypeUsage.ofType(t.type, t.arguments, typeUsage.nullable))
-                    else -> NodeTypes(typeUsage)
-                }
+            type is UnnamedSuperTypeType && type.subtypes.isNotEmpty() -> {
+                val t = type.subtypes[nodeInfo.alt.option]
+                t
             }
 
-            else -> NodeTypes(typeUsage)
+            else -> typeUse
         }
     }
 

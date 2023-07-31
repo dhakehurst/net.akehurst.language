@@ -127,7 +127,7 @@ data class GrammarRuleDefault(
             this._rhs = value
         }
 
-    override val isOneEmebedded: Boolean get() = this.rhs is Embedded || (this.rhs is Concatenation) && (this.rhs as Concatenation).items[0] is Embedded
+    override val isOneEmbedded: Boolean get() = this.rhs is Embedded || (this.rhs is Concatenation) && (this.rhs as Concatenation).items[0] is Embedded
 
     override val nodeType: NodeType = NodeTypeDefault(this.name)
 
