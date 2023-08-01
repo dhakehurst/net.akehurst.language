@@ -30,6 +30,8 @@ internal sealed class RuntimeRuleRhs(
     abstract val rulePositionsNotAtStart: Set<RulePosition>
     abstract val rulePositionsAtStart: Set<RulePosition>
 
+    open val asString: String get() = this.toString()
+
     abstract fun rhsItemsAt(option: Int, position: Int): Set<RuntimeRule>
 
     abstract fun nextRulePositions(current: RulePosition): Set<RulePosition>
@@ -163,7 +165,9 @@ internal class RuntimeRuleRhsConcatenation(
         concatItems.map { clonedRules[it.tag]!! }
     )
 
-    override fun toString(): String = "CONCAT(${this.concatItems.map { "${it.tag}[${it.ruleNumber}]" }.joinToString(" ")})"
+    override val asString: String get() = "CONCAT(${this.concatItems.joinToString(" ") { it.tag }})"
+
+    override fun toString(): String = "CONCAT(${this.concatItems.joinToString(" ") { "${it.tag}[${it.ruleNumber}]" }})"
 }
 
 internal class RuntimeRuleRhsChoice(
@@ -197,7 +201,9 @@ internal class RuntimeRuleRhsChoice(
         options.map { it.clone(clonedRules) }
     )
 
-    override fun toString(): String = "CHOICE(${this.options.map { "${it}" }.joinToString(" | ")})"
+    override val asString: String get() = "CHOICE(${this.options.joinToString(" | ") { it.asString }})"
+
+    override fun toString(): String = "CHOICE(${this.options.joinToString(" | ") { "$it" }})"
 
 }
 

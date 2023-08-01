@@ -89,7 +89,7 @@ class GrammarTypeModelBuilder(
         return et
     }
 
-    fun unnamedSuperTypeTypeFor(name: String, subtypes: List<Any>): UnnamedSuperTypeType {
+    fun unnamedSuperTypeTypeOf(name: String, subtypes: List<Any>): UnnamedSuperTypeType {
         val sts = subtypes.map {
             when (it) {
                 is String -> _model.findOrCreateElementTypeNamed(it)!!
@@ -98,6 +98,15 @@ class GrammarTypeModelBuilder(
             }
         }
         val t = UnnamedSuperTypeType(sts.map { TypeUsage.ofType(it) }, false)
+        _model.addTypeFor(name, TypeUsage.ofType(t))
+        return t
+    }
+
+    fun unnamedSuperTypeType(name: String, init: SubtypeListBuilder.() -> Unit): UnnamedSuperTypeType {
+        val b = SubtypeListBuilder(_model, _typeReferences)
+        b.init()
+        val stu = b.build()
+        val t = UnnamedSuperTypeType(stu, false)
         _model.addTypeFor(name, TypeUsage.ofType(t))
         return t
     }

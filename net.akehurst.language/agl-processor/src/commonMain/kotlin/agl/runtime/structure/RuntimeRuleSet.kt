@@ -16,9 +16,9 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.automaton.ParserStateSet
+import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.ParserException
 import net.akehurst.language.api.processor.AutomatonKind
@@ -411,7 +411,7 @@ internal class RuntimeRuleSet(
             val clonedCtx = clonedRules[it.contextRule.tag]!!
             val clonedPrecRules = it.options.map { pr ->
                 val cTgt = clonedRules[pr.target.tag]!!
-                val cOp = pr.operators.map{clonedRules[it.tag]!!}.toSet()
+                val cOp = pr.operators.map { clonedRules[it.tag]!! }.toSet()
                 RuntimePreferenceRule.RuntimePreferenceOption(pr.precedence, cTgt, pr.option, cOp, pr.associativity)
             }
             RuntimePreferenceRule(clonedCtx, clonedPrecRules)
@@ -421,14 +421,16 @@ internal class RuntimeRuleSet(
     }
 
     override fun toString(): String {
-        val rulesStr = this.runtimeRules.map {
-            "  " + it.toString()
-        }.joinToString("\n")
+        val rulesStr = this.runtimeRules
+            .sortedBy { it.tag }
+            .map {
+                "  " + it.asString
+            }.joinToString("\n")
         return """
-            RuntimeRuleSet {
-                ${rulesStr}
-            }
-        """.trimIndent()
+RuntimeRuleSet {
+${rulesStr}
+}
+""".trimIndent()
     }
 
     override fun hashCode(): Int = number

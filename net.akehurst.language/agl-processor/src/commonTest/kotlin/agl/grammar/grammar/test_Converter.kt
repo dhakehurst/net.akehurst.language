@@ -121,24 +121,24 @@ internal class test_Converter {
 
     @Test
     fun concatenationNonTerminalRule() {
-        // S = a b c ;
-        // a = 'a' ;
-        // b = 'b' ;
-        // c = 'c' ;
+        // S = A B C ;
+        // A = 'a' ;
+        // B = 'b' ;
+        // C = 'c' ;
         val gb = GrammarBuilderDefault(NamespaceDefault("test"), "test")
-        gb.rule("a").concatenation(gb.terminalLiteral("a"))
-        gb.rule("b").concatenation(gb.terminalLiteral("b"))
-        gb.rule("c").concatenation(gb.terminalLiteral("c"))
-        gb.rule("S").concatenation(gb.nonTerminal("a"), gb.nonTerminal("b"), gb.nonTerminal("c"))
+        gb.rule("A").concatenation(gb.terminalLiteral("a"))
+        gb.rule("B").concatenation(gb.terminalLiteral("b"))
+        gb.rule("C").concatenation(gb.terminalLiteral("c"))
+        gb.rule("S").concatenation(gb.nonTerminal("A"), gb.nonTerminal("B"), gb.nonTerminal("C"))
         val grammar = gb.grammar
 
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
         val expected = runtimeRuleSet {
-            concatenation("S") { ref("a"); ref("b"); ref("c") }
-            concatenation("a") { literal("a") }
-            concatenation("b") { literal("b") }
-            concatenation("c") { literal("c") }
+            concatenation("S") { ref("A"); ref("B"); ref("C") }
+            concatenation("A") { literal("a") }
+            concatenation("B") { literal("b") }
+            concatenation("C") { literal("c") }
         }
 
         assertTrue(expected.matches(actual))

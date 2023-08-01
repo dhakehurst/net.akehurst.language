@@ -49,15 +49,16 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val issues = IssueHolder(LanguageProcessorPhase.ALL)
 
-    protected abstract val _runtimeRuleSet: RuntimeRuleSet
+    /* made internal so we can test against it */
+    internal abstract val runtimeRuleSet: RuntimeRuleSet
     protected abstract val mapToGrammar: (Int, Int) -> RuleItem
 
     abstract override val grammar: Grammar
     protected abstract val configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 
     private val _completionProvider: CompletionProvider by lazy { CompletionProvider(this.grammar) }
-    private val _scanner by lazy { Scanner(this._runtimeRuleSet) }
-    private val parser: Parser by lazy { ScanOnDemandParser(this._runtimeRuleSet) }
+    private val _scanner by lazy { Scanner(this.runtimeRuleSet) }
+    private val parser: Parser by lazy { ScanOnDemandParser(this.runtimeRuleSet) }
 
     override val spptParser: SPPTParser by lazy {
         val embeddedRuntimeRuleSets = grammar.allResolvedEmbeddedGrammars.map {

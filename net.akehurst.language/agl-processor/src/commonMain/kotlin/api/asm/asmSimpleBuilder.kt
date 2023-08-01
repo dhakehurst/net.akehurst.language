@@ -56,6 +56,8 @@ class AsmSimpleBuilder(
         return b.build()
     }
 
+    fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = element(TupleType.INSTANCE_NAME, init)
+
     fun listOfString(vararg items: String): List<String> {
         val path = AsmElementPath.ROOT + (_asm.rootElements.size).toString()
         val list = items.asList()

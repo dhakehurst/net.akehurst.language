@@ -398,8 +398,8 @@ class test_deriveTypeModelFromGrammar {
 
         val actual = TypeModelFromGrammar.createFrom(result.asm!!.last())
         val expected = grammarTypeModel("test", "Test", "S") {
-            val B = unnamedSuperTypeTypeFor("B", listOf(StringType, "D"))
-            unnamedSuperTypeTypeFor("S", listOf("A", B, "C"))
+            val B = unnamedSuperTypeTypeOf("B", listOf(StringType, "D"))
+            unnamedSuperTypeTypeOf("S", listOf("A", B, "C"))
             elementType("A", "A") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyPrimitiveType("x", "String", false, 1)
@@ -1150,7 +1150,7 @@ class test_deriveTypeModelFromGrammar {
                 propertyPrimitiveType("b", "String", false, 0)
                 propertyPrimitiveType("c", "String", false, 1)
             }
-            unnamedSuperTypeTypeFor("S", listOf(BC))
+            unnamedSuperTypeTypeOf("S", listOf(BC))
         }
 
         GrammarTypeModelTest.assertEquals(expected, actual)
@@ -1180,7 +1180,7 @@ class test_deriveTypeModelFromGrammar {
                 propertyPrimitiveType("b", "String", false, 0)
                 propertyPrimitiveType("c", "String", false, 1)
             }
-            unnamedSuperTypeTypeFor("S", listOf(BC))
+            unnamedSuperTypeTypeOf("S", listOf(BC))
         }
 
         GrammarTypeModelTest.assertEquals(expected, actual)

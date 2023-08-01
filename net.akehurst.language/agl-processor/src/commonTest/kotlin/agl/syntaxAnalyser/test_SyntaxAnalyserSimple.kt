@@ -19,6 +19,11 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.processor.LanguageProcessorAbstract
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
@@ -39,8 +44,6 @@ class TestData(
 class test_SyntaxAnalyserSimple {
 
     private companion object {
-        val grammarProc = Agl.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
-
         fun processor(grammarStr: String) = Agl.processorFromStringDefault(grammarStr)
 
         fun testProc(grammarStr: String): LanguageProcessor<AsmSimple, ContextSimple> {
@@ -50,7 +53,7 @@ class test_SyntaxAnalyserSimple {
             return result.processor!!
         }
 
-        fun MutableList<TestData>.define(sentence: String, expected: () -> AsmSimple) = this.add(TestData(sentence, expected()))
+        fun MutableList<TestData>.define(sentence: String, sppt: String? = null, expected: () -> AsmSimple) = this.add(TestData(sentence, expected()))
 
         fun test(proc: LanguageProcessor<AsmSimple, ContextSimple>, data: TestData) {
             println("'${data.sentence}'")
@@ -68,8 +71,14 @@ class test_SyntaxAnalyserSimple {
             }
         }
 
-        fun checkTypeModel(expected: GrammarTypeModel, actual: GrammarTypeModel) {
-            GrammarTypeModelTest.assertEquals(expected, actual)
+        fun checkRuntimeGrammar(proc: LanguageProcessor<AsmSimple, ContextSimple>, expected: RuntimeRuleSet) {
+            val actual = (proc as LanguageProcessorAbstract).runtimeRuleSet
+            assertEquals(expected.toString(), actual.toString())
+            assertTrue(expected.matches(actual))
+        }
+
+        fun checkTypeModel(proc: LanguageProcessor<AsmSimple, ContextSimple>, expected: GrammarTypeModel) {
+            GrammarTypeModelTest.assertEquals(expected, proc.typeModel)
         }
     }
 
@@ -257,6 +266,35 @@ class test_SyntaxAnalyserSimple {
             }
         """.trimIndent()
         val proc = testProc(grammarStr)
+
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("A"); ref("B"); ref("C") }
+            concatenation("A") { ref("a"); ref("x") }
+            concatenation("B") { ref("b"); ref("x") }
+            concatenation("C") { ref("c"); ref("x") }
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("x", "x")
+        })
+
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
+            elementType("S", "S") {
+                subTypes("A", "B", "C")
+            }
+            elementType("A", "A") {
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyPrimitiveType("x", "String", false, 1)
+            }
+            elementType("B", "B") {
+                propertyPrimitiveType("b", "String", false, 0)
+                propertyPrimitiveType("x", "String", false, 1)
+            }
+            elementType("C", "C") {
+                propertyPrimitiveType("c", "String", false, 0)
+                propertyPrimitiveType("x", "String", false, 1)
+            }
+        })
 
         val tests = mutableListOf<TestData>()
         tests.define("ax") {
@@ -591,14 +629,14 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
             elementType("S", "S") {
                 propertyElementTypeOf("a", "A", true, 0)
             }
             elementType("A", "A") {
                 propertyPrimitiveType("a", "String", false, 0)
             }
-        }, proc.typeModel)
+        })
 
         val tests = mutableListOf<TestData>()
         tests.define("") {
@@ -633,7 +671,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
             elementType("S", "S") {
                 propertyPrimitiveType("b", "String", false, 0)
                 propertyElementTypeOf("a", "A", true, 1)
@@ -641,7 +679,7 @@ class test_SyntaxAnalyserSimple {
             elementType("A", "A") {
                 propertyPrimitiveType("a", "String", false, 0)
             }
-        }, proc.typeModel)
+        })
 
         val tests = mutableListOf<TestData>()
         tests.define("b") {
@@ -678,7 +716,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
             elementType("S", "S") {
                 propertyElementTypeOf("oA", "OA", false, 0)
             }
@@ -688,7 +726,7 @@ class test_SyntaxAnalyserSimple {
             elementType("A", "A") {
                 propertyPrimitiveType("a", "String", false, 0)
             }
-        }, proc.typeModel)
+        })
 
         val tests = mutableListOf<TestData>()
         tests.define("") {
@@ -905,14 +943,14 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
             elementType("S", "S") {
                 propertyListTypeOf("a", "A", false, 0)
             }
             elementType("A", "A") {
                 propertyPrimitiveType("a", "String", false, 0)
             }
-        }, proc.typeModel)
+        })
 
         val tests = mutableListOf<TestData>()
         tests.define("") {
@@ -964,7 +1002,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
             elementType("S", "S") {
                 propertyPrimitiveType("b", "String", false, 0)
                 propertyListTypeOf("a", "A", false, 1)
@@ -973,7 +1011,7 @@ class test_SyntaxAnalyserSimple {
             elementType("A", "A") {
                 propertyPrimitiveType("a", "String", false, 0)
             }
-        }, proc.typeModel)
+        })
 
         val tests = mutableListOf<TestData>()
         tests.define("bc") {
@@ -1029,14 +1067,14 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
             elementType("S", "S") {
                 propertyListTypeOf("as", "String", false, 0)
             }
             elementType("as", "As") {
                 propertyListTypeOf("a", "String", false, 0)
             }
-        }, proc.typeModel)
+        })
 
         val tests = mutableListOf<TestData>()
         tests.define("") {
@@ -1086,7 +1124,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
             elementType("S", "S") {
                 propertyListTypeOf("abs", "AB", false, 0)
             }
@@ -1102,29 +1140,29 @@ class test_SyntaxAnalyserSimple {
             elementType("B", "B") {
                 propertyPrimitiveType("b", "String", false, 0)
             }
-        }, proc.typeModel)
+        })
 
         val tests = mutableListOf<TestData>()
-//        tests.define("") {
-//            asmSimple {
-//                element("S") {
-//                    propertyListOfElement("abs") {
-//
-//                    }
-//                }
-//            }
-//        }
-//        tests.define("a") {
-//            asmSimple {
-//                element("S") {
-//                    propertyListOfElement("abs") {
-//                        element("A") {
-//                            propertyString("a", "a")
-//                        }
-//                    }
-//                }
-//            }
-//        }
+        tests.define("") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("abs") {
+
+                    }
+                }
+            }
+        }
+        tests.define("a") {
+            asmSimple {
+                element("S") {
+                    propertyListOfElement("abs") {
+                        element("A") {
+                            propertyString("a", "a")
+                        }
+                    }
+                }
+            }
+        }
         tests.define("b") {
             asmSimple {
                 element("S") {
@@ -1448,7 +1486,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
             elementType("S", "S") {
                 propertyListTypeOf("abs", "AB", false, 0)
             }
@@ -1464,7 +1502,7 @@ class test_SyntaxAnalyserSimple {
             elementType("B", "B") {
                 propertyPrimitiveType("b", "String", false, 0)
             }
-        }, proc.typeModel)
+        })
 
         val tests = mutableListOf<TestData>()
         tests.define("") {
@@ -1920,7 +1958,18 @@ class test_SyntaxAnalyserSimple {
                 }
             }
         }
-        tests.define("abcf") {
+        tests.define(
+            "abcf", """
+            S {
+              'a'
+              §S§opt1 { §S§choice1 {
+                'b'
+                'c'
+              } }
+              'f'
+            } 
+        """
+        ) {
             asmSimple {
                 element("S") {
                     propertyString("a", "a")
@@ -2087,6 +2136,22 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("BC") }
+                concatenation { ref("§S§multi1") }
+            }
+            concatenation("BC") { ref("b"); ref("c") }
+            multi("§S§multi1", 1, -1, "d")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+        })
+
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
+
+        })
+
         val tests = mutableListOf<TestData>()
         tests.define("bc") {
             asmSimple {
@@ -2122,6 +2187,21 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            concatenation("S") { ref("a"); ref("§S§choice1"); ref("e") }
+            choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("BC") }
+                concatenation { ref("§S§multi1") }
+            }
+            concatenation("BC") { ref("b"); ref("c") }
+            multi("§S§multi1", 1, -1, "d")
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            literal("e", "e")
+        })
+
         val tests = mutableListOf<TestData>()
         tests.define("abce") {
             asmSimple {
@@ -2148,6 +2228,681 @@ class test_SyntaxAnalyserSimple {
             test(proc, data)
         }
     }
+
+    @Test // S = a (BC | d+)? e ;
+    fun _7_concat_group_choice_concat_nonTerm_list_2() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a (BC | d+)? e ;
+                BC = b c ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            concatenation("S") { ref("a"); ref("§S§opt2"); ref("e") }
+            multi("§S§opt2", 0, 1, "§S§choice1")
+            choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("BC") }
+                concatenation { ref("§S§multi1") }
+            }
+            concatenation("BC") { ref("b"); ref("c") }
+            multi("§S§multi1", 1, -1, "d")
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            literal("e", "e")
+        })
+
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
+            elementType("S", "S") {
+                propertyPrimitiveType("a", "String", false, 0)
+                propertyUnnamedSuperType("\$choice", true, 1) {
+                    elementRef("BC")
+                    listType(false) { primitiveType("String") }
+                }
+                propertyPrimitiveType("e", "String", false, 2)
+            }
+            elementType("BC", "BC") {
+                propertyPrimitiveType("b", "String", false, 0)
+                propertyPrimitiveType("c", "String", false, 1)
+            }
+        })
+
+        val tests = mutableListOf<TestData>()
+        /*        tests.define("ae") {
+                    asmSimple {
+                        element("S") {
+                            propertyString("a", "a")
+                            propertyNull("\$choice")
+                            propertyString("e", "e")
+                        }
+                    }
+                }*/
+        tests.define(
+            "abce", """
+            S {
+              'a'
+              §S§opt2 { §S§choice1 { BC {
+                'b'
+                'c'
+              } } }
+              'e'
+            } 
+        """.trimIndent()
+        ) {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyElementExplicitType("\$choice", "BC") {
+                        propertyString("b", "b")
+                        propertyString("c", "c")
+                    }
+                    propertyString("e", "e")
+                }
+            }
+        }
+        tests.define("ade") {
+            asmSimple {
+                element("S") {
+                    propertyString("a", "a")
+                    propertyListOfString("\$choice", listOf("d"))
+                    propertyString("e", "e")
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test // S = a b | c d e ;
+    fun _7_1a_rhs_choice_concat_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = a b | c d e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("a"); ref("b") }
+                concatenation { ref("c"); ref("d"); ref("e") }
+            }
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            literal("e", "e")
+        })
+
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
+            unnamedSuperTypeType("S") {
+                tupleType {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyPrimitiveType("b", "String", false, 1)
+                }
+                tupleType {
+                    propertyPrimitiveType("c", "String", false, 0)
+                    propertyPrimitiveType("d", "String", false, 1)
+                    propertyPrimitiveType("e", "String", false, 2)
+                }
+            }
+        })
+
+        val tests = mutableListOf<TestData>()
+        tests.define(
+            "ab", """
+            S {
+              'a'
+              'b'
+            } 
+        """
+        ) {
+            asmSimple {
+                tuple {
+                    propertyString("a", "a")
+                    propertyString("b", "b")
+                }
+            }
+        }
+        tests.define("cde") {
+            asmSimple {
+                tuple {
+                    propertyString("c", "c")
+                    propertyString("d", "d")
+                    propertyString("e", "e")
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test // S = (a b) | (c d e) ;
+    fun _7_1b_rhs_choice_concat_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = (a b) | (c d e) ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("§S§group1") }
+                concatenation { ref("§S§group2") }
+            }
+            concatenation("§S§group1") { ref("a"); ref("b") }
+            concatenation("§S§group2") { ref("c"); ref("d"); ref("e") }
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            literal("e", "e")
+        })
+
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
+            unnamedSuperTypeType("S") {
+                tupleType {
+                    propertyTupleType("\$group", false, 0) {
+                        propertyPrimitiveType("a", "String", false, 0)
+                        propertyPrimitiveType("b", "String", false, 1)
+                    }
+                }
+                tupleType {
+                    propertyTupleType("\$group", false, 0) {
+                        propertyPrimitiveType("c", "String", false, 0)
+                        propertyPrimitiveType("d", "String", false, 1)
+                        propertyPrimitiveType("e", "String", false, 2)
+                    }
+                }
+            }
+        })
+
+        val tests = mutableListOf<TestData>()
+        tests.define(
+            "ab", """
+            S { §S§group1 {
+              'a'
+              'b'
+            } } 
+        """
+        ) {
+            asmSimple {
+                tuple {
+                    propertyTuple("\$group") {
+                        propertyString("a", "a")
+                        propertyString("b", "b")
+                    }
+                }
+            }
+        }
+        tests.define("cde") {
+            asmSimple {
+                tuple {
+                    propertyTuple("\$group") {
+                        propertyString("c", "c")
+                        propertyString("d", "d")
+                        propertyString("e", "e")
+                    }
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test // S = (a b | c d e) ;
+    fun _7_1c_rhs_choice_concat_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = (a b | c d e) ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("a"); ref("b") }
+                concatenation { ref("c"); ref("d"); ref("e") }
+            }
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            literal("e", "e")
+        })
+
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
+            unnamedSuperTypeType("S") {
+                tupleType {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyPrimitiveType("b", "String", false, 1)
+                }
+                tupleType {
+                    propertyPrimitiveType("c", "String", false, 0)
+                    propertyPrimitiveType("d", "String", false, 1)
+                    propertyPrimitiveType("e", "String", false, 2)
+                }
+            }
+        })
+
+        val tests = mutableListOf<TestData>()
+        tests.define("ab") {
+            asmSimple {
+                tuple {
+                    propertyString("a", "a")
+                    propertyString("b", "b")
+                }
+            }
+        }
+        tests.define("cde") {
+            asmSimple {
+                tuple {
+                    propertyString("c", "c")
+                    propertyString("d", "d")
+                    propertyString("e", "e")
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test // S = ((a b) | (c d e)) ;
+    fun _7_2_rhs_choice_concat_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = (a b | c d e) ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("a"); ref("b") }
+                concatenation { ref("c"); ref("d"); ref("e") }
+            }
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            literal("e", "e")
+        })
+
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
+            unnamedSuperTypeType("S") {
+                tupleType {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyPrimitiveType("b", "String", false, 1)
+                }
+                tupleType {
+                    propertyPrimitiveType("c", "String", false, 0)
+                    propertyPrimitiveType("d", "String", false, 1)
+                    propertyPrimitiveType("e", "String", false, 2)
+                }
+            }
+        })
+
+        val tests = mutableListOf<TestData>()
+        tests.define("ab") {
+            asmSimple {
+                tuple {
+                    propertyString("a", "a")
+                    propertyString("b", "b")
+                }
+            }
+        }
+        tests.define("cde") {
+            asmSimple {
+                tuple {
+                    propertyString("c", "c")
+                    propertyString("d", "d")
+                    propertyString("e", "e")
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test // S = x (a b | c d e) y ;
+    fun _7_3_rhs_choice_concat_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = x (a b | c d e) y ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+                leaf x = 'x' ;
+                leaf y = 'y' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            concatenation("S") { ref("x"); ref("§S§choice1"); ref("y") }
+            choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("a"); ref("b") }
+                concatenation { ref("c"); ref("d"); ref("e") }
+            }
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            literal("e", "e")
+            literal("x", "x")
+            literal("y", "y")
+        })
+
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
+            elementType("S", "S") {
+                propertyPrimitiveType("x", "String", false, 0)
+                propertyUnnamedSuperType("\$choice", false, 1) {
+                    tupleType {
+                        propertyPrimitiveType("a", "String", false, 0)
+                        propertyPrimitiveType("b", "String", false, 1)
+                    }
+                    tupleType {
+                        propertyPrimitiveType("c", "String", false, 0)
+                        propertyPrimitiveType("d", "String", false, 1)
+                        propertyPrimitiveType("e", "String", false, 2)
+                    }
+                }
+                propertyPrimitiveType("y", "String", false, 2)
+            }
+        })
+
+        val tests = mutableListOf<TestData>()
+        tests.define(
+            "xaby", """
+            S {
+              'x'
+              §S§choice1 {
+                'a'
+                'b'
+              }
+              'y'
+            } 
+        """
+        ) {
+            asmSimple {
+                element("S") {
+                    propertyString("x", "x")
+                    propertyTuple("\$choice") {
+                        propertyString("a", "a")
+                        propertyString("b", "b")
+                    }
+                    propertyString("y", "y")
+                }
+            }
+        }
+        tests.define("xcdey") {
+            asmSimple {
+                element("S") {
+                    propertyString("x", "x")
+                    propertyTuple("\$choice") {
+                        propertyString("c", "c")
+                        propertyString("d", "d")
+                        propertyString("e", "e")
+                    }
+                    propertyString("y", "y")
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test // S = CH; CH = a b | c d e ;
+    fun _7_4_rhs_choice_concat_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = CH ;
+                CH = a b | c d e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("BC") }
+                concatenation { ref("§S§multi1") }
+            }
+            concatenation("BC") { ref("b"); ref("c") }
+            multi("§S§multi1", 1, -1, "d")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+        })
+
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
+
+        })
+
+        val tests = mutableListOf<TestData>()
+        tests.define("bc") {
+            asmSimple {
+                element("BC") {
+                    propertyString("b", "b")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("d") {
+            asmSimple {
+                listOfString("d")
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test // S = CH; CH = (a b | c d e) ;
+    fun _7_5_rhs_choice_concat_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = CH ;
+                CH = (a b | c d e) ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("BC") }
+                concatenation { ref("§S§multi1") }
+            }
+            concatenation("BC") { ref("b"); ref("c") }
+            multi("§S§multi1", 1, -1, "d")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+        })
+
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
+
+        })
+
+        val tests = mutableListOf<TestData>()
+        tests.define("bc") {
+            asmSimple {
+                element("BC") {
+                    propertyString("b", "b")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("d") {
+            asmSimple {
+                listOfString("d")
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test // S = x CH y ; CH = a b | c d e
+    fun _7_6_rhs_choice_concat_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = x CH y ;
+                CH = a b | c d e ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+                leaf x = 'x' ;
+                leaf y = 'y' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("BC") }
+                concatenation { ref("§S§multi1") }
+            }
+            concatenation("BC") { ref("b"); ref("c") }
+            multi("§S§multi1", 1, -1, "d")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+        })
+
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
+
+        })
+
+        val tests = mutableListOf<TestData>()
+        tests.define("bc") {
+            asmSimple {
+                element("BC") {
+                    propertyString("b", "b")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("d") {
+            asmSimple {
+                listOfString("d")
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test // S = x C y ; C = (a b | c d e)
+    fun _7_7_rhs_choice_concat_nonTerm() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = x CH y ;
+                CH = (a b | c d e) ;
+                leaf a = 'a' ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+                leaf e = 'e' ;
+                leaf x = 'x' ;
+                leaf y = 'y' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("BC") }
+                concatenation { ref("§S§multi1") }
+            }
+            concatenation("BC") { ref("b"); ref("c") }
+            multi("§S§multi1", 1, -1, "d")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+        })
+
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
+
+        })
+
+        val tests = mutableListOf<TestData>()
+        tests.define("bc") {
+            asmSimple {
+                element("BC") {
+                    propertyString("b", "b")
+                    propertyString("c", "c")
+                }
+            }
+        }
+        tests.define("d") {
+            asmSimple {
+                listOfString("d")
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
 
     @Test
     fun _7_where_root_is_UnnamedSuperType() {
@@ -2233,7 +2988,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkTypeModel(grammarTypeModel("test", "Test", "S") {
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
             // S = type ;
             elementType("S", "S") {
                 propertyElementTypeOf("type", "Type", false, 0)
@@ -2251,7 +3006,7 @@ class test_SyntaxAnalyserSimple {
             elementType("typeArgList", "TypeArgList") {
                 propertyListTypeOf("type", "Type", false, 0)
             }
-        }, proc.typeModel)
+        })
 
         val tests = mutableListOf<TestData>()
         tests.define("A") {

@@ -28,28 +28,20 @@ internal class RuntimeRule(
     val isSkip: Boolean
 ) : Rule {
 
-    private lateinit var _rhs: RuntimeRuleRhs;
+    private lateinit var _rhs: RuntimeRuleRhs
     fun setRhs(value: RuntimeRuleRhs) {
         this._rhs = value
     }
 
     val rhs get() = this._rhs
 
-    //TODO: neeeds properties:
+    //TODO: needs properties- maybe:
     // isUnnamedLiteral - so we can eliminate from AsmSimple
     // isGenerated - also w.r.t. AsmSimple so we know if we should try and get a property name from the elements
     // not sure if I really want to add the data to this class as only used for AsmSimple not runtime use?
 
     val isExplicitlyNamed: Boolean get() = this.name != null
     override val tag: String get() = this.name ?: if (this.isTerminal) this.rhs.toString() else error("Internal Error: no tag")
-
-    /*
-    val emptyRuleItem: RuntimeRule
-        get() = when {
-            isEmptyTerminal -> (rhs as RuntimeRuleRhsEmpty).ruleThatIsEmpty
-            else -> error("Internal Error: Not an EmptyTerminal ")
-        }
-*/
 
     val isGoal get() = this.rhs is RuntimeRuleRhsGoal
     override val isEmptyTerminal get() = this.rhs is RuntimeRuleRhsEmpty
@@ -115,6 +107,13 @@ internal class RuntimeRule(
 
     val rhsItems get() = this.rulePositions.flatMap { it.items }.toSet()
 
+    val asString: String
+        get() = when {
+            isTerminal -> if (tag == rhs.toString()) tag else "$tag($rhs)"
+            isNonTerminal -> "$tag = ${rhs.asString}"
+            else -> error("All rules should be either Terminal or NonTerminal")
+        }
+
     // --- Any ---
     private val _hashCode = arrayOf(this.runtimeRuleSetNumber, this.ruleNumber).contentHashCode()
     override fun hashCode(): Int = _hashCode
@@ -125,5 +124,9 @@ internal class RuntimeRule(
         else -> true
     }
 
-    override fun toString(): String = "$tag = $rhs"
+    override fun toString(): String = when {
+        isTerminal -> if (tag == rhs.toString()) tag else "$tag($rhs)"
+        isNonTerminal -> "$tag = $rhs"
+        else -> error("All rules should be either Terminal or NonTerminal")
+    }
 }
