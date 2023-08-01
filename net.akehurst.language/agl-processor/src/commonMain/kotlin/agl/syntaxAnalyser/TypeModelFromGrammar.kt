@@ -314,10 +314,7 @@ class TypeModelFromGrammar(
         when (ruleItem) {
             is EmptyRule -> Unit
             is Terminal -> Unit //createUniquePropertyDeclaration(et, UNNAMED_STRING_VALUE, propType)
-            is Embedded -> {
-                val refRule = ruleItem.referencedRule(ruleItem.embeddedGrammarReference.resolved!!) //TODO: check for null
-                createPropertyDeclarationForReferencedRule(refRule, et, ruleItem, childIndex)
-            }
+            is Embedded -> createPropertyDeclarationForEmbedded(et, ruleItem, childIndex)
 
             is NonTerminal -> {
                 val refRule = ruleItem.referencedRule(this.grammar)
@@ -424,6 +421,55 @@ class TypeModelFromGrammar(
             }
         }
     }
+
+    //TODO: combine with above by passing in TypeModel
+    private fun createPropertyDeclarationForEmbedded(et: StructuredRuleType, ruleItem: Embedded, childIndex: Int) {
+        val embTm = TypeModelFromGrammar.createFrom(ruleItem.embeddedGrammarReference.resolved!!, ruleItem.embeddedGoalName) //TODO: configuration
+        val refRule = ruleItem.referencedRule(ruleItem.embeddedGrammarReference.resolved!!) //TODO: check for null
+        val rhs = refRule.rhs
+        when (rhs) {
+            is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, StringType), StringType.use, childIndex)
+
+            is Concatenation -> {
+                val t = embTm.typeForRuleItem(ruleItem, true)
+                createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, t.type), t, childIndex)
+            }
+
+            is ListOfItems -> {
+                val ignore = when (rhs) {
+                    is SimpleList -> when (rhs.item) {
+                        is Terminal -> true
+                        else -> false
+                    }
+
+                    is SeparatedList -> when (rhs.item) {
+                        is Terminal -> true
+                        else -> false
+                    }
+
+                    else -> error("Internal Error: not handled ${rhs::class.simpleName}")
+                }
+                if (ignore) {
+                    Unit
+                } else {
+                    val propType = embTm.typeForRuleItem(rhs, true) //to get list type
+                    createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, propType.type), propType, childIndex)
+                }
+            }
+
+            is Choice -> {
+                val choiceType = embTm.typeForChoiceRule(rhs, refRule) //pName, rhs.alternative)
+                val pName = propertyNameFor(et, ruleItem, choiceType.type)
+                createUniquePropertyDeclaration(et, pName, choiceType, childIndex)
+            }
+
+            else -> {
+                val propType = embTm.typeForRuleItem(ruleItem, true)
+                createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, propType.type), propType, childIndex)
+            }
+        }
+    }
+
 
     private fun propertyNameFor(et: StructuredRuleType, ruleItem: RuleItem, ruleItemType: TypeDefinition): String {
         return when (_configuration) {

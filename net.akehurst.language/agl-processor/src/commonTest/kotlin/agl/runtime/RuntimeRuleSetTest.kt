@@ -21,8 +21,8 @@ import net.akehurst.language.agl.collections.CollectionsTest.matches
 internal object RuntimeRuleSetTest {
 
     fun RuntimeRuleSet.matches(other: RuntimeRuleSet) = when {
-        this.runtimeRules.size!=other.runtimeRules.size -> false
-        else -> this.runtimeRules.sortedBy { it.tag }.matches(other.runtimeRules.sortedBy { it.tag }) { t,o -> t.matches(o) }
+        this.runtimeRules.size != other.runtimeRules.size -> false
+        else -> this.runtimeRules.sortedBy { it.tag }.matches(other.runtimeRules.sortedBy { it.tag }) { t, o -> t.matches(o) }
     }
 
     fun RulePosition.matches(other: RulePosition): Boolean = when {
@@ -55,7 +55,11 @@ internal object RuntimeRuleSetTest {
     fun RuntimeRuleRhsEmpty.matches(other: RuntimeRuleRhsEmpty): Boolean = true
     fun RuntimeRuleRhsLiteral.matches(other: RuntimeRuleRhsLiteral): Boolean = this.value == other.value
     fun RuntimeRuleRhsPattern.matches(other: RuntimeRuleRhsPattern): Boolean = this.pattern == other.pattern
-    fun RuntimeRuleRhsEmbedded.matches(other: RuntimeRuleRhsEmbedded): Boolean = TODO()
+    fun RuntimeRuleRhsEmbedded.matches(other: RuntimeRuleRhsEmbedded): Boolean = when {
+        this.embeddedRuntimeRuleSet.matches(other.embeddedRuntimeRuleSet).not() -> false
+        this.embeddedStartRule.matches(other.embeddedStartRule).not() -> false
+        else -> true
+    }
 
     fun RuntimeRuleRhsNonTerminal.matches(other: RuntimeRuleRhsNonTerminal): Boolean = when (this) {
         is RuntimeRuleRhsGoal -> other is RuntimeRuleRhsGoal && this.matches(other)

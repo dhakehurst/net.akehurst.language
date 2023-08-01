@@ -109,7 +109,7 @@ internal class RuntimeRule(
 
     val asString: String
         get() = when {
-            isTerminal -> if (tag == rhs.toString()) tag else "$tag($rhs)"
+            isTerminal -> if (tag == rhs.asString) tag else "$tag(${rhs.asString})"
             isNonTerminal -> "$tag = ${rhs.asString}"
             else -> error("All rules should be either Terminal or NonTerminal")
         }

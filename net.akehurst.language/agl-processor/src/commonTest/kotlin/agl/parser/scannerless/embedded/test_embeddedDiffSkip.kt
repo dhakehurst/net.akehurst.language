@@ -31,7 +31,7 @@ internal class test_embeddedDiffSkip : test_ScanOnDemandParserAbstract() {
         // B = b ;
         val Inner = runtimeRuleSet {
             concatenation("WS", true) { literal("_") }
-            multi("Bs",1,-1,"B")
+            multi("Bs", 1, -1, "B")
             concatenation("B") { literal("b") }
         }
 
@@ -40,7 +40,7 @@ internal class test_embeddedDiffSkip : test_ScanOnDemandParserAbstract() {
         val S = runtimeRuleSet {
             concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { literal("a"); ref("gB"); literal("c"); }
-            embedded("gB", Inner, Inner.findRuntimeRule("Bs"))
+            embedded("gB", Inner, "Bs")
         }
         val goal = "S"
     }
@@ -54,7 +54,8 @@ internal class test_embeddedDiffSkip : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test
@@ -66,7 +67,8 @@ internal class test_embeddedDiffSkip : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^d", setOf("'a'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test
@@ -78,7 +80,8 @@ internal class test_embeddedDiffSkip : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test
@@ -89,8 +92,9 @@ internal class test_embeddedDiffSkip : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'b'","'c'"))
-            ), issues.errors)
+                parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'b'", "'c'"))
+            ), issues.errors
+        )
     }
 
     @Test

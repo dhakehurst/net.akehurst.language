@@ -281,6 +281,11 @@ class SubtypeListBuilder(
 
     val _subtypeList = mutableListOf<TypeUsage>()
 
+    fun primitiveRef(typeName: String) {
+        val t = _model.findTypeNamed(typeName) ?: error("Type not found: '$typeName'")
+        _subtypeList.add(t.typeUse())
+    }
+
     fun elementRef(elementTypeName: String) {
         val t = _model.findOrCreateElementTypeNamed(elementTypeName) as ElementType
         _subtypeList.add(TypeUsage.ofType(t))

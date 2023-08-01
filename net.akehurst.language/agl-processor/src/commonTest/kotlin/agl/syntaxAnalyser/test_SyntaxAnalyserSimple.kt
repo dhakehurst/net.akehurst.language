@@ -477,8 +477,28 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("A"); ref("B"); ref("C") }
+            concatenation("A") { ref("a"); ref("x") }
+            choice("B", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("c"); ref("D") }
+            concatenation("C") { ref("c") }
+            concatenation("D") { ref("d") }
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            literal("x", "x")
+        })
+
         val tests = mutableListOf<TestData>()
-        tests.define("ax") {
+        tests.define(
+            "ax", """
+            S { A {
+              'a'
+              'x'
+            } } 
+        """.trimIndent()
+        ) {
             asmSimple {
                 element("A") {
                     propertyString("a", "a")
@@ -2712,15 +2732,16 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         checkRuntimeGrammar(proc, runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                concatenation { ref("BC") }
-                concatenation { ref("§S§multi1") }
+            concatenation("S") { ref("CH") }
+            choice("CH", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("a"); ref("b") }
+                concatenation { ref("c"); ref("d"); ref("e") }
             }
-            concatenation("BC") { ref("b"); ref("c") }
-            multi("§S§multi1", 1, -1, "d")
+            literal("a", "a")
             literal("b", "b")
             literal("c", "c")
             literal("d", "d")
+            literal("e", "e")
         })
 
         checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
@@ -2960,10 +2981,114 @@ class test_SyntaxAnalyserSimple {
             asmSimple {
                 element("S") {
                     propertyString("a", "a")
-                    propertyTuple("x") {
-                        propertyString("\$group", "x")
-                    }
+                    propertyString("x", "x")
                     propertyString("e", "e")
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    // Embedded
+    @Test
+    fun _8_e() {
+        //  S = <e> | S a
+        // S = d | B S
+        // B = b I::S b | c I::S c
+        val grammarStr = """
+            namespace test
+            grammar I {
+                S = a | S a ;
+                leaf a = 'a' ;
+            }
+            grammar O {
+                S = d | B S ;
+                B = b I::S b | c I::S c ;
+                leaf b = 'b' ;
+                leaf c = 'c' ;
+                leaf d = 'd' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+        val Inner = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("a") }
+                concatenation { ref("S"); ref("a") }
+            }
+            literal("a", "a")
+        }
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("d") }
+                concatenation { ref("B"); ref("S") }
+            }
+            choice("B", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("b"); ref("§I§S§embedded1"); ref("b"); }
+                concatenation { ref("c"); ref("§I§S§embedded1"); ref("c") }
+            }
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            embedded("§I§S§embedded1", Inner, "S")
+        })
+
+        /*
+        Can't define this as it is recursive on UnnamedSuperTypes
+        checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
+            unnamedSuperTypeType("S") {
+                primitiveRef("String")
+                tupleType {
+                    propertyUnnamedSuperType("b", false, 1) {
+                        tupleType {
+                            propertyPrimitiveType("b", "String", false, 0)
+                            propertyPrimitiveType("b2", "String", false, 2)
+                        }
+                        tupleType {
+                            propertyPrimitiveType("c", "String", false, 0)
+                            propertyPrimitiveType("c2", "String", false, 2)
+                        }
+                    }
+                    propertyElementTypeOf("s", "S", false, 1)
+                }
+            }
+            unnamedSuperTypeType("B") {
+                tupleType {
+                    propertyPrimitiveType("b", "String", false, 0)
+                    propertyUnnamedSuperType("s", false, 1) {
+                        primitiveRef("String")
+                        tupleType {
+                            propertyUnnamedSuperType("s", false, 0) {
+                                //recursive
+                            }
+                            propertyPrimitiveType("a","String",false, 1)
+                        }
+                    }
+                    propertyPrimitiveType("b2", "String", false, 2)
+                }
+                tupleType {
+                    propertyPrimitiveType("c", "String", false, 0)
+                    propertyPrimitiveType("c2", "String", false, 2)
+                }
+            }
+        })*/
+
+        val tests = mutableListOf<TestData>()
+        tests.define("d") {
+            asmSimple {
+                string("d")
+            }
+        }
+        tests.define("babd") {
+            asmSimple {
+                tuple {
+                    propertyTuple("b") {
+                        propertyString("b", "b")
+                        propertyString("s", "a")
+                        propertyString("b2", "b")
+                    }
+                    propertyString("s", "d")
                 }
             }
         }

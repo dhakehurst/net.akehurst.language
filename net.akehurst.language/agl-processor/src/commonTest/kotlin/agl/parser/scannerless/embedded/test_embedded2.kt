@@ -29,31 +29,31 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
     private companion object {
 
         val Inner = runtimeRuleSet {
-            pattern("WS","\\s+",true)
-            pattern("COMMENT","/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/", true)
-            concatenation("TR") { ref("optST"); ref("optRE"); ref("optTP")  }
-            multi("optST",0,1,"ST")
+            pattern("WS", "\\s+", true)
+            pattern("COMMENT", "/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/", true)
+            concatenation("TR") { ref("optST"); ref("optRE"); ref("optTP") }
+            multi("optST", 0, 1, "ST")
             concatenation("ST") { ref("ID") }
-            multi("optRE",0,1,"RE")
+            multi("optRE", 0, 1, "RE")
             concatenation("RE") { literal("/"); ref("EX") }
-            multi("optTP",0,1,"TP")
+            multi("optTP", 0, 1, "TP")
             concatenation("TP") { literal("#"); ref("ID") }
 
             choice("EX", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("ASS")
                 ref("ID")
             }
-            concatenation("ASS") { ref("ID"); literal("="); ref("ID")  }
+            concatenation("ASS") { ref("ID"); literal("="); ref("ID") }
 
-            pattern("ID","[a-zA-Z]+")
+            pattern("ID", "[a-zA-Z]+")
         }
 
         // S = 's' '{' I '}' ;
         // I = Inner::TR ;
         val S = runtimeRuleSet {
-            pattern("WS","\\s+",true)
+            pattern("WS", "\\s+", true)
             concatenation("S") { literal("s"); literal("{"); ref("I"); literal("}"); }
-            embedded("I", Inner, Inner.findRuntimeRule("TR"))
+            embedded("I", Inner, "TR")
         }
         val goal = "S"
     }
@@ -67,7 +67,8 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'s'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test
@@ -79,7 +80,8 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^d", setOf("'s'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test
@@ -91,7 +93,8 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1, 2, 1, 1), "s^", setOf("'{'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test
@@ -102,8 +105,9 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2, 3, 1, 1), "s{^", setOf("ID","'/'","'#'","'}'"))
-            ), issues.errors)
+                parseError(InputLocation(2, 3, 1, 1), "s{^", setOf("ID", "'/'", "'#'", "'}'"))
+            ), issues.errors
+        )
     }
 
     @Test

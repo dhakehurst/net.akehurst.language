@@ -47,7 +47,7 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         // gB = B::B ;
         val S = runtimeRuleSet {
             concatenation("S") { literal("a"); ref("gB"); literal("c"); }
-            embedded("gB", B, B.findRuntimeRule("B"))
+            embedded("gB", B, "B")
         }
         val goal = "S"
     }
@@ -61,7 +61,8 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test
@@ -73,7 +74,8 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.PARSE, InputLocation(1, 2, 1, 1), "a^", setOf("'b'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test
@@ -106,7 +108,8 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test
@@ -118,7 +121,8 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^d", setOf("'a'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test
@@ -130,7 +134,8 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test
@@ -142,7 +147,8 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'c'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test

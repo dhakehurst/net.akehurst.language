@@ -39,7 +39,7 @@ internal class test_embedded : test_AutomatonAbstract() {
         }
         val rrs = runtimeRuleSet {
             concatenation("S") { literal("a"); ref("gB"); literal("a"); }
-            embedded("gB", rrsB, rrsB.findRuntimeRule("B"))
+            embedded("gB", rrsB, "B")
         }
 
         val S = rrs.findRuntimeRule("S")

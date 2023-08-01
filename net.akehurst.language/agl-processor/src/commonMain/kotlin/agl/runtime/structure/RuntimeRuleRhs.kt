@@ -92,6 +92,10 @@ internal class RuntimeRuleRhsEmbedded(
             emClone.findRuntimeRule(embeddedStartRule.tag)
         )
     }
+
+    override val asString: String get() = "EMBED ::${embeddedStartRule.tag}"
+
+    override fun toString(): String = "EMBED ${embeddedRuntimeRuleSet.number}::${embeddedStartRule.tag}[${embeddedStartRule.ruleNumber}]"
 }
 
 internal sealed class RuntimeRuleRhsNonTerminal(

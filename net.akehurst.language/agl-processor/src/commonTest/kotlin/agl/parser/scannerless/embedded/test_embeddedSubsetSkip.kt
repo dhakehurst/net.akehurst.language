@@ -30,18 +30,18 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
         // Bs = B+ ;
         // B = b ;
         val Inner = runtimeRuleSet {
-            pattern("WSi","\\s+",true)
-            multi("Bs",1,-1,"B")
+            pattern("WSi", "\\s+", true)
+            multi("Bs", 1, -1, "B")
             concatenation("B") { literal("b") }
         }
 
         // S = a gB c ;
         // gB = Inner::B ;
         val S = runtimeRuleSet {
-            pattern("WSo","\\s+",true)
+            pattern("WSo", "\\s+", true)
             concatenation("COMMENT", true) { pattern("/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/") }
             concatenation("S") { literal("a"); ref("gB"); literal("c"); }
-            embedded("gB", Inner, Inner.findRuntimeRule("Bs"))
+            embedded("gB", Inner, "Bs")
         }
         val goal = "S"
     }
@@ -55,7 +55,8 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test
@@ -67,7 +68,8 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^d", setOf("'a'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test
@@ -79,7 +81,8 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test
@@ -90,8 +93,9 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'b'","'c'"))
-            ), issues.errors)
+                parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'b'", "'c'"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -266,7 +270,8 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(4, 5, 1, 1), " a b^/*c*/b c", setOf("'c'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test

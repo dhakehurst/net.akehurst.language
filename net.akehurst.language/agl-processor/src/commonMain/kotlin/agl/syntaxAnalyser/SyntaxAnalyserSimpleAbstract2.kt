@@ -310,11 +310,11 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
             }
 
             override fun beginEmbedded(nodeInfo: SpptDataNodeInfo) {
-                TODO("not implemented")
+                beginBranch(nodeInfo)
             }
 
             override fun endEmbedded(nodeInfo: SpptDataNodeInfo) {
-                TODO("not implemented")
+                endBranch(nodeInfo)
             }
 
             override fun skip(startPosition: Int, nextInputPosition: Int) {
@@ -361,6 +361,7 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
         return when {
             null == parentTypeUsage -> NothingType.use // property unused
             parentTypeUsage.nullable -> typeForParentOptional(parentTypeUsage, nodeInfo)
+            nodeInfo.node.rule.isEmbedded -> parentTypeUsage //skip this node
             else -> {
                 val parentType = parentTypeUsage.type
                 when (parentType) {
@@ -482,7 +483,11 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
 
             type is UnnamedSuperTypeType -> when {
                 // special cases where PT is compressed for choice of concats
-                nodeInfo.node.rule.isChoice -> NodeTypes(typeUsage, type.subtypes[nodeInfo.alt.option])
+                nodeInfo.node.rule.isChoice -> when {
+                    type.subtypes[nodeInfo.alt.option].type is TupleType -> NodeTypes(typeUsage, type.subtypes[nodeInfo.alt.option])
+                    else -> NodeTypes(typeUsage)
+                }
+
                 else -> NodeTypes(typeUsage)
             }
 
@@ -530,6 +535,7 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
                 }
             }
 
+            target.node.rule.isEmbedded -> children[0].value
             else -> {
                 val type = downData.typeUse.forNode.type
                 when (type) {
