@@ -1,0 +1,9 @@
+{
+  "name": "agl-example",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "net.akehurst.language-agl-processor": "^4.0.0"
+  }
+}
