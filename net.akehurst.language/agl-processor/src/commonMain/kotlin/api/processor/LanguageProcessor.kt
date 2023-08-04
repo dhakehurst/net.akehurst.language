@@ -23,7 +23,7 @@ import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
-import net.akehurst.language.api.sppt.SPPTLeaf
+import net.akehurst.language.api.sppt.LeafData
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
@@ -91,7 +91,7 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     /**
      * Specifically scan the sentence using the terminal rules found in the grammar
      */
-    fun scan(sentence: String): List<SPPTLeaf>
+    fun scan(sentence: String): List<LeafData>
 
     /**
      * Parse the sentence using the grammar for this language and output a SharedPackedParseTree.

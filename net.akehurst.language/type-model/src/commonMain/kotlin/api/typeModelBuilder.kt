@@ -89,7 +89,7 @@ class TypeModelBuilder(
                 else -> error("Cannot map to TypeDefinition: $it")
             }
         }
-        val t = UnnamedSuperTypeType(sts.map { TypeUsage.ofType(it) }, false)
+        val t = _model.createUnnamedSuperTypeType(sts.map { TypeUsage.ofType(it) })
         return t
     }
 
@@ -153,6 +153,14 @@ abstract class StructuredTypeBuilder(
         b.init()
         val tt = b.build()
         return property(propertyName, TypeUsage.ofType(tt), childIndex)
+    }
+
+    fun propertyUnnamedSuperType(propertyName: String, isNullable: Boolean, childIndex: Int, init: SubtypeListBuilder.() -> Unit): PropertyDeclaration {
+        val b = SubtypeListBuilder(_model, _typeReferences)
+        b.init()
+        val stu = b.build()
+        val t = _model.createUnnamedSuperTypeType(stu)
+        return property(propertyName, TypeUsage.ofType(t, emptyList(), isNullable), childIndex)
     }
 
     //
@@ -256,11 +264,61 @@ class TypeUsageReferenceBuilder(
             UnnamedSuperTypeType::class -> {
                 val subtypes = _refs.map { _model.findTypeNamed(it) ?: error("Type not found: '$it'") }
                 val stu = subtypes.map { TypeUsage.ofType(it) }
-                val t = UnnamedSuperTypeType(stu, false)
+                val t = _model.createUnnamedSuperTypeType(stu)
                 _args.add(TypeUsage.ofType(t, emptyList(), nullable))
             }
 
             else -> error("Not handled: ${_refClass.simpleName}")
         }
     }
+}
+
+@TypeModelDslMarker
+class SubtypeListBuilder(
+    val _model: TypeModel,
+    private val _typeReferences: MutableList<TypeUsageReferenceBuilder>
+) {
+
+    val _subtypeList = mutableListOf<TypeUsage>()
+
+    fun primitiveRef(typeName: String) {
+        val t = _model.findTypeNamed(typeName) ?: error("Type not found: '$typeName'")
+        _subtypeList.add(t.typeUse())
+    }
+
+    fun elementRef(elementTypeName: String) {
+        val t = _model.findOrCreateElementTypeNamed(elementTypeName) as ElementType
+        _subtypeList.add(TypeUsage.ofType(t))
+    }
+
+    fun listType(nullable: Boolean, init: TypeUsageReferenceBuilder.() -> Unit) {
+        val tb = TypeUsageReferenceBuilder(this._model, ListSimpleType, nullable)
+        tb.init()
+        _typeReferences.add(tb)
+        val tu = tb.build()
+        _subtypeList.add(tu)
+    }
+
+    fun tupleType(init: TupleTypeBuilder.() -> Unit) {
+        val b = TupleTypeBuilder(_model, mutableListOf())
+        b.init()
+        val t = b.build()
+        _subtypeList.add(TypeUsage.ofType(t))
+    }
+
+    fun unnamedSuperTypeOf(vararg subtypeNames: String) {
+        val sts = subtypeNames.map { _model.findOrCreateElementTypeNamed(it)!! }
+        val t = _model.createUnnamedSuperTypeType(sts.map { TypeUsage.ofType(it) })
+        _subtypeList.add(TypeUsage.ofType(t))
+    }
+
+    fun unnamedSuperType(init: SubtypeListBuilder.() -> Unit) {
+        val b = SubtypeListBuilder(_model, _typeReferences)
+        b.init()
+        val stu = b.build()
+        val t = _model.createUnnamedSuperTypeType(stu)
+        _subtypeList.add(TypeUsage.ofType(t))
+    }
+
+    fun build(): List<TypeUsage> = _subtypeList
 }

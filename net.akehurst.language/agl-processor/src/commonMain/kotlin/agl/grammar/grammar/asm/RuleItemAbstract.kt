@@ -188,6 +188,8 @@ class TerminalDefault(
     override val isPattern: Boolean
 ) : TangibleItemAbstract(), Terminal {
 
+    override lateinit var grammar: Grammar
+
     override val name: String = if (isPattern) "\"$value\"" else "'$value'"
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {

@@ -47,8 +47,8 @@ internal class RuntimeRuleSetBuilder2 : RuleSetBuilder {
             val rr = rb.buildRule(ruleNumber)
             Pair(rb.tag, rr)
         }
-            .plus(Pair("<EMPTY>",RuntimeRuleSet.EMPTY))
-            .plus(Pair("<EOT>",RuntimeRuleSet.END_OF_TEXT))
+            .plus(Pair("<EMPTY>", RuntimeRuleSet.EMPTY))
+            .plus(Pair("<EOT>", RuntimeRuleSet.END_OF_TEXT))
             .associate { it }
         val rules = this._ruleBuilders.values.map { rb ->
             rb.buildRhs(ruleMap)
@@ -136,7 +136,8 @@ internal class RuntimeRuleSetBuilder2 : RuleSetBuilder {
         }
     }
 
-    fun embedded(ruleName: String, embeddedRuleSet: RuleSet, startRule: Rule, isSkip: Boolean = false) {
+    fun embedded(ruleName: String, embeddedRuleSet: RuleSet, startRuleName: String, isSkip: Boolean = false) {
+        val startRule = (embeddedRuleSet as RuntimeRuleSet).findRuntimeRule(startRuleName)
         val tag = ruleName
         val rb = RuntimeRuleBuilder(ruleSetNumber, ruleName, tag, isSkip) { rule, _ ->
             RuntimeRuleRhsEmbedded(rule, embeddedRuleSet as RuntimeRuleSet, startRule as RuntimeRule)
@@ -255,9 +256,11 @@ internal class PrecedenceRuleBuilder(
     fun left(ruleName: String, operatorRuleNames: Set<String>) {
         _rules.add(Quad(ruleName, 0, operatorRuleNames, RuntimePreferenceRule.Assoc.LEFT))
     }
-    fun leftOption(ruleName: String, option:Int, operatorRuleNames: Set<String>) {
+
+    fun leftOption(ruleName: String, option: Int, operatorRuleNames: Set<String>) {
         _rules.add(Quad(ruleName, option, operatorRuleNames, RuntimePreferenceRule.Assoc.LEFT))
     }
+
     /**
      * indicate that @param ruleName is right-associative
      */
@@ -265,7 +268,7 @@ internal class PrecedenceRuleBuilder(
         _rules.add(Quad(ruleName, 0, operatorRuleNames, RuntimePreferenceRule.Assoc.RIGHT))
     }
 
-    fun rightOption(ruleName: String, option:Int, operatorRuleNames: Set<String>) {
+    fun rightOption(ruleName: String, option: Int, operatorRuleNames: Set<String>) {
         _rules.add(Quad(ruleName, option, operatorRuleNames, RuntimePreferenceRule.Assoc.RIGHT))
     }
 

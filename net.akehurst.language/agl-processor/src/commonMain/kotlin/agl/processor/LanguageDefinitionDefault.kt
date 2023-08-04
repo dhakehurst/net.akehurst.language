@@ -83,9 +83,9 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         this.grammarStr = grammarStr
         this.scopeModelStr = scopeModelStr
         this.styleStr = styleStr
-        updateGrammarStr(grammarStr, oldGrammarStr)
-        updateScopeModelStr(scopeModelStr, oldScopeModelStr)
-        updateStyleStr(styleStr, oldStyleStr)
+        updateGrammarStr(oldGrammarStr, grammarStr)
+        updateScopeModelStr(oldScopeModelStr, scopeModelStr)
+        updateStyleStr(oldStyleStr, styleStr)
         this._doObservableUpdates = true
     }
 

@@ -30,6 +30,8 @@ interface GrammarTypeModel : TypeModel {
     val allTypesByRuleName: Collection<Pair<String, TypeUsage>>
 
     fun findTypeUsageForRule(ruleName: String): TypeUsage?
+
+    //fun asString(): String
 }
 
 val GrammarTypeModel.StringType: PrimitiveType get() = this.findOrCreatePrimitiveTypeNamed("String")
@@ -38,12 +40,10 @@ fun GrammarTypeModel.asString(): String {
     val rules = this.allRuleNameToType.entries.sortedBy { it.key }
     val ruleToType = rules.joinToString(separator = "\n") { it.key + "->" + it.value.signature(this, 0) }
     val types = this.allTypesByName.entries.sortedBy { it.key }.joinToString(separator = "\n") { it.value.asString(this) }
-    val s = """
-    typemodel '$namespace.$name' {
-    $ruleToType
-    
-    $types
-    }
-    """.trimIndent()
+    val s = """typemodel '$namespace.$name' {
+$ruleToType
+
+$types
+}""".trimIndent()
     return s
 }

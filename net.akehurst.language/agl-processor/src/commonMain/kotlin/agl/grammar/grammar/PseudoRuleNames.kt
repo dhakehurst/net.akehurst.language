@@ -42,7 +42,7 @@ internal class PseudoRuleNames(val grammar: Grammar) {
         grammar.allResolvedNonTerminalRule.forEach {
             when {
                 it.isLeaf -> Unit
-                it.isOneEmebedded -> Unit
+                it.isOneEmbedded -> Unit
                 else -> {
                     val pseudoRuleNames = pseudoRulesFor(it.rhs)
                     pseudoRuleNames.forEach {

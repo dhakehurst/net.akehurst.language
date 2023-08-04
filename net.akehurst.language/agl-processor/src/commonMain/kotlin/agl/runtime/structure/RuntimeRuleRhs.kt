@@ -20,88 +20,19 @@ enum class RuntimeRuleChoiceKind {
     NONE,
     AMBIGUOUS,
     LONGEST_PRIORITY,
-    PRIORITY_LONGEST
+    PRIORITY_LONGEST //TODO: deprecate this
 }
-
-/*
-        val rhs = this.rhs
-        return when(rhs) {
-            is RuntimeRuleRhsTerminal -> when(rhs) {
-                is RuntimeRuleRhsCommonTerminal-> TODO()
-                is RuntimeRuleRhsLiteral-> TODO()
-                is RuntimeRuleRhsPattern-> TODO()
-                is RuntimeRuleRhsEmpty-> TODO()
-                is RuntimeRuleRhsEmbedded-> TODO()
-            }
-            is RuntimeRuleRhsNonTerminal-> when(rhs) {
-                is RuntimeRuleRhsGoal-> TODO()
-                is RuntimeRuleRhsConcatenation-> TODO()
-                is RuntimeRuleRhsChoice-> TODO()
-                is RuntimeRuleRhsList-> when(rhs) {
-                    is RuntimeRuleRhsListSimple-> TODO()
-                    is RuntimeRuleRhsListSeparated-> TODO()
-                }
-            }
-        }
- */
 
 internal sealed class RuntimeRuleRhs(
     val rule: RuntimeRule
 ) {
 
-    companion object {
-        val EMPTY__RULE_THAT_IS_EMPTY = 0
-        val MULTI__ITEM = 0
-        val MULTI__EMPTY_RULE = 1
-        val SLIST__ITEM = 0
-        val SLIST__SEPARATOR = 1
-        val SLIST__EMPTY_RULE = 2
-
-    }
-
-    //abstract val rhsItems: Set<RuntimeRule>
-
     abstract val rulePositionsNotAtStart: Set<RulePosition>
     abstract val rulePositionsAtStart: Set<RulePosition>
 
+    open val asString: String get() = this.toString()
+
     abstract fun rhsItemsAt(option: Int, position: Int): Set<RuntimeRule>
-
-    /*
-    fun findItemAt(n: Int): Array<out RuntimeRule> {
-        return when (this.itemsKind) {
-            RuntimeRuleRhsItemsKind.EMPTY -> emptyArray<RuntimeRule>()
-            RuntimeRuleRhsItemsKind.CHOICE -> this.items //TODO: should maybe test n == 0
-            RuntimeRuleRhsItemsKind.CONCATENATION -> if (this.items.size > n) arrayOf(this.items[n]) else emptyArray<RuntimeRule>()
-            RuntimeRuleRhsItemsKind.LIST -> when (listKind) {
-                RuntimeRuleListKind.NONE -> error("")
-                RuntimeRuleListKind.MULTI -> {
-                    if ((this.multiMax == -1 || n <= this.multiMax - 1) && n >= this.multiMin - 1) {
-                        arrayOf(this.items[0])
-                    } else {
-                        emptyArray<RuntimeRule>()
-                    }
-                }
-
-                RuntimeRuleListKind.SEPARATED_LIST -> {
-                    when (n % 2) {
-                        0 -> if ((this.multiMax == -1 || n <= this.multiMax - 1) && n >= this.multiMin - 1) {
-                            arrayOf(this.items[0])
-                        } else {
-                            emptyArray<RuntimeRule>()
-                        }
-
-                        1 -> arrayOf(this.SLIST__separator)
-                        else -> emptyArray<RuntimeRule>() // should never happen!
-                    }
-                }
-
-                RuntimeRuleListKind.LEFT_ASSOCIATIVE_LIST -> TODO()
-                RuntimeRuleListKind.RIGHT_ASSOCIATIVE_LIST -> TODO()
-                RuntimeRuleListKind.UNORDERED -> TODO()
-            }
-        }
-    }
-*/
 
     abstract fun nextRulePositions(current: RulePosition): Set<RulePosition>
 
@@ -111,7 +42,6 @@ internal sealed class RuntimeRuleRhs(
 internal sealed class RuntimeRuleRhsTerminal(
     rule: RuntimeRule
 ) : RuntimeRuleRhs(rule) {
-    //override val rhsItems: Set<RuntimeRule> get() = emptySet()
     override val rulePositionsNotAtStart: Set<RulePosition> get() = emptySet()
     override val rulePositionsAtStart: Set<RulePosition> get() = emptySet()
     override fun rhsItemsAt(option: Int, position: Int): Set<RuntimeRule> = emptySet()
@@ -162,6 +92,10 @@ internal class RuntimeRuleRhsEmbedded(
             emClone.findRuntimeRule(embeddedStartRule.tag)
         )
     }
+
+    override val asString: String get() = "EMBED ::${embeddedStartRule.tag}"
+
+    override fun toString(): String = "EMBED ${embeddedRuntimeRuleSet.number}::${embeddedStartRule.tag}[${embeddedStartRule.ruleNumber}]"
 }
 
 internal sealed class RuntimeRuleRhsNonTerminal(
@@ -235,7 +169,9 @@ internal class RuntimeRuleRhsConcatenation(
         concatItems.map { clonedRules[it.tag]!! }
     )
 
-    override fun toString(): String = "CONCAT(${this.concatItems.map { "${it.tag}[${it.ruleNumber}]" }.joinToString(" ")})"
+    override val asString: String get() = "CONCAT(${this.concatItems.joinToString(" ") { it.tag }})"
+
+    override fun toString(): String = "CONCAT(${this.concatItems.joinToString(" ") { "${it.tag}[${it.ruleNumber}]" }})"
 }
 
 internal class RuntimeRuleRhsChoice(
@@ -244,7 +180,6 @@ internal class RuntimeRuleRhsChoice(
     val options: List<RuntimeRuleRhs>
 ) : RuntimeRuleRhsNonTerminal(rule) {
 
-    //override val rhsItems: Set<RuntimeRule> get() = options.flatMap { it.rhsItems }.toSet()
     override val rulePositionsNotAtStart: Set<RulePosition>
         get() = options.flatMapIndexed { op, choiceRhs ->
             choiceRhs.rulePositionsNotAtStart.map { RulePosition(rule, op, it.position) }
@@ -270,7 +205,9 @@ internal class RuntimeRuleRhsChoice(
         options.map { it.clone(clonedRules) }
     )
 
-    override fun toString(): String = "CHOICE(${this.options.map { "${it}" }.joinToString(" | ")})"
+    override val asString: String get() = "CHOICE(${this.options.joinToString(" | ") { it.asString }})"
+
+    override fun toString(): String = "CHOICE(${this.options.joinToString(" | ") { "$it" }})"
 
 }
 
@@ -291,7 +228,6 @@ internal class RuntimeRuleRhsListSimple(
     override val max: Int,
     val repeatedRhsItem: RuntimeRule
 ) : RuntimeRuleRhsList(rule) {
-    //override val rhsItems: Set<RuntimeRule> = setOf(repeatedRhsItem)
 
     override val rulePositionsAtStart: Set<RulePosition>
         get() = when {
@@ -349,6 +285,7 @@ internal class RuntimeRuleRhsListSimple(
             RulePosition.POSITION_MULIT_ITEM -> setOf(repeatedRhsItem)
             else -> emptySet()
         }
+
         else -> error("Internal Error: Invalid option value for SimpleList - $option")
     }
 
@@ -403,7 +340,6 @@ internal class RuntimeRuleRhsListSeparated(
     val repeatedRhsItem: RuntimeRule,
     val separatorRhsItem: RuntimeRule
 ) : RuntimeRuleRhsList(rule) {
-    //override val rhsItems: Set<RuntimeRule> = setOf(repeatedRhsItem, separatorRhsItem)
 
     override val rulePositionsAtStart: Set<RulePosition>
         get() = when {
@@ -460,6 +396,7 @@ internal class RuntimeRuleRhsListSeparated(
             RulePosition.POSITION_SLIST_SEPARATOR -> setOf(separatorRhsItem)
             else -> emptySet()
         }
+
         else -> error("Internal Error: Invalid option value for SeparatedList - $option")
     }
 

@@ -40,7 +40,7 @@ import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.sppt.SPPTLeaf
+import net.akehurst.language.api.sppt.LeafData
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
@@ -49,15 +49,16 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override val issues = IssueHolder(LanguageProcessorPhase.ALL)
 
-    protected abstract val _runtimeRuleSet: RuntimeRuleSet
+    /* made internal so we can test against it */
+    internal abstract val runtimeRuleSet: RuntimeRuleSet
     protected abstract val mapToGrammar: (Int, Int) -> RuleItem
 
     abstract override val grammar: Grammar
     protected abstract val configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 
     private val _completionProvider: CompletionProvider by lazy { CompletionProvider(this.grammar) }
-    private val _scanner by lazy { Scanner(this._runtimeRuleSet) }
-    private val parser: Parser by lazy { ScanOnDemandParser(this._runtimeRuleSet) }
+    private val _scanner by lazy { Scanner(this.runtimeRuleSet) }
+    private val parser: Parser by lazy { ScanOnDemandParser(this.runtimeRuleSet) }
 
     override val spptParser: SPPTParser by lazy {
         val embeddedRuntimeRuleSets = grammar.allResolvedEmbeddedGrammars.map {
@@ -133,7 +134,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         return this
     }
 
-    override fun scan(sentence: String): List<SPPTLeaf> {
+    override fun scan(sentence: String): List<LeafData> {
         return this._scanner.scan(sentence, false)
     }
 
@@ -214,7 +215,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override fun expectedTerminalsAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
         val opts = defaultOptions(options)
-        val parserExpected: Set<RuntimeRule> = this.parser.expectedAt(opts.parse.goalRuleName!!, sentence, position, opts.parse.automatonKind)
+        val parserExpected: Set<RuntimeRule> = this.parser.expectedTerminalsAt(opts.parse.goalRuleName!!, sentence, position, opts.parse.automatonKind)
         //val grammarExpected: List<RuleItem> = parserExpected
         //    .filter { it !== RuntimeRuleSet.END_OF_TEXT }
         //    .map { this._converterToRuntimeRules.originalRuleItemFor(it.runtimeRuleSetNumber, it.number) }

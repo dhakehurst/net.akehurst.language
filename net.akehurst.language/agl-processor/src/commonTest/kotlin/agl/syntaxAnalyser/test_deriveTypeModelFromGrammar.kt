@@ -20,7 +20,7 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.api.grammarTypeModel.asString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -398,8 +398,8 @@ class test_deriveTypeModelFromGrammar {
 
         val actual = TypeModelFromGrammar.createFrom(result.asm!!.last())
         val expected = grammarTypeModel("test", "Test", "S") {
-            val B = unnamedSuperTypeTypeFor("B", listOf(StringType, "D"))
-            unnamedSuperTypeTypeFor("S", listOf("A", B, "C"))
+            val B = unnamedSuperTypeTypeOf("B", listOf(StringType, "D"))
+            unnamedSuperTypeTypeOf("S", listOf("A", B, "C"))
             elementType("A", "A") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyPrimitiveType("x", "String", false, 1)
@@ -993,19 +993,13 @@ class test_deriveTypeModelFromGrammar {
             val gtb = this
             elementType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
-                property(
-                    "\$choice", TypeUsage.ofType(
-                        UnnamedSuperTypeType(
-                            listOf(
-                                TupleType {
-                                    PropertyDeclaration(this, "b", gtb.StringType.use, 0)
-                                    PropertyDeclaration(this, "c", gtb.StringType.use, 1)
-                                },
-                                gtb.StringType,
-                            ).map { TypeUsage.ofType(it) }, false
-                        )
-                    ), 1
-                )
+                propertyUnnamedSuperType("\$choice", false, 1) {
+                    tupleType {
+                        propertyPrimitiveType("b", "String", false, 0)
+                        propertyPrimitiveType("c", "String", false, 0)
+                    }
+                    primitiveRef("String")
+                }
                 propertyPrimitiveType("e", "String", false, 2)
             }
         }
@@ -1037,20 +1031,16 @@ class test_deriveTypeModelFromGrammar {
             val gtb = this
             elementType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
-                property(
-                    "\$choice", TypeUsage.ofType(UnnamedSuperTypeType(listOf(
-                        TupleType {
-                            PropertyDeclaration(this, "b", gtb.StringType.use, 0)
-                            PropertyDeclaration(this, "c", gtb.StringType.use, 1)
-                        },
-                        TupleType {
-                            PropertyDeclaration(this, "d", gtb.StringType.use, 0)
-                            PropertyDeclaration(this, "e", gtb.StringType.use, 1)
-                        }
-                    ).map { TypeUsage.ofType(it) }, false
-                    )
-                    ), 1
-                )
+                propertyUnnamedSuperType("\$choice", false, 1) {
+                    tupleType {
+                        propertyPrimitiveType("b", "String", false, 0)
+                        propertyPrimitiveType("c", "String", false, 0)
+                    }
+                    tupleType {
+                        propertyPrimitiveType("d", "String", false, 0)
+                        propertyPrimitiveType("e", "String", false, 0)
+                    }
+                }
                 propertyPrimitiveType("f", "String", false, 2)
             }
         }
@@ -1150,7 +1140,7 @@ class test_deriveTypeModelFromGrammar {
                 propertyPrimitiveType("b", "String", false, 0)
                 propertyPrimitiveType("c", "String", false, 1)
             }
-            unnamedSuperTypeTypeFor("S", listOf(BC))
+            unnamedSuperTypeTypeOf("S", listOf(BC))
         }
 
         GrammarTypeModelTest.assertEquals(expected, actual)
@@ -1180,7 +1170,7 @@ class test_deriveTypeModelFromGrammar {
                 propertyPrimitiveType("b", "String", false, 0)
                 propertyPrimitiveType("c", "String", false, 1)
             }
-            unnamedSuperTypeTypeFor("S", listOf(BC))
+            unnamedSuperTypeTypeOf("S", listOf(BC))
         }
 
         GrammarTypeModelTest.assertEquals(expected, actual)
@@ -1214,13 +1204,7 @@ class test_deriveTypeModelFromGrammar {
             }
             elementType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
-                property(
-                    "\$choice", TypeUsage.ofType(
-                        UnnamedSuperTypeType(
-                            listOf(TypeUsage.ofType(BC), ListSimpleType.ofType(gtb.StringType.use)), false
-                        )
-                    ), 1
-                )
+
                 propertyPrimitiveType("e", "String", false, 2)
             }
 
@@ -1263,6 +1247,99 @@ class test_deriveTypeModelFromGrammar {
             elementType("B", "B") {
                 propertyPrimitiveType("name", "String", false, 0)
                 propertyPrimitiveType("name2", "String", false, 1)
+            }
+        }
+
+        assertEquals(expected.asString(), actual.asString())
+        GrammarTypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun embedded() {
+        val grammarStr = """
+            namespace test
+            grammar I {
+                S = A | SA ;
+                SA = S A ;
+                A = a ;
+                leaf a = 'a' ;
+            }
+            grammar O {
+               S = B | SBC ;
+               SBC = S BC ;
+               BC = B | C ;
+               B = 'b' I::S 'b' ;
+               C = 'c' I::S 'c' ;
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+
+        val actual = TypeModelFromGrammar.createFrom(result.asm!!.last())
+        val expected = grammarTypeModel("test", "O", "S") {
+            elementType("S", "S") {
+                subTypes("B", "SBC")
+            }
+            elementType("SBC", "SBC") {
+                propertyElementTypeOf("s", "S", false, 0)
+                propertyElementTypeOf("bc", "BC", false, 1)
+            }
+            elementType("BC", "BC") {
+                subTypes("B", "C")
+            }
+            elementType("C", "C") {
+                propertyPrimitiveType("s", "S", false, 1)
+            }
+            elementType("B", "B") {
+                propertyPrimitiveType("s", "S", false, 1)
+            }
+        }
+
+        assertEquals(expected.asString(), actual.asString())
+        GrammarTypeModelTest.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun embedded2() {
+        val grammarStr = """
+            namespace test
+            grammar I {
+                S = A | SA ;
+                SA = S A ;
+                A = a ;
+                leaf a = 'a' ;
+            }
+            grammar O {
+               S = B | S BC ;
+               BC = B | C ;
+               B = 'b' I::S 'b' ;
+               C = 'c' I::S 'c' ;
+            }
+        """.trimIndent()
+
+        val result = grammarProc.process(grammarStr)
+        assertNotNull(result.asm)
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+
+        val actual = TypeModelFromGrammar.createFrom(result.asm!!.last())
+        val expected = grammarTypeModel("test", "O", "S") {
+            unnamedSuperTypeType("S") {
+                elementRef("B")
+                tupleType {
+                    propertyElementTypeOf("s", "S", false, 0)
+                    propertyElementTypeOf("bc", "BC", false, 1)
+                }
+            }
+            elementType("BC", "BC") {
+                subTypes("B", "C")
+            }
+            elementType("C", "C") {
+                propertyPrimitiveType("s", "S", false, 1)
+            }
+            elementType("B", "B") {
+                propertyPrimitiveType("s", "S", false, 1)
             }
         }
 

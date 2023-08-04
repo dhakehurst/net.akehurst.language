@@ -30,17 +30,17 @@ internal class test_embeddedInnerOptional : test_ScanOnDemandParserAbstract() {
         // Bs = B+ ;
         // B = b ;
         val Inner = runtimeRuleSet {
-            literal("US","_",true)
-            multi("optB",0,1,"B")
+            literal("US", "_", true)
+            multi("optB", 0, 1, "B")
             concatenation("B") { literal("b") }
         }
 
         // S = a gB c ;
         // gB = Inner::B ;
         val S = runtimeRuleSet {
-            literal("DT",".",true)
+            literal("DT", ".", true)
             concatenation("S") { literal("a"); ref("I"); literal("c"); }
-            embedded("I", Inner, Inner.findRuntimeRule("optB"))
+            embedded("I", Inner, "optB")
         }
         val goal = "S"
     }
@@ -54,7 +54,8 @@ internal class test_embeddedInnerOptional : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test
@@ -66,7 +67,8 @@ internal class test_embeddedInnerOptional : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^d", setOf("'a'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test
@@ -78,7 +80,8 @@ internal class test_embeddedInnerOptional : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'", "'c'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test
@@ -89,8 +92,9 @@ internal class test_embeddedInnerOptional : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'b'","'c'"))
-            ), issues.errors)
+                parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'b'", "'c'"))
+            ), issues.errors
+        )
     }
 
     @Test

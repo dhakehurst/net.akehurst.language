@@ -14,24 +14,34 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.runtime.graph
+package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.api.sppt.SpptWalker
 
-internal class TreeDataComplete<CN : SpptDataNode>(
+internal data class PreferredNode(
+    val rule: Rule,
+    val startPosition: Int
+) {
+    override fun toString(): String = "PN(${rule.tag},$startPosition)"
+}
+
+data class CompleteTreeDataNode(
+    override val rule: Rule,
+    override val startPosition: Int,
+    override val nextInputPosition: Int,
+    override val nextInputNoSkip: Int,
+    override val option: Int
+) : SpptDataNode
+
+// public so it can be serialised
+class TreeDataComplete<CN : SpptDataNode>(
     val forStateSetNumber: Int
 ) {
 
     companion object {
-        private data class PreferredNode(
-            val rule: Rule,
-            val startPosition: Int
-        ) {
-            override fun toString(): String = "PN(${rule.tag},$startPosition)"
-        }
 
         private val SpptDataNode.preferred get() = PreferredNode(this.rule, this.startPosition)
     }
@@ -78,10 +88,10 @@ internal class TreeDataComplete<CN : SpptDataNode>(
 
     // index --> map-of-alternatives (optionList,lists-of-children)
     //maybe optimise because only ambiguous choice nodes have multiple child options
-    private val _complete = mutableMapOf<CN, MutableMap<Int, List<CN>>>()
+    private val _complete = hashMapOf<CN, MutableMap<Int, List<CN>>>()
 
     // map startPosition -> CN
-    private val _preferred = mutableMapOf<PreferredNode, CN>()
+    private val _preferred = hashMapOf<PreferredNode, CN>()
     private val _skipDataAfter = hashMapOf<CN, TreeDataComplete<CN>>()
     private val _embeddedFor = hashMapOf<CN, TreeDataComplete<CN>>()
 

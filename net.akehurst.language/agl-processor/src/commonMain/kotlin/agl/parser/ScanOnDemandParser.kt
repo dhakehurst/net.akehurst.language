@@ -25,12 +25,14 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
+import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.ParseOptions
 import net.akehurst.language.api.processor.ParseResult
+import net.akehurst.language.api.sppt.SpptDataNode
 import kotlin.math.max
 
 internal class ScanOnDemandParser(
@@ -80,7 +82,7 @@ internal class ScanOnDemandParser(
             totalWork += rp.graph.numberOfHeads
         }
 
-        val match = rp.graph.treeData.complete
+        val match = rp.graph.treeData.complete as TreeDataComplete<SpptDataNode>
         return if (match.root != null) {
             //val sppt = SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
             val sppt = SPPTFromTreeData(match, input, seasons, maxNumHeads)
@@ -560,11 +562,12 @@ internal class ScanOnDemandParser(
         this.runtimeParser = rp
 
         val possibleEndOfText = setOf(LookaheadSet.EOT)
-        rp.start(0, possibleEndOfText, RuntimeParser.forPossErrors)
+        val parseArgs = RuntimeParser.forExpectedAt
+        rp.start(0, possibleEndOfText, parseArgs)
         var seasons = 1
 
         while (rp.graph.canGrow && (rp.graph.goals.isEmpty() || rp.graph.goalMatchedAll.not())) {
-            rp.grow3(possibleEndOfText, RuntimeParser.forPossErrors) //TODO: maybe no need to build tree!
+            rp.grow3(possibleEndOfText, parseArgs) //TODO: maybe no need to build tree!
             seasons++
         }
         /*
@@ -594,7 +597,7 @@ internal class ScanOnDemandParser(
                 when {
                     it.isTerminal -> listOf(it)
                     //RuntimeRuleKind.NON_TERMINAL -> this.runtimeRuleSet.firstTerminals[it.ruleNumber]
-                    else -> TODO()
+                    else -> emptyList() // TODO()
                 }
             }
             .toSet()

@@ -53,6 +53,17 @@ class test_StatechartTools_Singles {
         ).processor!!
     }
 
+    @org.junit.Test
+    fun parse() {
+        val goal = "Expression"
+        val sentence = "true || false"
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        val resultStr = result.sppt!!.asString
+        assertEquals(sentence, resultStr)
+    }
+
     @Test
     fun Expression_integer() {
         val goal = "Expression"
@@ -162,6 +173,18 @@ class test_StatechartTools_Singles {
     }
 
     @Test
+    fun TransitionReaction_xxx() {
+        val goal = "TransitionReaction"
+        val sentence = "after 10 s / raise ABC.intEvent"
+        val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
+        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+        assertNotNull(result.asm)
+
+        val resultStr = processor.formatAsm(result.asm!!).sentence
+        assertEquals(sentence, resultStr)
+    }
+
+    @Test
     fun StextTrigger_else() {
         val goal = "StextTrigger"
         val sentence = "else"
@@ -177,7 +200,12 @@ class test_StatechartTools_Singles {
     fun expectedAt_TransitionSpecification_0() {
         val goal = "TransitionSpecification"
         val sentence = ""
-        val actual = processor.expectedTerminalsAt(sentence, 0, 1, Agl.options { parse { goalRuleName(goal) } })
+        val actual = processor.expectedTerminalsAt(sentence, 0, 1, Agl.options {
+            parse {
+                goalRuleName(goal)
+                //reportErrors(false)
+            }
+        })
             .items.map {
                 when (it.kind) {
                     CompletionItemKind.LITERAL -> it.text

@@ -50,6 +50,7 @@ class test_Dot_Singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
+        assertEquals(sentence, result.sppt!!.asString)
     }
 
     @Test
@@ -57,6 +58,18 @@ class test_Dot_Singles {
         val goal = "graph"
         val sentence = """
           /* a comment */
+          graph { }
+        """.trimIndent()
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
+    }
+
+    @Test
+    fun C_PREPROCESSOR() {
+        val goal = "graph"
+        val sentence = """
+          #a pre proc
           graph { }
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
@@ -74,14 +87,16 @@ class test_Dot_Singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.toString())
         assertTrue(result.issues.errors.isEmpty())
-        println(result.sppt!!.toStringAll)
+        //println(result.sppt!!.toStringAll)
+
+        val result2 = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
 
         val expected = processor.spptParser.parse(
             """
             ID { HTML {
               '<'
               WHITESPACE : ' '
-              §Xml§elementContent§embedded1 { elementContent {
+              §Xml§elementContent§embedded1 { Xml::elementContent {
                 startTag {
                   '<'
                   §startTag§opt1 { §empty }

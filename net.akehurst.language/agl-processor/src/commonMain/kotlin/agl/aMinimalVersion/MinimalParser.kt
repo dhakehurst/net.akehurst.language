@@ -22,8 +22,8 @@ import net.akehurst.language.agl.collections.GraphStructuredStack
 import net.akehurst.language.agl.collections.binaryHeap
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.TreeData
-import net.akehurst.language.agl.runtime.graph.TreeDataComplete
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.collections.LazyMutableMapNonNull
@@ -188,9 +188,14 @@ internal data class Transition(
 internal data class GSSNode(
     val state: State,
     val rlh: LookaheadSetPart,
+    /** Start Position */
     val sp: Int,
+    /** Next Input Position */
     val nip: Int
 ) {
+    /** Next Input Before Skip */
+    var nibs: Int = nip //not part of identity, but needed for extracting text without skip
+
     val isGoal get() = this.state.rp.isGoal
     val isComplete get() = this.state.rp.isAtEnd
     val isEmptyMatch get() = this.sp == this.nip
@@ -200,7 +205,8 @@ internal class CompleteNode(
     override val rule: RuntimeRule,
     override val startPosition: Int,
     override val nextInputPosition: Int,
-    override val option: Int // not part of defintion, just easy way to pass it to SPPF
+    override val nextInputNoSkip: Int, // not part of definition, just easy way to pass it to SPPF
+    override val option: Int // not part of definition, just easy way to pass it to SPPF
 ) : SpptDataNode {
 
     private val _hashCode_cache = arrayOf(rule, startPosition, nextInputPosition).contentHashCode()
@@ -251,20 +257,17 @@ internal class MinimalParser private constructor(
             }
         }
 
-        private val GSSNode.complete get() = CompleteNode(this.state.rp.rule, this.sp, this.nip, this.state.rp.option)
+        private val GSSNode.complete get() = CompleteNode(this.state.rp.rule, this.sp, this.nip, this.nibs, this.state.rp.option)
 
         private fun GraphStructuredStack<GSSNode>.setRoot(
             state: State,
             rlh: LookaheadSetPart,
             sp: Int,
+            nibs: Int,
             nip: Int
         ): GSSNode {
-            val nn = GSSNode(
-                state = state,
-                rlh = rlh,
-                sp = sp,
-                nip = nip
-            )
+            val nn = GSSNode(state = state, rlh = rlh, sp = sp, nip = nip)
+            nn.nibs = nibs
             this.root(nn)
             return nn
         }
@@ -274,14 +277,11 @@ internal class MinimalParser private constructor(
             state: State,
             rlh: LookaheadSetPart,
             sp: Int,
+            nibs: Int,
             nip: Int
         ): GSSNode {
-            val nn = GSSNode(
-                state = state,
-                rlh = rlh,
-                sp = sp,
-                nip = nip
-            )
+            val nn = GSSNode(state = state, rlh = rlh, sp = sp, nip = nip)
+            nn.nibs = nibs
             this.push(prev, nn)
             return nn
         }
@@ -403,7 +403,7 @@ internal class MinimalParser private constructor(
             tryParseSkip(position, slh)
         }
         val nip = initialSkipData?.root?.nextInputPosition ?: position
-        val stNd = gss.setRoot(ss, eot, position, nip)//, 0)
+        val stNd = gss.setRoot(ss, eot, position, position, nip)
         sppf.initialise(stNd, initialSkipData)
 
         var currentNextInputPosition = nip
@@ -540,7 +540,7 @@ internal class MinimalParser private constructor(
     private fun doGoal(hd: GSSNode, pv: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
         val lh = tr.lh.resolve(peot, pv.rlh)
         return if (input!!.isLookingAtAnyOf(lh, hd.nip)) {
-            val nn = gss.setRoot(tr.target, pv.rlh, hd.sp, hd.nip)//, nc)
+            val nn = gss.setRoot(tr.target, pv.rlh, hd.sp, hd.nibs, hd.nip)//, nc)
             sppf.setNextChildInParent(pv, nn, hd.complete)
             true
         } else {
@@ -556,7 +556,7 @@ internal class MinimalParser private constructor(
             val nip = if (null != skipData) skipData.root!!.nextInputPosition!! else lf.nextInputPosition
             if (input!!.isLookingAtAnyOf(slh, nip)) {
                 val rlh = LookaheadSetPart.EMPTY
-                val nn = gss.pushNode(hd, tr.target, rlh, lf.startPosition, nip)//, 0)
+                val nn = gss.pushNode(hd, tr.target, rlh, lf.startPosition, lf.nextInputPosition, nip)
                 if (null != skipData) sppf.setSkipDataAfter(nn.complete, skipData)
                 true
             } else {
@@ -572,7 +572,7 @@ internal class MinimalParser private constructor(
         val nip = hd.nip
         return if (input!!.isLookingAtAnyOf(lh, nip)) {
             val rlh = tr.up.resolve(peot, pv.rlh)
-            val nn = gss.pushNode(pv, tr.target, rlh, hd.sp, hd.nip)//, 1)
+            val nn = gss.pushNode(pv, tr.target, rlh, hd.sp, hd.nip, hd.nip)//, 1)
             if (nn.isComplete) {
                 val existing = sppf.preferred(nn.complete)
                 if (null == existing) {
@@ -603,7 +603,7 @@ internal class MinimalParser private constructor(
         val lh = tr.lh.resolve(peot, pv.rlh)
         return if (input!!.isLookingAtAnyOf(lh, hd.nip)) {
             val rlh = pv.rlh
-            val nn = gss.pushNode(pp!!, tr.target, rlh, pv.sp, hd.nip)//, nc)
+            val nn = gss.pushNode(pp!!, tr.target, rlh, pv.sp, hd.nibs, hd.nip)//, nc)
             if (nn.isComplete) {
                 val existing = sppf.preferred(nn.complete)
                 if (null == existing) {
@@ -650,7 +650,7 @@ internal class MinimalParser private constructor(
             val skipData = tryParseSkip(embed.root!!.nextInputPosition, slh)
             val nip = if (null != skipData) skipData.root!!.nextInputPosition!! else embed.root!!.nextInputPosition
             val rlh = LookaheadSetPart.EMPTY
-            val nn = gss.pushNode(hd, tr.target, rlh, embed.root!!.startPosition, nip)//, 0)
+            val nn = gss.pushNode(hd, tr.target, rlh, embed.root!!.startPosition, embed.root!!.nextInputPosition, nip)
             sppf.complete.setEmbeddedTreeFor(nn.complete, embed)
             if (null != skipData) sppf.setSkipDataAfter(nn.complete, skipData)
             true

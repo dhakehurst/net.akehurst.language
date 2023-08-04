@@ -108,8 +108,8 @@ class test_MinimalVersionForPaper {
             },
             listOf(
                 "a",
-                //"bac",
-                //"ac",
+                "bac",
+                "ac",
                 "acc",
                 "accc",
                 "accccc",
@@ -519,7 +519,7 @@ class test_MinimalVersionForPaper {
                 concatenation { literal("b"); ref("E"); literal("b") }
                 concatenation { literal("c"); ref("E"); literal("c") }
             }
-            embedded("E", emb, emb.findRuntimeRule("S"))
+            embedded("E", emb, "S")
         }
 
         val sentences = listOf(
@@ -561,7 +561,7 @@ class test_MinimalVersionForPaper {
                 concatenation { literal("b"); ref("E"); literal("b") }
                 concatenation { literal("c"); ref("E"); literal("c") }
             }
-            embedded("E", emb, emb.findRuntimeRule("S"))
+            embedded("E", emb, "S")
         }
 
         val sentences = listOf(

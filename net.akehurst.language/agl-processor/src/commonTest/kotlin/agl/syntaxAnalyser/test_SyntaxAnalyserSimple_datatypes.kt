@@ -108,7 +108,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
             // typeArguments = '<' [typeReference / ',']+ '>' ;
             elementType("typeArguments", "TypeArguments") {
-                propertyListSeparatedTypeOf("typeReference", "TypeReference", "String", false, 1)
+                propertyListTypeOf("typeReference", "TypeReference", false, 1)
             }
         }
 

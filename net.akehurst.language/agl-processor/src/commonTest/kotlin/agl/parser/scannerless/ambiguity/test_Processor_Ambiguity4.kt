@@ -48,7 +48,7 @@ internal class test_Processor_Ambiguity4 : test_ScanOnDemandParserAbstract() {
             multi("Popt", 0, 1, "P")
             concatenation("P") { literal("p"); literal("{"); ref("SPopt"); literal("}") }
             multi("SPopt", 0, 1, "eSP")
-            embedded("eSP", Inner, Inner.findRuntimeRule("SP"))
+            embedded("eSP", Inner, "SP")
             multi("RList", 0, -1, "R")
             concatenation("R") { literal("r"); ref("n"); literal("{"); ref("SList"); literal("}") }
             multi("SList", 0, -1, "S")

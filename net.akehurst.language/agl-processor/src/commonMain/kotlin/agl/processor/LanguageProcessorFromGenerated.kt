@@ -28,13 +28,13 @@ import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 
 internal class LanguageProcessorFromGenerated<AsmType : Any, ContextType : Any>(
-    val generated : GeneratedLanguageProcessorAbstract<AsmType, ContextType>,
+    val generated: GeneratedLanguageProcessorAbstract<AsmType, ContextType>,
 ) : LanguageProcessorAbstract<AsmType, ContextType>() {
 
     override val configuration: LanguageProcessorConfiguration<AsmType, ContextType>
         get() = TODO("not implemented")
 
-    override val _runtimeRuleSet: RuntimeRuleSet = generated.ruleSet as RuntimeRuleSet
+    override val runtimeRuleSet: RuntimeRuleSet = generated.ruleSet as RuntimeRuleSet
     override val mapToGrammar: (Int, Int) -> RuleItem = generated.mapToGrammar
     override val scopeModel: ScopeModel = generated.scopeModel ?: ScopeModelAgl()
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? = generated.syntaxAnalyser
@@ -44,7 +44,7 @@ internal class LanguageProcessorFromGenerated<AsmType : Any, ContextType : Any>(
 
     init {
         generated.automata.forEach { (userGoalRuleName, automaton) ->
-            this._runtimeRuleSet.addGeneratedBuildFor(userGoalRuleName, automaton)
+            this.runtimeRuleSet.addGeneratedBuildFor(userGoalRuleName, automaton)
         }
     }
 }

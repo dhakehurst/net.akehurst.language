@@ -17,15 +17,19 @@
 package net.akehurst.language.api.sppt
 
 import net.akehurst.language.agl.api.runtime.Rule
+import net.akehurst.language.agl.sppt.TreeDataComplete
+import net.akehurst.language.api.parser.InputLocation
 
 interface SpptDataNode {
     val rule: Rule
     val startPosition: Int
     val nextInputPosition: Int
+    val nextInputNoSkip: Int
     val option: Int
 }
 
 data class ChildInfo(
+    val propertyIndex: Int, // property index for a list is different to child index
     val index: Int,
     val total: Int
 )
@@ -39,6 +43,7 @@ data class AltInfo(
 interface SpptDataNodeInfo {
     val node: SpptDataNode
 
+    val parentAlt: AltInfo
     val alt: AltInfo
     val child: ChildInfo
 
@@ -68,6 +73,25 @@ interface SpptWalker {
     fun error(msg: String, path: () -> List<SpptDataNode>)
 }
 
+data class LeafData(
+    val name: String,
+    val location: InputLocation,
+    val matchedText: String,
+    val tagList: List<String>
+) {
+    val metaTags: List<String> by lazy { //TODO: make this configurable on the LanguageProcessor
+        val map = mutableMapOf<String, String>(
+            "\$keyword" to "'[a-zA-Z_][a-zA-Z0-9_-]*'"
+        )
+        map.mapNotNull {
+            when {
+                this.name.matches(Regex(it.value)) -> it.key
+                else -> null
+            }
+        }
+    }
+}
+
 /**
  * A Shared Packed Parse Forest is a collection of parse trees which share Nodes when possible. There is a Root Node. Each Node in a tree is either a Leaf or an
  * Branch. An Branch contains a Set of Lists of child Nodes. Each list of child nodes is an alternative possible list of children for the Branch
@@ -93,6 +117,7 @@ interface SharedPackedParseTree {
 
     fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean)
 
+    val treeData: TreeDataComplete<SpptDataNode>
 
     /**
      * Determines if there is an equivalent tree in this forest for every tree in the other forest.
@@ -102,9 +127,9 @@ interface SharedPackedParseTree {
      */
     fun contains(other: SharedPackedParseTree): Boolean
 
-    fun tokensByLineAll(): List<List<SPPTLeaf>>
+    fun tokensByLineAll(): List<List<LeafData>>
 
-    fun tokensByLine(line: Int): List<SPPTLeaf>
+    fun tokensByLine(line: Int): List<LeafData>
 
     /**
      *  the original input text

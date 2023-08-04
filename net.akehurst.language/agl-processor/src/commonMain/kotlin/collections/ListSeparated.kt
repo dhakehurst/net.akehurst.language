@@ -35,17 +35,19 @@ inline fun <reified I, reified S> emptyListSeparated(): ListSeparated<I, S> = li
 inline fun <reified I, reified S> listSeparatedOf(vararg elements: Any?): ListSeparated<I, S> = ListSeparatedArrayList(elements.toList())
 inline fun <reified I, reified S> mutableListSeparated(): MutableListSeparated<I, S> = MutableListSeparatedArrayList()
 
+inline fun <reified I, reified S> List<*>.toSeparatedList(): ListSeparated<I, S> = ListSeparatedArrayList<I, S>(this)
+
 class ListSeparatedArrayList<I, S>(val elements: List<Any?>) : AbstractList<Any?>(), ListSeparated<I, S> {
 
     override val size: Int get() = elements.size
 
     override fun get(index: Int): Any? = elements[index]
 
-    override val items: MutableList<I>
-        get() = TODO("not implemented")
+    override val items: List<I>
+        get() = elements.filterIndexed { index, _ -> index % 2 == 0 } as List<I>
 
-    override val separators: MutableList<S>
-        get() = TODO("not implemented")
+    override val separators: List<S>
+        get() = elements.filterIndexed { index, _ -> index % 2 == 1 } as List<S>
 }
 
 class MutableListSeparatedArrayList<I, S> : AbstractMutableList<Any?>(), MutableListSeparated<I, S> {

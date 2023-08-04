@@ -23,11 +23,11 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.runtime.graph.CompleteNodeIndex
 import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 import net.akehurst.language.agl.runtime.graph.ParseGraph
-import net.akehurst.language.agl.runtime.graph.TreeDataComplete
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimePreferenceRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
+import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
 import net.akehurst.language.api.automaton.ParseAction
@@ -59,6 +59,8 @@ internal class RuntimeParser(
         //val normalArgs = GrowArgs(true, false, false, false, true)
         val forPossErrors = GrowArgs(false, true, false, true, true)
         val heightGraftOnly = GrowArgs(false, true, true, false, false)
+        val forExpectedAt = GrowArgs(false, false, false, false, true)
+
     }
 
     val graph = ParseGraph(input, this.stateSet.number)
@@ -153,7 +155,7 @@ internal class RuntimeParser(
 
     var debugCount = 0
     fun debugOutput() {
-        fun GrowingNodeIndex.asString() = "(s${runtimeState.state.number.value},${startPosition}-${nextInputPosition}{${numNonSkipChildren}}${
+        fun GrowingNodeIndex.asString() = "(s${runtimeState.state.number.value},${startPosition}-${nextInputPositionAfterSkip}{${numNonSkipChildren}}${
             runtimeState.state.rulePositions.joinToString()
         }${
             runtimeState.runtimeLookaheadSet.joinToString(
@@ -866,13 +868,13 @@ internal class RuntimeParser(
             parseArgs.heightGraftOnly -> false
             parseArgs.nonEmptyWidthOnly && transition.to.firstRule.isEmptyTerminal -> false
             else -> {
-                val l = this.graph.input.findOrTryCreateLeaf(transition.to.firstRule, head.nextInputPosition)
+                val l = this.graph.input.findOrTryCreateLeaf(transition.to.firstRule, head.nextInputPositionAfterSkip)
                 if (null != l) {
                     val lh = transition.lookahead.map { it.guard }.reduce { acc, e -> acc.union(this.stateSet, e) } //TODO:reduce to 1 in SM
                     val runtimeLhs = head.runtimeState.runtimeLookaheadSet
 
                     val skipData = parseSkipIfAny(l.nextInputPosition, runtimeLhs, lh, possibleEndOfText, parseArgs)
-                    val nextInputPositionAfterSkip = skipData?.root?.nextInputPosition ?: l.nextInputPosition
+                    val nextInputPositionAfterSkip = skipData?.root?.nextInputPositionBeforeSkip ?: l.nextInputPosition
 
                     val hasLh = possibleEndOfText.any { eot ->
                         runtimeLhs.any { rt ->
@@ -897,7 +899,7 @@ internal class RuntimeParser(
                         false
                     }
                 } else {
-                    recordFailedWidthTo(parseArgs, head.nextInputPosition, transition)
+                    recordFailedWidthTo(parseArgs, head.nextInputPositionAfterSkip, transition)
                     false
                 }
             }
@@ -958,7 +960,7 @@ internal class RuntimeParser(
                         buildSPPT = parseArgs.buildTree
                     )
                 } else {
-                    recordFailedHeightLh(parseArgs, head.nextInputPosition, transition, runtimeLhs, possibleEndOfText)
+                    recordFailedHeightLh(parseArgs, head.nextInputPositionAfterSkip, transition, runtimeLhs, possibleEndOfText)
                     false
                 }
             }
@@ -988,11 +990,11 @@ internal class RuntimeParser(
                             buildSPPT = parseArgs.buildTree
                         )
                     } else {
-                        recordFailedGraftLH(parseArgs, head.nextInputPosition, transition, runtimeLhs, possibleEndOfText)
+                        recordFailedGraftLH(parseArgs, head.nextInputPositionAfterSkip, transition, runtimeLhs, possibleEndOfText)
                         false
                     }
                 } else {
-                    recordFailedGraftRTG(parseArgs, head.nextInputPosition, transition, previous.numNonSkipChildren)
+                    recordFailedGraftRTG(parseArgs, head.nextInputPositionAfterSkip, transition, previous.numNonSkipChildren)
                     false
                 }
             }
@@ -1125,7 +1127,7 @@ internal class RuntimeParser(
                 } else {
                     //  could not parse embedded
                     //this.embeddedLastDropped[transition] = embeddedParser.lastDropped
-                    recordFailedEmbedded(parseArgs, head.nextInputPosition, transition, embeddedParser.failedReasons)
+                    recordFailedEmbedded(parseArgs, head.nextInputPositionAfterSkip, transition, embeddedParser.failedReasons)
                     false
                 }
             }

@@ -18,8 +18,6 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
@@ -118,7 +116,7 @@ import net.akehurst.language.api.sppt.*
         this.tagList = tags
     }
 
-    override val eolPositions: List<Int> by lazy { input.eolPositions(matchedText) }
+    override val eolPositions: List<Int> by lazy { InputFromString.eolPositions(matchedText) }
 
     // --- SPPTNode ---
     override val nonSkipMatchedText: String get() = if (isSkip) "" else this.matchedText

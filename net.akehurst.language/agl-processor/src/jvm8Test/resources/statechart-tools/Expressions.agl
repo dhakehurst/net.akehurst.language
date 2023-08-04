@@ -62,8 +62,9 @@ grammar Expressions {
     ElementReferenceExpression =
        ID
        (
-         '('
-         (Argument (',' Argument)*)?	')' | ('[' Expression ']')  ('[' Expression ']')*
+           '(' (Argument (',' Argument)*)?	')'
+         |
+           ('[' Expression ']')  ('[' Expression ']')*
        )?
        ;
 

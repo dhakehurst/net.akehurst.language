@@ -23,7 +23,7 @@ import net.akehurst.language.agl.grammar.format.AglFormatGrammar
 import net.akehurst.language.agl.grammar.format.AglFormatSyntaxAnalyser
 import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
-import net.akehurst.language.agl.grammar.grammar.AglGrammarSyntaxAnalyser
+import net.akehurst.language.agl.grammar.grammar.AglGrammarSyntaxAnalyser2
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.agl.grammar.scopes.AglScopesGrammar
 import net.akehurst.language.agl.grammar.scopes.AglScopesSyntaxAnalyser
@@ -70,7 +70,7 @@ class LanguageRegistryDefault : GrammarRegistry {
                     defaultGoalRuleName(AglGrammarGrammar.goalRuleName)
                     typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.createFrom(AglGrammarGrammar), IssueHolder(LanguageProcessorPhase.ALL)) }
                     scopeModelResolver { ProcessResultDefault(ScopeModelAgl(), IssueHolder(LanguageProcessorPhase.ALL)) }
-                    syntaxAnalyserResolver { ProcessResultDefault(AglGrammarSyntaxAnalyser(), IssueHolder(LanguageProcessorPhase.ALL)) }
+                    syntaxAnalyserResolver { ProcessResultDefault(AglGrammarSyntaxAnalyser2(), IssueHolder(LanguageProcessorPhase.ALL)) }
                     semanticAnalyserResolver { ProcessResultDefault(AglGrammarSemanticAnalyser(this@LanguageRegistryDefault), IssueHolder(LanguageProcessorPhase.ALL)) }
                     formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                     styleResolver {

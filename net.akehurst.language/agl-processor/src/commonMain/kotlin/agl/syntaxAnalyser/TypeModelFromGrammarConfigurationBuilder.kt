@@ -21,7 +21,7 @@ import net.akehurst.language.typemodel.api.*
 
 interface TypeModelFromGrammarConfiguration {
     fun typeNameFor(rule: GrammarRule): String
-    fun propertyNameFor(ruleItem: RuleItem, ruleItemType: TypeDefinition): String
+    fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDefinition): String
 }
 
 fun String.lower() = when {
@@ -31,7 +31,11 @@ fun String.lower() = when {
 
 class TypeModelFromGrammarConfigurationDefault() : TypeModelFromGrammarConfiguration {
     override fun typeNameFor(rule: GrammarRule): String = rule.name.replaceFirstChar { it.titlecase() }
-    override fun propertyNameFor(ruleItem: RuleItem, ruleItemType: TypeDefinition): String {
+    override fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDefinition): String {
+        val prefix = when (context) {
+            ruleItem.owningRule.grammar -> ""
+            else -> "${ruleItem.owningRule.grammar.name.lower()}_"
+        }
         val baseName = when (ruleItem) {
             is Terminal -> when (ruleItemType) {
                 is PrimitiveType -> TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
@@ -41,13 +45,14 @@ class TypeModelFromGrammarConfigurationDefault() : TypeModelFromGrammarConfigura
                 else -> TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
             }
 
-            is Embedded -> ruleItem.embeddedGoalName.lower()
+            //is Embedded -> "${ruleItem.embeddedGrammarReference.resolved!!.name}_${ruleItem.embeddedGoalName.lower()}"
+            is Embedded -> "${ruleItem.embeddedGoalName.lower()}"
             is NonTerminal -> ruleItem.name.lower()
             is Group -> TypeModelFromGrammar.UNNAMED_GROUP_PROPERTY_NAME
             is Choice -> TypeModelFromGrammar.UNNAMED_CHOICE_PROPERTY_NAME
             else -> error("Internal error, unhandled subtype of SimpleItem")
         }.replaceFirstChar { it.lowercase() }
-        return when (ruleItemType) {
+        val name = when (ruleItemType) {
             is NothingType -> baseName
             is AnyType -> baseName
             is PrimitiveType -> baseName
@@ -68,5 +73,6 @@ class TypeModelFromGrammarConfigurationDefault() : TypeModelFromGrammarConfigura
             is TupleType -> baseName
             is ElementType -> baseName
         }
+        return name //prefix + name
     }
 }

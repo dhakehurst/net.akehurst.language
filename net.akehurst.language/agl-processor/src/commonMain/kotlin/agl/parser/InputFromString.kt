@@ -34,6 +34,16 @@ internal class InputFromString(
         const val contextSize = 10
         val END_OF_TEXT = 3.toChar().toString()
         val EOL_PATTERN = Regex("\n", setOf(RegexOption.MULTILINE))
+
+        //TODO: write a scanner that counts eols as it goes, rather than scanning the text twice
+        fun eolPositions(text: String): List<Int> = EOL_PATTERN.findAll(text).map { it.range.first }.toList()
+
+        fun locationFor(sentence: String, startPosition: Int, length: Int): InputLocation {
+            val before = sentence.substring(0, startPosition)
+            val line = before.count { it == '\n' } + 1
+            val column = startPosition - before.lastIndexOf('\n')
+            return InputLocation(startPosition, column, line, length)
+        }
     }
 
     // private var lastlocationCachePosition = -1
@@ -89,9 +99,6 @@ internal class InputFromString(
         // TODO what if we want t0 parse part of the text?, e.g. sub grammar
         return position >= this.text.length
     }
-
-    //TODO: write a scanner that counts eols as it goes, rather than scanning the text twice
-    fun eolPositions(text: String): List<Int> = EOL_PATTERN.findAll(text).map { it.range.first }.toList()
 
     // seems faster to match literal with regex than substring and startsWith
     private val isLookingAt_cache = hashMapOf<Pair<Int, RuntimeRule>, Boolean>()
@@ -158,7 +165,7 @@ internal class InputFromString(
         return if (null == matchedText)
             null
         else {
-            val eolPositions = this.eolPositions(matchedText)
+            val eolPositions = eolPositions(matchedText)
             RegexMatcher.MatchResult(matchedText, eolPositions)
             //matchedText
         }
@@ -255,12 +262,7 @@ internal class InputFromString(
      * startPosition - 0 index position in input text
      * nextInputPosition - 0 index position of next 'token', so we can calculate length
      */
-    fun locationFor(startPosition: Int, length: Int): InputLocation {
-        val before = this.text.substring(0, startPosition)
-        val line = before.count { it == '\n' } + 1
-        val column = startPosition - before.lastIndexOf('\n')
-        return InputLocation(startPosition, column, line, length)
-    }
+    fun locationFor(startPosition: Int, length: Int): InputLocation = locationFor(this.text, startPosition, length)
 
     fun textFromUntil(startPosition: Int, nextInputPosition: Int): String {
         return this.text.substring(startPosition, nextInputPosition)

@@ -32,7 +32,7 @@ import net.akehurst.language.typemodel.api.*
 class SyntaxAnalyserSimple(
     typeModel: GrammarTypeModel,
     scopeModel: ScopeModel
-) : SyntaxAnalyserSimpleAbstract<AsmSimple>(typeModel, scopeModel) {
+) : SyntaxAnalyserSimpleAbstract2<AsmSimple>(typeModel, scopeModel) {
 
     companion object {
         private const val ns = "net.akehurst.language.agl.syntaxAnalyser"

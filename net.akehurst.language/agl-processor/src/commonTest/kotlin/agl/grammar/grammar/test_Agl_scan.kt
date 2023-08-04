@@ -19,43 +19,38 @@ package net.akehurst.language.agl.processor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 internal class test_Agl_scan {
 
     @Test
     fun scan_literal_empty_a() {
-        val pr = Agl.processorFromString<Any,Any>("namespace test grammar Test { a = ''; }")
+        val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = ''; }")
         val tokens = pr.processor!!.scan("ab")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
         assertNotNull(tokens)
         assertEquals(1, tokens.size)
-        assertTrue(tokens[0].isLiteral)
-        assertTrue(tokens[0].isLeaf)
         assertEquals("a", tokens[0].matchedText)
-        assertEquals(1, tokens[0].identity.runtimeRuleNumber)
-        assertEquals(0, tokens[0].identity.startPosition)
-        assertEquals(1, tokens[0].matchedTextLength)
+        // assertEquals(1, tokens[0].identity.runtimeRuleNumber)
+        assertEquals(0, tokens[0].location.position)
+        assertEquals(1, tokens[0].matchedText.length)
 
     }
 
     @Test
     fun scan_pattern_empty_a() {
-        val pr = Agl.processorFromString<Any,Any>("namespace test grammar Test { a = \"[x]*\"; }")
+        val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = \"[x]*\"; }")
         val tokens = pr.processor!!.scan("ab")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
         assertNotNull(tokens)
         assertEquals(1, tokens.size)
-        assertTrue(tokens[0].isLiteral)
-        assertTrue(tokens[0].isLeaf)
         assertEquals("a", tokens[0].matchedText)
-        assertEquals(1, tokens[0].identity.runtimeRuleNumber)
-        assertEquals(0, tokens[0].identity.startPosition)
-        assertEquals(1, tokens[0].matchedTextLength)
+        //assertEquals(1, tokens[0].identity.runtimeRuleNumber)
+        assertEquals(0, tokens[0].location.position)
+        assertEquals(1, tokens[0].matchedText.length)
 
     }
 
@@ -68,18 +63,16 @@ internal class test_Agl_scan {
 
         assertNotNull(tokens)
         assertEquals(1, tokens.size)
-        assertTrue(tokens[0].isLiteral)
-        assertTrue(tokens[0].isLeaf)
         assertEquals("a", tokens[0].matchedText)
-        assertEquals(1, tokens[0].identity.runtimeRuleNumber)
-        assertEquals(0, tokens[0].identity.startPosition)
-        assertEquals(1, tokens[0].matchedTextLength)
+        //assertEquals(1, tokens[0].identity.runtimeRuleNumber)
+        assertEquals(0, tokens[0].location.position)
+        assertEquals(1, tokens[0].matchedText.length)
 
     }
 
     @Test
     fun scan_a_aa() {
-        val pr = Agl.processorFromString<Any,Any>("namespace test grammar Test { a = 'a';}")
+        val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = 'a';}")
         val tokens = pr.processor!!.scan("aa")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
@@ -90,7 +83,7 @@ internal class test_Agl_scan {
 
     @Test
     fun scan_a_aaa() {
-        val pr = Agl.processorFromString<Any,Any>("namespace test grammar Test { a = 'a';}")
+        val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = 'a';}")
         val tokens = pr.processor!!.scan("aaa")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
@@ -101,7 +94,7 @@ internal class test_Agl_scan {
 
     @Test
     fun scan_ab_aba() {
-        val pr = Agl.processorFromString<Any,Any>("namespace test grammar Test { a = 'a'; b = 'b'; }")
+        val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = 'a'; b = 'b'; }")
         val tokens = pr.processor!!.scan("aba")
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
@@ -116,14 +109,16 @@ internal class test_Agl_scan {
 
     @Test
     fun scan_end_of_line() {
-        val pr = Agl.processorFromString<Any,Any>("""
+        val pr = Agl.processorFromString<Any, Any>(
+            """
             namespace test
             grammar Test {
                 skip WHITESPACE = "\s+" ;
                 chars = char+ ;
                 char = "[a-z]" ;
             }
-        """.trimIndent())
+        """.trimIndent()
+        )
         var tokens = pr.processor!!.scan("a")
         var tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")

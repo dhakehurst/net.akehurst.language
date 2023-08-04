@@ -160,7 +160,7 @@ grammar AglGrammar {
     namespace = 'namespace' qualifiedName ;
     definitions = grammar+ ;
     grammar = 'grammar' IDENTIFIER extendsOpt '{' rules '}' ;
-    extendsOpt = extends?
+    extendsOpt = extends? ;
     extends = 'extends' extendsList ;
     extendsList = [qualifiedName / ',']+ ;
     rules = rule+ ;
@@ -199,6 +199,7 @@ grammar AglGrammar {
     preferenceOption = nonTerminal choiceNumber 'on' terminalList associativity ;
     choiceNumber = POSITIVE_INTEGER? ;
     terminalList = [simpleItem / ',']+ ;
+    associativity = 'left' | 'right' ;
 }
     """.trimIndent()
 }

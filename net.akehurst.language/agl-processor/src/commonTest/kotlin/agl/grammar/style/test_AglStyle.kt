@@ -18,9 +18,7 @@
 package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
-import net.akehurst.language.agl.grammar.scopes.test_AglScopes
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.syntaxAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -34,7 +32,8 @@ class test_AglStyle {
 
     private companion object {
         val aglProc = Agl.registry.agl.style.processor!!
-        val testGrammar = Agl.registry.agl.grammar.processor?.process("""
+        val testGrammar = Agl.registry.agl.grammar.processor?.process(
+            """
             namespace test
             
             grammar Test {
@@ -55,13 +54,14 @@ class test_AglStyle {
                 COMMENT = "\"(\\?.)*\"" ;
                 INT = "[0-9]+" ;
             }
-        """.trimIndent())?.asm?.first()!!
+        """.trimIndent()
+        )?.asm?.first()!!
     }
 
-    private fun process(sentence:String) =aglProc.process(
+    private fun process(sentence: String) = aglProc.process(
         sentence,
         Agl.options {
-             semanticAnalysis { context(ContextFromGrammar(testGrammar)) }
+            semanticAnalysis { context(ContextFromGrammar(testGrammar)) }
         })
 
 
@@ -108,9 +108,11 @@ class test_AglStyle {
 
         assertNotNull(result.asm)
         assertEquals(1, result.asm?.rules?.size)
-        assertEquals(setOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(0,1,1,7),"GrammarRule 'xxx' not found for style rule", null)
-        ), result.issues.all)
+        assertEquals(
+            setOf(
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(0, 1, 1, 7), "GrammarRule 'xxx' not found for style rule", null)
+            ), result.issues.all
+        )
     }
 
     @Test
@@ -137,7 +139,7 @@ class test_AglStyle {
             }
         """.trimIndent()
 
-        val result =process(text)
+        val result = process(text)
 
         assertNotNull(result.asm)
         assertEquals(1, result.asm?.rules?.size)
@@ -197,4 +199,64 @@ class test_AglStyle {
         assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }
     //TODO more tests
+
+
+    @Test
+    fun dot() {
+
+        val text = """
+C_PREPROCESSOR {
+  foreground: gray;
+  font-style: italic;
+}
+SINGLE_LINE_COMMENT {
+  foreground: DarkSlateGrey;
+  font-style: italic;
+}
+MULTI_LINE_COMMENT {
+  foreground: DarkSlateGrey;
+  font-style: italic;
+}
+STRICT {
+  foreground: purple;
+  font-style: bold;
+}
+GRAPH {
+  foreground: purple;
+  font-style: bold;
+}
+DIGRAPH {
+  foreground: purple;
+  font-style: bold;
+}
+SUBGRAPH {
+  foreground: purple;
+  font-style: bold;
+}
+NODE {
+  foreground: purple;
+  font-style: bold;
+}
+EDGE {
+  foreground: purple;
+  font-style: bold;
+}
+ALPHABETIC_ID {
+  foreground: red;
+  font-style: italic;
+}
+HTML {
+  background: LemonChiffon;
+}
+NAME {
+    foreground: green;
+}
+        """.trimIndent()
+
+        val result = process(text)
+
+        assertNotNull(result.asm)
+        assertEquals(12, result.asm?.rules?.size)
+        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
+    }
 }

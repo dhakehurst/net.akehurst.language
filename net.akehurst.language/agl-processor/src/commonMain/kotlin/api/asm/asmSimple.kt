@@ -25,6 +25,12 @@ data class AsmElementPath(val value: String) {
     }
 
     operator fun plus(segment: String) = if (this == ROOT) AsmElementPath("/$segment") else AsmElementPath("$value/$segment")
+
+    val parent: AsmElementPath?
+        get() = when {
+            ROOT == this -> null
+            else -> AsmElementPath(this.value.substringBeforeLast("/"))
+        }
 }
 
 open class AsmSimple() {

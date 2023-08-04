@@ -42,11 +42,13 @@ interface TypeModel {
     fun findOrCreateElementTypeNamed(typeName: String): ElementType
 
     fun findOrCreatePrimitiveTypeNamed(typeName: String): PrimitiveType
+
+    fun createUnnamedSuperTypeType(subtypes: List<TypeUsage>): UnnamedSuperTypeType
 }
 
 sealed class TypeDefinition {
     companion object {
-        const val maxDepth = 5
+        const val maxDepth = 10
     }
 
     abstract val name: String
@@ -59,6 +61,8 @@ sealed class TypeDefinition {
     var metaInfo = mutableMapOf<String, String>()
 
     abstract fun signature(context: TypeModel?, currentDepth: Int = 0): String
+
+    fun typeUse(arguments: List<TypeUsage> = emptyList(), nullable: Boolean = false): TypeUsage = TypeUsage.ofType(this, arguments, nullable)
 
     fun asString(context: TypeModel): String = when (this) {
         is NothingType -> signature(context, 0)
@@ -77,19 +81,6 @@ sealed class TypeDefinition {
         }
     }
 }
-
-/*
-object StringType : TypeDefinition() {
-    val use = TypeUsage.ofType(StringType)
-    val useNullable = TypeUsage.ofType(StringType, emptyList(), true)
-
-    override val name: String = "\$String"
-    override fun signature(context: TypeModel?, currentDepth: Int): String = name
-    override fun hashCode(): Int = name.hashCode()
-    override fun equals(other: Any?): Boolean = this === other
-    override fun toString(): String = name
-}
-*/
 
 object AnyType : TypeDefinition() {
     val use = TypeUsage.ofType(AnyType)
@@ -114,9 +105,9 @@ object NothingType : TypeDefinition() {
 }
 
 class UnnamedSuperTypeType(
+    val id: Int, // needs a number else can't implement equals without a recursive loop
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
-    val subtypes: List<TypeUsage>,
-    val consumeNode: Boolean
+    val subtypes: List<TypeUsage>
 ) : TypeDefinition() {
     companion object {
         const val INSTANCE_NAME = "UnnamedSuperType"
@@ -127,13 +118,13 @@ class UnnamedSuperTypeType(
         return when {
             currentDepth >= maxDepth -> "..."
             else -> "? supertypeOf " + this.subtypes.sortedBy { it.signature(context, currentDepth + 1) }
-                .joinToString(prefix = "(", postfix = ")") { it.signature(context, currentDepth + 1) }
+                .joinToString(prefix = "(", postfix = ")", separator = " | ") { it.signature(context, currentDepth + 1) }
         }
     }
 
-    override fun hashCode(): Int = name.hashCode()
+    override fun hashCode(): Int = id
     override fun equals(other: Any?): Boolean = when (other) {
-        is UnnamedSuperTypeType -> other.subtypes == this.subtypes
+        is UnnamedSuperTypeType -> other.id == this.id
         else -> false
     }
 
@@ -193,7 +184,7 @@ class PrimitiveType(
 
 sealed class StructuredRuleType : TypeDefinition() {
     abstract val property: MutableMap<String, PropertyDeclaration>
-    abstract fun getPropertyByIndex(i: Int): PropertyDeclaration
+    abstract fun getPropertyByIndex(i: Int): PropertyDeclaration?
 
     /**
      * called from PropertyDeclaration constructor
@@ -220,22 +211,22 @@ class TupleType() : StructuredRuleType() {
     override val name: String = INSTANCE_NAME
 
     override val property = mutableMapOf<String, PropertyDeclaration>()
-    val properties = mutableListOf<PropertyDeclaration>()
+    val properties = mutableMapOf<Int, PropertyDeclaration>()
 
-    private val nameTypePair get() = properties.map { Pair(it.name, it.typeUse) }
+    private val nameTypePair get() = properties.values.map { Pair(it.name, it.typeUse) }
 
     override fun signature(context: TypeModel?, currentDepth: Int): String {
         return when {
             currentDepth >= maxDepth -> "..."
-            else -> "${name}<${this.properties.joinToString { it.name + ":" + it.typeUse.signature(context, currentDepth + 1) }}>"
+            else -> "${name}<${this.properties.values.joinToString { it.name + ":" + it.typeUse.signature(context, currentDepth + 1) }}>"
         }
     }
 
-    override fun getPropertyByIndex(i: Int): PropertyDeclaration = properties[i]
+    override fun getPropertyByIndex(i: Int): PropertyDeclaration? = properties[i]
 
     override fun addProperty(propertyDeclaration: PropertyDeclaration) {
         this.property[propertyDeclaration.name] = propertyDeclaration
-        this.properties.add(propertyDeclaration)
+        this.properties[propertyDeclaration.childIndex] = propertyDeclaration
     }
 
     override fun hashCode(): Int = 0
@@ -245,7 +236,7 @@ class TupleType() : StructuredRuleType() {
         else -> true
     }
 
-    override fun toString(): String = "Tuple<${this.properties.joinToString { it.name + ":" + it.typeUse }}>"
+    override fun toString(): String = "Tuple<${this.properties.values.joinToString { it.name + ":" + it.typeUse }}>"
 }
 
 data class ElementType(
@@ -262,7 +253,7 @@ data class ElementType(
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     val subtypes: MutableList<ElementType> = mutableListOf<ElementType>()
     override val property = mutableMapOf<String, PropertyDeclaration>()
-    private val _propertyIndex = mutableListOf<PropertyDeclaration>()
+    private val _propertyIndex = mutableMapOf<Int, PropertyDeclaration>()
 
     override fun signature(context: TypeModel?, currentDepth: Int): String = when {
         null == context -> qualifiedName
@@ -276,15 +267,15 @@ data class ElementType(
         (type.subtypes as MutableList).add(this)
     }
 
-    override fun getPropertyByIndex(i: Int): PropertyDeclaration = _propertyIndex[i]
+    override fun getPropertyByIndex(i: Int): PropertyDeclaration? = _propertyIndex[i]
     override fun addProperty(propertyDeclaration: PropertyDeclaration) {
         this.property[propertyDeclaration.name] = propertyDeclaration
-        this._propertyIndex.add(propertyDeclaration)
+        this._propertyIndex[propertyDeclaration.childIndex] = propertyDeclaration
     }
 
     override fun hashCode(): Int = qualifiedName.hashCode()
     override fun equals(other: Any?): Boolean = when {
-        other !is PrimitiveType -> false
+        other !is ElementType -> false
         this.qualifiedName != other.qualifiedName -> false
         else -> true
     }

@@ -18,16 +18,25 @@ package net.akehurst.language.agl.grammar.grammar.asm
 
 import net.akehurst.language.api.grammar.*
 
+abstract class GrammarItemAbstract() : GrammarItem {
+    override lateinit var grammar: Grammar
+}
+
 data class GrammarRuleDefault(
-    override val grammar: GrammarDefault,
     override val name: String,
     override val isOverride: Boolean,
     override val isSkip: Boolean,
     override val isLeaf: Boolean
-) : GrammarRule {
+) : GrammarItemAbstract(), GrammarRule {
 
     companion object {
-        class CompressedLeafRule(override val name: String, override val value: String, override val isPattern: Boolean) : Terminal, RuleItemAbstract() {
+        class CompressedLeafRule(
+            override val name: String,
+            override val value: String,
+            override val isPattern: Boolean
+        ) : Terminal, RuleItemAbstract() {
+            override lateinit var grammar: Grammar
+
             override val allTerminal: Set<Terminal> = setOf(this)
             override val allNonTerminal: Set<NonTerminal> = emptySet()
             override val allEmbedded: Set<Embedded> = emptySet()
@@ -39,7 +48,6 @@ data class GrammarRuleDefault(
             override fun subItem(index: Int): RuleItem {
                 TODO("not implemented")
             }
-
         }
 
         private fun toRegEx(value: String): String {
@@ -48,7 +56,7 @@ data class GrammarRuleDefault(
 
         private fun compressRuleItem(compressedName: String, item: RuleItem): CompressedLeafRule {
             val grammar = item.owningRule.grammar
-            return when (item) {
+            val cr = when (item) {
                 is Terminal -> when {
                     item.isPattern -> CompressedLeafRule(compressedName, item.value, true)
                     //else -> CompressedLeafRule(compressedName, "(${toRegEx(item.value)})", true)
@@ -103,12 +111,10 @@ data class GrammarRuleDefault(
 
                 else -> throw GrammarExeception("GrammarRule ${item.owningRule.name}, compressing ${item::class.simpleName} to leaf is not yet supported", null)
             }
+            cr.grammar = grammar
+            return cr
         }
 
-    }
-
-    init {
-        this.grammar.grammarRule.add(this)
     }
 
     private var _rhs: RuleItem? = null
@@ -121,7 +127,7 @@ data class GrammarRuleDefault(
             this._rhs = value
         }
 
-    override val isOneEmebedded: Boolean get() = this.rhs is Embedded || (this.rhs is Concatenation) && (this.rhs as Concatenation).items[0] is Embedded
+    override val isOneEmbedded: Boolean get() = this.rhs is Embedded || (this.rhs is Concatenation) && (this.rhs as Concatenation).items[0] is Embedded
 
     override val nodeType: NodeType = NodeTypeDefault(this.name)
 
