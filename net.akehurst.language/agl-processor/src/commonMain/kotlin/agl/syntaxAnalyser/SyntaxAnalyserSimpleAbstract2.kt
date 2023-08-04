@@ -305,6 +305,7 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
                 } else {
                     createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
+                value?.let { locationMap[it] = nodeInfo.node.locationIn(sentence) }
                 stack.push(ChildData(nodeInfo, value))
                 // path = path.parent!!
             }
@@ -361,7 +362,7 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
         return when {
             null == parentTypeUsage -> NothingType.use // property unused
             parentTypeUsage.nullable -> typeForParentOptional(parentTypeUsage, nodeInfo)
-            nodeInfo.node.rule.isEmbedded -> parentTypeUsage //skip this node
+            nodeInfo.node.rule.isEmbedded -> typeForEmbedded(parentTypeUsage, nodeInfo)
             else -> {
                 val parentType = parentTypeUsage.type
                 when (parentType) {
@@ -384,6 +385,21 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
         if (Debug.CHECK) check(parentTypeUsage.nullable)
         return parentTypeUsage.notNullable
     }
+
+    private fun typeForEmbedded(parentTypeUsage: TypeUsage, nodeInfo: SpptDataNodeInfo): TypeUsage {
+        // need to skip over the embedded node and use type of its child
+        if (Debug.CHECK) check(nodeInfo.node.rule.isEmbedded)
+        val type = parentTypeUsage.type
+        return when (type) {
+            is ElementType -> {
+                val prop = type.getPropertyByIndex(nodeInfo.child.propertyIndex)
+                prop?.typeUse ?: NothingType.use
+            }
+
+            else -> parentTypeUsage
+        }
+    }
+
 
     private fun typeForParentListSimple(parentTypeUsage: TypeUsage, nodeInfo: SpptDataNodeInfo): TypeUsage {
         // nodes map to runtime-rules, not user-rules

@@ -89,7 +89,7 @@ class TypeModelBuilder(
                 else -> error("Cannot map to TypeDefinition: $it")
             }
         }
-        val t = UnnamedSuperTypeType(sts.map { TypeUsage.ofType(it) }, false)
+        val t = _model.createUnnamedSuperTypeType(sts.map { TypeUsage.ofType(it) })
         return t
     }
 
@@ -159,7 +159,7 @@ abstract class StructuredTypeBuilder(
         val b = SubtypeListBuilder(_model, _typeReferences)
         b.init()
         val stu = b.build()
-        val t = UnnamedSuperTypeType(stu, false)
+        val t = _model.createUnnamedSuperTypeType(stu)
         return property(propertyName, TypeUsage.ofType(t, emptyList(), isNullable), childIndex)
     }
 
@@ -264,7 +264,7 @@ class TypeUsageReferenceBuilder(
             UnnamedSuperTypeType::class -> {
                 val subtypes = _refs.map { _model.findTypeNamed(it) ?: error("Type not found: '$it'") }
                 val stu = subtypes.map { TypeUsage.ofType(it) }
-                val t = UnnamedSuperTypeType(stu, false)
+                val t = _model.createUnnamedSuperTypeType(stu)
                 _args.add(TypeUsage.ofType(t, emptyList(), nullable))
             }
 
@@ -308,7 +308,7 @@ class SubtypeListBuilder(
 
     fun unnamedSuperTypeOf(vararg subtypeNames: String) {
         val sts = subtypeNames.map { _model.findOrCreateElementTypeNamed(it)!! }
-        val t = UnnamedSuperTypeType(sts.map { TypeUsage.ofType(it) }, false)
+        val t = _model.createUnnamedSuperTypeType(sts.map { TypeUsage.ofType(it) })
         _subtypeList.add(TypeUsage.ofType(t))
     }
 
@@ -316,7 +316,7 @@ class SubtypeListBuilder(
         val b = SubtypeListBuilder(_model, _typeReferences)
         b.init()
         val stu = b.build()
-        val t = UnnamedSuperTypeType(stu, false)
+        val t = _model.createUnnamedSuperTypeType(stu)
         _subtypeList.add(TypeUsage.ofType(t))
     }
 

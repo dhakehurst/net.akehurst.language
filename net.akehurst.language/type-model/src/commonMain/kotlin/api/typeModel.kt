@@ -42,11 +42,13 @@ interface TypeModel {
     fun findOrCreateElementTypeNamed(typeName: String): ElementType
 
     fun findOrCreatePrimitiveTypeNamed(typeName: String): PrimitiveType
+
+    fun createUnnamedSuperTypeType(subtypes: List<TypeUsage>): UnnamedSuperTypeType
 }
 
 sealed class TypeDefinition {
     companion object {
-        const val maxDepth = 5
+        const val maxDepth = 10
     }
 
     abstract val name: String
@@ -103,9 +105,9 @@ object NothingType : TypeDefinition() {
 }
 
 class UnnamedSuperTypeType(
+    val id: Int, // needs a number else can't implement equals without a recursive loop
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
-    val subtypes: List<TypeUsage>,
-    val consumeNode: Boolean
+    val subtypes: List<TypeUsage>
 ) : TypeDefinition() {
     companion object {
         const val INSTANCE_NAME = "UnnamedSuperType"
@@ -116,13 +118,13 @@ class UnnamedSuperTypeType(
         return when {
             currentDepth >= maxDepth -> "..."
             else -> "? supertypeOf " + this.subtypes.sortedBy { it.signature(context, currentDepth + 1) }
-                .joinToString(prefix = "(", postfix = ")") { it.signature(context, currentDepth + 1) }
+                .joinToString(prefix = "(", postfix = ")", separator = " | ") { it.signature(context, currentDepth + 1) }
         }
     }
 
-    override fun hashCode(): Int = name.hashCode()
+    override fun hashCode(): Int = id
     override fun equals(other: Any?): Boolean = when (other) {
-        is UnnamedSuperTypeType -> other.subtypes == this.subtypes
+        is UnnamedSuperTypeType -> other.id == this.id
         else -> false
     }
 

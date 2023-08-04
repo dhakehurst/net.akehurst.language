@@ -25,9 +25,9 @@ internal object AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst
     const val goalRuleName = "rules"
     private fun createRules(): List<GrammarRule> {
         val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglStyle");
-        b.skip("WHITESPACE").concatenation(b.terminalPattern("\\s+"));
-        b.skip("MULTI_LINE_COMMENT").concatenation(b.terminalPattern("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"));
-        b.skip("SINGLE_LINE_COMMENT").concatenation(b.terminalPattern("//[^\\n\\r]*"));
+        b.skip("WHITESPACE").concatenation(b.terminalPattern("\\s+"))
+        b.skip("MULTI_LINE_COMMENT").concatenation(b.terminalPattern("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"))
+        b.skip("SINGLE_LINE_COMMENT").concatenation(b.terminalPattern("//[^\\n\\r]*"))
 
         b.rule("rules").multi(0, -1, b.nonTerminal("rule"))
         b.rule("rule").concatenation(b.nonTerminal("selectorExpression"), b.terminalLiteral("{"), b.nonTerminal("styleList"), b.terminalLiteral("}"))
@@ -89,16 +89,27 @@ references {
     override fun toString(): String = """
 namespace net.akehurst.language.agl
 grammar AglStyle {
+    skip WHITESPACE = "\s+" ;
+	skip SINGLE_LINE_COMMENT = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
+	skip MULTI_LINE_COMMENT = "//[^\n\r]*" ;
+
     rules = rule* ;
     rule = selectorExpression '{' styleList '}' ;
     selectorExpression
-     = selectorSingle
-     | selectorAndComposition
+     = selectorAndComposition
+     | selectorSingle
      ; //TODO
     selectorAndComposition = [selectorSingle /',']2+ ;
-    selectorSingle = LITERAL | PATTERN | IDENTIFIER ;
+    selectorSingle = LITERAL | PATTERN | IDENTIFIER | META_IDENTIFIER ;
     styleList = style* ;
     style = STYLE_ID ':' STYLE_VALUE ';' ;
+    
+    leaf LITERAL = "'([^'\\]|\\.)+'" ;
+    leaf PATTERN = "\"([^\"\\]|\\.)+\"" ;
+    leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
+    leaf META_IDENTIFIER = "[\\${'$'}][a-zA-Z_][a-zA-Z_0-9-]*" ;
+    leaf STYLE_ID = "[-a-zA-Z_][-a-zA-Z_0-9]*" ;
+    leaf STYLE_VALUE = "([^;:]*)" ;
 }
     """.trimIndent()
 }

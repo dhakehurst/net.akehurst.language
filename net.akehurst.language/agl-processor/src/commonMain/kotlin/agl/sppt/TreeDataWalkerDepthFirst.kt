@@ -20,11 +20,11 @@ package net.akehurst.language.agl.sppt
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.MutableStack
 
-private interface StackData {
+internal interface StackData {
 
 }
 
-private data class StackInfo(
+internal data class StackInfo(
     val done: Boolean,
     override val node: SpptDataNode,
 
@@ -53,7 +53,7 @@ private data class StackInfo(
     override val totalChildrenFromAllAlternatives: Int get() = numChildrenAlternatives.values.fold(0) { acc, it -> acc + it }
 }
 
-private data class AlternativesInfo(
+internal data class AlternativesInfo(
     val node: SpptDataNode,
     val isRoot: Boolean
 ) : StackData {

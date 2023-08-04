@@ -17,18 +17,15 @@
 package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
-import net.akehurst.language.api.sppt.SPPTBranch
-import net.akehurst.language.api.sppt.SPPTLeaf
-import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
+import net.akehurst.language.api.sppt.*
 
 
 internal class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, List<String>> {
 
-    val lines = mutableListOf<MutableList<SPPTLeaf>>()
+    val lines = mutableListOf<MutableList<LeafData>>()
     private lateinit var inputFromString: InputFromString
 
-    fun MutableList<MutableList<SPPTLeaf>>.getOrCreate(index: Int): MutableList<SPPTLeaf> {
+    fun MutableList<MutableList<LeafData>>.getOrCreate(index: Int): MutableList<LeafData> {
         if (index >= this.size) {
             for (i in this.size - 1 until index) {
                 this.add(mutableListOf())
@@ -49,15 +46,17 @@ internal class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, List<Str
     }
 
     override fun visitLeaf(target: SPPTLeaf, arg: List<String>) {
-        target.setTags(arg+target.name)
+        val tags = arg + target.name
         when {
             target.isEmptyMatch -> { /* do nothing */
             }
+
             target.eolPositions.isEmpty() -> {
                 //(target.tagList as MutableList<String>).addAll(arg)
                 //(target.tagList as MutableList<String>).add(target.name)
-                lines.getOrCreate(target.location.line - 1).add(target)
+                lines.getOrCreate(target.location.line - 1).add(LeafData(target.name, target.location, target.matchedText, tags))
             }
+
             else -> {
                 if (target is SPPTLeafFromInput) {
                     val rr = target.runtimeRule
@@ -68,8 +67,7 @@ internal class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, List<Str
                     var column = target.location.column
                     target.eolPositions.forEach { eolPos ->
                         val lineText = target.matchedText.substring(indexPos, eolPos + 1)
-                        val segmentLeaf = SPPTLeafFromInput(target.input, rr, startLinePos, startLinePos + lineText.length, target.priority)
-                        segmentLeaf.setTags(arg+target.name)
+                        val segmentLeaf = LeafData(target.name, target.location, lineText, tags)
                         //val segmentLeaf = SPPTLeafDefault(rr, InputLocation(startLinePos + startPos, column, line, lineText.length), false, lineText, target.priority)
                         lines.getOrCreate(line - 1).add(segmentLeaf)
                         line++
@@ -82,8 +80,7 @@ internal class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, List<Str
                     val lineText = target.matchedText.substring(indexPos)
                     if (lineText.isNotEmpty()) {
                         //TODO: use SPPTLeafFromInput
-                        val segmentLeaf = SPPTLeafFromInput(target.input, rr, startLinePos, startLinePos + lineText.length, target.priority)
-                        segmentLeaf.setTags(arg+target.name)
+                        val segmentLeaf = LeafData(target.name, target.location, lineText, tags)
                         //val segmentLeaf = SPPTLeafDefault(rr, InputLocation(startLinePos + startPos, column, line, lineText.length), false, lineText, target.priority)
                         lines.getOrCreate(line - 1).add(segmentLeaf)
                     }

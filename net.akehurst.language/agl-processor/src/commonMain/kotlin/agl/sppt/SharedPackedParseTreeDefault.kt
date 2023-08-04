@@ -17,10 +17,7 @@
 package net.akehurst.language.agl.sppt
 
 
-import net.akehurst.language.api.sppt.SPPTLeaf
-import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.sppt.SpptWalker
+import net.akehurst.language.api.sppt.*
 
 //TODO: currently this has to be public, because otherwise kotlin does not
 // use the non-mangled names for properties
@@ -34,6 +31,8 @@ import net.akehurst.language.api.sppt.SpptWalker
         root.tree = this
     }
 
+    override val treeData: TreeDataComplete<SpptDataNode> get() = TODO("not implemented")
+
     override fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean) {
         TODO("not implemented")
     }
@@ -42,17 +41,17 @@ import net.akehurst.language.api.sppt.SpptWalker
         return this.root.contains(other.root)
     }
 
-    private val _tokensByLine: List<List<SPPTLeaf>> by lazy {
+    private val _tokensByLine: List<List<LeafData>> by lazy {
         val visitor = TokensByLineVisitor()
         visitor.visitTree(this, emptyList())
         visitor.lines
     }
 
-    override fun tokensByLineAll(): List<List<SPPTLeaf>> {
+    override fun tokensByLineAll(): List<List<LeafData>> {
         return this._tokensByLine
     }
 
-    override fun tokensByLine(line: Int): List<SPPTLeaf> {
+    override fun tokensByLine(line: Int): List<LeafData> {
         val tbl = this._tokensByLine
         return if (tbl.isEmpty() || line >= tbl.size) {
             emptyList()

@@ -97,7 +97,7 @@ class GrammarTypeModelBuilder(
                 else -> error("Cannot map to TypeDefinition: $it")
             }
         }
-        val t = UnnamedSuperTypeType(sts.map { TypeUsage.ofType(it) }, false)
+        val t = _model.createUnnamedSuperTypeType(sts.map { TypeUsage.ofType(it) })
         _model.addTypeFor(name, TypeUsage.ofType(t))
         return t
     }
@@ -106,7 +106,7 @@ class GrammarTypeModelBuilder(
         val b = SubtypeListBuilder(_model, _typeReferences)
         b.init()
         val stu = b.build()
-        val t = UnnamedSuperTypeType(stu, false)
+        val t = _model.createUnnamedSuperTypeType(stu)
         _model.addTypeFor(name, TypeUsage.ofType(t))
         return t
     }

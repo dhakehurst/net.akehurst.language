@@ -3097,6 +3097,200 @@ class test_SyntaxAnalyserSimple {
         }
     }
 
+    @Test
+    fun _8_e_2() {
+        val grammarStr = """
+            namespace test
+            grammar I {
+                S = A | SA ;
+                SA = S A ;
+                A = a ;
+                leaf a = 'a' ;
+            }
+            grammar O {
+               S = B | SBC ;
+               SBC = S BC ;
+               BC = B | C ;
+               B = 'b' I::S 'b' ;
+               C = 'c' I::S 'c' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+        val Inner = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("A") }
+                concatenation { ref("SA") }
+            }
+            concatenation("SA") { ref("S"); ref("A") }
+            concatenation("A") { ref("a") }
+            literal("a", "a")
+        }
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("B") }
+                concatenation { ref("SBC") }
+            }
+            concatenation("SBC") { ref("S"); ref("BC") }
+            choice("BC", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("B") }
+                concatenation { ref("C") }
+            }
+            concatenation("B") { literal("b"); ref("§I§S§embedded1"); literal("b"); }
+            concatenation("C") { literal("c"); ref("§I§S§embedded1"); literal("c") }
+            embedded("§I§S§embedded1", Inner, "S")
+        })
+
+        val tests = mutableListOf<TestData>()
+        tests.define(
+            "bab",
+            """
+            S { B {
+              'b'
+              §I§S§embedded1 { S { A { 'a' } } }
+              'b'
+            } } 
+        """
+        ) {
+            asmSimple {
+                element("B") {
+                    propertyElementExplicitType("s", "A") {
+                        propertyString("a", "a")
+                    }
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test
+    fun _8_e_3() {
+        // S = 'a' | S 'a' ;
+        // S = B | S B;
+        // B = 'b' Inner::S 'b' | 'c' Inner::S 'c' ;
+        val grammarStr = """
+            namespace test
+            grammar I {
+                S = 'a' | S 'a' ;
+            }
+            grammar O {
+               S = B | S B;
+               B = 'b' I::S 'b' | 'c' I::S 'c' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+        val Inner = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { literal("a") }
+                concatenation { ref("S"); literal("a") }
+            }
+        }
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("B") }
+                concatenation { ref("S"); ref("B") }
+            }
+            choice("B", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { literal("b"); ref("§I§S§embedded1"); literal("b"); }
+                concatenation { literal("c"); ref("§I§S§embedded1"); literal("c") }
+            }
+            embedded("§I§S§embedded1", Inner, "S")
+        })
+
+        val tests = mutableListOf<TestData>()
+        tests.define(
+            "bab", """
+            S { B {
+              'b'
+              §I§S§embedded1 { S { 'a' } }
+              'b'
+            } }
+        """
+        ) {
+            asmSimple {
+                tuple {
+                    propertyTuple("b") {
+                        propertyString("b", "b")
+                        propertyString("s", "a")
+                        propertyString("b2", "b")
+                    }
+                    propertyString("s", "d")
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
+    @Test
+    fun _8_e_4() {
+        val grammarStr = """
+            namespace test
+            grammar I {
+                S = A | SA ;
+                SA = S A ;
+                A = a ;
+                leaf a = 'a' ;
+            }
+            grammar O {
+               S = B | S BC ;
+               BC = B | C ;
+               B = 'b' I::S 'b' ;
+               C = 'c' I::S 'c' ;
+            }
+        """.trimIndent()
+        val proc = testProc(grammarStr)
+        val Inner = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("A") }
+                concatenation { ref("SA") }
+            }
+            concatenation("SA") { ref("S"); ref("A") }
+            concatenation("A") { ref("a") }
+            literal("a", "a")
+        }
+        checkRuntimeGrammar(proc, runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("B") }
+                concatenation { ref("S"); ref("BC") }
+            }
+            choice("BC", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("B") }
+                concatenation { ref("C") }
+            }
+            concatenation("B") { literal("b"); ref("§I§S§embedded1"); literal("b"); }
+            concatenation("C") { literal("c"); ref("§I§S§embedded1"); literal("c") }
+            embedded("§I§S§embedded1", Inner, "S")
+        })
+
+        val tests = mutableListOf<TestData>()
+        tests.define(
+            "bab", """
+            S { B {
+              'b'
+              §I§S§embedded1 { S { A { 'a' } } }
+              'b'
+            } } 
+        """
+        ) {
+            asmSimple {
+                tuple {
+                    propertyTuple("b") {
+                        propertyString("b", "b")
+                        propertyString("s", "a")
+                        propertyString("b2", "b")
+                    }
+                    propertyString("s", "d")
+                }
+            }
+        }
+        for (data in tests) {
+            test(proc, data)
+        }
+    }
+
     // --- Misc ---
     @Test
     fun _9_nesting() {

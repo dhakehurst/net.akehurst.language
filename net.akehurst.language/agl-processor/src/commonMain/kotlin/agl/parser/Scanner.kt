@@ -20,18 +20,19 @@ package net.akehurst.language.agl.agl.parser
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTLeafFromInput
+import net.akehurst.language.api.sppt.LeafData
 import net.akehurst.language.api.sppt.SPPTLeaf
 
 internal class Scanner(
-    internal val runtimeRuleSet:RuntimeRuleSet
+    internal val runtimeRuleSet: RuntimeRuleSet
 ) {
 
-    fun scan(inputText: String, includeSkipRules: Boolean): List<SPPTLeaf> {
+    fun scan(inputText: String, includeSkipRules: Boolean): List<LeafData> {
         val undefined = RuntimeRuleSet.UNDEFINED_RULE
         //TODO: improve this algorithm...it is not efficient I think, also doesn't work!
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, inputText)
         var terminals = if (includeSkipRules) this.runtimeRuleSet.terminalRules else this.runtimeRuleSet.nonSkipTerminals
-        val result = mutableListOf<SPPTLeaf>()
+        val result = mutableListOf<LeafData>()
 
         //eliminate tokens that are empty matches
         terminals = terminals.filter { it.isEmptyTerminal.not() }
@@ -67,13 +68,14 @@ internal class Scanner(
                     //TODO: collate unscanned, rather than make a separate token for each char
                     val text = inputText[nextInputPosition].toString()
                     nextInputPosition += text.length
-                    val eolPositions = emptyList<Int>()//TODO calulat
+                    val eolPositions = emptyList<Int>()//TODO calculate
                     val unscanned = SPPTLeafFromInput(input, undefined, startPosition, nextInputPosition, 0)
                     //unscanned.eolPositions = input.eolPositions(text)
-                    result.add(unscanned)
+                    result.add(LeafData(unscanned.name, unscanned.location, unscanned.matchedText, emptyList()))
                 }
+
                 else -> {
-                    result.add(longest)
+                    result.add(LeafData(longest.name, longest.location, longest.matchedText, longest.tagList))
                     nextInputPosition += longest.matchedTextLength
                 }
             }

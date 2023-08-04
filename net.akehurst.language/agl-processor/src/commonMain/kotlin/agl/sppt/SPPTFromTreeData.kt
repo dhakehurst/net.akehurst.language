@@ -21,13 +21,10 @@ import net.akehurst.language.agl.agl.sppt.SpptWalkerToString
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.CompleteNodeIndex
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.api.sppt.SPPTLeaf
-import net.akehurst.language.api.sppt.SPPTNode
-import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.sppt.SpptWalker
+import net.akehurst.language.api.sppt.*
 
 internal class SPPTFromTreeData(
-    val treeData: TreeDataComplete<CompleteNodeIndex>,
+    override val treeData: TreeDataComplete<SpptDataNode>,
     val input: InputFromString,
     override val seasons: Int,
     override val maxNumHeads: Int
@@ -40,7 +37,7 @@ internal class SPPTFromTreeData(
     override val root: SPPTNode
         get() {
             val goalChildren = treeData.childrenFor(treeData.root!!)
-            val userGoal = goalChildren.first().second[0]
+            val userGoal = goalChildren.first().second[0] as CompleteNodeIndex
             val userGoalOption = userGoal.option //TODO: will ther ever by more than 1 element?
             //TODO: if goal is a leaf !
 
@@ -51,7 +48,7 @@ internal class SPPTFromTreeData(
                 val skipChildren = td.completeChildren[sg]!!.values.first().map {
                     td.completeChildren[it]!!.values.first().get(0)
                 }
-                val nug = CompleteNodeIndex(userGoal.state, startPositionBeforeInitialSkip, userGoal.nextInputPositionBeforeSkip, td.root!!.nextInputPositionBeforeSkip!!)
+                val nug = CompleteNodeIndex(userGoal.state, startPositionBeforeInitialSkip, userGoal.nextInputPositionBeforeSkip, td.root!!.nextInputNoSkip)
                 val userGoalChildren = skipChildren + treeData.completeChildren[userGoal]!!.values.first()
                 treeData.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
                 nug
@@ -67,7 +64,7 @@ internal class SPPTFromTreeData(
                             //    child.rulePositions.first { it.rule == possChild.item }
                         }
                     }
-                    val uagsTreeData = this.treeData.embeddedFor(uags) ?: error("No tree-data found for $uags")
+                    val uagsTreeData = this.treeData.embeddedFor(uags) as TreeDataComplete<CompleteNodeIndex>? ?: error("No tree-data found for $uags")
                     SPPTBranchFromTreeData(uagsTreeData, input, rp.rule as RuntimeRule, rp.option, uags.startPosition, uags.nextInputPositionBeforeSkip, -1)
                 }
 
@@ -76,7 +73,15 @@ internal class SPPTFromTreeData(
                     SPPTLeafFromInput(input, uags.firstRule, uags.startPosition, uags.nextInputPositionBeforeSkip, -1)
                 }
 
-                else -> SPPTBranchFromTreeData(treeData, input, userGoal.highestPriorityRule, userGoalOption, startPositionBeforeInitialSkip, uags.nextInputPositionBeforeSkip, -1)
+                else -> SPPTBranchFromTreeData(
+                    treeData as TreeDataComplete<CompleteNodeIndex>,
+                    input,
+                    userGoal.highestPriorityRule,
+                    userGoalOption,
+                    startPositionBeforeInitialSkip,
+                    uags.nextInputPositionBeforeSkip,
+                    -1
+                )
             }
         }
 
@@ -84,17 +89,17 @@ internal class SPPTFromTreeData(
         return this.root.contains(other.root)
     }
 
-    private val _tokensByLine: List<List<SPPTLeaf>> by lazy {
-        val visitor = TokensByLineVisitor()
+    private val _tokensByLine: List<List<LeafData>> by lazy {
+        val visitor = TokensByLineVisitor2(input.text)
         visitor.visitTree(this, emptyList())
         visitor.lines
     }
 
-    override fun tokensByLineAll(): List<List<SPPTLeaf>> {
+    override fun tokensByLineAll(): List<List<LeafData>> {
         return this._tokensByLine
     }
 
-    override fun tokensByLine(line: Int): List<SPPTLeaf> {
+    override fun tokensByLine(line: Int): List<LeafData> {
         val tbl = this._tokensByLine
         return if (tbl.isEmpty() || line >= tbl.size) {
             emptyList()

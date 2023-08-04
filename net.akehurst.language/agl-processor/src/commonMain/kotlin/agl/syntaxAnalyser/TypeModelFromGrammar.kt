@@ -30,20 +30,19 @@ class TypeModelFromGrammar(
     imports: Set<TypeModel> = setOf(GrammarTypeModelStdLib)
 ) : GrammarTypeModelAbstract(namespace, name, rootTypeName, imports) {
     //constructor(grammar: Grammar, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration) : this(listOf(grammar), configuration)
-    private constructor(grammars: List<Grammar>, rootTypeName: String, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration)
-            : this(grammars.last().namespace.qualifiedName, grammars.last().name, rootTypeName) {
+    private constructor(context: Grammar, grammar: Grammar, rootTypeName: String, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration)
+            : this(grammar.namespace.qualifiedName, grammar.name, rootTypeName) {
+        this.contextGrammar = context
         this._configuration = configuration
-        grammars.forEach { g ->
-            this.grammar = g
-            g.allResolvedGrammarRule
-                .filter { it.isLeaf.not() && it.isSkip.not() }
-                .forEach { typeForGrammarRule(it) }
-            this._ruleToType.entries.forEach {
-                val key = it.key
-                val value = it.value
-                super.allRuleNameToType[key] = value
-                super.allTypesByName[value.type.name] = value.type
-            }
+        this.grammar = grammar
+        grammar.allResolvedGrammarRule
+            .filter { it.isLeaf.not() && it.isSkip.not() }
+            .forEach { typeForGrammarRule(it) }
+        this._ruleToType.entries.forEach {
+            val key = it.key
+            val value = it.value
+            super.allRuleNameToType[key] = value
+            super.allTypesByName[value.type.name] = value.type
         }
     }
 
@@ -61,12 +60,22 @@ class TypeModelFromGrammar(
             defaultGoalRuleName: String? = null,
             configuration: TypeModelFromGrammarConfiguration = defaultConfiguration
         ): TypeModelFromGrammar {
-            //val namespace = grammar.namespace
-            //val name = grammar.name
             val goalRuleName = defaultGoalRuleName ?: grammar.grammarRule.first { it.isSkip.not() }.name
             val goalRule = grammar.findNonTerminalRule(goalRuleName) ?: error("Cannot find grammar rule '$goalRuleName'")
             val rootTypeName = configuration.typeNameFor(goalRule)
-            return TypeModelFromGrammar(listOf(grammar), rootTypeName)
+            return TypeModelFromGrammar(grammar, grammar, rootTypeName)
+        }
+
+        fun createWithContextFrom(
+            context: Grammar,
+            grammar: Grammar,
+            defaultGoalRuleName: String? = null,
+            configuration: TypeModelFromGrammarConfiguration = defaultConfiguration
+        ): TypeModelFromGrammar {
+            val goalRuleName = defaultGoalRuleName ?: grammar.grammarRule.first { it.isSkip.not() }.name
+            val goalRule = grammar.findNonTerminalRule(goalRuleName) ?: error("Cannot find grammar rule '$goalRuleName'")
+            val rootTypeName = configuration.typeNameFor(goalRule)
+            return TypeModelFromGrammar(context, grammar, rootTypeName)
         }
     }
 
@@ -75,6 +84,8 @@ class TypeModelFromGrammar(
     private val _typeForRuleItem = mutableMapOf<RuleItem, TypeUsage>()
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredRuleType, String>, Int>()
     private var _configuration: TypeModelFromGrammarConfiguration? = null
+
+    private lateinit var contextGrammar: Grammar
 
     // temp var - changes for each Grammar processed
     private lateinit var grammar: Grammar
@@ -137,7 +148,7 @@ class TypeModelFromGrammar(
                 }
 
                 is Embedded -> {
-                    val embTmfg = TypeModelFromGrammar.createFrom(ruleItem.embeddedGrammarReference.resolved!!) //TODO: check for null
+                    val embTmfg = TypeModelFromGrammar.createWithContextFrom(this.contextGrammar, ruleItem.embeddedGrammarReference.resolved!!) //TODO: check for null
                     val embTm = embTmfg
                     embTm.findTypeUsageForRule(ruleItem.name) ?: error("Should never happen")
                 }
@@ -273,10 +284,10 @@ class TypeModelFromGrammar(
                     }
                 }
 
-                else -> TypeUsage.ofType(UnnamedSuperTypeType(subtypes.map { it }, false))
+                else -> TypeUsage.ofType(super.createUnnamedSuperTypeType(subtypes.map { it }))
             }
 
-            else -> TypeUsage.ofType(UnnamedSuperTypeType(subtypes.map { it }, true))
+            else -> TypeUsage.ofType(super.createUnnamedSuperTypeType(subtypes.map { it }))
         }
     }
 
@@ -285,7 +296,7 @@ class TypeModelFromGrammar(
         return when {
             subtypes.all { it.type is NothingType } -> TypeUsage.ofType(NothingType, emptyList(), subtypes.any { it.nullable })
             subtypes.all { it.type is PrimitiveType } -> TypeUsage.ofType(StringType, emptyList(), subtypes.any { it.nullable })
-            subtypes.all { it.type is ElementType } -> TypeUsage.ofType(UnnamedSuperTypeType(subtypes.map { it }, true))
+            subtypes.all { it.type is ElementType } -> TypeUsage.ofType(super.createUnnamedSuperTypeType(subtypes.map { it }))
             subtypes.all { it.type is ListSimpleType } -> { //=== PrimitiveType.LIST } -> {
                 val itemType = TypeUsage.ofType(AnyType)//TODO: compute better elementType ?
                 val choiceType = ListSimpleType.ofType(itemType)
@@ -301,10 +312,10 @@ class TypeModelFromGrammar(
                     }
                 }
 
-                else -> TypeUsage.ofType(UnnamedSuperTypeType(subtypes.map { it }, false))
+                else -> TypeUsage.ofType(super.createUnnamedSuperTypeType(subtypes.map { it }))
             }
 
-            else -> TypeUsage.ofType(UnnamedSuperTypeType(subtypes.map { it }, false))
+            else -> TypeUsage.ofType(super.createUnnamedSuperTypeType(subtypes.map { it }))
         }
     }
 
@@ -424,7 +435,7 @@ class TypeModelFromGrammar(
 
     //TODO: combine with above by passing in TypeModel
     private fun createPropertyDeclarationForEmbedded(et: StructuredRuleType, ruleItem: Embedded, childIndex: Int) {
-        val embTm = TypeModelFromGrammar.createFrom(ruleItem.embeddedGrammarReference.resolved!!, ruleItem.embeddedGoalName) //TODO: configuration
+        val embTm = TypeModelFromGrammar.createWithContextFrom(this.contextGrammar, ruleItem.embeddedGrammarReference.resolved!!, ruleItem.embeddedGoalName) //TODO: configuration
         val refRule = ruleItem.referencedRule(ruleItem.embeddedGrammarReference.resolved!!) //TODO: check for null
         val rhs = refRule.rhs
         when (rhs) {
@@ -483,13 +494,14 @@ class TypeModelFromGrammar(
                     else -> UNNAMED_PRIMITIVE_PROPERTY_NAME
                 }
 
-                is Embedded -> ruleItem.embeddedGoalName
+                is Embedded -> "${ruleItem.embeddedGoalName.lower()}"
+                //is Embedded -> "${ruleItem.embeddedGrammarReference.resolved!!.name}_${ruleItem.embeddedGoalName}"
                 is NonTerminal -> ruleItem.name
                 is Group -> UNNAMED_GROUP_PROPERTY_NAME
                 else -> error("Internal error, unhandled subtype of SimpleItem")
             }
 
-            else -> _configuration!!.propertyNameFor(ruleItem, ruleItemType)
+            else -> _configuration!!.propertyNameFor(contextGrammar, ruleItem, ruleItemType)
         }
     }
 
@@ -510,6 +522,7 @@ class TypeModelFromGrammar(
         }
         return uniqueName
     }
+
 
     override fun toString(): String = "TypeModel(${this.qualifiedName})"
 }

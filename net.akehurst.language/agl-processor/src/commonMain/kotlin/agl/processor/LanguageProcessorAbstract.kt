@@ -40,7 +40,7 @@ import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.sppt.SPPTLeaf
+import net.akehurst.language.api.sppt.LeafData
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
@@ -134,7 +134,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         return this
     }
 
-    override fun scan(sentence: String): List<SPPTLeaf> {
+    override fun scan(sentence: String): List<LeafData> {
         return this._scanner.scan(sentence, false)
     }
 

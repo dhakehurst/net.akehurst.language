@@ -15,127 +15,107 @@
  */
 package net.akehurst.language.agl.grammar.scopes
 
-import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
-import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.agl.collections.toSeparatedList
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromTreeDataAbstract
+import net.akehurst.language.agl.syntaxAnalyser.locationIn
 import net.akehurst.language.api.grammar.GrammarItem
-import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.sppt.SPPTBranch
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.sppt.SpptDataNodeInfo
 
-class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl> {
+class AglScopesSyntaxAnalyser : SyntaxAnalyserFromTreeDataAbstract<ScopeModelAgl>() {
+
+    init {
+        super.register(this::declarations)
+        super.register(this::rootIdentifiables)
+        super.register(this::scopes)
+        super.register(this::scope)
+        super.register(this::identifiables)
+        super.register(this::identifiable)
+        super.register(this::referencesOpt)
+        super.register(this::references)
+        super.register(this::referenceDefinitions)
+        super.register(this::referenceDefinition)
+        super.register(this::typeReferences)
+        super.register(this::propertyReferenceOrNothing)
+        super.register(this::typeReference)
+        super.register(this::propertyReference)
+    }
 
     data class PropertyValue(
         val asmObject: Any,
         val value: String
     )
 
-    override val locationMap = mutableMapOf<Any, InputLocation>()
-
-    private val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
-
-    override fun clear() {
-        this.locationMap.clear()
-        this.issues.clear()
-    }
-
     override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
         return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<ScopeModelAgl> {
-        val asm = this.declarations(sppt.root.asBranch)
-        return SyntaxAnalysisResultDefault(asm, issues,locationMap)
-    }
-
     // declarations = rootIdentifiables scopes referencesOpt
-    private fun declarations(node: SPPTBranch): ScopeModelAgl {
+    private fun declarations(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): ScopeModelAgl {
         val asm = ScopeModelAgl()
-        val rootIdentifiables = this.rootIdentifiables(node.branchChild(0))
-        val scopes = this.scopes(node.branchChild(1))
-        val references = this.referencesOpt(node.branchChild(2))
+        val rootIdentifiables = children[0] as List<Identifiable>
+        val scopes = children[1] as List<ScopeDefinition>
+        val referencesOpt = children[2] as List<ReferenceDefinition>?
         asm.scopes[ScopeModelAgl.ROOT_SCOPE_TYPE_NAME]?.identifiables?.addAll(rootIdentifiables)
-        scopes.forEach {
-            asm.scopes[it.scopeFor] = it
-        }
-        asm.references.addAll(references)
-        locationMap[asm] = node.location
+        scopes.forEach { asm.scopes[it.scopeFor] = it }
+        referencesOpt?.let { asm.references.addAll(referencesOpt) }
         return asm
     }
 
     // rootIdentifiables = identifiable*
-    private fun rootIdentifiables(node: SPPTBranch): List<Identifiable> {
-        return node.branchNonSkipChildren.map {
-            this.identifiable(it.asBranch)
-        }
-    }
+    private fun rootIdentifiables(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<Identifiable> =
+        (children as List<Identifiable?>).filterNotNull()
 
-    // scopes = scope+
-    private fun scopes(node: SPPTBranch): List<ScopeDefinition> {
-        return node.branchNonSkipChildren.map {
-            this.scope(it.asBranch)
-        }
-    }
+    // scopes = scope* ;
+    private fun scopes(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<ScopeDefinition> =
+        (children as List<ScopeDefinition?>).filterNotNull()
 
     // scope = 'scope' typeReference '{' identifiables '}
-    private fun scope(node: SPPTBranch): ScopeDefinition {
-        val scopeFor = this.typeReference(node.branchChild(0))
-        val identifiables = this.identifiables(node.branchChild(1))
-        val scope = ScopeDefinition(scopeFor)
+    private fun scope(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): ScopeDefinition {
+        val typeReference = children[1] as String
+        val identifiables = children[3] as List<Identifiable>
+        val scope = ScopeDefinition(typeReference)
         scope.identifiables.addAll(identifiables)
-        locationMap[scope] = node.location
-        locationMap[PropertyValue(scope, "typeReference")] = node.branchChild(0).location
+        locationMap[PropertyValue(scope, "typeReference")] = locationMap[typeReference]!!
         return scope
     }
 
     // identifiables = identifiable*
-    private fun identifiables(node: SPPTBranch): List<Identifiable> {
-        return node.branchNonSkipChildren.map {
-            this.identifiable(it.asBranch)
-        }
-    }
+    private fun identifiables(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<Identifiable> =
+        (children as List<Identifiable?>).filterNotNull()
 
     // identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
-    private fun identifiable(node: SPPTBranch): Identifiable {
-        val typeName = this.typeReference(node.branchChild(0))
-        val propertyName = this.propertyReferenceOrNothing(node.branchChild(1))
+    private fun identifiable(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): Identifiable {
+        val typeName = children[1] as String
+        val propertyName = children[3] as String
         val identifiable = Identifiable(typeName, propertyName)
-        locationMap[identifiable] = node.location
-        locationMap[PropertyValue(identifiable, "typeReference")] = node.branchChild(0).location
-        locationMap[PropertyValue(identifiable, "propertyName")] = node.branchChild(1).location
+        locationMap[PropertyValue(identifiable, "typeReference")] = locationMap[typeName]!!
+        locationMap[PropertyValue(identifiable, "propertyName")] = locationMap[propertyName]!!
         return identifiable
     }
 
     // referencesOpt = references?
-    private fun referencesOpt(node: SPPTBranch): List<ReferenceDefinition> {
-        return node.branchNonSkipChildren.flatMap {
-            this.references(it.asBranch)
-        }
-    }
+    private fun referencesOpt(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<ReferenceDefinition>? =
+        children[0] as List<ReferenceDefinition>?
 
     // references = 'references' '{' referenceDefinitions '}'
-    private fun references(node: SPPTBranch): List<ReferenceDefinition> {
-        return this.referenceDefinitions(node.branchChild(0))
-    }
+    private fun references(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<ReferenceDefinition> =
+        children[2] as List<ReferenceDefinition>
 
     // referenceDefinitions = referenceDefinition*
-    private fun referenceDefinitions(node: SPPTBranch): List<ReferenceDefinition> {
-        return node.branchNonSkipChildren.map {
-            this.referenceDefinition(it.asBranch)
-        }
-    }
+    private fun referenceDefinitions(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<ReferenceDefinition> =
+        (children as List<ReferenceDefinition?>).filterNotNull()
 
     // referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
-    private fun referenceDefinition(node: SPPTBranch): ReferenceDefinition {
-        val inTypeName = this.typeReference(node.branchChild(0))
-        val referringPropertyName = this.typeReference(node.branchChild(1))
-        val typeReferences = this.typeReferences(node.branchChild(2))
+    private fun referenceDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): ReferenceDefinition {
+        val inTypeName = children[1] as String
+        val referringPropertyName = children[3] as String
+        val typeReferences = children[5] as List<Pair<String, InputLocation>>
         val def = ReferenceDefinition(inTypeName, referringPropertyName, typeReferences.map { it.first })
-        this.locationMap[def] = node.location
-        locationMap[PropertyValue(def, "in")] = node.branchChild(0).location
-        locationMap[PropertyValue(def, "propertyReference")] = node.branchChild(1).location
+        locationMap[PropertyValue(def, "in")] = locationMap[inTypeName]!!
+        locationMap[PropertyValue(def, "propertyReference")] = locationMap[referringPropertyName]!!
         typeReferences.forEachIndexed { i, n ->
             locationMap[PropertyValue(def, "typeReferences[$i]")] = n.second
         }
@@ -143,16 +123,16 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl> {
     }
 
     // typeReferences = [typeReferences / ',']+
-    private fun typeReferences(node: SPPTBranch): List<Pair<String,InputLocation>> {
-        return node.branchNonSkipChildren.mapIndexed { i, n ->
-            val ref = this.typeReference(n.asBranch)
-            Pair(ref,n.location)
+    private fun typeReferences(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<Pair<String, InputLocation>> {
+        return children.toSeparatedList<String, String>().items.mapIndexed { i, n ->
+            val ref = n as String
+            Pair(ref, nodeInfo.node.locationIn(sentence))
         }
     }
 
     // propertyReferenceOrNothing = '§nothing' | propertyReference
-    private fun propertyReferenceOrNothing(node: SPPTBranch): String {
-        val text = node.nonSkipMatchedText
+    private fun propertyReferenceOrNothing(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): String {
+        val text = children[0] as String
         return when (text) {
             "§nothing" -> ScopeModelAgl.IDENTIFY_BY_NOTHING
             else -> text
@@ -160,12 +140,12 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyser<ScopeModelAgl> {
     }
 
     // typeReference = IDENTIFIER
-    private fun typeReference(node: SPPTBranch): String {
-        return node.nonSkipMatchedText
+    private fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): String {
+        return children[0] as String
     }
 
     // propertyReference = IDENTIFIER
-    private fun propertyReference(node: SPPTBranch): String {
-        return node.nonSkipMatchedText
+    private fun propertyReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): String {
+        return children[0] as String
     }
 }

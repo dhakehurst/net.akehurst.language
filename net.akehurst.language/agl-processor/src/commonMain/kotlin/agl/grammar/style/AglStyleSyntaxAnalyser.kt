@@ -15,94 +15,67 @@
  */
 package net.akehurst.language.agl.grammar.style
 
-import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
-import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.agl.collections.toSeparatedList
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromTreeDataAbstract
 import net.akehurst.language.api.grammar.GrammarItem
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.sppt.SPPTBranch
-import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.style.AglStyle
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.style.AglStyleRule
 
-
-internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<AglStyleModel> {
+internal class AglStyleSyntaxAnalyser : SyntaxAnalyserFromTreeDataAbstract<AglStyleModel>() {
 
     companion object {
         //not sure if this should be here or in grammar object
         const val KEYWORD_STYLE_ID = "\$keyword"
     }
 
-    override val locationMap = mutableMapOf<Any, InputLocation>()
-
-    private val _issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
-
-    override fun clear() {
-        locationMap.clear()
-        _issues.clear()
+    init {
+        super.register(this::rules)
+        super.register(this::rule)
+        super.register(this::selectorExpression)
+        super.register(this::selectorAndComposition)
+        super.register(this::selectorSingle)
+        super.register(this::styleList)
+        super.register(this::style)
     }
 
     override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
         return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<AglStyleModel> {
-        val rules: List<AglStyleRule> = this.rules(sppt.root.asBranch, sppt.root.asBranch.branchNonSkipChildren, "")
-        return SyntaxAnalysisResultDefault(AglStyleModelDefault(rules), _issues,locationMap)
-    }
-
     // rules : rule* ;
-    fun rules(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<AglStyleRule> {
-        return if (children.isEmpty()) {
-            emptyList()
-        } else {
-            children.mapIndexed { index, it ->
-                this.rule(it, it.branchNonSkipChildren, arg)
-            }
-        }
-    }
+    fun rules(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): AglStyleModelDefault =
+        AglStyleModelDefault((children as List<AglStyleRule?>).filterNotNull())
 
     // rule = selectorExpression '{' styleList '}' ;
-    fun rule(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): AglStyleRule {
-        val selector = selectorExpression(children[0], children[0].branchNonSkipChildren, arg)  //TODO: ? selector combinations, and/or/contains etc
+    fun rule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): AglStyleRule {
+        val selector = children[0] as List<String> //TODO: ? selector combinations, and/or/contains etc
         val rule = AglStyleRule(selector)
-        val styles: List<AglStyle> = this.styleList(children[1], children[1].branchNonSkipChildren, arg)
-        styles.forEach {
-            rule.styles[it.name] = it
-        }
-        val asm = rule
-        this.locationMap[asm] = target.location
-        return asm
+        val styles: List<AglStyle> = children[2] as List<AglStyle>
+        styles.forEach { rule.styles[it.name] = it }
+        return rule
     }
 
     // selectorExpression
     //             = selectorSingle
     //             | selectorAndComposition
     //             ; //TODO
-    fun selectorExpression(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<String> {
-        return when (children[0].name) {
-            "selectorSingle" -> selectorSingle(children[0], children[0].branchNonSkipChildren, arg)
-            "selectorAndComposition" -> selectorAndComposition(children[0], children[0].branchNonSkipChildren, arg)
-            else -> error("Internal Error (AglStyleSyntaxAnalyser):Unhandled choice in 'selectorExpression' of '${children[0].name}'")
-        }
-    }
+    fun selectorExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<String> =
+        children[0] as List<String>
 
     // selectorAndComposition = [selectorSingle /',']2+ ;
-    fun selectorAndComposition(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<String> {
-        return children.flatMap {
-            selectorSingle(it, it.branchNonSkipChildren, arg)
-        }
-    }
+    fun selectorAndComposition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<String> =
+        (children as List<String>).toSeparatedList<List<String>, String>().items.flatten()
 
     // selectorSingle = LITERAL | PATTERN | IDENTIFIER ;
-    fun selectorSingle(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<String> {
+    fun selectorSingle(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<String> {
         // Must match what is done in AglGrammarSyntaxAnalyser.terminal,
         // but keep the enclosing (single or double) quotes
-        val isPattern = target.nonSkipChildren[0].name == "PATTERN"
-        val mt = target.nonSkipMatchedText
+        val isPattern = nodeInfo.node.rule.tag == "PATTERN"
+        val mt = children[0] as String
         //val escaped = mt.substring(1, mt.length - 1)
         val value = if (isPattern) {
             mt.replace("\\\"", "\"")
@@ -114,18 +87,13 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyser<AglStyleModel> {
     }
 
     // styleList = style* ;
-    fun styleList(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): List<AglStyle> {
-        return children.mapIndexed { index, it ->
-            this.style(it, it.branchNonSkipChildren, arg)
-        }
-    }
+    fun styleList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<AglStyle> =
+        (children as List<AglStyle?>).filterNotNull()
 
     // style = STYLE_ID ':' STYLE_VALUE ';' ;
-    fun style(target: SPPTBranch, children: List<SPPTBranch>, arg: Any?): AglStyle {
-        val name = target.nonSkipChildren[0].nonSkipMatchedText
-        val value = target.nonSkipChildren[2].nonSkipMatchedText
-        val asm = AglStyle(name, value)
-        this.locationMap[asm] = target.location
-        return asm
+    fun style(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): AglStyle {
+        val name = children[0] as String
+        val value = children[2] as String
+        return AglStyle(name, value)
     }
 }

@@ -17,24 +17,55 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.parser.InputFromString
+import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
+import net.akehurst.language.agl.sppt.SPPTFromTreeData
 import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.SyntaxAnalysisResult
+import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.sppt.SpptWalker
 import net.akehurst.language.collections.mutableStackOf
+import kotlin.reflect.KFunction3
 
 typealias BranchHandler2<T> = (SpptDataNodeInfo, children: List<Any?>, Any?) -> T
+
+val SpptDataNode.isEmptyMatch get() = this.startPosition == this.nextInputPosition
+fun SpptDataNode.locationIn(sentence: String) = InputFromString.locationFor(sentence, this.startPosition, this.nextInputPosition - this.startPosition)
+fun SpptDataNode.matchedTextNoSkip(sentence: String) = sentence.substring(this.startPosition, this.nextInputNoSkip)
 
 abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAnalyser<AsmType> {
 
     private val branchHandlers: MutableMap<String, BranchHandler2<*>> = mutableMapOf()
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
+    val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
-    protected fun <T> register(branchName: String, handler: BranchHandler2<T>) {
+    override fun clear() {
+        this.locationMap.clear()
+        this.issues.clear()
+    }
+
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<AsmType> {
+        val sentence = (sppt as SPPTFromTreeData).input.text
+        val treeData = (sppt as SPPTFromTreeData).treeData
+        val grammars = this.walkTree<AsmType>(sentence, treeData, false)
+        return SyntaxAnalysisResultDefault(grammars, issues, locationMap)
+    }
+
+
+    protected fun <T> registerFor(branchName: String, handler: BranchHandler2<T>) {
         this.branchHandlers[branchName] = handler
+    }
+
+    protected fun <T> register(handler: KFunction3<SpptDataNodeInfo, List<Any?>, String, T>) {
+        this.branchHandlers[handler.name] = handler as BranchHandler2<T>
     }
 
     private fun <T> findBranchHandler(branchName: String, begin: Boolean): BranchHandler2<T>? {
@@ -92,6 +123,7 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAna
                     stack.push(adjChildren)
                 } else {
                     val obj = handler.invoke(nodeInfo, adjChildren, sentence)
+                    locationMap[obj] = nodeInfo.node.locationIn(sentence)
                     stack.push(obj)
                 }
             }

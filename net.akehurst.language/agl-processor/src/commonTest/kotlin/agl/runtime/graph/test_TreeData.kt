@@ -22,7 +22,9 @@ import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
 import net.akehurst.language.agl.sppt.SPPTParserDefault
+import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.api.processor.AutomatonKind
+import net.akehurst.language.api.sppt.SpptDataNode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -76,7 +78,7 @@ internal class test_TreeData {
         """.trimIndent()
         )
 
-        val actual = SPPTFromTreeData(graph.treeData.complete, InputFromString(rrs.terminalRules.size, sentence), -1, -1)
+        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete<SpptDataNode>, InputFromString(rrs.terminalRules.size, sentence), -1, -1)
 
         assertEquals(sppt.tree.toStringAll, actual.toStringAll)
         assertEquals(sppt.tree, actual)
@@ -132,7 +134,7 @@ internal class test_TreeData {
         """.trimIndent()
         )
 
-        val actual = SPPTFromTreeData(graph.treeData.complete, InputFromString(rrs.terminalRules.size, sentence), -1, -1)
+        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete<SpptDataNode>, InputFromString(rrs.terminalRules.size, sentence), -1, -1)
 
         assertEquals(sppt.tree.toStringAll, actual.toStringAll)
         assertEquals(sppt.tree, actual)

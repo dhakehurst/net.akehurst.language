@@ -43,6 +43,13 @@ abstract class TypeModelAbstract(
     override val imports: Set<TypeModel>
 ) : TypeModel {
 
+    private var _nextUnnamedSuperTypeTypeId = 0
+    private val _unnamedSuperTypes = hashMapOf<List<TypeUsage>, UnnamedSuperTypeType>()
+
+    private var _nextTupleTypeId = 0
+    private val _unnamedTupleTypes = hashMapOf<List<TypeUsage>, TupleType>()
+
+
     override val qualifiedName get() = if (namespace.isBlank()) name else "$namespace.$name"
 
     override val allTypesByName = mutableMapOf<String, TypeDefinition>()
@@ -76,6 +83,28 @@ abstract class TypeModelAbstract(
             existing as ElementType
         }
     }
+
+    override fun createUnnamedSuperTypeType(subtypes: List<TypeUsage>): UnnamedSuperTypeType {
+        val existing = _unnamedSuperTypes[subtypes]
+        return if (null == existing) {
+            val t = UnnamedSuperTypeType(_nextUnnamedSuperTypeTypeId++, subtypes)
+            _unnamedSuperTypes[subtypes] = t
+            t
+        } else {
+            existing
+        }
+    }
+
+//    override fun createTupleType(): TupleType {
+//        val existing = _unnamedSuperTypes[subtypes]
+//        return if (null == existing) {
+//            val t = TupleType(_nextUnnamedSuperTypeTypeId++, subtypes)
+//            _unnamedSuperTypes[subtypes] = t
+//            t
+//        } else {
+//            existing
+//        }
+//    }
 
     override fun hashCode(): Int = qualifiedName.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {

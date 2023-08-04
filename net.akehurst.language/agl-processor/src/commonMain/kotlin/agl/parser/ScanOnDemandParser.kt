@@ -25,12 +25,14 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
+import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.ParseOptions
 import net.akehurst.language.api.processor.ParseResult
+import net.akehurst.language.api.sppt.SpptDataNode
 import kotlin.math.max
 
 internal class ScanOnDemandParser(
@@ -80,7 +82,7 @@ internal class ScanOnDemandParser(
             totalWork += rp.graph.numberOfHeads
         }
 
-        val match = rp.graph.treeData.complete
+        val match = rp.graph.treeData.complete as TreeDataComplete<SpptDataNode>
         return if (match.root != null) {
             //val sppt = SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
             val sppt = SPPTFromTreeData(match, input, seasons, maxNumHeads)

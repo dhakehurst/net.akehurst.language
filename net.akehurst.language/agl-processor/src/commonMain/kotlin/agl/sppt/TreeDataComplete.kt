@@ -21,7 +21,7 @@ import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.api.sppt.SpptWalker
 
-private data class PreferredNode(
+internal data class PreferredNode(
     val rule: Rule,
     val startPosition: Int
 ) {

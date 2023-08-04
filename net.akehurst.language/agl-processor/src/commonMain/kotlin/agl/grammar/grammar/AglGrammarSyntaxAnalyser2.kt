@@ -18,95 +18,73 @@ package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.collections.toSeparatedList
 import net.akehurst.language.agl.grammar.grammar.asm.*
-import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
-import net.akehurst.language.agl.sppt.SPPTFromTreeData
 import net.akehurst.language.agl.syntaxAnalyser.BranchHandler2
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromTreeDataAbstract
+import net.akehurst.language.agl.syntaxAnalyser.locationIn
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SentenceContext
-import net.akehurst.language.api.processor.SyntaxAnalysisResult
-import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
-
 
 internal class AglGrammarSyntaxAnalyser2(
     //val languageRegistry: LanguageRegistryDefault
 ) : SyntaxAnalyserFromTreeDataAbstract<List<Grammar>>() {
-
-    companion object {
-        fun SpptDataNode.locationIn(sentence: String) = InputFromString.locationFor(sentence, this.startPosition, this.nextInputPosition - this.startPosition)
-    }
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
     private val _localStore = mutableMapOf<String, Any>()
 
     init {
-        this.register("grammarDefinition", this::grammarDefinition as BranchHandler2<List<Grammar>>)
-        this.register("namespace", this::namespace as BranchHandler2<Namespace>)
-        this.register("definitions", this::definitions as BranchHandler2<List<Grammar>>)
-        this.register("grammar", this::grammar as BranchHandler2<Grammar>)
-        this.register("extendsOpt", this::extendsOpt as BranchHandler2<List<GrammarReference>>)
-        this.register("extends", this::extends as BranchHandler2<List<GrammarReference>>)
-        this.register("extendsList", this::extendsList as BranchHandler2<List<GrammarReference>>)
-        this.register("rules", this::rules as BranchHandler2<List<GrammarRule>>)
-        this.register("rule", this::rule as BranchHandler2<GrammarItem>)
-        this.register("grammarRule", this::grammarRule as BranchHandler2<GrammarRule>)
-        this.register("preferenceRule", this::preferenceRule as BranchHandler2<PreferenceRule>)
-        this.register("ruleTypeLabels", this::ruleTypeLabels as BranchHandler2<List<String>>)
+        this.registerFor("grammarDefinition", this::grammarDefinition as BranchHandler2<List<Grammar>>)
+        this.registerFor("namespace", this::namespace as BranchHandler2<Namespace>)
+        this.registerFor("definitions", this::definitions as BranchHandler2<List<Grammar>>)
+        this.registerFor("grammar", this::grammar as BranchHandler2<Grammar>)
+        this.registerFor("extendsOpt", this::extendsOpt as BranchHandler2<List<GrammarReference>>)
+        this.registerFor("extends", this::extends as BranchHandler2<List<GrammarReference>>)
+        this.registerFor("extendsList", this::extendsList as BranchHandler2<List<GrammarReference>>)
+        this.registerFor("rules", this::rules as BranchHandler2<List<GrammarRule>>)
+        this.registerFor("rule", this::rule as BranchHandler2<GrammarItem>)
+        this.registerFor("grammarRule", this::grammarRule as BranchHandler2<GrammarRule>)
+        this.registerFor("preferenceRule", this::preferenceRule as BranchHandler2<PreferenceRule>)
+        this.registerFor("ruleTypeLabels", this::ruleTypeLabels as BranchHandler2<List<String>>)
         // this.register("ruleType", this::ruleType as BranchHandler2<GrammarRule>)
-        this.register("rhs", this::rhs as BranchHandler2<RuleItem>)
-        this.register("empty", this::empty as BranchHandler2<RuleItem>)
-        this.register("choice", this::choice as BranchHandler2<RuleItem>)
-        this.register("simpleChoice", this::simpleChoice as BranchHandler2<RuleItem>)
-        this.register("priorityChoice", this::priorityChoice as BranchHandler2<RuleItem>)
-        this.register("ambiguousChoice", this::ambiguousChoice as BranchHandler2<RuleItem>)
-        this.register("concatenation", this::concatenation as BranchHandler2<Concatenation>)
-        this.register("concatenationItem", this::concatenationItem as BranchHandler2<ConcatenationItem>)
-        this.register("simpleItemOrGroup", this::simpleItemOrGroup as BranchHandler2<SimpleItem>)
-        this.register("simpleItem", this::simpleItem as BranchHandler2<SimpleItem>)
-        this.register("listOfItems", this::listOfItems as BranchHandler2<ListOfItems>)
-        this.register("multiplicity", this::multiplicity as BranchHandler2<Pair<Int, Int>>)
-        this.register("range", this::range as BranchHandler2<Pair<Int, Int>>)
-        this.register("rangeUnBraced", this::rangeUnBraced as BranchHandler2<Pair<Int, Int>>)
-        this.register("rangeBraced", this::rangeBraced as BranchHandler2<Pair<Int, Int>>)
-        this.register("rangeMaxOpt", this::rangeMaxOpt as BranchHandler2<Int>)
-        this.register("rangeMax", this::rangeMax as BranchHandler2<Int>)
-        this.register("rangeMaxBounded", this::rangeMaxBounded as BranchHandler2<Int>)
-        this.register("rangeMaxUnbounded", this::rangeMaxUnbounded as BranchHandler2<Int>)
-        this.register("simpleList", this::simpleList as BranchHandler2<SimpleList>)
-        this.register("group", this::group as BranchHandler2<Group>)
-        this.register("groupedContent", this::groupedContent as BranchHandler2<RuleItem>)
-        this.register("separatedList", this::separatedList as BranchHandler2<SeparatedList>)
-        this.register("nonTerminal", this::nonTerminal as BranchHandler2<NonTerminal>)
-        this.register("embedded", this::embedded as BranchHandler2<Embedded>)
-        this.register("terminal", this::terminal as BranchHandler2<Terminal>)
-        this.register("qualifiedName", this::qualifiedName as BranchHandler2<String>)
-        this.register("preferenceOption", this::preferenceOption as BranchHandler2<PreferenceOption>)
-        this.register("choiceNumber", this::choiceNumber as BranchHandler2<Int?>)
-        this.register("associativity", this::associativity as BranchHandler2<Int?>)
-    }
-
-    override fun clear() {
-        locationMap.clear()
-        _issues.clear()
+        this.registerFor("rhs", this::rhs as BranchHandler2<RuleItem>)
+        this.registerFor("empty", this::empty as BranchHandler2<RuleItem>)
+        this.registerFor("choice", this::choice as BranchHandler2<RuleItem>)
+        this.registerFor("simpleChoice", this::simpleChoice as BranchHandler2<RuleItem>)
+        this.registerFor("priorityChoice", this::priorityChoice as BranchHandler2<RuleItem>)
+        this.registerFor("ambiguousChoice", this::ambiguousChoice as BranchHandler2<RuleItem>)
+        this.registerFor("concatenation", this::concatenation as BranchHandler2<Concatenation>)
+        this.registerFor("concatenationItem", this::concatenationItem as BranchHandler2<ConcatenationItem>)
+        this.registerFor("simpleItemOrGroup", this::simpleItemOrGroup as BranchHandler2<SimpleItem>)
+        this.registerFor("simpleItem", this::simpleItem as BranchHandler2<SimpleItem>)
+        this.registerFor("listOfItems", this::listOfItems as BranchHandler2<ListOfItems>)
+        this.registerFor("multiplicity", this::multiplicity as BranchHandler2<Pair<Int, Int>>)
+        this.registerFor("range", this::range as BranchHandler2<Pair<Int, Int>>)
+        this.registerFor("rangeUnBraced", this::rangeUnBraced as BranchHandler2<Pair<Int, Int>>)
+        this.registerFor("rangeBraced", this::rangeBraced as BranchHandler2<Pair<Int, Int>>)
+        this.registerFor("rangeMaxOpt", this::rangeMaxOpt as BranchHandler2<Int>)
+        this.registerFor("rangeMax", this::rangeMax as BranchHandler2<Int>)
+        this.registerFor("rangeMaxBounded", this::rangeMaxBounded as BranchHandler2<Int>)
+        this.registerFor("rangeMaxUnbounded", this::rangeMaxUnbounded as BranchHandler2<Int>)
+        this.registerFor("simpleList", this::simpleList as BranchHandler2<SimpleList>)
+        this.registerFor("group", this::group as BranchHandler2<Group>)
+        this.registerFor("groupedContent", this::groupedContent as BranchHandler2<RuleItem>)
+        this.registerFor("separatedList", this::separatedList as BranchHandler2<SeparatedList>)
+        this.registerFor("nonTerminal", this::nonTerminal as BranchHandler2<NonTerminal>)
+        this.registerFor("embedded", this::embedded as BranchHandler2<Embedded>)
+        this.registerFor("terminal", this::terminal as BranchHandler2<Terminal>)
+        this.registerFor("qualifiedName", this::qualifiedName as BranchHandler2<String>)
+        this.registerFor("preferenceOption", this::preferenceOption as BranchHandler2<PreferenceOption>)
+        this.registerFor("choiceNumber", this::choiceNumber as BranchHandler2<Int?>)
+        this.registerFor("associativity", this::associativity as BranchHandler2<Int?>)
     }
 
     override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
         //TODO
         return emptyList()
-    }
-
-    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<List<Grammar>> {
-        val sentence = (sppt as SPPTFromTreeData).input.text
-        val treeData = (sppt as SPPTFromTreeData).treeData
-        val grammars = this.walkTree<List<Grammar>>(sentence, treeData, false)
-        return SyntaxAnalysisResultDefault(grammars, _issues, locationMap)
     }
 
     // grammarDefinition : namespace definitions ;

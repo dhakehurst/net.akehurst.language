@@ -42,7 +42,7 @@ class test_AglScopes {
             elementType("declarations", "Declarations") {
                 propertyListTypeOf("rootIdentifiables", "Identifiable", false, 0)
                 propertyListTypeOf("scopes", "Scope", false, 1)
-                propertyListTypeOf("references", "Reference", true, 2)
+                propertyListTypeOf("references", "ReferenceDefinition", true, 2)
             }
             // rootIdentifiables = identifiable*
             elementType("rootIdentifiables", "RootIdentifiables") {
