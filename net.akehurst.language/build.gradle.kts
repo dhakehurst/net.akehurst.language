@@ -202,7 +202,7 @@ subprojects {
         archiveClassifier.set("javadoc")
         //from(dokkaHtml.outputDirectory)
     }
-    //tasks.named("publish").get().dependsOn("javadocJar")
+    tasks.named("publish").get().dependsOn("javadocJar")
 
     dependencies {
         "commonTestImplementation"(kotlin("test"))
@@ -217,8 +217,6 @@ subprojects {
         ?: error("Must set project property with Sonatype Password (-P SONATYPE_PASSWORD=<...> or set in ~/.gradle/gradle.properties)")
     project.ext.set("signing.password", sonatype_pwd)
 
-    //tasks.named("publishJsPublicationToMavenLocal").get().dependsOn("signJvm8Publication")
-
     configure<PublishingExtension> {
         repositories {
             maven {
@@ -232,7 +230,7 @@ subprojects {
             }
         }
         publications.withType<MavenPublication> {
-            //artifact(javadocJar.get())
+            artifact(javadocJar.get())
 
             pom {
                 name.set("AGL Processor")
@@ -263,4 +261,12 @@ subprojects {
         val publishing = project.properties["publishing"] as PublishingExtension
         sign(publishing.publications)
     }
+
+    tasks.named("publishJsPublicationToMavenLocal").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
+    tasks.named("publishJvm8PublicationToMavenLocal").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
+    tasks.named("publishKotlinMultiplatformPublicationToMavenLocal").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
+    tasks.named("publishJsPublicationToSonatypeRepository").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
+    tasks.named("publishJvm8PublicationToSonatypeRepository").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
+    tasks.named("publishKotlinMultiplatformPublicationToSonatypeRepository").get().mustRunAfter("signKotlinMultiplatformPublication", "signJvm8Publication", "signJsPublication")
+
 }
