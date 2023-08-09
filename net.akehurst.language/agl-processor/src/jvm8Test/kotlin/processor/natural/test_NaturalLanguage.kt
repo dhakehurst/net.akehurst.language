@@ -90,7 +90,7 @@ class test_NaturalLanguage(val data: Data) {
         assertNotNull(result.sppt, result.issues.toString())
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val resultStr = result.sppt!!.asString
+        val resultStr = result.sppt!!.asSentence
         assertEquals(this.data.sentence, resultStr)
 
     }

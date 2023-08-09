@@ -27,6 +27,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
 
 typealias BranchHandler<T> = (SPPTBranch, List<SPPTBranch>, Any?) -> T
 
+@Deprecated("Use SyntaxAnalyserFromTreeDataAbstract instead")
 abstract class SyntaxAnalyserAbstract<out AsmType : Any> : SyntaxAnalyser<AsmType>, SharedPackedParseTreeVisitor<Any, Any?> {
 
     private var grammarLoader: GrammarLoader? = null
@@ -60,8 +61,9 @@ abstract class SyntaxAnalyserAbstract<out AsmType : Any> : SyntaxAnalyser<AsmTyp
 
     // --- IParseTreeVisitor ---
     override fun visitTree(target: SharedPackedParseTree, arg: Any?): Any {
-        val root = target.root
-        return this.visitNode(root, arg)
+        TODO()
+//        val root = target.root
+//        return this.visitNode(root, arg)
     }
 
     override fun visitLeaf(target: SPPTLeaf, arg: Any?): Any {

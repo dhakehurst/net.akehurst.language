@@ -141,7 +141,7 @@ internal class test_Processor_Ambiguity4 : test_ScanOnDemandParserAbstract() {
               Popt { P {
                 'p'
                 '{'
-                SPopt { eSP { Inner::SP { xopt { §empty } } } }
+                SPopt { eSP : Inner::SP { xopt { §empty } } }
                 '}'
               } }
               RList { §empty }
@@ -175,7 +175,7 @@ internal class test_Processor_Ambiguity4 : test_ScanOnDemandParserAbstract() {
               Popt { P {
                 'p'
                 '{'
-                SPopt {  eSP { Inner::SP { xopt { x:'x' } } } }
+                SPopt {  eSP : Inner::SP { xopt { x:'x' } } }
                 '}'
               } }
               RList { §empty }
@@ -257,7 +257,7 @@ internal class test_Processor_Ambiguity4 : test_ScanOnDemandParserAbstract() {
               Popt { P {
                 'p'
                 '{'
-                SPopt { eSP { Inner::SP { xopt { §empty } } } }
+                SPopt { eSP : Inner::SP { xopt { §empty } } }
                 '}'
               } }
               RList { R {

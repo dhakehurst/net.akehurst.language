@@ -97,7 +97,7 @@ class test_Java8Agl_Literals(val data: Data) {
         val result = processor.parse(this.data.text)
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        val resultStr = result.sppt!!.asString
+        val resultStr = result.sppt!!.asSentence
         assertEquals(this.data.text, resultStr)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }

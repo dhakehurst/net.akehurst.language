@@ -18,4 +18,4 @@ package net.akehurst.language.test
 
 actual annotation class FixMethodOrder(actual val value: MethodSorters)
 
-actual enum class MethodSorters { NAME_ASCENDING }
+actual enum class MethodSorters { NAME_ASCENDING, JVM, DEFAULT }

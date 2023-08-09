@@ -16,7 +16,6 @@
 package net.akehurst.language.agl.processor.sql
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -82,7 +81,7 @@ class test_SQLValid(val data: Data) {
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
-        val resultStr = result.sppt!!.asString
+        val resultStr = result.sppt!!.asSentence
         assertEquals(queryStr, resultStr)
     }
 

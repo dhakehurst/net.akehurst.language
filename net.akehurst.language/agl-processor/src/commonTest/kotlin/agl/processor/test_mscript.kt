@@ -287,7 +287,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("rootVariable", result.sppt!!.root.name)
+        assertEquals("rootVariable", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -298,7 +298,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("expression", result.sppt!!.root.name)
+        assertEquals("expression", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -309,7 +309,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("BOOLEAN", result.sppt!!.root.name)
+        assertEquals("BOOLEAN", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -320,7 +320,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("expression", result.sppt!!.root.name)
+        assertEquals("expression", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -331,7 +331,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("REAL", result.sppt!!.root.name)
+        assertEquals("REAL", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -342,7 +342,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("REAL", result.sppt!!.root.name)
+        assertEquals("REAL", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -353,7 +353,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("REAL", result.sppt!!.root.name)
+        assertEquals("REAL", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -364,7 +364,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("REAL", result.sppt!!.root.name)
+        assertEquals("REAL", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -392,7 +392,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("INTEGER", result.sppt!!.root.name)
+        assertEquals("INTEGER", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -402,7 +402,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.root.name)
+        assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -412,7 +412,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.root.name)
+        assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -423,7 +423,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.root.name)
+        assertEquals("SINGLE_QUOTE_STRING", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -434,7 +434,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("matrix", result.sppt!!.root.name)
+        assertEquals("matrix", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -445,7 +445,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("matrix", result.sppt!!.root.name)
+        assertEquals("matrix", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -456,7 +456,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("matrix", result.sppt!!.root.name)
+        assertEquals("matrix", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -467,7 +467,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("row", result.sppt!!.root.name)
+        assertEquals("row", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -478,7 +478,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("matrix", result.sppt!!.root.name)
+        assertEquals("matrix", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -489,7 +489,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("matrix", result.sppt!!.root.name)
+        assertEquals("matrix", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -500,7 +500,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("matrix", result.sppt!!.root.name)
+        assertEquals("matrix", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test
@@ -510,7 +510,7 @@ grammar Mscript {
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals("matrix", result.sppt!!.root.name)
+        assertEquals("matrix", result.sppt!!.treeData.root!!.rule.tag)
     }
 
     @Test

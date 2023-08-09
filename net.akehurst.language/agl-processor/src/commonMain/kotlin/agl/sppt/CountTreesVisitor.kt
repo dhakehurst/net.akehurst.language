@@ -24,7 +24,8 @@ import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
 internal class CountTreesVisitor : SharedPackedParseTreeVisitor<Int, Unit> {
 
     override fun visitTree(target: SharedPackedParseTree, arg: Unit): Int {
-        return visitNode(target.root, arg)
+        TODO()
+        //return visitNode(target.root, arg)
     }
 
     override fun visitLeaf(target: SPPTLeaf, arg: Unit): Int {

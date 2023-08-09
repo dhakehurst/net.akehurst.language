@@ -35,7 +35,8 @@ internal class TokensByLineVisitor : SharedPackedParseTreeVisitor<Unit, List<Str
     }
 
     override fun visitTree(target: SharedPackedParseTree, arg: List<String>) {
-        return this.visitNode(target.root, arg)
+        TODO()
+//        return this.visitNode(target.root, arg)
     }
 
     override fun visitBranch(target: SPPTBranch, arg: List<String>) {

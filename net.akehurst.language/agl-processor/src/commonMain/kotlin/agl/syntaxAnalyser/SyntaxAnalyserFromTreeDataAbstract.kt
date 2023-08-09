@@ -43,6 +43,7 @@ fun SpptDataNode.matchedTextNoSkip(sentence: String) = sentence.substring(this.s
 abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAnalyser<AsmType> {
 
     private val branchHandlers: MutableMap<String, BranchHandler2<*>> = mutableMapOf()
+    private val branchHandlers_begin: MutableMap<String, BranchHandler2<*>> = mutableMapOf()
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
     val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
@@ -53,35 +54,36 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAna
     }
 
     override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<AsmType> {
-        val sentence = (sppt as SPPTFromTreeData).input.text
+        val sentence = (sppt as SPPTFromTreeData).originalSentence
         val treeData = (sppt as SPPTFromTreeData).treeData
         val grammars = this.walkTree<AsmType>(sentence, treeData, false)
         return SyntaxAnalysisResultDefault(grammars, issues, locationMap)
     }
 
-
-    protected fun <T> registerFor(branchName: String, handler: BranchHandler2<T>) {
-        this.branchHandlers[branchName] = handler
-    }
-
-    protected fun <T> register(handler: KFunction3<SpptDataNodeInfo, List<Any?>, String, T>) {
+    protected fun <T : Any?> register(handler: KFunction3<SpptDataNodeInfo, List<Any?>, String, T>) {
         this.branchHandlers[handler.name] = handler as BranchHandler2<T>
     }
 
-    private fun <T> findBranchHandler(branchName: String, begin: Boolean): BranchHandler2<T>? {
-        val handler: BranchHandler2<T>? = this.branchHandlers[branchName] as BranchHandler2<T>?
+    protected fun <T : Any?> registerFor(branchName: String, handler: BranchHandler2<T>) {
+        this.branchHandlers[branchName] = handler
+    }
+
+    protected fun <T : Any?> registerForBeginHandler(branchName: String, handler: KFunction3<SpptDataNodeInfo, List<Any?>, String, T>) {
+        this.branchHandlers_begin[branchName] = handler as BranchHandler2<T>
+    }
+
+    private fun <T : Any?> findBranchHandler(branchName: String, begin: Boolean): BranchHandler2<T>? {
         return when {
-            begin -> this.branchHandlers["${branchName}_begin"] as BranchHandler2<T>?
-            else -> when (handler) {
-                null -> this.branchHandlers["${branchName}_end"] as BranchHandler2<T>?
-                else -> handler
-            }
+            begin -> this.branchHandlers_begin[branchName] as BranchHandler2<T>?
+            else -> this.branchHandlers[branchName] as BranchHandler2<T>?
         }
     }
 
     fun <T> walkTree(sentence: String, treeData: TreeDataComplete<out SpptDataNode>, skipDataAsTree: Boolean): T {
         val stack = mutableStackOf<Any?>()
         val walker = object : SpptWalker {
+            override fun beginTree() {}
+            override fun endTree() {}
             override fun leaf(nodeInfo: SpptDataNodeInfo) {
                 when {
                     nodeInfo.node.rule.isEmptyTerminal -> {
@@ -116,15 +118,25 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAna
                     else -> children.reversed()
                 }
 
-                val branchName = nodeInfo.node.rule.tag
-                val handler = this@SyntaxAnalyserFromTreeDataAbstract.findBranchHandler<Any>(branchName, false)
-                if (null == handler) {
-                    //error("Cannot find SyntaxAnalyser branch handler method named $branchName or ${branchName}_end")
-                    stack.push(adjChildren)
-                } else {
-                    val obj = handler.invoke(nodeInfo, adjChildren, sentence)
-                    locationMap[obj] = nodeInfo.node.locationIn(sentence)
-                    stack.push(obj)
+                when {
+                    nodeInfo.node.rule.isOptional -> {
+                        val obj = adjChildren[0]
+                        obj?.let { locationMap[obj] = nodeInfo.node.locationIn(sentence) }
+                        stack.push(obj)
+                    }
+
+                    else -> {
+                        val branchName = nodeInfo.node.rule.tag
+                        val handler = this@SyntaxAnalyserFromTreeDataAbstract.findBranchHandler<Any>(branchName, false)
+                        if (null == handler) {
+                            //error("Cannot find SyntaxAnalyser branch handler method named $branchName or ${branchName}_end")
+                            stack.push(adjChildren)
+                        } else {
+                            val obj = handler.invoke(nodeInfo, adjChildren, sentence)
+                            obj?.let { locationMap[obj] = nodeInfo.node.locationIn(sentence) }
+                            stack.push(obj)
+                        }
+                    }
                 }
             }
 

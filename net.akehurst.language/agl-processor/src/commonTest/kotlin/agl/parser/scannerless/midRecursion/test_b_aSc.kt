@@ -63,7 +63,7 @@ internal class test_b_aSc : test_ScanOnDemandParserAbstract() {
         val goal = "S"
 
         val expected = """
-         S|1 { S1 { { 'a' S { 'b' } 'c' } }
+         S|1 { S1 { 'a' S { 'b' } 'c' } }
         """.trimIndent()
 
         super.test(

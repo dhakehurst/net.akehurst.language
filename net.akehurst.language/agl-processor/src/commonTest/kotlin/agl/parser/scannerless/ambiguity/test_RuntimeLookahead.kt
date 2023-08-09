@@ -79,7 +79,7 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
                 } }
               oT { §empty }
             }
-        """
+        """.trimIndent()
 
         super.test(
             rrs = rrs,

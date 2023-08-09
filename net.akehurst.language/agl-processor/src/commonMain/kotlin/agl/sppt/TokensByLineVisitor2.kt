@@ -44,6 +44,9 @@ internal class TokensByLineVisitor2(
         val nodeLabelStack = mutableStackOf<String>()
         val callback = object : SpptWalker {
             override fun error(msg: String, path: () -> List<SpptDataNode>) = Unit
+            override fun beginTree() {}
+
+            override fun endTree() {}
             override fun skip(startPosition: Int, nextInputPosition: Int) = Unit
             override fun leaf(nodeInfo: SpptDataNodeInfo) = processLeaf(nodeInfo, nodeLabelStack.elements)
             override fun beginBranch(nodeInfo: SpptDataNodeInfo) {

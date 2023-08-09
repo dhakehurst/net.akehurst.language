@@ -118,11 +118,11 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               's' '{'
-              I { Inner::TR {
+              I : Inner::TR {
                 optST{ §empty }
                 optRE{ §empty }
                 optTP{ §empty }
-              } }
+              }
               '}'
             }
         """.trimIndent()
@@ -148,11 +148,11 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               's' '{' WS : ' '
-              I { Inner::TR {
+              I : Inner::TR {
                 optST{ §empty }
                 optRE{ §empty }
                 optTP{ §empty }
-              } }
+              }
               '}'
             }
         """.trimIndent()
@@ -178,11 +178,11 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               's' '{'
-              I { Inner::TR {
+              I : Inner::TR {
                 optST{ ST { ID : 'a' } }
                 optRE{ §empty }
                 optTP{ §empty }
-              } }
+              }
               '}'
             }
         """.trimIndent()
@@ -208,12 +208,12 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               's' '{'
-              I { Inner::TR {
+              I : Inner::TR {
                 COMMENT:'/*xx*/'
                 optST{ §empty }
                 optRE{ §empty }
                 optTP{ §empty }
-              } }
+              }
               '}'
             }
         """.trimIndent()

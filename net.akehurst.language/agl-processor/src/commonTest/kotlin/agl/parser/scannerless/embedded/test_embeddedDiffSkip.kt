@@ -105,7 +105,7 @@ internal class test_embeddedDiffSkip : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               'a'
-              gB { Inner::Bs { B{ 'b' } } }
+              gB : Inner::Bs { B{ 'b' } }
               'c'
             }
         """.trimIndent()
@@ -131,7 +131,7 @@ internal class test_embeddedDiffSkip : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               'a'
-              gB { Inner::Bs { B{ 'b' } B { 'b' } } }
+              gB : Inner::Bs { B{ 'b' } B { 'b' } }
               'c'
             }
         """.trimIndent()
@@ -157,7 +157,7 @@ internal class test_embeddedDiffSkip : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               'a'
-              gB { Inner::Bs { B{ 'b' WS { '_' } } B { 'b' } } }
+              gB : Inner::Bs { B{ 'b' WS { '_' } } B { 'b' } }
               'c'
             }
         """.trimIndent()
@@ -184,10 +184,10 @@ internal class test_embeddedDiffSkip : test_ScanOnDemandParserAbstract() {
             S {
               WS { "\s+" : ' ' }
               'a'
-              gB { Inner::Bs {
+              gB : Inner::Bs {
                WS { '_' }
                B{ 'b' WS { '_' } } B { 'b' }
-              } }
+              }
               'c'
             }
         """.trimIndent()

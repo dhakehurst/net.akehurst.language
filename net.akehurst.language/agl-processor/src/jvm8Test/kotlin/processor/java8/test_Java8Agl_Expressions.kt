@@ -101,7 +101,7 @@ class test_Java8Agl_Expressions(val data: Data) {
         val result = processor.parse(this.data.text)
         assertTrue(result.issues.notWidth.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        val resultStr = result.sppt!!.asString
+        val resultStr = result.sppt!!.asSentence
         assertEquals(this.data.text, resultStr)
         assertTrue(2 >= result.sppt!!.maxNumHeads, "number of heads = ${result.sppt!!.maxNumHeads}")
     }

@@ -106,7 +106,7 @@ internal class test_embeddedSupersetSkip : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               'a'
-              gB { Inner::Bs { B{ 'b' } } }
+              gB : Inner::Bs { B{ 'b' } }
               'c'
             }
         """.trimIndent()
@@ -132,7 +132,7 @@ internal class test_embeddedSupersetSkip : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               'a'
-              gB { Inner::Bs { B{ 'b' } B { 'b' } } }
+              gB : Inner::Bs { B{ 'b' } B { 'b' } }
               'c'
             }
         """.trimIndent()
@@ -158,7 +158,7 @@ internal class test_embeddedSupersetSkip : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               'a'
-              gB { Inner::Bs { B{ 'b' WSi:' ' } B { 'b' } } }
+              gB : Inner::Bs { B{ 'b' WSi:' ' } B { 'b' } }
               'c'
             }
         """.trimIndent()
@@ -186,7 +186,7 @@ internal class test_embeddedSupersetSkip : test_ScanOnDemandParserAbstract() {
               WSo : ' '
               'a'
               WSo : ' '
-              gB { Inner::Bs { B{ 'b' WSi:' ' } B { 'b' } } }
+              gB : Inner::Bs { B{ 'b' WSi:' ' } B { 'b' } }
               'c'
             }
         """.trimIndent()
@@ -214,7 +214,7 @@ internal class test_embeddedSupersetSkip : test_ScanOnDemandParserAbstract() {
               WSo : ' '
               'a'
               WSo : ' '
-              gB { Inner::Bs { B{ 'b' WSi:' ' } B { 'b' WSi:' ' } } }
+              gB : Inner::Bs { B{ 'b' WSi:' ' } B { 'b' WSi:' ' } }
               'c'
             }
         """.trimIndent()
@@ -241,10 +241,10 @@ internal class test_embeddedSupersetSkip : test_ScanOnDemandParserAbstract() {
             S {
               WSo : ' '
               'a'
-              gB { Inner::Bs {
-                 COMMENT { "/\*[^*]*\*+(?:[^/*][^*]*\*+)*/" : '/*c*/' }
-                 B{ 'b' WSi:' ' } B { 'b' WSi:' ' } }
-              }
+              gB : Inner::Bs {
+                     COMMENT { "/\*[^*]*\*+(?:[^/*][^*]*\*+)*/" : '/*c*/' }
+                     B{ 'b' WSi:' ' } B { 'b' WSi:' ' }
+                   }
               'c'
             }
         """.trimIndent()
@@ -272,10 +272,13 @@ internal class test_embeddedSupersetSkip : test_ScanOnDemandParserAbstract() {
               WSo : ' '
               'a'
               WSo : ' '
-              gB { Inner::Bs { B{
-                'b'
-                COMMENT { "/\*[^*]*\*+(?:[^/*][^*]*\*+)*/" : '/*c*/' }
-              } B { 'b' WSi : ' ' } } }
+              gB : Inner::Bs {
+                     B {
+                       'b'
+                       COMMENT { "/\*[^*]*\*+(?:[^/*][^*]*\*+)*/" : '/*c*/' }
+                     }
+                     B { 'b' WSi : ' ' }
+                   }
               'c'
             }
         """.trimIndent()
@@ -303,10 +306,10 @@ internal class test_embeddedSupersetSkip : test_ScanOnDemandParserAbstract() {
               WSo : ' '
               'a'
               WSo : ' '
-              gB { Inner::Bs {
+              gB : Inner::Bs {
                 B{ 'b' WSi:' ' }
                 B { 'b' COMMENT { "/\*[^*]*\*+(?:[^/*][^*]*\*+)*/" : '/*c*/' } }
-              } }
+              }
               'c'
             }
         """.trimIndent()

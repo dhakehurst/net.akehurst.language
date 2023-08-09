@@ -17,12 +17,14 @@
 package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.test.FixMethodOrder
+import net.akehurst.language.test.MethodSorters
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-
-class test_AglGrammarSyntaxAnalyser2 {
+@FixMethodOrder(MethodSorters.JVM)
+class test_AglGrammarSyntaxAnalyser {
 
     companion object {
         val aglProc = Agl.registry.agl.grammar.processor!!
@@ -38,7 +40,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
     }
@@ -53,7 +55,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
@@ -70,7 +72,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
@@ -87,7 +89,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
     }
@@ -102,7 +104,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
     }
@@ -117,7 +119,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
     }
@@ -132,7 +134,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
     }
@@ -147,7 +149,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
     }
@@ -162,7 +164,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
@@ -180,7 +182,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
@@ -197,7 +199,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
@@ -214,7 +216,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
@@ -231,7 +233,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
@@ -248,7 +250,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
@@ -265,7 +267,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
@@ -282,7 +284,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
@@ -299,7 +301,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
@@ -316,7 +318,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
@@ -334,7 +336,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
@@ -352,7 +354,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
@@ -369,7 +371,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
@@ -388,7 +390,7 @@ class test_AglGrammarSyntaxAnalyser2 {
         """.trimIndent()
         val sppt = aglProc.parse(sentence).sppt!!
         //println(sppt.toStringAll)
-        val sut = AglGrammarSyntaxAnalyser2()
+        val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 

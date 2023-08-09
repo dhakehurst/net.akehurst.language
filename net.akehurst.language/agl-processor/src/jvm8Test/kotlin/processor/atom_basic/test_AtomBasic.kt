@@ -80,7 +80,7 @@ class test_AtomBasic(val data: Data) {
             val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName("file") })
             assertNotNull(result.sppt, result.issues.toString())
             assertTrue(result.issues.isEmpty())
-            val resultStr = result.sppt!!.asString
+            val resultStr = result.sppt!!.asSentence
             assertEquals(this.data.text, resultStr)
         } else {
             assertFailsWith<LanguageProcessorException>("$data") {

@@ -62,14 +62,14 @@ internal class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
 
         // measure
         val timeRegEx = TimeSource.Monotonic.measureTimedValue {
-            regExParser.parseForGoal(goal, text).sppt
+            regExParser.parseForGoal(goal, text).sppt!!
         }
         val timeChar = TimeSource.Monotonic.measureTimedValue {
-            charParser.parseForGoal(goal, text).sppt
+            charParser.parseForGoal(goal, text).sppt!!
         }
 
-        assertEquals("S", timeRegEx.value?.root?.name)
-        assertEquals("S", timeChar.value?.root?.name)
+        assertEquals("S", timeRegEx.value.treeData.userRoot.rule.tag)
+        assertEquals("S", timeChar.value.treeData.userRoot.rule.tag)
 
         println("- 10 -")
         println("regEx = ${timeRegEx.duration}")
@@ -88,14 +88,14 @@ internal class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         charParser.parseForGoal(goal, text)
 
         val timeRegEx = TimeSource.Monotonic.measureTimedValue {
-            regExParser.parseForGoal(goal, text).sppt
+            regExParser.parseForGoal(goal, text).sppt!!
         }
         val timeChar = TimeSource.Monotonic.measureTimedValue {
-            charParser.parseForGoal(goal, text).sppt
+            charParser.parseForGoal(goal, text).sppt!!
         }
 
-        assertEquals("S", timeRegEx.value?.root?.name)
-        assertEquals("S", timeChar.value?.root?.name)
+        assertEquals("S", timeRegEx.value.treeData.userRoot.rule.tag)
+        assertEquals("S", timeChar.value.treeData.userRoot.rule.tag)
 
         println("- 100 -")
         println("regEx = ${timeRegEx.duration}")
@@ -114,14 +114,14 @@ internal class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
         charParser.parseForGoal(goal, text)
 
         val timeRegEx = TimeSource.Monotonic.measureTimedValue {
-            regExParser.parseForGoal(goal, text).sppt
+            regExParser.parseForGoal(goal, text).sppt!!
         }
         val timeChar = TimeSource.Monotonic.measureTimedValue {
-            charParser.parseForGoal(goal, text).sppt
+            charParser.parseForGoal(goal, text).sppt!!
         }
 
-        assertEquals("S", timeRegEx.value?.root?.name)
-        assertEquals("S", timeChar.value?.root?.name)
+        assertEquals("S", timeRegEx.value.treeData.userRoot.rule.tag)
+        assertEquals("S", timeChar.value.treeData.userRoot.rule.tag)
 
         println("- 1000 -")
         println("regEx = ${timeRegEx.duration}")
@@ -158,13 +158,13 @@ internal class test_Character_vs_RegEx : test_ScanOnDemandParserAbstract() {
                 aglRegex.match(text, 0)
             }
             val timeRegExParser = TimeSource.Monotonic.measureTimedValue {
-                regExParser.parseForGoal(goal, text).sppt
+                regExParser.parseForGoal(goal, text).sppt!!
             }
             val timeCharParser = TimeSource.Monotonic.measureTimedValue {
-                charParser.parseForGoal(goal, text).sppt
+                charParser.parseForGoal(goal, text).sppt!!
             }
-            assertEquals("S", timeRegExParser.value?.root?.name)
-            assertEquals("S", timeCharParser.value?.root?.name)
+            assertEquals("S", timeRegExParser.value.treeData.userRoot.rule.tag)
+            assertEquals("S", timeCharParser.value.treeData.userRoot.rule.tag)
             timeRegExKotlinList.add(timeRegExKotlin.duration)
             timeRegExAglList.add(timeRegExAgl.duration)
             timeRegExParserList.add(timeRegExParser.duration)

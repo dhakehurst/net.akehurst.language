@@ -146,7 +146,7 @@ class test_Java8_Compare(val data: Data) {
         val result = proc.parse(queryStr, Agl.parseOptions { goalRuleName(grammarRule) })
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        val resultStr = clean(result.sppt!!.asString)
+        val resultStr = clean(result.sppt!!.asSentence)
         assertEquals(queryStr, resultStr)
     }
 

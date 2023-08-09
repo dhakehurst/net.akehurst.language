@@ -78,7 +78,7 @@ internal class test_TreeData {
         """.trimIndent()
         )
 
-        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete<SpptDataNode>, InputFromString(rrs.terminalRules.size, sentence), -1, -1)
+        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete<SpptDataNode>, sentence, -1, -1)
 
         assertEquals(sppt.tree.toStringAll, actual.toStringAll)
         assertEquals(sppt.tree, actual)
@@ -134,7 +134,7 @@ internal class test_TreeData {
         """.trimIndent()
         )
 
-        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete<SpptDataNode>, InputFromString(rrs.terminalRules.size, sentence), -1, -1)
+        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete<SpptDataNode>, sentence, -1, -1)
 
         assertEquals(sppt.tree.toStringAll, actual.toStringAll)
         assertEquals(sppt.tree, actual)

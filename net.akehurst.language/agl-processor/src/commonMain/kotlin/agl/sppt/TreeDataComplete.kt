@@ -42,7 +42,6 @@ class TreeDataComplete<CN : SpptDataNode>(
 ) {
 
     companion object {
-
         private val SpptDataNode.preferred get() = PreferredNode(this.rule, this.startPosition)
     }
 
@@ -52,9 +51,7 @@ class TreeDataComplete<CN : SpptDataNode>(
     var root: CN? = null; private set
     var initialSkip: TreeDataComplete<CN>? = null; private set
 
-    // needed when parsing embedded sentences and skip
-    //val startPosition: Int? get() = root?.startPosition
-    //val nextInputPosition: Int? get() = root?.nextInputPosition
+    val userRoot get() = childrenFor(root!!).first().second.first()
 
     fun setUserGoalChildrenAfterInitialSkip(nug: CN, userGoalChildren: List<CN>) {
         this._complete[nug] = mutableMapOf(0 to userGoalChildren.toMutableList())
@@ -164,6 +161,15 @@ class TreeDataComplete<CN : SpptDataNode>(
     fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean) {
         val walker = TreeDataWalkerDepthFirst<CN>(this)
         walker.traverse(callback, skipDataAsTree)
+    }
+
+    fun matches(other: TreeDataComplete<CN>) = when {
+        this.initialSkip != other.initialSkip -> false
+        this._embeddedFor != other._embeddedFor -> false
+        this._skipDataAfter != other._skipDataAfter -> false
+        this._preferred != other._preferred -> false
+        this._complete != other._complete -> false
+        else -> true
     }
 
     override fun hashCode(): Int = this.forStateSetNumber

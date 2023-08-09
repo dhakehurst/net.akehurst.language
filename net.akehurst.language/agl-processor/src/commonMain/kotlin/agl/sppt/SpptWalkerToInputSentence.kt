@@ -30,6 +30,10 @@ class SpptWalkerToInputSentence(
     //(alt,String)
     private val textStack = mutableStackOf<Pair<Int, String>>()
 
+    override fun beginTree() {}
+
+    override fun endTree() {}
+
     override fun skip(startPosition: Int, nextInputPosition: Int) {
         val matchedText = sentence.substring(startPosition, nextInputPosition)//.replace("\n", "\u23CE").replace("\t", "\u2B72")
         when {
@@ -50,9 +54,7 @@ class SpptWalkerToInputSentence(
         textStack.push(Pair(nodeInfo.alt.option, matchedText))
     }
 
-    override fun beginBranch(nodeInfo: SpptDataNodeInfo) {
-
-    }
+    override fun beginBranch(nodeInfo: SpptDataNodeInfo) {}
 
     override fun endBranch(nodeInfo: SpptDataNodeInfo) {
         val numChildren = nodeInfo.numChildrenAlternatives[nodeInfo.alt.option]!!
@@ -68,7 +70,6 @@ class SpptWalkerToInputSentence(
     override fun endEmbedded(nodeInfo: SpptDataNodeInfo) {
         this.endBranch(nodeInfo)
     }
-
 
     override fun error(msg: String, path: () -> List<SpptDataNode>) {
         val p = path()

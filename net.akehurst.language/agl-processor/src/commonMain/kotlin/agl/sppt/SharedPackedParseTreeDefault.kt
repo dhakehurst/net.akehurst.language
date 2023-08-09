@@ -17,18 +17,21 @@
 package net.akehurst.language.agl.sppt
 
 
-import net.akehurst.language.api.sppt.*
+import net.akehurst.language.api.sppt.LeafData
+import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.sppt.SpptDataNode
+import net.akehurst.language.api.sppt.SpptWalker
 
 //TODO: currently this has to be public, because otherwise kotlin does not
 // use the non-mangled names for properties
 /*internal */ class SharedPackedParseTreeDefault(
-    override val root: SPPTNode,
+    //override val root: SPPTNode,
     override val seasons: Int,
     override val maxNumHeads: Int
 ) : SharedPackedParseTree {
 
     init {
-        root.tree = this
+        // root.tree = this
     }
 
     override val treeData: TreeDataComplete<SpptDataNode> get() = TODO("not implemented")
@@ -37,9 +40,9 @@ import net.akehurst.language.api.sppt.*
         TODO("not implemented")
     }
 
-    override fun contains(other: SharedPackedParseTree): Boolean {
-        return this.root.contains(other.root)
-    }
+//    override fun contains(other: SharedPackedParseTree): Boolean {
+//        return this.root.contains(other.root)
+//    }
 
     private val _tokensByLine: List<List<LeafData>> by lazy {
         val visitor = TokensByLineVisitor()
@@ -60,7 +63,7 @@ import net.akehurst.language.api.sppt.*
         }
     }
 
-    override val asString: String by lazy {
+    override val asSentence: String by lazy {
         SPPT2InputText().visitTree(this, "")
     }
 
@@ -90,7 +93,8 @@ import net.akehurst.language.api.sppt.*
 
     override fun equals(other: Any?): Boolean {
         return if (other is SharedPackedParseTree) {
-            this.root == other.root
+            //this.root == other.root
+            this.treeData == other.treeData
         } else {
             false
         }

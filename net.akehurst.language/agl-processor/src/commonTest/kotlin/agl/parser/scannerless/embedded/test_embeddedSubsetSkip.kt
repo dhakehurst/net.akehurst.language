@@ -106,7 +106,7 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               'a'
-              gB { Inner::Bs { B{ 'b' } } }
+              gB : Inner::Bs { B{ 'b' } }
               'c'
             }
         """.trimIndent()
@@ -132,7 +132,7 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               'a'
-              gB { Inner::Bs { B{ 'b' } B { 'b' } } }
+              gB : Inner::Bs { B{ 'b' } B { 'b' } }
               'c'
             }
         """.trimIndent()
@@ -158,7 +158,7 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               'a'
-              gB { Inner::Bs { B{ 'b' WSi:' ' } B { 'b' } } }
+              gB : Inner::Bs { B{ 'b' WSi:' ' } B { 'b' } }
               'c'
             }
         """.trimIndent()
@@ -186,7 +186,7 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
               WSo : ' '
               'a'
               WSo : ' '
-              gB { Inner::Bs { B{ 'b' WSi:' ' } B { 'b' } } }
+              gB : Inner::Bs { B{ 'b' WSi:' ' } B { 'b' } }
               'c'
             }
         """.trimIndent()
@@ -214,7 +214,7 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
               WSo : ' '
               'a'
               WSo : ' '
-              gB { Inner::Bs { B{ 'b' WSi:' ' } B { 'b' WSi:' ' } } }
+              gB : Inner::Bs { B{ 'b' WSi:' ' } B { 'b' WSi:' ' } }
               'c'
             }
         """.trimIndent()
@@ -242,7 +242,7 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
               WSo : ' '
               'a'
               COMMENT { "/\*[^*]*\*+(?:[^/*][^*]*\*+)*/" : '/*c*/' }
-              gB { Inner::Bs { B{ 'b' WSi:' ' } B { 'b' WSi:' ' } } }
+              gB : Inner::Bs { B{ 'b' WSi:' ' } B { 'b' WSi:' ' } }
               'c'
             }
         """.trimIndent()
@@ -284,7 +284,7 @@ internal class test_embeddedSubsetSkip : test_ScanOnDemandParserAbstract() {
               WSo : ' '
               'a'
               WSo : ' '
-              gB { Inner::Bs { B{ 'b' WSi:' ' } B { 'b' } } }
+              gB : Inner::Bs { B{ 'b' WSi:' ' } B { 'b' } }
               COMMENT { "/\*[^*]*\*+(?:[^/*][^*]*\*+)*/" : '/*c*/' }
               'c'
             }

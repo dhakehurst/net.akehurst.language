@@ -73,7 +73,7 @@ class test_Xml(val data: Data) {
         if (data.valid) {
             assertNotNull(result.sppt)
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-            val resultStr = result.sppt!!.asString
+            val resultStr = result.sppt!!.asSentence
             assertEquals(this.data.text, resultStr)
         } else {
             assertNull(result.sppt)

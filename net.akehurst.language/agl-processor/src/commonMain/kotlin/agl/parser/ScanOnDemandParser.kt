@@ -85,7 +85,7 @@ internal class ScanOnDemandParser(
         val match = rp.graph.treeData.complete as TreeDataComplete<SpptDataNode>
         return if (match.root != null) {
             //val sppt = SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
-            val sppt = SPPTFromTreeData(match, input, seasons, maxNumHeads)
+            val sppt = SPPTFromTreeData(match, input.text, seasons, maxNumHeads)
             ParseResultDefault(sppt, this._issues)
         } else {
             //val nextExpected = this.findNextExpectedAfterError2(rp, lastToTryWidth, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown

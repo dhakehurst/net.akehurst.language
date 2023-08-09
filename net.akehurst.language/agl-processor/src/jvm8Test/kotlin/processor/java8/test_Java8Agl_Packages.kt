@@ -100,7 +100,7 @@ class test_Java8Agl_Packages(val data: Data) {
         val result = processor.parse(this.data.text)
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
-        val resultStr = result.sppt!!.asString
+        val resultStr = result.sppt!!.asSentence
         assertEquals(this.data.text, resultStr)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }

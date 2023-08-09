@@ -20,4 +20,4 @@ package net.akehurst.language.test
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
 public expect annotation class FixMethodOrder(val value: MethodSorters)
 
-expect enum class MethodSorters { NAME_ASCENDING }
+expect enum class MethodSorters { NAME_ASCENDING, JVM, DEFAULT }

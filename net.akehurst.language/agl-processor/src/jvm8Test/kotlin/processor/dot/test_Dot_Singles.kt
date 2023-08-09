@@ -50,7 +50,7 @@ class test_Dot_Singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
-        assertEquals(sentence, result.sppt!!.asString)
+        assertEquals(sentence, result.sppt!!.asSentence)
     }
 
     @Test

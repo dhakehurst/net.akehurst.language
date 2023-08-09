@@ -605,7 +605,7 @@ grammar Mdl {
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         //assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
-        assertEquals("section", result.sppt!!.root.name)
+        assertEquals("section", result.sppt!!.treeData.root!!.rule.tag)
         //TODO
     }
 }

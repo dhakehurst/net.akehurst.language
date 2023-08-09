@@ -16,26 +16,29 @@
 
 package net.akehurst.language.agl.sppt
 
-import net.akehurst.language.api.sppt.*
-import net.akehurst.language.collections.MutableStack
+import net.akehurst.language.api.sppt.SPPTBranch
+import net.akehurst.language.api.sppt.SPPTLeaf
+import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.sppt.SharedPackedParseTreeVisitor
 
 internal class SPPT2InputText : SharedPackedParseTreeVisitor<String, Any> {
 
     override fun visitTree(target: SharedPackedParseTree, arg: Any): String {
-        val stack = MutableStack<SPPTNode>()
-        var acc = ""
-        stack.push(target.root)
-        while(stack.isEmpty.not()) {
-            val node = stack.pop()
-            when (node) {
-                is SPPTLeaf -> acc += visitLeaf(node, arg)
-                is SPPTBranch -> {
-                    node.children.reversed().forEach { stack.push(it) }
-                }
-                else -> error("Unknown subtype of SPPTNode ${target::class.simpleName}")
-            }
-        }
-        return acc
+        TODO()
+//        val stack = MutableStack<SPPTNode>()
+//        var acc = ""
+//        stack.push(target.root)
+//        while(stack.isEmpty.not()) {
+//            val node = stack.pop()
+//            when (node) {
+//                is SPPTLeaf -> acc += visitLeaf(node, arg)
+//                is SPPTBranch -> {
+//                    node.children.reversed().forEach { stack.push(it) }
+//                }
+//                else -> error("Unknown subtype of SPPTNode ${target::class.simpleName}")
+//            }
+//        }
+//        return acc
     }
 
     //override fun visit1(target: SharedPackedParseTree, arg: Any): String {

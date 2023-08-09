@@ -32,7 +32,8 @@ internal class ToStringVisitor(val lineSeparator: String, val indentIncrement: S
     )
 
     fun visitTree(target: SharedPackedParseTree, indentText: String): Set<String> {
-        return this.visitNode(target.root, indentText)
+        TODO()
+        //return this.visitNode(target.root, indentText)
     }
 
     fun visitNode(start: SPPTNode, indentText: String): Set<String> {
