@@ -28,8 +28,8 @@ internal class test_aOpt : test_ScanOnDemandParserAbstract() {
         val rrs = runtimeRuleSet {
             concatenation("WS", true) { pattern("\\s+") }
             concatenation("S") { ref("aOpt") }
-            multi("aOpt" ,0, 1, "'a'")
-            literal("'a'","a")
+            optional("aOpt", "'a'")
+            literal("'a'", "a")
         }
         val goal = "S"
     }
@@ -80,11 +80,11 @@ internal class test_aOpt : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
         )
     }
 
@@ -97,11 +97,11 @@ internal class test_aOpt : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
         )
     }
 
@@ -114,11 +114,11 @@ internal class test_aOpt : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
         )
     }
 
@@ -134,11 +134,11 @@ internal class test_aOpt : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         val actual = super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = *arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = *arrayOf(expected)
         )
     }
 

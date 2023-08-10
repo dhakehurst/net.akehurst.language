@@ -30,11 +30,11 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
      */
     private companion object {
         val rrs = runtimeRuleSet {
-            concatenation("S") { ref("Opts"); literal("t")}
+            concatenation("S") { ref("Opts"); literal("t") }
             concatenation("Opts") { ref("aOpt"); ref("bOpt"); ref("cOpt") }
-            multi("aOpt", 0, 1, "'a'")
-            multi("bOpt", 0, 1, "'b'")
-            multi("cOpt", 0, 1, "'c'")
+            optional("aOpt", "'a'")
+            optional("bOpt", "'b'")
+            optional("cOpt", "'c'")
             literal("'a'", "a")
             literal("'b'", "b")
             literal("'c'", "c")
@@ -50,8 +50,9 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0,1,1,1),"^", setOf("'a'","'b'","'c'","'t'"))
-            ), issues.errors)
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'", "'b'", "'c'", "'t'"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -62,8 +63,9 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0,1,1,1),"^d", setOf("'a'","'b'","'c'","'t'"))
-            ), issues.errors)
+                parseError(InputLocation(0, 1, 1, 1), "^d", setOf("'a'", "'b'", "'c'", "'t'"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -105,11 +107,11 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -128,11 +130,11 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -144,8 +146,9 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1,2,1,1),"b^a", setOf("'c'","'t'"))
-            ), issues.errors)
+                parseError(InputLocation(1, 2, 1, 1), "b^a", setOf("'c'", "'t'"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -163,11 +166,11 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -186,11 +189,11 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -202,8 +205,9 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1,2,1,1),"a^dc", setOf("'b'","'c'","'t'"))
-            ), issues.errors)
+                parseError(InputLocation(1, 2, 1, 1), "a^dc", setOf("'b'", "'c'", "'t'"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -214,8 +218,9 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2,3,1,1),"ab^d", setOf("'c'","'t'"))
-            ), issues.errors)
+                parseError(InputLocation(2, 3, 1, 1), "ab^d", setOf("'c'", "'t'"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -226,8 +231,9 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(3,4,1,1),"abc^d", setOf("'t'"))
-            ), issues.errors)
+                parseError(InputLocation(3, 4, 1, 1), "abc^d", setOf("'t'"))
+            ), issues.errors
+        )
     }
 
     @Test
@@ -245,11 +251,11 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -268,11 +274,11 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -292,11 +298,11 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -309,7 +315,8 @@ internal class test_nested_aObOcO : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(1,2,1,1),"c^b", setOf("'t'"))
-            ), issues.errors)
+                parseError(InputLocation(1, 2, 1, 1), "c^b", setOf("'t'"))
+            ), issues.errors
+        )
     }
 }

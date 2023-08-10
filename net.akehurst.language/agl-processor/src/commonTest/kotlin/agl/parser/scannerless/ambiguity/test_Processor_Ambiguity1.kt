@@ -42,7 +42,7 @@ internal class test_Processor_Ambiguity1 : test_ScanOnDemandParserAbstract() {
                 ref("S1")
             }
             concatenation("S1") { literal("a"); ref("S"); ref("B"); ref("B") }
-            multi("B", 0, 1, "'b'")
+            optional("B", "'b'")
             literal("'b'", "b")
         }
         val goal = "S"

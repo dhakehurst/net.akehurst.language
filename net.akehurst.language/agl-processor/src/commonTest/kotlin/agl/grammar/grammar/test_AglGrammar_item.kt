@@ -273,7 +273,7 @@ class test_AglGrammar_item {
         val result = parse("multiplicity", "*")
         val expected = this.sppt(
             """
-            multiplicity { '*' : '*' }
+            multiplicity { '*' }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -286,7 +286,7 @@ class test_AglGrammar_item {
         val result = parse("multiplicity", "?")
         val expected = this.sppt(
             """
-            multiplicity|2 { '?' : '?' }
+            multiplicity|2 { '?' }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -299,7 +299,7 @@ class test_AglGrammar_item {
         val result = parse("multiplicity", "+")
         val expected = this.sppt(
             """
-            multiplicity|1 { '+' : '+' }
+            multiplicity|1 { '+' }
         """.trimIndent()
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
@@ -394,7 +394,7 @@ class test_AglGrammar_item {
             """
             simpleList {
                 simpleItemOrGroup { simpleItem { terminal { LITERAL  : '\'a\''  } } }
-                multiplicity { '*' : '*' }
+                multiplicity { '*' }
             }
         """.trimIndent()
         )
@@ -735,7 +735,7 @@ class test_AglGrammar_item {
         val result = parse("rhs", gstr)
         val expected = this.sppt(
             """
-            rhs { concatenation { concatenationItem { simpleItemOrGroup {  { group {
+            rhs { concatenation { concatenationItem { simpleItemOrGroup {  group {
               '('
               groupedContent { concatenation {
                 concatenationItem { simpleItemOrGroup { simpleItem { nonTerminal { IDENTIFIER : 'b' WHITESPACE : ' ' } } } }
@@ -869,7 +869,7 @@ rule { grammarRule {
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
-        assertEquals(2, result.sppt!!.maxNumHeads)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
     @Test
@@ -1188,7 +1188,7 @@ grammar {
         )
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
-        assertEquals(2, result.sppt!!.maxNumHeads)
+        assertEquals(1, result.sppt!!.maxNumHeads)
     }
 
     @Test

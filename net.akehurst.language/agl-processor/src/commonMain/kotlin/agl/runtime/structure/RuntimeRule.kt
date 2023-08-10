@@ -71,18 +71,16 @@ internal class RuntimeRule(
             is RuntimeRuleRhsGoal -> true
             is RuntimeRuleRhsConcatenation -> true
             is RuntimeRuleRhsChoice -> true
+            is RuntimeRuleRhsOptional -> true
             is RuntimeRuleRhsList -> true
         }
 
     override val isChoice get() = this.rhs is RuntimeRuleRhsChoice
     val isChoiceAmbiguous get() = this.isChoice && (this.rhs as RuntimeRuleRhsChoice).choiceKind == RuntimeRuleChoiceKind.AMBIGUOUS
+    override val isOptional: Boolean get() = this.rhs is RuntimeRuleRhsOptional
     override val isList get() = this.rhs is RuntimeRuleRhsList
     override val isListSimple: Boolean get() = this.rhs is RuntimeRuleRhsListSimple
     override val isListSeparated: Boolean get() = this.rhs is RuntimeRuleRhsListSeparated
-    override val isOptional: Boolean
-        get() = this.rhs is RuntimeRuleRhsListSimple &&
-                (this.rhs as RuntimeRuleRhsListSimple).max == 1 &&
-                (this.rhs as RuntimeRuleRhsListSimple).min == 0
 
     @Deprecated("use 'rhs is'")
     val kind
@@ -105,7 +103,9 @@ internal class RuntimeRule(
 
     val rulePositionsAtStart get() = rhs.rulePositionsAtStart
 
-    val rhsItems get() = this.rulePositions.flatMap { it.items }.toSet()
+    override val rhsItems get() = this.rhs.rhsItems
+
+    //val rhsItems get() = this.rulePositions.flatMap { it.items }.toSet()
 
     val asString: String
         get() = when {

@@ -46,7 +46,7 @@ internal class test_java_NavigableExpression : test_ScanOnDemandParserAbstract()
             concatenation("MethodReference") { ref("MethodInvocation"); literal("::"); ref("IDENTIFIER") }
             concatenation("GenericMethodInvocation") { ref("optTypeArguments"); ref("MethodInvocation"); }
             concatenation("MethodInvocation") { ref("IDENTIFIER"); literal("("); ref("Expression"); literal(")") }
-            multi("optTypeArguments", 0, 1, "TypeArguments")
+            optional("optTypeArguments", "TypeArguments")
             concatenation("TypeArguments") { literal("<>") }
             choice("Expression", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("Postfix")

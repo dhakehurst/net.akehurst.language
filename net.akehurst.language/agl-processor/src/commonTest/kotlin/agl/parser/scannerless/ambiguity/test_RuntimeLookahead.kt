@@ -50,13 +50,13 @@ internal class test_RuntimeLookahead : test_ScanOnDemandParserAbstract() {
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("oP"); ref("oT") }
-            multi("oP", 0, 1, "P")
-            multi("oT", 0, 1, "T")
+            optional("oP", "P")
+            optional("oT", "T")
             concatenation("P") { ref("oA"); literal("p") }
             concatenation("T") { ref("oA"); literal("t") }
-            multi("oA", 0, 1, "A")
+            optional("oA", "A")
             concatenation("A") { literal("a"); literal("n"); ref("oG") }
-            multi("oG", 0, 1, "G")
+            optional("oG", "G")
             concatenation("G") { literal("s"); ref("oA") }
             preferenceFor("<EMPTY>") {
                 leftOption("oA", 1, setOf("'t'"))

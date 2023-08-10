@@ -17,16 +17,12 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.runtime.structure.RuleOptionId
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleListKind
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsItemsKind
 import net.akehurst.language.api.sppt.SPPTNode
 
 internal class GrowingChildNode(
-        val ruleOptionList: Set<RuleOptionId>,
-        val children: List<SPPTNode>,
-        val isSkip:Boolean
+    val ruleOptionList: Set<RuleOptionId>,
+    val children: List<SPPTNode>,
+    val isSkip: Boolean
 ) {
 
     companion object {
@@ -47,19 +43,19 @@ internal class GrowingChildNode(
     val nextInputPosition: Int
         get() = when {
 //            null == state -> children.last().nextInputPosition
-            1==children.size -> children.first().nextInputPosition
+            1 == children.size -> children.first().nextInputPosition
             else -> {
                 //check(1==children.map { it.nextInputPosition }.toSet().size)
                 children.first().nextInputPosition
             }
         }
 
-    private fun appendRealLast(node:GrowingChildNode): GrowingChildNode {
+    private fun appendRealLast(node: GrowingChildNode): GrowingChildNode {
         this.nextChild = node
         return node
     }
 
-    private fun appendAlternativeLast(growingChildren: GrowingChildren, childIndex: Int, node:GrowingChildNode): GrowingChildNode {
+    private fun appendAlternativeLast(growingChildren: GrowingChildren, childIndex: Int, node: GrowingChildNode): GrowingChildNode {
         val existingNextChild = this.nextChild
         return when {
             null != existingNextChild -> { // first alternative
@@ -77,6 +73,7 @@ internal class GrowingChildNode(
                                 this.nextChildAlternatives = nextChildAlternatives
                                 alternativeNextChild
                             }
+
                             else -> {
                                 //TODO: do we replace or drop?"
                                 existingNextChild
@@ -84,6 +81,7 @@ internal class GrowingChildNode(
                             }
                         }
                     }
+
                     else -> {
                         val nextChildAlternatives = mutableMapOf<Set<RuleOptionId>?, MutableList<GrowingChildNode>>()
                         nextChildAlternatives[existingNextChild.ruleOptionList] = mutableListOf(existingNextChild)
@@ -95,6 +93,7 @@ internal class GrowingChildNode(
                     }
                 }
             }
+
             else -> { // other alternatives
                 // if null==nextChild then must be that null!=nextChildAlternatives
                 val nextChildAlternatives = this.nextChildAlternatives!!
@@ -105,6 +104,7 @@ internal class GrowingChildNode(
                         nextChildAlternatives[node.ruleOptionList] = mutableListOf(alternativeNextChild)
                         alternativeNextChild
                     }
+
                     else -> {
                         val alternativeNextChild = node
                         // check if there is a duplicate with greater length
@@ -112,12 +112,13 @@ internal class GrowingChildNode(
                         when {
                             null == existing -> {
                                 alts.add(alternativeNextChild)
-                                growingChildren.setNextChildAlt(childIndex, node.ruleOptionList,alts.size-1)
+                                growingChildren.setNextChildAlt(childIndex, node.ruleOptionList, alts.size - 1)
                                 alternativeNextChild
                             }
+
                             else -> {
                                 //error("TODO: do we replace or drop?")
-                                growingChildren.setNextChildAlt(childIndex, node.ruleOptionList,alts.indexOf(existing))
+                                growingChildren.setNextChildAlt(childIndex, node.ruleOptionList, alts.indexOf(existing))
                                 existing
                                 //null
                             }
@@ -128,7 +129,7 @@ internal class GrowingChildNode(
         }
     }
 
-    fun appendLast(growingChildren: GrowingChildren, childIndex: Int, nextChild:GrowingChildNode): GrowingChildNode = when {
+    fun appendLast(growingChildren: GrowingChildren, childIndex: Int, nextChild: GrowingChildNode): GrowingChildNode = when {
         this.isLast -> appendRealLast(nextChild)
         else -> appendAlternativeLast(growingChildren, childIndex, nextChild)
     }
@@ -139,9 +140,11 @@ internal class GrowingChildNode(
             val rpIds = it.key
             rpIds?.any { it == ruleOption } ?: false
         }?.value?.get(altNext)
+
         null == nextChild -> null
         else -> nextChild
     }
+
     internal fun next(altNext: Int, ruleOptionList: Set<RuleOptionId>): GrowingChildNode? = when {
         null != nextChildAlternatives -> nextChildAlternatives?.get(ruleOptionList)?.get(altNext)
         null == nextChild -> null
@@ -150,9 +153,9 @@ internal class GrowingChildNode(
 
     operator fun get(ruleOption: RuleOptionId?): List<SPPTNode> {
         return when {
- //           null == this.state -> children //skip nodes
+            //           null == this.state -> children //skip nodes
             else -> when {
-                null==ruleOption-> children
+                null == ruleOption -> children
                 1 == children.size -> children
                 else -> {
                     val rr = ruleOption.runtimeRule
@@ -163,10 +166,11 @@ internal class GrowingChildNode(
                             is RuntimeRuleRhsGoal -> ruleOptionList.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule }
                             is RuntimeRuleRhsConcatenation -> ruleOptionList.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule }
                             is RuntimeRuleRhsChoice -> ruleOptionList.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
+                            is RuntimeRuleRhsOptional -> ruleOptionList.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
                             is RuntimeRuleRhsList -> ruleOptionList.indexOfFirst { it.runtimeRule == ruleOption.runtimeRule && it.option == ruleOption.option }
                         }
                     }
-                    if (-1==i) emptyList() else listOf(children[i])
+                    if (-1 == i) emptyList() else listOf(children[i])
                 }
             }
         }
@@ -174,8 +178,8 @@ internal class GrowingChildNode(
 
     override fun toString(): String = when {
 //        null == this.state -> children.joinToString(separator = " ") {
- //           "${it.startPosition},${it.nextInputPosition},${it.name}[${it.option}]"
- //       }
+        //           "${it.startPosition},${it.nextInputPosition},${it.name}[${it.option}]"
+        //       }
         else -> children.joinToString(separator = "|") {
             "${it.startPosition},${it.nextInputPosition},${it.name}[${it.option}]"
         }

@@ -115,7 +115,7 @@ internal class SPPTParserDefault(
     val embeddedRuntimeRuleSets: Map<String, RuntimeRuleSet> = emptyMap()
 ) : SPPTParser {
 
-    private v
+    private var _oldTreeData: TreeDataComplete<CompleteTreeDataNode>? = null
 
     // --- SPPTParser ---
     override lateinit var tree: SharedPackedParseTree
@@ -124,15 +124,14 @@ internal class SPPTParserDefault(
     }
 
     override fun parse(treeAsString: String, addTree: Boolean): SharedPackedParseTree {
-        if (addTree) {
-            //do not reset cache
-        } else {
-            //     this.node_cache.clear()
-        }
-
         val tp = TreeParser(treeAsString, this.embeddedRuntimeRuleSets)
-        val td = tp.parse(rootRuntimeRuleSet)
-
+        val oldTree = if (addTree) {
+            this._oldTreeData
+        } else {
+            null
+        }
+        val td = tp.parse(rootRuntimeRuleSet, oldTree)
+        this._oldTreeData = td
         this.tree = SPPTFromTreeData(td as TreeDataComplete<SpptDataNode>, tp.sentence, -1, -1)
         return this.tree
     }
@@ -169,8 +168,8 @@ internal class TreeParser(
 
     val sentence: String get() = this._sentenceBuilder.toString()
 
-    fun parse(rootRuntimeRuleSet: RuntimeRuleSet): TreeDataComplete<CompleteTreeDataNode> {
-        this.beginTree(rootRuntimeRuleSet)
+    fun parse(rootRuntimeRuleSet: RuntimeRuleSet, oldTree: TreeDataComplete<CompleteTreeDataNode>?): TreeDataComplete<CompleteTreeDataNode> {
+        this.beginTree(rootRuntimeRuleSet, oldTree)
         childrenStack.push(mutableListOf<CompleteTreeDataNode>())
         while (scanner.hasMore()) {
             when {
@@ -198,6 +197,7 @@ internal class TreeParser(
     private val nodeNamesStack = mutableStackOf<NodeStart>()
     private val childrenStack = mutableStackOf<MutableList<CompleteTreeDataNode>>()
     private var runtimeRuleSetInUse = mutableStackOf<RuntimeRuleSet>()
+
     //    private val node_cache: MutableMap<Pair<SPPTNodeIdentity, Int>, SPPTNode> = mutableMapOf()
     private val _sentenceBuilder = StringBuilder()
 
@@ -287,8 +287,8 @@ internal class TreeParser(
     }
 
     //
-    private fun beginTree(rrs: RuntimeRuleSet) {
-        val treeData = TreeDataComplete<CompleteTreeDataNode>(rrs.number)
+    private fun beginTree(rrs: RuntimeRuleSet, oldTree: TreeDataComplete<CompleteTreeDataNode>?) {
+        val treeData = oldTree ?: TreeDataComplete<CompleteTreeDataNode>(rrs.number)
         this.treeDataStack.push(treeData)
         this.runtimeRuleSetInUse.push(rrs)
     }
@@ -330,7 +330,8 @@ internal class TreeParser(
         val nextInputNoSkip = children.lastOrNull()?.nextInputNoSkip ?: 0
 
         val tn = CompleteTreeDataNode(rr, startPosition, nextInputPosition, nextInputNoSkip, lastNodeStart.option)
-        this.treeDataStack.peek().setChildren(tn, children, false)
+        val isAlternative = this.treeDataStack.peek().childrenFor(tn).isNotEmpty()
+        this.treeDataStack.peek().setChildren(tn, children, isAlternative)
         when {
             ntRef.isQualified -> this.endEmbedded(tn)
             else -> this.childrenStack.peek().add(tn)

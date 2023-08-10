@@ -31,7 +31,7 @@ internal class test_embeddedInnerOptional : test_ScanOnDemandParserAbstract() {
         // B = 'b' ;
         val Inner = runtimeRuleSet {
             literal("US", "_", true)
-            multi("optB", 0, 1, "B")
+            optional("optB", "B")
             concatenation("B") { literal("b") }
         }
 

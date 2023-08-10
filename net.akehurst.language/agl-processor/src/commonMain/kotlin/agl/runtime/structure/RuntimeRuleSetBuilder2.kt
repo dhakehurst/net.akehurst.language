@@ -121,6 +121,13 @@ internal class RuntimeRuleSetBuilder2 : RuleSetBuilder {
         }
     }
 
+    fun optional(ruleName: String, itemRef: String, isSkip: Boolean = false) {
+        _rule(ruleName, isSkip) { rule, ruleMap ->
+            val item = RuntimeRuleRef(itemRef).resolve(ruleMap)
+            RuntimeRuleRhsOptional(rule, item)
+        }
+    }
+
     fun multi(ruleName: String, min: Int, max: Int, itemRef: String, isSkip: Boolean = false) {
         _rule(ruleName, isSkip) { rule, ruleMap ->
             val item = RuntimeRuleRef(itemRef).resolve(ruleMap)

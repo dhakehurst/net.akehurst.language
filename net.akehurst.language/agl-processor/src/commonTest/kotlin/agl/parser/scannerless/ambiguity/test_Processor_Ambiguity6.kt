@@ -64,10 +64,10 @@ internal class test_Processor_Ambiguity6 : test_ScanOnDemandParserAbstract() {
             concatenation("Rt") { ref("ID") }
             concatenation("Mc") { ref("ID"); ref("Al") }
             concatenation("Al") { literal("("); ref("Go"); literal(")") }
-            multi("Go", 0, 1, "Gl")
+            optional("Go", "Gl")
             multi("Gl", 1, -1, "Ag")
             concatenation("Ag") { ref("No"); ref("Ex") }
-            multi("No", 0, 1, "N")
+            optional("No", "N")
             concatenation("N") { ref("ID"); literal("=") }
             pattern("ID", "[a-z]+")
         }

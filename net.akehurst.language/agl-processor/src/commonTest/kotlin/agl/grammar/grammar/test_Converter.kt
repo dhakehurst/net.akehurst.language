@@ -19,6 +19,7 @@ package net.akehurst.language.agl.grammar.grammar
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
 import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
@@ -279,7 +280,7 @@ internal class test_Converter {
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
         val expected = runtimeRuleSet {
-            multi("S", 0, 1, "'a'")
+            optional("S", "'a'")
             literal("a")
         }
 
@@ -298,7 +299,7 @@ internal class test_Converter {
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
         val expected = runtimeRuleSet {
-            multi("S", 0, 1, "a")
+            optional("S", "a")
             concatenation("a") { literal("a") }
         }
 
@@ -514,9 +515,16 @@ internal class test_Converter {
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
         val expected = runtimeRuleSet {
-            sList("S", 1, -1, "a", "c")
-            concatenation("a") { literal("a") }
-            concatenation("c") { literal(",") }
+            concatenation("S") { ref("a"); ref("§S§choice1"); ref("e") }
+            choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("b"); ref("c") }
+                concatenation { ref("d") }
+            }
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            literal("e", "e")
         }
 
         assertTrue(expected.matches(actual))
@@ -540,9 +548,18 @@ internal class test_Converter {
         val actual = ConverterToRuntimeRules(grammar).runtimeRuleSet
 
         val expected = runtimeRuleSet {
-            sList("S", 1, -1, "a", "c")
-            concatenation("a") { literal("a") }
-            concatenation("c") { literal(",") }
+            concatenation("S") { ref("a"); ref("§S§choice1"); ref("e") }
+            choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("BC") }
+                concatenation { ref("§S§multi1") }
+            }
+            concatenation("BC") { ref("b"); ref("c") }
+            multi("§S§multi1", 1, -1, "d")
+            literal("a", "a")
+            literal("b", "b")
+            literal("c", "c")
+            literal("d", "d")
+            literal("e", "e")
         }
 
         assertTrue(expected.matches(actual))

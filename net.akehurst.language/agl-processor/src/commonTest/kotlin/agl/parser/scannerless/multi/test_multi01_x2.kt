@@ -32,9 +32,9 @@ internal class test_multi01_x2 : test_ScanOnDemandParserAbstract() {
     private companion object {
         private val rrs = runtimeRuleSet {
             concatenation("S") { ref("A"); ref("B"); ref("V"); literal("d") }
-            multi("A", 0, 1, "'a'")
+            optional("A", "'a'")
             literal("'a'", "a")
-            multi("B", 0, 1, "'b'")
+            optional("B", "'b'")
             literal("'b'", "b")
             pattern("V", "[a-c]")
         }

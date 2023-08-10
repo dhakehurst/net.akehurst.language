@@ -37,16 +37,16 @@ internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehur
             b.terminalLiteral("grammar"), b.nonTerminal("IDENTIFIER"), b.nonTerminal("extendsOpt"),
             b.terminalLiteral("{"), b.nonTerminal("rules"), b.terminalLiteral("}")
         )
-        b.rule("extendsOpt").multi(0, 1, b.nonTerminal("extends"))
+        b.rule("extendsOpt").optional(b.nonTerminal("extends"))
         b.rule("extends").concatenation(b.terminalLiteral("extends"), b.nonTerminal("extendsList"))
         b.rule("extendsList").separatedList(1, -1, b.terminalLiteral(","), b.nonTerminal("qualifiedName"))
         b.rule("rules").multi(1, -1, b.nonTerminal("rule"))
         b.rule("rule").choiceLongestFromConcatenationItem(b.nonTerminal("grammarRule"), b.nonTerminal("preferenceRule"))
         b.rule("grammarRule").concatenation(b.nonTerminal("ruleTypeLabels"), b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="), b.nonTerminal("rhs"), b.terminalLiteral(";"))
         b.rule("ruleTypeLabels").concatenation(b.nonTerminal("isOverride"), b.nonTerminal("isSkip"), b.nonTerminal("isLeaf"))
-        b.rule("isOverride").multi(0, 1, b.terminalLiteral("override"))
-        b.rule("isSkip").multi(0, 1, b.terminalLiteral("skip"))
-        b.rule("isLeaf").multi(0, 1, b.terminalLiteral("leaf"))
+        b.rule("isOverride").optional(b.terminalLiteral("override"))
+        b.rule("isSkip").optional(b.terminalLiteral("skip"))
+        b.rule("isLeaf").optional(b.terminalLiteral("leaf"))
         b.rule("rhs").choiceLongestFromConcatenationItem(b.nonTerminal("empty"), b.nonTerminal("concatenation"), b.nonTerminal("choice"))
         b.rule("empty").empty()
         b.rule("choice").choiceLongestFromConcatenationItem(b.nonTerminal("ambiguousChoice"), b.nonTerminal("priorityChoice"), b.nonTerminal("simpleChoice"))
@@ -70,7 +70,7 @@ internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehur
         )
         b.rule("rangeUnBraced").concatenation(b.nonTerminal("POSITIVE_INTEGER"), b.nonTerminal("rangeMaxOpt"))
         b.rule("rangeBraced").concatenation(b.terminalLiteral("{"), b.nonTerminal("POSITIVE_INTEGER"), b.nonTerminal("rangeMaxOpt"), b.terminalLiteral("}"))
-        b.rule("rangeMaxOpt").multi(0, 1, b.nonTerminal("rangeMax"))
+        b.rule("rangeMaxOpt").optional(b.nonTerminal("rangeMax"))
         b.rule("rangeMax").choiceLongestFromConcatenationItem(
             b.nonTerminal("rangeMaxUnbounded"),
             b.nonTerminal("rangeMaxBounded"),
@@ -102,7 +102,7 @@ internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehur
         b.rule("preferenceOptionList").multi(1, -1, b.nonTerminal("preferenceOption"))
         b.rule("preferenceOption")
             .concatenation(b.nonTerminal("nonTerminal"), b.nonTerminal("choiceNumber"), b.terminalLiteral("on"), b.nonTerminal("terminalList"), b.nonTerminal("associativity"))
-        b.rule("choiceNumber").multi(0, 1, b.nonTerminal("POSITIVE_INTEGER"))
+        b.rule("choiceNumber").optional(b.nonTerminal("POSITIVE_INTEGER"))
         b.rule("terminalList").separatedList(1, -1, b.terminalLiteral(","), b.nonTerminal("simpleItem"))
         b.rule("associativity").choiceLongestFromConcatenationItem(b.terminalLiteral("left"), b.terminalLiteral("right"))
         return b.grammar.grammarRule

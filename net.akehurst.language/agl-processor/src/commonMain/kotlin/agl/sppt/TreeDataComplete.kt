@@ -34,22 +34,25 @@ data class CompleteTreeDataNode(
     override val nextInputPosition: Int,
     override val nextInputNoSkip: Int,
     override val option: Int
-) : SpptDataNode
+) : SpptDataNode {
+    override fun toString(): String = "CN(${rule.tag},$startPosition-$nextInputPosition|$option)"
+}
 
 // public so it can be serialised
 class TreeDataComplete<CN : SpptDataNode>(
-    val forStateSetNumber: Int
+    val forStateSetNumber: Int,
+    // the following are optional arguments to allow for serialisation
+    root: CN? = null,
+    initialSkip: TreeDataComplete<CN>? = null
 ) {
 
     companion object {
         private val SpptDataNode.preferred get() = PreferredNode(this.rule, this.startPosition)
     }
 
-    // --- used to create SPPT ---
-
     val completeChildren: Map<CN, Map<Int, List<CN>>> get() = this._complete
-    var root: CN? = null; private set
-    var initialSkip: TreeDataComplete<CN>? = null; private set
+    var root: CN? = root; private set
+    var initialSkip: TreeDataComplete<CN>? = initialSkip; private set
 
     val userRoot get() = childrenFor(root!!).first().second.first()
 

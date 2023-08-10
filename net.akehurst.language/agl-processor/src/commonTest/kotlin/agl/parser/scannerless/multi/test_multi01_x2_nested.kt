@@ -34,9 +34,9 @@ internal class test_multi01_x2_nested : test_ScanOnDemandParserAbstract() {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("AB"); ref("V"); literal("d") }
             concatenation("AB") { ref("A"); ref("B") }
-            multi("A", 0, 1, "'a'")
+            optional("A", "'a'")
             literal("'a'", "a")
-            multi("B", 0, 1, "'b'")
+            optional("B", "'b'")
             literal("'b'", "b")
             pattern("V", "[a-c]")
         }

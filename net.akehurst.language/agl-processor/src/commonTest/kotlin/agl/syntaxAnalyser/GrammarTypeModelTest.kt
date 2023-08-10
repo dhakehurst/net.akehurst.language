@@ -19,7 +19,7 @@ package net.akehurst.language.agl.grammarTypeModel
 
 
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
-import net.akehurst.language.typemodel.api.asString
+import net.akehurst.language.api.grammarTypeModel.asString
 import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.fail
 

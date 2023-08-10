@@ -346,7 +346,7 @@ class test_AglGrammar {
     }
 
     @Test
-    fun literal_multi_0_1() {
+    fun literal_optional() {
 
         val grammarStr = """
             namespace test
@@ -365,7 +365,7 @@ class test_AglGrammar {
         """
         )
         assertEquals(expected1.toStringAll, result1.sppt?.toStringAll)
-        assertEquals(expected1, result1.sppt)
+        assertTrue(expected1.treeData.matches(result1.sppt!!.treeData))
         assertTrue(result1.issues.isEmpty())
 
         val result2 = pr.processor!!.parse("a");
@@ -1493,7 +1493,7 @@ class test_AglGrammar {
             """
             S {
                 'a'
-                §S§group1 { 'b' }
+                §S§choice1 { 'b' }
             }
         """
         )
@@ -1506,7 +1506,7 @@ class test_AglGrammar {
             """
             S {
                 'a'
-                §S§group1|1 { §S§multi1 {
+                §S§choice1|1 { §S§multi1 {
                     c : 'c'
                     c : 'c'
                     c : 'c'
@@ -1694,7 +1694,7 @@ class test_AglGrammar {
             """
              S { 
                a:'a'
-               gB { Inner::B { 'b' } }
+               gB : Inner::B { 'b' }
                c:'c'
              }
         """
@@ -1729,7 +1729,7 @@ class test_AglGrammar {
             """
              S { 
                A:'a'
-               gB { Inner::C { 'c' } } 
+               gB : Inner::C { 'c' }
                D:'d'
              }
         """

@@ -65,6 +65,7 @@ internal object RuntimeRuleSetTest {
         is RuntimeRuleRhsGoal -> other is RuntimeRuleRhsGoal && this.matches(other)
         is RuntimeRuleRhsConcatenation -> other is RuntimeRuleRhsConcatenation && this.matches(other)
         is RuntimeRuleRhsChoice -> other is RuntimeRuleRhsChoice && this.matches(other)
+        is RuntimeRuleRhsOptional -> other is RuntimeRuleRhsOptional && this.matches(other)
         is RuntimeRuleRhsList -> other is RuntimeRuleRhsList && this.matches(other)
     }
 
@@ -79,6 +80,10 @@ internal object RuntimeRuleSetTest {
 
     fun RuntimeRuleRhsChoice.matches(other: RuntimeRuleRhsChoice): Boolean {
         return this.options.matches(other.options) { t, o -> t.matches(o) }
+    }
+
+    fun RuntimeRuleRhsOptional.matches(other: RuntimeRuleRhsOptional): Boolean {
+        return this.optionalItem.tag == other.optionalItem.tag
     }
 
     fun RuntimeRuleRhsList.matches(other: RuntimeRuleRhsList): Boolean {

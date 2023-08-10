@@ -42,7 +42,9 @@ class TypeModelFromGrammar(
             val key = it.key
             val value = it.value
             super.allRuleNameToType[key] = value
-            super.allTypesByName[value.type.name] = value.type
+            if (value.type is ElementType) {
+                super.allTypesByName[value.type.name] = value.type
+            }
         }
     }
 

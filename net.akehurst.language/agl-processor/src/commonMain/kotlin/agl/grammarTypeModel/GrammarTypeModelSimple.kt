@@ -18,6 +18,7 @@
 package net.akehurst.language.agl.grammarTypeModel
 
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
+import net.akehurst.language.typemodel.api.ElementType
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.TypeUsage
 import net.akehurst.language.typemodel.simple.TypeModelAbstract
@@ -44,7 +45,9 @@ abstract class GrammarTypeModelAbstract(
 
     fun addTypeFor(grammarRuleName: String, typeUse: TypeUsage) {
         this.allRuleNameToType[grammarRuleName] = typeUse
-        super.allTypesByName[typeUse.type.name] = typeUse.type
+        if (typeUse.type is ElementType) {
+            super.allTypesByName[typeUse.type.name] = typeUse.type
+        }
     }
 
     /*

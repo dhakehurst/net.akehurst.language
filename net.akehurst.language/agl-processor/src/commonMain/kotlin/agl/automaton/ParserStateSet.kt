@@ -243,8 +243,8 @@ internal class ParserStateSet(
         return when {
             rule.isGoal -> {
                 used.add(rule)
-                for (sr in rule.rhsItems) {
-                    calcUsedRules(sr, used, done)
+                for (sr in rule.rhsItems.flatten()) {
+                    calcUsedRules(sr as RuntimeRule, used, done)
                 }
                 used
             }
@@ -254,8 +254,8 @@ internal class ParserStateSet(
                 rule.isNonTerminal -> {
                     used.add(rule)
                     if (rule.ruleNumber >= 0) done[rule.ruleNumber] = true
-                    for (sr in rule.rhsItems) {
-                        calcUsedRules(sr, used, done)
+                    for (sr in rule.rhsItems.flatten()) {
+                        calcUsedRules(sr as RuntimeRule, used, done)
                     }
                     used
                 }

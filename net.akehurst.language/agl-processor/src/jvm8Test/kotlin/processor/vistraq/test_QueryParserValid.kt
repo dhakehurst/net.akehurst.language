@@ -16,7 +16,6 @@
 package net.akehurst.language.agl.processor.vistraq
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,13 +33,11 @@ class test_QueryParserValid(val data: Data) {
     companion object {
 
         private val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/Query.agl")?.readText() ?: error("File not found")
-        var processor: LanguageProcessor<Any, Any> = tgqlprocessor()
+        var processor = tgqlprocessor()
 
         var sourceFiles = arrayOf("/vistraq/sampleValidQueries.txt")
 
-        fun tgqlprocessor(): LanguageProcessor<Any, Any> {
-            return Agl.processorFromString<Any, Any>(grammarStr).processor!!
-        }
+        fun tgqlprocessor() = Agl.processorFromStringDefault(grammarStr).processor!!
 
         @JvmStatic
         @Parameters(name = "{0}")
@@ -79,7 +76,7 @@ class test_QueryParserValid(val data: Data) {
     }
 
     @Test(timeout = 2000)
-    fun test() {
+    fun parse() {
         val queryStr = this.data.queryStr
         val goal = "query"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
@@ -89,5 +86,12 @@ class test_QueryParserValid(val data: Data) {
         Assert.assertEquals(queryStr, resultStr)
     }
 
-
+    @Test(timeout = 2000)
+    fun process() {
+        val queryStr = this.data.queryStr
+        val goal = "query"
+        val result = processor.process(queryStr, Agl.options { parse { goalRuleName(goal) } })
+        assertNotNull(result.asm, result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+    }
 }

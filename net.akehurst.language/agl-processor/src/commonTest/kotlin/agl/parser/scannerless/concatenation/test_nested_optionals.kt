@@ -45,12 +45,12 @@ internal class test_nested_optionals : test_ScanOnDemandParserAbstract() {
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { literal("i"); literal("a"); ref("Rs"); literal("z") }
-            multi("Rs",1,-1,"R")
+            multi("Rs", 1, -1, "R")
             concatenation("R") { ref("Os"); literal("i"); literal("t") }
             concatenation("Os") { ref("Bo"); ref("Co"); ref("Do") }
-            multi("Bo", 0, 1, "'b'")
-            multi("Co", 0, 1, "'c'")
-            multi("Do", 0, 1, "'d'")
+            optional("Bo", "'b'")
+            optional("Co", "'c'")
+            optional("Do", "'d'")
             literal("'b'", "b")
             literal("'c'", "c")
             literal("'d'", "d")
@@ -67,7 +67,8 @@ internal class test_nested_optionals : test_ScanOnDemandParserAbstract() {
         assertEquals(
             listOf(
                 parseError(InputLocation(0, 1, 1, 1), "^", setOf("'i'"))
-            ), issues.errors)
+            ), issues.errors
+        )
     }
 
     @Test

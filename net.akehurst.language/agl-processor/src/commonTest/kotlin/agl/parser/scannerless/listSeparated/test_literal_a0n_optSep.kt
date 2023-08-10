@@ -28,7 +28,7 @@ internal class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
         val rrs = runtimeRuleSet {
             sList("S", 0, -1, "'a'", "sep")
             literal("'a'", "a")
-            multi("sep", 0, 1, "','")
+            optional("sep", "','")
             literal("','", ",")
         }
     }
@@ -41,11 +41,11 @@ internal class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
         val expected = "S|1 { §empty }"
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -57,11 +57,11 @@ internal class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
         val expected = "S { 'a' }"
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -73,11 +73,11 @@ internal class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
         val expected = "S {'a' sep{','} 'a'}"
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -89,11 +89,11 @@ internal class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
         val expected = "S {'a' sep|1 { §empty } 'a'}"
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -105,11 +105,11 @@ internal class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
         val expected = "S {'a' sep { ',' } 'a' sep|1 { §empty } 'a'}"
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -121,27 +121,27 @@ internal class test_literal_a0n_optSep : test_ScanOnDemandParserAbstract() {
         val expected = "S {'a' sep{','} 'a' sep{','} 'a'}"
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
     @Test
     fun acax100() {
         val goal = "S"
-        val sentence = "a"+",a".repeat(99)
+        val sentence = "a" + ",a".repeat(99)
 
-        val expected = "S {'a'"+" sep{','} 'a'".repeat(99)+"}"
+        val expected = "S {'a'" + " sep{','} 'a'".repeat(99) + "}"
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 

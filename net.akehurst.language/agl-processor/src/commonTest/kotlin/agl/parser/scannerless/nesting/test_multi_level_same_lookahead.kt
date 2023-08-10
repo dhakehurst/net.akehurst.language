@@ -46,8 +46,8 @@ internal class test_multi_level_same_lookahead : test_ScanOnDemandParserAbstract
             }
             concatenation("U") { ref("Q"); ref("uOpt") }
             concatenation("V") { ref("Q"); ref("vOpt") }
-            multi("uOpt", 0, 1, "'u'")
-            multi("vOpt", 0, 1, "'v'")
+            optional("uOpt", "'u'")
+            optional("vOpt", "'v'")
             literal("'u'", "u")
             literal("'v'", "v")
             concatenation("Q") { literal("q") }

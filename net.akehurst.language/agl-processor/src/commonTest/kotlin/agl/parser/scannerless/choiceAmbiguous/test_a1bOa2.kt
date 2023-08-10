@@ -35,7 +35,7 @@ internal class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
                 literal("a")
             }
             concatenation("S1") { literal("a"); ref("bOpt") }
-            multi("bOpt", 0, 1, "'b'")
+            optional("bOpt", "'b'")
             literal("'b'", "b")
             preferenceFor("'a'") {
                 left("S1", setOf("<EOT>"))
@@ -51,7 +51,7 @@ internal class test_a1bOa2 : test_ScanOnDemandParserAbstract() {
                 literal("a")
             }
             concatenation("S1") { literal("a"); ref("bOpt") }
-            multi("bOpt", 0, 1, "'b'")
+            optional("bOpt", "'b'")
             literal("'b'", "b")
         }
 

@@ -43,6 +43,8 @@ interface Rule {
     val isListSeparated: Boolean
 
     val isOptional: Boolean
+
+    val rhsItems: List<List<Rule>>
 }
 
 @DslMarker

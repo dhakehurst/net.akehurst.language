@@ -354,10 +354,10 @@ fun TypeModel.asString(): String {
         .joinToString(prefix = "  ", separator = "\n  ") { it.value.asString(this) }
     val importstr = this.imports.joinToString(prefix = "  ", separator = "\n  ") { "import ${it.qualifiedName}.*" }
     val s = """
-    typemodel '$namespace.$name' {
-    $importstr
-    $types
-    }
+typemodel '$namespace.$name' {
+$importstr
+$types
+}
     """.trimIndent()
     return s
 }

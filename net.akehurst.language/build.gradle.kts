@@ -131,7 +131,7 @@ subprojects {
         }
     }
 
-    // --- Add TestFixtures to be built into 'main' TODO: update when fixed in kotlin
+    // --- Add TestFixtures TODO: update when fixed in kotlin
     configurations {
         val jvm8TestFixture by creating { extendsFrom(configurations["jvm8TestImplementation"]) }
         val jsTestFixture by creating { extendsFrom(configurations["jsTestImplementation"]) }

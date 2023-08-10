@@ -37,7 +37,7 @@ internal class ConverterToRuntimeRules(
 
     private val _ruleSetNumber by lazy { RuntimeRuleSet.numberForGrammar[grammar] }
     val runtimeRuleSet: RuntimeRuleSet by lazy {
-        this.visitGrammar(grammar, "")
+        this.convertGrammar(grammar, "")
         val rules = this.runtimeRules.values.toList()
         RuntimeRuleSet(_ruleSetNumber, rules, _precRules)
     }
@@ -116,18 +116,17 @@ internal class ConverterToRuntimeRules(
         return emptySet()
     }
 
-    private fun visitGrammar(target: Grammar, arg: String): Set<RuntimeRule> {
-
+    private fun convertGrammar(target: Grammar, arg: String): Set<RuntimeRule> {
         val rules = target.allResolvedGrammarRule.map {
-            this.visitGrammarRule(it, arg)
+            this.convertGrammarRule(it, arg)
         }.toSet()
         _precRules = target.allResolvedPreferenceRuleRule.map {
-            this.visitPreferenceRule(it, arg)
+            this.convertPreferenceRule(it, arg)
         }
         return rules
     }
 
-    private fun visitPreferenceRule(target: PreferenceRule, arg: String): RuntimePreferenceRule {
+    private fun convertPreferenceRule(target: PreferenceRule, arg: String): RuntimePreferenceRule {
         val forItem = target.forItem
         val contextRule = when (forItem) {
             is NonTerminal -> findNamedRule(forItem.name)!!
@@ -164,7 +163,7 @@ internal class ConverterToRuntimeRules(
         return RuntimePreferenceRule(contextRule, options)
     }
 
-    private fun visitGrammarRule(target: GrammarRule, arg: String): RuntimeRule {
+    private fun convertGrammarRule(target: GrammarRule, arg: String): RuntimeRule {
         val rule = this.findNamedRule(target.name)
         val rhs = target.rhs
         return if (null == rule) {
@@ -271,7 +270,7 @@ internal class ConverterToRuntimeRules(
     private fun convertNonTerminal(target: NonTerminal, arg: String): RuntimeRule {
         val refName = target.name
         return findNamedRule(refName)
-            ?: this.visitGrammarRule(target.referencedRule(this.grammar!!), arg)
+            ?: this.convertGrammarRule(target.referencedRule(this.grammar!!), arg)
     }
 
     private fun convertEmbedded(target: Embedded, arg: String): RuntimeRule {
@@ -349,7 +348,7 @@ internal class ConverterToRuntimeRules(
         return nrule
     }
 
-    private fun createRhsForChoice(rule: RuntimeRule, target: Choice, arg: String): RuntimeRuleRhs {
+    private fun createRhsForChoice(rule: RuntimeRule, target: Choice, arg: String): RuntimeRuleRhsChoice {
         return when (target.alternative.size) {
             1 -> error("Internal Error: choice should have more than one alternative") //createRhs(rule, target.alternative[0], arg)
             else -> {
@@ -365,17 +364,17 @@ internal class ConverterToRuntimeRules(
         }
     }
 
-    private fun createRhsForOptional(rule: RuntimeRule, target: OptionalItem, arg: String): RuntimeRuleRhs {
+    private fun createRhsForOptional(rule: RuntimeRule, target: OptionalItem, arg: String): RuntimeRuleRhsOptional {
         val item = this.runtimeRuleForRuleItem(target.item, arg)
-        return RuntimeRuleRhsListSimple(rule, 0, 1, item)
+        return RuntimeRuleRhsOptional(rule, item)
     }
 
-    private fun createRhsForSimpleList(rule: RuntimeRule, target: SimpleList, arg: String): RuntimeRuleRhs {
+    private fun createRhsForSimpleList(rule: RuntimeRule, target: SimpleList, arg: String): RuntimeRuleRhsListSimple {
         val item = this.runtimeRuleForRuleItem(target.item, arg)
         return RuntimeRuleRhsListSimple(rule, target.min, target.max, item)
     }
 
-    private fun createRhsForSeparatedList(rule: RuntimeRule, target: SeparatedList, arg: String): RuntimeRuleRhs {
+    private fun createRhsForSeparatedList(rule: RuntimeRule, target: SeparatedList, arg: String): RuntimeRuleRhsListSeparated {
         val item = this.runtimeRuleForRuleItem(target.item, arg)
         val separator = this.runtimeRuleForRuleItem(target.separator, arg)
         return RuntimeRuleRhsListSeparated(rule, target.min, target.max, item, separator)

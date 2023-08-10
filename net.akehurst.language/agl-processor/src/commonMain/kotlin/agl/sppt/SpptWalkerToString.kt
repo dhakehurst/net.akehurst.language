@@ -53,7 +53,7 @@ class SpptWalkerToString(
         when {
             nodeInfo.node.rule.isEmptyTerminal -> sb.append("${ind}${nodeInfo.node.rule.tag}$eol")
             nodeInfo.node.rule.isPattern -> sb.append("${ind}${nodeInfo.node.rule.tag} : '${matchedText}'$eol")
-            "'${matchedText}" == nodeInfo.node.rule.tag -> sb.append("${ind}'${matchedText}'$eol")
+            "'${matchedText}'" == nodeInfo.node.rule.tag -> sb.append("${ind}'${matchedText}'$eol")
             else -> sb.append("${ind}${nodeInfo.node.rule.tag} : '${matchedText}'$eol")
         }
     }

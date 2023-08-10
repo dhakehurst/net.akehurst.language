@@ -37,9 +37,9 @@ internal class test_ambiguous_nonTerm_0n : test_ScanOnDemandParserAbstract() {
             }
             concatenation("a1") { literal("a"); ref("optB") }
             concatenation("a2") { literal("a") }
-            multi("optB", 0, 1, "'b'")
+            optional("optB", "'b'")
             literal("'b'", "b")
-            multi("sep", 0, 1, "','")
+            optional("sep", "','")
             literal("','", ",")
             preferenceFor("'a'") {
                 left("a1", setOf("<EOT>", "','", "'a'", "<EOT>", "','", "'a'"))

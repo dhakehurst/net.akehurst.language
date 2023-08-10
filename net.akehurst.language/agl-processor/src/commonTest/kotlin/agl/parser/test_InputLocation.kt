@@ -127,17 +127,19 @@ class test_InputLocation_multiLine {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 5), result.sppt!!.treeData.root!!.locationIn(sentence))
-        assertEquals("a", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(0, 1, 1, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0].locationIn(sentence))
-        assertEquals("\n", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(1, 2, 1, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1].locationIn(sentence))
-        assertEquals("b", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(2, 1, 2, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2].locationIn(sentence))
-        assertEquals("\n", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(3, 2, 2, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3].locationIn(sentence))
-        assertEquals("c", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(4, 1, 3, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4].locationIn(sentence))
+        val sppt = result.sppt!!
+        val userRoot = sppt.treeData.userRoot
+        assertEquals(InputLocation(0, 1, 1, 5), userRoot.locationIn(sentence))
+        assertEquals("a", userRoot.children(sppt.treeData)[0].matchedTextNoSkip(sentence))
+        assertEquals(InputLocation(0, 1, 1, 1), userRoot.children(sppt.treeData)[0].locationIn(sentence))
+        assertEquals("\n", userRoot.children(sppt.treeData)[1].matchedTextNoSkip(sentence))
+        assertEquals(InputLocation(1, 2, 1, 1), userRoot.children(sppt.treeData)[1].locationIn(sentence))
+        assertEquals("b", userRoot.children(sppt.treeData)[2].matchedTextNoSkip(sentence))
+        assertEquals(InputLocation(2, 1, 2, 1), userRoot.children(sppt.treeData)[2].locationIn(sentence))
+        assertEquals("\n", userRoot.children(sppt.treeData)[3].matchedTextNoSkip(sentence))
+        assertEquals(InputLocation(3, 2, 2, 1), userRoot.children(sppt.treeData)[3].locationIn(sentence))
+        assertEquals("c", userRoot.children(sppt.treeData)[4].matchedTextNoSkip(sentence))
+        assertEquals(InputLocation(4, 1, 3, 1), userRoot.children(sppt.treeData)[4].locationIn(sentence))
 
     }
 }

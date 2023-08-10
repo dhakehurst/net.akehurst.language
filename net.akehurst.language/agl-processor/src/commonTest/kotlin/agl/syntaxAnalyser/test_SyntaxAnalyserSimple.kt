@@ -2169,7 +2169,17 @@ class test_SyntaxAnalyserSimple {
         })
 
         checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
+            unnamedSuperTypeType("S") {
+                elementRef("BC")
+                listType(false) {
+                    primitiveType("String")
+                }
+            }
 
+            elementType("BC", "BC") {
+                propertyPrimitiveType("b", "String", false, 0)
+                propertyPrimitiveType("c", "String", false, 1)
+            }
         })
 
         val tests = mutableListOf<TestData>()
@@ -2267,7 +2277,7 @@ class test_SyntaxAnalyserSimple {
 
         checkRuntimeGrammar(proc, runtimeRuleSet {
             concatenation("S") { ref("a"); ref("§S§opt2"); ref("e") }
-            multi("§S§opt2", 0, 1, "§S§choice1")
+            optional("§S§opt2", "§S§choice1")
             choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("BC") }
                 concatenation { ref("§S§multi1") }
@@ -2745,21 +2755,52 @@ class test_SyntaxAnalyserSimple {
         })
 
         checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
-
+            elementType("S", "S") {
+                propertyUnnamedSuperType("ch", false, 0) {
+                    tupleType {
+                        propertyPrimitiveType("a", "String", false, 0)
+                        propertyPrimitiveType("b", "String", false, 1)
+                    }
+                    tupleType {
+                        propertyPrimitiveType("c", "String", false, 0)
+                        propertyPrimitiveType("d", "String", false, 1)
+                        propertyPrimitiveType("e", "String", false, 2)
+                    }
+                }
+            }
+            unnamedSuperTypeType("CH") {
+                tupleType {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyPrimitiveType("b", "String", false, 1)
+                }
+                tupleType {
+                    propertyPrimitiveType("c", "String", false, 0)
+                    propertyPrimitiveType("d", "String", false, 1)
+                    propertyPrimitiveType("e", "String", false, 2)
+                }
+            }
         })
 
         val tests = mutableListOf<TestData>()
-        tests.define("bc") {
+        tests.define("ab") {
             asmSimple {
-                element("BC") {
-                    propertyString("b", "b")
-                    propertyString("c", "c")
+                element("S") {
+                    propertyTuple("ch") {
+                        propertyString("a", "a")
+                        propertyString("b", "b")
+                    }
                 }
             }
         }
-        tests.define("d") {
+        tests.define("cde") {
             asmSimple {
-                listOfString("d")
+                element("S") {
+                    propertyTuple("ch") {
+                        propertyString("c", "c")
+                        propertyString("d", "d")
+                        propertyString("e", "e")
+                    }
+                }
             }
         }
         for (data in tests) {
@@ -2784,33 +2825,65 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         checkRuntimeGrammar(proc, runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                concatenation { ref("BC") }
-                concatenation { ref("§S§multi1") }
+            concatenation("S") { ref("CH") }
+            choice("CH", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("a"); ref("b") }
+                concatenation { ref("c"); ref("d"); ref("e") }
             }
-            concatenation("BC") { ref("b"); ref("c") }
-            multi("§S§multi1", 1, -1, "d")
+            literal("a", "a")
             literal("b", "b")
             literal("c", "c")
             literal("d", "d")
+            literal("e", "e")
         })
 
         checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
-
+            elementType("S", "S") {
+                propertyUnnamedSuperType("ch", false, 0) {
+                    tupleType {
+                        propertyPrimitiveType("a", "String", false, 0)
+                        propertyPrimitiveType("b", "String", false, 1)
+                    }
+                    tupleType {
+                        propertyPrimitiveType("c", "String", false, 0)
+                        propertyPrimitiveType("d", "String", false, 1)
+                        propertyPrimitiveType("e", "String", false, 2)
+                    }
+                }
+            }
+            unnamedSuperTypeType("CH") {
+                tupleType {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyPrimitiveType("b", "String", false, 1)
+                }
+                tupleType {
+                    propertyPrimitiveType("c", "String", false, 0)
+                    propertyPrimitiveType("d", "String", false, 1)
+                    propertyPrimitiveType("e", "String", false, 2)
+                }
+            }
         })
 
         val tests = mutableListOf<TestData>()
-        tests.define("bc") {
+        tests.define("ab") {
             asmSimple {
-                element("BC") {
-                    propertyString("b", "b")
-                    propertyString("c", "c")
+                element("S") {
+                    propertyTuple("ch") {
+                        propertyString("a", "a")
+                        propertyString("b", "b")
+                    }
                 }
             }
         }
-        tests.define("d") {
+        tests.define("cde") {
             asmSimple {
-                listOfString("d")
+                element("S") {
+                    propertyTuple("ch") {
+                        propertyString("c", "c")
+                        propertyString("d", "d")
+                        propertyString("e", "e")
+                    }
+                }
             }
         }
         for (data in tests) {
@@ -2837,33 +2910,73 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         checkRuntimeGrammar(proc, runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                concatenation { ref("BC") }
-                concatenation { ref("§S§multi1") }
+            concatenation("S") { ref("x"); ref("CH"); ref("y") }
+            choice("CH", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("a"); ref("b") }
+                concatenation { ref("c"); ref("d"); ref("e") }
             }
-            concatenation("BC") { ref("b"); ref("c") }
-            multi("§S§multi1", 1, -1, "d")
+            literal("a", "a")
             literal("b", "b")
             literal("c", "c")
             literal("d", "d")
+            literal("e", "e")
+            literal("x", "x")
+            literal("y", "y")
         })
 
         checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
-
+            elementType("S", "S") {
+                propertyPrimitiveType("x", "String", false, 0)
+                propertyUnnamedSuperType("ch", false, 1) {
+                    tupleType {
+                        propertyPrimitiveType("a", "String", false, 0)
+                        propertyPrimitiveType("b", "String", false, 1)
+                    }
+                    tupleType {
+                        propertyPrimitiveType("c", "String", false, 0)
+                        propertyPrimitiveType("d", "String", false, 1)
+                        propertyPrimitiveType("e", "String", false, 2)
+                    }
+                }
+                propertyPrimitiveType("y", "String", false, 2)
+            }
+            unnamedSuperTypeType("CH") {
+                tupleType {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyPrimitiveType("b", "String", false, 1)
+                }
+                tupleType {
+                    propertyPrimitiveType("c", "String", false, 0)
+                    propertyPrimitiveType("d", "String", false, 1)
+                    propertyPrimitiveType("e", "String", false, 2)
+                }
+            }
         })
 
         val tests = mutableListOf<TestData>()
-        tests.define("bc") {
+        tests.define("xaby") {
             asmSimple {
-                element("BC") {
-                    propertyString("b", "b")
-                    propertyString("c", "c")
+                element("S") {
+                    propertyString("x", "x")
+                    propertyTuple("ch") {
+                        propertyString("a", "a")
+                        propertyString("b", "b")
+                    }
+                    propertyString("y", "y")
                 }
             }
         }
-        tests.define("d") {
+        tests.define("xcdey") {
             asmSimple {
-                listOfString("d")
+                element("S") {
+                    propertyString("x", "x")
+                    propertyTuple("ch") {
+                        propertyString("c", "c")
+                        propertyString("d", "d")
+                        propertyString("e", "e")
+                    }
+                    propertyString("y", "y")
+                }
             }
         }
         for (data in tests) {
@@ -2890,33 +3003,73 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         checkRuntimeGrammar(proc, runtimeRuleSet {
-            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
-                concatenation { ref("BC") }
-                concatenation { ref("§S§multi1") }
+            concatenation("S") { ref("x"); ref("CH"); ref("y") }
+            choice("CH", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                concatenation { ref("a"); ref("b") }
+                concatenation { ref("c"); ref("d"); ref("e") }
             }
-            concatenation("BC") { ref("b"); ref("c") }
-            multi("§S§multi1", 1, -1, "d")
+            literal("a", "a")
             literal("b", "b")
             literal("c", "c")
             literal("d", "d")
+            literal("e", "e")
+            literal("x", "x")
+            literal("y", "y")
         })
 
         checkTypeModel(proc, grammarTypeModel("test", "Test", "S") {
-
+            elementType("S", "S") {
+                propertyPrimitiveType("x", "String", false, 0)
+                propertyUnnamedSuperType("ch", false, 1) {
+                    tupleType {
+                        propertyPrimitiveType("a", "String", false, 0)
+                        propertyPrimitiveType("b", "String", false, 1)
+                    }
+                    tupleType {
+                        propertyPrimitiveType("c", "String", false, 0)
+                        propertyPrimitiveType("d", "String", false, 1)
+                        propertyPrimitiveType("e", "String", false, 2)
+                    }
+                }
+                propertyPrimitiveType("y", "String", false, 2)
+            }
+            unnamedSuperTypeType("CH") {
+                tupleType {
+                    propertyPrimitiveType("a", "String", false, 0)
+                    propertyPrimitiveType("b", "String", false, 1)
+                }
+                tupleType {
+                    propertyPrimitiveType("c", "String", false, 0)
+                    propertyPrimitiveType("d", "String", false, 1)
+                    propertyPrimitiveType("e", "String", false, 2)
+                }
+            }
         })
 
         val tests = mutableListOf<TestData>()
-        tests.define("bc") {
+        tests.define("xaby") {
             asmSimple {
-                element("BC") {
-                    propertyString("b", "b")
-                    propertyString("c", "c")
+                element("S") {
+                    propertyString("x", "x")
+                    propertyTuple("ch") {
+                        propertyString("a", "a")
+                        propertyString("b", "b")
+                    }
+                    propertyString("y", "y")
                 }
             }
         }
-        tests.define("d") {
+        tests.define("xcdey") {
             asmSimple {
-                listOfString("d")
+                element("S") {
+                    propertyString("x", "x")
+                    propertyTuple("ch") {
+                        propertyString("c", "c")
+                        propertyString("d", "d")
+                        propertyString("e", "e")
+                    }
+                    propertyString("y", "y")
+                }
             }
         }
         for (data in tests) {
@@ -3203,7 +3356,7 @@ class test_SyntaxAnalyserSimple {
             "bab", """
             S { B {
               'b'
-              §I§S§embedded1 { S { 'a' } }
+              §I§S§embedded1 : S { 'a' }
               'b'
             } }
         """

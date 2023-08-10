@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.collections.toSeparatedList
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
@@ -32,6 +33,7 @@ import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
+import net.akehurst.language.api.grammarTypeModel.StringType
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageProcessorPhase
@@ -75,6 +77,8 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
         const val CONFIGURATION_KEY_AGL_SCOPE_MODEL = "$ns.scope.model"
 
         val PropertyDeclaration.isTheSingleProperty get() = this.owner.property.size == 1
+
+        val Rule.hasOnyOneRhsItem get() = this.rhsItems.size == 1 && this.rhsItems[0].size == 1
     }
 
     private var _asm: AsmSimple? = null
@@ -304,10 +308,10 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
                 }
                 val value = when {
                     null == downData -> null //branch not used for element property value, push null for correct num children on stack
-                    nodeInfo.node.rule.isOptional -> {
-                        TODO("this currently causes issues")
-                        (children[0] as ChildData).value
-                    }
+                    //nodeInfo.node.rule.isOptional -> {
+                    //TODO("this currently causes issues")
+                    //    (children[0] as ChildData).value
+                    //}
 
                     else -> createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
@@ -493,6 +497,10 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
     private fun resolveCompressed(typeUsage: TypeUsage, nodeInfo: SpptDataNodeInfo): NodeTypes {
         val type = typeUsage.type
         return when {
+            type is StructuredRuleType && nodeInfo.node.rule.isOptional && nodeInfo.node.rule.hasOnyOneRhsItem && nodeInfo.node.rule.rhsItems[0][0].isTerminal -> {
+                NodeTypes(typeUsage, typeModel.StringType.use)
+            }
+
             type is ElementType && type.property.size == 1 -> {
                 // special cases where PT is compressed for lists (and optionals)
                 when {
