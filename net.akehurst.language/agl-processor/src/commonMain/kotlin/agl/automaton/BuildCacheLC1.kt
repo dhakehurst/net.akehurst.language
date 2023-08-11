@@ -20,11 +20,9 @@ import net.akehurst.language.agl.agl.automaton.FirstOf
 import net.akehurst.language.agl.automaton.LookaheadSetPart.Companion.unionAll
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.collections.lazyMutableMapNonNull
-import net.akehurst.language.collections.mutableStackOf
 
 internal class BuildCacheLC1(
     stateSet: ParserStateSet
@@ -108,54 +106,56 @@ internal class BuildCacheLC1(
 
             val outTransInfo = mutableMapOf<RulePosition?, MutableSet<PossibleTransInfo>>()
 
-            val mergedTransInfo: Set<TransInfo> by lazy {
-                val tis = this.outTransInfo.values.flatten().toSet()
-                val tisAtEnd = tis.filter { it.to.first().isAtEnd }
-                //TODO: need to split things at end!
-                val mergedAtEnd = tisAtEnd.map {
-                    val lhs = when (it.action) {
-                        ParseAction.GOAL -> LookaheadSetPart.EOT
-                        ParseAction.WIDTH, ParseAction.EMBED -> {
-                            it.to.map { tgt ->
-                                if (tgt.rule == RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD) {
-                                    LookaheadSetPart.EMPTY
-                                } else {
-                                    this.firstOfCache[tgt]!![this.rulePosition]!!
+            /*
+                        val mergedTransInfo: Set<TransInfo> by lazy {
+                            val tis = this.outTransInfo.values.flatten().toSet()
+                            val tisAtEnd = tis.filter { it.to.first().isAtEnd }
+                            //TODO: need to split things at end!
+                            val mergedAtEnd = tisAtEnd.map {
+                                val lhs = when (it.action) {
+                                    ParseAction.GOAL -> LookaheadSetPart.EOT
+                                    ParseAction.WIDTH, ParseAction.EMBED -> {
+                                        it.to.map { tgt ->
+                                            if (tgt.rule == RuntimeRuleSet.USE_RUNTIME_LOOKAHEAD) {
+                                                LookaheadSetPart.EMPTY
+                                            } else {
+                                                this.firstOfCache[tgt]!![this.rulePosition]!!
+                                            }
+                                        }.reduce { acc, l -> acc.union(l) }
+                                    }
+
+                                    ParseAction.HEIGHT, ParseAction.GRAFT -> it.firstOfNext
                                 }
-                            }.reduce { acc, l -> acc.union(l) }
-                        }
-
-                        ParseAction.HEIGHT, ParseAction.GRAFT -> it.firstOfNext
-                    }
-                    TransInfo(setOf(setOf(it.prev)), it.action, it.to.toSet(), setOf(LookaheadInfoPart(lhs, LookaheadSetPart.EMPTY)))
-                }
-                val tisNotAtEnd = tis - tisAtEnd
-                val groupNotAtEnd = tisNotAtEnd.groupBy { Pair(it.action, it.to) }
-                val mergedNotAtEnd = groupNotAtEnd.map { me ->
-                    val prev = me.value.map { it.prev.let { setOf(it) } }.toSet()
-                    val parentFirstOfNext = me.value.map { tr ->
-                        //tr.parent?.rulePosition?.next()?.map { this.firstOfNext(tr.prev) } ?: emptyList()
-                        tr.parentFirstOfNext
-                    }
-                    val action = me.key.first
-                    val to = me.key.second
-                    val lookaheadSet = when (action) {
-                        ParseAction.GOAL -> LookaheadSetPart.EOT
-                        ParseAction.WIDTH, ParseAction.EMBED -> me.value.map { tr ->
-                            val p = when {
-                                this.isAtStart -> tr.prev ?: this.rulePosition
-                                else -> this.rulePosition
+                                TransInfo(setOf(setOf(it.prevPrev)), setOf(setOf(it.prev)), it.action, it.to.toSet(), setOf(LookaheadInfoPart(lhs, LookaheadSetPart.EMPTY)))
                             }
-                            this.firstOfCache[tr.to.first()]!!.get(this.rulePosition)!!
-                        }.reduce { acc, it -> acc.union(it) }
+                            val tisNotAtEnd = tis - tisAtEnd
+                            val groupNotAtEnd = tisNotAtEnd.groupBy { Pair(it.action, it.to) }
+                            val mergedNotAtEnd = groupNotAtEnd.map { me ->
+                                val prev = me.value.map { it.prev.let { setOf(it) } }.toSet()
+                                val parentFirstOfNext = me.value.map { tr ->
+                                    //tr.parent?.rulePosition?.next()?.map { this.firstOfNext(tr.prev) } ?: emptyList()
+                                    tr.parentFirstOfNext
+                                }
+                                val action = me.key.first
+                                val to = me.key.second
+                                val lookaheadSet = when (action) {
+                                    ParseAction.GOAL -> LookaheadSetPart.EOT
+                                    ParseAction.WIDTH, ParseAction.EMBED -> me.value.map { tr ->
+                                        val p = when {
+                                            this.isAtStart -> tr.prev ?: this.rulePosition
+                                            else -> this.rulePosition
+                                        }
+                                        this.firstOfCache[tr.to.first()]!!.get(this.rulePosition)!!
+                                    }.reduce { acc, it -> acc.union(it) }
 
-                        ParseAction.HEIGHT, ParseAction.GRAFT -> me.value.map { tr -> tr.firstOfNext }.reduce { acc, it -> acc.union(it) }
-                    }
-                    val lhInfo = parentFirstOfNext.map { LookaheadInfoPart(lookaheadSet, it) }.toSet()
-                    TransInfo(prev, action, to.toSet(), lhInfo)
-                }.toSet()
-                mergedNotAtEnd + mergedAtEnd
-            }
+                                    ParseAction.HEIGHT, ParseAction.GRAFT -> me.value.map { tr -> tr.firstOfNext }.reduce { acc, it -> acc.union(it) }
+                                }
+                                val lhInfo = parentFirstOfNext.map { LookaheadInfoPart(lookaheadSet, it) }.toSet()
+                                TransInfo(prev, action, to.toSet(), lhInfo)
+                            }.toSet()
+                            mergedNotAtEnd + mergedAtEnd
+                        }
+            */
 
             val allPrev get() = outTransInfo.values.flatMap { it.map { it.prev } }.toSet().toList()
 
@@ -199,19 +199,19 @@ internal class BuildCacheLC1(
         val StateInfo.isAtEnd: Boolean get() = this.rulePositions.any { it.isAtEnd }
         val StateInfo.isGoal: Boolean get() = this.rulePositions.any { it.isGoal }
 
-        val StateInfo.mergedTransInfo: Set<TransInfo>
-            get() {
-                val tis = this.possibleTrans
-                val groupedTis = tis.groupBy { Pair(it.action, it.to) }
-                val mergedTis = groupedTis.map { me ->
-                    val prev = me.value.flatMap { it.prev }.toSet()
-                    val action = me.key.first
-                    val to = me.key.second
-                    val lhInfo = me.value.flatMap { it.lookahead }.toSet()
-                    TransInfo(prev, action, to, lhInfo)
-                }.toSet()
-                return mergedTis
-            }
+        /*        val StateInfo.mergedTransInfo: Set<TransInfo>
+                    get() {
+                        val tis = this.possibleTrans
+                        val groupedTis = tis.groupBy { Pair(it.action, it.to) }
+                        val mergedTis = groupedTis.map { me ->
+                            val prev = me.value.flatMap { it.prev }.toSet()
+                            val action = me.key.first
+                            val to = me.key.second
+                            val lhInfo = me.value.flatMap { it.lookahead }.toSet()
+                            TransInfo(prev, action, to, lhInfo)
+                        }.toSet()
+                        return mergedTis
+                    }*/
 
         val RulePosition.canMergeState: Boolean get() = this.isAtEnd.not()// && this.next().all { it.isAtEnd.not() }
         val RulePosition.cannotMergeState: Boolean get() = this.isAtEnd //|| this.next().any { it.isAtEnd }
@@ -226,7 +226,7 @@ internal class BuildCacheLC1(
 
     // Pair( listOf(RulePositions-of-previous-state), listOf(RuntimeRules-of-fromState) ) -> mapOf
     //    to-state-rule-positions -> HeightGraftInfo
-    private val _heightOrGraftInto = mutableMapOf<Pair<List<RulePosition>, List<RuntimeRule>>, MutableMap<Set<RulePosition>, TransInfo>>()
+    private val _heightOrGraftInto = mutableMapOf<Triple<List<RulePosition>, List<RulePosition>, List<RuntimeRule>>, MutableMap<Set<RulePosition>, TransInfo>>()
 
     private val _allRulePositionsForStates: List<RulePosition>
         get() = this.stateSet.usedNonTerminalRules
@@ -318,6 +318,7 @@ internal class BuildCacheLC1(
             return updMergedStates.toSet()//mergedStateInfo
         }
     */
+    /*
     internal fun stateInfo2(): Set<StateInfo> {
         data class L1Trans(
             val parent: RulePosition?,
@@ -542,7 +543,7 @@ internal class BuildCacheLC1(
 
         val atEnd = l0States.values.filter { it.rulePosition.first().isAtEnd || it.rulePosition.first().isGoal }
         val notAtEnd = l0States.values.filter { it.rulePosition.first().isAtEnd.not() && it.rulePosition.first().isGoal.not() }
-        ///*
+
         val mergeAtEnd = atEnd.map { st ->
             val rp = st.rulePosition
             val trans = st.outTransitions
@@ -558,8 +559,7 @@ internal class BuildCacheLC1(
             }.toSet()
             L0State(rp, mergeTrans)
         }
-        //*/
-        /*
+
         val mergeAtEnd = atEnd.map { st ->
             val rp = st.rulePosition
             val trans = st.outTransitions
@@ -575,8 +575,7 @@ internal class BuildCacheLC1(
             }.toSet()
             L0State(rp, mergeTrans)
         }
-        */
-        /*
+
         val groupNotAtEnd = notAtEnd.groupBy { st ->
             st.outTransitions.map { tr -> Triple(tr.action, tr.to,tr.parent.map { it.runtimeRule }) }.toSet()
         }
@@ -600,7 +599,7 @@ internal class BuildCacheLC1(
             }.toSet()
             L0State(rp, mergeTrans)
         }
-        */
+
         val mergeNotAtEnd = notAtEnd.map { st ->
             val rp = st.rulePosition
             val trans = st.outTransitions
@@ -637,7 +636,7 @@ internal class BuildCacheLC1(
                 val lh = tr.lookahead.map { LookaheadInfoPart(it.guard, it.up) }.toSet()
                 TransInfo(prev, action, to.rulePosition, lh)
             }.toSet()
-            /*
+
             val grouped = trans.groupBy { tr -> Triple(tr.prev, tr.action, tr.to) }
             val merged2 = grouped.map{ me->
                 val prev = me.key.first
@@ -653,139 +652,141 @@ internal class BuildCacheLC1(
                     }.toSet()
                 TransInfo(prev, parent, action, to, lhs)
             }.toSet()
-             */
+//
             StateInfo(rp).also { it.possibleTrans = it.possibleTrans + trans }
         }.toSet()
         return stateInfo
     }
-
-    private fun stateInfo3(): Set<StateInfo> {
-        val stateRps = this.stateSet.usedNonTerminalRules.flatMap { it.rulePositionsNotAtStart } +
-                this.stateSet.usedTerminalRules.map { it.asTerminalRulePosition }
-        val rulePosition = this.stateSet.startRulePosition
-        val context = rulePosition
-        val parentNextFollow = LookaheadSetPart.EOT
-        val parentParentNextFollow = LookaheadSetPart.EOT
-        firstFollowCache.processAllClosures(context, rulePosition, parentNextFollow)
-        val stateInfo = mutableMapOf<RulePosition, StateInfo>()
-        val transInfoBySrc = mutableMapOf<RulePosition, Set<TransInfo>>()
-        for (srcRp in stateRps) {
-            var transInfo = emptySet<TransInfo>()
-            for (ctx in firstFollowCache.possibleContextsFor(srcRp)) {
-                val tis = when {
-                    srcRp.isAtEnd -> {
-                        val hgtis = mutableSetOf<TransInfo>()
-                        for (ctxCtx in firstFollowCache.possibleContextsFor(ctx)) {
-                            val pns = this.firstFollowCache.parentInContext(ctxCtx, ctx, srcRp.rule)
-                            val hgInfo = pns.map { parentNext ->
-                                val action = when {
-                                    parentNext.rulePosition.isGoal -> ParseAction.GOAL
-                                    parentNext.firstPosition -> ParseAction.HEIGHT
-                                    else -> ParseAction.GRAFT
-                                }
-                                val tgt = parentNext.rulePosition
-                                val follow = parentNext.expectedAt
-                                val grd = follow
-                                val up = when (action) {
-                                    ParseAction.HEIGHT -> parentNext.parentExpectedAt
-                                    ParseAction.EMBED,
-                                    ParseAction.WIDTH,
-                                    ParseAction.GRAFT,
-                                    ParseAction.GOAL -> LookaheadSetPart.EMPTY
-                                }
-                                TransInfo(setOf(setOf(ctx)), action, setOf(tgt), setOf(LookaheadInfoPart(grd, up)))
-                                //HeightGraftInfo(action, listOf(tgt), setOf(LookaheadInfoPart(grd, up)))
-                            }.toSet()
-                            val merged = mergeTransInfo(transInfo, hgInfo)
-                            hgtis.addAll(merged)
-                        }
-                        transInfo = mergeTransInfo(transInfo, hgtis)
-                    }
-
-                    else -> {
-                        val parentFollow = when {
-                            srcRp.isGoal -> LookaheadSetPart.EOT
-                            else -> {
-                                val ctxCtxs = this.firstFollowCache.possibleContextsFor(ctx)
-                                val x = ctxCtxs.flatMap { cc ->
-                                    this.firstFollowCache.parentInContext(cc, ctx, srcRp.rule)
+*/
+    /*
+        private fun stateInfo3(): Set<StateInfo> {
+            val stateRps = this.stateSet.usedNonTerminalRules.flatMap { it.rulePositionsNotAtStart } +
+                    this.stateSet.usedTerminalRules.map { it.asTerminalRulePosition }
+            val rulePosition = this.stateSet.startRulePosition
+            val context = rulePosition
+            val parentNextFollow = LookaheadSetPart.EOT
+            val parentParentNextFollow = LookaheadSetPart.EOT
+            firstFollowCache.processAllClosures(context, rulePosition, parentNextFollow)
+            val stateInfo = mutableMapOf<RulePosition, StateInfo>()
+            val transInfoBySrc = mutableMapOf<RulePosition, Set<TransInfo>>()
+            for (srcRp in stateRps) {
+                var transInfo = emptySet<TransInfo>()
+                for (ctx in firstFollowCache.possibleContextsFor(srcRp)) {
+                    val tis = when {
+                        srcRp.isAtEnd -> {
+                            val hgtis = mutableSetOf<TransInfo>()
+                            for (ctxCtx in firstFollowCache.possibleContextsFor(ctx)) {
+                                val pns = this.firstFollowCache.parentInContext(ctxCtx, ctx, srcRp.rule)
+                                val hgInfo = pns.map { parentNext ->
+                                    val action = when {
+                                        parentNext.rulePosition.isGoal -> ParseAction.GOAL
+                                        parentNext.firstPosition -> ParseAction.HEIGHT
+                                        else -> ParseAction.GRAFT
+                                    }
+                                    val tgt = parentNext.rulePosition
+                                    val follow = parentNext.expectedAt
+                                    val grd = follow
+                                    val up = when (action) {
+                                        ParseAction.HEIGHT -> parentNext.parentExpectedAt
+                                        ParseAction.EMBED,
+                                        ParseAction.WIDTH,
+                                        ParseAction.GRAFT,
+                                        ParseAction.GOAL -> LookaheadSetPart.EMPTY
+                                    }
+                                    TransInfo(setOf(setOf(ctx)), action, setOf(tgt), setOf(LookaheadInfoPart(grd, up)))
+                                    //HeightGraftInfo(action, listOf(tgt), setOf(LookaheadInfoPart(grd, up)))
                                 }.toSet()
-                                x.map { it.expectedAt }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+                                val merged = mergeTransInfo(transInfo, hgInfo)
+                                hgtis.addAll(merged)
                             }
+                            transInfo = mergeTransInfo(transInfo, hgtis)
                         }
-                        val ftis = this.firstFollowCache.firstTerminalInContext(ctx, srcRp, parentFollow) //emptySet(),  parentFollow)
-                        val wis = ftis.map { firstTermInfo ->
-                            val action = when {
-                                firstTermInfo.terminalRule.isEmbedded -> ParseAction.EMBED
-                                else -> ParseAction.WIDTH
-                            }
-                            val trp = firstTermInfo.terminalRule.asTerminalRulePosition
-                            val lhs = firstTermInfo.parentExpectedAt
-                            TransInfo(setOf(setOf(ctx)), action, setOf(trp), setOf(LookaheadInfoPart(lhs, LookaheadSetPart.EMPTY)))
-                            //WidthInfo(action, trp, lhs)
-                        }
-                        transInfo = mergeTransInfo(transInfo, wis.toSet())
-                    }
-                }
-            }
-            val mergedTrans = mergeTransInfo(transInfoBySrc[srcRp], transInfo)
-            transInfoBySrc[srcRp] = mergedTrans
 
-            //transInfoBySrc[srcRp].addAll(transInfo)
-            transInfo.forEach { ti ->
-                val si = StateInfo(ti.to)
-                ti.to.forEach {
-                    val existing = stateInfo[it]
-                    when {
-                        (null == existing) -> stateInfo[it] = si
-                        existing.rulePositions == si.rulePositions -> Unit //OK same state
                         else -> {
-                            val mergedState = StateInfo(existing.rulePositions + si.rulePositions)
-                            mergedState.possibleTrans = mergeTransInfo(existing.possibleTrans, si.possibleTrans)
-                            mergedState.rulePositions.forEach {
-                                stateInfo[it] = mergedState
+                            val parentFollow = when {
+                                srcRp.isGoal -> LookaheadSetPart.EOT
+                                else -> {
+                                    val ctxCtxs = this.firstFollowCache.possibleContextsFor(ctx)
+                                    val x = ctxCtxs.flatMap { cc ->
+                                        this.firstFollowCache.parentInContext(cc, ctx, srcRp.rule)
+                                    }.toSet()
+                                    x.map { it.expectedAt }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
+                                }
+                            }
+                            val ftis = this.firstFollowCache.firstTerminalInContext(ctx, srcRp, parentFollow) //emptySet(),  parentFollow)
+                            val wis = ftis.map { firstTermInfo ->
+                                val action = when {
+                                    firstTermInfo.terminalRule.isEmbedded -> ParseAction.EMBED
+                                    else -> ParseAction.WIDTH
+                                }
+                                val trp = firstTermInfo.terminalRule.asTerminalRulePosition
+                                val lhs = firstTermInfo.parentExpectedAt
+                                TransInfo(setOf(setOf(ctx)), action, setOf(trp), setOf(LookaheadInfoPart(lhs, LookaheadSetPart.EMPTY)))
+                                //WidthInfo(action, trp, lhs)
+                            }
+                            transInfo = mergeTransInfo(transInfo, wis.toSet())
+                        }
+                    }
+                }
+                val mergedTrans = mergeTransInfo(transInfoBySrc[srcRp], transInfo)
+                transInfoBySrc[srcRp] = mergedTrans
+
+                //transInfoBySrc[srcRp].addAll(transInfo)
+                transInfo.forEach { ti ->
+                    val si = StateInfo(ti.to)
+                    ti.to.forEach {
+                        val existing = stateInfo[it]
+                        when {
+                            (null == existing) -> stateInfo[it] = si
+                            existing.rulePositions == si.rulePositions -> Unit //OK same state
+                            else -> {
+                                val mergedState = StateInfo(existing.rulePositions + si.rulePositions)
+                                mergedState.possibleTrans = mergeTransInfo(existing.possibleTrans, si.possibleTrans)
+                                mergedState.rulePositions.forEach {
+                                    stateInfo[it] = mergedState
+                                }
                             }
                         }
                     }
                 }
             }
-        }
-        stateInfo[rulePosition] = StateInfo(setOf(rulePosition))
-        for ((srcRp, outTrans) in transInfoBySrc) {
-            stateInfo[srcRp]!!.possibleTrans = outTrans
-        }
+            stateInfo[rulePosition] = StateInfo(setOf(rulePosition))
+            for ((srcRp, outTrans) in transInfoBySrc) {
+                stateInfo[srcRp]!!.possibleTrans = outTrans
+            }
 
-        val transInfoBySrc2 = mutableMapOf<RulePosition, Set<TransInfo>>()
-        val stateInfo2 = mutableMapOf<RulePosition, StateInfo>()
-        for ((srcRp, outTrans) in transInfoBySrc) {
-            val srcStateInfo = stateInfo[srcRp]!!
-            val mergedTrans = mergeTransInfo(srcStateInfo.possibleTrans, outTrans)
-            transInfoBySrc2[srcRp] = mergedTrans
-            srcStateInfo.possibleTrans = mergedTrans
-            mergedTrans.forEach { ti ->
-                val si = StateInfo(ti.to)
-                ti.to.forEach {
-                    val existing = stateInfo2[it]
-                    when {
-                        (null == existing) -> stateInfo2[it] = si
-                        existing.rulePositions == si.rulePositions -> Unit //OK same state
-                        else -> {
-                            val mergedState = StateInfo(existing.rulePositions + si.rulePositions)
-                            mergedState.rulePositions.forEach {
-                                stateInfo2[it] = mergedState
+            val transInfoBySrc2 = mutableMapOf<RulePosition, Set<TransInfo>>()
+            val stateInfo2 = mutableMapOf<RulePosition, StateInfo>()
+            for ((srcRp, outTrans) in transInfoBySrc) {
+                val srcStateInfo = stateInfo[srcRp]!!
+                val mergedTrans = mergeTransInfo(srcStateInfo.possibleTrans, outTrans)
+                transInfoBySrc2[srcRp] = mergedTrans
+                srcStateInfo.possibleTrans = mergedTrans
+                mergedTrans.forEach { ti ->
+                    val si = StateInfo(ti.to)
+                    ti.to.forEach {
+                        val existing = stateInfo2[it]
+                        when {
+                            (null == existing) -> stateInfo2[it] = si
+                            existing.rulePositions == si.rulePositions -> Unit //OK same state
+                            else -> {
+                                val mergedState = StateInfo(existing.rulePositions + si.rulePositions)
+                                mergedState.rulePositions.forEach {
+                                    stateInfo2[it] = mergedState
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        stateInfo2[rulePosition] = StateInfo(setOf(rulePosition))
-        for ((srcRp, outTrans) in transInfoBySrc) {
-            stateInfo2[srcRp]!!.possibleTrans = outTrans
+            stateInfo2[rulePosition] = StateInfo(setOf(rulePosition))
+            for ((srcRp, outTrans) in transInfoBySrc) {
+                stateInfo2[srcRp]!!.possibleTrans = outTrans
+            }
+            return stateInfo2.values.toSet()
         }
-        return stateInfo2.values.toSet()
-    }
+    */
 
     private fun stateInfo4(): Set<StateInfo> {
         val startRulePosition = this.stateSet.startRulePosition
@@ -916,7 +917,7 @@ internal class BuildCacheLC1(
                         ParseAction.GRAFT,
                         ParseAction.GOAL -> LookaheadSetPart.EMPTY
                     }
-                    TransInfo(setOf(setOf(ctx)), action, setOf(tgt), setOf(LookaheadInfoPart(grd, up)))
+                    TransInfo(setOf(setOf(ctxCtx)), setOf(setOf(ctx)), action, setOf(tgt), setOf(LookaheadInfoPart(grd, up)))
                     //HeightGraftInfo(action, listOf(tgt), setOf(LookaheadInfoPart(grd, up)))
                 }.toSet()
                 hgtis.addAll(hgInfo)
@@ -950,7 +951,7 @@ internal class BuildCacheLC1(
                 }
                 val trp = firstTermInfo.terminalRule.asTerminalRulePosition
                 val lhs = firstTermInfo.parentExpectedAt
-                TransInfo(setOf(setOf(ctx)), action, setOf(trp), setOf(LookaheadInfoPart(lhs, LookaheadSetPart.EMPTY)))
+                TransInfo(setOf(emptySet()), setOf(setOf(ctx)), action, setOf(trp), setOf(LookaheadInfoPart(lhs, LookaheadSetPart.EMPTY)))
             }
             transInfo.addAll(wis.toSet())
         }
@@ -1034,12 +1035,13 @@ internal class BuildCacheLC1(
             else -> {
                 val grouped = transInfo.groupBy { it.to }
                 val merged = grouped.map { me ->
+                    val prevPrev = me.value.flatMap { it.prevPrev }.toSet()
                     val prev = me.value.flatMap { it.prev }.toSet()
                     val action = ParseAction.WIDTH
                     val to = me.value.flatMap { it.to }.toSet()
                     val grd = me.value.flatMap { it.lookahead.map { it.guard } }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                     val lhs = setOf(LookaheadInfoPart(grd, LookaheadSetPart.EMPTY))
-                    TransInfo(prev, action, to, lhs)
+                    TransInfo(prevPrev, prev, action, to, lhs)
                 }.toSet()
                 merged
             }
@@ -1052,11 +1054,12 @@ internal class BuildCacheLC1(
             else -> {
                 val grouped = transInfo.groupBy { it.to }
                 val merged = grouped.map { me ->
+                    val prevPrev = me.value.flatMap { it.prevPrev }.toSet()
                     val prev = me.value.flatMap { it.prev }.toSet()
                     val action = ParseAction.HEIGHT
                     val to = me.key
                     val lhs = LookaheadInfoPart.merge(me.value.flatMap { it.lookahead }.toSet())
-                    TransInfo(prev, action, to, lhs)
+                    TransInfo(prevPrev, prev, action, to, lhs)
                 }.toSet()
                 merged
             }
@@ -1070,12 +1073,13 @@ internal class BuildCacheLC1(
                 //val grouped = transInfo.groupBy { Pair(it.to, it.lookahead) }
                 val grouped = transInfo.groupBy { it.to }
                 val merged = grouped.map { me ->
+                    val prevPrev = me.value.flatMap { it.prevPrev }.toSet()
                     val prev = me.value.flatMap { it.prev }.toSet()
                     val action = ParseAction.HEIGHT
                     val to = me.key
                     //val lhs = me.key.second
                     val lhs = LookaheadInfoPart.merge(me.value.flatMap { it.lookahead }.toSet())
-                    TransInfo(prev, action, to, lhs)
+                    TransInfo(prevPrev, prev, action, to, lhs)
                 }.toSet()
                 merged
             }
@@ -1088,12 +1092,13 @@ internal class BuildCacheLC1(
             else -> {
                 val grouped = transInfo.groupBy { it.to }
                 val merged = grouped.map { me ->
+                    val prevPrev = me.value.flatMap { it.prevPrev }.toSet()
                     val prev = me.value.flatMap { it.prev }.toSet()
                     val action = ParseAction.GRAFT
                     val to = me.key
                     val grd = me.value.flatMap { it.lookahead.map { it.guard } }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                     val lhs = setOf(LookaheadInfoPart(grd, LookaheadSetPart.EMPTY))
-                    TransInfo(prev, action, to, lhs)
+                    TransInfo(prevPrev, prev, action, to, lhs)
                 }.toSet()
                 merged
             }
@@ -1106,12 +1111,13 @@ internal class BuildCacheLC1(
             else -> {
                 val grouped = transInfo.groupBy { it.to }
                 val merged = grouped.map { me ->
+                    val prevPrev = me.value.flatMap { it.prevPrev }.toSet()
                     val prev = me.value.flatMap { it.prev }.toSet()
                     val action = ParseAction.GRAFT
                     val to = me.key
                     val grd = me.value.flatMap { it.lookahead.map { it.guard } }.fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                     val lhs = setOf(LookaheadInfoPart(grd, LookaheadSetPart.EMPTY))
-                    TransInfo(prev, action, to, lhs)
+                    TransInfo(prevPrev, prev, action, to, lhs)
                 }.toSet()
                 merged
             }
@@ -1170,12 +1176,12 @@ internal class BuildCacheLC1(
         from: ParserState
     ): Set<TransInfo> {//, upCls: Set<ClosureItemLC1>): Set<HeightGraftInfo> {
         val hgi = calcHeightOrGraftInto(prevPrev, prev, from)//, upCls)
-        cacheHeightOrGraftInto(prev, from, hgi)
+        cacheHeightOrGraftInto(prevPrev, prev, from, hgi)
         return hgi
     }
 
-    private fun cacheHeightOrGraftInto(prev: ParserState, from: ParserState, hgis: Set<TransInfo>) {
-        val key = Pair(prev.rulePositions, from.runtimeRules)
+    private fun cacheHeightOrGraftInto(prevPrev: ParserState, prev: ParserState, from: ParserState, hgis: Set<TransInfo>) {
+        val key = Triple(prevPrev.rulePositions, prev.rulePositions, from.runtimeRules)
         val map = this._heightOrGraftInto[key] ?: run {
             val x = mutableMapOf<Set<RulePosition>, TransInfo>()
             this._heightOrGraftInto[key] = x
@@ -1187,7 +1193,7 @@ internal class BuildCacheLC1(
                 map[hg.to] = hg
             } else {
                 val lhs = hg.lookahead.union(existing.lookahead)
-                map[hg.to] = TransInfo(existing.prev, hg.action, hg.to, lhs)
+                map[hg.to] = TransInfo(existing.prevPrev, existing.prev, hg.action, hg.to, lhs)
             }
         }
     }
@@ -1211,7 +1217,7 @@ internal class BuildCacheLC1(
                     val grd = parentNext.expectedAt
                     val up = parentNext.parentExpectedAt
                     rls.add(tgt.rule)
-                    TransInfo(setOf(setOf(context)), action, setOf(tgt), setOf(LookaheadInfoPart(grd, up)))
+                    TransInfo(setOf(setOf(contextContext)), setOf(setOf(context)), action, setOf(tgt), setOf(LookaheadInfoPart(grd, up)))
                     //HeightGraftInfo(action, listOf(tgt), setOf(LookaheadInfoPart(grd, up)))
                 }
             }

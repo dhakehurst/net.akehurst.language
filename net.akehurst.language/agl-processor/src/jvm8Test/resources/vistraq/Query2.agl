@@ -23,8 +23,9 @@ grammar Query {
 	leaf PERIOD = 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year' ;
 
 
-	querySource = pathQuery | storedQueryReference ;
-	storedQueryReference = 'FROM' STORED_QUERY_ID ;
+	querySource = pathQuery | storedQueryReference | preQuery;
+	storedQueryReference = 'FROM' STORED_QUERY_ID whereClause? ;
+    preQuery = 'FROM' query pathQuery;
     pathQuery = 'MATCH' pathExpression whereClause? ;
     pathExpression =  nodeSelector linkedNodeSelectorPath? ;
 
@@ -65,21 +66,21 @@ grammar Query {
 
 	whereClause = 'WHERE' expression ;
 
-	returnDefinition = returnValue | returnTable | returnSelect | returnGraph ;
+	returnDefinition = returnExpression | returnTable | returnSelect | returnGraph ;
 
-	returnValue = 'RETURN' ' VALUE' aggregateFunctionCallOrExpression ;
+	returnExpression = 'RETURN' aggregateFunctionCallOrExpression ;
 
 	returnTable = 'RETURN' 'TABLE' columnDefinition+ orderBy? ;
 	columnDefinition = 'COLUMN' NAME 'CONTAINING' aggregateFunctionCallOrExpression whereClause? ;
 
-    returnSelect = 'RETURN' 'SELECT' selectList ;
+    returnSelect = 'RETURN' 'SELECT' selectList;
     selectList = [selectItem / ',']* ;
     selectItem = NAME | propertyReference ;
     propertyReference = NAME '.' NAME ;
 
 	returnGraph = 'RETURN' 'GRAPH' subgraphConstruction ;
 	subgraphConstruction = nodeSrc linkedSubGraphConstruction? whereConstructionClause?;
-    nodeSrc = nodeConstruction | nodeReference ; 
+    nodeSrc = nodeConstruction | nodeReference ;
     nodeReference = NAME ;
 	nodeConstruction = nodeTypeConstructionExpression '{' nodeIdentityExpressionConstruction nodePropertyAssignmentExpressionList? '}' aliasDefinition?;
 	nodeTypeConstructionExpression = expression < nodeTypeReference ;
@@ -104,8 +105,9 @@ grammar Query {
     expression
 		= root
 		| literalValue
-		| navigationExpression
+		| propertyCall
         | indexOperatorCall
+		| methodCall
 		| infixLogical
 		| infixArithmetic
 		| infixComparison
@@ -117,25 +119,23 @@ grammar Query {
 	  infixLogical on logicalOperator left
 	  infixComparison on comparisonOperator left
 	  infixArithmetic on arithmeticOperator left
-  	  navigationExpression on '.' left
+  	  propertyCall on '.' left
 	}
 
     aliasDefinition = 'AS' NAME ;
 
-    groupExpression = '(' expression ')' ;
-	root = NAME ;
-	navigationExpression = expression '.' navigationCall ;
-	navigationCall = propertyCall | methodCall ;
-	propertyCall = NAME ;
-	methodCall = NAME '(' argList ')';
-	indexOperatorCall = expression '[' expression ']' ;
+    groupExpression = '(' expression ')'  ;
+	root = NAME;
+	propertyCall = expression '.' NAME ;
+	methodCall = expression '.' NAME '(' argList ')';
+    indexOperatorCall = expression '[' expression ']' ;
 	argList = [expression / ',']* ;
 	infixLogical = [expression / logicalOperator]2+ ;
 	infixArithmetic = [expression / arithmeticOperator]2+ ;
 	infixComparison = [expression / comparisonOperator]2+ ;
 
     leaf arithmeticOperator =  '/' | '*' | '+' | '-' ;
-    leaf comparisonOperator = '==' | '!=' | '<=' | '>=' | '<' | '>' ;
+    leaf comparisonOperator = '==' | '!=' | '<=' | '>=' | '<' | '>'  ;
     leaf logicalOperator = 'AND' | 'OR' | 'XOR' ;
 
     conditionalExpression = expression '?' expression ':' expression ;

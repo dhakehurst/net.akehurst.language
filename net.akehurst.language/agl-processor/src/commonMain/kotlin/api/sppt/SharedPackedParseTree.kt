@@ -78,6 +78,7 @@ interface SpptWalker {
 
 data class LeafData(
     val name: String,
+    val isPattern: Boolean,
     val location: InputLocation,
     val matchedText: String,
     val tagList: List<String>

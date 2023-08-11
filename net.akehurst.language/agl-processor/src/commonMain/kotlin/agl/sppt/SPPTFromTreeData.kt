@@ -31,7 +31,7 @@ internal class SPPTFromTreeData(
 ) : SharedPackedParseTree {
 
     private val _tokensByLine: List<List<LeafData>> by lazy {
-        val visitor = TokensByLineVisitor2(originalSentence)
+        val visitor = TokensByLineVisitor(originalSentence)
         visitor.visitTree(this, emptyList())
         visitor.lines
     }
@@ -66,22 +66,6 @@ internal class SPPTFromTreeData(
         } else {
             tbl[line]
         }
-    }
-
-    fun toStringAllWithIndent1(indentIncrement: String): String {
-        val visitor = ToStringVisitor("\n", indentIncrement)
-        val all: Set<String> = visitor.visitTree(this, "  ")
-        val total = all.size
-        val sep = "\n"
-        var cur = 0
-        var res = ""
-        for (pt in all) {
-            cur++
-            res += "Tree ${cur} of ${total}\n"
-            res += pt
-            res += "\n"
-        }
-        return all.joinToString(sep)
     }
 
     override fun toStringAllWithIndent(indentIncrement: String, skipDataAsTree: Boolean): String {

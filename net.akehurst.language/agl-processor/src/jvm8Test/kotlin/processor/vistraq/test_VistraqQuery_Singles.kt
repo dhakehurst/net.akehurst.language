@@ -24,7 +24,6 @@ import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import org.junit.Test
 import kotlin.test.*
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
@@ -180,7 +179,7 @@ class test_VistraqQuery_Singles {
         val goal = "expression"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         val resultStr = result.sppt!!.asSentence
         assertEquals(queryStr, resultStr)
         println(result.sppt!!.toStringAllWithIndent("  "))
@@ -256,7 +255,7 @@ class test_VistraqQuery_Singles {
 
     @Test
     fun singleQuery1() {
-        val queryStr = "MATCH Milestone RETURN 1"
+        val queryStr = "MATCH Milestone RETURN VALUE 1"
         val goal = "singleQuery"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
@@ -268,7 +267,7 @@ class test_VistraqQuery_Singles {
     @Test
     fun singleQuery2() {
         val queryStr = """
-   MATCH Milestone WHERE true RETURN 1
+   MATCH Milestone WHERE true RETURN VALUE 1
         """.trimIndent()
         val goal = "singleQuery"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
@@ -398,5 +397,25 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
         } catch (e: ParseFailedException) {
             fail("${e.message}, at ${e.location}, expected ${e.expected}")
         }
+    }
+
+    @Test
+    fun returnTable1() {
+        val queryStr = "COLUMN a CONTAINING a.identity ORDER BY a"
+        val goal = "columnDefinition"
+        val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.toString())
+        val resultStr = result.sppt!!.asSentence
+        assertEquals(queryStr, resultStr)
+    }
+
+    @Test
+    fun returnTable() {
+        val queryStr = "MATCH A AS a LINKED TO B AS b RETURN TABLE COLUMN a CONTAINING a.identity COLUMN b CONTAINING b.identity ORDER BY a"
+        val goal = "singleQuery"
+        val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
+        assertNotNull(result.sppt, result.issues.toString())
+        val resultStr = result.sppt!!.asSentence
+        assertEquals(queryStr, resultStr)
     }
 }

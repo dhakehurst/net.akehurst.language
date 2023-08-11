@@ -20,7 +20,6 @@ package net.akehurst.language.processor.java8
 //import com.soywiz.korio.file.std.resourcesVfs
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.sppt.SPPT2InputText
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.parser.InputLocation
@@ -346,7 +345,7 @@ public class BadBinaryLiterals {
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -358,7 +357,7 @@ public class BadBinaryLiterals {
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -370,7 +369,7 @@ public class BadBinaryLiterals {
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -383,7 +382,7 @@ public class BadBinaryLiterals {
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -396,7 +395,7 @@ public class BadBinaryLiterals {
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -409,7 +408,7 @@ public class BadBinaryLiterals {
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -422,7 +421,7 @@ public class BadBinaryLiterals {
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -435,7 +434,7 @@ public class BadBinaryLiterals {
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -448,7 +447,7 @@ public class BadBinaryLiterals {
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -461,7 +460,7 @@ public class BadBinaryLiterals {
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -474,7 +473,7 @@ public class BadBinaryLiterals {
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -526,11 +525,11 @@ public class BadBinaryLiterals {
         val goal = "Block"
 
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -642,7 +641,7 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -660,7 +659,7 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         assertNotNull(result.sppt)
         assertEquals(3, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -682,7 +681,7 @@ class A {
         assertNotNull(result.sppt)
         assertEquals(3, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -705,7 +704,7 @@ class A {
         assertNotNull(result.sppt)
         assertEquals(3, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -722,7 +721,7 @@ class A {
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -739,7 +738,7 @@ class A {
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -756,7 +755,7 @@ class A {
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -773,7 +772,7 @@ class A {
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -790,7 +789,7 @@ class A {
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -807,7 +806,7 @@ class A {
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -824,7 +823,7 @@ class A {
         assertNotNull(result.sppt)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 

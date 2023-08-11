@@ -200,6 +200,7 @@ internal data class LookaheadInfoPart(
 }
 
 internal data class TransInfo(
+    val prevPrev: Set<Set<RulePosition>>,
     val prev: Set<Set<RulePosition>>,
     val action: ParseAction,
     val to: Set<RulePosition>,

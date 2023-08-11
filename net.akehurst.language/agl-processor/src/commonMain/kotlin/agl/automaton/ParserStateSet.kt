@@ -225,12 +225,22 @@ internal class ParserStateSet(
         for (si in stateInfos) {
             val state = this.fetchState(si.rulePositions.toList())!!
             for (ti in si.possibleTrans) {
-                val previousStates = ti.prev.map { p -> this.fetchCompatibleState(p.toList()) ?: error("Internal error, state not created for $p") }
+                val from = state
                 val action = ti.action
                 val to = this.fetchCompatibleState(ti.to.toList()) ?: error("Internal error, state not created for ${ti.to}")
                 val lhs = ti.lookahead.map { Lookahead(it.guard.lhs(this), it.up.lhs(this)) }.toSet()
-                TODO("need prevPrev")
-                //state.outTransitions.createTransition(previousStates.toSet(), state, action, to, lhs)
+                for (ps in ti.prev) {
+                    val prev = this.fetchCompatibleState(ps.toList()) ?: error("Internal error, state not created for $ps")
+                    when {
+                        state.isNotAtEnd -> state.outTransitions.createTransitionForIncomplete(prev, from, action, to, lhs)
+                        else -> {
+                            for (pps in ti.prevPrev) {
+                                val prevPrev = this.fetchCompatibleState(pps.toList()) ?: error("Internal error, state not created for $pps")
+                                state.outTransitions.createTransitionForComplete(prev, prevPrev, from, action, to, lhs)
+                            }
+                        }
+                    }
+                }
             }
         }
     }

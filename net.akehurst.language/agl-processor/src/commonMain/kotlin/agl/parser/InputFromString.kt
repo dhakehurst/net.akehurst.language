@@ -19,10 +19,9 @@ package net.akehurst.language.agl.parser
 import agl.runtime.graph.CompletedNodesStore
 import net.akehurst.language.agl.automaton.LookaheadSetPart
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.agl.sppt.SPPTLeafFromInput
+import net.akehurst.language.agl.sppt.CompleteTreeDataNode
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.regex.RegexMatcher
-import net.akehurst.language.api.sppt.SPPTLeaf
 import kotlin.math.min
 
 internal class InputFromString(
@@ -34,6 +33,7 @@ internal class InputFromString(
         const val contextSize = 10
         val END_OF_TEXT = 3.toChar().toString()
         val EOL_PATTERN = Regex("\n", setOf(RegexOption.MULTILINE))
+        val LEAF_NONE = CompleteTreeDataNode(RuntimeRuleSet.UNDEFINED_RULE, -1, -1, -1, -1)
 
         //TODO: write a scanner that counts eols as it goes, rather than scanning the text twice
         fun eolPositions(text: String): List<Int> = EOL_PATTERN.findAll(text).map { it.range.first }.toList()
@@ -75,7 +75,7 @@ internal class InputFromString(
 
     //internal val leaves: MutableMap<LeafIndex, SPPTLeafDefault?> = mutableMapOf()
     // leaves[runtimeRule, position]
-    internal val leaves = CompletedNodesStore<SPPTLeaf>(numTerminalRules, text.length + 1)
+    internal val leaves = CompletedNodesStore<CompleteTreeDataNode>(numTerminalRules, text.length + 1)
 
     fun reset() {
         this.leaves.clear()
@@ -216,12 +216,12 @@ internal class InputFromString(
         return InputLocation(position, column, line, newLength)
     }
 
-    private fun tryCreateLeaf(terminalRuntimeRule: RuntimeRule, atInputPosition: Int): SPPTLeaf {
+    private fun tryCreateLeaf(terminalRuntimeRule: RuntimeRule, atInputPosition: Int): CompleteTreeDataNode {
         // LeafIndex passed as argument because we already created it to try and find the leaf in the cache
         return if (terminalRuntimeRule.rhs is RuntimeRuleRhsEmpty) {
             //val location = this.nextLocation(lastLocation, 0)
             //val leaf = SPPTLeafDefault(terminalRuntimeRule, location, true, "", 0)
-            val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, atInputPosition, 0)
+            val leaf = CompleteTreeDataNode(terminalRuntimeRule, atInputPosition, atInputPosition, atInputPosition, 0)
             this.leaves[terminalRuntimeRule, atInputPosition] = leaf
             //val cindex = CompleteNodeIndex(terminalRuntimeRule.number, inputPosition)//0, index.startPosition)
             //this.completeNodes[cindex] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
@@ -229,12 +229,12 @@ internal class InputFromString(
         } else {
             val match = this.tryMatchText(atInputPosition, terminalRuntimeRule)
             if (null == match) {
-                this.leaves[terminalRuntimeRule, atInputPosition] = SPPTLeafFromInput.NONE
-                SPPTLeafFromInput.NONE
+                this.leaves[terminalRuntimeRule, atInputPosition] = LEAF_NONE
+                LEAF_NONE
             } else {
                 //val location = this.nextLocation(lastLocation, match.length)//match.matchedText.length)
                 val nextInputPosition = atInputPosition + match.matchedText.length
-                val leaf = SPPTLeafFromInput(this, terminalRuntimeRule, atInputPosition, nextInputPosition, 0)
+                val leaf = CompleteTreeDataNode(terminalRuntimeRule, atInputPosition, nextInputPosition, nextInputPosition, 0)
                 this.leaves[terminalRuntimeRule, atInputPosition] = leaf
                 //val cindex = CompleteNodeIndex(terminalRuntimeRule.number, inputPosition)//0, index.startPosition)
                 //this.completeNodes[cindex] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
@@ -243,7 +243,7 @@ internal class InputFromString(
         }
     }
 
-    fun findOrTryCreateLeaf(terminalRuntimeRule: RuntimeRule, inputPosition: Int): SPPTLeaf? {
+    fun findOrTryCreateLeaf(terminalRuntimeRule: RuntimeRule, inputPosition: Int): CompleteTreeDataNode? {
         //val index = LeafIndex(terminalRuntimeRule.number, inputPosition)
         var existing = this.leaves[terminalRuntimeRule, inputPosition]
         if (null == existing) {
@@ -251,10 +251,10 @@ internal class InputFromString(
             //this.leaves[index] = l
             //this.completeNodes[terminalRuntimeRule.number, inputPosition] = existing
         }
-        return if (SPPTLeafFromInput.NONE === existing) {
+        return if (LEAF_NONE === existing) {
             null
         } else {
-            existing as SPPTLeaf
+            existing
         }
     }
 
