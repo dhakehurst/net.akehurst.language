@@ -66,9 +66,9 @@ grammar Query {
 
 	whereClause = 'WHERE' expression ;
 
-	returnDefinition = returnExpression | returnTable | returnSelect | returnGraph ;
+	returnDefinition = returnValue | returnTable | returnSelect | returnGraph ;
 
-	returnExpression = 'RETURN' aggregateFunctionCallOrExpression ;
+	returnValue = 'RETURN' ' VALUE' aggregateFunctionCallOrExpression ;
 
 	returnTable = 'RETURN' 'TABLE' columnDefinition+ orderBy? ;
 	columnDefinition = 'COLUMN' NAME 'CONTAINING' aggregateFunctionCallOrExpression whereClause? ;
@@ -105,9 +105,8 @@ grammar Query {
     expression
 		= root
 		| literalValue
-		| propertyCall
+		| navigationExpression
         | indexOperatorCall
-		| methodCall
 		| infixLogical
 		| infixArithmetic
 		| infixComparison
@@ -117,17 +116,20 @@ grammar Query {
 	preference expression {
 	  conditionalExpression on '?' left
 	  infixLogical on logicalOperator left
+	  aggregateFunctionCallOrExpression 1 on 'ORDER' left
 	  infixComparison on comparisonOperator left
 	  infixArithmetic on arithmeticOperator left
-  	  propertyCall on '.' left
+  	  navigationExpression on '.' left
 	}
 
     aliasDefinition = 'AS' NAME ;
 
     groupExpression = '(' expression ')'  ;
 	root = NAME;
-	propertyCall = expression '.' NAME ;
-	methodCall = expression '.' NAME '(' argList ')';
+	navigationExpression = expression '.' navigationCall ;
+	navigationCall = propertyCall | methodCall ;
+	propertyCall = NAME ;
+	methodCall = NAME '(' argList ')';
     indexOperatorCall = expression '[' expression ']' ;
 	argList = [expression / ',']* ;
 	infixLogical = [expression / logicalOperator]2+ ;
@@ -160,5 +162,4 @@ grammar Query {
     leaf INTEGER = "[0-9]+" ;
     leaf REAL = "[0-9]+[.][0-9]+" ;
     leaf NULL = 'null' ;
-
 }

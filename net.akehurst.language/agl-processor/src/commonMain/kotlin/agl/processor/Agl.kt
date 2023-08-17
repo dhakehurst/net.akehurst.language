@@ -139,7 +139,7 @@ object Agl {
                 grammarDefinitionStr,
                 aglOptions ?: Agl.registry.agl.grammar.processor!!.optionsDefault()
             )
-            if (null == res.asm) {
+            if (null == res.asm || 0 == res.asm!!.size) {
                 LanguageProcessorResult(null, res.issues)
             } else {
                 val grammar = if (null == configuration?.targetGrammarName) {

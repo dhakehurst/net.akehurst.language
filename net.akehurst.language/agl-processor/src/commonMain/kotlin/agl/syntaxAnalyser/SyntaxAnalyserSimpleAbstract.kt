@@ -89,6 +89,8 @@ abstract class SyntaxAnalyserSimpleAbstract2<A : AsmSimple>(
 
     override val locationMap = mutableMapOf<Any, InputLocation>()
 
+    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<A>> = emptyMap()
+
     private fun findTypeForRule(ruleName: String) = this.typeModel.findTypeUsageForRule(ruleName)
 
     override fun clear() {

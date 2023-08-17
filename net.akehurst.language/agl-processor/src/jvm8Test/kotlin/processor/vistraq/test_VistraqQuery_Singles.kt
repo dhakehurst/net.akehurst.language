@@ -401,10 +401,11 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
 
     @Test
     fun returnTable1() {
-        val queryStr = "COLUMN a CONTAINING a.identity ORDER BY a"
-        val goal = "columnDefinition"
+        val queryStr = "RETURN TABLE COLUMN a CONTAINING a ORDER BY a"
+        val goal = "returnTable"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.toString())
+        println(result.issues)
         val resultStr = result.sppt!!.asSentence
         assertEquals(queryStr, resultStr)
     }

@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 
 interface RuleSet {
     companion object {
-        fun build(init: RuleSetBuilder.() -> Unit): RuleSet = runtimeRuleSet(init)
+        fun build(name: String, init: RuleSetBuilder.() -> Unit): RuleSet = runtimeRuleSet(name, init)
     }
 }
 

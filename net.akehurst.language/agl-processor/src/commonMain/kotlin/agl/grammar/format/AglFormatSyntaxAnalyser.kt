@@ -38,6 +38,8 @@ internal class AglFormatSyntaxAnalyser(
 
     override val locationMap: Map<Any, InputLocation> get() = _sa.locationMap
 
+    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<AglFormatterModel>> = emptyMap()
+
     override fun clear() {
         //TODO("not implemented")
     }

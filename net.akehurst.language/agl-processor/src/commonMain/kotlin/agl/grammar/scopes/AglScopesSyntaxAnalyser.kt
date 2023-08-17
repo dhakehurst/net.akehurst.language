@@ -18,6 +18,7 @@ package net.akehurst.language.agl.grammar.scopes
 import net.akehurst.language.agl.collections.toSeparatedList
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromTreeDataAbstract
 import net.akehurst.language.agl.syntaxAnalyser.locationIn
+import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
@@ -47,6 +48,8 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserFromTreeDataAbstract<ScopeModelAgl
         val asmObject: Any,
         val value: String
     )
+
+    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<ScopeModelAgl>> = emptyMap()
 
     override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
         return emptyList()

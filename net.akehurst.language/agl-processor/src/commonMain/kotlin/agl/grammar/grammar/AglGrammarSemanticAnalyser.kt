@@ -38,6 +38,7 @@ class AglGrammarSemanticAnalyser(
     private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private var _locationMap: Map<*, InputLocation>? = null
     private var _analyseAmbiguities = true
+    private val _usedRules = mutableMapOf<Grammar, MutableMap<GrammarRule, Boolean>>()
 
     private fun issueWarn(item: Any, message: String, data: Any?) {
         val location = this._locationMap?.get(item)
@@ -50,6 +51,7 @@ class AglGrammarSemanticAnalyser(
     }
 
     override fun clear() {
+        _usedRules.clear()
         this.issues.clear()
         _locationMap = null
     }
@@ -72,7 +74,8 @@ class AglGrammarSemanticAnalyser(
     private fun checkGrammar(grammarList: List<Grammar>, automatonKind: AutomatonKind) {
         grammarList.forEach { grammar ->
             this.checkExtendsExist(grammar.extends)
-            this.checkNonTerminalReferencesExist(grammar)
+            this.analyseGrammar(grammar)
+            this.checkRuleUsage(grammar)
             if (issues.errors.isEmpty() && _analyseAmbiguities) {
                 this.checkForAmbiguities(grammar, automatonKind)
             }
@@ -94,46 +97,61 @@ class AglGrammarSemanticAnalyser(
         }
     }
 
-    private fun checkNonTerminalReferencesExist(grammar: Grammar) {
-        grammar.grammarRule.forEach {
-            val rhs = it.rhs
-            this.checkRuleItem(grammar, rhs)
+    private fun checkRuleUsage(grammar: Grammar) {
+        _usedRules[grammar]!!.entries.forEach {
+            when (it.value) {
+                true -> Unit
+                else -> issueWarn(it.key, "Grammar Rule '${it.key.name}' is not used.", null)
+            }
         }
     }
 
-    private fun checkRuleItem(grammar: Grammar, rhs: RuleItem) {
+    private fun analyseGrammar(grammar: Grammar) {
+        _usedRules[grammar] = mutableMapOf()
+        // default usage is false for all rules in this grammar
+        grammar.grammarRule.forEach {
+            when {
+                it.isSkip -> this._usedRules[grammar]!![it] = true
+                else -> this._usedRules[grammar]!![it] = false
+            }
+        }
+        // first rule is default goal rule
+        this._usedRules[grammar]!![grammar.grammarRule[0]] = true
+
+        grammar.grammarRule.forEach {
+            val rhs = it.rhs
+            this.analyseRuleItem(grammar, rhs)
+        }
+    }
+
+    private fun analyseRuleItem(grammar: Grammar, rhs: RuleItem) {
         when (rhs) {
             is EmptyRule -> Unit
             is Terminal -> Unit
             is Embedded -> checkGrammarExists(rhs.embeddedGrammarReference)
+            is Concatenation -> rhs.items.forEach { analyseRuleItem(grammar, it) }
+            is Choice -> rhs.alternative.forEach { analyseRuleItem(grammar, it) }
+            is Group -> analyseRuleItem(grammar, rhs.groupedContent)
+            is OptionalItem -> analyseRuleItem(grammar, rhs.item)
+            is SimpleList -> analyseRuleItem(grammar, rhs.item)
+            is SeparatedList -> {
+                analyseRuleItem(grammar, rhs.item)
+                analyseRuleItem(grammar, rhs.separator)
+            }
+
             is NonTerminal -> {
                 val all = grammar.findAllNonTerminalRule(rhs.name)
                 when {
                     all.isEmpty() -> issueError(rhs, "GrammarRule '${rhs.name}' not found in grammar '${grammar.name}'", null)
-                    all.size > 1 -> issueError(rhs, "More than one rule named '${rhs.name}' in grammar '${grammar.name}', have you remembered the 'override' modifier", null)
-                    else -> Unit //resolved
+                    all.size > 1 -> {
+                        this._usedRules[grammar]!![all.first()] = true
+                        issueError(rhs, "More than one rule named '${rhs.name}' in grammar '${grammar.name}', have you remembered the 'override' modifier", null)
+                    }
+
+                    else -> {
+                        this._usedRules[grammar]!![all.first()] = true
+                    }
                 }
-            }
-
-            is Concatenation -> {
-                rhs.items.forEach { checkRuleItem(grammar, it) }
-            }
-
-            is Choice -> {
-                rhs.alternative.forEach { checkRuleItem(grammar, it) }
-            }
-
-            is Group -> {
-                checkRuleItem(grammar, rhs.groupedContent)
-            }
-
-            is SimpleList -> {
-                checkRuleItem(grammar, rhs.item)
-            }
-
-            is SeparatedList -> {
-                checkRuleItem(grammar, rhs.item)
-                checkRuleItem(grammar, rhs.separator)
             }
         }
     }

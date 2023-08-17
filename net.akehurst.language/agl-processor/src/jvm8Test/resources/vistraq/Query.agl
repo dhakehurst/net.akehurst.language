@@ -23,8 +23,9 @@ grammar Query {
 	leaf PERIOD = 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year' ;
 
 
-	querySource = pathQuery | storedQueryReference ;
-	storedQueryReference = 'FROM' STORED_QUERY_ID ;
+	querySource = pathQuery | storedQueryReference | preQuery;
+	storedQueryReference = 'FROM' STORED_QUERY_ID whereClause? ;
+    preQuery = 'FROM' query pathQuery;
     pathQuery = 'MATCH' pathExpression whereClause? ;
     pathExpression =  nodeSelector linkedNodeSelectorPath? ;
 
@@ -115,6 +116,7 @@ grammar Query {
 	preference expression {
 	  conditionalExpression on '?' left
 	  infixLogical on logicalOperator left
+	  aggregateFunctionCallOrExpression 1 on 'ORDER' left
 	  infixComparison on comparisonOperator left
 	  infixArithmetic on arithmeticOperator left
   	  navigationExpression on '.' left

@@ -22,6 +22,7 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.syntaxAnalyser.BranchHandler2
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromTreeDataAbstract
 import net.akehurst.language.agl.syntaxAnalyser.locationIn
+import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageProcessorPhase
@@ -35,6 +36,8 @@ internal class AglGrammarSyntaxAnalyser(
     private val _issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
     private val _localStore = mutableMapOf<String, Any>()
+
+    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<List<Grammar>>> = emptyMap()
 
     init {
         this.registerFor("grammarDefinition", this::grammarDefinition as BranchHandler2<List<Grammar>>)
@@ -393,6 +396,7 @@ internal class AglGrammarSyntaxAnalyser(
         val item = children[0] as NonTerminal
         val choiceNumber = when {
             null == children[1] -> 0
+            children[1] is String -> (children[1] as String).toInt() //FIXME: choiceNumber not called!
             else -> children[1] as Int
         }
         val terminalList = children[3] as List<SimpleItem>

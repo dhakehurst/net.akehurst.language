@@ -17,6 +17,7 @@ package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.collections.toSeparatedList
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromTreeDataAbstract
+import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.SentenceContext
@@ -41,6 +42,8 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserFromTreeDataAbstract<AglSt
         super.register(this::styleList)
         super.register(this::style)
     }
+
+    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<AglStyleModel>> = emptyMap()
 
     override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
         return emptyList()
