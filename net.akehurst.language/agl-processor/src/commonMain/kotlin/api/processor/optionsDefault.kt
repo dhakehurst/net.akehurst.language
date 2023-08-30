@@ -38,7 +38,8 @@ internal class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
 internal class ParseOptionsDefault(
     override var goalRuleName: String? = null,
     override var automatonKind: AutomatonKind = AutomatonKind.LOOKAHEAD_1,
-    override var reportErrors: Boolean = true
+    override var reportErrors: Boolean = true,
+    override var cacheSkip: Boolean = true
 ) : ParseOptions
 
 internal class SyntaxAnalysisOptionsDefault<AsmType : Any, ContextType : Any>(
@@ -170,6 +171,7 @@ class ParseOptionsBuilder {
     private var _goalRuleName: String? = null
     private var _automatonKind: AutomatonKind = AutomatonKind.LOOKAHEAD_1
     private var _reportErrors: Boolean = true
+    private var _cacheSkip: Boolean = true
 
     fun goalRuleName(value: String?) {
         _goalRuleName = value
@@ -183,8 +185,12 @@ class ParseOptionsBuilder {
         _reportErrors = value
     }
 
+    fun cacheSkip(value: Boolean) {
+        _cacheSkip = value
+    }
+
     fun build(): ParseOptions {
-        return ParseOptionsDefault(_goalRuleName, _automatonKind, _reportErrors)
+        return ParseOptionsDefault(_goalRuleName, _automatonKind, _reportErrors, _cacheSkip)
     }
 }
 

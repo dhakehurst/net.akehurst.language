@@ -35,11 +35,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class TestData(
-    val sentence: String,
-    val expected: AsmSimple
-)
-
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class test_SyntaxAnalyserSimple {
 
@@ -52,6 +47,11 @@ class test_SyntaxAnalyserSimple {
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
             return result.processor!!
         }
+
+        class TestData(
+            val sentence: String,
+            val expected: AsmSimple
+        )
 
         fun MutableList<TestData>.define(sentence: String, sppt: String? = null, expected: () -> AsmSimple) = this.add(TestData(sentence, expected()))
 
@@ -267,7 +267,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("Test") {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("A"); ref("B"); ref("C") }
             concatenation("A") { ref("a"); ref("x") }
             concatenation("B") { ref("b"); ref("x") }
@@ -477,7 +477,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("Test") {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("A"); ref("B"); ref("C") }
             concatenation("A") { ref("a"); ref("x") }
             choice("B", RuntimeRuleChoiceKind.LONGEST_PRIORITY) { ref("c"); ref("D") }
@@ -2156,7 +2156,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("Test") {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("BC") }
                 concatenation { ref("§S§multi1") }
@@ -2217,7 +2217,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("Test") {
             concatenation("S") { ref("a"); ref("§S§choice1"); ref("e") }
             choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("BC") }
@@ -2275,7 +2275,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("Test") {
             concatenation("S") { ref("a"); ref("§S§opt2"); ref("e") }
             optional("§S§opt2", "§S§choice1")
             choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
@@ -2368,7 +2368,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("Test") {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("a"); ref("b") }
                 concatenation { ref("c"); ref("d"); ref("e") }
@@ -2439,7 +2439,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("Test") {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("§S§group1") }
                 concatenation { ref("§S§group2") }
@@ -2520,7 +2520,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("Test") {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("a"); ref("b") }
                 concatenation { ref("c"); ref("d"); ref("e") }
@@ -2584,7 +2584,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("Test") {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("a"); ref("b") }
                 concatenation { ref("c"); ref("d"); ref("e") }
@@ -2650,7 +2650,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("Test") {
             concatenation("S") { ref("x"); ref("§S§choice1"); ref("y") }
             choice("§S§choice1", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("a"); ref("b") }
@@ -2741,7 +2741,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("Test") {
             concatenation("S") { ref("CH") }
             choice("CH", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("a"); ref("b") }
@@ -2824,7 +2824,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("Test") {
             concatenation("S") { ref("CH") }
             choice("CH", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("a"); ref("b") }
@@ -2909,7 +2909,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("Test") {
             concatenation("S") { ref("x"); ref("CH"); ref("y") }
             choice("CH", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("a"); ref("b") }
@@ -3002,7 +3002,7 @@ class test_SyntaxAnalyserSimple {
         """.trimIndent()
         val proc = testProc(grammarStr)
 
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("Test") {
             concatenation("S") { ref("x"); ref("CH"); ref("y") }
             choice("CH", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("a"); ref("b") }
@@ -3165,14 +3165,14 @@ class test_SyntaxAnalyserSimple {
             }
         """.trimIndent()
         val proc = testProc(grammarStr)
-        val Inner = runtimeRuleSet {
+        val Inner = runtimeRuleSet("I") {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("a") }
                 concatenation { ref("S"); ref("a") }
             }
             literal("a", "a")
         }
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("O") {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("d") }
                 concatenation { ref("B"); ref("S") }
@@ -3233,7 +3233,19 @@ class test_SyntaxAnalyserSimple {
                 string("d")
             }
         }
-        tests.define("babd") {
+        tests.define(
+            "babd",
+            """
+            S {
+              B {
+                b : 'b'
+                §I§S§embedded1 : <EMBED>::S { a : 'a' } 
+                b : 'b'
+              }
+              S { d : 'd' }
+            } 
+            """
+        ) {
             asmSimple {
                 tuple {
                     propertyTuple("b") {
@@ -3269,7 +3281,7 @@ class test_SyntaxAnalyserSimple {
             }
         """.trimIndent()
         val proc = testProc(grammarStr)
-        val Inner = runtimeRuleSet {
+        val Inner = runtimeRuleSet("I") {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("A") }
                 concatenation { ref("SA") }
@@ -3278,7 +3290,7 @@ class test_SyntaxAnalyserSimple {
             concatenation("A") { ref("a") }
             literal("a", "a")
         }
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("O") {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("B") }
                 concatenation { ref("SBC") }
@@ -3333,13 +3345,13 @@ class test_SyntaxAnalyserSimple {
             }
         """.trimIndent()
         val proc = testProc(grammarStr)
-        val Inner = runtimeRuleSet {
+        val Inner = runtimeRuleSet("I") {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { literal("a") }
                 concatenation { ref("S"); literal("a") }
             }
         }
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("O") {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("B") }
                 concatenation { ref("S"); ref("B") }
@@ -3395,7 +3407,7 @@ class test_SyntaxAnalyserSimple {
             }
         """.trimIndent()
         val proc = testProc(grammarStr)
-        val Inner = runtimeRuleSet {
+        val Inner = runtimeRuleSet("I") {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("A") }
                 concatenation { ref("SA") }
@@ -3404,7 +3416,7 @@ class test_SyntaxAnalyserSimple {
             concatenation("A") { ref("a") }
             literal("a", "a")
         }
-        checkRuntimeGrammar(proc, runtimeRuleSet {
+        checkRuntimeGrammar(proc, runtimeRuleSet("O") {
             choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 concatenation { ref("B") }
                 concatenation { ref("S"); ref("BC") }

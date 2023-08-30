@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.sppt
 
+import net.akehurst.language.agl.aMinimalVersion.CompleteNode
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.sppt.SpptDataNode
@@ -35,7 +36,18 @@ data class CompleteTreeDataNode(
     override val nextInputNoSkip: Int,
     override val option: Int
 ) : SpptDataNode {
-    override fun toString(): String = "CN(${rule.tag},$startPosition-$nextInputPosition|$option)"
+
+    private val _hashCode_cache = arrayOf(rule, startPosition, nextInputPosition).contentHashCode()
+    override fun hashCode(): Int = _hashCode_cache
+    override fun equals(other: Any?): Boolean = when {
+        other !is CompleteNode -> false
+        this.startPosition != other.startPosition -> false
+        this.nextInputPosition != other.nextInputPosition -> false
+        this.rule != other.rule -> false
+        else -> true
+    }
+
+    override fun toString(): String = "CN(${rule.tag}|${option},$startPosition-$nextInputPosition)"
 }
 
 // public so it can be serialised
@@ -50,6 +62,7 @@ class TreeDataComplete<CN : SpptDataNode>(
         private val SpptDataNode.preferred get() = PreferredNode(this.rule, this.startPosition)
     }
 
+    val isEmpty: Boolean get() = null == root && null == initialSkip && this._complete.isEmpty() && this._skipDataAfter.isEmpty() && this._embeddedFor.isEmpty()
     val completeChildren: Map<CN, Map<Int, List<CN>>> get() = this._complete
     var root: CN? = root; private set
     var initialSkip: TreeDataComplete<CN>? = initialSkip; private set

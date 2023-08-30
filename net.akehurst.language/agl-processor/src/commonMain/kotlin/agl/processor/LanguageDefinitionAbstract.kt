@@ -95,7 +95,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
 
     override val processor: LanguageProcessor<AsmType, ContextType>? get() = this._processor_cache.value
 
-    override val issues: IssueCollection get() = _issues
+    override val issues: IssueCollection<LanguageIssue> get() = _issues
 
     abstract override var styleStr: String?
 

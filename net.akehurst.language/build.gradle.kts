@@ -15,26 +15,20 @@
  */
 
 import com.github.gmazzo.gradle.plugins.BuildConfigExtension
-import org.gradle.internal.jvm.Jvm
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 plugins {
-    kotlin("multiplatform") version ("1.9.0") apply false
+    kotlin("multiplatform") version ("1.9.10") apply false
     id("org.jetbrains.dokka") version ("1.8.20") apply false
     id("com.github.gmazzo.buildconfig") version ("4.1.2") apply false
     id("nu.studer.credentials") version ("3.0")
-    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version ("1.9.0") apply false
+    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version ("1.9.10") apply false
 }
 val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9
 val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9
 val jvmTargetVersion = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
-
-println("===============================================")
-println("Gradle: ${GradleVersion.current()}")
-println("JVM: ${Jvm.current()} '${Jvm.current().javaHome}'")
-println("===============================================")
 
 allprojects {
     val version_project: String by project
@@ -43,7 +37,7 @@ allprojects {
     group = group_project
     version = version_project
 
-    buildDir = File(rootProject.projectDir, ".gradle-build/${project.name}")
+    project.layout.buildDirectory = File(rootProject.projectDir, ".gradle-build/${project.name}")
 }
 
 subprojects {

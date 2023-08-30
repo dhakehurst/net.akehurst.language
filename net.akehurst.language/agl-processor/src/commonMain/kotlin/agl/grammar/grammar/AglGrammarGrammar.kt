@@ -153,7 +153,7 @@ IDENTIFIER {
 namespace net.akehurst.language.agl
 grammar AglGrammar {
     skip WHITESPACE = "\s+" ;
-    skip MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
+    skip MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*/" ;
     skip SINGLE_LINE_COMMENT = "//[\n\r]*?" ;
 
     grammarDefinition = namespace definitions ;

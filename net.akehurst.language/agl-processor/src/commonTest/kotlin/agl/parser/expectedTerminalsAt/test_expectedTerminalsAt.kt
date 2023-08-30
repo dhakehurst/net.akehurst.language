@@ -17,11 +17,10 @@
 package net.akehurst.language.parser.expectedTerminalsAt
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.*
-import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 internal class test_expectedTerminalsAt {
 
@@ -39,8 +38,11 @@ internal class test_expectedTerminalsAt {
     fun concat_a_empty_0() {
         val rs = concat_a()
         val sp = ScanOnDemandParser(rs)
+        val sentence = ""
+        val goal = "S"
+        val position = 0
 
-        val actual = sp.expectedTerminalsAt("S", "", 0, AutomatonKind.LOOKAHEAD_1)
+        val actual = sp.expectedTerminalsAt(sentence, position, Agl.parseOptions { goalRuleName(goal) })
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
@@ -59,8 +61,11 @@ internal class test_expectedTerminalsAt {
     fun concat_a_a_0() {
         val rs = concat_a()
         val sp = ScanOnDemandParser(rs)
+        val sentence = "a"
+        val goal = "S"
+        val position = 0
 
-        val actual = sp.expectedTerminalsAt("S", "a", 0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
+        val actual = sp.expectedTerminalsAt(sentence, position, Agl.parseOptions { goalRuleName(goal) })
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
@@ -78,8 +83,11 @@ internal class test_expectedTerminalsAt {
     fun concat_a_a_1() {
         val rs = concat_a()
         val sp = ScanOnDemandParser(rs)
+        val sentence = "a"
+        val goal = "S"
+        val position = 1
 
-        val actual = sp.expectedTerminalsAt("S", "a", 1, AutomatonKind.LOOKAHEAD_1)
+        val actual = sp.expectedTerminalsAt(sentence, position, Agl.parseOptions { goalRuleName(goal) })
 
         assertEquals(true, actual.all { it.isTerminal })
         assertEquals(setOf(), actual)
@@ -100,8 +108,11 @@ internal class test_expectedTerminalsAt {
     fun concat_ab_empty_0() {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
+        val sentence = ""
+        val goal = "S"
+        val position = 0
 
-        val actual = sp.expectedTerminalsAt("S", "", 0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
+        val actual = sp.expectedTerminalsAt(sentence, position, Agl.parseOptions { goalRuleName(goal) })
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
@@ -120,8 +131,11 @@ internal class test_expectedTerminalsAt {
     fun concat_ab_a_0() {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
+        val sentence = "a"
+        val goal = "S"
+        val position = 0
 
-        val actual = sp.expectedTerminalsAt("S", "a", 0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
+        val actual = sp.expectedTerminalsAt(sentence, position, Agl.parseOptions { goalRuleName(goal) })
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
@@ -140,8 +154,11 @@ internal class test_expectedTerminalsAt {
     fun concat_ab_a_1() {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
+        val sentence = "a"
+        val goal = "S"
+        val position = 1
 
-        val actual = sp.expectedTerminalsAt("S", "a", 1, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
+        val actual = sp.expectedTerminalsAt(sentence, position, Agl.parseOptions { goalRuleName(goal) })
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
@@ -160,8 +177,11 @@ internal class test_expectedTerminalsAt {
     fun concat_ab_ab_1() {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
+        val sentence = "ab"
+        val goal = "S"
+        val position = 1
 
-        val actual = sp.expectedTerminalsAt("S", "ab", 1, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
+        val actual = sp.expectedTerminalsAt(sentence, position, Agl.parseOptions { goalRuleName(goal) })
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
@@ -180,8 +200,11 @@ internal class test_expectedTerminalsAt {
     fun concat_ab_ab_2() {
         val rs = concat_ab()
         val sp = ScanOnDemandParser(rs)
+        val sentence = "ab"
+        val goal = "S"
+        val position = 2
 
-        val actual = sp.expectedTerminalsAt("S", "ab", 2, AutomatonKind.LOOKAHEAD_1)
+        val actual = sp.expectedTerminalsAt(sentence, position, Agl.parseOptions { goalRuleName(goal) })
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
@@ -212,8 +235,11 @@ internal class test_expectedTerminalsAt {
     fun choiceEqual_ab_empty_0() {
         val rs = choiceEqual_ab()
         val sp = ScanOnDemandParser(rs)
+        val sentence = ""
+        val goal = "S"
+        val position = 0
 
-        val actual = sp.expectedTerminalsAt("S", "", 0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
+        val actual = sp.expectedTerminalsAt(sentence, position, Agl.parseOptions { goalRuleName(goal) })
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
@@ -234,8 +260,11 @@ internal class test_expectedTerminalsAt {
     fun choiceEqual_ab_a_1() {
         val rs = choiceEqual_ab()
         val sp = ScanOnDemandParser(rs)
+        val sentence = "a"
+        val goal = "S"
+        val position = 1
 
-        val actual = sp.expectedTerminalsAt("S", "a", 1, AutomatonKind.LOOKAHEAD_1)
+        val actual = sp.expectedTerminalsAt(sentence, position, Agl.parseOptions { goalRuleName(goal) })
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
@@ -252,8 +281,11 @@ internal class test_expectedTerminalsAt {
     fun choiceEqual_ab_b_1() {
         val rs = choiceEqual_ab()
         val sp = ScanOnDemandParser(rs)
+        val sentence = "b"
+        val goal = "S"
+        val position = 1
 
-        val actual = sp.expectedTerminalsAt("S", "b", 1, AutomatonKind.LOOKAHEAD_1)
+        val actual = sp.expectedTerminalsAt(sentence, position, Agl.parseOptions { goalRuleName(goal) })
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {

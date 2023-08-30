@@ -16,7 +16,7 @@
 package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.collections.toSeparatedList
-import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromTreeDataAbstract
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.processor.LanguageIssue
@@ -26,14 +26,14 @@ import net.akehurst.language.api.style.AglStyle
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.style.AglStyleRule
 
-internal class AglStyleSyntaxAnalyser : SyntaxAnalyserFromTreeDataAbstract<AglStyleModel>() {
+internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<AglStyleModel>() {
 
     companion object {
         //not sure if this should be here or in grammar object
         const val KEYWORD_STYLE_ID = "\$keyword"
     }
 
-    init {
+    override fun registerHandlers() {
         super.register(this::rules)
         super.register(this::rule)
         super.register(this::selectorExpression)

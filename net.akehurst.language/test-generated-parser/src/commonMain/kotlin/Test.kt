@@ -46,7 +46,7 @@ object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<AsmSimple, C
     override val scopeModelString = """
     """
 
-    override val ruleSet: RuleSet = RuleSet.build {
+    override val ruleSet: RuleSet = RuleSet.build("Test") {
         concatenation("S") { literal("a") }
     }
 

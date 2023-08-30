@@ -170,7 +170,7 @@ internal class ParseGraph(
 
     val peekNextHead get() = this._gss.peekFirstHead!!
 
-    val isEmpty: Boolean get() = _gss.isEmpty
+    val isEmpty: Boolean get() = _gss.isEmpty && treeData.isClean
 
     fun createGrowingNodeIndex(
         state: ParserState,
@@ -545,8 +545,19 @@ internal class ParseGraph(
         }
     }
 
+    fun dropGrowingTreeData(head: GrowingNodeIndex) {
+        if (head.isLeaf.not() && head.isComplete.not()) {
+            when {
+                //head.isComplete -> treeData.removeTreeComplete(head.complete)
+                else -> treeData.removeTreeGrowing(head)
+            }
+        }
+    }
+
     fun dropStackWithHead(head: GrowingNodeIndex) {
-        this._gss.dropStack(head)
+        val dropped = this._gss.dropStack(head) { n ->
+            dropGrowingTreeData(n)
+        }
     }
 
     /**

@@ -16,7 +16,7 @@
 package net.akehurst.language.agl.grammar.scopes
 
 import net.akehurst.language.agl.collections.toSeparatedList
-import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromTreeDataAbstract
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.agl.syntaxAnalyser.locationIn
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.GrammarItem
@@ -25,9 +25,9 @@ import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 
-class AglScopesSyntaxAnalyser : SyntaxAnalyserFromTreeDataAbstract<ScopeModelAgl>() {
+class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<ScopeModelAgl>() {
 
-    init {
+    override fun registerHandlers() {
         super.register(this::declarations)
         super.register(this::rootIdentifiables)
         super.register(this::scopes)

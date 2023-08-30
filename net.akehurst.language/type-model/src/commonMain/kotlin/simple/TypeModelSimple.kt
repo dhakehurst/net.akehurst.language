@@ -40,7 +40,7 @@ abstract class TypeModelAbstract(
     override val namespace: String,
     override val name: String,
     override val rootTypeName: String?,
-    override val imports: Set<TypeModel>
+    imports: Set<TypeModel>
 ) : TypeModel {
 
     private var _nextUnnamedSuperTypeTypeId = 0
@@ -49,6 +49,9 @@ abstract class TypeModelAbstract(
     private var _nextTupleTypeId = 0
     private val _unnamedTupleTypes = hashMapOf<List<TypeUsage>, TupleType>()
 
+    protected val _imports = imports.toMutableSet()
+
+    override val imports: Set<TypeModel> get() = _imports
 
     override val qualifiedName get() = if (namespace.isBlank()) name else "$namespace.$name"
 

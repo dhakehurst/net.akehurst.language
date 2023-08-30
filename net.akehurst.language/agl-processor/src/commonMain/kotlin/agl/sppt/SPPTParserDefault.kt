@@ -142,29 +142,27 @@ internal class SPPTParserDefault(
     }
 }
 
+private data class QName(val full: String) {
+    val isQualified get() = this.full.contains(".")
+    val name get() = this.full.substringAfter(".", this.full)
+    val qualifier get() = this.full.substringBefore(".", "")
+}
+
+private data class RuleReference(val qname: QName?, val name: String) {
+    val isQualified get() = null != this.qname
+}
+
+private data class NodeStart(
+    val ref: RuleReference,
+    val option: Int,
+    val sentenceStartPosition: Int,
+    val sentenceNextInputPosition: Int
+)
+
 internal class TreeParser(
     val treeAsString: String,
     val embeddedRuntimeRuleSets: Map<String, RuntimeRuleSet>
 ) {
-
-    companion object {
-        private data class QName(val full: String) {
-            val isQualified get() = this.full.contains(".")
-            val name get() = this.full.substringAfter(".", this.full)
-            val qualifier get() = this.full.substringBefore(".", "")
-        }
-
-        private data class RuleReference(val qname: QName?, val name: String) {
-            val isQualified get() = null != this.qname
-        }
-
-        private data class NodeStart(
-            val ref: RuleReference,
-            val option: Int,
-            val sentenceStartPosition: Int,
-            val sentenceNextInputPosition: Int
-        )
-    }
 
     val sentence: String get() = this._sentenceBuilder.toString()
 

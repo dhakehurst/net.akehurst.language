@@ -22,7 +22,7 @@ import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 
-operator fun IssueCollection.plus(other: IssueCollection): IssueHolder {
+operator fun IssueCollection<LanguageIssue>.plus(other: IssueCollection<LanguageIssue>): IssueHolder {
     val issues = IssueHolder(LanguageProcessorPhase.ALL)
     issues.addAll(this)
     issues.addAll(other)
@@ -31,7 +31,7 @@ operator fun IssueCollection.plus(other: IssueCollection): IssueHolder {
 
 class IssueHolder(
     private val defaultPhase: LanguageProcessorPhase
-) : IssueCollection {
+) : IssueCollection<LanguageIssue> {
 
     private val _issues = mutableSetOf<LanguageIssue>()
 
@@ -60,7 +60,7 @@ class IssueHolder(
         raise(LanguageIssueKind.ERROR, defaultPhase, location, message, data)
 
 
-    fun addAll(other: IssueCollection) {
+    fun addAll(other: IssueCollection<LanguageIssue>) {
         this._issues.addAll(other.all)
     }
 

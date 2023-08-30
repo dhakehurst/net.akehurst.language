@@ -20,7 +20,12 @@ import net.akehurst.language.api.parser.InputLocation
 
 enum class LanguageIssueKind { ERROR, WARNING, INFORMATION }
 
-enum class LanguageProcessorPhase { GRAMMAR, PARSE, SYNTAX_ANALYSIS, SEMANTIC_ANALYSIS, FORMATTER, ALL }
+enum class LanguageProcessorPhase {
+    GRAMMAR,
+    PARSE, SYNTAX_ANALYSIS, SEMANTIC_ANALYSIS,
+    INTERPRETER, GENERATOR, FORMATTER,
+    ALL
+}
 
 data class LanguageIssue(
     val kind: LanguageIssueKind,

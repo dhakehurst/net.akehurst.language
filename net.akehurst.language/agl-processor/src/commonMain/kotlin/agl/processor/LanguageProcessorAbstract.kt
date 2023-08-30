@@ -58,7 +58,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     private val _completionProvider: CompletionProvider by lazy { CompletionProvider(this.grammar) }
     private val _scanner by lazy { Scanner(this.runtimeRuleSet) }
-    private val parser: Parser by lazy { ScanOnDemandParser(this.runtimeRuleSet) }
+    internal val parser: Parser by lazy { ScanOnDemandParser(this.runtimeRuleSet) }
 
     override val spptParser: SPPTParser by lazy {
         val embeddedRuntimeRuleSets = grammar.allResolvedEmbeddedGrammars.map {
@@ -141,7 +141,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     override fun parse(sentence: String, options: ParseOptions?): ParseResult {//Pair<SharedPackedParseTree?, List<LanguageIssue>> {
         val opts = options ?: parseOptionsDefault()
         if (null == opts.goalRuleName) opts.goalRuleName = this.defaultGoalRuleName
-        return this.parser.parseForGoal(opts.goalRuleName!!, sentence)
+        return this.parser.parse(sentence, opts)
     }
 
     override fun syntaxAnalysis(
@@ -215,7 +215,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override fun expectedTerminalsAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
         val opts = defaultOptions(options)
-        val parserExpected: Set<RuntimeRule> = this.parser.expectedTerminalsAt(opts.parse.goalRuleName!!, sentence, position, opts.parse.automatonKind)
+        val parserExpected: Set<RuntimeRule> = this.parser.expectedTerminalsAt(sentence, position, opts.parse)
         //val grammarExpected: List<RuleItem> = parserExpected
         //    .filter { it !== RuntimeRuleSet.END_OF_TEXT }
         //    .map { this._converterToRuntimeRules.originalRuleItemFor(it.runtimeRuleSetNumber, it.number) }

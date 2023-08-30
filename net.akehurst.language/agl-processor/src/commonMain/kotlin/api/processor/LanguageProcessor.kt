@@ -37,7 +37,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
  */
 interface LanguageProcessor<AsmType : Any, ContextType : Any> {
 
-    val issues: IssueCollection
+    val issues: IssueCollection<LanguageIssue>
 
     val grammar: Grammar?
 

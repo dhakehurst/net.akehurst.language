@@ -59,6 +59,10 @@ class MutableStack<T>() {
     val isNotEmpty: Boolean get() = this.list.size != 0
     val elements: List<T> get() = this.list
 
+    fun clear() {
+        this.list.clear()
+    }
+
     fun push(item: T) {
         list.add(item)
     }

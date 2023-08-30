@@ -52,11 +52,11 @@ internal interface Parser {
      * @throws ParseTreeException
      * @throws GrammarRuleNotFoundException
      **/
-    fun expectedAt(goalRuleName: String, inputText: String, position: Int, automatonKind: AutomatonKind): Set<RuntimeRule>
+    fun expectedAt(sentence: String, position: Int, options: ParseOptions): Set<RuntimeRule>
 
     /*
      * List of terminal rules expected at the position
      */
-    fun expectedTerminalsAt(goalRuleName: String, inputText: String, position: Int, automatonKind: AutomatonKind): Set<RuntimeRule>
+    fun expectedTerminalsAt(sentence: String, position: Int, options: ParseOptions): Set<RuntimeRule>
 
 }

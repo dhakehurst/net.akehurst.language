@@ -41,6 +41,7 @@ import kotlin.math.max
 internal class RuntimeParser(
     val stateSet: ParserStateSet,
     val skipStateSet: ParserStateSet?, // null if this is a skipParser
+    val cacheSkip: Boolean,
     val userGoalRule: RuntimeRule,
     private val input: InputFromString,
     private val _issues: IssueHolder
@@ -82,7 +83,7 @@ internal class RuntimeParser(
     // must use a different instance of Input, so it can be reset, reset clears cached leaves. //TODO: check this
     private val skipParser = skipStateSet?.let {
         if (this.stateSet.preBuilt) this.skipStateSet.build()
-        RuntimeParser(it, null, skipStateSet.userGoalRule, InputFromString(skipStateSet.usedTerminalRules.size, this.input.text), _issues)
+        RuntimeParser(it, null, false, skipStateSet.userGoalRule, InputFromString(skipStateSet.usedTerminalRules.size, this.input.text), _issues)
     }
 
     fun reset() {
@@ -216,8 +217,7 @@ internal class RuntimeParser(
             //TODO: move empty checking stuff to doWidth
             if (head.isEmptyMatch && doneEmpties.contains(Pair(head.state, graph.previousOf(head)))) {
                 //don't do it again
-                val prev = this.graph.dropStackWithHead(head)
-                //prev.forEach { this.graph._gss._growingHeadHeap[it] = it } //TODO: should not do this here
+                this.graph.dropStackWithHead(head)
             } else {
                 if (head.isEmptyMatch) {
                     doneEmpties.add(Pair(head.state, graph.previousOf(head)))
@@ -344,6 +344,7 @@ internal class RuntimeParser(
         dropPrevs.forEach {
             if (it.value) {
                 graph.dropStackWithHead(it.key)
+                //graph.dropGrowingTreeData(it.key)
                 if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Dropped: $it" }
             } else {
                 doNoTransitionsTaken(it.key)
@@ -1024,17 +1025,21 @@ internal class RuntimeParser(
     }
 
     private fun tryParseSkipUntilNone(possibleEndOfSkip: Set<LookaheadSet>, startPosition: Int, growArgs: GrowArgs): TreeDataComplete<CompleteNodeIndex>? {
-        val key = Pair(startPosition, possibleEndOfSkip)
-        return if (_skip_cache.containsKey(key)) {
-            // can cache null as a valid result
-            _skip_cache[key]
-        } else {
-            val skipData = when (skipParser) { //TODO: raise test to outer level
-                null -> null
-                else -> tryParseSkip(possibleEndOfSkip, startPosition, growArgs)
+        return if (this.cacheSkip) {
+            val key = Pair(startPosition, possibleEndOfSkip)
+            if (_skip_cache.containsKey(key)) {
+                // can cache null as a valid result
+                _skip_cache[key]
+            } else {
+                val skipData = when (skipParser) { //TODO: raise test to outer level
+                    null -> null
+                    else -> tryParseSkip(possibleEndOfSkip, startPosition, growArgs)
+                }
+                _skip_cache[key] = skipData
+                skipData
             }
-            _skip_cache[key] = skipData
-            skipData
+        } else {
+            tryParseSkip(possibleEndOfSkip, startPosition, growArgs)
         }
     }
 
@@ -1069,7 +1074,7 @@ internal class RuntimeParser(
         val embeddedStartRule = embeddedRhs.embeddedStartRule
         val embeddedS0 = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedStartRule.tag, this.stateSet.automatonKind).startState
         val embeddedSkipStateSet = embeddedRuntimeRuleSet.skipParserStateSet
-        val embeddedParser = RuntimeParser(embeddedS0.stateSet, embeddedSkipStateSet, embeddedStartRule, this.input, _issues)
+        val embeddedParser = RuntimeParser(embeddedS0.stateSet, embeddedSkipStateSet, this.cacheSkip, embeddedStartRule, this.input, _issues)
         val skipTerms = this.skipStateSet?.firstTerminals ?: emptySet()
         val endingLookahead = transition.lookahead.first().guard //should ony ever be one
         val embeddedPossibleEOT = endingLookahead.unionContent(embeddedS0.stateSet, skipTerms)
@@ -1150,7 +1155,7 @@ internal class RuntimeParser(
             else -> ambigStr.joinToString(prefix = "\n    ", separator = "\n    ", postfix = "\n") { it }
         }
         val loc = input.locationFor(head.nextInputPositionAfterSkip, 1)
-        _issues.raise(LanguageIssueKind.WARNING, LanguageProcessorPhase.GRAMMAR, loc, "Ambiguity in parse (on $ambigOnStr): ($from) into $into", ambigOn)
+        _issues.raise(LanguageIssueKind.WARNING, LanguageProcessorPhase.GRAMMAR, loc, "Ambiguity in parse (on $ambigOnStr):\n  ($from) into $into", ambigOn)
     }
 
     private fun recordFailedWidthTo(parseArgs: GrowArgs, position: Int, transition: Transition) {

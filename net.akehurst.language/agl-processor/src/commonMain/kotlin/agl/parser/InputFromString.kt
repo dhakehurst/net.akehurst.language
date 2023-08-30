@@ -16,8 +16,8 @@
 
 package net.akehurst.language.agl.parser
 
-import agl.runtime.graph.CompletedNodesStore
 import net.akehurst.language.agl.automaton.LookaheadSetPart
+import net.akehurst.language.agl.runtime.graph.CompletedNodesStore
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.sppt.CompleteTreeDataNode
 import net.akehurst.language.api.parser.InputLocation

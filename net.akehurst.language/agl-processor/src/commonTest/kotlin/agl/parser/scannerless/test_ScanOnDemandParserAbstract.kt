@@ -83,7 +83,7 @@ internal abstract class test_ScanOnDemandParserAbstract(val build: Boolean = fal
         return result.sppt
     }
 
-    fun testFail(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int): Pair<SharedPackedParseTree?, IssueCollection> {
+    fun testFail(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int): Pair<SharedPackedParseTree?, IssueCollection<LanguageIssue>> {
         val parser = ScanOnDemandParser(rrs as RuntimeRuleSet)
         if (build) parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
         val p = parser.parseForGoal(goal, sentence)

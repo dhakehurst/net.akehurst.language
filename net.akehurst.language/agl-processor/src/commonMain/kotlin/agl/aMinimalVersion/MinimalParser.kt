@@ -417,7 +417,7 @@ internal class MinimalParser private constructor(
             }
             if (hd.isEmptyMatch && doneEmpties.contains(Pair(hd.state, gss.peekPrevious(hd)))) {
                 //don't do it again
-                gss.dropStack(hd)
+                gss.dropStack(hd) {}
                 if (TRACE) traceDrop(hd)
             } else {
                 if (hd.isEmptyMatch) {
@@ -440,7 +440,7 @@ internal class MinimalParser private constructor(
 
     private fun recordGoal(sppf: TreeData<GSSNode, CompleteNode>, hd: GSSNode) {
         sppf.complete.setRoot(hd.complete)
-        gss.dropStack(hd)
+        gss.dropStack(hd) {}
     }
 
     private fun growIncomplete(hd: GSSNode, peot: LookaheadSetPart) {
@@ -461,7 +461,7 @@ internal class MinimalParser private constructor(
             grown = grown || b
             if (TRACE) traceTrans(hd, pv, tr, b)
         }
-        if (grown.not()) gss.dropStack(hd)
+        if (grown.not()) gss.dropStack(hd) {}
     }
 
     private fun growComplete(hd: GSSNode, peot: LookaheadSetPart) {
@@ -492,18 +492,22 @@ internal class MinimalParser private constructor(
 
     private fun cleanUpGss(hd: GSSNode, headGrownHeight: Boolean, headGrownGraft: Boolean, dropPrevs: Map<GSSNode, Boolean>) {
         when {
-            headGrownHeight.not() && headGrownGraft.not() -> gss.dropStack(hd)
-            headGrownHeight && headGrownGraft.not() -> gss.dropStack(hd)
-            headGrownHeight.not() && headGrownGraft -> gss.dropStack(hd)
-            headGrownHeight && headGrownGraft -> gss.dropStack(hd)
+            headGrownHeight.not() && headGrownGraft.not() -> gss.dropStack(hd) {}
+            headGrownHeight && headGrownGraft.not() -> gss.dropStack(hd) {}
+            headGrownHeight.not() && headGrownGraft -> gss.dropStack(hd) {}
+            headGrownHeight && headGrownGraft -> gss.dropStack(hd) {}
         }
         dropPrevs.forEach {
             if (it.value) {
-                gss.dropStack(it.key)
+                gss.dropStack(it.key) {}
             } else {
-                gss.dropStack(it.key)
+                gss.dropStack(it.key) {}
             }
         }
+    }
+
+    private fun dropStackAndData(hd: GSSNode) {
+        gss.dropStack(hd) { TODO() }
     }
 
     private fun growComplete2(hd: GSSNode, pv: GSSNode, pp: GSSNode?, peot: LookaheadSetPart): Pair<Boolean, Boolean> {

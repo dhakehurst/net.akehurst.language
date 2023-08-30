@@ -22,35 +22,35 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 class LanguageProcessorResult<AsmType : Any, ContextType : Any>(
     val processor: LanguageProcessor<AsmType, ContextType>?,
-    val issues: IssueCollection
+    val issues: IssueCollection<LanguageIssue>
 )
 
 data class ParseResultDefault(
-    override  val sppt:SharedPackedParseTree?,
-    override  val issues:IssueCollection
+    override val sppt: SharedPackedParseTree?,
+    override val issues: IssueCollection<LanguageIssue>
 ) : ParseResult
 
 data class SyntaxAnalysisResultDefault<AsmType : Any>(
-    override  val asm:AsmType?,
-    override   val issues:IssueCollection,
-    override   val locationMap:Map<Any, InputLocation>
+    override val asm: AsmType?,
+    override val issues: IssueCollection<LanguageIssue>,
+    override val locationMap: Map<Any, InputLocation>
 ) : SyntaxAnalysisResult<AsmType>
 
 data class SemanticAnalysisResultDefault(
-    override    val issues:IssueCollection
+    override val issues: IssueCollection<LanguageIssue>
 ) : SemanticAnalysisResult
 
-data class  ProcessResultDefault<AsmType: Any>(
-    override  val asm:AsmType?,
-    override  val issues:IssueCollection
+data class ProcessResultDefault<AsmType : Any>(
+    override val asm: AsmType?,
+    override val issues: IssueCollection<LanguageIssue>
 ) : ProcessResult<AsmType>
 
 data class FormatResultDefault(
-    override  val sentence:String?,
-    override  val issues:IssueCollection
+    override val sentence: String?,
+    override val issues: IssueCollection<LanguageIssue>
 ) : FormatResult
 
 data class ExpectedAtResultDefault(
-    override  val items:List<CompletionItem>,
-    override val issues:IssueCollection
+    override val items: List<CompletionItem>,
+    override val issues: IssueCollection<LanguageIssue>
 ) : ExpectedAtResult

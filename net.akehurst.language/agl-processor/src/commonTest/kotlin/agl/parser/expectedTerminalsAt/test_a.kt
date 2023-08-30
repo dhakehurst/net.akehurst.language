@@ -17,9 +17,9 @@
 package net.akehurst.language.parser.expectedTerminalsAt
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -65,7 +65,9 @@ class test_a {
             val sentence = data.sentence
             val position = data.position
 
-            val result = parser.expectedTerminalsAt(goal, sentence, position, AutomatonKind.LOOKAHEAD_1)
+            val result = parser.expectedTerminalsAt(sentence, position, Agl.parseOptions {
+                goalRuleName(goal)
+            })
             val actual = result.filter { it.isEmptyTerminal.not() }.map { it.rhs.toString() }
             val expected = data.expected
             assertEquals(expected, actual, data.toString())

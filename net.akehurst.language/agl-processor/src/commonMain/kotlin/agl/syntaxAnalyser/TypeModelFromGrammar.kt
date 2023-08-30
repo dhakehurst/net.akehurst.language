@@ -107,6 +107,12 @@ class TypeModelFromGrammar(
         }
     }
 
+    private fun typeModelForEmbedded(ruleItem: Embedded): TypeModelFromGrammar {
+        val embTm = TypeModelFromGrammar.createWithContextFrom(this.contextGrammar, ruleItem.embeddedGrammarReference.resolved!!, ruleItem.embeddedGoalName) //TODO: configuration
+        super._imports.add(embTm)
+        return embTm
+    }
+
     private fun typeForGrammarRule(rule: GrammarRule): TypeUsage {
         val type = _ruleToType[rule.name]
         return if (null != type) {
@@ -150,7 +156,7 @@ class TypeModelFromGrammar(
                 }
 
                 is Embedded -> {
-                    val embTmfg = TypeModelFromGrammar.createWithContextFrom(this.contextGrammar, ruleItem.embeddedGrammarReference.resolved!!) //TODO: check for null
+                    val embTmfg = typeModelForEmbedded(ruleItem)
                     val embTm = embTmfg
                     embTm.findTypeUsageForRule(ruleItem.name) ?: error("Should never happen")
                 }
@@ -437,7 +443,7 @@ class TypeModelFromGrammar(
 
     //TODO: combine with above by passing in TypeModel
     private fun createPropertyDeclarationForEmbedded(et: StructuredRuleType, ruleItem: Embedded, childIndex: Int) {
-        val embTm = TypeModelFromGrammar.createWithContextFrom(this.contextGrammar, ruleItem.embeddedGrammarReference.resolved!!, ruleItem.embeddedGoalName) //TODO: configuration
+        val embTm = typeModelForEmbedded(ruleItem) //TODO: configuration
         val refRule = ruleItem.referencedRule(ruleItem.embeddedGrammarReference.resolved!!) //TODO: check for null
         val rhs = refRule.rhs
         when (rhs) {
@@ -483,7 +489,6 @@ class TypeModelFromGrammar(
         }
     }
 
-
     private fun propertyNameFor(et: StructuredRuleType, ruleItem: RuleItem, ruleItemType: TypeDefinition): String {
         return when (_configuration) {
             null -> when (ruleItem) {
@@ -524,7 +529,6 @@ class TypeModelFromGrammar(
         }
         return uniqueName
     }
-
 
     override fun toString(): String = "TypeModel(${this.qualifiedName})"
 }
