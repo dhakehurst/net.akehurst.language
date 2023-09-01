@@ -74,27 +74,27 @@ internal class RuntimeRuleSetBuilder2(
         this._ruleBuilders[name] = rb
     }
 
-    fun literal(value: String, isSkip: Boolean = false) = literal(null, value, isSkip)
-    fun literal(name: String?, value: String, isSkip: Boolean = false) {
-        val tag = name ?: "'$value'"
+    fun literal(literalUnescaped: String, isSkip: Boolean = false) = literal(null, literalUnescaped, isSkip)
+    fun literal(name: String?, literalUnescaped: String, isSkip: Boolean = false) {
+        val tag = name ?: "'$literalUnescaped'"
         if (this._ruleBuilders.containsKey(tag)) {
             //do nothing
         } else {
             val rb = RuntimeRuleBuilder(ruleSetNumber, name, tag, isSkip) { rule, _ ->
-                RuntimeRuleRhsLiteral(rule, value)
+                RuntimeRuleRhsLiteral(rule, literalUnescaped)
             }
             this._ruleBuilders[tag] = rb
         }
     }
 
     fun pattern(value: String, isSkip: Boolean = false) = pattern(null, value, isSkip)
-    fun pattern(name: String?, pattern: String, isSkip: Boolean = false) {
-        val tag = name ?: "\"$pattern\""
+    fun pattern(name: String?, patternUnescaped: String, isSkip: Boolean = false) {
+        val tag = name ?: "\"$patternUnescaped\""
         if (this._ruleBuilders.containsKey(tag)) {
             //do nothing
         } else {
             val rb = RuntimeRuleBuilder(ruleSetNumber, name, tag, isSkip) { rule, _ ->
-                RuntimeRuleRhsPattern(rule, pattern)
+                RuntimeRuleRhsPattern(rule, patternUnescaped)
             }
             this._ruleBuilders[tag] = rb
         }

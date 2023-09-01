@@ -54,13 +54,14 @@ internal class RuntimeParser(
             val noLookahead: Boolean,
             val heightGraftOnly: Boolean,
             val nonEmptyWidthOnly: Boolean,
-            val reportErrors: Boolean
+            val reportErrors: Boolean,
+            val reportGrammarAmbiguities: Boolean
         )
 
         //val normalArgs = GrowArgs(true, false, false, false, true)
-        val forPossErrors = GrowArgs(false, true, false, true, true)
-        val heightGraftOnly = GrowArgs(false, true, true, false, false)
-        val forExpectedAt = GrowArgs(false, false, false, false, true)
+        val forPossErrors = GrowArgs(false, true, false, true, true, true)
+        val heightGraftOnly = GrowArgs(false, true, true, false, false, true)
+        val forExpectedAt = GrowArgs(false, false, false, false, true, false)
 
     }
 
@@ -83,7 +84,7 @@ internal class RuntimeParser(
     // must use a different instance of Input, so it can be reset, reset clears cached leaves. //TODO: check this
     private val skipParser = skipStateSet?.let {
         if (this.stateSet.preBuilt) this.skipStateSet.build()
-        RuntimeParser(it, null, false, skipStateSet.userGoalRule, InputFromString(skipStateSet.usedTerminalRules.size, this.input.text), _issues)
+        RuntimeParser(it, null, false, skipStateSet.userGoalRule, InputFromString(skipStateSet.usedTerminalRules.size, this.input.sentence.text), _issues)
     }
 
     fun reset() {
@@ -264,7 +265,7 @@ internal class RuntimeParser(
                 if (b) transTaken.add(tr)
                 grown = grown || b
             }
-            if (growArgs.reportErrors && transTaken.size > 1) ambiguity(head, transTaken, possibleEndOfText)
+            if (growArgs.reportGrammarAmbiguities && transTaken.size > 1) ambiguity(head, transTaken, possibleEndOfText)
             if (grown.not()) doNoTransitionsTaken(head)
             grown
         }
@@ -287,7 +288,7 @@ internal class RuntimeParser(
                 grown = grown || b
             }
         }
-        if (growArgs.reportErrors && transTaken.size > 1) ambiguity(head, transTaken, possibleEndOfText)
+        if (growArgs.reportGrammarAmbiguities && transTaken.size > 1) ambiguity(head, transTaken, possibleEndOfText)
         if (grown.not()) doNoTransitionsTaken(head)
         return grown
     }
@@ -413,7 +414,7 @@ internal class RuntimeParser(
         val trans2 = resolvePrecedence(transWithValidLookahead, head)
         if (Debug.OUTPUT_RUNTIME) Debug.debug(Debug.IndentDelta.NONE) { "Choices:\n${trans2.joinToString(separator = "\n") { "  $it" }}" }
         //val grouped = transitions.groupBy { it.to.runtimeRulesSet }
-        if (parseArgs.reportErrors && trans2.size > 1) {
+        if (parseArgs.reportGrammarAmbiguities && trans2.size > 1) {
             ambiguity(head, trans2, possibleEndOfText)
         }
         val grouped = trans2.groupBy { it.to.runtimeRulesAsSet }

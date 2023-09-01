@@ -18,27 +18,24 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.agl.sppt.SpptWalkerToInputSentence
 import net.akehurst.language.agl.agl.sppt.SpptWalkerToString
-import net.akehurst.language.api.sppt.LeafData
-import net.akehurst.language.api.sppt.SharedPackedParseTree
-import net.akehurst.language.api.sppt.SpptDataNode
-import net.akehurst.language.api.sppt.SpptWalker
+import net.akehurst.language.api.sppt.*
 
 internal class SPPTFromTreeData(
     override val treeData: TreeDataComplete<SpptDataNode>,
-    internal val originalSentence: String,
+    internal val sentence: Sentence,
     override val seasons: Int,
     override val maxNumHeads: Int
 ) : SharedPackedParseTree {
 
     private val _tokensByLine: List<List<LeafData>> by lazy {
-        val visitor = TokensByLineVisitor(originalSentence)
+        val visitor = TokensByLineVisitor(sentence)
         visitor.visitTree(this, emptyList())
         visitor.lines
     }
 
     override val asSentence: String by lazy {
         //SPPT2InputText().visitTree(this, "")
-        val walker = SpptWalkerToInputSentence(originalSentence)
+        val walker = SpptWalkerToInputSentence(sentence)
         this.treeData.traverseTreeDepthFirst(walker, false)
         walker.output
     }
@@ -69,7 +66,7 @@ internal class SPPTFromTreeData(
     }
 
     override fun toStringAllWithIndent(indentIncrement: String, skipDataAsTree: Boolean): String {
-        val walker = SpptWalkerToString(originalSentence, indentIncrement)
+        val walker = SpptWalkerToString(sentence, indentIncrement)
         this.treeData.traverseTreeDepthFirst(walker, skipDataAsTree)
         return walker.output
     }
@@ -80,7 +77,7 @@ internal class SPPTFromTreeData(
 
     override fun equals(other: Any?): Boolean = when {
         other !is SharedPackedParseTree -> false
-        this.treeData != other.treeData -> false
+        this.treeData.matches(other.treeData).not() -> false
         else -> true
     }
 }

@@ -53,8 +53,8 @@ internal object RuntimeRuleSetTest {
 
     fun RuntimeRuleRhsCommonTerminal.matches(other: RuntimeRuleRhsCommonTerminal) = this.rule == other.rule
     fun RuntimeRuleRhsEmpty.matches(other: RuntimeRuleRhsEmpty): Boolean = true
-    fun RuntimeRuleRhsLiteral.matches(other: RuntimeRuleRhsLiteral): Boolean = this.value == other.value
-    fun RuntimeRuleRhsPattern.matches(other: RuntimeRuleRhsPattern): Boolean = this.pattern == other.pattern
+    fun RuntimeRuleRhsLiteral.matches(other: RuntimeRuleRhsLiteral): Boolean = this.literalUnescaped == other.literalUnescaped
+    fun RuntimeRuleRhsPattern.matches(other: RuntimeRuleRhsPattern): Boolean = this.patternUnescaped == other.patternUnescaped
     fun RuntimeRuleRhsEmbedded.matches(other: RuntimeRuleRhsEmbedded): Boolean = when {
         this.embeddedRuntimeRuleSet.matches(other.embeddedRuntimeRuleSet).not() -> false
         this.embeddedStartRule.matches(other.embeddedStartRule).not() -> false

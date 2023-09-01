@@ -16,17 +16,18 @@
 
 package net.akehurst.language.agl.parser
 
+import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.automaton.LookaheadSetPart
 import net.akehurst.language.agl.runtime.graph.CompletedNodesStore
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.sppt.CompleteTreeDataNode
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.regex.RegexMatcher
-import kotlin.math.min
+import net.akehurst.language.api.sppt.Sentence
 
 internal class InputFromString(
     numTerminalRules: Int,
-    sentence: String
+    sentenceText: String
 ) {
 
     companion object {
@@ -38,24 +39,29 @@ internal class InputFromString(
         //TODO: write a scanner that counts eols as it goes, rather than scanning the text twice
         fun eolPositions(text: String): List<Int> = EOL_PATTERN.findAll(text).map { it.range.first }.toList()
 
+        /*
         fun locationFor(sentence: String, startPosition: Int, length: Int): InputLocation {
             val before = sentence.substring(0, startPosition)
             val line = before.count { it == '\n' } + 1
             val column = startPosition - before.lastIndexOf('\n')
             return InputLocation(startPosition, column, line, length)
         }
+         */
     }
 
     // private var lastlocationCachePosition = -1
     // private val locationCache = mutableMapOf<Int, InputLocation>()
 
-    var text: String = sentence; private set
+    // seems faster to match literal with regex than substring and startsWith
+    private val isLookingAt_cache = hashMapOf<Pair<Int, RuntimeRule>, Boolean>()
+
+    var sentence: Sentence = SentenceDefault(sentenceText); private set
 
     fun contextInText(position: Int): String {
         val startIndex = maxOf(0, position - contextSize)
-        val endIndex = minOf(this.text.length, position + contextSize)
-        val forText = this.text.substring(startIndex, position)
-        val aftText = this.text.substring(position, endIndex)
+        val endIndex = minOf(this.sentence.text.length, position + contextSize)
+        val forText = this.sentence.text.substring(startIndex, position)
+        val aftText = this.sentence.text.substring(position, endIndex)
         val startOfLine = forText.lastIndexOfAny(listOf("\n", "\r"))
         val s = if (-1 == startOfLine) {
             0
@@ -69,26 +75,26 @@ internal class InputFromString(
             startIndex > 0 -> "..."
             else -> ""
         }
-        val postFix = if (endIndex < this.text.length) "..." else ""
+        val postFix = if (endIndex < this.sentence.text.length) "..." else ""
         return "$prefix$forTextAfterLastEol^$aftText$postFix"
     }
 
     //internal val leaves: MutableMap<LeafIndex, SPPTLeafDefault?> = mutableMapOf()
     // leaves[runtimeRule, position]
-    internal val leaves = CompletedNodesStore<CompleteTreeDataNode>(numTerminalRules, text.length + 1)
+    internal val leaves = CompletedNodesStore<CompleteTreeDataNode>(numTerminalRules, sentenceText.length + 1)
 
     fun reset() {
         this.leaves.clear()
     }
 
     // used by SPPTParserDefault to build up the sentence
-    internal fun append(value: String) {
-        this.text += value
-    }
+//    internal fun append(value: String) {
+//        this.text += value
+//    }
 
-    operator fun get(startPosition: Int, nextInputPosition: Int): String {
-        return text.substring(startPosition, nextInputPosition)
-    }
+//    operator fun get(startPosition: Int, nextInputPosition: Int): String {
+//        return sentence.text.substring(startPosition, nextInputPosition)
+//    }
 
     internal fun isStart(position: Int): Boolean {
         // TODO what if we want t0 parse part of the text?, e.g. sub grammar
@@ -97,11 +103,9 @@ internal class InputFromString(
 
     internal fun isEnd(position: Int): Boolean {
         // TODO what if we want t0 parse part of the text?, e.g. sub grammar
-        return position >= this.text.length
+        return position >= this.sentence.text.length
     }
 
-    // seems faster to match literal with regex than substring and startsWith
-    private val isLookingAt_cache = hashMapOf<Pair<Int, RuntimeRule>, Boolean>()
     fun isLookingAt(position: Int, terminalRule: RuntimeRule): Boolean {
         val r = isLookingAt_cache[Pair(position, terminalRule)]
         return if (null != r) {
@@ -110,8 +114,8 @@ internal class InputFromString(
             val rhs = terminalRule.rhs
             val matched = when {
                 this.isEnd(position) -> if (terminalRule == RuntimeRuleSet.END_OF_TEXT) true else false //TODO: do we need this
-                rhs is RuntimeRuleRhsPattern -> rhs.regex.matchesAt(this.text, position)
-                rhs is RuntimeRuleRhsLiteral -> this.text.regionMatches(position, rhs.value, 0, rhs.value.length)
+                rhs is RuntimeRuleRhsPattern -> rhs.regex.matchesAt(this.sentence.text, position)
+                rhs is RuntimeRuleRhsLiteral -> this.sentence.text.regionMatches(position, rhs.literalUnescaped, 0, rhs.literalUnescaped.length)
                 else -> error("Internal Error: not handled")
             }
             isLookingAt_cache[Pair(position, terminalRule)] = matched
@@ -132,7 +136,7 @@ internal class InputFromString(
         //val match = stext.startsWith(patternText)//regionMatches(position, patternText, 0, patternText.length, false)
         val match = this.isLookingAt(position, terminalRule)
         return if (match) {
-            val text = (terminalRule.rhs as RuntimeRuleRhsLiteral).value
+            val text = (terminalRule.rhs as RuntimeRuleRhsLiteral).literalUnescaped
             val eolPositions = emptyList<Int>() //this.eolPositions(text)
             RegexMatcher.MatchResult(text, eolPositions)
             //matchedText
@@ -142,12 +146,12 @@ internal class InputFromString(
     }
 
     private fun matchRegEx(position: Int, regex: Regex): String? {//RegexMatcher.MatchResult? {
-        val m = regex.find(this.text, position)
+        val m = regex.find(this.sentence.text, position)
         return if (null == m)
             null
         else {
             val matchedText = m.value
-            val x = this.text.substring(position, position + matchedText.length)
+            val x = this.sentence.text.substring(position, position + matchedText.length)
             if (x == matchedText) {
                 //val eolPositions = this.eolPositions(matchedText)
                 //RegexMatcher.MatchResult(matchedText, eolPositions)
@@ -161,7 +165,7 @@ internal class InputFromString(
     private fun matchRegEx2(position: Int, regex: Regex): RegexMatcher.MatchResult? {
         //val stext = this.text.substring(position)
         //val matchedText = regex.matchAtStart(stext)
-        val matchedText = regex.matchAt(this.text, position)?.value
+        val matchedText = regex.matchAt(this.sentence.text, position)?.value
         return if (null == matchedText)
             null
         else {
@@ -172,7 +176,7 @@ internal class InputFromString(
     }
 
     private fun matchRegEx3(position: Int, regex: Regex): String? {//RegexMatcher.MatchResult? {
-        val stext = this.text.substring(position)
+        val stext = this.sentence.text.substring(position)
         val match = regex.find(stext)
         return if (null == match)
             null
@@ -194,28 +198,29 @@ internal class InputFromString(
         return matched
     }
 
-    fun nextLocation(lastLocation: InputLocation, newLength: Int): InputLocation {
-        val endIndex = min(this.text.length, lastLocation.position + lastLocation.length)
-        val lastText = this.text.substring(lastLocation.position, endIndex)
-        var linesInText = 0
-        var lastEolInText = -1
-        lastText.forEachIndexed { index, ch -> //FIXME: inefficient having to parse text again
-            if (ch == '\n') {
-                linesInText++
-                lastEolInText = index
+    /*
+        fun nextLocation(lastLocation: InputLocation, newLength: Int): InputLocation {
+            val endIndex = min(this.text.sentence.length, lastLocation.position + lastLocation.length)
+            val lastText = this.sentence.text.substring(lastLocation.position, endIndex)
+            var linesInText = 0
+            var lastEolInText = -1
+            lastText.forEachIndexed { index, ch -> //FIXME: inefficient having to parse text again
+                if (ch == '\n') {
+                    linesInText++
+                    lastEolInText = index
+                }
             }
-        }
 
-        val position = lastLocation.position + lastLocation.length
-        val line = lastLocation.line + linesInText
-        val column = when {
-            0 == lastLocation.position && 0 == lastLocation.length -> 1
-            -1 == lastEolInText -> lastLocation.column + lastLocation.length
-            else -> lastLocation.length - lastEolInText
+            val position = lastLocation.position + lastLocation.length
+            val line = lastLocation.line + linesInText
+            val column = when {
+                0 == lastLocation.position && 0 == lastLocation.length -> 1
+                -1 == lastEolInText -> lastLocation.column + lastLocation.length
+                else -> lastLocation.length - lastEolInText
+            }
+            return InputLocation(position, column, line, newLength)
         }
-        return InputLocation(position, column, line, newLength)
-    }
-
+    */
     private fun tryCreateLeaf(terminalRuntimeRule: RuntimeRule, atInputPosition: Int): CompleteTreeDataNode {
         // LeafIndex passed as argument because we already created it to try and find the leaf in the cache
         return if (terminalRuntimeRule.rhs is RuntimeRuleRhsEmpty) {
@@ -262,10 +267,6 @@ internal class InputFromString(
      * startPosition - 0 index position in input text
      * nextInputPosition - 0 index position of next 'token', so we can calculate length
      */
-    fun locationFor(startPosition: Int, length: Int): InputLocation = locationFor(this.text, startPosition, length)
-
-    fun textFromUntil(startPosition: Int, nextInputPosition: Int): String {
-        return this.text.substring(startPosition, nextInputPosition)
-    }
+    fun locationFor(startPosition: Int, length: Int): InputLocation = this.sentence.locationFor(startPosition, length)
 
 }

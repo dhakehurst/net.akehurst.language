@@ -45,7 +45,7 @@ internal class Scanner(
                     null
                 } else {
                     val ni = nextInputPosition + match.matchedText.length
-                    val loc = InputFromString.locationFor(inputText, startPosition, ni - startPosition)
+                    val loc = input.locationFor(startPosition, ni - startPosition)
                     val matchedText = inputText.substring(loc.position, loc.length)
                     LeafData(it.tag, it.isPattern, loc, matchedText, emptyList())
                 }
@@ -68,7 +68,7 @@ internal class Scanner(
                     val text = inputText[nextInputPosition].toString()
                     nextInputPosition += text.length
                     val eolPositions = emptyList<Int>()//TODO calculate
-                    val loc = InputFromString.locationFor(inputText, startPosition, nextInputPosition - startPosition)
+                    val loc = input.locationFor(startPosition, nextInputPosition - startPosition)
                     val matchedText = inputText.substring(loc.position, loc.length)
                     val ld = LeafData(undefined.tag, false, loc, matchedText, emptyList())
                     //unscanned.eolPositions = input.eolPositions(text)

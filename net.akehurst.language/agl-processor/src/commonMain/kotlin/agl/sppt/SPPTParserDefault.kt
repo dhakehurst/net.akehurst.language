@@ -16,7 +16,10 @@
 
 package net.akehurst.language.agl.sppt
 
+import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.regex.regexMatcher
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.regex.RegexMatcher
 import net.akehurst.language.api.sppt.SPPTParser
@@ -132,7 +135,7 @@ internal class SPPTParserDefault(
         }
         val td = tp.parse(rootRuntimeRuleSet, oldTree)
         this._oldTreeData = td
-        this.tree = SPPTFromTreeData(td as TreeDataComplete<SpptDataNode>, tp.sentence, -1, -1)
+        this.tree = SPPTFromTreeData(td as TreeDataComplete<SpptDataNode>, SentenceDefault(tp.sentence), -1, -1)
         return this.tree
     }
 
@@ -216,26 +219,27 @@ internal class TreeParser(
 
     // LITERAL
     private fun scanLiteral() {
-        val leafName = scanner.next(Tokens.LITERAL)
-        val textWithQuotes = leafName
+        val literal = scanner.next(Tokens.LITERAL)
+        val textWithQuotes = literal
         val text = textWithQuotes.substring(1, textWithQuotes.length - 1)
-            .replace("\\'", "'")
+        val textUnescaped = RuntimeRuleRhsLiteral.unescape(text)
         sentenceStartPosition = sentenceNextInputPosition
-        sentenceNextInputPosition += text.length
-        this.leaf(leafName, text, sentenceStartPosition, sentenceNextInputPosition)
+        sentenceNextInputPosition += textUnescaped.length
+        val literalUnescaped = RuntimeRuleRhsLiteral.unescape(literal)
+        this.leaf(literalUnescaped, textUnescaped, sentenceStartPosition, sentenceNextInputPosition)
     }
 
     // ID COLON LITERAL
     private fun scanLeafLiteral() {
-        val leafName = scanner.next(Tokens.ID)
+        val literal = scanner.next(Tokens.ID)
         scanner.next(Tokens.COLON)
         val textWithQuotes = scanner.next(Tokens.LITERAL)
         val text = textWithQuotes.substring(1, textWithQuotes.length - 1)
-            .replace("\\'", "'")
+        val textUnescaped = RuntimeRuleRhsLiteral.unescape(text)
         sentenceStartPosition = sentenceNextInputPosition
-        sentenceNextInputPosition += text.length
-
-        this.leaf(leafName, text, sentenceStartPosition, sentenceNextInputPosition)
+        sentenceNextInputPosition += textUnescaped.length
+        val literalUnescaped = RuntimeRuleRhsLiteral.unescape(literal)
+        this.leaf(literalUnescaped, textUnescaped, sentenceStartPosition, sentenceNextInputPosition)
     }
 
     // PATTERN COLON LITERAL
@@ -244,11 +248,11 @@ internal class TreeParser(
         scanner.next(Tokens.COLON)
         val textWithQuotes = scanner.next(Tokens.LITERAL)
         val text = textWithQuotes.substring(1, textWithQuotes.length - 1)
-            .replace("\\'", "'")
+        val textUnescaped = RuntimeRuleRhsLiteral.unescape(text)
         sentenceStartPosition = sentenceNextInputPosition
-        sentenceNextInputPosition += text.length
-
-        this.leaf(pattern, text, sentenceStartPosition, sentenceNextInputPosition)
+        sentenceNextInputPosition += textUnescaped.length
+        val patternUnescaped = RuntimeRuleRhsPattern.unescape(pattern)
+        this.leaf(patternUnescaped, textUnescaped, sentenceStartPosition, sentenceNextInputPosition)
     }
 
     // ID CHILDREN_START
@@ -306,9 +310,9 @@ internal class TreeParser(
         return CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputPosition, 0)
     }
 
-    private fun leaf(pattern: String, text: String, startPosition: Int, nextInputPosition: Int) {
+    private fun leaf(tag: String, text: String, startPosition: Int, nextInputPosition: Int) {
         _sentenceBuilder.append(text)
-        val terminalRule = this.runtimeRuleSetInUse.peek().findTerminalRule(pattern)
+        val terminalRule = this.runtimeRuleSetInUse.peek().findTerminalRule(tag)
         val leaf = CompleteTreeDataNode(terminalRule, startPosition, nextInputPosition, nextInputPosition, 0)
         childrenStack.peek().add(leaf)
     }

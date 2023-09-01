@@ -16,11 +16,10 @@
 
 package net.akehurst.language.parser
 
+import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.agl.sppt.TreeDataComplete
-import net.akehurst.language.agl.syntaxAnalyser.locationIn
-import net.akehurst.language.agl.syntaxAnalyser.matchedTextNoSkip
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SpptDataNode
 import kotlin.test.Test
@@ -44,6 +43,7 @@ internal class test_InputLocation_singleLine {
     @Test
     fun abc() {
         val sentence = "abc"
+        val ss = SentenceDefault(sentence)
         val sp = ScanOnDemandParser(S)
 
         val result = sp.parseForGoal("S", sentence)
@@ -52,10 +52,10 @@ internal class test_InputLocation_singleLine {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.treeData.root!!.locationIn(sentence))
-        assertEquals(InputLocation(0, 1, 1, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0].locationIn(sentence))
-        assertEquals(InputLocation(1, 2, 1, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1].locationIn(sentence))
-        assertEquals(InputLocation(2, 3, 1, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2].locationIn(sentence))
+        assertEquals(InputLocation(0, 1, 1, 3), ss.locationFor(result.sppt!!.treeData.userRoot!!))
+        assertEquals(InputLocation(0, 1, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[0]))
+        assertEquals(InputLocation(1, 2, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[1]))
+        assertEquals(InputLocation(2, 3, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[2]))
 
     }
 
@@ -76,6 +76,7 @@ class test_InputLocation_multiLine {
     @Test
     fun abc() {
         val sentence = "abc"
+        val ss = SentenceDefault(sentence)
         val sp = ScanOnDemandParser(S)
 
         val result = sp.parseForGoal("S", sentence)
@@ -84,16 +85,17 @@ class test_InputLocation_multiLine {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.treeData.root!!.locationIn(sentence))
-        assertEquals(InputLocation(0, 1, 1, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0].locationIn(sentence))
-        assertEquals(InputLocation(1, 2, 1, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1].locationIn(sentence))
-        assertEquals(InputLocation(2, 3, 1, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2].locationIn(sentence))
+        assertEquals(InputLocation(0, 1, 1, 3), ss.locationFor(result.sppt!!.treeData.userRoot!!))
+        assertEquals(InputLocation(0, 1, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[0]))
+        assertEquals(InputLocation(1, 2, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[1]))
+        assertEquals(InputLocation(2, 3, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[2]))
 
     }
 
     @Test
     fun a_b_c() {
         val sentence = "a b c"
+        val ss = SentenceDefault(sentence)
         val sp = ScanOnDemandParser(S)
 
         val result = sp.parseForGoal("S", sentence)
@@ -102,12 +104,12 @@ class test_InputLocation_multiLine {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 5), result.sppt!!.treeData.root!!.locationIn(sentence))
-        assertEquals(InputLocation(0, 1, 1, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0].locationIn(sentence))
-        assertEquals(InputLocation(1, 2, 1, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1].locationIn(sentence))
-        assertEquals(InputLocation(2, 3, 1, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2].locationIn(sentence))
-        assertEquals(InputLocation(3, 4, 1, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3].locationIn(sentence))
-        assertEquals(InputLocation(4, 5, 1, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4].locationIn(sentence))
+        assertEquals(InputLocation(0, 1, 1, 5), ss.locationFor(result.sppt!!.treeData.userRoot!!))
+        assertEquals(InputLocation(0, 1, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[0]))
+        assertEquals(InputLocation(1, 2, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[1]))
+        assertEquals(InputLocation(2, 3, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[2]))
+        assertEquals(InputLocation(3, 4, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[3]))
+        assertEquals(InputLocation(4, 5, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[4]))
 
     }
 
@@ -119,6 +121,7 @@ class test_InputLocation_multiLine {
             b
             c
         """.trimIndent()
+        val ss = SentenceDefault(sentence)
         val sp = ScanOnDemandParser(S)
 
         val result = sp.parseForGoal("S", sentence)
@@ -129,17 +132,13 @@ class test_InputLocation_multiLine {
 
         val sppt = result.sppt!!
         val userRoot = sppt.treeData.userRoot
-        assertEquals(InputLocation(0, 1, 1, 5), userRoot.locationIn(sentence))
-        assertEquals("a", userRoot.children(sppt.treeData)[0].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(0, 1, 1, 1), userRoot.children(sppt.treeData)[0].locationIn(sentence))
-        assertEquals("\n", userRoot.children(sppt.treeData)[1].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(1, 2, 1, 1), userRoot.children(sppt.treeData)[1].locationIn(sentence))
-        assertEquals("b", userRoot.children(sppt.treeData)[2].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(2, 1, 2, 1), userRoot.children(sppt.treeData)[2].locationIn(sentence))
-        assertEquals("\n", userRoot.children(sppt.treeData)[3].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(3, 2, 2, 1), userRoot.children(sppt.treeData)[3].locationIn(sentence))
-        assertEquals("c", userRoot.children(sppt.treeData)[4].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(4, 1, 3, 1), userRoot.children(sppt.treeData)[4].locationIn(sentence))
+        assertEquals(InputLocation(0, 1, 1, 5), ss.locationFor(userRoot))
+        assertEquals("a", ss.matchedTextNoSkip(userRoot.children(sppt.treeData)[0]))
+        assertEquals(InputLocation(0, 1, 1, 1), ss.locationFor(userRoot.children(sppt.treeData)[0]))
+        assertEquals("b", ss.matchedTextNoSkip(userRoot.children(sppt.treeData)[1]))
+        assertEquals(InputLocation(2, 1, 2, 1), ss.locationFor(userRoot.children(sppt.treeData)[1]))
+        assertEquals("c", ss.matchedTextNoSkip(userRoot.children(sppt.treeData)[2]))
+        assertEquals(InputLocation(4, 1, 3, 1), ss.locationFor(userRoot.children(sppt.treeData)[2]))
 
     }
 }
@@ -159,6 +158,7 @@ class test_InputLocation_multiLine2 {
     @Test
     fun abc() {
         val sentence = "aaabbbccc"
+        val ss = SentenceDefault(sentence)
         val sp = ScanOnDemandParser(S)
 
         val result = sp.parseForGoal("S", sentence)
@@ -167,16 +167,17 @@ class test_InputLocation_multiLine2 {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 9), result.sppt!!.treeData.root!!.locationIn(sentence))
-        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0].locationIn(sentence))
-        assertEquals(InputLocation(3, 4, 1, 3), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1].locationIn(sentence))
-        assertEquals(InputLocation(6, 7, 1, 3), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2].locationIn(sentence))
+        assertEquals(InputLocation(0, 1, 1, 9), ss.locationFor(result.sppt!!.treeData.root!!))
+        assertEquals(InputLocation(0, 1, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
+        assertEquals(InputLocation(3, 4, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
+        assertEquals(InputLocation(6, 7, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
 
     }
 
     @Test
     fun a_b_c() {
         val sentence = "aaa bbb ccc"
+        val ss = SentenceDefault(sentence)
         val sp = ScanOnDemandParser(S)
 
         val result = sp.parseForGoal("S", sentence)
@@ -185,12 +186,12 @@ class test_InputLocation_multiLine2 {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 11), result.sppt!!.treeData.root!!.locationIn(sentence))
-        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0].locationIn(sentence))
-        assertEquals(InputLocation(3, 4, 1, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1].locationIn(sentence))
-        assertEquals(InputLocation(4, 5, 1, 3), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2].locationIn(sentence))
-        assertEquals(InputLocation(7, 8, 1, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3].locationIn(sentence))
-        assertEquals(InputLocation(8, 9, 1, 3), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4].locationIn(sentence))
+        assertEquals(InputLocation(0, 1, 1, 11), ss.locationFor(result.sppt!!.treeData.root!!))
+        assertEquals(InputLocation(0, 1, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
+        assertEquals(InputLocation(3, 4, 1, 1), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
+        assertEquals(InputLocation(4, 5, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
+        assertEquals(InputLocation(7, 8, 1, 1), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
+        assertEquals(InputLocation(8, 9, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
 
     }
 
@@ -201,6 +202,7 @@ class test_InputLocation_multiLine2 {
             bbb
             ccc
         """.trimIndent()
+        val ss = SentenceDefault(sentence)
         val sp = ScanOnDemandParser(S)
 
         val result = sp.parseForGoal("S", sentence)
@@ -209,17 +211,17 @@ class test_InputLocation_multiLine2 {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 11), result.sppt!!.treeData.root!!.locationIn(sentence))
-        assertEquals("aaa", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0].locationIn(sentence))
-        assertEquals("\n", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(3, 4, 1, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1].locationIn(sentence))
-        assertEquals("bbb", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(4, 1, 2, 3), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2].locationIn(sentence))
-        assertEquals("\n", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(7, 4, 2, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3].locationIn(sentence))
-        assertEquals("ccc", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(8, 1, 3, 3), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4].locationIn(sentence))
+        assertEquals(InputLocation(0, 1, 1, 11), ss.locationFor(result.sppt!!.treeData.root!!))
+        assertEquals("aaa", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
+        assertEquals(InputLocation(0, 1, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
+        assertEquals("\n", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
+        assertEquals(InputLocation(3, 4, 1, 1), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
+        assertEquals("bbb", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
+        assertEquals(InputLocation(4, 1, 2, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
+        assertEquals("\n", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
+        assertEquals(InputLocation(7, 4, 2, 1), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
+        assertEquals("ccc", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
+        assertEquals(InputLocation(8, 1, 3, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
 
     }
 
@@ -231,6 +233,7 @@ class test_InputLocation_multiLine2 {
             bbb
             ccc
         """.trimIndent()
+        val ss = SentenceDefault(sentence)
         val sp = ScanOnDemandParser(S)
         val result = sp.parseForGoal("S", sentence)
 
@@ -238,19 +241,19 @@ class test_InputLocation_multiLine2 {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 12), result.sppt!!.treeData.root!!.locationIn(sentence))
-        assertEquals("\n", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(0, 1, 1, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0].locationIn(sentence))
-        assertEquals("aaa", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(1, 1, 2, 3), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1].locationIn(sentence))
-        assertEquals("\n", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(4, 4, 2, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2].locationIn(sentence))
-        assertEquals("bbb", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(5, 1, 3, 3), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3].locationIn(sentence))
-        assertEquals("\n", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(8, 4, 3, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4].locationIn(sentence))
-        assertEquals("ccc", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[5].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(9, 1, 4, 3), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[5].locationIn(sentence))
+        assertEquals(InputLocation(0, 1, 1, 12), ss.locationFor(result.sppt!!.treeData.root!!))
+        assertEquals("\n", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
+        assertEquals(InputLocation(0, 1, 1, 1), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
+        assertEquals("aaa", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
+        assertEquals(InputLocation(1, 1, 2, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
+        assertEquals("\n", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
+        assertEquals(InputLocation(4, 4, 2, 1), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
+        assertEquals("bbb", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
+        assertEquals(InputLocation(5, 1, 3, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
+        assertEquals("\n", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
+        assertEquals(InputLocation(8, 4, 3, 1), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
+        assertEquals("ccc", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[5]))
+        assertEquals(InputLocation(9, 1, 4, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[5]))
 
     }
 
@@ -261,6 +264,7 @@ class test_InputLocation_multiLine2 {
               bbb
             ccc
         """.trimIndent()
+        val ss = SentenceDefault(sentence)
         val sp = ScanOnDemandParser(S)
 
         val result = sp.parseForGoal("S", sentence)
@@ -269,17 +273,17 @@ class test_InputLocation_multiLine2 {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 13), result.sppt!!.treeData.root!!.locationIn(sentence))
-        assertEquals("aaa", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0].locationIn(sentence))
-        assertEquals("\n  ", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(3, 4, 1, 3), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1].locationIn(sentence))
-        assertEquals("bbb", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(6, 3, 2, 3), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2].locationIn(sentence))
-        assertEquals("\n", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(9, 6, 2, 1), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3].locationIn(sentence))
-        assertEquals("ccc", result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4].matchedTextNoSkip(sentence))
-        assertEquals(InputLocation(10, 1, 3, 3), result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4].locationIn(sentence))
+        assertEquals(InputLocation(0, 1, 1, 13), ss.locationFor(result.sppt!!.treeData.root!!))
+        assertEquals("aaa", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
+        assertEquals(InputLocation(0, 1, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
+        assertEquals("\n  ", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
+        assertEquals(InputLocation(3, 4, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
+        assertEquals("bbb", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
+        assertEquals(InputLocation(6, 3, 2, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
+        assertEquals("\n", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
+        assertEquals(InputLocation(9, 6, 2, 1), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
+        assertEquals("ccc", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
+        assertEquals(InputLocation(10, 1, 3, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
 
     }
 }

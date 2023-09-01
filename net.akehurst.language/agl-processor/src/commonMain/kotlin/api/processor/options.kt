@@ -60,6 +60,7 @@ interface ParseOptions {
     var goalRuleName: String?
     val automatonKind: AutomatonKind
     val reportErrors: Boolean
+    val reportGrammarAmbiguities: Boolean
     val cacheSkip: Boolean
 }
 

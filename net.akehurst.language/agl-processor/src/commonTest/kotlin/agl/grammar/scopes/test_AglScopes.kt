@@ -203,7 +203,7 @@ class test_AglScopes {
         assertEquals(expected.references, result.asm?.references)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(6, 7, 1, 6), "Type 'RuleX' not found in scope")
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(6, 7, 1, 5), "Type 'RuleX' not found in scope")
             ), result.issues.all
         )
     }
@@ -286,7 +286,7 @@ class test_AglScopes {
                 LanguageIssue(
                     LanguageIssueKind.ERROR,
                     LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                    InputLocation(27, 14, 2, 6),
+                    InputLocation(27, 14, 2, 5),
                     "Type 'RuleX' not found in scope"
                 )
             ),
@@ -334,7 +334,7 @@ class test_AglScopes {
                 LanguageIssue(
                     LanguageIssueKind.ERROR,
                     LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                    InputLocation(36, 23, 2, 6),
+                    InputLocation(36, 23, 2, 5),
                     "In scope for 'Rule1', 'ruleX' not found for identifying property of 'Rule2'"
                 )
             ), result.issues.errors
@@ -415,7 +415,7 @@ class test_AglScopes {
                 LanguageIssue(
                     LanguageIssueKind.ERROR,
                     LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                    InputLocation(20, 8, 2, 6),
+                    InputLocation(20, 8, 2, 5),
                     "Referring type 'RuleX' not found in scope"
                 ),
                 LanguageIssue(

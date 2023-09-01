@@ -17,13 +17,14 @@
 
 package net.akehurst.language.agl.agl.sppt
 
+import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.sppt.SpptWalker
 import net.akehurst.language.collections.mutableStackOf
 
-class SpptWalkerToInputSentence(
-    val sentence: String
+internal class SpptWalkerToInputSentence(
+    val sentence: Sentence
 ) : SpptWalker {
     val output get() = textStack.elements.joinToString(separator = "") { it.second }
 
@@ -35,7 +36,7 @@ class SpptWalkerToInputSentence(
     override fun endTree() {}
 
     override fun skip(startPosition: Int, nextInputPosition: Int) {
-        val matchedText = sentence.substring(startPosition, nextInputPosition)//.replace("\n", "\u23CE").replace("\t", "\u2B72")
+        val matchedText = sentence.text.substring(startPosition, nextInputPosition)//.replace("\n", "\u23CE").replace("\t", "\u2B72")
         when {
             textStack.isEmpty -> {
                 //initial skip
@@ -50,7 +51,7 @@ class SpptWalkerToInputSentence(
     }
 
     override fun leaf(nodeInfo: SpptDataNodeInfo) {
-        val matchedText = sentence.substring(nodeInfo.node.startPosition, nodeInfo.node.nextInputNoSkip)//.replace("\n", "\u23CE").replace("\t", "\u2B72")
+        val matchedText = sentence.matchedTextNoSkip(nodeInfo.node)//.replace("\n", "\u23CE").replace("\t", "\u2B72")
         textStack.push(Pair(nodeInfo.alt.option, matchedText))
     }
 

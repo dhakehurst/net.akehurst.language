@@ -117,27 +117,17 @@ class test_AglGrammar {
     }
 
     @Test
-    fun literal_empty() {
+    fun literal_empty_fails() {
 
         val grammarStr = """
             namespace test
             grammar Test {
-                a = '' 'a';
+                a = '' ;
             }
         """.trimIndent()
 
         val pr = Agl.processorFromStringDefault(grammarStr)
-        assertNotNull(pr.processor)
-
-        val result = pr.processor!!.parse("a");
-        val expected = pr.processor!!.spptParser.parse(
-            """
-            a { '' 'a' }
-        """
-        )
-        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
-        assertEquals(expected, result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertNull(pr.processor, pr.issues.toString())
     }
 
     @Test
@@ -185,6 +175,110 @@ class test_AglGrammar {
             """
              a {
                 "[a-c]":'b'
+             }
+        """
+        )
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+        assertTrue(result.issues.isEmpty())
+    }
+
+    @Test
+    fun singleQuoteLiteral() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = '\'' ;
+            }
+        """.trimIndent()
+
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
+        assertNotNull(pr.processor)
+
+        val result = pr.processor!!.parse("'");
+        val expected = pr.processor!!.spptParser.parse(
+            """
+             a {
+                '\''
+             }
+        """
+        )
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+        assertTrue(result.issues.isEmpty())
+    }
+
+    @Test
+    fun doubleQuoteLiteral() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = '"' ;
+            }
+        """.trimIndent()
+
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
+        assertNotNull(pr.processor)
+
+        val result = pr.processor!!.parse("\"");
+        val expected = pr.processor!!.spptParser.parse(
+            """
+             a {
+                '"'
+             }
+        """
+        )
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+        assertTrue(result.issues.isEmpty())
+    }
+
+    @Test
+    fun singleQuotePattern() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = "'" ;
+            }
+        """.trimIndent()
+
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
+        assertNotNull(pr.processor)
+
+        val result = pr.processor!!.parse("'");
+        val expected = pr.processor!!.spptParser.parse(
+            """
+             a {
+                "'":'\''
+             }
+        """
+        )
+        assertEquals(expected.toStringAll, result.sppt?.toStringAll)
+        assertEquals(expected, result.sppt)
+        assertTrue(result.issues.isEmpty())
+    }
+
+    @Test
+    fun doubleQuotePattern() {
+
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                a = "\"" ;
+            }
+        """.trimIndent()
+
+        val pr = Agl.processorFromString<Any, Any>(grammarStr)
+        assertNotNull(pr.processor)
+
+        val result = pr.processor!!.parse("\"");
+        val expected = pr.processor!!.spptParser.parse(
+            """
+             a {
+                "\"" : '"'
              }
         """
         )

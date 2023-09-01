@@ -23,33 +23,41 @@ import net.akehurst.language.api.grammar.GrammarRule
 /**
 
  */
-internal object AglScopesGrammar: GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglScopes") {
+internal object AglScopesGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglScopes") {
     //companion object {
-        const val goalRuleName = "declarations"
-        private fun createRules(): List<GrammarRule> {
-            val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglStyle");
-            b.skip("WHITESPACE",true).concatenation(b.terminalPattern("\\s+"));
-            b.skip("MULTI_LINE_COMMENT",true).concatenation(b.terminalPattern("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"));
-            b.skip("SINGLE_LINE_COMMENT",true).concatenation(b.terminalPattern("//[^\\n\\r]*"));
+    const val goalRuleName = "declarations"
+    private fun createRules(): List<GrammarRule> {
+        val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglStyle");
+        b.skip("WHITESPACE", true).concatenation(b.terminalPattern("\\s+"));
+        b.skip("MULTI_LINE_COMMENT", true).concatenation(b.terminalPattern("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"));
+        b.skip("SINGLE_LINE_COMMENT", true).concatenation(b.terminalPattern("//[^\\n\\r]*"));
 
-            b.rule("declarations").concatenation(b.nonTerminal("rootIdentifiables"), b.nonTerminal("scopes"),b.nonTerminal("referencesOpt"))
-            b.rule("rootIdentifiables").multi(0, -1, b.nonTerminal("identifiable"))
-            b.rule("scopes").multi(0,-1,b.nonTerminal("scope"))
-            b.rule("scope").concatenation(b.terminalLiteral("scope"), b.nonTerminal("typeReference"), b.terminalLiteral("{"), b.nonTerminal("identifiables"), b.terminalLiteral("}"))
-            b.rule("identifiables").multi(0, -1, b.nonTerminal("identifiable"))
-            b.rule("identifiable").concatenation(b.terminalLiteral("identify"),b.nonTerminal("typeReference"),b.terminalLiteral("by"),b.nonTerminal("propertyReferenceOrNothing"))
-            b.rule("referencesOpt").multi(0,1,b.nonTerminal("references"))
-            b.rule("references").concatenation(b.terminalLiteral("references"), b.terminalLiteral("{"), b.nonTerminal("referenceDefinitions"),b.terminalLiteral("}"))
-            b.rule("referenceDefinitions").multi(0,-1,b.nonTerminal("referenceDefinition"))
-            b.rule("referenceDefinition").concatenation(b.terminalLiteral("in"),b.nonTerminal("typeReference"),b.terminalLiteral("property"),b.nonTerminal("propertyReference"),b.terminalLiteral("refers-to"),b.nonTerminal("typeReferences"))
-            b.rule("typeReferences").separatedList(1,-1,b.terminalLiteral("|"),b.nonTerminal("typeReference"))
-            b.rule("typeReference").concatenation(b.nonTerminal("IDENTIFIER"))
-            b.rule("propertyReferenceOrNothing").choiceLongestFromConcatenationItem(b.terminalLiteral("§nothing"),b.nonTerminal("propertyReference"))
-            b.rule("propertyReference").concatenation(b.nonTerminal("IDENTIFIER"))
-            b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
+        b.rule("declarations").concatenation(b.nonTerminal("rootIdentifiables"), b.nonTerminal("scopes"), b.nonTerminal("referencesOpt"))
+        b.rule("rootIdentifiables").multi(0, -1, b.nonTerminal("identifiable"))
+        b.rule("scopes").multi(0, -1, b.nonTerminal("scope"))
+        b.rule("scope").concatenation(b.terminalLiteral("scope"), b.nonTerminal("typeReference"), b.terminalLiteral("{"), b.nonTerminal("identifiables"), b.terminalLiteral("}"))
+        b.rule("identifiables").multi(0, -1, b.nonTerminal("identifiable"))
+        b.rule("identifiable").concatenation(b.terminalLiteral("identify"), b.nonTerminal("typeReference"), b.terminalLiteral("by"), b.nonTerminal("propertyReferenceOrNothing"))
+        b.rule("referencesOpt").optional(b.nonTerminal("references"))
+        b.rule("references").concatenation(b.terminalLiteral("references"), b.terminalLiteral("{"), b.nonTerminal("referenceDefinitions"), b.terminalLiteral("}"))
+        b.rule("referenceDefinitions").multi(0, -1, b.nonTerminal("referenceDefinition"))
+        b.rule("referenceDefinition").concatenation(
+            b.terminalLiteral("in"),
+            b.nonTerminal("typeReference"),
+            b.terminalLiteral("property"),
+            b.nonTerminal("propertyReference"),
+            b.terminalLiteral("refers-to"),
+            b.nonTerminal("typeReferences")
+        )
+        b.rule("typeReferences").separatedList(1, -1, b.terminalLiteral("|"), b.nonTerminal("typeReference"))
+        b.rule("typeReference").concatenation(b.nonTerminal("IDENTIFIER"))
+        b.rule("propertyReferenceOrNothing").choiceLongestFromConcatenationItem(b.terminalLiteral("§nothing"), b.nonTerminal("propertyReference"))
+        b.rule("propertyReference").concatenation(b.nonTerminal("IDENTIFIER"))
+        b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
 
-            return b.grammar.grammarRule
-        }
+        return b.grammar.grammarRule
+    }
+
     //}
     const val grammarStr = """
 namespace net.akehurst.language.agl
@@ -127,9 +135,11 @@ References -> when {
 ReferenceDefinitions -> [referenceDefinition / '\n']
 ReferenceDefinition -> "in §typeReference property §propertyReference refers-to §typeReferences"
     """
+
     init {
         super.grammarRule.addAll(createRules())
     }
+
     //TODO: gen this from the ASM
     override fun toString(): String = grammarStr.trimIndent()
 }

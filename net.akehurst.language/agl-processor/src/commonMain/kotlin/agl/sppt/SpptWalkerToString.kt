@@ -17,12 +17,13 @@
 
 package net.akehurst.language.agl.agl.sppt
 
+import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.sppt.SpptWalker
 
-class SpptWalkerToString(
-    val sentence: String,
+internal class SpptWalkerToString(
+    val sentence: Sentence,
     val indentDelta: String
 ) : SpptWalker {
     private var currentIndent = ""
@@ -37,7 +38,7 @@ class SpptWalkerToString(
     }
 
     override fun skip(startPosition: Int, nextInputPosition: Int) {
-        val matchedText = sentence.substring(startPosition, nextInputPosition).replace("\n", "\u23CE").replace("\t", "\u2B72")
+        val matchedText = sentence.text.substring(startPosition, nextInputPosition).replace("\n", "\u23CE").replace("\t", "\u2B72")
         sb.append("${currentIndent}<SKIP> : '$matchedText'\n")
     }
 
@@ -46,7 +47,7 @@ class SpptWalkerToString(
         val siblings = nodeInfo.child.total
         val ind = if (siblings == 1) "" else currentIndent
         val eol = if (siblings == 1) " " else "\n"
-        val matchedText = sentence.substring(nodeInfo.node.startPosition, nodeInfo.node.nextInputNoSkip)
+        val matchedText = sentence.matchedTextNoSkip(nodeInfo.node)
             .replace("\n", "\u23CE")
             .replace("\t", "\u2B72")
             .replace("'", "\\'")

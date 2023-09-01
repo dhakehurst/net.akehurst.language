@@ -70,9 +70,11 @@ internal class ConverterToRuntimeRules(
     private fun terminalRule(name: String?, value: String, kind: RuntimeRuleKind, isPattern: Boolean, isSkip: Boolean): RuntimeRule {
         val newRule = RuntimeRule(_ruleSetNumber, runtimeRules.size, name, isSkip).also {
             if (isPattern) {
-                it.setRhs(RuntimeRuleRhsPattern(it, value))
+                val unescaped = RuntimeRuleRhsPattern.unescape(value)
+                it.setRhs(RuntimeRuleRhsPattern(it, unescaped))
             } else {
-                it.setRhs(RuntimeRuleRhsLiteral(it, value))
+                val unescaped = RuntimeRuleRhsLiteral.unescape(value)
+                it.setRhs(RuntimeRuleRhsLiteral(it, unescaped))
             }
         }
         if (Debug.CHECK) check(this.runtimeRules.containsKey(newRule.tag).not()) { "Already got rule with tag '$name'" }

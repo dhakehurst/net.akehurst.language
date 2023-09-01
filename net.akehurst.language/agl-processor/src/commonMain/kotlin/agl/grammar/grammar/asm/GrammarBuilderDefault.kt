@@ -116,6 +116,7 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
         }
 
         fun multi(min: Int, max: Int, item: SimpleItem) {
+            check((min == 0 && max == 1).not()) { "Use optional rather than multi" }
             this.rule.rhs = SimpleListDefault(min, max, item)
         }
 

@@ -45,8 +45,8 @@ internal data class LookaheadSetPart(
     val regex by lazy {
         val str = this.content.joinToString(prefix = "(", separator = ")|(", postfix = ")") {
             when (it.rhs) {
-                is RuntimeRuleRhsLiteral -> "\\Q${(it.rhs as RuntimeRuleRhsLiteral).value}\\E"
-                is RuntimeRuleRhsPattern -> (it.rhs as RuntimeRuleRhsPattern).pattern
+                is RuntimeRuleRhsLiteral -> "\\Q${(it.rhs as RuntimeRuleRhsLiteral).literalUnescaped}\\E"
+                is RuntimeRuleRhsPattern -> (it.rhs as RuntimeRuleRhsPattern).patternUnescaped
                 else -> error("Internal Error: rhs not a literal that can be joined to a regex")
             }
         }

@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.sppt
 
-import net.akehurst.language.agl.aMinimalVersion.CompleteNode
 import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.sppt.SpptDataNode
@@ -40,7 +39,7 @@ data class CompleteTreeDataNode(
     private val _hashCode_cache = arrayOf(rule, startPosition, nextInputPosition).contentHashCode()
     override fun hashCode(): Int = _hashCode_cache
     override fun equals(other: Any?): Boolean = when {
-        other !is CompleteNode -> false
+        other !is SpptDataNode -> false
         this.startPosition != other.startPosition -> false
         this.nextInputPosition != other.nextInputPosition -> false
         this.rule != other.rule -> false

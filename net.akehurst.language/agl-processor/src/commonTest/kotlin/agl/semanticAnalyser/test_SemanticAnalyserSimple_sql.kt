@@ -133,7 +133,9 @@ grammar SQL {
                     }
                 }
             """.trimIndent()
-        ).asm!!
+        ).let {
+            it.asm ?: error("Unable to parse '/atom-basic/Grammar.agl'\n${it.issues}")
+        }
         val syntaxAnalyser = SyntaxAnalyserSimple(typeModel, scopeModel)
         val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
             grammarStr,

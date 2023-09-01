@@ -46,8 +46,8 @@ internal class test_expectedTerminalsAt {
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
-                is RuntimeRuleRhsPattern -> rhs.pattern
-                is RuntimeRuleRhsLiteral -> rhs.value
+                is RuntimeRuleRhsPattern -> rhs.patternUnescaped
+                is RuntimeRuleRhsLiteral -> rhs.literalUnescaped
                 else -> it.tag
             }
         }
@@ -69,8 +69,8 @@ internal class test_expectedTerminalsAt {
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
-                is RuntimeRuleRhsPattern -> rhs.pattern
-                is RuntimeRuleRhsLiteral -> rhs.value
+                is RuntimeRuleRhsPattern -> rhs.patternUnescaped
+                is RuntimeRuleRhsLiteral -> rhs.literalUnescaped
                 else -> it.tag
             }
         }
@@ -116,8 +116,8 @@ internal class test_expectedTerminalsAt {
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
-                is RuntimeRuleRhsPattern -> rhs.pattern
-                is RuntimeRuleRhsLiteral -> rhs.value
+                is RuntimeRuleRhsPattern -> rhs.patternUnescaped
+                is RuntimeRuleRhsLiteral -> rhs.literalUnescaped
                 else -> it.tag
             }
         }
@@ -139,8 +139,8 @@ internal class test_expectedTerminalsAt {
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
-                is RuntimeRuleRhsPattern -> rhs.pattern
-                is RuntimeRuleRhsLiteral -> rhs.value
+                is RuntimeRuleRhsPattern -> rhs.patternUnescaped
+                is RuntimeRuleRhsLiteral -> rhs.literalUnescaped
                 else -> it.tag
             }
         }
@@ -162,8 +162,8 @@ internal class test_expectedTerminalsAt {
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
-                is RuntimeRuleRhsPattern -> rhs.pattern
-                is RuntimeRuleRhsLiteral -> rhs.value
+                is RuntimeRuleRhsPattern -> rhs.patternUnescaped
+                is RuntimeRuleRhsLiteral -> rhs.literalUnescaped
                 else -> it.tag
             }
         }
@@ -185,8 +185,8 @@ internal class test_expectedTerminalsAt {
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
-                is RuntimeRuleRhsPattern -> rhs.pattern
-                is RuntimeRuleRhsLiteral -> rhs.value
+                is RuntimeRuleRhsPattern -> rhs.patternUnescaped
+                is RuntimeRuleRhsLiteral -> rhs.literalUnescaped
                 else -> it.tag
             }
         }
@@ -208,8 +208,8 @@ internal class test_expectedTerminalsAt {
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
-                is RuntimeRuleRhsPattern -> rhs.pattern
-                is RuntimeRuleRhsLiteral -> rhs.value
+                is RuntimeRuleRhsPattern -> rhs.patternUnescaped
+                is RuntimeRuleRhsLiteral -> rhs.literalUnescaped
                 else -> it.tag
             }
         }
@@ -243,8 +243,8 @@ internal class test_expectedTerminalsAt {
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
-                is RuntimeRuleRhsPattern -> rhs.pattern
-                is RuntimeRuleRhsLiteral -> rhs.value
+                is RuntimeRuleRhsPattern -> rhs.patternUnescaped
+                is RuntimeRuleRhsLiteral -> rhs.literalUnescaped
                 else -> it.tag
             }
         }
@@ -268,8 +268,8 @@ internal class test_expectedTerminalsAt {
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
-                is RuntimeRuleRhsPattern -> rhs.pattern
-                is RuntimeRuleRhsLiteral -> rhs.value
+                is RuntimeRuleRhsPattern -> rhs.patternUnescaped
+                is RuntimeRuleRhsLiteral -> rhs.literalUnescaped
                 else -> it.tag
             }
         }
@@ -289,8 +289,8 @@ internal class test_expectedTerminalsAt {
         val actStr = actual.map {
             val rhs = it.rhs
             when (rhs) {
-                is RuntimeRuleRhsPattern -> rhs.pattern
-                is RuntimeRuleRhsLiteral -> rhs.value
+                is RuntimeRuleRhsPattern -> rhs.patternUnescaped
+                is RuntimeRuleRhsLiteral -> rhs.literalUnescaped
                 else -> it.tag
             }
         }

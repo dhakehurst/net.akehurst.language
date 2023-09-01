@@ -17,7 +17,6 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
@@ -27,12 +26,13 @@ import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
+import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SpptDataNode
 
 val SpptDataNode.isEmptyMatch get() = this.startPosition == this.nextInputPosition
-fun SpptDataNode.locationIn(sentence: String) = InputFromString.locationFor(sentence, this.startPosition, this.nextInputPosition - this.startPosition)
-fun SpptDataNode.matchedTextNoSkip(sentence: String) = sentence.substring(this.startPosition, this.nextInputNoSkip)
+//fun SpptDataNode.locationIn(sentence: Sentence) = sentence.locationFor(this)
+//fun SpptDataNode.matchedTextNoSkip(sentence: Sentence) = sentence.matchedTextNoSkip(this)
 
 abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAnalyser<AsmType> {
 
@@ -47,7 +47,7 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAna
     }
 
     override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<AsmType> {
-        val sentence = (sppt as SPPTFromTreeData).originalSentence
+        val sentence = (sppt as SPPTFromTreeData).sentence
         val treeData = (sppt as SPPTFromTreeData).treeData
         this.walkTree(sentence, treeData, false)
         this.embeddedSyntaxAnalyser.values.forEach {
@@ -59,5 +59,5 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAna
     /**
      * implement this to walk the tree and set the 'asm' property
      */
-    abstract fun walkTree(sentence: String, treeData: TreeDataComplete<out SpptDataNode>, skipDataAsTree: Boolean)
+    abstract fun walkTree(sentence: Sentence, treeData: TreeDataComplete<out SpptDataNode>, skipDataAsTree: Boolean)
 }

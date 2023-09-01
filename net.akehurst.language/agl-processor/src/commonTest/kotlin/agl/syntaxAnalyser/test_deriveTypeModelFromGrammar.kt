@@ -21,19 +21,23 @@ import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.grammarTypeModel.asString
+import net.akehurst.language.test.FixMethodOrder
+import net.akehurst.language.test.MethodSorters
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class test_deriveTypeModelFromGrammar {
 
     private companion object {
         val grammarProc = Agl.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
     }
 
+    // --- Empty ---
     @Test // S =  ;
-    fun rhs_empty() {
+    fun _00_rhs_empty() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -54,8 +58,9 @@ class test_deriveTypeModelFromGrammar {
         GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
+    // --- Literal ---
     @Test // S = 'a' ;
-    fun rhs_terminal_nonleaf_literal() {
+    fun _11_rhs_terminal_nonleaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -77,7 +82,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = a ; leaf a = 'a' ;
-    fun rhs_terminal_leaf_literal() {
+    fun _12_rhs_terminal_leaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -100,8 +105,9 @@ class test_deriveTypeModelFromGrammar {
         GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
+    // --- Pattern ---
     @Test //  S = "[a-z]" ;
-    fun rhs_terminal_nonLeaf_pattern() {
+    fun _13_rhs_terminal_nonLeaf_pattern() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -123,7 +129,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = v ; leaf v = "[a-z]" ;
-    fun rhs_terminal_leaf_pattern() {
+    fun _14_rhs_terminal_leaf_pattern() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -146,8 +152,9 @@ class test_deriveTypeModelFromGrammar {
         GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
+    // --- Concatenation ---
     @Test // S = A B C ;
-    fun rhs_concat_nonTerm_x3_literal() {
+    fun _21_rhs_concat_nonTerm_x3_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -178,7 +185,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = a ',' b ',' c ;
-    fun rhs_concat_nonTerm_x3_literal_with_separator() {
+    fun _22_rhs_concat_nonTerm_x3_literal_with_separator() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -208,8 +215,9 @@ class test_deriveTypeModelFromGrammar {
         GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
+    // --- Choice ---
     @Test // S = 'a' | 'b' | 'c' ;
-    fun rhs_choice_literal() {
+    fun _31_rhs_choice_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -230,7 +238,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = A | B | C ; A = a x; B = b x; C = c x;
-    fun rhs_choice_nonTerm() {
+    fun _32_rhs_choice_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -272,7 +280,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = L | M ; L = 'a' | 'b' | 'c' ; M = 'x' | 'y' ;
-    fun rhs_choice_of_choice_all_literal() {
+    fun _33_rhs_choice_of_choice_all_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -297,7 +305,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = L | M ; L = a | b | c ;  M = x | y ;
-    fun rhs_choice_of_choice_all_leaf() {
+    fun _34_rhs_choice_of_choice_all_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -327,7 +335,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = A | B | C ; A = a x ; B = C | D ; C = c x; D = d x ;
-    fun rhs_choice_of_choice_all_concats() {
+    fun _35_rhs_choice_of_choice_all_concats() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -375,7 +383,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = A | B | C ; A = a x ; B = c | D ; C = c ; D = d ;
-    fun rhs_choice_of_choice_mixed_literal_and_concats() {
+    fun _36_rhs_choice_of_choice_mixed_literal_and_concats() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -416,8 +424,9 @@ class test_deriveTypeModelFromGrammar {
         GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
+    // --- Optional ---
     @Test //  S = 'a'? ;
-    fun rhs_optional_literal() {
+    fun _4_rhs_optional_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -439,7 +448,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = a 'b'? c ;
-    fun concat_optional_literal() {
+    fun _4_concat_optional_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -465,7 +474,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = a? ;
-    fun rhs_optional_literal_leaf() {
+    fun _4_rhs_optional_literal_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -488,8 +497,9 @@ class test_deriveTypeModelFromGrammar {
         GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
+    // --- ListSimple ---
     @Test // S = 'a'* ;
-    fun rhs_list_literal_nonLeaf() {
+    fun _5_list_literal_nonLeaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -513,7 +523,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = a 'b'* c ;
-    fun concat_list_literal_nonLeaf() {
+    fun _5_concat_list_literal_nonLeaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -539,7 +549,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test //  S = a* ;
-    fun rhs_list_literal_leaf() {
+    fun _5_list_literal_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -564,7 +574,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = a b* c ;
-    fun concat_list_literal_leaf() {
+    fun _5_concat_list_literal_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -592,7 +602,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test //S = as ; as = a* ;
-    fun rhs_nonTerm_multi_literal_leaf() {
+    fun _5_nonTerm_multi_literal_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -621,7 +631,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = as ; as = ['a' / ',']* ;
-    fun rhs_nonTerm_sepList_literal() {
+    fun _5_nonTerm_sepList_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -648,8 +658,9 @@ class test_deriveTypeModelFromGrammar {
         GrammarTypeModelTest.assertEquals(expected, actual)
     }
 
+    // --- ListSeparated ---
     @Test // S = a bs c ; bs = ['b' / ',']* ;
-    fun concat_nonTerm_sepList_literal() {
+    fun _6_concat_nonTerm_sepList_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -680,7 +691,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = as ; as = [a / ',']* ;
-    fun rhs_nonTerm_sepList_literal_leaf() {
+    fun _6_nonTerm_sepList_literal_leaf() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -711,7 +722,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test
-    fun sepList_multi_nonTerm() {
+    fun _6_sepList_multi_nonTerm() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -747,7 +758,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test
-    fun nonTerm_multi_literal() {
+    fun _6_nonTerm_multi_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -776,7 +787,7 @@ class test_deriveTypeModelFromGrammar {
 
     // --- Group ---
     @Test // S = a ('b' 'c' 'e') e ;
-    fun concat_group_concat_nonLeaf_literal() {
+    fun _7_concat_group_concat_nonLeaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -802,7 +813,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = a (b c d) e ;
-    fun concat_group_concat_leaf_literal() {
+    fun _7_concat_group_concat_leaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -836,7 +847,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = a (b c d) (b a c) e ;
-    fun concat_group_concat_leaf_literal_2() {
+    fun _7_concat_group_concat_leaf_literal_2() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -875,7 +886,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = a (b) e ;
-    fun concat_group_1_leaf_literal() {
+    fun _7_concat_group_1_leaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -905,7 +916,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = a (b (c) d) e ;
-    fun concat_group_concat_group_group_leaf_literal() {
+    fun _7_concat_group_concat_group_group_leaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -931,7 +942,7 @@ class test_deriveTypeModelFromGrammar {
                     propertyTupleType("\$group", false, 1) {
                         propertyPrimitiveType("c", "String", false, 0)
                     }
-                    propertyPrimitiveType("d", "String", false, 0)
+                    propertyPrimitiveType("d", "String", false, 2)
                 }
                 propertyPrimitiveType("e", "String", false, 2)
             }
@@ -941,7 +952,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = a (b | c | d) e ;
-    fun concat_group_choice_leaf_literal() {
+    fun _7_concat_group_choice_leaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -971,7 +982,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = a (b c | d) e ;
-    fun concat_group_choice_concat_leaf_literal() {
+    fun _7_concat_group_choice_concat_leaf_literal() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -996,7 +1007,7 @@ class test_deriveTypeModelFromGrammar {
                 propertyUnnamedSuperType("\$choice", false, 1) {
                     tupleType {
                         propertyPrimitiveType("b", "String", false, 0)
-                        propertyPrimitiveType("c", "String", false, 0)
+                        propertyPrimitiveType("c", "String", false, 1)
                     }
                     primitiveRef("String")
                 }
@@ -1008,7 +1019,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test // S = a (b c | d e) f ;
-    fun concat_group_choice_concat_leaf_literal_2() {
+    fun _7_concat_group_choice_concat_leaf_literal_2() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -1034,11 +1045,11 @@ class test_deriveTypeModelFromGrammar {
                 propertyUnnamedSuperType("\$choice", false, 1) {
                     tupleType {
                         propertyPrimitiveType("b", "String", false, 0)
-                        propertyPrimitiveType("c", "String", false, 0)
+                        propertyPrimitiveType("c", "String", false, 1)
                     }
                     tupleType {
                         propertyPrimitiveType("d", "String", false, 0)
-                        propertyPrimitiveType("e", "String", false, 0)
+                        propertyPrimitiveType("e", "String", false, 1)
                     }
                 }
                 propertyPrimitiveType("f", "String", false, 2)
@@ -1049,7 +1060,7 @@ class test_deriveTypeModelFromGrammar {
     }
 
     @Test //  S = a (b? c) e ;
-    fun group_concat_optional() {
+    fun _7_group_concat_optional() {
         val grammarStr = """
             namespace test
             grammar Test {
@@ -1072,7 +1083,7 @@ class test_deriveTypeModelFromGrammar {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyTupleType("\$group", false, 1) {
                     propertyPrimitiveType("b", "String", true, 0)
-                    propertyPrimitiveType("c", "String", false, 2)
+                    propertyPrimitiveType("c", "String", false, 1)
                 }
                 propertyPrimitiveType("e", "String", false, 2)
             }

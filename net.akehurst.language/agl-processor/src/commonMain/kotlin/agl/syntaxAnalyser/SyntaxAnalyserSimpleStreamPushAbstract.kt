@@ -34,6 +34,7 @@ import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.grammarTypeModel.StringType
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.sppt.SpptWalker
@@ -95,7 +96,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
         return emptyList()
     }
 
-    override fun walkTree(sentence: String, treeData: TreeDataComplete<out SpptDataNode>, skipDataAsTree: Boolean) {
+    override fun walkTree(sentence: Sentence, treeData: TreeDataComplete<out SpptDataNode>, skipDataAsTree: Boolean) {
         val syntaxAnalyserStack = mutableStackOf(this)
         val downStack = mutableStackOf<DownData?>() //when null don't use branch
         val stack = mutableStackOf<ChildData>()
@@ -170,7 +171,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
 
                     else -> syntaxAnalyserStack.peek().createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
-                value?.let { locationMap[it] = nodeInfo.node.locationIn(sentence) }
+                value?.let { locationMap[it] = sentence.locationFor(nodeInfo.node) }
                 stack.push(ChildData(nodeInfo, value))
                 // path = path.parent!!
             }
@@ -409,7 +410,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
         }
     }
 
-    private fun createValueFromBranch(sentence: String, downData: DownData, target: SpptDataNodeInfo, children: List<ChildData>): Any? {
+    private fun createValueFromBranch(sentence: Sentence, downData: DownData, target: SpptDataNodeInfo, children: List<ChildData>): Any? {
         val targetType = findTypeForRule(target.node.rule.tag)
 
         return when {
@@ -565,7 +566,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
         }
     }
 
-    private fun createValueFor(sentence: String, type: TypeDefinition, path: AsmElementPath, childData: ChildData): Any? = when (type) {
+    private fun createValueFor(sentence: Sentence, type: TypeDefinition, path: AsmElementPath, childData: ChildData): Any? = when (type) {
         is PrimitiveType -> createPrimitiveValue(sentence, typeModel.StringType, childData.nodeInfo)
         is AnyType -> TODO()
         is NothingType -> TODO()
@@ -576,10 +577,10 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
         is ElementType -> createElementFrom(sentence, type, path, childData.value as List<ChildData>)
     }
 
-    private fun createPrimitiveValue(sentence: String, type: PrimitiveType, nodeInfo: SpptDataNodeInfo) {
+    private fun createPrimitiveValue(sentence: Sentence, type: PrimitiveType, nodeInfo: SpptDataNodeInfo) {
         val text = when {
             nodeInfo.node.rule.isEmptyTerminal -> null
-            else -> sentence.substring(nodeInfo.node.startPosition, nodeInfo.node.nextInputNoSkip)
+            else -> sentence.matchedTextNoSkip(nodeInfo.node)
         }
         primitive(type, text)
     }
@@ -599,14 +600,14 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
         }
     }
 
-    private fun createTupleFrom(sentence: String, type: TupleType, path: AsmElementPath, childData: ChildData) {
+    private fun createTupleFrom(sentence: Sentence, type: TupleType, path: AsmElementPath, childData: ChildData) {
         for (propDecl in type.property.values) {
             setPropertyOrReferenceFromDeclaration(type, propDecl)
         }
         finishTuple(path)
     }
 
-    private fun createElementFrom(sentence: String, type: ElementType, path: AsmElementPath, children: List<ChildData>) {
+    private fun createElementFrom(sentence: Sentence, type: ElementType, path: AsmElementPath, children: List<ChildData>) {
         if (type.subtypes.isNotEmpty()) {
             if (Debug.CHECK) check(1 == children.size)
             children[0].value
@@ -619,7 +620,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
                     is PrimitiveType -> {
                         val text = when {
                             childData.nodeInfo.node.rule.isEmptyTerminal -> null
-                            else -> sentence.substring(childData.nodeInfo.node.startPosition, childData.nodeInfo.node.nextInputNoSkip)
+                            else -> sentence.matchedTextNoSkip(childData.nodeInfo.node)
                         }
                         primitive(propType, text)
                     }

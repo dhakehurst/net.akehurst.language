@@ -18,15 +18,12 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.syntaxAnalyser.isEmptyMatch
-import net.akehurst.language.agl.syntaxAnalyser.locationIn
-import net.akehurst.language.agl.syntaxAnalyser.matchedTextNoSkip
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.mutableStackOf
 
 internal class TokensByLineVisitor(
-    val sentence: String
+    val sentence: Sentence
 ) {
-
     val lines = mutableListOf<MutableList<LeafData>>()
     private lateinit var inputFromString: InputFromString
 
@@ -67,8 +64,8 @@ internal class TokensByLineVisitor(
         val name = nodeInfo.node.rule.tag
         val isPattern = nodeInfo.node.rule.isPattern
         val tags = tagList + name
-        val location = nodeInfo.node.locationIn(sentence)
-        val matchedText = nodeInfo.node.matchedTextNoSkip(sentence)
+        val location = sentence.locationFor(nodeInfo.node)
+        val matchedText = sentence.matchedTextNoSkip(nodeInfo.node)
         val eolPositions = InputFromString.eolPositions(matchedText)
         when {
             nodeInfo.node.isEmptyMatch -> Unit

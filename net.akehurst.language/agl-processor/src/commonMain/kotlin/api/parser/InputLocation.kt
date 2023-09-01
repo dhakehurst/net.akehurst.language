@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.api.parser;
 
+
 data class InputLocation(
     val position: Int,
     val column: Int,

@@ -28,6 +28,13 @@ interface SpptDataNode {
     val option: Int
 }
 
+interface Sentence {
+    val text: String
+    fun matchedTextNoSkip(node: SpptDataNode): String
+    fun locationFor(position: Int, length: Int): InputLocation
+    fun locationFor(node: SpptDataNode): InputLocation
+}
+
 data class ChildInfo(
     val propertyIndex: Int, // property index for a list is different to child index
     val index: Int,

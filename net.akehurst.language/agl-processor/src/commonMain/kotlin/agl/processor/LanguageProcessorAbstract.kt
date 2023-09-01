@@ -227,8 +227,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 else -> {
                     val rhs = it.rhs
                     when (rhs) {
-                        is RuntimeRuleRhsLiteral -> CompletionItem(CompletionItemKind.LITERAL, it.tag, rhs.value)
-                        is RuntimeRuleRhsPattern -> CompletionItem(CompletionItemKind.PATTERN, it.tag, rhs.pattern)
+                        is RuntimeRuleRhsLiteral -> CompletionItem(CompletionItemKind.LITERAL, it.tag, rhs.literalUnescaped)
+                        is RuntimeRuleRhsPattern -> CompletionItem(CompletionItemKind.PATTERN, it.tag, rhs.patternUnescaped)
                         else -> CompletionItem(CompletionItemKind.LITERAL, it.tag, it.tag)
                     }
                 }

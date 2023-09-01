@@ -170,6 +170,7 @@ abstract class StructuredTypeBuilder(
     }
 
     fun property(propertyName: String, typeUse: TypeUsage, childIndex: Int): PropertyDeclaration {
+        check(childIndex == _structuredType.property.size) { "Incorrect property index" }
         return PropertyDeclaration(_structuredType, propertyName, typeUse, childIndex)
     }
 }

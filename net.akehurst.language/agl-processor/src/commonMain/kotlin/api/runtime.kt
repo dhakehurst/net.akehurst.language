@@ -43,6 +43,7 @@ interface Rule {
     val isListSeparated: Boolean
 
     val isOptional: Boolean
+    val isListOptional: Boolean
 
     val rhsItems: List<List<Rule>>
 }

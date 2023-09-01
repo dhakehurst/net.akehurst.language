@@ -39,6 +39,7 @@ internal class ParseOptionsDefault(
     override var goalRuleName: String? = null,
     override var automatonKind: AutomatonKind = AutomatonKind.LOOKAHEAD_1,
     override var reportErrors: Boolean = true,
+    override val reportGrammarAmbiguities: Boolean = false,
     override var cacheSkip: Boolean = true
 ) : ParseOptions
 
@@ -171,6 +172,7 @@ class ParseOptionsBuilder {
     private var _goalRuleName: String? = null
     private var _automatonKind: AutomatonKind = AutomatonKind.LOOKAHEAD_1
     private var _reportErrors: Boolean = true
+    private var _reportGrammarAmbiguities = false
     private var _cacheSkip: Boolean = true
 
     fun goalRuleName(value: String?) {
@@ -185,12 +187,16 @@ class ParseOptionsBuilder {
         _reportErrors = value
     }
 
+    fun reportGrammarAmbiguities(value: Boolean) {
+        _reportGrammarAmbiguities = value
+    }
+
     fun cacheSkip(value: Boolean) {
         _cacheSkip = value
     }
 
     fun build(): ParseOptions {
-        return ParseOptionsDefault(_goalRuleName, _automatonKind, _reportErrors, _cacheSkip)
+        return ParseOptionsDefault(_goalRuleName, _automatonKind, _reportErrors, _reportGrammarAmbiguities, _cacheSkip)
     }
 }
 

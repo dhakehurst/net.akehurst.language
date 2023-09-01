@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.runtime.graph
 
+import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RulePosition
@@ -78,7 +79,7 @@ internal class test_TreeData {
         """.trimIndent()
         )
 
-        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete<SpptDataNode>, sentence, -1, -1)
+        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete<SpptDataNode>, SentenceDefault(sentence), -1, -1)
 
         assertEquals(sppt.tree.toStringAll, actual.toStringAll)
         assertEquals(sppt.tree, actual)
@@ -134,7 +135,7 @@ internal class test_TreeData {
         """.trimIndent()
         )
 
-        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete<SpptDataNode>, sentence, -1, -1)
+        val actual = SPPTFromTreeData(graph.treeData.complete as TreeDataComplete<SpptDataNode>, SentenceDefault(sentence), -1, -1)
 
         assertEquals(sppt.tree.toStringAll, actual.toStringAll)
         assertEquals(sppt.tree, actual)

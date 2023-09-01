@@ -69,19 +69,33 @@ internal class RuntimeRuleRhsCommonTerminal(
 
 internal class RuntimeRuleRhsPattern(
     rule: RuntimeRule,
-    val pattern: String
+    val patternUnescaped: String
 ) : RuntimeRuleRhsTerminal(rule) {
-    internal val regex by lazy { Regex(this.pattern) }
-    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsPattern(clonedRules[rule.tag]!!, pattern)
-    override fun toString(): String = "\"$pattern\""
+    companion object {
+        fun unescape(literalEscaped: String) =
+            literalEscaped
+                .replace("\\\"", "\"")
+    }
+
+    val regex by lazy { Regex(this.patternUnescaped) }
+    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsPattern(clonedRules[rule.tag]!!, patternUnescaped)
+    override fun toString(): String = "\"$patternUnescaped\""
 }
 
 internal class RuntimeRuleRhsLiteral(
     rule: RuntimeRule,
-    val value: String
+    val literalUnescaped: String
 ) : RuntimeRuleRhsTerminal(rule) {
-    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsLiteral(clonedRules[rule.tag]!!, value)
-    override fun toString(): String = "'$value'"
+
+    companion object {
+        fun unescape(literalEscaped: String) =
+            literalEscaped
+                .replace("\\'", "'")
+                .replace("\\\\", "\\")
+    }
+
+    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsLiteral(clonedRules[rule.tag]!!, literalUnescaped)
+    override fun toString(): String = "'$literalUnescaped'"
 }
 
 internal class RuntimeRuleRhsEmbedded(

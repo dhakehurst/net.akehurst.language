@@ -21,12 +21,12 @@ import net.akehurst.language.agl.grammar.grammar.asm.*
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.syntaxAnalyser.BranchHandler
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
-import net.akehurst.language.agl.syntaxAnalyser.locationIn
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 
 internal class AglGrammarSyntaxAnalyser(
@@ -91,32 +91,32 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // grammarDefinition : namespace definitions ;
-    private fun grammarDefinition(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<Grammar> {
+    private fun grammarDefinition(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Grammar> {
         val namespace = children[0]
         val definitions = children[1] as List<Grammar>
         return definitions
     }
 
     // definitions = grammar+ ;
-    private fun definitions(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<Grammar> {
+    private fun definitions(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Grammar> {
         val definitions = children as List<Grammar>
         return definitions
     }
 
     // namespace : 'namespace' qualifiedName ;
-    private fun namespace(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): Namespace {
+    private fun namespace(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Namespace {
         val qualifiedName = children[1] as String
-        val ns = NamespaceDefault(qualifiedName).also { this.locationMap[it] = target.node.locationIn(sentence) }
+        val ns = NamespaceDefault(qualifiedName)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
         _localStore["namespace"] = ns
         return ns
     }
 
     // grammar : 'grammar' IDENTIFIER extendsOpt '{' rules '}' ;
-    private fun grammar(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): Grammar {
+    private fun grammar(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Grammar {
         val namespace = _localStore["namespace"] as Namespace
         val name = children[1] as String
         val extends = (children[2] as List<GrammarReference>?) ?: emptyList()
-        val grmr = GrammarDefault(namespace, name).also { this.locationMap[it] = target.node.locationIn(sentence) }
+        val grmr = GrammarDefault(namespace, name)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
         grmr.extends.addAll(extends)
         _localStore["grammar"] = grmr
         val rules = children[4] as List<GrammarItem>
@@ -132,7 +132,7 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // extendsOpt = extends?
-    private fun extendsOpt(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<GrammarReference> {
+    private fun extendsOpt(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<GrammarReference> {
         return when {
             null == children[0] -> emptyList()
             else -> children[0] as List<GrammarReference>
@@ -140,38 +140,38 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // extends = 'extends' extendsList ;
-    private fun extends(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<GrammarReference> {
+    private fun extends(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<GrammarReference> {
         return children[1] as List<GrammarReference>
     }
 
     // extendsList = [qualifiedName / ',']+ ;
-    private fun extendsList(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<GrammarReference> {
+    private fun extendsList(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<GrammarReference> {
         val localNamespace = _localStore["namespace"] as Namespace
         val extendNameList = children as List<String>
         val sl = extendNameList.toSeparatedList<String, String>()
         val extendedGrammars = sl.items.map {
-            GrammarReferenceDefault(localNamespace, it).also { this.locationMap[it] = target.node.locationIn(sentence) }
+            GrammarReferenceDefault(localNamespace, it)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
         }
         return extendedGrammars
     }
 
     // rules : rule+ ;
-    private fun rules(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<GrammarItem> =
+    private fun rules(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<GrammarItem> =
         children as List<GrammarItem>
 
     // rule = grammarRule | preferenceRule
-    private fun rule(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): GrammarItem =
+    private fun rule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarItem =
         children[0] as GrammarItem
 
 
     // grammarRule : ruleTypeLabels IDENTIFIER '=' rhs ';' ;
-    private fun grammarRule(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): GrammarRule {
+    private fun grammarRule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarRule {
         val type = children[0] as List<String>
         val isOverride = type.contains("override")
         val isSkip = type.contains("skip")
         val isLeaf = type.contains("leaf")
         val name = children[1] as String
-        val result = GrammarRuleDefault(name, isOverride, isSkip, isLeaf).also { this.locationMap[it] = target.node.locationIn(sentence) }
+        val result = GrammarRuleDefault(name, isOverride, isSkip, isLeaf)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
         val rhs = children[3] as RuleItem
         result.rhs = rhs
         return result
@@ -181,12 +181,12 @@ internal class AglGrammarSyntaxAnalyser(
     // isOverride = 'override' ? ;
     // isSkip = 'leaf' ? ;
     // isLeaf = 'skip' ? ;
-    private fun ruleTypeLabels(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<String> {
+    private fun ruleTypeLabels(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> {
         return (children as List<String?>).filterNotNull()
     }
 
     // rhs = empty | concatenation | choice ;
-    private fun rhs(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): RuleItem {
+    private fun rhs(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleItem {
         val rhs = children[0] as RuleItem
         val rhs2 = when (rhs) {
             is Concatenation -> reduceConcatenation(rhs)
@@ -196,61 +196,61 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // empty = ;
-    private fun empty(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): RuleItem {
-        return EmptyRuleDefault().also { this.locationMap[it] = target.node.locationIn(sentence) }
+    private fun empty(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleItem {
+        return EmptyRuleDefault()//.also { this.locationMap[it] = target.node.locationIn(sentence) }
     }
 
     // choice = ambiguousChoice | priorityChoice | simpleChoice ;
-    private fun choice(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): RuleItem {
+    private fun choice(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleItem {
         return children[0] as RuleItem
     }
 
     // simpleChoice : [concatenation, '|']* ;
-    private fun simpleChoice(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): RuleItem {
+    private fun simpleChoice(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleItem {
         val simpleChoice = children.toSeparatedList<Concatenation, String>()
         val alternative = simpleChoice.items.map { reduceConcatenation(it) }
-        return ChoiceLongestDefault(alternative).also { this.locationMap[it] = target.node.locationIn(sentence) }
+        return ChoiceLongestDefault(alternative)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
     }
 
     // priorityChoice : [concatenation, '<']* ;
-    private fun priorityChoice(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): RuleItem {
+    private fun priorityChoice(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleItem {
         val priorityChoice = children.toSeparatedList<Concatenation, String>()
         val alternative = priorityChoice.items.map { reduceConcatenation(it) }
-        return ChoicePriorityDefault(alternative).also { this.locationMap[it] = target.node.locationIn(sentence) }
+        return ChoicePriorityDefault(alternative)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
     }
 
     // ambiguousChoice : [concatenation, '||']* ;
-    private fun ambiguousChoice(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): RuleItem {
+    private fun ambiguousChoice(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleItem {
         val ambiguousChoice = children.toSeparatedList<Concatenation, String>()
         val alternative = ambiguousChoice.items.map { reduceConcatenation(it) }
-        return ChoiceAmbiguousDefault(alternative).also { this.locationMap[it] = target.node.locationIn(sentence) }
+        return ChoiceAmbiguousDefault(alternative)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
     }
 
     // concatenation : concatenationItem+ ;
-    private fun concatenation(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): Concatenation {
+    private fun concatenation(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Concatenation {
         val items = children as List<RuleItem>
-        return ConcatenationDefault(items).also { this.locationMap[it] = target.node.locationIn(sentence) }
+        return ConcatenationDefault(items)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
     }
 
     // concatenationItem = simpleItemOrGroup | listOfItems ; // a group can be mapped to a Choice so return RuleItem
-    private fun concatenationItem(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): RuleItem =
+    private fun concatenationItem(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleItem =
         children[0] as RuleItem
 
     // simpleItemOrGroup : simpleItem | group ; // a group can be mapped to a Choice so return RuleItem
-    private fun simpleItemOrGroup(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): RuleItem =
+    private fun simpleItemOrGroup(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleItem =
         children[0] as RuleItem
 
     // simpleItem : terminal | nonTerminal | embedded ;
-    private fun simpleItem(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): SimpleItem =
+    private fun simpleItem(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): SimpleItem =
         children[0] as SimpleItem
 
     // listOfItems = simpleList | separatedList ;
     // could also return optional
-    private fun listOfItems(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): ConcatenationItem =
+    private fun listOfItems(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ConcatenationItem =
         children[0] as ConcatenationItem
 
     // multiplicity = '*' | '+' | '?' | range ;
-    private fun multiplicity(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): Pair<Int, Int> {
+    private fun multiplicity(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<Int, Int> {
         val m = children[0]
         return when (m) {
             is String -> when (m) {
@@ -266,11 +266,11 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     //range = rangeBraced | rangeUnBraced ;
-    private fun range(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): Pair<Int, Int> =
+    private fun range(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<Int, Int> =
         children[0] as Pair<Int, Int>
 
     //rangeUnBraced = POSITIVE_INTEGER rangeMaxOpt ;
-    private fun rangeUnBraced(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): Pair<Int, Int> {
+    private fun rangeUnBraced(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<Int, Int> {
         val min = (children[0] as String).toInt()
         val max = if (children[1] == null) {
             min
@@ -281,7 +281,7 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     //rangeBraced = '{' POSITIVE_INTEGER rangeMaxOpt '}' ;
-    private fun rangeBraced(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): Pair<Int, Int> {
+    private fun rangeBraced(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<Int, Int> {
         val min = (children[1] as String).toInt()
         val max = if (null == children[2]) {
             min
@@ -292,48 +292,48 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // rangeMaxOpt = rangeMax? ;
-    private fun rangeMaxOpt(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): Int? {
+    private fun rangeMaxOpt(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Int? {
         return children[0] as Int?
     }
 
     //rangeMax = rangeMaxUnbounded | rangeMaxBounded ;
-    private fun rangeMax(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): Int =
+    private fun rangeMax(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Int =
         children[0] as Int
 
 
     //rangeMaxUnbounded = '+' ;
-    private fun rangeMaxUnbounded(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): Int = -1
+    private fun rangeMaxUnbounded(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Int = -1
 
     //rangeMaxBounded = '..' POSITIVE_INTEGER ;
-    private fun rangeMaxBounded(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): Int =
+    private fun rangeMaxBounded(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Int =
         (children[1] as String).toInt()
 
     // simpleList = simpleItem multiplicity ;
-    private fun simpleList(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): ConcatenationItem {
+    private fun simpleList(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ConcatenationItem {
         val (min, max) = children[1] as Pair<Int, Int>
         val item = children[0] as RuleItem
         return when {
-            min == 0 && max == 1 -> OptionalItemDefault(item).also { this.locationMap[it] = target.node.locationIn(sentence) }
-            else -> SimpleListDefault(min, max, item).also { this.locationMap[it] = target.node.locationIn(sentence) }
+            min == 0 && max == 1 -> OptionalItemDefault(item)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
+            else -> SimpleListDefault(min, max, item)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
         }
     }
 
     // separatedList : '[' simpleItem '/' terminal ']' multiplicity ;
-    private fun separatedList(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): SeparatedList {
+    private fun separatedList(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): SeparatedList {
         val (min, max) = children[5] as Pair<Int, Int>
         val separator = children[3] as RuleItem
         val item = children[1] as RuleItem
-        return SeparatedListDefault(min, max, item, separator).also { this.locationMap[it] = target.node.locationIn(sentence) }
+        return SeparatedListDefault(min, max, item, separator)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
     }
 
     // group = '(' groupedContent ')' ;
-    private fun group(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): RuleItem {
+    private fun group(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleItem {
         val groupContent = children[1] as RuleItem
         return when (groupContent) {
-            is Choice -> groupContent.also { this.locationMap[it] = target.node.locationIn(sentence) }
+            is Choice -> groupContent//.also { this.locationMap[it] = target.node.locationIn(sentence) }
             is Concatenation -> {
                 val reduced = reduceConcatenation(groupContent)
-                GroupDefault(reduced).also { this.locationMap[it] = target.node.locationIn(sentence) }
+                GroupDefault(reduced)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
             }
 
             else -> error("Internal Error: subtype of RuleItem not handled - ${groupContent::class.simpleName}")
@@ -341,28 +341,28 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // groupedContent = concatenation | choice ;
-    private fun groupedContent(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): RuleItem =
+    private fun groupedContent(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleItem =
         children[0] as RuleItem
 
 
     // nonTerminal : IDENTIFIER ;
-    private fun nonTerminal(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): NonTerminal {
+    private fun nonTerminal(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NonTerminal {
         val nonTerminalRef = children[0] as String
-        val nt = NonTerminalDefault(nonTerminalRef).also { this.locationMap[it] = target.node.locationIn(sentence) }
+        val nt = NonTerminalDefault(nonTerminalRef)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
         return nt
     }
 
     // embedded = qualifiedName '::' nonTerminal ;
-    private fun embedded(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): Embedded {
+    private fun embedded(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Embedded {
         val namespace = _localStore["namespace"] as Namespace
         val embeddedGrammarStr = children[0] as String
         val embeddedStartRuleRef = children[2] as NonTerminal
-        val embeddedGrammarRef = GrammarReferenceDefault(namespace, embeddedGrammarStr).also { this.locationMap[it] = target.node.locationIn(sentence) }
-        return EmbeddedDefault(embeddedStartRuleRef.name, embeddedGrammarRef).also { this.locationMap[it] = target.node.locationIn(sentence) }
+        val embeddedGrammarRef = GrammarReferenceDefault(namespace, embeddedGrammarStr)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
+        return EmbeddedDefault(embeddedStartRuleRef.name, embeddedGrammarRef)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
     }
 
     // terminal : LITERAL | PATTERN ;
-    private fun terminal(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): Terminal {
+    private fun terminal(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Terminal {
         // Must match what is done in AglStyleSyntaxAnalyser.selectorSingle
         val isPattern = when (target.alt.option) {
             0 -> false
@@ -371,21 +371,21 @@ internal class AglGrammarSyntaxAnalyser(
         val mt = children[0] as String
         val escaped = mt.substring(1, mt.length - 1)
         //TODO: check these unescapings, e.g. '\\n'
-        val value = if (isPattern) {
-            escaped.replace("\\\"", "\"")
-        } else {
-            escaped.replace("\\'", "'").replace("\\\\", "\\")
-        }
-        return TerminalDefault(value, isPattern).also { this.locationMap[it] = target.node.locationIn(sentence) }
+//        val value = if (isPattern) {
+//            escaped.replace("\\\"", "\"")
+//        } else {
+//            escaped.replace("\\'", "'").replace("\\\\", "\\")
+//        }
+        return TerminalDefault(escaped, isPattern)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
     }
 
     // qualifiedName : (IDENTIFIER / '.')+ ;
-    private fun qualifiedName(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): String {
+    private fun qualifiedName(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
         return (children as List<String>).joinToString(separator = "")
     }
 
     // preferenceRule = 'preference' simpleItem '{' preferenceOptionList '}' ;
-    private fun preferenceRule(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): PreferenceRule {
+    private fun preferenceRule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PreferenceRule {
         val forItem = children[1] as SimpleItem
         val optionList = children[3] as List<PreferenceOption>
         return PreferenceRuleDefault(forItem, optionList)
@@ -410,13 +410,13 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // choiceNumber = POSITIVE_INTEGER? ;
-    private fun choiceNumber(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): Int? {
+    private fun choiceNumber(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Int? {
         val n = children[0] as String?
         return n?.toInt()
     }
 
     // associativity = 'left' | 'right' ;
-    private fun associativity(target: SpptDataNodeInfo, children: List<Any?>, sentence: String): String =
+    private fun associativity(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
         children[0] as String
 
     private fun reduceConcatenation(concat: Concatenation): RuleItem {

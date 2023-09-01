@@ -140,10 +140,10 @@ class test_AglGrammar_item {
         val result = parse("LITERAL", text)
         val expected = this.sppt(
             """
-            LITERAL  : '\'\\\''
+            LITERAL  : '\'\\\\\''
         """.trimIndent()
         )
-        //converted to single backslash by SyntaxAnalyser
+
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
         assertEquals(1, result.sppt!!.maxNumHeads)

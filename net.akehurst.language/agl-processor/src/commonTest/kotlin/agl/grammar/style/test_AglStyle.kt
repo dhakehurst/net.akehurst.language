@@ -64,7 +64,6 @@ class test_AglStyle {
             semanticAnalysis { context(ContextFromGrammar(testGrammar)) }
         })
 
-
     @Test
     fun single_line_comment() {
 
