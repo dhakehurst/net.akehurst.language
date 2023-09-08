@@ -105,9 +105,9 @@ subprojects {
                 }
             }
             browser {
-                webpackTask {
-                    outputFileName = "${project.group}-${project.name}.js"
-                }
+                // webpackTask {
+                //    outputFileName = "${project.group}-${project.name}.js"
+                // }
                 testTask {
                     useMocha {
                         timeout = "5000"

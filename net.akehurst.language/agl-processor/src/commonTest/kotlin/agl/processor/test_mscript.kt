@@ -17,14 +17,13 @@ package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
+import net.akehurst.language.agl.syntaxAnalyser.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.typemodel.api.asString
 import kotlin.test.*
 
 class test_mscript {
@@ -142,18 +141,18 @@ grammar Mscript {
             }
             elementType("conditional", "Conditional") {
                 // conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
-                propertyElementTypeOf("expression", "Expression", false, 1)
+                propertyDataTypeOf("expression", "Expression", false, 1)
                 propertyListSeparatedTypeOf("statementList", "Line", "String", false, 3)
                 propertyListSeparatedTypeOf("statementList2", "Line", "String", false, 5)
             }
             elementType("assignment", "Assignment") {
                 // assignment = rootVariable '=' expression ;
-                propertyElementTypeOf("rootVariable", "RootVariable", false, 0)
-                propertyElementTypeOf("expression", "Expression", false, 2)
+                propertyDataTypeOf("rootVariable", "RootVariable", false, 0)
+                propertyDataTypeOf("expression", "Expression", false, 2)
             }
             elementType("", "ExpressionStatement") {
                 // expressionStatement = expression ;
-                propertyElementTypeOf("expression", "Expression", false, 0)
+                propertyDataTypeOf("expression", "Expression", false, 0)
             }
             elementType("", "Expression") {
                 // expression
@@ -170,7 +169,7 @@ grammar Mscript {
             elementType("", "GroupExpression") {
                 // groupExpression = '(' expression ')' ;
                 //superType("expression")
-                propertyElementTypeOf("expression", "Expression", false, 1)
+                propertyDataTypeOf("expression", "Expression", false, 1)
             }
             elementType("", "FunctionCallOrIndex") {
                 // functionCall = NAME '(' argumentList ')' ;
@@ -189,7 +188,7 @@ grammar Mscript {
             elementType("", "PrefixExpression") {
                 // prefixExpression = prefixOperator expression ;
                 propertyPrimitiveType("prefixOperator", "String", false, 0)
-                propertyElementTypeOf("expression", "Expression", false, 1)
+                propertyDataTypeOf("expression", "Expression", false, 1)
             }
             stringTypeFor("PrefixOperator")
             //elementType("prefixOperator") {
@@ -219,10 +218,10 @@ grammar Mscript {
             }
             elementType("", "Row") {
                 // row = expression (','? expression)* ;
-                propertyElementTypeOf("expression", "Expression", false, 0)
+                propertyDataTypeOf("expression", "Expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
-                    propertyPrimitiveType(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, "String", true, 0)
-                    propertyElementTypeOf("expression", "Expression", false, 1)
+                    propertyPrimitiveType(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, "String", true, 0)
+                    propertyDataTypeOf("expression", "Expression", false, 1)
                 }
             }
             elementType("", "LiteralExpression") {
@@ -249,7 +248,7 @@ grammar Mscript {
             //}
         }
         assertEquals(expected.asString(), actual?.asString())
-        GrammarTypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.tmAssertEquals(expected, actual)
     }
 
     @Test

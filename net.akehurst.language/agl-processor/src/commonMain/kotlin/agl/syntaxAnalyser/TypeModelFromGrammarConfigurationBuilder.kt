@@ -38,40 +38,32 @@ class TypeModelFromGrammarConfigurationDefault() : TypeModelFromGrammarConfigura
         }
         val baseName = when (ruleItem) {
             is Terminal -> when (ruleItemType) {
-                is PrimitiveType -> TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
-                is ListSimpleType -> TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME
-                is ListSeparatedType -> TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME
-                is TupleType -> TypeModelFromGrammar.UNNAMED_TUPLE_PROPERTY_NAME
-                else -> TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
+                is PrimitiveType -> GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
+                is CollectionType -> GrammarTypeNamespaceFromGrammar.UNNAMED_LIST_PROPERTY_NAME
+                is TupleType -> GrammarTypeNamespaceFromGrammar.UNNAMED_TUPLE_PROPERTY_NAME
+                else -> GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME
             }
 
             //is Embedded -> "${ruleItem.embeddedGrammarReference.resolved!!.name}_${ruleItem.embeddedGoalName.lower()}"
             is Embedded -> "${ruleItem.embeddedGoalName.lower()}"
             is NonTerminal -> ruleItem.name.lower()
-            is Group -> TypeModelFromGrammar.UNNAMED_GROUP_PROPERTY_NAME
-            is Choice -> TypeModelFromGrammar.UNNAMED_CHOICE_PROPERTY_NAME
+            is Group -> GrammarTypeNamespaceFromGrammar.UNNAMED_GROUP_PROPERTY_NAME
+            is Choice -> GrammarTypeNamespaceFromGrammar.UNNAMED_CHOICE_PROPERTY_NAME
             else -> error("Internal error, unhandled subtype of SimpleItem")
         }.replaceFirstChar { it.lowercase() }
         val name = when (ruleItemType) {
-            is NothingType -> baseName
-            is AnyType -> baseName
             is PrimitiveType -> baseName
             is UnnamedSuperTypeType -> baseName
-            is ListSimpleType -> when (ruleItem) {
+            is CollectionType -> when (ruleItem) {
                 is NonTerminal -> ruleItem.name.lower()
-                is Terminal -> TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME
-                is Group -> TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME
-                else -> "${baseName}List"
-            }
-
-            is ListSeparatedType -> when (ruleItem) {
-                is NonTerminal -> ruleItem.name.lower()
-                is Terminal -> TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME
+                is Terminal -> GrammarTypeNamespaceFromGrammar.UNNAMED_LIST_PROPERTY_NAME
+                is Group -> GrammarTypeNamespaceFromGrammar.UNNAMED_LIST_PROPERTY_NAME
                 else -> "${baseName}List"
             }
 
             is TupleType -> baseName
-            is ElementType -> baseName
+            is DataType -> baseName
+            else -> baseName
         }
         return name //prefix + name
     }

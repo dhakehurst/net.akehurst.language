@@ -39,7 +39,7 @@ internal class ConverterToRuntimeRules(
     val runtimeRuleSet: RuntimeRuleSet by lazy {
         this.convertGrammar(grammar, "")
         val rules = this.runtimeRules.values.toList()
-        RuntimeRuleSet(_ruleSetNumber, grammar.name, rules, _precRules)
+        RuntimeRuleSet(_ruleSetNumber, grammar.qualifiedName, rules, _precRules)
     }
 
     fun originalRuleItemFor(runtimeRuleSetNumber: Int, runtimeRuleNumber: Int): RuleItem = this.originalRuleItem[Pair(runtimeRuleSetNumber, runtimeRuleNumber)]

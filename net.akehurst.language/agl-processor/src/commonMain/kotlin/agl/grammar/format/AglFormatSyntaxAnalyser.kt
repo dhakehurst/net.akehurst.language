@@ -22,19 +22,20 @@ import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.typemodel.api.TypeModel
 
 internal class AglFormatSyntaxAnalyser(
-    val typeModel: GrammarTypeModel,
+    grammarNamespaceQualifiedName: String,
+    val typeModel: TypeModel,
     val scopeModel: ScopeModel
 ) : SyntaxAnalyser<AglFormatterModel> {
 
-    private val _sa = SyntaxAnalyserSimple(typeModel, scopeModel)
+    private val _sa = SyntaxAnalyserSimple(grammarNamespaceQualifiedName, typeModel, scopeModel)
 
     override val locationMap: Map<Any, InputLocation> get() = _sa.locationMap
 

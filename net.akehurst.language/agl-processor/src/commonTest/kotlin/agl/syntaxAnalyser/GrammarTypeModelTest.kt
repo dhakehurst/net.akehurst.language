@@ -18,14 +18,36 @@
 package net.akehurst.language.agl.grammarTypeModel
 
 
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
-import net.akehurst.language.api.grammarTypeModel.asString
+import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.api.TypeNamespace
 import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.fail
 
 object GrammarTypeModelTest {
 
-    fun assertEquals(expected: GrammarTypeModel?, actual: GrammarTypeModel?) {
+    fun tmAssertEquals(expected: TypeModel?, actual: TypeModel?) {
+        kotlin.test.assertEquals(expected?.asString(), actual?.asString())
+        when {
+            (expected == null && actual == null) -> Unit // pass
+            expected == null -> fail()
+            actual == null -> fail()
+            else -> {
+                kotlin.test.assertEquals(expected.allNamespace.size, actual.allNamespace.size, "number of namespaces in model is different")
+                for (k in expected.allNamespace.indices) {
+                    val expEl = expected.allNamespace[k]
+                    val actEl = actual.allNamespace[k]
+                    when {
+                        expEl is GrammarTypeNamespace && actEl is GrammarTypeNamespace -> GrammarTypeModelTest.tmAssertEquals(expEl, actEl, "GrammarTypeNamespace")
+                        else -> TypeModelTest.tmAssertEquals(expEl, actEl, "TypeNamespace")
+                    }
+
+                }
+            }
+        }
+    }
+
+    fun tmAssertEquals(expected: GrammarTypeNamespace?, actual: GrammarTypeNamespace?, source: String) {
         kotlin.test.assertEquals(expected?.asString(), actual?.asString())
         when {
             (expected == null && actual == null) -> Unit // pass
@@ -38,7 +60,7 @@ object GrammarTypeModelTest {
                     val actEl = actual.allRuleNameToType[k]
                     TypeModelTest.tmAssertEquals(expEl, actEl, "TypeModel")
                 }
-                TypeModelTest.assertEquals(expected, actual)
+                TypeModelTest.tmAssertEquals(expected as TypeNamespace?, actual as TypeNamespace?, "")
             }
         }
     }

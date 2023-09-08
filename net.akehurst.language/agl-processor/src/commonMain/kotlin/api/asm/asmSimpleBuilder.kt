@@ -19,12 +19,12 @@ package net.akehurst.language.api.asm
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.agl.syntaxAnalyser.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.agl.syntaxAnalyser.createReferenceLocalToScope
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.typemodel.api.TupleType
+import net.akehurst.language.typemodel.simple.TupleTypeSimple
 
 @DslMarker
 annotation class AsmSimpleBuilderMarker
@@ -56,7 +56,7 @@ class AsmSimpleBuilder(
         return b.build()
     }
 
-    fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = element(TupleType.INSTANCE_NAME, init)
+    fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = element(TupleTypeSimple.INSTANCE_NAME, init)
 
     fun listOfString(vararg items: String): List<String> {
         val path = AsmElementPath.ROOT + (_asm.rootElements.size).toString()
@@ -127,13 +127,13 @@ class AsmElementSimpleBuilder(
         _element.setProperty(name, value, false, 0)//TODO childIndex
     }
 
-    fun propertyUnnamedString(value: String?) = this._property(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, value)
+    fun propertyUnnamedString(value: String?) = this._property(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, value)
     fun propertyString(name: String, value: String?) = this._property(name, value)
     fun propertyNull(name: String) = this._property(name, null)
     fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple =
-        propertyElementExplicitType(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, typeName, init)
+        propertyElementExplicitType(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, typeName, init)
 
-    fun propertyTuple(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElementExplicitType(name, TupleType.INSTANCE_NAME, init)
+    fun propertyTuple(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElementExplicitType(name, TupleTypeSimple.INSTANCE_NAME, init)
     fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElementExplicitType(name, name, init)
     fun propertyElementExplicitType(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
         val newPath = _element.asmPath + name
@@ -144,9 +144,9 @@ class AsmElementSimpleBuilder(
         return el
     }
 
-    fun propertyUnnamedListOfString(list: List<String>) = this._property(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME, list)
+    fun propertyUnnamedListOfString(list: List<String>) = this._property(GrammarTypeNamespaceFromGrammar.UNNAMED_LIST_PROPERTY_NAME, list)
     fun propertyListOfString(name: String, list: List<String>) = this._property(name, list)
-    fun propertyUnnamedListOfElement(init: ListAsmElementSimpleBuilder.() -> Unit) = this.propertyListOfElement(TypeModelFromGrammar.UNNAMED_LIST_PROPERTY_NAME, init)
+    fun propertyUnnamedListOfElement(init: ListAsmElementSimpleBuilder.() -> Unit) = this.propertyListOfElement(GrammarTypeNamespaceFromGrammar.UNNAMED_LIST_PROPERTY_NAME, init)
     fun propertyListOfElement(name: String, init: ListAsmElementSimpleBuilder.() -> Unit): List<Any> {
         val newPath = _element.asmPath + name
         val b = ListAsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, newPath, _elementScope)
@@ -208,7 +208,7 @@ class ListAsmElementSimpleBuilder(
         return el
     }
 
-    fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = element(TupleType.INSTANCE_NAME, init)
+    fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = element(TupleTypeSimple.INSTANCE_NAME, init)
 
 
     fun build(): List<Any> {

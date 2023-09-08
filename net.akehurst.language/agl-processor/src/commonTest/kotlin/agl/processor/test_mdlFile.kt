@@ -91,7 +91,7 @@ grammar Mdl {
             //parameter = IDENTIFIER value ;
             elementType("parameter", "Parameter") {
                 propertyPrimitiveType("identifier", "String", false, 0)
-                propertyElementTypeOf("value", "Value", false, 1)
+                propertyDataTypeOf("value", "Value", false, 1)
             }
             //value = stringList | matrix | identifier | literal ;
             elementType("value", "Value") {
@@ -106,11 +106,11 @@ grammar Mdl {
 
             //stringList = DOUBLE_QUOTE_STRING+ ;
             elementType("stringList", "StringList") {
-                propertyListType("double_quoted_string", false, 0) { primitiveType("String") }
+                propertyListType("double_quoted_string", false, 0) { primitiveRef("String") }
             }
         }
 
-        GrammarTypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.tmAssertEquals(expected, actual)
     }
 
     @Test

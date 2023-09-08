@@ -61,10 +61,10 @@ class test_SyntaxAnalyserSimple_datatypes {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
             assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
-            TypeModelFromGrammar.createFrom(result.asm!!.last())
+            GrammarTypeModelSimple.createFrom(result.asm!!.last())
         }
         val scopeModel = ScopeModelAgl()
-        val syntaxAnalyser = SyntaxAnalyserSimple(typeModel, scopeModel)
+        val syntaxAnalyser = SyntaxAnalyserSimple(grammar.qualifiedName, typeModel, scopeModel)
         val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
             grammarStr,
             Agl.configuration {
@@ -78,7 +78,7 @@ class test_SyntaxAnalyserSimple_datatypes {
     @Test
     fun typeModel() {
         val actual = processor.typeModel
-        val expected = grammarTypeModel("test", "Test", "Unit") {
+        val expected = grammarTypeModel("test.Test", "Test", "Unit") {
             //unit = declaration* ;
             elementType("unit", "Unit") {
                 propertyListTypeOf("declaration", "Declaration", false, 0)
@@ -99,12 +99,12 @@ class test_SyntaxAnalyserSimple_datatypes {
             // property = ID ':' typeReference ;
             elementType("property", "Property") {
                 propertyPrimitiveType("id", "String", false, 0)
-                propertyElementTypeOf("typeReference", "TypeReference", false, 2)
+                propertyDataTypeOf("typeReference", "TypeReference", false, 2)
             }
             // typeReference = type typeArguments? ;
             elementType("typeReference", "TypeReference") {
                 propertyPrimitiveType("type", "String", false, 0)
-                propertyElementTypeOf("typeArguments", "TypeArguments", true, 1)
+                propertyDataTypeOf("typeArguments", "TypeArguments", true, 1)
             }
             // typeArguments = '<' [typeReference / ',']+ '>' ;
             elementType("typeArguments", "TypeArguments") {
@@ -112,7 +112,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         }
 
-        GrammarTypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.tmAssertEquals(expected, actual)
     }
 
     @Test

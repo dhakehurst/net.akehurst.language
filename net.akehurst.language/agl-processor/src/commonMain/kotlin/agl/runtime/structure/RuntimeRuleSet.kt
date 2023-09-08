@@ -26,7 +26,7 @@ import net.akehurst.language.collections.lazyMutableMapNonNull
 
 internal class RuntimeRuleSet(
     val number: Int,
-    val name: String,
+    val qualifiedName: String,
     val runtimeRules: List<RuntimeRule>,
     val precedenceRules: List<RuntimePreferenceRule>
 ) : RuleSet {
@@ -417,7 +417,7 @@ internal class RuntimeRuleSet(
             }
             RuntimePreferenceRule(clonedCtx, clonedPrecRules)
         }
-        val clone = RuntimeRuleSet(cloneNumber, name, rules, clonedPrecedenceRules)
+        val clone = RuntimeRuleSet(cloneNumber, qualifiedName, rules, clonedPrecedenceRules)
         return clone
     }
 
@@ -428,7 +428,7 @@ internal class RuntimeRuleSet(
                 "  " + it.asString
             }.joinToString("\n")
         return """
-RuntimeRuleSet '$name' {
+RuntimeRuleSet '$qualifiedName' {
 ${rulesStr}
 }
 """.trimIndent()

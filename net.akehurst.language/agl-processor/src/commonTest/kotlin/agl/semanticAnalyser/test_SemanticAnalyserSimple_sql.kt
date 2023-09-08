@@ -103,10 +103,10 @@ grammar SQL {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
             assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
-            TypeModelFromGrammar.createFrom(result.asm!!.last())
+            GrammarTypeModelSimple.createFrom(result.asm!!.last())
         }
         val scopeModel = ScopeModelAgl.fromString(
-            ContextFromTypeModel(TypeModelFromGrammar.createFrom(grammar)),
+            ContextFromTypeModel(grammar.qualifiedName, GrammarTypeModelSimple.createFrom(grammar)),
             """
                 identify TableDefinition by table-id
                 scope TableDefinition {
@@ -134,9 +134,9 @@ grammar SQL {
                 }
             """.trimIndent()
         ).let {
-            it.asm ?: error("Unable to parse '/atom-basic/Grammar.agl'\n${it.issues}")
+            it.asm ?: error("Unable to parse ScopeModel\n${it.issues}")
         }
-        val syntaxAnalyser = SyntaxAnalyserSimple(typeModel, scopeModel)
+        val syntaxAnalyser = SyntaxAnalyserSimple(grammar.qualifiedName, typeModel, scopeModel)
         val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
             grammarStr,
             Agl.configuration {

@@ -25,12 +25,12 @@ import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.grammar.GrammarItem
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.typemodel.api.ElementType
+import net.akehurst.language.typemodel.api.DataType
 import net.akehurst.language.typemodel.api.PrimitiveType
 import net.akehurst.language.typemodel.api.PropertyDeclaration
+import net.akehurst.language.typemodel.api.TypeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -40,9 +40,9 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
 
     private companion object {
         class SyntaxAnalyserToString(
-            typeModel: GrammarTypeModel,
+            typeModel: TypeModel,
             scopeModel: ScopeModel
-        ) : SyntaxAnalyserSimpleStreamPushAbstract<String>(typeModel, scopeModel) {
+        ) : SyntaxAnalyserSimpleStreamPushAbstract<String>("ns", typeModel, scopeModel) {
 
             private val sb = StringBuilder()
             private var indent = ""
@@ -94,12 +94,12 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
                 TODO("not implemented")
             }
 
-            override fun startAsmElement(path: AsmElementPath, type: ElementType) {
+            override fun startAsmElement(path: AsmElementPath, type: DataType) {
                 sb.append("${type.name} {$eol")
                 indentInc()
             }
 
-            override fun finishAsmElement(path: AsmElementPath, type: ElementType) {
+            override fun finishAsmElement(path: AsmElementPath, type: DataType) {
                 indentDec()
                 sb.append(indent)
                 sb.append("}$eol")
@@ -137,7 +137,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
         fun processor(grammarStr: String) = Agl.processorFromString<String, ContextSimple>(
             grammarDefinitionStr = grammarStr,
             configuration = Agl.configuration {
-                typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar.createFrom(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+                typeModelResolver { p -> ProcessResultDefault(GrammarTypeModelSimple.createFrom(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                 syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserToString(p.typeModel!!, p.scopeModel!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserToString(), IssueHolder(LanguageProcessorPhase.ALL)) }
             }

@@ -16,12 +16,8 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammarConfiguration
 import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.processor.SentenceContext
 
 // used by other languages that reference rules  in a grammar
@@ -29,7 +25,9 @@ import net.akehurst.language.api.processor.SentenceContext
 class ContextFromGrammar(
 ) : SentenceContext<String> {
     constructor(grammar: Grammar) : this(listOf(grammar))
-    constructor(grammars: List<Grammar>) : this() { createScopeFrom(grammars) }
+    constructor(grammars: List<Grammar>) : this() {
+        createScopeFrom(grammars)
+    }
 
     companion object {
         const val GRAMMAR_RULE_CONTEXT_TYPE_NAME = "GrammarRule"
@@ -62,5 +60,6 @@ class ContextFromGrammar(
         this.rootScope != other.rootScope -> false
         else -> true
     }
+
     override fun toString(): String = "ContextFromGrammar"
 }

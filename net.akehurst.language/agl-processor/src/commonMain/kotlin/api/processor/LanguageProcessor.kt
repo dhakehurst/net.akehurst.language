@@ -22,10 +22,10 @@ import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.sppt.LeafData
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.typemodel.api.TypeModel
 
 /**
  * A LanguageProcessor is used to process a sentence using a given grammar.
@@ -51,7 +51,7 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     /**
      * model of the types instantiated by syntaxAnalysis for the LanguageDefinition of this LanguageProcessor
      */
-    val typeModel: GrammarTypeModel
+    val typeModel: TypeModel
 
     /*
      * model of the scopes and references for the LanguageDefinition of this LanguageProcessor

@@ -115,9 +115,9 @@ class AsmElementSimple(
     fun setPropertyFromDeclaration(declaration: PropertyDeclaration, value: Any?, isReference: Boolean) {
         if (isReference) {
             val ref = AsmElementReference(value as String, null)
-            _properties[declaration.name] = AsmElementProperty(declaration.name, declaration.childIndex, ref, true)
+            _properties[declaration.name] = AsmElementProperty(declaration.name, declaration.index, ref, true)
         } else {
-            _properties[declaration.name] = AsmElementProperty(declaration.name, declaration.childIndex, value, false)
+            _properties[declaration.name] = AsmElementProperty(declaration.name, declaration.index, value, false)
         }
     }
 

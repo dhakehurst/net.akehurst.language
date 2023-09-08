@@ -41,17 +41,19 @@ class test_AglFormat {
     @Test
     fun typeModel() {
         val actual = aglProc.typeModel
-        val expected = typeModel("net.akehurst.language.agl", "AglFormat") {
-            //unit = ruleList ;
-            //ruleList = [formatRule]* ;
-            //formatRule = typeReference '->' formatExpression ;
-            //formatExpression
-            // = stringExpression
-            // | whenExpression
-            // ;
+        val expected = typeModel("", "AglFormat") {
+            namespace("net.akehurst.language.agl") {
+                //unit = ruleList ;
+                //ruleList = [formatRule]* ;
+                //formatRule = typeReference '->' formatExpression ;
+                //formatExpression
+                // = stringExpression
+                // | whenExpression
+                // ;
+            }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        TypeModelTest.tmAssertEquals(expected, actual)
     }
 
     @Test

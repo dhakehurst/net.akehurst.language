@@ -37,12 +37,12 @@ import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.sppt.LeafData
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.typemodel.api.TypeModel
 
 internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : Any>(
 ) : LanguageProcessor<AsmType, ContextType> {
@@ -77,10 +77,11 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     //    res?.asm
     //}
 
-    override val typeModel: GrammarTypeModel by lazy {
+    override val typeModel: TypeModel by lazy {
         val res = configuration.typeModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
-        res?.asm ?: grammarTypeModel("", "<Empty>", "None") {}
+        res?.asm ?: grammarTypeModel("empty", "<Empty>", "None") {
+        }
     }
 
     override val scopeModel: ScopeModel by lazy {
@@ -150,7 +151,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     ): SyntaxAnalysisResult<AsmType> { //Triple<AsmType?, List<LanguageIssue>, Map<Any, InputLocation>> {
         val opts = defaultOptions(options)
         val sa: SyntaxAnalyser<AsmType> = this.syntaxAnalyser
-            ?: SyntaxAnalyserSimple(this.typeModel!!, this.scopeModel!!) as SyntaxAnalyser<AsmType>
+            ?: SyntaxAnalyserSimple(this.grammar.qualifiedName, this.typeModel!!, this.scopeModel!!) as SyntaxAnalyser<AsmType>
         sa.clear()
         return sa.transform(sppt, this.mapToGrammar)
     }

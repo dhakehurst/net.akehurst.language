@@ -64,10 +64,10 @@ class test_SemanticAnalyserSimple_datatypes {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
             assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
-            TypeModelFromGrammar.createFrom(result.asm!!.last())
+            GrammarTypeModelSimple.createFrom(result.asm!!.last())
         }
         val scopeModel = ScopeModelAgl.fromString(
-            ContextFromTypeModel(TypeModelFromGrammar.createFrom(grammar)),
+            ContextFromTypeModel(grammar.qualifiedName, GrammarTypeModelSimple.createFrom(grammar)),
             """
                 identify Unit by §nothing
                 scope Unit {
@@ -82,7 +82,7 @@ class test_SemanticAnalyserSimple_datatypes {
                 }
             """.trimIndent()
         ).asm!!
-        val syntaxAnalyser = SyntaxAnalyserSimple(typeModel, scopeModel)
+        val syntaxAnalyser = SyntaxAnalyserSimple(grammar.qualifiedName, typeModel, scopeModel)
         val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
             grammarStr,
             Agl.configuration {

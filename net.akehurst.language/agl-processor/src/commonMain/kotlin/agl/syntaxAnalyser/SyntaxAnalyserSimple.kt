@@ -18,9 +18,10 @@ package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.api.analyser.ScopeModel
+import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.asm.*
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.collections.lazyMap
 import net.akehurst.language.typemodel.api.*
 
 /**
@@ -30,13 +31,23 @@ import net.akehurst.language.typemodel.api.*
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
 class SyntaxAnalyserSimple(
-    typeModel: GrammarTypeModel,
+    grammarNamespaceQualifiedName: String,
+    typeModel: TypeModel,
     scopeModel: ScopeModel
-) : SyntaxAnalyserSimpleAbstract<AsmSimple>(typeModel, scopeModel) {
+) : SyntaxAnalyserSimpleAbstract<AsmSimple>(grammarNamespaceQualifiedName, typeModel, scopeModel) {
 
     companion object {
         private const val ns = "net.akehurst.language.agl.syntaxAnalyser"
         const val CONFIGURATION_KEY_AGL_SCOPE_MODEL = "$ns.scope.model"
+    }
+
+    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<AsmSimple>> = lazyMap { embGramName ->
+        //val emTm = this.typeModel.imports.firstOrNull { it.qualifiedName == embGramName } ?: error("TypeModel for '$embGramName' not found")
+        //when (emTm) {
+        //    !is GrammarTypeNamespace -> error("TypeModel for '$embGramName' is not a GrammarTypeModel")
+        //    else -> SyntaxAnalyserSimple(emTm, this.scopeModel) as SyntaxAnalyser<A>
+        //}
+        SyntaxAnalyserSimple(embGramName, typeModel, this.scopeModel)
     }
 
 }

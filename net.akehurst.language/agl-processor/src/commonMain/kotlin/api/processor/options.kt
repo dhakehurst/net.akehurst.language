@@ -20,9 +20,9 @@ import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.formatter.AglFormatterModel
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.style.AglStyleModel
+import net.akehurst.language.typemodel.api.TypeModel
 
 /**
  * Options to configure the building of a language processor
@@ -35,7 +35,7 @@ import net.akehurst.language.api.style.AglStyleModel
 
 //typealias GrammarResolver = () -> ProcessResult<Grammar>
 typealias ScopeModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<ScopeModel>
-typealias TypeModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<GrammarTypeModel>
+typealias TypeModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<TypeModel>
 typealias SyntaxAnalyserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<SyntaxAnalyser<AsmType>>
 typealias SemanticAnalyserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<SemanticAnalyser<AsmType, ContextType>>
 typealias FormatterResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<AglFormatterModel>

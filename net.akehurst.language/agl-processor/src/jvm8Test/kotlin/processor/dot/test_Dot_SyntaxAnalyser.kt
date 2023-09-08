@@ -19,11 +19,10 @@ package net.akehurst.language.processor.dot
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
+import net.akehurst.language.agl.syntaxAnalyser.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.typemodel.api.asString
 import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -52,7 +51,7 @@ class test_Dot_SyntaxAnalyser {
             listTypeOf("stmt_list", "Stmt1")
             // stmt1 = stmt  ';'? ;
             elementType("stmt1", "Stmt1") {
-                propertyElementTypeOf("stmt", "Stmt", false, 0)
+                propertyDataTypeOf("stmt", "Stmt", false, 0)
             }
             // 	stmt
             //	    = node_stmt
@@ -66,17 +65,17 @@ class test_Dot_SyntaxAnalyser {
             }
             // node_stmt = node_id attr_lists? ;
             elementType("node_stmt", "Node_stmt") {
-                propertyElementTypeOf("node_id", "Node_id", false, 1)
-                propertyElementTypeOf("attr_lists", "Attr_lists", true, 1)
+                propertyDataTypeOf("node_id", "Node_id", false, 1)
+                propertyDataTypeOf("attr_lists", "Attr_lists", true, 1)
             }
             // node_id = ID port? ;
             elementType("node_id", "Node_id") {
-                propertyElementTypeOf("id", "Id", false, 0)
-                propertyElementTypeOf("port", "Port", true, 1)
+                propertyDataTypeOf("id", "Id", false, 0)
+                propertyDataTypeOf("port", "Port", true, 1)
             }
             elementType("", "expressionStatement") {
                 // expressionStatement = expression ;
-                propertyElementTypeOf("expression", "expression", false, 0)
+                propertyDataTypeOf("expression", "expression", false, 0)
             }
             elementType("", "expression") {
                 // expression
@@ -92,7 +91,7 @@ class test_Dot_SyntaxAnalyser {
             }
             elementType("", "groupExpression") {
                 // groupExpression = '(' expression ')' ;
-                propertyElementTypeOf("expression", "expression", false, 1)
+                propertyDataTypeOf("expression", "expression", false, 1)
             }
             elementType("", "functionCallOrIndex") {
                 // functionCall = NAME '(' argumentList ')' ;
@@ -110,7 +109,7 @@ class test_Dot_SyntaxAnalyser {
             elementType("", "prefixExpression") {
                 // prefixExpression = prefixOperator expression ;
                 propertyPrimitiveType("prefixOperator", "String", false, 0)
-                propertyElementTypeOf("expression", "expression", false, 1)
+                propertyDataTypeOf("expression", "expression", false, 1)
             }
             stringTypeFor("prefixOperator")
             //elementType("prefixOperator") {
@@ -140,10 +139,10 @@ class test_Dot_SyntaxAnalyser {
             }
             elementType("", "row") {
                 // row = expression (','? expression)* ;
-                propertyElementTypeOf("expression", "expression", false, 0)
+                propertyDataTypeOf("expression", "expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
-                    propertyPrimitiveType(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, "String", true, 0)
-                    propertyElementTypeOf("expression", "expression", false, 1)
+                    propertyPrimitiveType(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, "String", true, 0)
+                    propertyDataTypeOf("expression", "expression", false, 1)
                 }
             }
             elementType("", "literalExpression") {
@@ -170,7 +169,7 @@ class test_Dot_SyntaxAnalyser {
             //}
         }
         assertEquals(expected.asString(), actual?.asString())
-        TypeModelTest.assertEquals(expected, actual)
+        TypeModelTest.tmAssertEquals(expected, actual)
     }
 
     @Test

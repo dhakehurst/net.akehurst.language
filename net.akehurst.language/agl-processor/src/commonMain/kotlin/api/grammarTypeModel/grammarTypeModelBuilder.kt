@@ -17,104 +17,104 @@
 
 package net.akehurst.language.agl.grammarTypeModel
 
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
-import net.akehurst.language.api.grammarTypeModel.StringType
+import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.simple.TypeModelSimple
 
 fun grammarTypeModel(
-    namespace: String,
+    namespaceQualifiedName: String,
     name: String,
     rootTypeName: String,
-    imports: Set<TypeModel> = setOf(GrammarTypeModelStdLib),
+    imports: List<TypeNamespace> = listOf(SimpleTypeModelStdLib),
     init: GrammarTypeModelBuilder.() -> Unit
-): GrammarTypeModel {
-    val b = GrammarTypeModelBuilder(namespace, name, rootTypeName, imports)
+): TypeModel {
+    val model = TypeModelSimple(name)
+    val b = GrammarTypeModelBuilder(namespaceQualifiedName, rootTypeName, imports.map { it.qualifiedName })
     b.init()
-    val m = b.build()
-    return m
+    val ns = b.build()
+    imports.forEach { model.addNamespace(it) }
+    model.addNamespace(ns)
+    model.resolveImports()
+    return model
 }
 
 @TypeModelDslMarker
 class GrammarTypeModelBuilder(
-    val namespace: String,
-    val name: String,
+    namespaceQualifiedName: String,
     rootTypeName: String,
-    imports: Set<TypeModel>
+    imports: List<String>
 ) {
-
-    private val _model = GrammarTypeModelSimple(namespace, name, rootTypeName, imports)
+    private val _namespace = GrammarTypeNamespaceSimple(namespaceQualifiedName, rootTypeName, imports)
     private val _typeReferences = mutableListOf<TypeUsageReferenceBuilder>()
 
-    val StringType: PrimitiveType get() = _model.StringType
+    val StringType: PrimitiveType get() = SimpleTypeModelStdLib.String.type as PrimitiveType
 
     fun stringTypeFor(name: String, isNullable: Boolean = false) {
-        _model.addTypeFor(name, if (isNullable) _model.StringType.useNullable else _model.StringType.use)
+        _namespace.addTypeFor(name, if (isNullable) SimpleTypeModelStdLib.String.nullable() else SimpleTypeModelStdLib.String)
     }
 
-    fun listTypeFor(name: String, elementType: TypeDefinition): TypeUsage {
-        val t = ListSimpleType.ofType(TypeUsage.ofType(elementType))
-        _model.addTypeFor(name, t)
+    fun listTypeFor(name: String, elementType: TypeDefinition): TypeInstance {
+        val t = SimpleTypeModelStdLib.List.instance(listOf(elementType.instance()))
+        _namespace.addTypeFor(name, t)
         return t
     }
 
-    fun listTypeOf(name: String, elementTypeName: String): TypeUsage {
-        val elementType = _model.findOrCreateElementTypeNamed(elementTypeName)!!
+    fun listTypeOf(name: String, elementTypeName: String): TypeInstance {
+        val elementType = _namespace.findOrCreateDataTypeNamed(elementTypeName)!!
         return listTypeFor(name, elementType)
     }
 
-    fun listSeparatedTypeFor(name: String, itemType: TypeUsage, separatorType: TypeUsage) {
-        val t = ListSeparatedType.ofType(itemType, separatorType)
-        _model.addTypeFor(name, t)
+    fun listSeparatedTypeFor(name: String, itemType: TypeInstance, separatorType: TypeInstance) {
+        val t = SimpleTypeModelStdLib.ListSeparated.instance(listOf(itemType, separatorType))
+        _namespace.addTypeFor(name, t)
     }
 
     fun listSeparatedTypeFor(name: String, itemType: TypeDefinition, separatorType: TypeDefinition) =
-        listSeparatedTypeFor(name, TypeUsage.ofType(itemType), TypeUsage.ofType(separatorType))
+        listSeparatedTypeFor(name, itemType.instance(), separatorType.instance())
 
     fun listSeparatedTypeOf(name: String, itemTypeName: String, separatorType: TypeDefinition) {
-        val itemType = _model.findOrCreateElementTypeNamed(itemTypeName)!!
+        val itemType = _namespace.findOrCreateDataTypeNamed(itemTypeName)!!
         listSeparatedTypeFor(name, itemType, separatorType)
     }
 
     fun listSeparatedTypeOf(name: String, itemTypeName: String, separatorTypeName: String) {
-        val itemType = _model.findOrCreateElementTypeNamed(itemTypeName)!!
-        val separatorType = _model.findOrCreateElementTypeNamed(separatorTypeName)!!
+        val itemType = _namespace.findOrCreateDataTypeNamed(itemTypeName)!!
+        val separatorType = _namespace.findOrCreateDataTypeNamed(separatorTypeName)!!
         listSeparatedTypeFor(name, itemType, separatorType)
     }
 
-    fun elementType(grammarRuleName: String, typeName: String, init: ElementTypeBuilder.() -> Unit = {}): ElementType {
-        val b = ElementTypeBuilder(_model, _typeReferences, typeName)
+    fun elementType(grammarRuleName: String, typeName: String, init: DataTypeBuilder.() -> Unit = {}): DataType {
+        val b = DataTypeBuilder(_namespace, _typeReferences, typeName)
         b.init()
         val et = b.build()
-        _model.addTypeFor(grammarRuleName, TypeUsage.ofType(et))
+        _namespace.addTypeFor(grammarRuleName, et.instance())
         return et
     }
 
     fun unnamedSuperTypeTypeOf(name: String, subtypes: List<Any>): UnnamedSuperTypeType {
         val sts = subtypes.map {
             when (it) {
-                is String -> _model.findOrCreateElementTypeNamed(it)!!
+                is String -> _namespace.findOrCreateDataTypeNamed(it)!!
                 is TypeDefinition -> it
                 else -> error("Cannot map to TypeDefinition: $it")
             }
         }
-        val t = _model.createUnnamedSuperTypeType(sts.map { TypeUsage.ofType(it) })
-        _model.addTypeFor(name, TypeUsage.ofType(t))
+        val t = _namespace.createUnnamedSuperTypeType(sts.map { it.instance() })
+        _namespace.addTypeFor(name, t.instance())
         return t
     }
 
     fun unnamedSuperTypeType(name: String, init: SubtypeListBuilder.() -> Unit): UnnamedSuperTypeType {
-        val b = SubtypeListBuilder(_model, _typeReferences)
+        val b = SubtypeListBuilder(_namespace, _typeReferences)
         b.init()
         val stu = b.build()
-        val t = _model.createUnnamedSuperTypeType(stu)
-        _model.addTypeFor(name, TypeUsage.ofType(t))
+        val t = _namespace.createUnnamedSuperTypeType(stu)
+        _namespace.addTypeFor(name, t.instance())
         return t
     }
 
-    fun build(): GrammarTypeModel {
-        _typeReferences.forEach {
-            it.resolve()
-        }
-        return _model
+    fun build(): GrammarTypeNamespace {
+        return _namespace
     }
 }

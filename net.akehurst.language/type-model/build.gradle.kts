@@ -25,6 +25,7 @@ exportPublic {
     exportPatterns.set(
         listOf(
             "net.akehurst.language.typemodel.api.**",
+            "net.akehurst.language.typemodel.simple.**",
         )
     )
 }

@@ -23,8 +23,8 @@ import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.agl.syntaxAnalyser.GrammarTypeModelSimple
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
@@ -71,7 +71,7 @@ object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<AsmSimple, C
         asm
     }
 
-    override val syntaxAnalyser: SyntaxAnalyser<AsmSimple> = SyntaxAnalyserSimple(TypeModelFromGrammar.createFrom(grammar), scopeModel)
+    override val syntaxAnalyser: SyntaxAnalyser<AsmSimple> = SyntaxAnalyserSimple(grammar.qualifiedName, GrammarTypeModelSimple.createFrom(grammar), scopeModel)
     override val semanticAnalyser: SemanticAnalyser<AsmSimple, ContextSimple> = SemanticAnalyserSimple(scopeModel)
     override val formatter: Formatter<AsmSimple> = FormatterSimple(null)
     override val automata: Map<String, Automaton> = mapOf(

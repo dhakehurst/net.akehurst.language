@@ -144,7 +144,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
 
             override fun beginEmbedded(nodeInfo: SpptDataNodeInfo) {
                 val embeddedRhs = (nodeInfo.node.rule as RuntimeRule).rhs as RuntimeRuleRhsEmbedded
-                val embName = embeddedRhs.embeddedRuntimeRuleSet.name
+                val embName = embeddedRhs.embeddedRuntimeRuleSet.qualifiedName
                 val embSyntaxAnalyser = embeddedSyntaxAnalyser[embName] as SyntaxAnalyserByMethodRegistrationAbstract? ?: error("Embedded SyntaxAnalyser not found for '$embName'")
                 syntaxAnalyserStack.push(embSyntaxAnalyser)
             }

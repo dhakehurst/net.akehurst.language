@@ -19,7 +19,7 @@ import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.syntaxAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
+import net.akehurst.language.agl.syntaxAnalyser.GrammarTypeModelSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -54,7 +54,7 @@ class test_AglScopes {
             }
             // scope = 'scope' typeReference '{' identifiables '}
             elementType("scope", "Scope") {
-                propertyElementTypeOf("typeReference", "TypeReference", false, 0)
+                propertyDataTypeOf("typeReference", "TypeReference", false, 0)
                 propertyListTypeOf("identifiables", "Identifiable", false, 1)
             }
             // identifiables = identifiable*
@@ -63,7 +63,7 @@ class test_AglScopes {
             }
             // identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
             elementType("identifiable", "Identifiable") {
-                propertyElementTypeOf("typeReference", "TypeReference", false, 0)
+                propertyDataTypeOf("typeReference", "TypeReference", false, 0)
                 propertyPrimitiveType("propertyReferenceOrNothing", "String", false, 1)
             }
             // references = 'references' '{' referenceDefinitions '}'
@@ -76,8 +76,8 @@ class test_AglScopes {
             }
             // referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
             elementType("referenceDefinition", "ReferenceDefinition") {
-                propertyElementTypeOf("typeReference", "TypeReference", false, 0)
-                propertyElementTypeOf("propertyReference", "PropertyReference", false, 1)
+                propertyDataTypeOf("typeReference", "TypeReference", false, 0)
+                propertyDataTypeOf("propertyReference", "PropertyReference", false, 1)
                 propertyListTypeOf("typeReferences", "TypeReference", false, 2)
             }
             // typeReferences = [typeReferences / '|']+
@@ -100,7 +100,7 @@ class test_AglScopes {
 
         }
 
-        GrammarTypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.tmAssertEquals(expected, actual)
     }
 
     @Test
@@ -158,7 +158,7 @@ class test_AglScopes {
         val result = aglProc.process(
             sentence = text,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar.createFrom(grammar))) }
+                semanticAnalysis { context(ContextFromTypeModel(grammar.qualifiedName, GrammarTypeModelSimple.createFrom(grammar))) }
             }
         )
 
@@ -190,7 +190,7 @@ class test_AglScopes {
         val result = aglProc.process(
             sentence = text,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar.createFrom(grammar))) }
+                semanticAnalysis { context(ContextFromTypeModel(grammar.qualifiedName, GrammarTypeModelSimple.createFrom(grammar))) }
             }
         )
 
@@ -230,7 +230,7 @@ class test_AglScopes {
         val result = aglProc.process(
             sentence = text,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar.createFrom(grammar))) }
+                semanticAnalysis { context(ContextFromTypeModel(grammar.qualifiedName, GrammarTypeModelSimple.createFrom(grammar))) }
             }
         )
 
@@ -268,7 +268,7 @@ class test_AglScopes {
         val result = aglProc.process(
             sentence = text,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar.createFrom(grammar))) }
+                semanticAnalysis { context(ContextFromTypeModel(grammar.qualifiedName, GrammarTypeModelSimple.createFrom(grammar))) }
             }
         )
 
@@ -316,7 +316,7 @@ class test_AglScopes {
         val result = aglProc.process(
             sentence = text,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar.createFrom(grammar))) }
+                semanticAnalysis { context(ContextFromTypeModel(grammar.qualifiedName, GrammarTypeModelSimple.createFrom(grammar))) }
             }
         )
 
@@ -363,7 +363,7 @@ class test_AglScopes {
         val result = aglProc.process(
             sentence = text,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar.createFrom(grammar))) }
+                semanticAnalysis { context(ContextFromTypeModel(grammar.qualifiedName, GrammarTypeModelSimple.createFrom(grammar))) }
             }
         )
 
@@ -399,7 +399,7 @@ class test_AglScopes {
         val result = aglProc.process(
             sentence = text,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar.createFrom(grammar))) }
+                semanticAnalysis { context(ContextFromTypeModel(grammar.qualifiedName, GrammarTypeModelSimple.createFrom(grammar))) }
             }
         )
 
