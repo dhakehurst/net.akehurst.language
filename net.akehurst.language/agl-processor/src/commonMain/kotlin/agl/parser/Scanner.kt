@@ -38,6 +38,8 @@ internal class Scanner(
 
         var startPosition = 0
         var nextInputPosition = 0
+        var currentUndefinedText = ""
+        var currentUndefinedStart = -1
         while (!input.isEnd(nextInputPosition)) {
             val matches: List<LeafData> = terminals.mapNotNull {
                 val match = input.tryMatchText(nextInputPosition, it)
@@ -46,7 +48,7 @@ internal class Scanner(
                 } else {
                     val ni = nextInputPosition + match.matchedText.length
                     val loc = input.locationFor(startPosition, ni - startPosition)
-                    val matchedText = inputText.substring(loc.position, loc.length)
+                    val matchedText = match.matchedText //inputText.substring(loc.position, loc.length)
                     LeafData(it.tag, it.isPattern, loc, matchedText, emptyList())
                 }
             }
@@ -64,23 +66,33 @@ internal class Scanner(
             })
             when {
                 (null == longest || longest.location.length == 0) -> {
-                    //TODO: collate unscanned, rather than make a separate token for each char
                     val text = inputText[nextInputPosition].toString()
-                    nextInputPosition += text.length
-                    val eolPositions = emptyList<Int>()//TODO calculate
-                    val loc = input.locationFor(startPosition, nextInputPosition - startPosition)
-                    val matchedText = inputText.substring(loc.position, loc.length)
-                    val ld = LeafData(undefined.tag, false, loc, matchedText, emptyList())
-                    //unscanned.eolPositions = input.eolPositions(text)
-                    result.add(ld)
+                    if (-1 == currentUndefinedStart) {
+                        currentUndefinedStart = nextInputPosition
+                    }
+                    currentUndefinedText += text
+                    nextInputPosition += 1
                 }
 
                 else -> {
+                    if (-1 != currentUndefinedStart) {
+                        val loc = input.locationFor(currentUndefinedStart, currentUndefinedText.length)
+                        val ud = LeafData(undefined.tag, false, loc, currentUndefinedText, emptyList())
+                        result.add(ud)
+                        currentUndefinedStart = -1
+                        currentUndefinedText = ""
+                    }
                     result.add(longest)
                     nextInputPosition += longest.location.length
                 }
             }
             startPosition = nextInputPosition
+        }
+        //catch undefined stuff at end
+        if (-1 != currentUndefinedStart) {
+            val loc = input.locationFor(currentUndefinedStart, currentUndefinedText.length)
+            val ud = LeafData(undefined.tag, false, loc, currentUndefinedText, emptyList())
+            result.add(ud)
         }
         return result
     }

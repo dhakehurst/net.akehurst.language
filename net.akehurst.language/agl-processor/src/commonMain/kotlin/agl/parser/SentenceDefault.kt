@@ -27,14 +27,15 @@ class SentenceDefault(
 ) : Sentence {
 
     // --- Sentence ---
-    override fun matchedTextNoSkip(node: SpptDataNode): String = text.substring(node.startPosition, node.nextInputNoSkip)
+    override fun matchedTextNoSkip(node: SpptDataNode): String =
+        text.substring(node.startPosition, node.nextInputNoSkip)
 
     override fun locationFor(position: Int, length: Int): InputLocation {
         return when {
             0 == position -> InputLocation(position, 1, 1, length)
             _eolPositions.isEmpty() -> InputLocation(position, position + 1, 1, length)
             else -> {
-                val line = _eolPositions.filter { it <= position }.size
+                val line = _eolPositions.filter { it < position }.size
                 val col = when {
                     0 == line -> position + 1
                     else -> position - _eolPositions[line - 1]
@@ -44,7 +45,8 @@ class SentenceDefault(
         }
     }
 
-    override fun locationFor(node: SpptDataNode): InputLocation = locationFor(node.startPosition, node.nextInputNoSkip - node.startPosition)
+    override fun locationFor(node: SpptDataNode): InputLocation =
+        locationFor(node.startPosition, node.nextInputNoSkip - node.startPosition)
 
     // --- implementation ---
     private val _eolPositions: List<Int> by lazy { InputFromString.eolPositions(text) }

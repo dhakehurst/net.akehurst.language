@@ -14,28 +14,38 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.processor
+package net.akehurst.language.api.processor
 
+import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.sppt.LeafData
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class test_Agl_scan {
+internal class test_LanguageProcessor_scan {
+
+    private companion object {
+
+        fun test(grammarStr: String, sentence: String, expectedNumTokens: Int): List<LeafData> {
+            val pr = Agl.processorFromString<Any, Any>(grammarStr)
+            val tokens = pr.processor!!.scan(sentence)
+            assertNotNull(tokens)
+            val tokenStr = tokens.joinToString("") { it.matchedText }
+            assertEquals(sentence, tokenStr)
+            assertEquals(expectedNumTokens, tokens.size)
+            return tokens
+        }
+
+    }
 
     @Test
     fun scan_literal_empty_a() {
-        val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = ''; }")
-        val tokens = pr.processor!!.scan("ab")
-        val tokenStr = tokens.map { it.toString() }.joinToString(", ")
-        println("tokens = ${tokenStr}")
+        val grammarStr = "namespace test grammar Test { a = 'x'; }"
+        val sentence = "ab"
+        val tokens = test(grammarStr, sentence, 1)
 
-        assertNotNull(tokens)
-        assertEquals(1, tokens.size)
-        assertEquals("a", tokens[0].matchedText)
-        // assertEquals(1, tokens[0].identity.runtimeRuleNumber)
         assertEquals(0, tokens[0].location.position)
-        assertEquals(1, tokens[0].matchedText.length)
-
+        assertEquals(2, tokens[0].matchedText.length)
     }
 
     @Test
@@ -47,10 +57,10 @@ internal class test_Agl_scan {
 
         assertNotNull(tokens)
         assertEquals(1, tokens.size)
-        assertEquals("a", tokens[0].matchedText)
+        assertEquals("ab", tokens[0].matchedText)
         //assertEquals(1, tokens[0].identity.runtimeRuleNumber)
         assertEquals(0, tokens[0].location.position)
-        assertEquals(1, tokens[0].matchedText.length)
+        assertEquals(2, tokens[0].matchedText.length)
 
     }
 
@@ -130,5 +140,22 @@ internal class test_Agl_scan {
         assertEquals(3, tokens.size)
 
         TODO("test eol")
+    }
+
+    @Test
+    fun scan_bug() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip WHITESPACE = "\s+" ;
+                S = 'prefix' NAME;
+                NAME = "[a-z]+" ;
+            }
+        """.trimIndent()
+
+        //test(grammarStr, "prefix abc", 3)
+        //test(grammarStr, "prefixabc", 2)
+        test(grammarStr, "/prefix abc", 4)
+
     }
 }

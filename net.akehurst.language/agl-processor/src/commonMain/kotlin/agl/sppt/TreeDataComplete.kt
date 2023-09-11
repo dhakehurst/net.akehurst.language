@@ -72,9 +72,9 @@ class TreeDataComplete<CN : SpptDataNode>(
         this._complete[nug] = mutableMapOf(0 to userGoalChildren.toMutableList())
     }
 
-    fun childrenFor(branch: SpptDataNode): List<Pair<Int, List<CN>>> {
+    fun childrenFor(node: SpptDataNode): List<Pair<Int, List<CN>>> {
         val keys = this._complete.keys.filter {
-            it.startPosition == branch.startPosition && it.nextInputPosition == branch.nextInputPosition && it.rule == branch.rule
+            it.startPosition == node.startPosition && it.nextInputPosition == node.nextInputPosition && it.rule == node.rule
         }
         return when (keys.size) {
             0 -> emptyList()
@@ -93,9 +93,24 @@ class TreeDataComplete<CN : SpptDataNode>(
         }
     }
 
-    fun skipDataAfter(nodeIndex: SpptDataNode) = this._skipDataAfter[nodeIndex]
-    fun embeddedFor(nodeIndex: SpptDataNode) = this._embeddedFor[nodeIndex]
+    fun skipDataAfter(node: SpptDataNode) = this._skipDataAfter[node]
+    fun embeddedFor(node: SpptDataNode) = this._embeddedFor[node]
 
+    fun skipNodesAfter(node: SpptDataNode): List<CN> {
+        /* remember
+         * <SKIP-MULTI> = <SKIP-CHOICE>+
+         * <SKIP-CHOICE> = SR-0 | ... | SR-n
+         */
+        val skipTreeData = this.skipDataAfter(node)
+        return when (skipTreeData) {
+            null -> emptyList()
+            else -> {
+                val sur = skipTreeData.userRoot
+                val skpCh = skipTreeData.childrenFor(sur)
+                return skpCh[0].second
+            }
+        }
+    }
     // --- private implementation ---
 
     // index --> map-of-alternatives (optionList,lists-of-children)

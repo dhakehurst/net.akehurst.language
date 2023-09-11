@@ -132,12 +132,16 @@ internal class RuntimeRuleSet(
     private val states_cache = mutableMapOf<String, ParserStateSet>()
     private val skipStateSet = mutableMapOf<RuntimeRule, ParserStateSet>()
 
+    /**
+     * <SKIP-MULTI> = <SKIP-CHOICE>+
+     * <SKIP-CHOICE> = SR-0 | ... | SR-n
+     */
     internal val skipParserStateSet: ParserStateSet? by lazy {
         if (skipRules.isEmpty()) {
             null
         } else {
             val skipChoiceRule = RuntimeRule(this.number, SKIP_CHOICE_RULE_NUMBER, SKIP_CHOICE_RULE_TAG, false).also {
-                val options = skipRules.mapIndexed { index, skpRl ->
+                val options = skipRules.map { skpRl ->
                     RuntimeRuleRhsConcatenation(it, listOf(skpRl))
                 }
                 val rhs = RuntimeRuleRhsChoice(it, RuntimeRuleChoiceKind.LONGEST_PRIORITY, options)

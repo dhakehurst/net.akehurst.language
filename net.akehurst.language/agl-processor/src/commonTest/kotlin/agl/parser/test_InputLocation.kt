@@ -104,15 +104,32 @@ class test_InputLocation_multiLine {
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 5), ss.locationFor(result.sppt!!.treeData.userRoot!!))
-        assertEquals(InputLocation(0, 1, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[0]))
-        assertEquals(InputLocation(1, 2, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[1]))
-        assertEquals(InputLocation(2, 3, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[2]))
-        assertEquals(InputLocation(3, 4, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[3]))
-        assertEquals(InputLocation(4, 5, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[4]))
+        val td = result.sppt!!.treeData
+        val ur = td.userRoot!!
+        val url = ss.locationFor(ur)
+        val children = ur.children(td)
+        val c0 = ss.locationFor(children[0])                          // 'a'
+        assertEquals(1, td.skipNodesAfter(children[0]).size)
+        val c1 = ss.locationFor(td.skipNodesAfter(children[0])[0])    // ' '
+        val c2 = ss.locationFor(children[1])                          // 'b'
+        assertEquals(1, td.skipNodesAfter(children[1]).size)
+        val c3 = ss.locationFor(td.skipNodesAfter(children[1])[0])    // ' '
+        val c4 = ss.locationFor(children[2])                          // 'c'
+        assertEquals(0, td.skipNodesAfter(children[2]).size)
+
+        assertEquals(InputLocation(0, 1, 1, 5), url)
+        // 'a'
+        assertEquals(InputLocation(0, 1, 1, 1), c0)
+        // ' '
+        assertEquals(InputLocation(1, 2, 1, 1), c1)
+        // 'b'
+        assertEquals(InputLocation(2, 3, 1, 1), c2)
+        // ' '
+        assertEquals(InputLocation(3, 4, 1, 1), c3)
+        // 'c'
+        assertEquals(InputLocation(4, 5, 1, 1), c4)
 
     }
-
 
     @Test
     fun aNLbNLc() {

@@ -107,7 +107,7 @@ internal class InputFromString(
     }
 
     fun isLookingAt(position: Int, terminalRule: RuntimeRule): Boolean {
-        val r = isLookingAt_cache[Pair(position, terminalRule)]
+        val r = isLookingAt_cache[Pair(position, terminalRule)] //TODO: make this configurable
         return if (null != r) {
             r
         } else {
@@ -132,16 +132,25 @@ internal class InputFromString(
     }
 
     private fun matchLiteral(position: Int, terminalRule: RuntimeRule): RegexMatcher.MatchResult? {
-        //val stext = this.text.substring(position)
-        //val match = stext.startsWith(patternText)//regionMatches(position, patternText, 0, patternText.length, false)
-        val match = this.isLookingAt(position, terminalRule)
-        return if (match) {
-            val text = (terminalRule.rhs as RuntimeRuleRhsLiteral).literalUnescaped
-            val eolPositions = emptyList<Int>() //this.eolPositions(text)
-            RegexMatcher.MatchResult(text, eolPositions)
-            //matchedText
-        } else {
-            null
+        val rhs = terminalRule.rhs
+        return when (rhs) {
+            is RuntimeRuleRhsLiteral -> when {
+                rhs.literalUnescaped.isEmpty() -> error("Zero length literals are not permitted.")
+                else -> {
+                    val match = this.isLookingAt(position, terminalRule)
+                    when {
+                        match -> {
+                            val text = (terminalRule.rhs as RuntimeRuleRhsLiteral).literalUnescaped
+                            val eolPositions = emptyList<Int>() //this.eolPositions(text)
+                            RegexMatcher.MatchResult(text, eolPositions)
+                        }
+
+                        else -> null
+                    }
+                }
+            }
+
+            else -> error("Should not happen")
         }
     }
 
@@ -166,7 +175,7 @@ internal class InputFromString(
         //val stext = this.text.substring(position)
         //val matchedText = regex.matchAtStart(stext)
         val matchedText = regex.matchAt(this.sentence.text, position)?.value
-        return if (null == matchedText)
+        return if (null == matchedText || 0 == matchedText.length)
             null
         else {
             val eolPositions = eolPositions(matchedText)

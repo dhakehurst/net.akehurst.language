@@ -18,6 +18,7 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.syntaxAnalyser.isEmptyMatch
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.mutableStackOf
 
@@ -42,25 +43,28 @@ internal class TokensByLineVisitor(
         val callback = object : SpptWalker {
             override fun error(msg: String, path: () -> List<SpptDataNode>) = Unit
             override fun beginTree() {}
-
             override fun endTree() {}
             override fun skip(startPosition: Int, nextInputPosition: Int) = Unit
-            override fun leaf(nodeInfo: SpptDataNodeInfo) = processLeaf(nodeInfo, nodeLabelStack.elements)
-            override fun beginBranch(nodeInfo: SpptDataNodeInfo) {
-                nodeLabelStack.push(nodeInfo.node.rule.tag)
+            override fun leaf(nodeInfo: SpptDataNodeInfo) {
+                val skipNodes = treeData.skipNodesAfter(nodeInfo.node)
+                processLeaf(nodeInfo, skipNodes, nodeLabelStack.elements)
             }
 
+            override fun beginBranch(nodeInfo: SpptDataNodeInfo) = nodeLabelStack.push(nodeInfo.node.rule.tag)
             override fun endBranch(nodeInfo: SpptDataNodeInfo) {
                 nodeLabelStack.pop()
             }
 
-            override fun beginEmbedded(nodeInfo: SpptDataNodeInfo) = beginBranch(nodeInfo)
+            override fun beginEmbedded(nodeInfo: SpptDataNodeInfo) {
+                beginBranch(nodeInfo)
+            }
+
             override fun endEmbedded(nodeInfo: SpptDataNodeInfo) = endBranch(nodeInfo)
         }
         treeData.traverseTreeDepthFirst(callback, true)
     }
 
-    fun processLeaf(nodeInfo: SpptDataNodeInfo, tagList: List<String>) {
+    fun processLeaf(nodeInfo: SpptDataNodeInfo, skipNodes: List<SpptDataNode>, tagList: List<String>) {
         val name = nodeInfo.node.rule.tag
         val isPattern = nodeInfo.node.rule.isPattern
         val tags = tagList + name
@@ -81,18 +85,20 @@ internal class TokensByLineVisitor(
                 var column = location.column
                 eolPositions.forEach { eolPos ->
                     val lineText = matchedText.substring(indexPos, eolPos + 1)
-                    val segmentLeaf = LeafData(name, isPattern, location, lineText, tags)
+                    val loc = InputLocation(startLinePos, column, line, lineText.length)
+                    val segmentLeaf = LeafData(name, isPattern, loc, lineText, tags)
                     lines.getOrCreate(line - 1).add(segmentLeaf)
                     line++
                     indexPos += lineText.length
                     startLinePos += lineText.length
-                    column = 0
+                    column = 1
 
                 }
                 // add remaining text if there is any
                 val lineText = matchedText.substring(indexPos)
                 if (lineText.isNotEmpty()) {
-                    val segmentLeaf = LeafData(name, isPattern, location, lineText, tags)
+                    val loc = InputLocation(startLinePos, column, line, lineText.length)
+                    val segmentLeaf = LeafData(name, isPattern, loc, lineText, tags)
                     lines.getOrCreate(line - 1).add(segmentLeaf)
                 }
             }
