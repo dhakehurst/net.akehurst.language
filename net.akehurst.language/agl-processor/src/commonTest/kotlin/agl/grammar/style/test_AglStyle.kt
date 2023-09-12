@@ -56,13 +56,14 @@ class test_AglStyle {
             }
         """.trimIndent()
         )?.asm?.first()!!
+
+        fun process(sentence: String) = aglProc.process(
+            sentence,
+            Agl.options {
+                semanticAnalysis { context(ContextFromGrammar(testGrammar)) }
+            })
     }
 
-    private fun process(sentence: String) = aglProc.process(
-        sentence,
-        Agl.options {
-            semanticAnalysis { context(ContextFromGrammar(testGrammar)) }
-        })
 
     @Test
     fun single_line_comment() {

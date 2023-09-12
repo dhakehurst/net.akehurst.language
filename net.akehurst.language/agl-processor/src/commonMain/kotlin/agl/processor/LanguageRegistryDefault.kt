@@ -16,8 +16,12 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.agl.grammar.format.AglFormatCompletionProvider
 import net.akehurst.language.agl.agl.grammar.format.AglFormatSemanticAnalyser
+import net.akehurst.language.agl.agl.grammar.grammar.AglGrammarCompletionProvider
+import net.akehurst.language.agl.agl.grammar.scopes.AglScopesCompletionProvider
 import net.akehurst.language.agl.agl.grammar.scopes.AglScopesSemanticAnalyser
+import net.akehurst.language.agl.agl.grammar.style.AglStyleCompletionProvider
 import net.akehurst.language.agl.agl.grammar.style.AglStyleSemanticAnalyser
 import net.akehurst.language.agl.grammar.format.AglFormatGrammar
 import net.akehurst.language.agl.grammar.format.AglFormatSyntaxAnalyser
@@ -49,12 +53,12 @@ interface AglLanguages {
     val scopes: LanguageDefinition<ScopeModelAgl, SentenceContext<String>>
 }
 
-class LanguageRegistryDefault : GrammarRegistry {
+class LanguageRegistryDefault : LanguageRegistry {
 
     private val _grammars = mutableMapOf<String, Grammar>()
     private val _registry = mutableMapOf<String, LanguageDefinition<*, *>>()
 
-    val agl: AglLanguages = object : AglLanguages {
+    override val agl: AglLanguages = object : AglLanguages {
         override val grammarLanguageIdentity: String = AglGrammarGrammar.qualifiedName
         override val styleLanguageIdentity: String = AglStyleGrammar.qualifiedName
         override val formatLanguageIdentity: String = AglFormatGrammar.qualifiedName
@@ -80,6 +84,7 @@ class LanguageRegistryDefault : GrammarRegistry {
                             AglGrammarGrammar.styleStr
                         )
                     }
+                    completionProvider { ProcessResultDefault(AglGrammarCompletionProvider(), IssueHolder(LanguageProcessorPhase.ALL)) }
                 }
             )
         )
@@ -104,6 +109,7 @@ class LanguageRegistryDefault : GrammarRegistry {
                             AglScopesGrammar.styleStr
                         )
                     }
+                    completionProvider { ProcessResultDefault(AglScopesCompletionProvider(), IssueHolder(LanguageProcessorPhase.ALL)) }
                 }
             )//.also {
             //    it.syntaxAnalyser?.configure(
@@ -137,6 +143,7 @@ class LanguageRegistryDefault : GrammarRegistry {
                             AglFormatGrammar.styleStr
                         )
                     }
+                    completionProvider { ProcessResultDefault(AglFormatCompletionProvider(), IssueHolder(LanguageProcessorPhase.ALL)) }
                 }
             )
         )
@@ -161,6 +168,7 @@ class LanguageRegistryDefault : GrammarRegistry {
                             AglStyleGrammar.styleStr
                         )
                     }
+                    completionProvider { ProcessResultDefault(AglStyleCompletionProvider(), IssueHolder(LanguageProcessorPhase.ALL)) }
                 }
             )
         )
@@ -175,7 +183,7 @@ class LanguageRegistryDefault : GrammarRegistry {
         }
     }
 
-    fun <AsmType : Any, ContextType : Any> register(
+    override fun <AsmType : Any, ContextType : Any> register(
         identity: String,
         grammarStr: String?,
         aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
@@ -191,11 +199,11 @@ class LanguageRegistryDefault : GrammarRegistry {
         )
     )
 
-    fun unregister(identity: String) {
+    override fun unregister(identity: String) {
         this._registry.remove(identity)
     }
 
-    fun <AsmType : Any, ContextType : Any> findOrNull(identity: String): LanguageDefinition<AsmType, ContextType>? {
+    override fun <AsmType : Any, ContextType : Any> findOrNull(identity: String): LanguageDefinition<AsmType, ContextType>? {
         return this._registry[identity] as LanguageDefinition<AsmType, ContextType>?
     }
 
@@ -206,9 +214,9 @@ class LanguageRegistryDefault : GrammarRegistry {
         return findOrNull("$localNamespace.$nameOrQName") ?: findOrNull(nameOrQName)
     }
 
-    fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
+    override fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
         identity: String,
-        aglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = Agl.registry.agl.grammar.processor?.optionsDefault(),
+        aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
     ): LanguageDefinition<AsmType, ContextType> {
         val existing = this.findOrNull<AsmType, ContextType>(identity)
         return if (null == existing) {
@@ -230,7 +238,7 @@ class LanguageRegistryDefault : GrammarRegistry {
     override fun findGrammarOrNull(localNamespace: Namespace, nameOrQName: String): Grammar? =
         findGrammarOrNull("${localNamespace.qualifiedName}.$nameOrQName") ?: findGrammarOrNull(nameOrQName)
 
-    override fun register(grammar: Grammar) {
+    override fun registerGrammar(grammar: Grammar) {
         _grammars[grammar.qualifiedName] = grammar
     }
 }

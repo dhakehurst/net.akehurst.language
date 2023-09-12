@@ -26,13 +26,15 @@ internal class LanguageProcessorConfigurationDefault<AsmType : Any, ContextType 
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null,
     override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null,
     override var formatterResolver: FormatterResolver<AsmType, ContextType>? = null,
-    override var styleResolver: StyleResolver<AsmType, ContextType>? = null
+    override var styleResolver: StyleResolver<AsmType, ContextType>? = null,
+    override var completionProvider: CompletionProviderResolver<AsmType, ContextType>? = null
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
 
 internal class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
     override val parse: ParseOptions = ParseOptionsDefault(),
     override val syntaxAnalysis: SyntaxAnalysisOptions<AsmType, ContextType> = SyntaxAnalysisOptionsDefault(),
-    override val semanticAnalysis: SemanticAnalysisOptions<AsmType, ContextType> = SemanticAnalysisOptionsDefault()
+    override val semanticAnalysis: SemanticAnalysisOptions<AsmType, ContextType> = SemanticAnalysisOptionsDefault(),
+    override val completionProvider: CompletionProviderOptions<AsmType, ContextType> = CompletionProviderOptionsDefault()
 ) : ProcessOptions<AsmType, ContextType>
 
 internal class ParseOptionsDefault(
@@ -54,6 +56,11 @@ internal class SemanticAnalysisOptionsDefault<AsmType : Any, ContextType : Any>(
     override val options: Map<String, Any> = mutableMapOf()
 ) : SemanticAnalysisOptions<AsmType, ContextType>
 
+internal class CompletionProviderOptionsDefault<AsmType : Any, ContextType : Any>(
+    override var context: ContextType? = null,
+    override val options: Map<String, Any> = mutableMapOf()
+) : CompletionProviderOptions<AsmType, ContextType>
+
 @DslMarker
 annotation class LanguageProcessorConfigurationDslMarker
 
@@ -70,6 +77,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
     private var _semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null
     private var _formatterResolver: FormatterResolver<AsmType, ContextType>? = null
     private var _styleResolver: StyleResolver<AsmType, ContextType>? = null
+    private var _completionProviderResolver: CompletionProviderResolver<AsmType, ContextType>? = null
 
     fun targetGrammarName(value: String?) {
         _targetGrammarName = value
@@ -103,6 +111,10 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
         _styleResolver = func
     }
 
+    fun completionProvider(value: CompletionProviderResolver<AsmType, ContextType>?) {
+        _completionProviderResolver = value
+    }
+
     fun build(): LanguageProcessorConfiguration<AsmType, ContextType> {
         return when (base) {
             null -> LanguageProcessorConfigurationDefault<AsmType, ContextType>(
@@ -113,7 +125,8 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
                 _syntaxAnalyserResolver,
                 _semanticAnalyserResolver,
                 _formatterResolver,
-                _styleResolver
+                _styleResolver,
+                _completionProviderResolver
             )
 
             is LanguageProcessorConfigurationDefault<AsmType, ContextType> -> {
@@ -125,7 +138,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
                 _semanticAnalyserResolver?.let { base.semanticAnalyserResolver = it }
                 _formatterResolver?.let { base.formatterResolver = it }
                 _styleResolver?.let { base.styleResolver = it }
-
+                _completionProviderResolver.let { base.completionProvider = it }
                 base
             }
 
@@ -143,6 +156,7 @@ class ProcessOptionsBuilder<AsmType : Any, ContextType : Any> {
     private var _parser: ParseOptions = ParseOptionsDefault()
     private var _syntaxAnalyser: SyntaxAnalysisOptions<AsmType, ContextType> = SyntaxAnalysisOptionsDefault<AsmType, ContextType>()
     private var _semanticAnalyser: SemanticAnalysisOptions<AsmType, ContextType> = SemanticAnalysisOptionsDefault<AsmType, ContextType>()
+    private var _completionProvider: CompletionProviderOptions<AsmType, ContextType> = CompletionProviderOptionsDefault<AsmType, ContextType>()
 
     fun parse(init: ParseOptionsBuilder.() -> Unit) {
         val b = ParseOptionsBuilder()
@@ -162,8 +176,14 @@ class ProcessOptionsBuilder<AsmType : Any, ContextType : Any> {
         _semanticAnalyser = b.build()
     }
 
+    fun completionProvider(init: CompletionProviderOptionsBuilder<AsmType, ContextType>.() -> Unit) {
+        val b = CompletionProviderOptionsBuilder<AsmType, ContextType>()
+        b.init()
+        _completionProvider = b.build()
+    }
+
     fun build(): ProcessOptions<AsmType, ContextType> {
-        return ProcessOptionsDefault<AsmType, ContextType>(_parser, _syntaxAnalyser, _semanticAnalyser)
+        return ProcessOptionsDefault<AsmType, ContextType>(_parser, _syntaxAnalyser, _semanticAnalyser, _completionProvider)
     }
 }
 
@@ -240,5 +260,24 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
 
     fun build(): SemanticAnalysisOptions<AsmType, ContextType> {
         return SemanticAnalysisOptionsDefault<AsmType, ContextType>(_active, _locationMap, _context, _options)
+    }
+}
+
+@ProcessOptionsDslMarker
+class CompletionProviderOptionsBuilder<AsmType : Any, ContextType : Any>() {
+
+    private var _context: ContextType? = null
+    private val _options = mutableMapOf<String, Any>()
+
+    fun context(value: ContextType?) {
+        _context = value
+    }
+
+    fun option(key: String, value: Any) {
+        _options[key] = value
+    }
+
+    fun build(): CompletionProviderOptions<AsmType, ContextType> {
+        return CompletionProviderOptionsDefault<AsmType, ContextType>(_context, _options)
     }
 }

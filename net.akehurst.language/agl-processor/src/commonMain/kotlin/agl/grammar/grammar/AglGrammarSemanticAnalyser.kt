@@ -65,7 +65,7 @@ class AglGrammarSemanticAnalyser(
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
         this._analyseAmbiguities = options[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? ?: false
 
-        asm.forEach { languageRegistry.register(it) }
+        asm.forEach { languageRegistry.registerGrammar(it) }
 
         checkGrammar(asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
         return SemanticAnalysisResultDefault(issues)

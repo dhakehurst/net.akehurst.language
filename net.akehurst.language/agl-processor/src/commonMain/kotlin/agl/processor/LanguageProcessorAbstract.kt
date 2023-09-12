@@ -56,7 +56,6 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     abstract override val grammar: Grammar
     protected abstract val configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 
-    private val _completionProvider: CompletionProvider by lazy { CompletionProvider(this.grammar) }
     private val _scanner by lazy { Scanner(this.runtimeRuleSet) }
     internal val parser: Parser by lazy { ScanOnDemandParser(this.runtimeRuleSet) }
 
@@ -112,6 +111,12 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         val res = configuration.formatterResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
         FormatterSimple<AsmType>(res?.asm)
+    }
+
+    override val completionProvider: CompletionProvider<AsmType, ContextType>? by lazy {
+        val res = configuration.completionProvider?.invoke(this)
+        res?.let { this.issues.addAll(res.issues) }
+        res?.asm
     }
 
     override fun usedAutomatonFor(goalRuleName: String): ParserStateSet = (this.parser as ScanOnDemandParser).runtimeRuleSet.usedAutomatonFor(goalRuleName)
@@ -214,14 +219,12 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         return fResult
     }
 
-    override fun expectedTerminalsAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
+    override fun expectedTerminalsAt(
+        sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>?
+    ): ExpectedAtResult {
         val opts = defaultOptions(options)
         val parserExpected: Set<RuntimeRule> = this.parser.expectedTerminalsAt(sentence, position, opts.parse)
-        //val grammarExpected: List<RuleItem> = parserExpected
-        //    .filter { it !== RuntimeRuleSet.END_OF_TEXT }
-        //    .map { this._converterToRuntimeRules.originalRuleItemFor(it.runtimeRuleSetNumber, it.number) }
-        //val expected = grammarExpected.flatMap { this._completionProvider.provideFor(it, desiredDepth) }
-        val items = parserExpected.mapNotNull {
+        val terminalItems = parserExpected.mapNotNull {
             when {
                 it == RuntimeRuleSet.END_OF_TEXT -> null
                 it == RuntimeRuleSet.EMPTY -> null
@@ -235,26 +238,21 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 }
             }
         }
-        return ExpectedAtResultDefault(items, IssueHolder(LanguageProcessorPhase.ALL))
+        return ExpectedAtResultDefault(terminalItems, IssueHolder(LanguageProcessorPhase.ALL))
     }
 
-    /*
-    override fun expectedAt(
-        sentence: String,
-        position: Int,
-        desiredDepth: Int,
-        options: ProcessOptions<AsmType, ContextType>?
-    ): ExpectedAtResult {
-        val opts = defaultOptions(options)
-        val parserExpected: Set<RuntimeRule> = this.parser.expectedAt(opts.parse.goalRuleName!!, sentence, position, opts.parse.automatonKind)
-        val grammarExpected: List<RuleItem> = parserExpected
-            .filter { it !== RuntimeRuleSet.END_OF_TEXT }
-            .map { this._converterToRuntimeRules.originalRuleItemFor(it.runtimeRuleSetNumber, it.number) }
-        val expected = grammarExpected.flatMap { this._completionProvider.provideFor(it, desiredDepth) }
-        val items = expected.toSet().toList()
-        return ExpectedAtResultDefault(items, emptyList()) //TODO: issues
+    override fun expectedItemsAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
+        val terminalItems = expectedTerminalsAt(sentence, position, desiredDepth, options).items
+        val items = when {
+            null != completionProvider -> {
+                val opts = defaultOptions(options)
+                completionProvider!!.provide(terminalItems, opts.completionProvider.context, opts.completionProvider.options)
+            }
+
+            else -> terminalItems
+        }
+        return ExpectedAtResultDefault(items, IssueHolder(LanguageProcessorPhase.ALL))
     }
-     */
 
     private fun defaultOptions(options: ProcessOptions<AsmType, ContextType>?): ProcessOptions<AsmType, ContextType> {
         val opts = options ?: optionsDefault()

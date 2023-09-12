@@ -66,6 +66,8 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
 
     val formatter: Formatter<AsmType>?
 
+    val completionProvider: CompletionProvider<AsmType, ContextType>?
+
     /**
      * can be called from a different thread to stop the parser
      */
@@ -143,6 +145,9 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
      */
     fun expectedTerminalsAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>? = null): ExpectedAtResult
 
-    //List<CompletionItem> expectedAt(Reader reader, String goalRuleName, int position, int desiredDepth)
+    /**
+     * returns list of expected items according to the given completionProvider, or list of terminalItems if no completion provider given
+     */
+    fun expectedItemsAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>? = null): ExpectedAtResult
 
 }

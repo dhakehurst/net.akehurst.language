@@ -20,7 +20,7 @@ import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 
-class CompletionProvider(
+class CompletionProviderSimple(
     val targetGrammar: Grammar
 ) {
 

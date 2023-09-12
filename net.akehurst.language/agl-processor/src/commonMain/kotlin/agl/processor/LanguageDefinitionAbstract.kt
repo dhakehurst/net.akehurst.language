@@ -153,6 +153,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
                 semanticAnalyserResolver = this._semanticAnalyserResolver,
                 formatterResolver = this._formatterResolver,
                 //styleResolver = this._styleResolver //not used to create processor
+                completionProvider = this._completionProviderResolver,
             )
             val proc = Agl.processorFromGrammar(g, config)
             if (buildForDefaultGoal) proc.buildFor(null) //null options will use default goal
@@ -196,6 +197,11 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
         }
     }
     protected var _styleResolver: StyleResolver<AsmType, ContextType>? by Delegates.observable(configuration.styleResolver) { _, oldValue, newValue ->
+        if (oldValue != newValue) {
+            this._processor_cache.reset()
+        }
+    }
+    protected var _completionProviderResolver: CompletionProviderResolver<AsmType, ContextType>? by Delegates.observable(configuration.completionProvider) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }

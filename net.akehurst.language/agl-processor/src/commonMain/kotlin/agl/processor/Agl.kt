@@ -34,7 +34,7 @@ object Agl {
     val version: String = BuildConfig.version
     val buildStamp: String = BuildConfig.buildStamp
 
-    val registry = LanguageRegistryDefault()
+    val registry: LanguageRegistry = LanguageRegistryDefault()
 
     fun configurationDefault(): LanguageProcessorConfiguration<AsmSimple, ContextSimple> = Agl.configuration {
         targetGrammarName(null) //use default

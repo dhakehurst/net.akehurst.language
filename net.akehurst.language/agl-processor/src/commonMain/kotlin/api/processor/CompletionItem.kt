@@ -17,14 +17,18 @@
 package net.akehurst.language.api.processor
 
 enum class CompletionItemKind {
-	LITERAL,
-	PATTERN,
-	SEGMENT
+    LITERAL,
+    PATTERN,
+    SEGMENT
 }
 
 data class CompletionItem(
-	val kind: CompletionItemKind,
-	val ruleName:String,
-	val text: String
-){
+    val kind: CompletionItemKind,
+    val ruleName: String,
+    val text: String
+) {
+}
+
+interface CompletionProvider<in AsmType, in ContextType> {
+    fun provide(terminalItems: List<CompletionItem>, context: ContextType?, options: Map<String, Any>): List<CompletionItem>
 }

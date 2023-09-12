@@ -40,6 +40,7 @@ typealias SyntaxAnalyserResolver<AsmType, ContextType> = (LanguageProcessor<AsmT
 typealias SemanticAnalyserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<SemanticAnalyser<AsmType, ContextType>>
 typealias FormatterResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<AglFormatterModel>
 typealias StyleResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<AglStyleModel>
+typealias CompletionProviderResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<CompletionProvider<AsmType, ContextType>>
 
 interface LanguageProcessorConfiguration<AsmType : Any, ContextType : Any> {
     //val grammarResolver: GrammarResolver?
@@ -51,6 +52,7 @@ interface LanguageProcessorConfiguration<AsmType : Any, ContextType : Any> {
     val semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
     val formatterResolver: FormatterResolver<AsmType, ContextType>?
     val styleResolver: StyleResolver<AsmType, ContextType>?
+    val completionProvider: CompletionProviderResolver<AsmType, ContextType>?
 }
 
 /**
@@ -81,6 +83,11 @@ interface SemanticAnalysisOptions<AsmType : Any, ContextType : Any> {
     val options: Map<String, Any>
 }
 
+interface CompletionProviderOptions<AsmType : Any, ContextType : Any> {
+    var context: ContextType?
+    val options: Map<String, Any>
+}
+
 /**
  * Options to configure the processing of a sentence
  */
@@ -88,4 +95,5 @@ interface ProcessOptions<AsmType : Any, ContextType : Any> {
     val parse: ParseOptions
     val syntaxAnalysis: SyntaxAnalysisOptions<AsmType, ContextType>
     val semanticAnalysis: SemanticAnalysisOptions<AsmType, ContextType>
+    val completionProvider: CompletionProviderOptions<AsmType, ContextType>
 }

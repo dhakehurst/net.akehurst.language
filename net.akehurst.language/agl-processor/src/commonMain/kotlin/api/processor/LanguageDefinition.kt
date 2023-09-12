@@ -16,6 +16,9 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.agl.grammar.grammar.GrammarContext
+import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.processor.AglLanguages
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
@@ -25,8 +28,33 @@ import net.akehurst.language.api.grammar.Namespace
 import net.akehurst.language.api.style.AglStyleModel
 
 interface GrammarRegistry {
-    fun register(grammar: Grammar)
+    fun registerGrammar(grammar: Grammar)
     fun findGrammarOrNull(localNamespace: Namespace, nameOrQName: String): Grammar?
+}
+
+interface LanguageRegistry : GrammarRegistry {
+
+    val agl: AglLanguages
+
+    /**
+     * create and register a LanguageDefinition as specified
+     */
+    fun <AsmType : Any, ContextType : Any> register(
+        identity: String,
+        grammarStr: String?,
+        aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
+        buildForDefaultGoal: Boolean,
+        configuration: LanguageProcessorConfiguration<AsmType, ContextType>
+    ): LanguageDefinition<AsmType, ContextType>
+
+    fun unregister(identity: String)
+
+    fun <AsmType : Any, ContextType : Any> findOrNull(identity: String): LanguageDefinition<AsmType, ContextType>?
+
+    fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
+        identity: String,
+        aglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = Agl.registry.agl.grammar.processor?.optionsDefault(),
+    ): LanguageDefinition<AsmType, ContextType>
 }
 
 interface LanguageDefinition<AsmType : Any, ContextType : Any> {
