@@ -42,8 +42,9 @@ internal class ConverterToRuntimeRules(
         RuntimeRuleSet(_ruleSetNumber, grammar.qualifiedName, rules, _precRules)
     }
 
-    fun originalRuleItemFor(runtimeRuleSetNumber: Int, runtimeRuleNumber: Int): RuleItem = this.originalRuleItem[Pair(runtimeRuleSetNumber, runtimeRuleNumber)]
-        ?: throw LanguageProcessorException("Cannot find original item for ($runtimeRuleSetNumber,$runtimeRuleNumber)", null)
+    fun originalRuleItemFor(runtimeRuleSetNumber: Int, runtimeRuleNumber: Int): RuleItem =
+        this.originalRuleItem[Pair(runtimeRuleSetNumber, runtimeRuleNumber)]
+            ?: throw LanguageProcessorException("Cannot find original item for ($runtimeRuleSetNumber,$runtimeRuleNumber)", null)
 
     // index by tag
     private val runtimeRules = mutableMapOf<String, RuntimeRule>()
@@ -110,7 +111,6 @@ internal class ConverterToRuntimeRules(
         } else {
             this.terminalRule(target.name, ci.value, RuntimeRuleKind.TERMINAL, false, isSkip)
         }
-        this.originalRuleItem[Pair(rule.runtimeRuleSetNumber, rule.ruleNumber)] = target.rhs
         return rule
     }
 
@@ -169,20 +169,29 @@ internal class ConverterToRuntimeRules(
         val rule = this.findNamedRule(target.name)
         val rhs = target.rhs
         return if (null == rule) {
-            when {
+            val (rrule, ruleItem) = when {
                 target.isLeaf -> when {
-                    rhs is Terminal -> this.terminalRule(target.name, rhs.value, RuntimeRuleKind.TERMINAL, rhs.isPattern, target.isSkip)
+                    rhs is Terminal -> {
+                        val rrule = this.terminalRule(target.name, rhs.value, RuntimeRuleKind.TERMINAL, rhs.isPattern, target.isSkip)
+                        Pair(rrule, rhs)
+                    }
+
                     rhs is Concatenation && rhs.items.size == 1 && rhs.items[0] is Terminal -> {
                         val t = (rhs.items[0] as Terminal)
-                        this.terminalRule(target.name, t.value, RuntimeRuleKind.TERMINAL, t.isPattern, target.isSkip)
+                        val rrule = this.terminalRule(target.name, t.value, RuntimeRuleKind.TERMINAL, t.isPattern, target.isSkip)
+                        Pair(rrule, t)
                     }
 
                     rhs is Choice && rhs.alternative.size == 1 && rhs.alternative[0] is Terminal -> {
                         val t = (rhs.alternative[0] as Terminal)
-                        this.terminalRule(target.name, t.value, RuntimeRuleKind.TERMINAL, t.isPattern, target.isSkip)
+                        val rrule = this.terminalRule(target.name, t.value, RuntimeRuleKind.TERMINAL, t.isPattern, target.isSkip)
+                        Pair(rrule, t)
                     }
 
-                    else -> this.buildCompressedRule(target, target.isSkip)
+                    else -> {
+                        val rrule = this.buildCompressedRule(target, target.isSkip)
+                        Pair(rrule, rhs)
+                    }
                 }
 
                 target.isOneEmbedded -> {
@@ -194,17 +203,18 @@ internal class ConverterToRuntimeRules(
                     }
                     val embeddedRule = this.embeddedRule(embeddedRuleName, false, e.embeddedGrammarReference.resolved!!, e.embeddedGoalName)
                     this.originalRuleItem[Pair(embeddedRule.runtimeRuleSetNumber, embeddedRule.ruleNumber)] = e
-                    embeddedRule
+                    Pair(embeddedRule, e)
                 }
 
                 else -> {
                     val nrule = this.nextRule(target.name, target.isSkip)
-                    this.originalRuleItem[Pair(nrule.runtimeRuleSetNumber, nrule.ruleNumber)] = target.rhs
                     val rrhs = createRhs(nrule, target.rhs, target.name)
                     nrule.setRhs(rrhs)
-                    nrule
+                    Pair(nrule, target.rhs)
                 }
             }
+            this.originalRuleItem[Pair(rrule.runtimeRuleSetNumber, rrule.ruleNumber)] = ruleItem
+            rrule
         } else {
             rule
         }

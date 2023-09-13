@@ -111,11 +111,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                     }
                     completionProvider { ProcessResultDefault(AglScopesCompletionProvider(), IssueHolder(LanguageProcessorPhase.ALL)) }
                 }
-            )//.also {
-            //    it.syntaxAnalyser?.configure(
-            //        configurationContext = ContextFromGrammar(AglScopesGrammar),
-            //    )
-            // }
+            )
         )
 
         override val formatter = this@LanguageRegistryDefault.registerFromDefinition(

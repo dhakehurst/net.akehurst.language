@@ -16,6 +16,8 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.api.grammar.RuleItem
+
 enum class CompletionItemKind {
     LITERAL,
     PATTERN,
@@ -30,5 +32,5 @@ data class CompletionItem(
 }
 
 interface CompletionProvider<in AsmType, in ContextType> {
-    fun provide(terminalItems: List<CompletionItem>, context: ContextType?, options: Map<String, Any>): List<CompletionItem>
+    fun provide(nextExpected: Set<RuleItem>, context: ContextType?, options: Map<String, Any>): List<CompletionItem>
 }

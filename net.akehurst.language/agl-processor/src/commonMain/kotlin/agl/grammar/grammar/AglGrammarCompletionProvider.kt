@@ -19,12 +19,13 @@ package net.akehurst.language.agl.agl.grammar.grammar
 
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionProvider
 
 class AglGrammarCompletionProvider : CompletionProvider<List<Grammar>, GrammarContext> {
 
-    override fun provide(terminalItems: List<CompletionItem>, context: GrammarContext?, options: Map<String, Any>): List<CompletionItem> {
-        return terminalItems //TODO
+    override fun provide(terminalItems: Set<RuleItem>, context: GrammarContext?, options: Map<String, Any>): List<CompletionItem> {
+        return emptyList()
     }
 }

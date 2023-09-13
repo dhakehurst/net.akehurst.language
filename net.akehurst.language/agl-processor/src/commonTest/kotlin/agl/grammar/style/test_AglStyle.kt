@@ -143,7 +143,7 @@ class test_AglStyle {
 
         assertNotNull(result.asm)
         assertEquals(1, result.asm?.rules?.size)
-        assertEquals("ID", result.asm!!.rules[0].selector.first())
+        assertEquals("ID", result.asm!!.rules[0].selector.first().value)
         assertEquals(2, result.asm!!.rules[0].styles.size)
         assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }

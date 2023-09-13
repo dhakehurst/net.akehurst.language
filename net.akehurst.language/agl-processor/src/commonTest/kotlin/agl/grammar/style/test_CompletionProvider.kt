@@ -59,11 +59,170 @@ class test_CompletionProvider {
             }
         """
         val sentence = """
-        """
+        """.trimIndent()
         val expected = listOf(
             CompletionItem(CompletionItemKind.LITERAL, "LITERAL", "'a'"),
-            CompletionItem(CompletionItemKind.LITERAL, "IDENTIFIER", "S"),
+            CompletionItem(CompletionItemKind.LITERAL, "GrammarRule", "S"),
+            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", "\$keyword"),
         )
-        test(grammarStr, sentence, 0, expected)
+        test(grammarStr, sentence, sentence.length, expected)
+    }
+
+    @Test
+    fun after_Selector() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val sentence = """
+            S
+        """.trimIndent()
+        val expected = listOf(
+            CompletionItem(CompletionItemKind.LITERAL, "selectorAndComposition", ","),
+            CompletionItem(CompletionItemKind.LITERAL, "rule", "{"),
+            CompletionItem(CompletionItemKind.SEGMENT, "rule", "{\n  <STYLE_ID>: <STYLE_VALUE>;\n}"),
+        )
+        test(grammarStr, sentence, sentence.length, expected)
+    }
+
+    @Test
+    fun after_SelectorAndComposition() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val sentence = """
+            S,
+        """.trimIndent()
+        val expected = listOf(
+            CompletionItem(CompletionItemKind.LITERAL, "LITERAL", "'a'"),
+            CompletionItem(CompletionItemKind.LITERAL, "GrammarRule", "S"),
+            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", "\$keyword"),
+        )
+        test(grammarStr, sentence, sentence.length, expected)
+    }
+
+    @Test
+    fun after_RuleStart() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val sentence = """
+            S {
+        """.trimIndent()
+        val expected = listOf(
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "foreground"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "background"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "font-style"),
+            CompletionItem(CompletionItemKind.LITERAL, "rule", "}"),
+            CompletionItem(CompletionItemKind.SEGMENT, "style", "<STYLE_ID>: <STYLE_VALUE>;"),
+        )
+        test(grammarStr, sentence, sentence.length, expected)
+    }
+
+    @Test
+    fun after_STYLE_ID() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val sentence = """
+            S {
+              foreground
+        """.trimIndent()
+        val expected = listOf(
+            CompletionItem(CompletionItemKind.LITERAL, "style", ":"),
+        )
+        test(grammarStr, sentence, sentence.length, expected)
+    }
+
+    @Test
+    fun after_style_colon() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val sentence = """
+            S {
+              foreground:
+        """.trimIndent()
+        val expected = listOf(
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "<colour>"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "bold"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "italic"),
+        )
+        test(grammarStr, sentence, sentence.length, expected)
+    }
+
+    @Test
+    fun after_STYLE_VALUE() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val sentence = """
+            S {
+              foreground: blue
+        """.trimIndent()
+        val expected = listOf(
+            CompletionItem(CompletionItemKind.LITERAL, "style", ";"),
+        )
+        test(grammarStr, sentence, sentence.length, expected)
+    }
+
+    @Test
+    fun after_style_end() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val sentence = """
+            S {
+              foreground: blue;
+        """.trimIndent()
+        val expected = listOf(
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "foreground"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "background"),
+            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "font-style"),
+            CompletionItem(CompletionItemKind.LITERAL, "rule", "}"),
+            CompletionItem(CompletionItemKind.SEGMENT, "style", "<STYLE_ID>: <STYLE_VALUE>;"),
+        )
+        test(grammarStr, sentence, sentence.length, expected)
+    }
+
+    @Test
+    fun after_rule_end() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val sentence = """
+            S {
+              foreground: blue;
+            }
+        """.trimIndent()
+        val expected = listOf(
+            CompletionItem(CompletionItemKind.LITERAL, "LITERAL", "'a'"),
+            CompletionItem(CompletionItemKind.LITERAL, "GrammarRule", "S"),
+            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", "\$keyword"),
+        )
+        test(grammarStr, sentence, sentence.length, expected)
     }
 }

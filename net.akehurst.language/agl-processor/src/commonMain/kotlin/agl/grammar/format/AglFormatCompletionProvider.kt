@@ -18,13 +18,14 @@
 package net.akehurst.language.agl.agl.grammar.format
 
 import net.akehurst.language.api.formatter.AglFormatterModel
+import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.SentenceContext
 
 class AglFormatCompletionProvider : CompletionProvider<AglFormatterModel, SentenceContext<String>> {
 
-    override fun provide(terminalItems: List<CompletionItem>, context: SentenceContext<String>?, options: Map<String, Any>): List<CompletionItem> {
-        return terminalItems //TODO
+    override fun provide(nextExpected: Set<RuleItem>, context: SentenceContext<String>?, options: Map<String, Any>): List<CompletionItem> {
+        return emptyList()
     }
 }

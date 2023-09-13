@@ -17,16 +17,15 @@
 
 package net.akehurst.language.agl.agl.grammar.scopes
 
-import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
-import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionProvider
 import net.akehurst.language.api.processor.SentenceContext
 
 class AglScopesCompletionProvider : CompletionProvider<ScopeModelAgl, SentenceContext<String>> {
 
-    override fun provide(terminalItems: List<CompletionItem>, context: SentenceContext<String>?, options: Map<String, Any>): List<CompletionItem> {
-        return terminalItems //TODO
+    override fun provide(terminalItems: Set<RuleItem>, context: SentenceContext<String>?, options: Map<String, Any>): List<CompletionItem> {
+        return emptyList()
     }
 }

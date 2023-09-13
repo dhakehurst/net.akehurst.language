@@ -242,16 +242,19 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     }
 
     override fun expectedItemsAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>?): ExpectedAtResult {
-        val terminalItems = expectedTerminalsAt(sentence, position, desiredDepth, options).items
-        val items = when {
+        return when {
             null != completionProvider -> {
                 val opts = defaultOptions(options)
-                completionProvider!!.provide(terminalItems, opts.completionProvider.context, opts.completionProvider.options)
+                val parserExpected: Set<RuntimeRule> = this.parser.expectedTerminalsAt(sentence, position, opts.parse)
+                val grammarItems = parserExpected.map {
+                    mapToGrammar(it.runtimeRuleSetNumber, it.ruleNumber)
+                }.toSet()
+                val items = completionProvider!!.provide(grammarItems, opts.completionProvider.context, opts.completionProvider.options)
+                ExpectedAtResultDefault(items, IssueHolder(LanguageProcessorPhase.ALL))
             }
 
-            else -> terminalItems
+            else -> expectedTerminalsAt(sentence, position, desiredDepth, options)
         }
-        return ExpectedAtResultDefault(items, IssueHolder(LanguageProcessorPhase.ALL))
     }
 
     private fun defaultOptions(options: ProcessOptions<AsmType, ContextType>?): ProcessOptions<AsmType, ContextType> {

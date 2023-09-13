@@ -90,15 +90,15 @@ class GrammarTypeNamespaceFromGrammar(
         this._configuration = configuration
         this.grammar = grammar
         grammar.allResolvedGrammarRule
-            .filter { it.isLeaf.not() && it.isSkip.not() }
+            .filter { it.isSkip.not() }
             .forEach { typeForGrammarRule(it) }
         this._ruleToType.entries.forEach {
             val key = it.key
             val value = it.value
             super.allRuleNameToType[key] = value
-            if (value.type is DataType) {
-                super.allTypesByName[value.type.name] = value.type
-            }
+            //if (value.type is DataType) {
+            super.allTypesByName[value.type.name] = value.type
+            //}
         }
     }
 
@@ -154,19 +154,24 @@ class GrammarTypeNamespaceFromGrammar(
         return if (null != type) {
             type // return the type if it exists, also stops recursion
         } else {
-            val rhs = rule.rhs
-            val ruleTypeUse: TypeInstance = when (rhs) {
-                is EmptyRule -> findOrCreateElementType(rule) {}
-                is Terminal -> elementTypeFor(rule, listOf(rhs))
-                is NonTerminal -> elementTypeFor(rule, listOf(rhs))
-                is Embedded -> elementTypeFor(rule, listOf(rhs))
-                is Concatenation -> elementTypeFor(rule, rhs.items)
-                is Choice -> typeForChoiceRule(rhs, rule)
-                is OptionalItem -> findOrCreateElementType(rule) { et -> createPropertyDeclaration(et, rhs, 0) }
-                is SimpleList -> findOrCreateElementType(rule) { et -> createPropertyDeclaration(et, rhs, 0) }
-                is SeparatedList -> findOrCreateElementType(rule) { et -> createPropertyDeclaration(et, rhs, 0) }
-                is Group -> typeForGroup(rhs, false)
-                else -> error("Internal error, unhandled subtype of rule '${rule.name}'.rhs '${rhs::class.simpleName}' when getting TypeModel from grammar '${this.qualifiedName}'")
+            val ruleTypeUse: TypeInstance = when {
+                rule.isLeaf -> SimpleTypeModelStdLib.String
+                else -> {
+                    val rhs = rule.rhs
+                    when (rhs) {
+                        is EmptyRule -> findOrCreateElementType(rule) {}
+                        is Terminal -> elementTypeFor(rule, listOf(rhs))
+                        is NonTerminal -> elementTypeFor(rule, listOf(rhs))
+                        is Embedded -> elementTypeFor(rule, listOf(rhs))
+                        is Concatenation -> elementTypeFor(rule, rhs.items)
+                        is Choice -> typeForChoiceRule(rhs, rule)
+                        is OptionalItem -> findOrCreateElementType(rule) { et -> createPropertyDeclaration(et, rhs, 0) }
+                        is SimpleList -> findOrCreateElementType(rule) { et -> createPropertyDeclaration(et, rhs, 0) }
+                        is SeparatedList -> findOrCreateElementType(rule) { et -> createPropertyDeclaration(et, rhs, 0) }
+                        is Group -> typeForGroup(rhs, false)
+                        else -> error("Internal error, unhandled subtype of rule '${rule.name}'.rhs '${rhs::class.simpleName}' when getting TypeModel from grammar '${this.qualifiedName}'")
+                    }
+                }
             }
             _ruleToType[rule.name] = ruleTypeUse
             ruleTypeUse

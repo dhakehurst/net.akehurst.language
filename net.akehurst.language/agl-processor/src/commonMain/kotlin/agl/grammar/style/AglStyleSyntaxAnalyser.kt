@@ -23,9 +23,7 @@ import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
-import net.akehurst.language.api.style.AglStyle
-import net.akehurst.language.api.style.AglStyleModel
-import net.akehurst.language.api.style.AglStyleRule
+import net.akehurst.language.api.style.*
 
 internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<AglStyleModel>() {
 
@@ -56,7 +54,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
 
     // rule = selectorExpression '{' styleList '}' ;
     fun rule(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleRule {
-        val selector = children[0] as List<String> //TODO: ? selector combinations, and/or/contains etc
+        val selector = children[0] as List<AglStyleSelector> //TODO: ? selector combinations, and/or/contains etc
         val rule = AglStyleRule(selector)
         val styles: List<AglStyle> = children[2] as List<AglStyle>
         styles.forEach { rule.styles[it.name] = it }
@@ -64,18 +62,23 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     }
 
     // selectorExpression
-    //             = selectorSingle
-    //             | selectorAndComposition
+    //             = selectorAndComposition
+    //             | selectorSingle
     //             ; //TODO
-    fun selectorExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> =
-        children[0] as List<String>
+    fun selectorExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AglStyleSelector> =
+        when (nodeInfo.alt.option) {
+            0 -> children[0] as List<AglStyleSelector>
+            1 -> listOf(children[0] as AglStyleSelector)
+            else -> error("Internal error: alternative not handled")
+        }
+
 
     // selectorAndComposition = [selectorSingle /',']2+ ;
-    fun selectorAndComposition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> =
-        (children as List<String>).toSeparatedList<List<String>, String>().items.flatten()
+    fun selectorAndComposition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AglStyleSelector> =
+        (children as List<Any>).toSeparatedList<AglStyleSelector, String>().items
 
     // selectorSingle = LITERAL | PATTERN | IDENTIFIER ;
-    fun selectorSingle(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> {
+    fun selectorSingle(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleSelector {
         // Must match what is done in AglGrammarSyntaxAnalyser.terminal,
         // but keep the enclosing (single or double) quotes
         val isPattern = nodeInfo.node.rule.tag == "PATTERN"
@@ -86,9 +89,15 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         } else {
             mt.replace("\\'", "'").replace("\\\\", "\\")
         }
+        val kind = when (nodeInfo.alt.option) {
+            0 -> AglStyleSelectorKind.LITERAL
+            1 -> AglStyleSelectorKind.PATTERN
+            2 -> AglStyleSelectorKind.RULE_NAME
+            else -> error("Internal error: alternative not handled")
+        }
         //val str = target.nonSkipMatchedText.replace("\\\\", "\\").replace("\\\"", "\"")
         //return listOf(value)
-        return listOf(mt)
+        return AglStyleSelector(mt, kind)
     }
 
     // styleList = style* ;

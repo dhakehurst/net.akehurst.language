@@ -30,13 +30,32 @@ import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.style.AglStyleModel
+import net.akehurst.language.api.style.AglStyleSelectorKind
 
 class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, SentenceContext<String>> {
 
-    private val aglGrammarTypeModel = Agl.registry.agl.grammar.processor!!.typeModel
-    private val namespace: GrammarTypeNamespace
-        get() =
-            aglGrammarTypeModel.namespace[Agl.registry.agl.grammar.processor!!.grammar!!.qualifiedName] as GrammarTypeNamespace? ?: error("")
+    companion object {
+        private val aglGrammarQualifiedName = Agl.registry.agl.grammar.processor!!.grammar!!.qualifiedName
+        private val aglGrammarTypeModel = Agl.registry.agl.grammar.processor!!.typeModel
+        private val aglGrammarNamespace: GrammarTypeNamespace
+            get() = aglGrammarTypeModel.namespace[aglGrammarQualifiedName] as GrammarTypeNamespace? ?: error("Internal error")
+
+//        private val aglStyleQualifiedName = Agl.registry.agl.style.processor!!.grammar!!.qualifiedName
+//        private val aglStyleTypeModel = Agl.registry.agl.style.processor!!.typeModel
+//        private val aglStyleNamespace: GrammarTypeNamespace
+//            get() = aglStyleTypeModel.namespace[aglStyleQualifiedName] as GrammarTypeNamespace? ?: error("")
+
+
+        //        private val terminal = aglGrammarNamespace.findTypeUsageForRule("terminal") ?: error("Internal error: type for 'terminal' not found")
+        private val grammarRule = aglGrammarNamespace.findTypeUsageForRule("grammarRule") ?: error("Internal error: type for 'grammarRule' not found")
+
+//        private val LITERAL = aglStyleNamespace.findTypeUsageForRule("LITERAL") ?: error("Internal error: type for 'LITERAL' not found")
+//        private val PATTERN = aglStyleNamespace.findTypeUsageForRule("PATTERN") ?: error("Internal error: type for 'PATTERN' not found")
+//        private val IDENTIFIER = aglStyleNamespace.findTypeUsageForRule("IDENTIFIER") ?: error("Internal error: type for 'IDENTIFIER' not found")
+//        private val META_IDENTIFIER = aglStyleNamespace.findTypeUsageForRule("META_IDENTIFIER") ?: error("Internal error: type for 'META_IDENTIFIER' not found")
+//        private val STYLE_ID = aglStyleNamespace.findTypeUsageForRule("STYLE_ID") ?: error("Internal error: type for 'STYLE_ID' not found")
+//        private val STYLE_VALUE = aglStyleNamespace.findTypeUsageForRule("STYLE_VALUE") ?: error("Internal error: type for 'STYLE_VALUE' not found")
+    }
 
     override fun clear() {
 
@@ -52,26 +71,34 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, SentenceConte
         if (null != context) {
             asm.rules.forEach { rule ->
                 rule.selector.forEach { sel ->
-                    if (AglStyleSyntaxAnalyser.KEYWORD_STYLE_ID == sel) {
-                        //it is ok
-                    } else {
-                        val typeName = ""
-                        TODO()
-                        //TODO: give selectors a type/kind pattern/literal/identifier...
-                        if (context.rootScope.isMissing(sel, typeName)) {
-                            val loc = locMap[rule]
-                            if (sel.startsWith("'") && sel.endsWith("'")) {
-                                issues.error(loc, "Terminal Literal ${sel} not found for style rule")
-                            } else if (sel.startsWith("\"") && sel.endsWith("\"")) {
-                                issues.error(loc, "Terminal Pattern ${sel} not found for style rule")
-
-                            } else {
-                                issues.error(loc, "GrammarRule '${sel}' not found for style rule")
+                    val loc = locMap[sel]
+                    // TODO: user types
+                    when (sel.kind) {
+                        AglStyleSelectorKind.LITERAL -> {
+                            if (context.rootScope.isMissing(sel.value, "LITERAL")) {
+                                issues.error(loc, "Terminal Literal ${sel.value} not found for style rule")
                             }
-                        } else {
-                            //no issues
                         }
+
+                        AglStyleSelectorKind.PATTERN -> {
+                            if (context.rootScope.isMissing(sel.value, "PATTERN")) {
+                                issues.error(loc, "Terminal Pattern ${sel.value} not found for style rule")
+                            }
+                        }
+
+                        AglStyleSelectorKind.RULE_NAME -> {
+                            if (AglStyleSyntaxAnalyser.KEYWORD_STYLE_ID == sel.value) {
+                                // its OK
+                            } else {
+                                if (context.rootScope.isMissing(sel.value, grammarRule.type.qualifiedName)) {
+                                    issues.error(loc, "Grammar Rule '${sel.value}' not found for style rule")
+                                }
+                            }
+                        }
+
+                        AglStyleSelectorKind.META -> TODO("Is this unused?")
                     }
+
                 }
             }
         }
