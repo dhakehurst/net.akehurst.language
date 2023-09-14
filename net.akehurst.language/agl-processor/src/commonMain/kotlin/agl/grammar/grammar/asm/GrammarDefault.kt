@@ -125,4 +125,12 @@ abstract class GrammarAbstract(
         return all.first()
     }
 
+    override fun hashCode(): Int = this.qualifiedName.hashCode()
+    override fun equals(other: Any?): Boolean = when (other) {
+        !is Grammar -> false
+        else -> this.qualifiedName == other.qualifiedName
+    }
+
+    override fun toString(): String = qualifiedName
+
 }

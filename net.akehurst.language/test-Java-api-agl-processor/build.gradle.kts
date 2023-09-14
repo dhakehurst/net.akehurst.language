@@ -12,3 +12,7 @@ kotlin {
         withJava()
     }
 }
+
+tasks.withType<PublishToMavenLocal> {
+    onlyIf { false }
+}

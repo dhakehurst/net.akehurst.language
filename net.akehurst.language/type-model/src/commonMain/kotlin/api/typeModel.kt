@@ -231,7 +231,7 @@ interface UnnamedSuperTypeType : TypeDefinition {
 }
 
 interface CollectionType : StructuredType {
-    val supertypes: Set<DataType>
+    val supertypes: Set<CollectionType>
 
     val isArray: Boolean
     val isList: Boolean

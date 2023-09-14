@@ -118,19 +118,19 @@ grammar Mscript {
     fun mscript_typeModel() {
         val actual = sut.typeModel
         val expected = grammarTypeModel("com.yakindu.modelviewer.parser", "Mscript", "Script") {
-            elementType("script", "Script") {
+            dataType("script", "Script") {
                 // script = statementList ;
                 propertyListSeparatedTypeOf("statementList", "Line", "String", false, 0)
             }
-            elementType("statementList", "StatementList") {
+            dataType("statementList", "StatementList") {
                 // statementList = [line / "\R"]* ;
                 propertyListSeparatedTypeOf("line", "Line", "String", false, 0)
             }
-            elementType("line", "Line") {
+            dataType("line", "Line") {
                 // line = [statement / ';']* ';'? ;
                 propertyListSeparatedTypeOf("statement", "Statement", "String", false, 0)
             }
-            elementType("statement", "Statement") {
+            dataType("statement", "Statement") {
                 // statement
                 //   = conditional
                 //   | assignment
@@ -139,22 +139,22 @@ grammar Mscript {
                 //   ;
                 subTypes("Conditional", "Assignment", "ExpressionStatement")
             }
-            elementType("conditional", "Conditional") {
+            dataType("conditional", "Conditional") {
                 // conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
                 propertyDataTypeOf("expression", "Expression", false, 1)
                 propertyListSeparatedTypeOf("statementList", "Line", "String", false, 3)
                 propertyListSeparatedTypeOf("statementList2", "Line", "String", false, 5)
             }
-            elementType("assignment", "Assignment") {
+            dataType("assignment", "Assignment") {
                 // assignment = rootVariable '=' expression ;
                 propertyDataTypeOf("rootVariable", "RootVariable", false, 0)
                 propertyDataTypeOf("expression", "Expression", false, 2)
             }
-            elementType("", "ExpressionStatement") {
+            dataType("", "ExpressionStatement") {
                 // expressionStatement = expression ;
                 propertyDataTypeOf("expression", "Expression", false, 0)
             }
-            elementType("", "Expression") {
+            dataType("", "Expression") {
                 // expression
                 //   = rootVariable
                 //   | literalExpression
@@ -166,26 +166,26 @@ grammar Mscript {
                 //   ;
                 subTypes("RootVariable", "LiteralExpression", "Matrix", "FunctionCallOrIndex", "PrefixExpression", "InfixExpression", "GroupExpression")
             }
-            elementType("", "GroupExpression") {
+            dataType("", "GroupExpression") {
                 // groupExpression = '(' expression ')' ;
                 //superType("expression")
                 propertyDataTypeOf("expression", "Expression", false, 1)
             }
-            elementType("", "FunctionCallOrIndex") {
+            dataType("", "FunctionCallOrIndex") {
                 // functionCall = NAME '(' argumentList ')' ;
                 //superType("expression")
                 propertyPrimitiveType("name", "String", false, 0)
                 propertyListSeparatedTypeOf("argumentList", "Argument", "String", false, 2)
             }
-            elementType("", "ArgumentList") {
+            dataType("", "ArgumentList") {
                 // argumentList = [ argument / ',' ]* ;
                 propertyListSeparatedTypeOf("argument", "Argument", "String", false, 0)
             }
-            elementType("", "Argument") {
+            dataType("", "Argument") {
                 // argument = expression | colonOperator ;
                 subTypes("Expression", "ColonOperator")
             }
-            elementType("", "PrefixExpression") {
+            dataType("", "PrefixExpression") {
                 // prefixExpression = prefixOperator expression ;
                 propertyPrimitiveType("prefixOperator", "String", false, 0)
                 propertyDataTypeOf("expression", "Expression", false, 1)
@@ -195,7 +195,7 @@ grammar Mscript {
             // prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
-            elementType("", "InfixExpression") {
+            dataType("", "InfixExpression") {
                 // infixExpression =  [ expression / infixOperator ]2+ ;
                 propertyListSeparatedTypeOf("expression", "Expression", "String", false, 0)
             }
@@ -209,14 +209,14 @@ grammar Mscript {
             //        ;
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
-            elementType("", "ColonOperator") {
+            dataType("", "ColonOperator") {
                 propertyPrimitiveType("colon", "String", false, 0)
             }
-            elementType("", "Matrix") {
+            dataType("", "Matrix") {
                 // matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
                 propertyListSeparatedTypeOf("row", "Row", "String", false, 1)
             }
-            elementType("", "Row") {
+            dataType("", "Row") {
                 // row = expression (','? expression)* ;
                 propertyDataTypeOf("expression", "Expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
@@ -224,7 +224,7 @@ grammar Mscript {
                     propertyDataTypeOf("expression", "Expression", false, 1)
                 }
             }
-            elementType("", "LiteralExpression") {
+            dataType("", "LiteralExpression") {
                 propertyPrimitiveType("literalValue", "String", false, 0)
             }
             stringTypeFor("LiteralValue")
@@ -237,7 +237,7 @@ grammar Mscript {
             //      ;
             //    propertyUnnamedPrimitiveType(PrimitiveType.ANY, false, 0)
             //}
-            elementType("", "RootVariable") {
+            dataType("", "RootVariable") {
                 // rootVariable = NAME ;
                 propertyPrimitiveType("name", "String", false, 0)
             }

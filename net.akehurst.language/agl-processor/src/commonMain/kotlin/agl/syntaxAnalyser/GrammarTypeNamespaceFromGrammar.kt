@@ -39,56 +39,32 @@ class GrammarTypeModelSimple {
             val goalRuleName = defaultGoalRuleName ?: grammar.grammarRule.first { it.isSkip.not() }.name
             val goalRule = grammar.findNonTerminalRule(goalRuleName) ?: error("Cannot find grammar rule '$goalRuleName'")
             val rootTypeName = configuration.typeNameFor(goalRule)
-            val ns = GrammarTypeNamespaceFromGrammar(grmrTypeModel, grammar, grammar, rootTypeName)
+            val ns = GrammarTypeNamespaceFromGrammar(grmrTypeModel, grammar, grammar)
             grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
             grmrTypeModel.addNamespace(ns)
             grmrTypeModel.resolveImports()
             return grmrTypeModel
         }
 
-//        fun createWithContextFrom(
-//            context: Grammar,
-//            grammar: Grammar,
-//            defaultGoalRuleName: String? = null,
-//            configuration: TypeModelFromGrammarConfiguration = GrammarTypeModelSimple.defaultConfiguration
-//        ): TypeModel {
-//            val grmrTypeModel = TypeModelSimple(grammar.name)
-//            val goalRuleName = defaultGoalRuleName ?: grammar.grammarRule.first { it.isSkip.not() }.name
-//            val goalRule = grammar.findNonTerminalRule(goalRuleName) ?: error("Cannot find grammar rule '$goalRuleName'")
-//            val rootTypeName = configuration.typeNameFor(goalRule)
-//            val ns = GrammarTypeNamespaceFromGrammar(grmrTypeModel, context, grammar, rootTypeName)
-//            grmrTypeModel.addNamespace(ns)
-//            return grmrTypeModel
-//        }
-    }
+        fun addNamespaceFromGrammar() {
 
-//    fun findFirstByName(typeName: String): TypeDefinition {
-//        return this.namespaces.mapNotNull {
-//            it.declaration[typeName]
-//        }.firstOrNull()
-//            ?: throw KompositeException("TypeDeclaration $typeName not found in any namespace")
-//    }
+        }
+
+    }
 }
 
 class GrammarTypeNamespaceFromGrammar(
-    private val model: TypeModelSimple,
-    namespace: String,
-    name: String,
-    rootTypeName: String,
-    imports: List<String> = listOf(SimpleTypeModelStdLib.qualifiedName)
-) : GrammarTypeNamespaceAbstract("${namespace}.${name}", rootTypeName, imports) {
-    //constructor(grammar: Grammar, configuration: TypeModelFromGrammarConfiguration? = defaultConfiguration) : this(listOf(grammar), configuration)
+    override val qualifiedName: String,
+    override val importsStr: MutableList<String> = mutableListOf(SimpleTypeModelStdLib.qualifiedName)
+) : GrammarTypeNamespaceAbstract() {
     constructor(
-        model: TypeModelSimple,
-        context: Grammar,
-        grammar: Grammar,
-        rootTypeName: String,
+        model: TypeModelSimple, context: Grammar, grammar: Grammar,
         configuration: TypeModelFromGrammarConfiguration? = GrammarTypeModelSimple.defaultConfiguration
-    )
-            : this(model, grammar.namespace.qualifiedName, grammar.name, rootTypeName) {
+    ) : this("${grammar.namespace.qualifiedName}.${grammar.name}") {
         this.contextGrammar = context
         this._configuration = configuration
         this.grammar = grammar
+        this.model = model
         grammar.allResolvedGrammarRule
             .filter { it.isSkip.not() }
             .forEach { typeForGrammarRule(it) }
@@ -116,6 +92,7 @@ class GrammarTypeNamespaceFromGrammar(
     private val _uniquePropertyNames = mutableMapOf<Pair<StructuredType, String>, Int>()
     private var _configuration: TypeModelFromGrammarConfiguration? = null
 
+    private lateinit var model: TypeModelSimple
     private lateinit var contextGrammar: Grammar
 
     // temp var - changes for each Grammar processed
@@ -141,7 +118,6 @@ class GrammarTypeNamespaceFromGrammar(
             model = model,
             context = this.contextGrammar,
             grammar = ruleItem.embeddedGrammarReference.resolved!!,
-            rootTypeName = ruleItem.embeddedGoalName,
             configuration = this._configuration
         ) //TODO: configuration
         model.addNamespace(embTm)

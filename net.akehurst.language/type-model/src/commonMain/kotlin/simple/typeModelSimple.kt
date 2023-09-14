@@ -19,7 +19,11 @@ package net.akehurst.language.typemodel.simple
 
 import net.akehurst.language.typemodel.api.*
 
-object SimpleTypeModelStdLib : TypeNamespaceAbstract("std", emptyList()) {
+object SimpleTypeModelStdLib : TypeNamespaceAbstract() {
+
+    override val qualifiedName: String = "std"
+    override val importsStr: MutableList<String> = mutableListOf()
+
     val AnyType: TypeDefinition = object : TypeDefinitionSimpleAbstract() {
         override val namespace: TypeNamespace get() = this@SimpleTypeModelStdLib
         override val name: String = "\$Any"
@@ -108,19 +112,14 @@ abstract class TypeModelSimpleAbstract(
 
 class TypeInstanceSimple(
     var namespace: TypeNamespace?,
-    optionalType: TypeDefinition?,
-    optionalName: String?,
+    val typeName: String,
     override val typeArguments: List<TypeInstance>,
     override val isNullable: Boolean
 ) : TypeInstance {
 
     override val type: TypeDefinition by lazy {
-        optionalType
-            ?: optionalName?.let {
-                val ns = namespace ?: error("Cannot resolve TypeDefinition '$optionalName', namespace is not set")
-                ns.findTypeNamed(optionalName) ?: error("Cannot resolve TypeDefinition '$optionalName', not found in namespace '${ns.qualifiedName}'. Is an import needed?")
-            }
-            ?: error("TypeDefinition '$optionalName' not found in context of namespace '${namespace?.qualifiedName}'")
+        val ns = namespace ?: error("Cannot resolve TypeDefinition '$typeName', namespace is not set")
+        ns.findTypeNamed(typeName) ?: error("Cannot resolve TypeDefinition '$typeName', not found in namespace '${ns.qualifiedName}'. Is an import needed?")
     }
 
     override fun notNullable() = this.type.instance(typeArguments, false)
@@ -161,24 +160,21 @@ class TypeInstanceSimple(
 }
 
 class TypeNamespaceSimple(
-    qualifiedName: String,
-    imports: List<String>
-) : TypeNamespaceAbstract(qualifiedName, imports) {
+    override val qualifiedName: String,
+    override val importsStr: MutableList<String>
+) : TypeNamespaceAbstract() {
 
 }
 
-abstract class TypeNamespaceAbstract(
-    override val qualifiedName: String,
-    private var importsStr: List<String>
-) : TypeNamespace {
+abstract class TypeNamespaceAbstract() : TypeNamespace {
 
     private var _nextUnnamedSuperTypeTypeId = 0
     private val _unnamedSuperTypes = hashMapOf<List<TypeInstance>, UnnamedSuperTypeType>()
 
     private var _imports: List<TypeNamespace>? = null
 
-    //private var _nextTupleTypeId = 0
-    //private val _unnamedTupleTypes = hashMapOf<List<TypeInstance>, TupleType>()
+    abstract override val qualifiedName: String
+    abstract val importsStr: MutableList<String> //needs to be public to support serialisation
 
     override val imports get() = _imports ?: emptyList()// error("imported namespaces need to be resolved with a call to resolveImports() on the TypeModel")
 
@@ -199,7 +195,7 @@ abstract class TypeNamespaceAbstract(
     }
 
     fun addImport(qualifiedName: String) {
-        this.importsStr += qualifiedName
+        this.importsStr.add(qualifiedName)
     }
 
     fun addDeclaration(decl: TypeDefinition) {
@@ -305,7 +301,7 @@ abstract class TypeDefinitionSimpleAbstract() : TypeDefinition {
      */
     override var metaInfo = mutableMapOf<String, String>()
 
-    override fun instance(arguments: List<TypeInstance>, nullable: Boolean): TypeInstance = TypeInstanceSimple(namespace, this, null, arguments, nullable)
+    override fun instance(arguments: List<TypeInstance>, nullable: Boolean): TypeInstance = TypeInstanceSimple(namespace, this.name, arguments, nullable)
 
     override fun asString(context: TypeNamespace): String = signature(context, 0)
 }
@@ -522,7 +518,7 @@ class CollectionTypeSimple(
     override var typeParameters: List<String> = mutableListOf<String>()
 ) : StructuredTypeSimpleAbstract(), CollectionType {
 
-    override val supertypes: Set<DataType> = mutableSetOf<DataType>()
+    override val supertypes: Set<CollectionType> = mutableSetOf<CollectionType>()
 
     override val isArray: Boolean get() = name == "Array"
     override val isList: Boolean get() = name == "List"
@@ -541,7 +537,7 @@ class CollectionTypeSimple(
 
 }
 
-private class PropertyDeclarationSimple(
+class PropertyDeclarationSimple(
     override val owner: StructuredType,
     override val name: String,
     override val typeInstance: TypeInstance,

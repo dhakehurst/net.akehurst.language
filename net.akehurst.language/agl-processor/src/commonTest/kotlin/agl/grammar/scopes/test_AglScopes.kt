@@ -39,61 +39,61 @@ class test_AglScopes {
         val actual = aglProc.typeModel
         val expected = grammarTypeModel("net.akehurst.language.agl", "AglScopes", "Declarations") {
             // declarations = rootIdentifiables scopes references?
-            elementType("declarations", "Declarations") {
+            dataType("declarations", "Declarations") {
                 propertyListTypeOf("rootIdentifiables", "Identifiable", false, 0)
                 propertyListTypeOf("scopes", "Scope", false, 1)
                 propertyListTypeOf("references", "ReferenceDefinition", true, 2)
             }
             // rootIdentifiables = identifiable*
-            elementType("rootIdentifiables", "RootIdentifiables") {
+            dataType("rootIdentifiables", "RootIdentifiables") {
                 propertyListTypeOf("identifiables", "Identifiable", false, 0)
             }
             // scopes = scope*
-            elementType("scopes", "Scope") {
+            dataType("scopes", "Scope") {
                 propertyListTypeOf("scope", "Scope", false, 0)
             }
             // scope = 'scope' typeReference '{' identifiables '}
-            elementType("scope", "Scope") {
+            dataType("scope", "Scope") {
                 propertyDataTypeOf("typeReference", "TypeReference", false, 0)
                 propertyListTypeOf("identifiables", "Identifiable", false, 1)
             }
             // identifiables = identifiable*
-            elementType("identifiables", "Identifiable") {
+            dataType("identifiables", "Identifiable") {
                 propertyListTypeOf("identifiable", "Identifiable", false, 0)
             }
             // identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
-            elementType("identifiable", "Identifiable") {
+            dataType("identifiable", "Identifiable") {
                 propertyDataTypeOf("typeReference", "TypeReference", false, 0)
                 propertyPrimitiveType("propertyReferenceOrNothing", "String", false, 1)
             }
             // references = 'references' '{' referenceDefinitions '}'
-            elementType("references", "References") {
+            dataType("references", "References") {
                 propertyListTypeOf("referenceDefinitions", "ReferenceDefinition", false, 1)
             }
             // referenceDefinitions = referenceDefinition*
-            elementType("referenceDefinitions", "ReferenceDefinition") {
+            dataType("referenceDefinitions", "ReferenceDefinition") {
                 propertyListTypeOf("referenceDefinition", "ReferenceDefinition", false, 0)
             }
             // referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
-            elementType("referenceDefinition", "ReferenceDefinition") {
+            dataType("referenceDefinition", "ReferenceDefinition") {
                 propertyDataTypeOf("typeReference", "TypeReference", false, 0)
                 propertyDataTypeOf("propertyReference", "PropertyReference", false, 1)
                 propertyListTypeOf("typeReferences", "TypeReference", false, 2)
             }
             // typeReferences = [typeReferences / '|']+
-            elementType("typeReferences", "TypeReference") {
+            dataType("typeReferences", "TypeReference") {
                 propertyListSeparatedTypeOf("typeReference", "TypeReference", "String", false, 0)
             }
             // propertyReferenceOrNothing = '§nothing' | propertyReference
-            elementType("propertyReferenceOrNothing", "PropertyReferenceOrNothing") {
+            dataType("propertyReferenceOrNothing", "PropertyReferenceOrNothing") {
 
             }
             // typeReference = IDENTIFIER     // same as grammar rule name
-            elementType("typeReference", "TypeReference") {
+            dataType("typeReference", "TypeReference") {
                 propertyPrimitiveType("identifier", "String", false, 0)
             }
             // propertyReference = IDENTIFIER // same as grammar rule name
-            elementType("propertyReference", "PropertyReference") {
+            dataType("propertyReference", "PropertyReference") {
                 propertyPrimitiveType("identifier", "String", false, 0)
             }
             // leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*"

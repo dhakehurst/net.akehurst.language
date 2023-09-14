@@ -60,3 +60,7 @@ kotlin {
         }
     }
 }
+
+tasks.withType<PublishToMavenLocal> {
+    onlyIf { false }
+}

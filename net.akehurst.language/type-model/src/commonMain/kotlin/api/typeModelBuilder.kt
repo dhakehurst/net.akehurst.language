@@ -39,7 +39,7 @@ class TypeModelBuilder(
 ) {
     val _model = TypeModelSimple(name)
 
-    fun namespace(qualifiedName: String, imports: List<String> = listOf(SimpleTypeModelStdLib.qualifiedName), init: TypeNamespaceBuilder.() -> Unit): TypeNamespace {
+    fun namespace(qualifiedName: String, imports: MutableList<String> = mutableListOf(SimpleTypeModelStdLib.qualifiedName), init: TypeNamespaceBuilder.() -> Unit): TypeNamespace {
         val b = TypeNamespaceBuilder(qualifiedName, imports)
         b.init()
         val ns = b.build()
@@ -55,7 +55,7 @@ class TypeModelBuilder(
 @TypeModelDslMarker
 class TypeNamespaceBuilder(
     val qualifiedName: String,
-    imports: List<String>
+    imports: MutableList<String>
 ) {
 
     private val _namespace = TypeNamespaceSimple(qualifiedName, imports)
@@ -142,14 +142,14 @@ abstract class StructuredTypeBuilder(
         val tab = TypeArgumentBuilder(_namespace)
         tab.init()
         val btargs = tab.build()
-        val atargs = typeArgs.map { TypeInstanceSimple(_namespace, null, it, emptyList(), false) }
+        val atargs = typeArgs.map { TypeInstanceSimple(_namespace, it, emptyList(), false) }
         val targs = if (btargs.isEmpty()) atargs else btargs
-        val ti = TypeInstanceSimple(_namespace, null, typeName, targs, isNullable)
+        val ti = TypeInstanceSimple(_namespace, typeName, targs, isNullable)
         return _structuredType.appendProperty(propertyName, ti, characteristics)
     }
 
     fun propertyPrimitiveType(propertyName: String, typeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
-        property(propertyName, TypeInstanceSimple(this._namespace, null, typeName, emptyList(), isNullable), childIndex)
+        property(propertyName, TypeInstanceSimple(this._namespace, typeName, emptyList(), isNullable), childIndex)
 
     fun propertyListTypeOf(propertyName: String, dataTypeName: String, nullable: Boolean, childIndex: Int): PropertyDeclaration =
         propertyListType(propertyName, nullable, childIndex) {
@@ -277,15 +277,15 @@ class TypeUsageReferenceBuilder(
     private val _args = mutableListOf<TypeInstance>()
 
     fun primitiveRef(typeName: String) {
-        _args.add(TypeInstanceSimple(_namespace, null, typeName, emptyList(), nullable))
+        _args.add(TypeInstanceSimple(_namespace, typeName, emptyList(), nullable))
     }
 
     fun elementRef(typeName: String) {
-        _args.add(TypeInstanceSimple(_namespace, null, typeName, emptyList(), nullable))
+        _args.add(TypeInstanceSimple(_namespace, typeName, emptyList(), nullable))
     }
 
     fun unnamedSuperTypeOf(vararg subtypeNames: String) {
-        val subtypes = subtypeNames.map { TypeInstanceSimple(_namespace, null, it, emptyList(), false) }
+        val subtypes = subtypeNames.map { TypeInstanceSimple(_namespace, it, emptyList(), false) }
         val t = _namespace.createUnnamedSuperTypeType(subtypes)
         _args.add(t.instance(emptyList(), nullable))
     }
@@ -304,7 +304,7 @@ class TypeArgumentBuilder(
         val tab = TypeArgumentBuilder(_namespace)
         tab.typeArguments()
         val typeArgs = tab.build()
-        val tref = TypeInstanceSimple(_namespace, null, qualifiedTypeName, typeArgs, false)
+        val tref = TypeInstanceSimple(_namespace, qualifiedTypeName, typeArgs, false)
         list.add(tref)
         return tref
     }
@@ -323,12 +323,12 @@ class SubtypeListBuilder(
     val _subtypeList = mutableListOf<TypeInstance>()
 
     fun primitiveRef(typeName: String) {
-        val ti = TypeInstanceSimple(_namespace, null, typeName, emptyList(), false)
+        val ti = TypeInstanceSimple(_namespace, typeName, emptyList(), false)
         _subtypeList.add(ti)
     }
 
     fun elementRef(elementTypeName: String) {
-        val ti = TypeInstanceSimple(_namespace, null, elementTypeName, emptyList(), false)
+        val ti = TypeInstanceSimple(_namespace, elementTypeName, emptyList(), false)
         _subtypeList.add(ti)
     }
 

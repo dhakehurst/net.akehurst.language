@@ -80,34 +80,34 @@ class test_SyntaxAnalyserSimple_datatypes {
         val actual = processor.typeModel
         val expected = grammarTypeModel("test.Test", "Test", "Unit") {
             //unit = declaration* ;
-            elementType("unit", "Unit") {
+            dataType("unit", "Unit") {
                 propertyListTypeOf("declaration", "Declaration", false, 0)
             }
             // declaration = datatype | primitive ;
-            elementType("declaration", "Declaration") {
+            dataType("declaration", "Declaration") {
                 subTypes("Datatype", "Primitive")
             }
             // primitive = 'primitive' ID ;
-            elementType("primitive", "Primitive") {
+            dataType("primitive", "Primitive") {
                 propertyPrimitiveType("id", "String", false, 1)
             }
             // datatype = 'datatype' ID '{' property* '}' ;
-            elementType("datatype", "Datatype") {
+            dataType("datatype", "Datatype") {
                 propertyPrimitiveType("id", "String", false, 1)
                 propertyListTypeOf("property", "Property", false, 3)
             }
             // property = ID ':' typeReference ;
-            elementType("property", "Property") {
+            dataType("property", "Property") {
                 propertyPrimitiveType("id", "String", false, 0)
                 propertyDataTypeOf("typeReference", "TypeReference", false, 2)
             }
             // typeReference = type typeArguments? ;
-            elementType("typeReference", "TypeReference") {
+            dataType("typeReference", "TypeReference") {
                 propertyPrimitiveType("type", "String", false, 0)
                 propertyDataTypeOf("typeArguments", "TypeArguments", true, 1)
             }
             // typeArguments = '<' [typeReference / ',']+ '>' ;
-            elementType("typeArguments", "TypeArguments") {
+            dataType("typeArguments", "TypeArguments") {
                 propertyListTypeOf("typeReference", "TypeReference", false, 1)
             }
         }

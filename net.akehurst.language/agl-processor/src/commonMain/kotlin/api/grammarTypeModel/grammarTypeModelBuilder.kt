@@ -30,7 +30,7 @@ fun grammarTypeModel(
     init: GrammarTypeModelBuilder.() -> Unit
 ): TypeModel {
     val model = TypeModelSimple(name)
-    val b = GrammarTypeModelBuilder(namespaceQualifiedName, rootTypeName, imports.map { it.qualifiedName })
+    val b = GrammarTypeModelBuilder(namespaceQualifiedName, imports.map { it.qualifiedName }.toMutableList())
     b.init()
     val ns = b.build()
     imports.forEach { model.addNamespace(it) }
@@ -42,10 +42,9 @@ fun grammarTypeModel(
 @TypeModelDslMarker
 class GrammarTypeModelBuilder(
     namespaceQualifiedName: String,
-    rootTypeName: String,
-    imports: List<String>
+    imports: MutableList<String>
 ) {
-    private val _namespace = GrammarTypeNamespaceSimple(namespaceQualifiedName, rootTypeName, imports)
+    private val _namespace = GrammarTypeNamespaceSimple(namespaceQualifiedName, imports)
     private val _typeReferences = mutableListOf<TypeUsageReferenceBuilder>()
 
     val StringType: PrimitiveType get() = SimpleTypeModelStdLib.String.type as PrimitiveType
@@ -84,7 +83,7 @@ class GrammarTypeModelBuilder(
         listSeparatedTypeFor(name, itemType, separatorType)
     }
 
-    fun elementType(grammarRuleName: String, typeName: String, init: DataTypeBuilder.() -> Unit = {}): DataType {
+    fun dataType(grammarRuleName: String, typeName: String, init: DataTypeBuilder.() -> Unit = {}): DataType {
         val b = DataTypeBuilder(_namespace, _typeReferences, typeName)
         b.init()
         val et = b.build()
