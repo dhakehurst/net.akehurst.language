@@ -24,7 +24,7 @@ annotation class TypeModelDslMarker
 
 fun typeModel(
     name: String,
-    rootTypeName: String? = null,
+    resolveImports: Boolean,
     init: TypeModelBuilder.() -> Unit
 ): TypeModel {
     val b = TypeModelBuilder(name)
@@ -48,6 +48,8 @@ class TypeModelBuilder(
     }
 
     fun build(): TypeModel {
+        _model.addNamespace(SimpleTypeModelStdLib)
+        _model.resolveImports()
         return _model
     }
 }
@@ -227,7 +229,7 @@ class TupleTypeBuilder(
     _typeReferences: MutableList<TypeUsageReferenceBuilder>
 ) : StructuredTypeBuilder(_namespace, _typeReferences) {
 
-    override val _structuredType = TupleTypeSimple(_namespace)
+    override val _structuredType = _namespace.createTupleType()
 
     fun build(): TupleType {
         return _structuredType
@@ -250,15 +252,13 @@ class DataTypeBuilder(
 
     fun superTypes(vararg superTypes: String) {
         superTypes.forEach {
-            val st = _namespace.findOrCreateDataTypeNamed(it)
-            _elementType.addSuperType(st as DataType)
+            _elementType.addSupertype(it)
         }
     }
 
     fun subTypes(vararg elementTypeName: String) {
         elementTypeName.forEach {
-            val st = _namespace.findOrCreateDataTypeNamed(it) as DataType
-            st.addSuperType(_elementType)
+            _elementType.addSubtype(it)
         }
     }
 

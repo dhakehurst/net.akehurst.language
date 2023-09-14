@@ -36,7 +36,6 @@ import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.simple.TupleTypeSimple
 
 data class NodeTypes(
     val forNode: TypeInstance,
@@ -325,7 +324,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
         return when {
             parentType.subtypes.isNotEmpty() -> {
                 val t = parentType.subtypes[nodeInfo.parentAlt.option]
-                return t.instance()
+                return t
             }
 
             else -> {
@@ -340,7 +339,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
         return when {
             type is DataType && type.subtypes.isNotEmpty() -> {
                 val t = type.subtypes[nodeInfo.alt.option]
-                t.instance()
+                t
             }
 
             else -> typeUse
@@ -670,7 +669,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
     }
 
     private fun createTupleFrom(sentence: Sentence, type: TupleType, path: AsmElementPath, childData: ChildData): AsmElementSimple {
-        val el = createAsmElement(path, TupleTypeSimple.INSTANCE_NAME) // TODO: should have a createTuple method
+        val el = createAsmElement(path, SimpleTypeModelStdLib.TupleType.name) // TODO: should have a createTuple method
         val v = childData.value
         for (propDecl in type.property.values) {
             val propType = propDecl.typeInstance

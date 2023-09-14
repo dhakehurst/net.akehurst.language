@@ -24,7 +24,7 @@ class test_typeModelBuilder {
 
     @Test
     fun test() {
-        val tm = typeModel("name") {
+        val tm = typeModel("name", true) {
             namespace("ns") {
                 dataType("Person") {
                     propertyPrimitiveType("name", "String", false, 0)

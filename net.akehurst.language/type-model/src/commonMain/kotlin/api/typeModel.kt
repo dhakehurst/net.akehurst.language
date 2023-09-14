@@ -86,6 +86,8 @@ interface TypeNamespace {
 
     fun createUnnamedSuperTypeType(subtypes: List<TypeInstance>): UnnamedSuperTypeType
 
+    fun createTupleType(): TupleType
+
     fun asString(): String
 }
 
@@ -146,23 +148,23 @@ interface TupleType : StructuredType {
 
 interface DataType : StructuredType {
 
-    val supertypes: List<DataType>
+    val supertypes: List<TypeInstance>
 
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
-    val subtypes: MutableList<DataType>
+    val subtypes: MutableList<TypeInstance>
 
     /**
      * transitive closure of supertypes
      */
-    val allSuperTypes: List<DataType>
+    val allSuperTypes: List<TypeInstance>
 
     /**
      * all properties from this and transitive closure of supertypes
      */
     val allProperty: Map<String, PropertyDeclaration>
 
-    fun addSuperType(type: DataType)
-
+    fun addSupertype(qualifiedTypeName: String)
+    fun addSubtype(qualifiedTypeName: String)
 }
 
 /**

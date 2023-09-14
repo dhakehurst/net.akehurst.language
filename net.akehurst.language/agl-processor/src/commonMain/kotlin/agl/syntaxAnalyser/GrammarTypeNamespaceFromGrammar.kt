@@ -20,9 +20,7 @@ package net.akehurst.language.agl.syntaxAnalyser
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceAbstract
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.typemodel.api.*
-import net.akehurst.language.typemodel.simple.DataTypeSimple
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
-import net.akehurst.language.typemodel.simple.TupleTypeSimple
 import net.akehurst.language.typemodel.simple.TypeModelSimple
 
 class GrammarTypeModelSimple {
@@ -65,15 +63,22 @@ class GrammarTypeNamespaceFromGrammar(
         this._configuration = configuration
         this.grammar = grammar
         this.model = model
-        grammar.allResolvedGrammarRule
+        val nonSkipRules = grammar.allResolvedGrammarRule
             .filter { it.isSkip.not() }
-            .forEach { typeForGrammarRule(it) }
+        //create DataType for each Rule
+        nonSkipRules.forEach {
+            //findOrCreateElementType(it) {}
+        }
+        //populate rule type content
+        nonSkipRules.forEach {
+            typeForGrammarRule(it)
+        }
         this._ruleToType.entries.forEach {
             val key = it.key
             val value = it.value
             super.allRuleNameToType[key] = value
             //if (value.type is DataType) {
-            super.allTypesByName[value.type.name] = value.type
+            // super.allTypesByName[value.type.name] = value.type
             //}
         }
     }
@@ -103,7 +108,7 @@ class GrammarTypeNamespaceFromGrammar(
         val existing = _ruleToType[ruleName]
         return if (null == existing) {
             val elTypeName = _configuration?.typeNameFor(rule) ?: ruleName
-            val et = DataTypeSimple(this, elTypeName)
+            val et = findOrCreateDataTypeNamed(elTypeName) // DataTypeSimple(this, elTypeName)
             val tt = et.instance()
             _ruleToType[ruleName] = tt
             ifCreate.invoke(et)
@@ -255,7 +260,7 @@ class GrammarTypeNamespaceFromGrammar(
     }
 
     private fun tupleTypeFor(ruleItem: RuleItem, items: List<RuleItem>): TypeInstance {
-        val concatType = TupleTypeSimple(this)
+        val concatType = this.createTupleType()
         val t = concatType.instance()
         this._typeForRuleItem[ruleItem] = t
         items.forEachIndexed { idx, it -> createPropertyDeclaration(concatType, it, idx) }
@@ -289,7 +294,10 @@ class GrammarTypeNamespaceFromGrammar(
             subtypes.all { it.type == SimpleTypeModelStdLib.NothingType } -> SimpleTypeModelStdLib.NothingType.instance(emptyList(), subtypes.any { it.isNullable })
             subtypes.all { it.type is PrimitiveType } -> SimpleTypeModelStdLib.String
             subtypes.all { it.type is DataType } -> findOrCreateElementType(choiceRule) { newType ->
-                subtypes.forEach { (it.type as DataType).addSuperType(newType) }
+                subtypes.forEach {
+                    (it.type as DataType).addSupertype(newType.name)
+                    newType.addSubtype(it.type.name)
+                }
             }
 
             subtypes.all { it.type == SimpleTypeModelStdLib.List } -> { //=== PrimitiveType.LIST } -> {

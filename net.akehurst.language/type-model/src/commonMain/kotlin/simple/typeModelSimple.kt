@@ -24,24 +24,11 @@ object SimpleTypeModelStdLib : TypeNamespaceAbstract() {
     override val qualifiedName: String = "std"
     override val importsStr: MutableList<String> = mutableListOf()
 
-    val AnyType: TypeDefinition = object : TypeDefinitionSimpleAbstract() {
-        override val namespace: TypeNamespace get() = this@SimpleTypeModelStdLib
-        override val name: String = "\$Any"
-        override fun signature(context: TypeNamespace?, currentDepth: Int): String = name
-
-        //TODO: fun instance(arguments: List<TypeInstance> = emptyList(), nullable: Boolean = false): TypeInstance = TypeInstance.ofType(this, arguments, nullable)
-        override fun hashCode(): Int = name.hashCode()
-        override fun equals(other: Any?): Boolean = this === other
-        override fun toString(): String = name
-    }
-    val NothingType: TypeDefinition = object : TypeDefinitionSimpleAbstract() {
-        override val namespace: TypeNamespace get() = this@SimpleTypeModelStdLib
-        override val name: String = "\$Nothing"
-        override fun signature(context: TypeNamespace?, currentDepth: Int): String = name
-        override fun hashCode(): Int = name.hashCode()
-        override fun equals(other: Any?): Boolean = this === other
-        override fun toString(): String = name
-    }
+    //TODO: need some other kinds of type for these really
+    val AnyType = super.findOrCreateSpecialTypeNamed("\$Any")
+    val NothingType = super.findOrCreateSpecialTypeNamed("\$Nothing")
+    val TupleType = super.findOrCreateSpecialTypeNamed("\$Tuple")
+    val UnnamedSuperTypeType = super.findOrCreateSpecialTypeNamed("\$UnnamedSuperType")
 
     val String = super.findOrCreatePrimitiveTypeNamed("String").instance()
     val Boolean = super.findOrCreatePrimitiveTypeNamed("Boolean").instance()
@@ -119,7 +106,8 @@ class TypeInstanceSimple(
 
     override val type: TypeDefinition by lazy {
         val ns = namespace ?: error("Cannot resolve TypeDefinition '$typeName', namespace is not set")
-        ns.findTypeNamed(typeName) ?: error("Cannot resolve TypeDefinition '$typeName', not found in namespace '${ns.qualifiedName}'. Is an import needed?")
+        ns.findTypeNamed(typeName)
+            ?: error("Cannot resolve TypeDefinition '$typeName', not found in namespace '${ns.qualifiedName}'. Is an import needed?")
     }
 
     override fun notNullable() = this.type.instance(typeArguments, false)
@@ -221,6 +209,17 @@ abstract class TypeNamespaceAbstract() : TypeNamespace {
 
     override fun findTypeNamed(typeName: String): TypeDefinition? = findOwnedTypeNamed(typeName) ?: imports.firstNotNullOfOrNull { it.findTypeNamed(typeName) }
 
+    fun findOrCreateSpecialTypeNamed(typeName: String): SpecialTypeSimple {
+        val existing = findTypeNamed(typeName) ?: imports.firstNotNullOfOrNull { it.findOrCreatePrimitiveTypeNamed(typeName) }
+        return if (null == existing) {
+            val t = SpecialTypeSimple(this, typeName)
+            this.allTypesByName[typeName] = t
+            t
+        } else {
+            existing as SpecialTypeSimple
+        }
+    }
+
     override fun findOrCreatePrimitiveTypeNamed(typeName: String): PrimitiveType {
         val existing = findTypeNamed(typeName) ?: imports.firstNotNullOfOrNull { it.findOrCreatePrimitiveTypeNamed(typeName) }
         return if (null == existing) {
@@ -257,12 +256,16 @@ abstract class TypeNamespaceAbstract() : TypeNamespace {
     override fun createUnnamedSuperTypeType(subtypes: List<TypeInstance>): UnnamedSuperTypeType {
         val existing = _unnamedSuperTypes[subtypes]
         return if (null == existing) {
-            val t = UnnamedSuperTypeTypeSimple(this, _nextUnnamedSuperTypeTypeId++, subtypes)
+            val t = UnnamedSuperTypeTypeSimple(SimpleTypeModelStdLib, _nextUnnamedSuperTypeTypeId++, subtypes)
             _unnamedSuperTypes[subtypes] = t
             t
         } else {
             existing
         }
+    }
+
+    override fun createTupleType(): TupleType {
+        return TupleTypeSimple(SimpleTypeModelStdLib)
     }
 
     override fun asString(): String {
@@ -284,7 +287,7 @@ $types
         else -> this.qualifiedName == other.qualifiedName
     }
 
-    override fun toString(): String = "$qualifiedName"
+    override fun toString(): String = qualifiedName
 }
 
 abstract class TypeDefinitionSimpleAbstract() : TypeDefinition {
@@ -304,6 +307,30 @@ abstract class TypeDefinitionSimpleAbstract() : TypeDefinition {
     override fun instance(arguments: List<TypeInstance>, nullable: Boolean): TypeInstance = TypeInstanceSimple(namespace, this.name, arguments, nullable)
 
     override fun asString(context: TypeNamespace): String = signature(context, 0)
+}
+
+class SpecialTypeSimple(
+    override val namespace: TypeNamespace,
+    override val name: String
+) : TypeDefinitionSimpleAbstract() {
+    override fun signature(context: TypeNamespace?, currentDepth: Int): String {
+        val core = when {
+            null == context -> qualifiedName
+            context == this.namespace -> name
+            context.imports.contains(this.namespace) -> name
+            else -> qualifiedName
+        }
+        return "special $core"
+    }
+
+    override fun hashCode(): Int = qualifiedName.hashCode()
+    override fun equals(other: Any?): Boolean = when {
+        other !is SpecialTypeSimple -> false
+        this.qualifiedName != other.qualifiedName -> false
+        else -> true
+    }
+
+    override fun toString(): String = qualifiedName
 }
 
 class PrimitiveTypeSimple(
@@ -362,12 +389,8 @@ class UnnamedSuperTypeTypeSimple(
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     override val subtypes: List<TypeInstance>
 ) : TypeDefinitionSimpleAbstract(), UnnamedSuperTypeType {
-    companion object {
-        const val INSTANCE_NAME = "UnnamedSuperType"
-    }
 
-
-    override val name: String = INSTANCE_NAME
+    override val name: String = SimpleTypeModelStdLib.UnnamedSuperTypeType.name
     override fun signature(context: TypeNamespace?, currentDepth: Int): String {
         val core = when {
             currentDepth >= maxDepth -> "..."
@@ -418,15 +441,12 @@ abstract class StructuredTypeSimpleAbstract : TypeDefinitionSimpleAbstract(), St
 class TupleTypeSimple(
     override val namespace: TypeNamespace,
 ) : StructuredTypeSimpleAbstract(), TupleType {
-    companion object {
-        const val INSTANCE_NAME = "\$Tuple"
-    }
 
     constructor(namespace: TypeNamespace, init: TupleType.() -> Unit) : this(namespace) {
         this.init()
     }
 
-    override val name: String = INSTANCE_NAME
+    override val name: String = SimpleTypeModelStdLib.TupleType.name
 
     override val entries get() = properties.values.map { Pair(it.name, it.typeInstance) }
 
@@ -455,17 +475,17 @@ class DataTypeSimple(
 
     override var typeParameters = mutableListOf<String>()
 
-    override val supertypes: List<DataType> = mutableListOf<DataType>()
+    override val supertypes: List<TypeInstance> = mutableListOf()
 
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
-    override val subtypes: MutableList<DataType> = mutableListOf<DataType>()
+    override val subtypes: MutableList<TypeInstance> = mutableListOf()
 
-    override val allSuperTypes: List<DataType>
-        get() = supertypes + supertypes.flatMap { it.supertypes }
+    override val allSuperTypes: List<TypeInstance>
+        get() = supertypes + supertypes.flatMap { (it.type as DataType).allSuperTypes }
 
     override val allProperty: Map<String, PropertyDeclaration>
         get() = supertypes.flatMap {
-            it.allProperty.values
+            (it.type as DataType).allProperty.values
         }.associateBy { it.name } + this.property
 
     override fun signature(context: TypeNamespace?, currentDepth: Int): String {
@@ -478,9 +498,15 @@ class DataTypeSimple(
         return "datatype $core"
     }
 
-    override fun addSuperType(type: DataType) {
-        (this.supertypes as MutableList).add(type)
-        (type.subtypes as MutableList).add(this)
+    override fun addSupertype(qualifiedTypeName: String) {
+        val ti = TypeInstanceSimple(namespace, qualifiedTypeName, emptyList(), false)
+        (this.supertypes as MutableList).add(ti)
+        //(type.subtypes as MutableList).add(this) //TODO: can we somehow add the reverse!
+    }
+
+    override fun addSubtype(qualifiedTypeName: String) {
+        val ti = TypeInstanceSimple(namespace, qualifiedTypeName, emptyList(), false)
+        (this.subtypes as MutableList).add(ti) //TODO: can we somehow add the reverse!
     }
 
     override fun asString(context: TypeNamespace): String {

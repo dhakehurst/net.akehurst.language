@@ -329,7 +329,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
         return when {
             parentType.subtypes.isNotEmpty() -> {
                 val t = parentType.subtypes[nodeInfo.parentAlt.option]
-                return t.instance()
+                return t
             }
 
             else -> {
@@ -344,7 +344,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
         return when {
             type is DataType && type.subtypes.isNotEmpty() -> {
                 val t = type.subtypes[nodeInfo.alt.option]
-                t.instance()
+                t
             }
 
             else -> typeUse

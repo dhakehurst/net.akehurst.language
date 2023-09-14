@@ -41,7 +41,7 @@ class test_AglFormat {
     @Test
     fun typeModel() {
         val actual = aglProc.typeModel
-        val expected = typeModel("", "AglFormat") {
+        val expected = typeModel("AglFormat", true) {
             namespace("net.akehurst.language.agl") {
                 //unit = ruleList ;
                 //ruleList = [formatRule]* ;
