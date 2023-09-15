@@ -22,47 +22,63 @@ import net.akehurst.language.api.grammar.*
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.simple.TypeModelSimple
+import net.akehurst.language.typemodel.simple.TypeNamespaceSimple
 
-class GrammarTypeModelSimple {
+object TypeModelFromGrammar {
 
-    companion object {
-        val defaultConfiguration = TypeModelFromGrammarConfigurationDefault()
+    val defaultConfiguration = TypeModelFromGrammarConfigurationDefault()
 
-        fun createFrom(
-            grammar: Grammar,
-            defaultGoalRuleName: String? = null,
-            configuration: TypeModelFromGrammarConfiguration = GrammarTypeModelSimple.defaultConfiguration
-        ): TypeModel {
-            val grmrTypeModel = TypeModelSimple(grammar.name)
-            val goalRuleName = defaultGoalRuleName ?: grammar.grammarRule.first { it.isSkip.not() }.name
-            val goalRule = grammar.findNonTerminalRule(goalRuleName) ?: error("Cannot find grammar rule '$goalRuleName'")
-            val rootTypeName = configuration.typeNameFor(goalRule)
-            val ns = GrammarTypeNamespaceFromGrammar(grmrTypeModel, grammar, grammar)
-            grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
-            grmrTypeModel.addNamespace(ns)
-            grmrTypeModel.resolveImports()
-            return grmrTypeModel
-        }
-
-        fun addNamespaceFromGrammar() {
-
-        }
-
+    fun create(
+        grammar: Grammar,
+        defaultGoalRuleName: String? = null,
+        configuration: TypeModelFromGrammarConfiguration = TypeModelFromGrammar.defaultConfiguration
+    ): TypeModel {
+        val grmrTypeModel = TypeModelSimple(grammar.name)
+        grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
+        val goalRuleName = defaultGoalRuleName ?: grammar.grammarRule.first { it.isSkip.not() }.name
+        val goalRule = grammar.findNonTerminalRule(goalRuleName) ?: error("Cannot find grammar rule '$goalRuleName'")
+        val ns = GrammarTypeNamespaceFromGrammar(grmrTypeModel, grammar, grammar)
+        grmrTypeModel.addNamespace(ns)
+        grmrTypeModel.resolveImports()
+        return grmrTypeModel
     }
+
+    fun addNamespaceFromGrammar(typeModel: TypeModel, grammar: Grammar) {
+        val namespaceFromGrammar = TypeNamespaceSimple(grammar.qualifiedName, listOf(SimpleTypeModelStdLib.qualifiedName))
+        /*        this.contextGrammar = context
+                this._configuration = configuration
+                this.grammar = grammar
+                this.model = typeModel
+                typeModel.addNamespace(this)
+                typeModel.resolveImports() //need to resolve std lib
+                val nonSkipRules = grammar.allResolvedGrammarRule
+                    .filter { it.isSkip.not() }
+                //populate rule type content
+                nonSkipRules.forEach {
+                    typeForGrammarRule(it)
+                }
+                this._ruleToType.entries.forEach {
+                    val key = it.key
+                    val value = it.value
+                    super.allRuleNameToType[key] = value
+                }*/
+    }
+
 }
 
 class GrammarTypeNamespaceFromGrammar(
     override val qualifiedName: String,
-    override val importsStr: MutableList<String> = mutableListOf(SimpleTypeModelStdLib.qualifiedName)
-) : GrammarTypeNamespaceAbstract() {
+    imports: List<String> = mutableListOf(SimpleTypeModelStdLib.qualifiedName)
+) : GrammarTypeNamespaceAbstract(imports) {
     constructor(
         model: TypeModelSimple, context: Grammar, grammar: Grammar,
-        configuration: TypeModelFromGrammarConfiguration? = GrammarTypeModelSimple.defaultConfiguration
+        configuration: TypeModelFromGrammarConfiguration? = TypeModelFromGrammar.defaultConfiguration
     ) : this("${grammar.namespace.qualifiedName}.${grammar.name}") {
         this.contextGrammar = context
         this._configuration = configuration
         this.grammar = grammar
         this.model = model
+        this.resolveImports(model) //need to resolve std lib
         val nonSkipRules = grammar.allResolvedGrammarRule
             .filter { it.isSkip.not() }
         //create DataType for each Rule

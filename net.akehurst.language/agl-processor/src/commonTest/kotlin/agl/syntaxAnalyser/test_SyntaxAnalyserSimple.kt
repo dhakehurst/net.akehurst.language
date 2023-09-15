@@ -279,9 +279,10 @@ class test_SyntaxAnalyserSimple {
         })
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
-            dataType("S", "S") {
-                subTypes("A", "B", "C")
-            }
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("x")
             dataType("A", "A") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyPrimitiveType("x", "String", false, 1)
@@ -293,6 +294,9 @@ class test_SyntaxAnalyserSimple {
             dataType("C", "C") {
                 propertyPrimitiveType("c", "String", false, 0)
                 propertyPrimitiveType("x", "String", false, 1)
+            }
+            dataType("S", "S") {
+                subtypes("A", "B", "C")
             }
         })
 
@@ -650,6 +654,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
             dataType("S", "S") {
                 propertyDataTypeOf("a", "A", true, 0)
             }
@@ -692,6 +697,8 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
+            stringTypeFor("b")
             dataType("S", "S") {
                 propertyPrimitiveType("b", "String", false, 0)
                 propertyDataTypeOf("a", "A", true, 1)
@@ -737,6 +744,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
             dataType("S", "S") {
                 propertyDataTypeOf("oA", "OA", false, 0)
             }
@@ -964,6 +972,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
             dataType("S", "S") {
                 propertyListTypeOf("a", "A", false, 0)
             }
@@ -1023,6 +1032,9 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
             dataType("S", "S") {
                 propertyPrimitiveType("b", "String", false, 0)
                 propertyListTypeOf("a", "A", false, 1)
@@ -1088,6 +1100,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
             dataType("S", "S") {
                 propertyListTypeOf("as", "String", false, 0)
             }
@@ -1145,20 +1158,22 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
+            stringTypeFor("b")
             dataType("S", "S") {
                 propertyListTypeOf("abs", "AB", false, 0)
             }
             dataType("abs", "Abs") {
                 propertyListTypeOf("ab", "AB", false, 0)
             }
-            dataType("AB", "AB") {
-                subTypes("A", "B")
-            }
             dataType("A", "A") {
                 propertyPrimitiveType("a", "String", false, 0)
             }
             dataType("B", "B") {
                 propertyPrimitiveType("b", "String", false, 0)
+            }
+            dataType("AB", "AB") {
+                subtypes("A", "B")
             }
         })
 
@@ -1507,20 +1522,22 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
+            stringTypeFor("b")
             dataType("S", "S") {
                 propertyListTypeOf("abs", "AB", false, 0)
             }
             dataType("abs", "Abs") {
                 propertyListTypeOf("ab", "AB", false, 0)
             }
-            dataType("AB", "AB") {
-                subTypes("A", "B")
-            }
             dataType("A", "A") {
                 propertyPrimitiveType("a", "String", false, 0)
             }
             dataType("B", "B") {
                 propertyPrimitiveType("b", "String", false, 0)
+            }
+            dataType("AB", "AB") {
+                subtypes("A", "B")
             }
         })
 
@@ -2169,6 +2186,9 @@ class test_SyntaxAnalyserSimple {
         })
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
             unnamedSuperTypeType("S") {
                 elementRef("BC")
                 listType(false) {
@@ -2292,6 +2312,11 @@ class test_SyntaxAnalyserSimple {
         })
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyUnnamedSuperType("\$choice", true, 1) {
@@ -2381,6 +2406,11 @@ class test_SyntaxAnalyserSimple {
         })
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
             unnamedSuperTypeType("S") {
                 tupleType {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -2454,6 +2484,11 @@ class test_SyntaxAnalyserSimple {
         })
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
             unnamedSuperTypeType("S") {
                 tupleType {
                     propertyTupleType("\$group", false, 0) {
@@ -2533,6 +2568,11 @@ class test_SyntaxAnalyserSimple {
         })
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
             unnamedSuperTypeType("S") {
                 tupleType {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -2597,6 +2637,11 @@ class test_SyntaxAnalyserSimple {
         })
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
             unnamedSuperTypeType("S") {
                 tupleType {
                     propertyPrimitiveType("a", "String", false, 0)
@@ -2666,6 +2711,13 @@ class test_SyntaxAnalyserSimple {
         })
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
+            stringTypeFor("x")
+            stringTypeFor("y")
             dataType("S", "S") {
                 propertyPrimitiveType("x", "String", false, 0)
                 propertyUnnamedSuperType("\$choice", false, 1) {
@@ -2755,6 +2807,11 @@ class test_SyntaxAnalyserSimple {
         })
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
             dataType("S", "S") {
                 propertyUnnamedSuperType("ch", false, 0) {
                     tupleType {
@@ -2838,6 +2895,11 @@ class test_SyntaxAnalyserSimple {
         })
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
             dataType("S", "S") {
                 propertyUnnamedSuperType("ch", false, 0) {
                     tupleType {
@@ -2925,6 +2987,13 @@ class test_SyntaxAnalyserSimple {
         })
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
+            stringTypeFor("x")
+            stringTypeFor("y")
             dataType("S", "S") {
                 propertyPrimitiveType("x", "String", false, 0)
                 propertyUnnamedSuperType("ch", false, 1) {
@@ -3018,6 +3087,13 @@ class test_SyntaxAnalyserSimple {
         })
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
+            stringTypeFor("x")
+            stringTypeFor("y")
             dataType("S", "S") {
                 propertyPrimitiveType("x", "String", false, 0)
                 propertyUnnamedSuperType("ch", false, 1) {
@@ -3473,6 +3549,7 @@ class test_SyntaxAnalyserSimple {
         val proc = testProc(grammarStr)
 
         checkTypeModel(proc, grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("NAME")
             // S = type ;
             dataType("S", "S") {
                 propertyDataTypeOf("type", "Type", false, 0)

@@ -25,10 +25,12 @@ import net.akehurst.language.typemodel.simple.TypeNamespaceAbstract
 
 class GrammarTypeNamespaceSimple(
     override val qualifiedName: String,
-    override val importsStr: MutableList<String>
-) : GrammarTypeNamespaceAbstract()
+    imports: List<String>
+) : GrammarTypeNamespaceAbstract(imports)
 
-abstract class GrammarTypeNamespaceAbstract() : TypeNamespaceAbstract(), GrammarTypeNamespace {
+abstract class GrammarTypeNamespaceAbstract(
+    imports: List<String>
+) : TypeNamespaceAbstract(imports), GrammarTypeNamespace {
 
     fun addTypeFor(grammarRuleName: String, typeUse: TypeInstance) {
         this.allRuleNameToType[grammarRuleName] = typeUse

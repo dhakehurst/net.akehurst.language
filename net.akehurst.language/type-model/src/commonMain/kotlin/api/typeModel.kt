@@ -49,7 +49,7 @@ interface TypeNamespace {
      * Things in these namespaces can be referenced non-qualified
      * ordered so that 'first' imported name takes priority
      */
-    val imports: List<TypeNamespace>
+    val imports: List<String>
 
     /**
      * TypeDefinition.name --> TypeDefinition
@@ -68,6 +68,8 @@ interface TypeNamespace {
 
     fun resolveImports(model: TypeModel)
 
+    fun isImported(qualifiedNamespaceName: String): Boolean
+
     /**
      * find type in this namespace with given name
      */
@@ -76,7 +78,7 @@ interface TypeNamespace {
     /**
      * find type in this namespace OR imports with given name
      */
-    fun findTypeNamed(typeName: String): TypeDefinition?
+    fun findTypeNamed(qualifiedOrImportedTypeName: String): TypeDefinition?
 
     fun findOrCreatePrimitiveTypeNamed(typeName: String): PrimitiveType
 
@@ -84,11 +86,16 @@ interface TypeNamespace {
 
     fun findOrCreateCollectionTypeNamed(typeName: String): CollectionType
 
+    fun createTypeInstance(qualifiedOrImportedTypeName: String, typeArguments: List<TypeInstance>, isNullable: Boolean): TypeInstance
+    fun createTupleTypeInstance(type: TupleType, arguments: List<TypeInstance>, nullable: Boolean): TypeInstance
+    fun createUnnamedSuperTypeTypeInstance(type: UnnamedSuperTypeType, arguments: List<TypeInstance>, nullable: Boolean): TypeInstance
+
     fun createUnnamedSuperTypeType(subtypes: List<TypeInstance>): UnnamedSuperTypeType
 
     fun createTupleType(): TupleType
 
     fun asString(): String
+
 }
 
 interface TypeInstance {

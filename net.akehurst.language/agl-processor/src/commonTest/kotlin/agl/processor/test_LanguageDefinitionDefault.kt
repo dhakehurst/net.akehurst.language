@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.agl.syntaxAnalyser.GrammarTypeModelSimple
+import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
@@ -95,7 +95,7 @@ class test_LanguageDefinitionDefault {
             Agl.configuration {
                 targetGrammarName(null)
                 defaultGoalRuleName(null)
-                typeModelResolver { ProcessResultDefault(GrammarTypeModelSimple.createFrom(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+                typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                 scopeModelResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                 syntaxAnalyserResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                 semanticAnalyserResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }

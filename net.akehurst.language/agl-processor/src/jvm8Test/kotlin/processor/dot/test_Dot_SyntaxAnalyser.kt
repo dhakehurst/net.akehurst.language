@@ -61,7 +61,7 @@ class test_Dot_SyntaxAnalyser {
             //      | subgraph
             //      ;
             dataType("stmt", "Stmt") {
-                subTypes("Node_stmt", "Edge_stmt", "Attr_stmt", "Subgraph")
+                subtypes("Node_stmt", "Edge_stmt", "Attr_stmt", "Subgraph")
             }
             // node_stmt = node_id attr_lists? ;
             dataType("node_stmt", "Node_stmt") {
@@ -87,7 +87,7 @@ class test_Dot_SyntaxAnalyser {
                 //   | infixExpression
                 //   | groupExpression
                 //   ;
-                subTypes("rootVariable", "literalExpression", "matrix", "functionCallOrIndex", "prefixExpression", "infixExpression", "groupExpression")
+                subtypes("rootVariable", "literalExpression", "matrix", "functionCallOrIndex", "prefixExpression", "infixExpression", "groupExpression")
             }
             dataType("", "groupExpression") {
                 // groupExpression = '(' expression ')' ;
@@ -104,7 +104,7 @@ class test_Dot_SyntaxAnalyser {
             }
             dataType("argument", "argument") {
                 // argument = expression | colonOperator ;
-                subTypes("expression", "colonOperator")
+                subtypes("expression", "colonOperator")
             }
             dataType("", "prefixExpression") {
                 // prefixExpression = prefixOperator expression ;

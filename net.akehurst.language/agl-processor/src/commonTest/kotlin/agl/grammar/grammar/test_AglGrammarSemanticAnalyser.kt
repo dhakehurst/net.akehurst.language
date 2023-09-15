@@ -41,7 +41,7 @@ class test_AglGrammarSemanticAnalyser {
         """.trimIndent()
         val result = aglProc.process(grammarStr)
         val expected = setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,InputLocation(38, 9, 3, 2), "GrammarRule 'b' not found in grammar 'Test'")
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(38, 9, 3, 1), "GrammarRule 'b' not found in grammar 'Test'")
         )
         assertEquals(expected, result.issues.all)
     }
@@ -60,7 +60,12 @@ class test_AglGrammarSemanticAnalyser {
         //val proc = Agl.processor(grammarStr)
         val result = aglProc.process(grammarStr)
         val expected = setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,InputLocation(38, 9, 3, 2), "More than one rule named 'b' in grammar 'Test', have you remembered the 'override' modifier")
+            LanguageIssue(
+                LanguageIssueKind.ERROR,
+                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(38, 9, 3, 1),
+                "More than one rule named 'b' in grammar 'Test', have you remembered the 'override' modifier"
+            )
         )
         assertEquals(expected, result.issues.all)
     }
@@ -76,10 +81,14 @@ class test_AglGrammarSemanticAnalyser {
             }
         """.trimIndent()
         //val proc = Agl.processor(grammarStr)
-        val result = aglProc.process(grammarStr)
+        val result = aglProc.process(grammarStr, Agl.options {
+            semanticAnalysis {
+                option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+            }
+        })
         val expected = setOf(
-                LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS,InputLocation(57, 10, 4, 4), "Ambiguity on [<EOT>] with b2"),
-                LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS,InputLocation(72, 10, 5, 4), "Ambiguity on [<EOT>] with b1")
+            LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(57, 10, 4, 4), "Ambiguity on [<EOT>] with b2"),
+            LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(72, 10, 5, 4), "Ambiguity on [<EOT>] with b1")
         )
         result.issues.forEach {
             println(it)

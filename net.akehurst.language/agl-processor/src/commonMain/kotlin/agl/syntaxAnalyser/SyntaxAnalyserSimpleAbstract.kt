@@ -236,9 +236,10 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
             }
 
             else -> when (parentType) {
+
                 typeModel.NothingType -> parentPath.plus("<error>")
                 typeModel.AnyType -> TODO()
-                else -> error("Shold not happen")
+                else -> error("Should not happen")
             }
         }
     }
@@ -370,7 +371,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
                     else -> when (propType) {
                         typeModel.NothingType -> typeModel.NothingType.instance()
                         typeModel.AnyType -> TODO()
-                        else -> error("Shold not happen")
+                        else -> error("Should not happen")
                     }
                 }
             }
@@ -669,7 +670,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
     }
 
     private fun createTupleFrom(sentence: Sentence, type: TupleType, path: AsmElementPath, childData: ChildData): AsmElementSimple {
-        val el = createAsmElement(path, SimpleTypeModelStdLib.TupleType.name) // TODO: should have a createTuple method
+        val el = createAsmElement(path, type.name) // TODO: should have a createTuple method
         val v = childData.value
         for (propDecl in type.property.values) {
             val propType = propDecl.typeInstance

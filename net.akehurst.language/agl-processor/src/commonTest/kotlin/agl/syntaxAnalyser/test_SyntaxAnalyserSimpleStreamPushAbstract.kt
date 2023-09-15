@@ -137,7 +137,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
         fun processor(grammarStr: String) = Agl.processorFromString<String, ContextSimple>(
             grammarDefinitionStr = grammarStr,
             configuration = Agl.configuration {
-                typeModelResolver { p -> ProcessResultDefault(GrammarTypeModelSimple.createFrom(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+                typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                 syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserToString(p.typeModel!!, p.scopeModel!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserToString(), IssueHolder(LanguageProcessorPhase.ALL)) }
             }

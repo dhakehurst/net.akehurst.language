@@ -61,7 +61,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
             assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
-            GrammarTypeModelSimple.createFrom(result.asm!!.last())
+            TypeModelFromGrammar.create(result.asm!!.last())
         }
         val scopeModel = ScopeModelAgl()
         val syntaxAnalyser = SyntaxAnalyserSimple(grammar.qualifiedName, typeModel, scopeModel)
@@ -83,10 +83,6 @@ class test_SyntaxAnalyserSimple_datatypes {
             dataType("unit", "Unit") {
                 propertyListTypeOf("declaration", "Declaration", false, 0)
             }
-            // declaration = datatype | primitive ;
-            dataType("declaration", "Declaration") {
-                subTypes("Datatype", "Primitive")
-            }
             // primitive = 'primitive' ID ;
             dataType("primitive", "Primitive") {
                 propertyPrimitiveType("id", "String", false, 1)
@@ -95,6 +91,10 @@ class test_SyntaxAnalyserSimple_datatypes {
             dataType("datatype", "Datatype") {
                 propertyPrimitiveType("id", "String", false, 1)
                 propertyListTypeOf("property", "Property", false, 3)
+            }
+            // declaration = datatype | primitive ;
+            dataType("declaration", "Declaration") {
+                subtypes("Datatype", "Primitive")
             }
             // property = ID ':' typeReference ;
             dataType("property", "Property") {
@@ -110,6 +110,8 @@ class test_SyntaxAnalyserSimple_datatypes {
             dataType("typeArguments", "TypeArguments") {
                 propertyListTypeOf("typeReference", "TypeReference", false, 1)
             }
+            stringTypeFor("ID")
+            stringTypeFor("type")
         }
 
         GrammarTypeModelTest.tmAssertEquals(expected, actual)

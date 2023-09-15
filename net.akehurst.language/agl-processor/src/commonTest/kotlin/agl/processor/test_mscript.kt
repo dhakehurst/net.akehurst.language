@@ -137,7 +137,7 @@ grammar Mscript {
                 //   | expressionStatement
                 //   //TODO: others
                 //   ;
-                subTypes("Conditional", "Assignment", "ExpressionStatement")
+                subtypes("Conditional", "Assignment", "ExpressionStatement")
             }
             dataType("conditional", "Conditional") {
                 // conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
@@ -164,7 +164,7 @@ grammar Mscript {
                 //   | infixExpression
                 //   | groupExpression
                 //   ;
-                subTypes("RootVariable", "LiteralExpression", "Matrix", "FunctionCallOrIndex", "PrefixExpression", "InfixExpression", "GroupExpression")
+                subtypes("RootVariable", "LiteralExpression", "Matrix", "FunctionCallOrIndex", "PrefixExpression", "InfixExpression", "GroupExpression")
             }
             dataType("", "GroupExpression") {
                 // groupExpression = '(' expression ')' ;
@@ -183,7 +183,7 @@ grammar Mscript {
             }
             dataType("", "Argument") {
                 // argument = expression | colonOperator ;
-                subTypes("Expression", "ColonOperator")
+                subtypes("Expression", "ColonOperator")
             }
             dataType("", "PrefixExpression") {
                 // prefixExpression = prefixOperator expression ;

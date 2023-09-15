@@ -24,7 +24,7 @@ import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
 import net.akehurst.language.agl.syntaxAnalyser.createReferenceLocalToScope
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+import net.akehurst.language.typemodel.simple.TupleTypeSimple
 
 @DslMarker
 annotation class AsmSimpleBuilderMarker
@@ -57,7 +57,7 @@ class AsmSimpleBuilder(
     }
 
     fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple =
-        element(SimpleTypeModelStdLib.TupleType.name, init)
+        element(TupleTypeSimple.NAME, init)
 
     fun listOfString(vararg items: String): List<String> {
         val path = AsmElementPath.ROOT + (_asm.rootElements.size).toString()
@@ -134,7 +134,7 @@ class AsmElementSimpleBuilder(
     fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple =
         propertyElementExplicitType(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, typeName, init)
 
-    fun propertyTuple(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElementExplicitType(name, SimpleTypeModelStdLib.TupleType.name, init)
+    fun propertyTuple(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElementExplicitType(name, TupleTypeSimple.NAME, init)
     fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = propertyElementExplicitType(name, name, init)
     fun propertyElementExplicitType(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple {
         val newPath = _element.asmPath + name
@@ -209,7 +209,7 @@ class ListAsmElementSimpleBuilder(
         return el
     }
 
-    fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = element(SimpleTypeModelStdLib.TupleType.name, init)
+    fun tuple(init: AsmElementSimpleBuilder.() -> Unit): AsmElementSimple = element(TupleTypeSimple.NAME, init)
 
 
     fun build(): List<Any> {

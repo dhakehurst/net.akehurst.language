@@ -49,7 +49,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
             }
@@ -72,7 +72,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
             }
@@ -95,7 +95,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
@@ -119,7 +119,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
             }
@@ -142,7 +142,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
                 propertyPrimitiveType("v", "String", false, 0)
@@ -169,7 +169,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
@@ -200,7 +200,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
@@ -229,7 +229,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("S")
         }
@@ -257,10 +257,10 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
-                subTypes("A", "B", "C")
+                subtypes("A", "B", "C")
             }
             dataType("A", "A") {
                 propertyPrimitiveType("a", "String", false, 0)
@@ -294,7 +294,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("S")
             stringTypeFor("L")
@@ -324,7 +324,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("S")
             stringTypeFor("L")
@@ -356,17 +356,17 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         //TODO: there are ambiguities! assertTrue(result.issues.errors.isEmpty(),result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
-                subTypes("A", "B", "C")
+                subtypes("A", "B", "C")
             }
             dataType("A", "A") {
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyPrimitiveType("x", "String", false, 1)
             }
             dataType("B", "B") {
-                subTypes("C", "D")
+                subtypes("C", "D")
             }
             dataType("C", "C") {
                 propertyPrimitiveType("c", "String", false, 0)
@@ -404,7 +404,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         //TODO: there are ambiguities! assertTrue(result.issues.errors.isEmpty(),result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             val B = unnamedSuperTypeTypeOf("B", listOf(StringType, "D"))
             unnamedSuperTypeTypeOf("S", listOf("A", B, "C"))
@@ -438,7 +438,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
             }
@@ -462,7 +462,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             stringTypeFor("c")
@@ -489,7 +489,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             dataType("S", "S") {
@@ -514,7 +514,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
 
@@ -540,7 +540,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             stringTypeFor("c")
@@ -567,7 +567,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             dataType("S", "S") {
@@ -595,7 +595,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             stringTypeFor("b")
@@ -625,7 +625,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             dataType("S", "S") {
@@ -654,7 +654,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
                 //propertyListSeparatedType("as", StringType, StringType, false, 0)
@@ -685,7 +685,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             stringTypeFor("c")
@@ -717,7 +717,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
                 propertyListTypeOf("as", "A", false, 0) // of String
@@ -749,7 +749,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
                 propertyListTypeOf("ass", "As", false, 0) // of String
@@ -783,7 +783,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
                 //propertyListType("as", StringType, false, 0) // of String
@@ -813,7 +813,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             stringTypeFor("e")
@@ -844,7 +844,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             stringTypeFor("b")
@@ -883,7 +883,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             stringTypeFor("b")
@@ -925,7 +925,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             stringTypeFor("b")
@@ -960,7 +960,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             stringTypeFor("b")
@@ -1001,7 +1001,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             stringTypeFor("b")
@@ -1036,7 +1036,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             val gtb = this
             stringTypeFor("a")
@@ -1079,7 +1079,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             val gtb = this
             stringTypeFor("a")
@@ -1125,7 +1125,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             stringTypeFor("b")
@@ -1163,7 +1163,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("a")
             stringTypeFor("b")
@@ -1204,8 +1204,11 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
             unnamedSuperTypeType("S") {
                 elementRef("BC")
                 listType(false) { primitiveRef("String") }
@@ -1237,7 +1240,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             stringTypeFor("b")
             stringTypeFor("c")
@@ -1279,7 +1282,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             val gtb = this
             val BC = dataType("BC", "BC") {
@@ -1316,7 +1319,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
                 propertyPrimitiveType("id", "String", false, 0)
@@ -1361,7 +1364,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val tmI = grammarTypeModel("test.I", "Inner", "S") {
             unnamedSuperTypeType("S") {
                 elementRef("A")
@@ -1377,14 +1380,14 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             )
         ) {
             dataType("S", "S") {
-                subTypes("B", "SBC")
+                subtypes("B", "SBC")
             }
             dataType("SBC", "SBC") {
                 propertyDataTypeOf("s", "S", false, 0)
                 propertyDataTypeOf("bc", "BC", false, 1)
             }
             dataType("BC", "BC") {
-                subTypes("B", "C")
+                subtypes("B", "C")
             }
             dataType("C", "C") {
                 propertyPrimitiveType("s", "S", false, 1)
@@ -1420,7 +1423,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.O", "O", "S") {
             unnamedSuperTypeType("S") {
                 elementRef("B")
@@ -1430,7 +1433,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                 }
             }
             dataType("BC", "BC") {
-                subTypes("B", "C")
+                subtypes("B", "C")
             }
             dataType("C", "C") {
                 propertyPrimitiveType("s", "S", false, 1)
@@ -1467,7 +1470,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
                 propertyDataTypeOf("exprList", "ExprList", false, 0)
@@ -1479,10 +1482,10 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                 }
             }
             dataType("expr", "Expr") {
-                subTypes("Root", "Mul", "Add")
+                subtypes("Root", "Mul", "Add")
             }
             dataType("root", "Root") {
-                subTypes("Var", "Literal")
+                subtypes("Var", "Literal")
             }
             dataType("var", "Var") {
                 propertyPrimitiveType("name", "String", false, 0)
@@ -1526,7 +1529,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val actual = GrammarTypeModelSimple.createFrom(result.asm!!.last())
+        val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             dataType("S", "S") {
                 propertyDataTypeOf("exprList", "ExprList", false, 0)
@@ -1538,10 +1541,10 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                 }
             }
             dataType("expr", "Expr") {
-                subTypes("Root", "Mul", "Add")
+                subtypes("Root", "Mul", "Add")
             }
             dataType("root", "Root") {
-                subTypes("Var", "Literal")
+                subtypes("Var", "Literal")
             }
             dataType("var", "Var") {
                 propertyPrimitiveType("name", "String", false, 0)

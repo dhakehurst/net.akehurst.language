@@ -86,7 +86,7 @@ grammar Mdl {
             }
             //content = section | parameter ;
             dataType("content", "Content") {
-                subTypes("Section", "Parameter")
+                subtypes("Section", "Parameter")
             }
             //parameter = IDENTIFIER value ;
             dataType("parameter", "Parameter") {
@@ -95,7 +95,7 @@ grammar Mdl {
             }
             //value = stringList | matrix | identifier | literal ;
             dataType("value", "Value") {
-                subTypes("StringList", "Matrix", "Identifier", "Literal")
+                subtypes("StringList", "Matrix", "Identifier", "Literal")
             }
             //identifier = IDENTIFIER ;
             dataType("identifier", "Identifier") {

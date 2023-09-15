@@ -103,10 +103,10 @@ grammar SQL {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
             assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
-            GrammarTypeModelSimple.createFrom(result.asm!!.last())
+            TypeModelFromGrammar.create(result.asm!!.last())
         }
         val scopeModel = ScopeModelAgl.fromString(
-            ContextFromTypeModel(grammar.qualifiedName, GrammarTypeModelSimple.createFrom(grammar)),
+            ContextFromTypeModel(grammar.qualifiedName, TypeModelFromGrammar.create(grammar)),
             """
                 identify TableDefinition by table-id
                 scope TableDefinition {

@@ -39,7 +39,7 @@ object Agl {
     fun configurationDefault(): LanguageProcessorConfiguration<AsmSimple, ContextSimple> = Agl.configuration {
         targetGrammarName(null) //use default
         defaultGoalRuleName(null) //use default
-        typeModelResolver { p -> ProcessResultDefault<TypeModel>(GrammarTypeModelSimple.createFrom(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+        typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
         scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel!!), "") }
         syntaxAnalyserResolver { p ->
             ProcessResultDefault(
@@ -115,7 +115,7 @@ object Agl {
         val config = Agl.configuration {
             targetGrammarName(null) //use default
             defaultGoalRuleName(null) //use default
-            typeModelResolver { p -> ProcessResultDefault(GrammarTypeModelSimple.createFrom(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+            typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
             scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel!!), scopeModelStr ?: "") }
             syntaxAnalyserResolver { p ->
                 ProcessResultDefault(
