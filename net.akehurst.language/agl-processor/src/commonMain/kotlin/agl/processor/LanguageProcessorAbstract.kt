@@ -28,9 +28,7 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.sppt.SPPTParserDefault
-import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
@@ -51,7 +49,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     /* made internal so we can test against it */
     internal abstract val runtimeRuleSet: RuntimeRuleSet
-    protected abstract val mapToGrammar: (Int, Int) -> RuleItem
+    protected abstract val mapToGrammar: (Int, Int) -> RuleItem?
 
     abstract override val grammar: Grammar
     protected abstract val configuration: LanguageProcessorConfiguration<AsmType, ContextType>
@@ -156,7 +154,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     ): SyntaxAnalysisResult<AsmType> { //Triple<AsmType?, List<LanguageIssue>, Map<Any, InputLocation>> {
         val opts = defaultOptions(options)
         val sa: SyntaxAnalyser<AsmType> = this.syntaxAnalyser
-            ?: SyntaxAnalyserSimple(this.grammar.qualifiedName, this.typeModel!!, this.scopeModel!!) as SyntaxAnalyser<AsmType>
+            ?: error("the processor for grammar '${this.grammar.qualifiedName}' was not configured with a SyntaxAnalyser")
+//            ?: SyntaxAnalyserDefault(this.grammar.qualifiedName, this.typeModel!!, this.scopeModel!!) as SyntaxAnalyser<AsmType>
         sa.clear()
         return sa.transform(sppt, this.mapToGrammar)
     }
@@ -167,10 +166,11 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     ): SemanticAnalysisResult {
         val opts = defaultOptions(options)
         val semAnalyser: SemanticAnalyser<AsmType, ContextType> = this.semanticAnalyser
-            ?: SemanticAnalyserSimple(this.scopeModel) as SemanticAnalyser<AsmType, ContextType>
+            ?: error("the processor for grammar '${this.grammar.qualifiedName}' was not configured with a SemanticAnalyser")
+//            ?: SemanticAnalyserDefault(this.scopeModel) as SemanticAnalyser<AsmType, ContextType>
         semAnalyser.clear()
         val lm = opts.semanticAnalysis.locationMap ?: emptyMap<Any, InputLocation>()
-        return semAnalyser.analyse(asm, lm, opts.semanticAnalysis.context, opts.semanticAnalysis.options)
+        return semAnalyser.analyse(asm, lm, opts.semanticAnalysis.context, opts.semanticAnalysis)
     }
 
     override fun process(
@@ -211,12 +211,9 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     override fun formatAsm(asm: AsmType, options: ProcessOptions<AsmType, ContextType>?): FormatResult {
         val opts = defaultOptions(options)
-        val fResult = if (null != formatter) {
-            this.formatter!!.format(asm)
-        } else {
-            FormatResultDefault(asm.toString(), IssueHolder(LanguageProcessorPhase.FORMATTER))
-        }
-        return fResult
+        val frmtr = this.formatter
+            ?: error("the processor for grammar '${this.grammar.qualifiedName}' was not configured with a Formatter")
+        return frmtr.format(asm)
     }
 
     override fun expectedTerminalsAt(
@@ -231,8 +228,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                 else -> {
                     val rhs = it.rhs
                     when (rhs) {
-                        is RuntimeRuleRhsLiteral -> CompletionItem(CompletionItemKind.LITERAL, it.tag, rhs.literalUnescaped)
-                        is RuntimeRuleRhsPattern -> CompletionItem(CompletionItemKind.PATTERN, it.tag, rhs.patternUnescaped)
+                        is RuntimeRuleRhsLiteral -> CompletionItem(CompletionItemKind.LITERAL, rhs.literalUnescaped, it.tag)
+                        is RuntimeRuleRhsPattern -> CompletionItem(CompletionItemKind.PATTERN, rhs.patternUnescaped, it.tag)
                         else -> CompletionItem(CompletionItemKind.LITERAL, it.tag, it.tag)
                     }
                 }
@@ -246,7 +243,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
             null != completionProvider -> {
                 val opts = defaultOptions(options)
                 val parserExpected: Set<RuntimeRule> = this.parser.expectedTerminalsAt(sentence, position, opts.parse)
-                val grammarItems = parserExpected.map {
+                val grammarItems = parserExpected.mapNotNull {
                     mapToGrammar(it.runtimeRuleSetNumber, it.ruleNumber)
                 }.toSet()
                 val items = completionProvider!!.provide(grammarItems, opts.completionProvider.context, opts.completionProvider.options)

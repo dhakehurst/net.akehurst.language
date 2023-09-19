@@ -17,12 +17,14 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.parser.InputLocation
@@ -54,6 +56,9 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
             fun indentDec() {
                 indent = indent.substring(1)
             }
+
+            override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<String>>
+                get() = TODO("not implemented")
 
             override val asm: String get() = sb.toString()
 

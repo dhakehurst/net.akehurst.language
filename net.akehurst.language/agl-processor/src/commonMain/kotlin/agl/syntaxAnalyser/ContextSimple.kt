@@ -55,7 +55,7 @@ class ScopeSimple<AsmElementIdType>(
     val forTypeName: String
 ) : Scope<AsmElementIdType> {
 
-    //should only be usde for rootScope
+    //should only be used for rootScope
     val scopeMap = mutableMapOf<AsmElementIdType, ScopeSimple<AsmElementIdType>>()
 
     private val _childScopes = mutableMapOf<String, ScopeSimple<AsmElementIdType>>()

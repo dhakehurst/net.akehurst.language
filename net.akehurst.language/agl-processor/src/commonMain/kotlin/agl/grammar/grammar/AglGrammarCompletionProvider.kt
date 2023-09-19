@@ -17,15 +17,23 @@
 
 package net.akehurst.language.agl.agl.grammar.grammar
 
+import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.api.grammar.Terminal
 import net.akehurst.language.api.processor.CompletionItem
-import net.akehurst.language.api.processor.CompletionProvider
 
-class AglGrammarCompletionProvider : CompletionProvider<List<Grammar>, GrammarContext> {
+class AglGrammarCompletionProvider : CompletionProviderAbstract<List<Grammar>, GrammarContext>() {
 
-    override fun provide(terminalItems: Set<RuleItem>, context: GrammarContext?, options: Map<String, Any>): List<CompletionItem> {
-        return emptyList()
+    override fun provide(nextExpected: Set<RuleItem>, context: GrammarContext?, options: Map<String, Any>): List<CompletionItem> {
+        //TODO
+        return nextExpected.flatMap {
+            when (it) {
+                is Terminal -> provideForTerminal(it, context)
+                else -> emptyList()
+            }
+        }
     }
+
 }

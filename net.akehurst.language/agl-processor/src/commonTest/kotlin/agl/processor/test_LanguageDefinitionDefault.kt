@@ -16,8 +16,8 @@
 
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple

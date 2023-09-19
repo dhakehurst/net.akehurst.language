@@ -1,0 +1,5 @@
+namespace net.akehurst.language.C
+
+grammar C_17 {
+
+}

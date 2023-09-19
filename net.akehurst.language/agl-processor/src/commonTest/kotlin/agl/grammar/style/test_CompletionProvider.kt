@@ -58,12 +58,11 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = """
-        """.trimIndent()
+        val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "LITERAL", "'a'"),
-            CompletionItem(CompletionItemKind.LITERAL, "GrammarRule", "S"),
-            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", "\$keyword"),
+            CompletionItem(CompletionItemKind.LITERAL, "'a'", "LITERAL"),
+            CompletionItem(CompletionItemKind.LITERAL, "S", "GrammarRule"),
+            CompletionItem(CompletionItemKind.LITERAL, "\$keyword", "META_IDENTIFIER"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -76,13 +75,11 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = """
-            S
-        """.trimIndent()
+        val sentence = "S"
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "selectorAndComposition", ","),
-            CompletionItem(CompletionItemKind.LITERAL, "rule", "{"),
-            CompletionItem(CompletionItemKind.SEGMENT, "rule", "{\n  <STYLE_ID>: <STYLE_VALUE>;\n}"),
+            CompletionItem(CompletionItemKind.LITERAL, ",", "selectorAndComposition"),
+            CompletionItem(CompletionItemKind.LITERAL, "{", "rule"),
+            CompletionItem(CompletionItemKind.SEGMENT, "{\n  <STYLE_ID>: <STYLE_VALUE>;\n}", "rule"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -95,13 +92,11 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = """
-            S,
-        """.trimIndent()
+        val sentence = "S,"
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "LITERAL", "'a'"),
-            CompletionItem(CompletionItemKind.LITERAL, "GrammarRule", "S"),
-            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", "\$keyword"),
+            CompletionItem(CompletionItemKind.LITERAL, "'a'", "LITERAL"),
+            CompletionItem(CompletionItemKind.LITERAL, "S", "GrammarRule"),
+            CompletionItem(CompletionItemKind.LITERAL, "\$keyword", "META_IDENTIFIER"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -114,15 +109,13 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = """
-            S {
-        """.trimIndent()
+        val sentence = "S {"
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "foreground"),
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "background"),
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "font-style"),
-            CompletionItem(CompletionItemKind.LITERAL, "rule", "}"),
-            CompletionItem(CompletionItemKind.SEGMENT, "style", "<STYLE_ID>: <STYLE_VALUE>;"),
+            CompletionItem(CompletionItemKind.LITERAL, "foreground", "STYLE_ID"),
+            CompletionItem(CompletionItemKind.LITERAL, "background", "STYLE_ID"),
+            CompletionItem(CompletionItemKind.LITERAL, "font-style", "STYLE_ID"),
+            CompletionItem(CompletionItemKind.LITERAL, "}", "rule"),
+            CompletionItem(CompletionItemKind.SEGMENT, "<STYLE_ID>: <STYLE_VALUE>;", "style"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -135,12 +128,9 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = """
-            S {
-              foreground
-        """.trimIndent()
+        val sentence = "S { foreground"
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "style", ":"),
+            CompletionItem(CompletionItemKind.LITERAL, ":", "style"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -153,14 +143,28 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = """
-            S {
-              foreground:
-        """.trimIndent()
+        val sentence = "S { foreground:"
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "<colour>"),
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "bold"),
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "italic"),
+            CompletionItem(CompletionItemKind.LITERAL, "<colour>", "STYLE_VALUE"),
+            CompletionItem(CompletionItemKind.LITERAL, "bold", "STYLE_VALUE"),
+            CompletionItem(CompletionItemKind.LITERAL, "italic", "STYLE_VALUE"),
+        )
+        test(grammarStr, sentence, sentence.length, expected)
+    }
+
+    @Test
+    fun after_style_colon_WS() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = 'a' ;
+            }
+        """
+        val sentence = "S { foreground: "
+        val expected = listOf(
+            CompletionItem(CompletionItemKind.LITERAL, "<colour>", "STYLE_VALUE"),
+            CompletionItem(CompletionItemKind.LITERAL, "bold", "STYLE_VALUE"),
+            CompletionItem(CompletionItemKind.LITERAL, "italic", "STYLE_VALUE"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -173,12 +177,9 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = """
-            S {
-              foreground: blue
-        """.trimIndent()
+        val sentence = "S { foreground: blue"
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "style", ";"),
+            CompletionItem(CompletionItemKind.LITERAL, ";", "style"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -191,16 +192,13 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = """
-            S {
-              foreground: blue;
-        """.trimIndent()
+        val sentence = "S { foreground: blue;"
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "foreground"),
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "background"),
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "font-style"),
-            CompletionItem(CompletionItemKind.LITERAL, "rule", "}"),
-            CompletionItem(CompletionItemKind.SEGMENT, "style", "<STYLE_ID>: <STYLE_VALUE>;"),
+            CompletionItem(CompletionItemKind.LITERAL, "foreground", "STYLE_ID"),
+            CompletionItem(CompletionItemKind.LITERAL, "background", "STYLE_ID"),
+            CompletionItem(CompletionItemKind.LITERAL, "font-style", "STYLE_ID"),
+            CompletionItem(CompletionItemKind.LITERAL, "}", "rule"),
+            CompletionItem(CompletionItemKind.SEGMENT, "<STYLE_ID>: <STYLE_VALUE>;", "style"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }
@@ -213,15 +211,11 @@ class test_CompletionProvider {
                 S = 'a' ;
             }
         """
-        val sentence = """
-            S {
-              foreground: blue;
-            }
-        """.trimIndent()
+        val sentence = "S { foreground: blue; }"
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "LITERAL", "'a'"),
-            CompletionItem(CompletionItemKind.LITERAL, "GrammarRule", "S"),
-            CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", "\$keyword"),
+            CompletionItem(CompletionItemKind.LITERAL, "'a'", "LITERAL"),
+            CompletionItem(CompletionItemKind.LITERAL, "S", "GrammarRule"),
+            CompletionItem(CompletionItemKind.LITERAL, "\$keyword", "META_IDENTIFIER"),
         )
         test(grammarStr, sentence, sentence.length, expected)
     }

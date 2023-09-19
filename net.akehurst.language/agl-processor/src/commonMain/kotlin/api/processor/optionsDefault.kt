@@ -53,6 +53,8 @@ internal class SemanticAnalysisOptionsDefault<AsmType : Any, ContextType : Any>(
     override var active: Boolean = true,
     override var locationMap: Map<Any, InputLocation> = emptyMap(),
     override var context: ContextType? = null,
+    override var checkReferences: Boolean = false,
+    override var resolveReferences: Boolean = false,
     override val options: Map<String, Any> = mutableMapOf()
 ) : SemanticAnalysisOptions<AsmType, ContextType>
 
@@ -129,18 +131,17 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
                 _completionProviderResolver
             )
 
-            is LanguageProcessorConfigurationDefault<AsmType, ContextType> -> {
-                _targetGrammarName?.let { base.targetGrammarName = it }
-                _defaultGoalRuleName?.let { base.defaultGoalRuleName = it }
-                _typeModelResolver?.let { base.typeModelResolver = it }
-                _scopeModelResolver?.let { base.scopeModelResolver = it }
-                _syntaxAnalyserResolver?.let { base.syntaxAnalyserResolver = it }
-                _semanticAnalyserResolver?.let { base.semanticAnalyserResolver = it }
-                _formatterResolver?.let { base.formatterResolver = it }
-                _styleResolver?.let { base.styleResolver = it }
-                _completionProviderResolver.let { base.completionProvider = it }
-                base
-            }
+            is LanguageProcessorConfigurationDefault<AsmType, ContextType> -> LanguageProcessorConfigurationDefault<AsmType, ContextType>(
+                targetGrammarName = _targetGrammarName ?: base.targetGrammarName,
+                defaultGoalRuleName = _defaultGoalRuleName ?: base.defaultGoalRuleName,
+                typeModelResolver = _typeModelResolver ?: base.typeModelResolver,
+                scopeModelResolver = _scopeModelResolver ?: base.scopeModelResolver,
+                syntaxAnalyserResolver = _syntaxAnalyserResolver ?: base.syntaxAnalyserResolver,
+                semanticAnalyserResolver = _semanticAnalyserResolver ?: base.semanticAnalyserResolver,
+                formatterResolver = _formatterResolver ?: base.formatterResolver,
+                styleResolver = _styleResolver ?: base.styleResolver,
+                completionProvider = _completionProviderResolver ?: base.completionProvider
+            )
 
             else -> error("Cannot override LanguageProcessorConfiguration of type ${base::class.simpleName}")
         }
@@ -240,6 +241,8 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
     private var _active = true
     private var _locationMap = emptyMap<Any, InputLocation>()
     private var _context: ContextType? = null
+    private var _checkReferences = false
+    private var _resolveReferences = false
     private val _options = mutableMapOf<String, Any>()
 
     fun active(value: Boolean) {
@@ -254,12 +257,27 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
         _context = value
     }
 
+    fun checkReferences(value: Boolean) {
+        _checkReferences = value
+    }
+
+    fun resolveReferences(value: Boolean) {
+        _resolveReferences = value
+    }
+
     fun option(key: String, value: Any) {
         _options[key] = value
     }
 
     fun build(): SemanticAnalysisOptions<AsmType, ContextType> {
-        return SemanticAnalysisOptionsDefault<AsmType, ContextType>(_active, _locationMap, _context, _options)
+        return SemanticAnalysisOptionsDefault<AsmType, ContextType>(
+            _active,
+            _locationMap,
+            _context,
+            _checkReferences,
+            _resolveReferences,
+            _options
+        )
     }
 }
 

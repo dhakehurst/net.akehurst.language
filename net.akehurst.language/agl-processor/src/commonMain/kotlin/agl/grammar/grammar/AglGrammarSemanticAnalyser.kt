@@ -40,7 +40,7 @@ class AglGrammarSemanticAnalyser(
     private var _analyseAmbiguities = true
     private val _usedRules = mutableMapOf<Grammar, MutableMap<GrammarRule, Boolean>>()
 
-    private fun issueWarn(item: Any, message: String, data: Any?) {
+    private fun issueWarn(item: Any?, message: String, data: Any?) {
         val location = this._locationMap?.get(item)
         issues.warn(location, message, data)
     }
@@ -194,9 +194,9 @@ class AglGrammarSemanticAnalyser(
                                         val ori1 = conv.originalRuleItemFor(tr1.to.runtimeRules.first().runtimeRuleSetNumber, tr1.to.runtimeRules.first().ruleNumber) //FIXME
                                         val ori2 = conv.originalRuleItemFor(tr2.to.runtimeRules.first().runtimeRuleSetNumber, tr2.to.runtimeRules.first().ruleNumber) //FIXME
                                         //val or1 = ori1.owningRule
-                                        val or2 = ori2.owningRule
+                                        val or2 = ori2?.owningRule
                                         val lhStr = lhi.fullContent.map { it.tag }
-                                        val msg = "Ambiguity on $lhStr with ${or2.name}"
+                                        val msg = "Ambiguity on $lhStr with ${or2?.name}"
                                         issueWarn(ori1, msg, null)
                                         //issueWarn(ori2, msg, null)
                                     }

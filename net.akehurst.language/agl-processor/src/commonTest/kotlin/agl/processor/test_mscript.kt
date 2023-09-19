@@ -15,9 +15,9 @@
  */
 package net.akehurst.language.agl.processor
 
+import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.syntaxAnalyser.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException

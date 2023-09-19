@@ -1,0 +1,25 @@
+namespace net.akehurst.language.xml
+
+grammar Xml {
+	skip leaf WS = "\s" ;
+
+	document = prolog? comment* element ;
+	prolog = '<?xml' attribute* '?>' ;
+    comment = '<!--' COMMENT_CONTENT '-->' ;
+	element = elementEmpty | elementContent ;
+	elementEmpty = '<' NAME attribute* '/>' ;
+    elementContent = startTag content endTag ;
+	startTag = '<'  NAME attribute*  '>' ;
+	endTag = '</'  NAME  '>' ;
+
+	content = (CHARDATA | element | comment)* ;
+
+	attribute = NAME '=' VALUE ;
+
+	leaf VALUE = DOUBLE_QUOTE_STRING | SINGLE_QUOTE_STRING ;
+	leaf COMMENT_CONTENT = "(.|[\n])*?(?=-->)" ;
+	leaf CHARDATA = "[^<]+" ;
+	leaf NAME = "[a-zA-Z_:][a-zA-Z0-9_.:-]*" ;
+	leaf DOUBLE_QUOTE_STRING = "[\"][^\"]*[\"]" ;
+	leaf SINGLE_QUOTE_STRING = "['][^']*[']" ;
+}

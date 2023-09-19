@@ -17,6 +17,8 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 
+import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
+import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
@@ -97,6 +99,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
             dataType("S", "S") {
                 propertyPrimitiveType("a", "String", false, 0)
             }
@@ -144,6 +147,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("v")
             dataType("S", "S") {
                 propertyPrimitiveType("v", "String", false, 0)
             }

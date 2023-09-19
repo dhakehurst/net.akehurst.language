@@ -33,7 +33,7 @@ import kotlin.test.*
 class test_Java8_Singles_aglOptm {
 
     companion object {
-        val grammarFile = "/java8/Java8AglOptm.agl"
+        val grammarFile = "/Java/version_8/grammar_aglOptm.agl"
         val proc: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor(grammarFile, true)
 
         fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<AsmSimple, ContextSimple> {
@@ -74,7 +74,7 @@ class test_Java8_Singles_aglOptm {
         // expect WIDTH ambiguity as 'true' could be a type name
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(3, result.sppt!!.maxNumHeads)
+        assertEquals(2, result.sppt!!.maxNumHeads)
     }
 
     @Test//(timeout = 5000)
@@ -657,7 +657,7 @@ class CharBufferSpliterator implements Spliterator.OfInt {
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(3, result.sppt!!.maxNumHeads)
+        assertEquals(2, result.sppt!!.maxNumHeads)
 
         val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
@@ -702,7 +702,7 @@ class A {
         val result = proc.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        assertEquals(3, result.sppt!!.maxNumHeads)
+        assertEquals(2, result.sppt!!.maxNumHeads)
 
         val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)

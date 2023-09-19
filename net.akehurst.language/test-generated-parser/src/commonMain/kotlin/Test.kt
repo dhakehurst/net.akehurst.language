@@ -17,14 +17,14 @@
 
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
 import net.akehurst.language.agl.api.runtime.RuleSet
+import net.akehurst.language.agl.default.SemanticAnalyserDefault
+import net.akehurst.language.agl.default.SyntaxAnalyserDefault
+import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.formatter.FormatterSimple
 import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.analyser.SyntaxAnalyser
@@ -71,8 +71,8 @@ object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<AsmSimple, C
         asm
     }
 
-    override val syntaxAnalyser: SyntaxAnalyser<AsmSimple> = SyntaxAnalyserSimple(grammar.qualifiedName, TypeModelFromGrammar.create(grammar), scopeModel)
-    override val semanticAnalyser: SemanticAnalyser<AsmSimple, ContextSimple> = SemanticAnalyserSimple(scopeModel)
+    override val syntaxAnalyser: SyntaxAnalyser<AsmSimple> = SyntaxAnalyserDefault(grammar.qualifiedName, TypeModelFromGrammar.create(grammar), scopeModel)
+    override val semanticAnalyser: SemanticAnalyser<AsmSimple, ContextSimple> = SemanticAnalyserDefault(scopeModel)
     override val formatter: Formatter<AsmSimple> = FormatterSimple(null)
     override val automata: Map<String, Automaton> = mapOf(
         "S" to automaton_S

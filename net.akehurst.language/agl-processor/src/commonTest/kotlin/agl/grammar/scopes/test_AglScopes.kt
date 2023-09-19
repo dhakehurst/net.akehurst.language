@@ -15,11 +15,11 @@
  */
 package net.akehurst.language.agl.grammar.scopes
 
+import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.syntaxAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -406,32 +406,34 @@ class test_AglScopes {
         val expected = ScopeModelAgl().apply {
             references.add(ReferenceDefinition("RuleX", "ruleY", listOf("RuleZ", "RuleW")))
         }
+        val expectedIssues = listOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR,
+                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(20, 8, 2, 5),
+                "Referring type 'RuleX' not found in scope"
+            ),
+            LanguageIssue(
+                LanguageIssueKind.ERROR,
+                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(51, 39, 2, 5),
+                "For reference in 'RuleX' referred to type 'RuleZ' not found"
+            ),
+            LanguageIssue(
+                LanguageIssueKind.ERROR,
+                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(57, 45, 2, 6),
+                "For reference in 'RuleX' referred to type 'RuleW' not found"
+            )
+        )
 
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, result.asm?.references)
-        assertEquals(
-            listOf(
-                LanguageIssue(
-                    LanguageIssueKind.ERROR,
-                    LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                    InputLocation(20, 8, 2, 5),
-                    "Referring type 'RuleX' not found in scope"
-                ),
-                LanguageIssue(
-                    LanguageIssueKind.ERROR,
-                    LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                    InputLocation(51, 39, 2, 5),
-                    "For reference in 'RuleX' referred to type 'RuleZ' not found"
-                ),
-                LanguageIssue(
-                    LanguageIssueKind.ERROR,
-                    LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                    InputLocation(57, 45, 2, 6),
-                    "For reference in 'RuleX' referred to type 'RuleW' not found"
-                )
-            ), result.issues.errors
-        )
+        assertEquals(expectedIssues.size, result.issues.errors.size)
+        for (i in expectedIssues.indices) {
+            assertEquals(expectedIssues[i], result.issues.errors[i])
+        }
     }
 
     @Test

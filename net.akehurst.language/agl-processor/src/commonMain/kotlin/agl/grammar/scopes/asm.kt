@@ -23,19 +23,17 @@ import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.AsmElementReference
 import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.children
-import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.api.processor.SentenceContext
 
 class ScopeModelAgl
-    : ScopeModel
-{
+    : ScopeModel {
     companion object {
         val ROOT_SCOPE_TYPE_NAME = "§root"
         val IDENTIFY_BY_NOTHING = "§nothing"
 
-        fun fromString(context: SentenceContext<String>, aglScopeModelSentence:String): ProcessResult<ScopeModelAgl> {
+        fun fromString(context: SentenceContext<String>, aglScopeModelSentence: String): ProcessResult<ScopeModelAgl> {
             val proc = Agl.registry.agl.scopes.processor ?: error("Scopes language not found!")
             return proc.process(
                 sentence = aglScopeModelSentence,
@@ -46,11 +44,11 @@ class ScopeModelAgl
         }
     }
 
-    val scopes = mutableMapOf<String,ScopeDefinition>()
+    val scopes = mutableMapOf<String, ScopeDefinition>()
     val references = mutableListOf<ReferenceDefinition>()
 
     init {
-        scopes[ROOT_SCOPE_TYPE_NAME]=ScopeDefinition(ROOT_SCOPE_TYPE_NAME)
+        scopes[ROOT_SCOPE_TYPE_NAME] = ScopeDefinition(ROOT_SCOPE_TYPE_NAME)
     }
 
     fun isScopeDefinition(scopeFor: String): Boolean {
@@ -71,12 +69,12 @@ class ScopeModelAgl
     }
 
     override fun getReferredToTypeNameFor(inTypeName: String, referringPropertyName: String): List<String> {
-        val def = references.firstOrNull { it.inTypeName == inTypeName && it.referringPropertyName==referringPropertyName }
+        val def = references.firstOrNull { it.inTypeName == inTypeName && it.referringPropertyName == referringPropertyName }
         return def?.refersToTypeName ?: emptyList()
     }
 
     fun shouldCreateReference(scopeFor: String, typeName: String): Boolean {
-        return null!=getReferablePropertyNameFor(scopeFor,typeName)
+        return null != getReferablePropertyNameFor(scopeFor, typeName)
     }
 
     internal fun resolveReferencesElement(
@@ -113,7 +111,15 @@ class ScopeModelAgl
                             )
                         } else {
                             val rel = el.asm.index[referred]
-                            v.value = rel
+                            if (null == rel) {
+                                val location = locationMap?.get(el) //TODO: should be property location
+                                issues.error(
+                                    location,
+                                    "Asm does not contain element '${v.reference}' as reference for '${el.typeName}.${prop.name}'"
+                                )
+                            } else {
+                                v.value = rel
+                            }
                         }
 
                     } else {

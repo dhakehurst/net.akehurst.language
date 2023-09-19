@@ -26,7 +26,6 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
 import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.grammar.GrammarItem
@@ -37,7 +36,6 @@ import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.sppt.SpptWalker
-import net.akehurst.language.collections.lazyMap
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
@@ -78,10 +76,6 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
 
     abstract fun startProperty(declaration: PropertyDeclaration, isRef: Boolean)
     abstract fun finishProperty(declaration: PropertyDeclaration, isRef: Boolean)
-
-    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<AsmType>> = lazyMap { embGramName ->
-        SyntaxAnalyserSimple(embGramName, typeModel, this.scopeModel) as SyntaxAnalyser<AsmType>
-    }
 
     private fun findTypeUsageForRule(ruleName: String): TypeInstance? {
         val ns = this.typeModel.namespace[grammarNamespaceQualifiedName] as GrammarTypeNamespace?

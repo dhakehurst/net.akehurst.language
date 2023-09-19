@@ -29,6 +29,13 @@ kotlin {
             customField("description:", "Generic Language (DSL) support, (parser, syntax-analyser, formatter, processor, etc), built using Kotlin multiplatform")
         }
     }
+
+    sourceSets {
+        commonTest.configure {
+            // add language repository so we can test the grammars with specific sentences here
+            resources.srcDir(projectDir.resolve("../language-repository/languages"))
+        }
+    }
 }
 
 exportPublic {

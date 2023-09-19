@@ -80,11 +80,9 @@ interface TypeNamespace {
      */
     fun findTypeNamed(qualifiedOrImportedTypeName: String): TypeDefinition?
 
-    fun findOrCreatePrimitiveTypeNamed(typeName: String): PrimitiveType
-
-    fun findOrCreateDataTypeNamed(typeName: String): DataType
-
-    fun findOrCreateCollectionTypeNamed(typeName: String): CollectionType
+    fun findOwnedOrCreatePrimitiveTypeNamed(typeName: String): PrimitiveType
+    fun findOwnedOrCreateDataTypeNamed(typeName: String): DataType
+    fun findOwnedOrCreateCollectionTypeNamed(typeName: String): CollectionType
 
     fun createTypeInstance(qualifiedOrImportedTypeName: String, typeArguments: List<TypeInstance>, isNullable: Boolean): TypeInstance
     fun createTupleTypeInstance(type: TupleType, arguments: List<TypeInstance>, nullable: Boolean): TypeInstance
@@ -99,6 +97,7 @@ interface TypeNamespace {
 }
 
 interface TypeInstance {
+    val namespace: TypeNamespace
     val type: TypeDefinition
     val typeArguments: List<TypeInstance>
     val isNullable: Boolean

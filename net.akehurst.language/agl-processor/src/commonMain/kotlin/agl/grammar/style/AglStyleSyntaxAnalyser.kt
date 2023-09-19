@@ -69,7 +69,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
         when (nodeInfo.alt.option) {
             0 -> children[0] as List<AglStyleSelector>
             1 -> listOf(children[0] as AglStyleSelector)
-            else -> error("Internal error: alternative not handled")
+            else -> error("Internal error: alternative 'selectorExpression' not handled")
         }
 
 
@@ -77,7 +77,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
     fun selectorAndComposition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AglStyleSelector> =
         (children as List<Any>).toSeparatedList<AglStyleSelector, String>().items
 
-    // selectorSingle = LITERAL | PATTERN | IDENTIFIER ;
+    // selectorSingle = LITERAL | PATTERN | IDENTIFIER | META_IDENTIFIER ;
     fun selectorSingle(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleSelector {
         // Must match what is done in AglGrammarSyntaxAnalyser.terminal,
         // but keep the enclosing (single or double) quotes
@@ -93,7 +93,8 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
             0 -> AglStyleSelectorKind.LITERAL
             1 -> AglStyleSelectorKind.PATTERN
             2 -> AglStyleSelectorKind.RULE_NAME
-            else -> error("Internal error: alternative not handled")
+            3 -> AglStyleSelectorKind.META
+            else -> error("Internal error: AglStyleSelectorKind not handled")
         }
         //val str = target.nonSkipMatchedText.replace("\\\\", "\\").replace("\\\"", "\"")
         //return listOf(value)

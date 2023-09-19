@@ -23,6 +23,7 @@ import net.akehurst.language.agl.agl.grammar.scopes.AglScopesCompletionProvider
 import net.akehurst.language.agl.agl.grammar.scopes.AglScopesSemanticAnalyser
 import net.akehurst.language.agl.agl.grammar.style.AglStyleCompletionProvider
 import net.akehurst.language.agl.agl.grammar.style.AglStyleSemanticAnalyser
+import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.grammar.format.AglFormatGrammar
 import net.akehurst.language.agl.grammar.format.AglFormatSyntaxAnalyser
 import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
@@ -34,7 +35,6 @@ import net.akehurst.language.agl.grammar.scopes.AglScopesSyntaxAnalyser
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.grammar.style.AglStyleGrammar
 import net.akehurst.language.agl.grammar.style.AglStyleSyntaxAnalyser
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.Namespace

@@ -26,9 +26,10 @@ enum class CompletionItemKind {
 
 data class CompletionItem(
     val kind: CompletionItemKind,
-    val ruleName: String,
-    val text: String
+    val text: String,
+    val name: String
 ) {
+    var description: String = ""
 }
 
 interface CompletionProvider<in AsmType, in ContextType> {

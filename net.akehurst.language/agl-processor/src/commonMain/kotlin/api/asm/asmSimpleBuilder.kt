@@ -16,10 +16,10 @@
 
 package net.akehurst.language.api.asm
 
+import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.agl.syntaxAnalyser.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
 import net.akehurst.language.agl.syntaxAnalyser.createReferenceLocalToScope
 import net.akehurst.language.api.parser.InputLocation

@@ -73,7 +73,7 @@ class TypeNamespaceBuilder(
     private val _namespace = TypeNamespaceSimple(qualifiedName, imports)
     private val _typeReferences = mutableListOf<TypeUsageReferenceBuilder>()
 
-    fun primitiveType(typeName: String): PrimitiveType = _namespace.findOrCreatePrimitiveTypeNamed(typeName)
+    fun primitiveType(typeName: String): PrimitiveType = _namespace.findOwnedOrCreatePrimitiveTypeNamed(typeName)
 
     fun enumType(typeName: String, literals: List<String>): EnumType {
         val et = EnumTypeSimple(_namespace, typeName, literals)
@@ -82,7 +82,7 @@ class TypeNamespaceBuilder(
     }
 
     fun collectionType(typeName: String, typeParams: List<String>): CollectionType =
-        _namespace.findOrCreateCollectionTypeNamed(typeName).also { (it.typeParameters as MutableList).addAll(typeParams) }
+        _namespace.findOwnedOrCreateCollectionTypeNamed(typeName).also { (it.typeParameters as MutableList).addAll(typeParams) }
 
     /**
      * create a list type of the indicated typeName
@@ -116,7 +116,7 @@ class TypeNamespaceBuilder(
     fun unnamedSuperTypeTypeFor(subtypes: List<Any>): UnnamedSuperTypeType {
         val sts = subtypes.map {
             when (it) {
-                is String -> _namespace.findOrCreateDataTypeNamed(it)!!
+                is String -> _namespace.findOwnedOrCreateDataTypeNamed(it)!!
                 is TypeDefinition -> it
                 else -> error("Cannot map to TypeDefinition: $it")
             }
@@ -179,13 +179,13 @@ abstract class StructuredTypeBuilder(
 
     // ListSeparated
     fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-        val itemType = _namespace.findTypeNamed(itemTypeName) ?: _namespace.findOrCreateDataTypeNamed(itemTypeName)!!
-        val separatorType = _namespace.findTypeNamed(itemTypeName) ?: _namespace.findOrCreateDataTypeNamed(separatorTypeName)!!
+        val itemType = _namespace.findTypeNamed(itemTypeName) ?: _namespace.findOwnedOrCreateDataTypeNamed(itemTypeName)!!
+        val separatorType = _namespace.findTypeNamed(itemTypeName) ?: _namespace.findOwnedOrCreateDataTypeNamed(separatorTypeName)!!
         return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
     }
 
     fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorType: TypeDefinition, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-        val itemType = _namespace.findOrCreateDataTypeNamed(itemTypeName)!!
+        val itemType = _namespace.findOwnedOrCreateDataTypeNamed(itemTypeName)!!
         return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
     }
 
@@ -222,7 +222,7 @@ abstract class StructuredTypeBuilder(
 
     //
     fun propertyDataTypeOf(propertyName: String, elementTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-        val t = _namespace.findOrCreateDataTypeNamed(elementTypeName)!!
+        val t = _namespace.findOwnedOrCreateDataTypeNamed(elementTypeName)!!
         return property(propertyName, t.instance(emptyList(), isNullable), childIndex)
     }
 
@@ -253,7 +253,7 @@ class DataTypeBuilder(
     _elementName: String
 ) : StructuredTypeBuilder(_namespace, _typeReferences) {
 
-    private val _elementType = _namespace.findOrCreateDataTypeNamed(_elementName) as DataType
+    private val _elementType = _namespace.findOwnedOrCreateDataTypeNamed(_elementName) as DataType
     override val _structuredType: StructuredType get() = _elementType
 
     fun typeParameters(vararg parameters: String) {
@@ -360,7 +360,7 @@ class SubtypeListBuilder(
     }
 
     fun unnamedSuperTypeOf(vararg subtypeNames: String) {
-        val sts = subtypeNames.map { _namespace.findOrCreateDataTypeNamed(it)!! }
+        val sts = subtypeNames.map { _namespace.findOwnedOrCreateDataTypeNamed(it)!! }
         val t = _namespace.createUnnamedSuperTypeType(sts.map { it.instance() })
         _subtypeList.add(t.instance())
     }

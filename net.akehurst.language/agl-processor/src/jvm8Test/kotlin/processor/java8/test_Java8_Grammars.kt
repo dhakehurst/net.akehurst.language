@@ -23,15 +23,15 @@ import kotlin.test.assertNotNull
 
 class test_Java8_Grammars {
 
-    @Test(timeout=5000)
+    @Test(timeout = 5000)
     fun aglSpec() {
-        val grammarStr = this::class.java.getResource("/java8/Java8AglSpec.agl").readText()
+        val grammarStr = this::class.java.getResource("/Java/version_8/grammar_aglSpec.agl").readText()
         val result = Agl.registry.agl.grammar.processor!!.process(
             sentence = grammarStr,
             options = Agl.options {
                 semanticAnalysis {
                     // switch off ambiguity analysis for performance
-                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
+                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }
             }
         )
@@ -39,15 +39,15 @@ class test_Java8_Grammars {
         result.issues.forEach { println(it) }
     }
 
-    @Test(timeout=5000)
+    @Test(timeout = 5000)
     fun aglOptm() {
-        val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
+        val grammarStr = this::class.java.getResource("/Java/version_8/grammar_aglOptm.agl").readText()
         val result = Agl.registry.agl.grammar.processor!!.process(
             sentence = grammarStr,
             options = Agl.options {
                 semanticAnalysis {
                     // switch off ambiguity analysis for performance
-                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
+                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }
             }
         )
@@ -55,16 +55,16 @@ class test_Java8_Grammars {
         result.issues.forEach { println(it) }
     }
 
-    @Test(timeout=5000)
+    @Test(timeout = 5000)
     fun antrlSpec() {
         //val grammarStr = this::class.java.getResource("/java8/Java8_all.agl").readText()
-        val grammarStr = this::class.java.getResource("/java8/Java8AntlrSpec.agl").readText()
+        val grammarStr = this::class.java.getResource("/Java/version_8/grammar_antlrSpec.agl").readText()
         val result = Agl.registry.agl.grammar.processor!!.process(
             sentence = grammarStr,
             options = Agl.options {
                 semanticAnalysis {
                     // switch off ambiguity analysis for performance
-                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
+                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }
             }
         )
@@ -73,16 +73,15 @@ class test_Java8_Grammars {
     }
 
 
-
-    @Test(timeout=5000)
+    @Test(timeout = 5000)
     fun antlrOptm() {
-        val grammarStr = this::class.java.getResource("/java8/Java8AntlrOptm.agl").readText()
+        val grammarStr = this::class.java.getResource("/Java/version_8/grammar_antlrOptm.agl").readText()
         val result = Agl.registry.agl.grammar.processor!!.process(
             sentence = grammarStr,
             options = Agl.options {
                 semanticAnalysis {
                     // switch off ambiguity analysis for performance
-                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
+                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                 }
             }
         )

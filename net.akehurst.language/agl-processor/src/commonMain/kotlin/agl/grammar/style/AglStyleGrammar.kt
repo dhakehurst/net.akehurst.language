@@ -45,7 +45,7 @@ internal object AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst
         b.rule("styleList").multi(0, -1, b.nonTerminal("style"))
         b.rule("style").concatenation(b.nonTerminal("STYLE_ID"), b.terminalLiteral(":"), b.nonTerminal("STYLE_VALUE"), b.terminalLiteral(";"))
         b.leaf("STYLE_ID").concatenation(b.terminalPattern("[-a-zA-Z_][-a-zA-Z_0-9]*"));
-        b.leaf("STYLE_VALUE").concatenation(b.terminalPattern("([^;:]*)"))
+        b.leaf("STYLE_VALUE").concatenation(b.terminalPattern("[^;: \\t\\n\\x0B\\f\\r]+"))
 
         return b.grammar.grammarRule
     }
@@ -109,7 +109,7 @@ grammar AglStyle {
     leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
     leaf META_IDENTIFIER = "[\\${'$'}][a-zA-Z_][a-zA-Z_0-9-]*" ;
     leaf STYLE_ID = "[-a-zA-Z_][-a-zA-Z_0-9]*" ;
-    leaf STYLE_VALUE = "([^;:]*)" ;
+    leaf STYLE_VALUE = "[^;: \t\n\x0B\f\r]+" ;
 }
     """.trimIndent()
 }

@@ -80,6 +80,8 @@ interface SemanticAnalysisOptions<AsmType : Any, ContextType : Any> {
     var active: Boolean
     var locationMap: Map<Any, InputLocation>
     var context: ContextType?
+    var checkReferences: Boolean
+    var resolveReferences: Boolean
     val options: Map<String, Any>
 }
 

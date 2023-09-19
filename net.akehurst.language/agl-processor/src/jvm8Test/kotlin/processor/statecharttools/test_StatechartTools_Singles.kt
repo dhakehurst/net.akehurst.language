@@ -209,7 +209,7 @@ class test_StatechartTools_Singles {
             .items.map {
                 when (it.kind) {
                     CompletionItemKind.LITERAL -> it.text
-                    CompletionItemKind.PATTERN -> it.ruleName
+                    CompletionItemKind.PATTERN -> it.name
                     CompletionItemKind.SEGMENT -> error("Not expected")
                 }
             }.toSet().sorted()

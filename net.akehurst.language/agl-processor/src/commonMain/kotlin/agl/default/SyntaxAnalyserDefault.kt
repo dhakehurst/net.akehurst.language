@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.syntaxAnalyser
+package net.akehurst.language.agl.default
 
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimpleAbstract
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.asm.*
@@ -30,7 +31,7 @@ import net.akehurst.language.typemodel.api.*
  * @param scopeDefinition TypeNameDefiningScope -> Map<TypeNameDefiningSomethingReferencable, referencableProperty>
  * @param references ReferencingTypeName, referencingPropertyName  -> ??
  */
-class SyntaxAnalyserSimple(
+class SyntaxAnalyserDefault(
     grammarNamespaceQualifiedName: String,
     typeModel: TypeModel,
     scopeModel: ScopeModel
@@ -42,12 +43,7 @@ class SyntaxAnalyserSimple(
     }
 
     override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<AsmSimple>> = lazyMap { embGramName ->
-        //val emTm = this.typeModel.imports.firstOrNull { it.qualifiedName == embGramName } ?: error("TypeModel for '$embGramName' not found")
-        //when (emTm) {
-        //    !is GrammarTypeNamespace -> error("TypeModel for '$embGramName' is not a GrammarTypeModel")
-        //    else -> SyntaxAnalyserSimple(emTm, this.scopeModel) as SyntaxAnalyser<A>
-        //}
-        SyntaxAnalyserSimple(embGramName, typeModel, this.scopeModel)
+        SyntaxAnalyserDefault(embGramName, typeModel, this.scopeModel)
     }
 
 }

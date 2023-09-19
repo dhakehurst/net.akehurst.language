@@ -21,7 +21,6 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.api.grammar.*
-import net.akehurst.language.api.processor.LanguageProcessorException
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.collections.LazyMutableMapNonNull
 import net.akehurst.language.collections.lazyMutableMapNonNull
@@ -42,9 +41,9 @@ internal class ConverterToRuntimeRules(
         RuntimeRuleSet(_ruleSetNumber, grammar.qualifiedName, rules, _precRules)
     }
 
-    fun originalRuleItemFor(runtimeRuleSetNumber: Int, runtimeRuleNumber: Int): RuleItem =
+    fun originalRuleItemFor(runtimeRuleSetNumber: Int, runtimeRuleNumber: Int): RuleItem? =
         this.originalRuleItem[Pair(runtimeRuleSetNumber, runtimeRuleNumber)]
-            ?: throw LanguageProcessorException("Cannot find original item for ($runtimeRuleSetNumber,$runtimeRuleNumber)", null)
+
 
     // index by tag
     private val runtimeRules = mutableMapOf<String, RuntimeRule>()

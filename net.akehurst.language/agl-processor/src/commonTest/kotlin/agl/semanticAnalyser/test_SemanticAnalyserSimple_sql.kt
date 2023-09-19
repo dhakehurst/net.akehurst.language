@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.syntaxAnalyser
+package net.akehurst.language.agl.semanticAnalyser
 
+import net.akehurst.language.agl.default.SyntaxAnalyserDefault
+import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
+import net.akehurst.language.agl.syntaxAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -136,7 +140,7 @@ grammar SQL {
         ).let {
             it.asm ?: error("Unable to parse ScopeModel\n${it.issues}")
         }
-        val syntaxAnalyser = SyntaxAnalyserSimple(grammar.qualifiedName, typeModel, scopeModel)
+        val syntaxAnalyser = SyntaxAnalyserDefault(grammar.qualifiedName, typeModel, scopeModel)
         val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
             grammarStr,
             Agl.configuration {

@@ -40,10 +40,15 @@ class test_VistraqQuery_Singles {
             return Agl.processorFromStringDefault(grammarStr).processor!! //TODO: use build
         }
 
+        fun test_process(sentence: String, goal: String) {
+            val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
+            assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        }
+
     }
 
     @Test
-    fun NULL() {
+    fun parse_NULL_null() {
         val sentence = "null"
         val goal = "NULL"
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
@@ -52,7 +57,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test
-    fun REAL_0() {
+    fun parse_REAL_0() {
         val sentence = "0"
         val goal = "REAL"
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
@@ -65,7 +70,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test
-    fun REAL_p0() {
+    fun parse_REAL_p0() {
         val sentence = ".0"
         val goal = "REAL"
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
@@ -79,7 +84,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test
-    fun REAL_0p0() {
+    fun parse_REAL_0p0() {
         val sentence = "0.0"
         val goal = "REAL"
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
@@ -88,7 +93,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test
-    fun REAL_3p14() {
+    fun parse_REAL_3p14() {
         val sentence = "3.14"
         val goal = "REAL"
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
@@ -97,7 +102,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test
-    fun expression_1() {
+    fun parse_expression_1() {
         val queryStr = "1"
         val goal = "expression"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
@@ -108,7 +113,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test
-    fun literalValue_0p1() {
+    fun parse_literalValue_0p1() {
         val queryStr = "0.1"
         val goal = "literalValue"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
@@ -119,7 +124,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test
-    fun expression_0p1() {
+    fun parse_expression_0p1() {
         val queryStr = "0.1"
         val goal = "expression"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
@@ -130,7 +135,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test
-    fun nodeSelector_NOT_A() {
+    fun parse_nodeSelector_NOT_A() {
         val queryStr = "NOT A"
         val goal = "nodeSelector"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
@@ -141,7 +146,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test
-    fun pathExpression_NOT_A() {
+    fun parse_pathExpression_NOT_A() {
         val queryStr = "NOT A"
         val goal = "pathExpression"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
@@ -152,7 +157,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test
-    fun pathQuery_MATCH_NOT_A() {
+    fun parse_pathQuery_MATCH_NOT_A() {
         val queryStr = "MATCH NOT A"
         val goal = "pathQuery"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
@@ -163,7 +168,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test
-    fun expression_literalValue_true() {
+    fun parse_expression_literalValue_true() {
         val queryStr = "true"
         val goal = "expression"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
@@ -174,7 +179,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test(timeout = 5000)
-    fun expression_long_3() {
+    fun parse_expression_long_3() {
         val queryStr = "a.p AND b.p AND c.p AND d.p"
         val goal = "expression"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
@@ -186,7 +191,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test(timeout = 5000)
-    fun expression_long_5() {
+    fun parse_expression_long_5() {
         val queryStr = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p"
         val goal = "expression"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
@@ -197,7 +202,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test//(timeout = 5000)
-    fun expression_long_11() {
+    fun parse_expression_long_11() {
         val queryStr = "a.p AND b.p AND c.p AND d.p AND e.p AND f.p AND g.p AND h.p AND i.p AND j.p AND k.p AND l.p"
         val goal = "expression"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
@@ -208,7 +213,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test//(timeout = 5000)
-    fun expression_long_fromBlog() {
+    fun parse_expression_long_fromBlog() {
         val queryStr = """
      ms.released == true
      AND ft.status == 'done'
@@ -232,7 +237,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test
-    fun whereClause_expression_literalValue_true() {
+    fun parse_whereClause_expression_literalValue_true() {
         val queryStr = "WHERE true"
         val goal = "whereClause"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
@@ -243,7 +248,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test
-    fun pathQuery1() {
+    fun parse_pathQuery1() {
         val queryStr = "MATCH Milestone WHERE true"
         val goal = "pathQuery"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
@@ -254,7 +259,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test
-    fun singleQuery1() {
+    fun parse_singleQuery_MATCH_X_RETURN_1() {
         val queryStr = "MATCH Milestone RETURN VALUE 1"
         val goal = "singleQuery"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
@@ -265,7 +270,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test
-    fun singleQuery2() {
+    fun parse_singleQuery_MATCH_X_WHERE_t_RETURN_1() {
         val queryStr = """
    MATCH Milestone WHERE true RETURN VALUE 1
         """.trimIndent()
@@ -278,7 +283,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test(timeout = 5000)
-    fun q2() {
+    fun parse_q2() {
         val queryStr = """
             FOR TIMESPAN all EVERY month
              FROM artefactCount
@@ -297,7 +302,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test(timeout = 5000)
-    fun query1() {
+    fun parse_query1() {
         val queryStr = "MATCH A WHERE a == b AND a == b AND true RETURN TABLE COLUMN a CONTAINING a"
         //val queryStr = "MATCH A  RETURN 1"
         val goal = "query"
@@ -309,7 +314,7 @@ class test_VistraqQuery_Singles {
     }
 
     @Test(timeout = 5000)
-    fun query2() {
+    fun parse_query2() {
         val queryStr = """
 FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
  MATCH Milestone AS ms
@@ -345,7 +350,7 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
 
     @ExperimentalTime
     @Test//(timeout = 10000)
-    fun fromBlog() {
+    fun parse_fromBlog() {
         val queryStr = """
 FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
  MATCH Milestone AS ms
@@ -400,7 +405,7 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
     }
 
     @Test
-    fun returnTable1() {
+    fun parse_returnTable1() {
         val queryStr = "RETURN TABLE COLUMN a CONTAINING a ORDER BY a"
         val goal = "returnTable"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
@@ -411,12 +416,19 @@ FOR TIMESPAN '01-Jan-2017' UNTIL '31-Dec-2017' EVERY month
     }
 
     @Test
-    fun returnTable() {
+    fun parse_returnTable() {
         val queryStr = "MATCH A AS a LINKED TO B AS b RETURN TABLE COLUMN a CONTAINING a.identity COLUMN b CONTAINING b.identity ORDER BY a"
         val goal = "singleQuery"
         val result = processor.parse(queryStr, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt, result.issues.toString())
         val resultStr = result.sppt!!.asSentence
         assertEquals(queryStr, resultStr)
+    }
+
+    @Test
+    fun process_RETURN_null() {
+        val sentence = "RETURN VALUE null"
+        val goal = "query"
+        test_process(sentence, goal)
     }
 }

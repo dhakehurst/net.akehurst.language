@@ -30,9 +30,11 @@ import kotlin.test.assertTrue
 @RunWith(Parameterized::class)
 class test_QueryParserValid(val data: Data) {
 
-    companion object {
+    private companion object {
 
-        private val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/Query.agl")?.readText() ?: error("File not found")
+        // val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/version_/grammar.agl")?.readText() ?: error("File not found")
+
+        val grammarStr = test_QueryParserValid::class.java.getResource("/vistraq/Query.agl")?.readText() ?: error("File not found")
         var processor = tgqlprocessor()
 
         var sourceFiles = arrayOf("/vistraq/sampleValidQueries.txt")

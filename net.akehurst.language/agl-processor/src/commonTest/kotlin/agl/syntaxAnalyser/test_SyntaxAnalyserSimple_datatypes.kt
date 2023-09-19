@@ -16,6 +16,9 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.default.SemanticAnalyserDefault
+import net.akehurst.language.agl.default.SyntaxAnalyserDefault
+import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
@@ -64,13 +67,14 @@ class test_SyntaxAnalyserSimple_datatypes {
             TypeModelFromGrammar.create(result.asm!!.last())
         }
         val scopeModel = ScopeModelAgl()
-        val syntaxAnalyser = SyntaxAnalyserSimple(grammar.qualifiedName, typeModel, scopeModel)
+        val syntaxAnalyser = SyntaxAnalyserDefault(grammar.qualifiedName, typeModel, scopeModel)
         val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
             grammarStr,
             Agl.configuration {
                 scopeModelResolver { ProcessResultDefault(scopeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
                 typeModelResolver { ProcessResultDefault(typeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
                 syntaxAnalyserResolver { ProcessResultDefault(syntaxAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) }
+                semanticAnalyserResolver { ProcessResultDefault(SemanticAnalyserDefault(scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
             }
         ).processor!!
     }

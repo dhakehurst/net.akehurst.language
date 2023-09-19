@@ -60,7 +60,7 @@ class GrammarTypeModelBuilder(
     }
 
     fun listTypeOf(name: String, elementTypeName: String): TypeInstance {
-        val elementType = _namespace.findOrCreateDataTypeNamed(elementTypeName)!!
+        val elementType = _namespace.findOwnedOrCreateDataTypeNamed(elementTypeName)!!
         return listTypeFor(name, elementType)
     }
 
@@ -73,13 +73,13 @@ class GrammarTypeModelBuilder(
         listSeparatedTypeFor(name, itemType.instance(), separatorType.instance())
 
     fun listSeparatedTypeOf(name: String, itemTypeName: String, separatorType: TypeDefinition) {
-        val itemType = _namespace.findOrCreateDataTypeNamed(itemTypeName)!!
+        val itemType = _namespace.findOwnedOrCreateDataTypeNamed(itemTypeName)!!
         listSeparatedTypeFor(name, itemType, separatorType)
     }
 
     fun listSeparatedTypeOf(name: String, itemTypeName: String, separatorTypeName: String) {
-        val itemType = _namespace.findOrCreateDataTypeNamed(itemTypeName)!!
-        val separatorType = _namespace.findOrCreateDataTypeNamed(separatorTypeName)!!
+        val itemType = _namespace.findOwnedOrCreateDataTypeNamed(itemTypeName)!!
+        val separatorType = _namespace.findOwnedOrCreateDataTypeNamed(separatorTypeName)!!
         listSeparatedTypeFor(name, itemType, separatorType)
     }
 
@@ -94,7 +94,7 @@ class GrammarTypeModelBuilder(
     fun unnamedSuperTypeTypeOf(name: String, subtypes: List<Any>): UnnamedSuperTypeType {
         val sts = subtypes.map {
             when (it) {
-                is String -> _namespace.findOrCreateDataTypeNamed(it)!!
+                is String -> _namespace.findOwnedOrCreateDataTypeNamed(it)!!
                 is TypeDefinition -> it
                 else -> error("Cannot map to TypeDefinition: $it")
             }

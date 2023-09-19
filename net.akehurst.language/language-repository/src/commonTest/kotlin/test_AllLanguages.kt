@@ -34,7 +34,7 @@ data class TestData(
     val sentence: String,
     val isValid: Boolean
 ) {
-    override fun toString(): String = "$grammarPath/$sentencePath"
+    override fun toString(): String = "$grammarPath - $sentencePath"
 }
 
 private suspend fun fetchTestData(): List<TestData> {
@@ -43,14 +43,18 @@ private suspend fun fetchTestData(): List<TestData> {
     rootFs.listNames().forEach { lang ->
         rootFs[lang].listNames().forEach { ver ->
             val grammarPath = "$lang/$ver"
-            val grammarStr = rootFs[lang][ver]["grammar.agl"].readString()
-            rootFs[lang][ver]["valid"].list().collectIndexed { _, value ->
-                val sentence = value.readString()
-                testData.add(TestData(grammarPath, grammarStr, "valid/${value.baseName}", sentence, true))
-            }
-            rootFs[lang][ver]["invalid"].list().collectIndexed { _, value ->
-                val sentence = value.readString()
-                testData.add(TestData(grammarPath, grammarStr, "valid/${value.baseName}", sentence, false))
+            rootFs[lang][ver].listNames().forEach { fileName ->
+                if (fileName.startsWith("grammar") && fileName.endsWith(".agl")) {
+                    val grammarStr = rootFs[lang][ver][fileName].readString()
+                    rootFs[lang][ver]["valid"].list().collectIndexed { _, value ->
+                        val sentence = value.readString()
+                        testData.add(TestData("$grammarPath/$fileName", grammarStr, "valid/${value.baseName}", sentence, true))
+                    }
+                    rootFs[lang][ver]["invalid"].list().collectIndexed { _, value ->
+                        val sentence = value.readString()
+                        testData.add(TestData("$grammarPath/$fileName", grammarStr, "valid/${value.baseName}", sentence, false))
+                    }
+                }
             }
         }
     }
@@ -68,9 +72,9 @@ class test_AllLanguages : FunSpec({
     }
     context("parse") {
         withData(tests) { testData ->
-            val procRes = Agl.processorFromStringDefault(testData.grammarString)
-            assertTrue(procRes.issues.errors.isEmpty(), procRes.issues.toString())
-            val proc = procRes.processor!!
+            val aglRes = Agl.processorFromStringDefault(testData.grammarString)
+            assertTrue(aglRes.issues.errors.isEmpty(), aglRes.issues.toString())
+            val proc = aglRes.processor!!
             val parseResult = proc.parse(testData.sentence)
             if (testData.isValid) {
                 assertTrue(parseResult.issues.errors.isEmpty(), parseResult.issues.toString())
@@ -83,9 +87,20 @@ class test_AllLanguages : FunSpec({
     }
     context("process") {
         withData(tests) { testData ->
-            val processor = Agl.processorFromStringDefault(testData.grammarString)
+            val aglRes = Agl.processorFromStringDefault(testData.grammarString)
+            assertTrue(aglRes.issues.errors.isEmpty(), aglRes.issues.toString())
+            val processor = aglRes.processor!!
 
-            TODO()
+            val procResult = processor.process(testData.sentence)
+            if (testData.isValid) {
+                assertTrue(procResult.issues.errors.isEmpty(), procResult.issues.toString())
+                //TODO: format and check resulting asm
+                //val asm = procResult.asm!!
+                //val frmRes = processor.formatAsm(asm)
+                // assertEquals(testData.sentence, frmRes.sentence)
+            } else {
+                assertTrue(procResult.issues.errors.isNotEmpty())
+            }
         }
     }
 })

@@ -81,48 +81,52 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, SentenceC
     private fun LITERAL(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext<String>): List<CompletionItem> {
         val scopeItems = context.rootScope.items["LITERAL"]?.values ?: emptyList()
         return scopeItems.map {
-            CompletionItem(CompletionItemKind.LITERAL, "LITERAL", it)
+            CompletionItem(CompletionItemKind.LITERAL, it, "LITERAL").also {
+                it.description = "Reference to a literal value used in the grammar. Literals are enclosed in single quotes or leaf rules."
+            }
         }
     }
 
     private fun PATTERN(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext<String>): List<CompletionItem> {
         val scopeItems = context.rootScope.items["PATTERN"]?.values ?: emptyList()
         return scopeItems.map {
-            CompletionItem(CompletionItemKind.LITERAL, "PATTERN", it)
+            CompletionItem(CompletionItemKind.LITERAL, it, "PATTERN").also {
+                it.description = "Reference to a pattern value (regular expression) used in the grammar. Patterns are enclosed in double quotes or leaf rules."
+            }
         }
     }
 
     private fun IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext<String>): List<CompletionItem> {
         val scopeItems = context.rootScope.items[grammarRule.type.qualifiedName]?.values ?: emptyList()
         return scopeItems.map {
-            CompletionItem(CompletionItemKind.LITERAL, grammarRule.type.name, it)
+            CompletionItem(CompletionItemKind.LITERAL, it, grammarRule.type.name)
         }
     }
 
     private fun META_IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext<String>): List<CompletionItem> {
-        return listOf(CompletionItem(CompletionItemKind.LITERAL, "META_IDENTIFIER", "\$keyword"))
+        return listOf(CompletionItem(CompletionItemKind.LITERAL, "\$keyword", "META_IDENTIFIER"))
     }
 
     private fun STYLE_ID(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext<String>): List<CompletionItem> {
         return listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "foreground"),
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "background"),
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_ID", "font-style"),
-            CompletionItem(CompletionItemKind.SEGMENT, "style", "<STYLE_ID>: <STYLE_VALUE>;"),
+            CompletionItem(CompletionItemKind.LITERAL, "foreground", "STYLE_ID"),
+            CompletionItem(CompletionItemKind.LITERAL, "background", "STYLE_ID"),
+            CompletionItem(CompletionItemKind.LITERAL, "font-style", "STYLE_ID"),
+            CompletionItem(CompletionItemKind.SEGMENT, "<STYLE_ID>: <STYLE_VALUE>;", "style"),
         )
     }
 
     private fun STYLE_VALUE(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext<String>): List<CompletionItem> {
         return listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "<colour>"),
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "bold"),
-            CompletionItem(CompletionItemKind.LITERAL, "STYLE_VALUE", "italic"),
+            CompletionItem(CompletionItemKind.LITERAL, "<colour>", "STYLE_VALUE"),
+            CompletionItem(CompletionItemKind.LITERAL, "bold", "STYLE_VALUE"),
+            CompletionItem(CompletionItemKind.LITERAL, "italic", "STYLE_VALUE"),
         )
     }
 
     private fun selectorAndComposition(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext<String>): List<CompletionItem> {
         return listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "selectorAndComposition", ","),
+            CompletionItem(CompletionItemKind.LITERAL, ",", "selectorAndComposition"),
         )
     }
 
@@ -130,11 +134,11 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, SentenceC
         return when (nextExpected) {
             is Terminal -> when (nextExpected.name) {
                 "'{'" -> listOf(
-                    CompletionItem(CompletionItemKind.LITERAL, "rule", "{"),
-                    CompletionItem(CompletionItemKind.SEGMENT, "rule", "{\n  <STYLE_ID>: <STYLE_VALUE>;\n}"),
+                    CompletionItem(CompletionItemKind.LITERAL, "{", "rule"),
+                    CompletionItem(CompletionItemKind.SEGMENT, "{\n  <STYLE_ID>: <STYLE_VALUE>;\n}", "rule"),
                 )
 
-                "'}'" -> listOf(CompletionItem(CompletionItemKind.LITERAL, "rule", "}"))
+                "'}'" -> listOf(CompletionItem(CompletionItemKind.LITERAL, "}", "rule"))
                 else -> error("Internal error: RuleItem $nextExpected not handled")
             }
 
@@ -145,8 +149,8 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, SentenceC
     private fun style(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext<String>): List<CompletionItem> {
         return when (nextExpected) {
             is Terminal -> when (nextExpected.name) {
-                "':'" -> listOf(CompletionItem(CompletionItemKind.LITERAL, "style", ":"))
-                "';'" -> listOf(CompletionItem(CompletionItemKind.LITERAL, "style", ";"))
+                "':'" -> listOf(CompletionItem(CompletionItemKind.LITERAL, ":", "style"))
+                "';'" -> listOf(CompletionItem(CompletionItemKind.LITERAL, ";", "style"))
                 else -> error("Internal error: RuleItem $nextExpected not handled")
             }
 

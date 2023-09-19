@@ -17,12 +17,15 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
+import net.akehurst.language.agl.default.CompletionProviderDefault
+import net.akehurst.language.agl.default.SemanticAnalyserDefault
+import net.akehurst.language.agl.default.SyntaxAnalyserDefault
+import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.grammar.format.AglFormatterModelDefault
 import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.grammar.style.AglStyleModelDefault
-import net.akehurst.language.agl.semanticAnalyser.SemanticAnalyserSimple
 import net.akehurst.language.agl.syntaxAnalyser.*
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.grammar.Grammar
@@ -40,16 +43,17 @@ object Agl {
         targetGrammarName(null) //use default
         defaultGoalRuleName(null) //use default
         typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-        scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel!!), "") }
+        scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel), "") }
         syntaxAnalyserResolver { p ->
             ProcessResultDefault(
-                SyntaxAnalyserSimple(p.grammar!!.qualifiedName, p.typeModel!!, p.scopeModel!!),
+                SyntaxAnalyserDefault(p.grammar!!.qualifiedName, p.typeModel, p.scopeModel),
                 IssueHolder(LanguageProcessorPhase.ALL)
             )
         }
-        semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+        semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserDefault(p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
         styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar(p.grammar!!), "") }
-        formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel!!), "") }
+        formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel), "") }
+        completionProvider { p -> ProcessResultDefault(CompletionProviderDefault(p.grammar!!, p.typeModel, p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
     }
 
     /**
@@ -112,22 +116,19 @@ object Agl {
         formatterModelStr: String? = null,
         grammarAglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = null
     ): LanguageProcessorResult<AsmSimple, ContextSimple> {
-        val config = Agl.configuration {
-            targetGrammarName(null) //use default
-            defaultGoalRuleName(null) //use default
-            typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-            scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel!!), scopeModelStr ?: "") }
-            syntaxAnalyserResolver { p ->
-                ProcessResultDefault(
-                    SyntaxAnalyserSimple(p.grammar!!.qualifiedName, p.typeModel!!, p.scopeModel!!),
-                    IssueHolder(LanguageProcessorPhase.ALL)
-                )
+        val config = Agl.configuration(Agl.configurationDefault()) {
+            if (null != scopeModelStr) {
+                scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel), scopeModelStr) }
             }
-            semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserSimple(p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
-            styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar(p.grammar!!), styleModelStr ?: "") }
-            formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel!!), formatterModelStr ?: "") }
+            if (null != styleModelStr) {
+                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar(p.grammar!!), styleModelStr) }
+            }
+            if (null != formatterModelStr) {
+                formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel), formatterModelStr) }
+            }
         }
-        return processorFromString(grammarDefinitionStr, config, grammarAglOptions)
+        val proc = processorFromString(grammarDefinitionStr, config, grammarAglOptions)
+        return proc
     }
 
     /**
