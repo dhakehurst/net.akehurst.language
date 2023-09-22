@@ -32,7 +32,7 @@ import net.akehurst.language.api.processor.*
 import net.akehurst.language.collections.mutableStackOf
 
 class SemanticAnalyserDefault(
-    val scopeModel: ScopeModel?
+    val scopeModel: ScopeModel
 ) : SemanticAnalyser<AsmSimple, ContextSimple> {
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
@@ -56,51 +56,57 @@ class SemanticAnalyserDefault(
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
 
-        if (options.checkReferences) {
-            this.buildScope(asm, context?.rootScope)
-            asm.rootElements.forEach { walkReferences(it, locationMap, context) }
+        when {
+            null == context -> _issues.info(null, "No context provided, references not checked or resolved, switch of reference checking or provide a context.")
+            options.checkReferences.not() -> _issues.info(null, "Semantic Analysis option 'checkReferences' is off, references not checked.")
+            else -> {
+                this.buildScope(asm, context.rootScope)
+                val resolve = if (options.resolveReferences) {
+                    true
+                } else {
+                    _issues.info(null, "Semantic Analysis option 'resolveReferences' is off, references checked but not resolved.")
+                    false
+                }
+                this.walkReferences(asm, locationMap, context.rootScope, resolve)
+            }
         }
-
         return SemanticAnalysisResultDefault(this._issues)
     }
 
-    private fun walkReferences(o: Any?, locationMap: Map<Any, InputLocation>?, context: ContextSimple?) {
-        when (o) {
-            is AsmElementSimple -> _scopeModel?.resolveReferencesElement(_issues, o, locationMap, context?.rootScope)
-            is List<*> -> o.forEach { walkReferences(it, locationMap, context) }
+    private fun walkReferences(asm: AsmSimple, locationMap: Map<Any, InputLocation>?, rootScope: ScopeSimple<AsmElementPath>, resolve: Boolean) {
+        val resolveFunction: ResolveFunction? = if (resolve) {
+            { ref -> asm.elementIndex[ref] }
+        } else {
+            null
         }
+        asm.traverseDepthFirst(ReferenceResolverDefault(scopeModel, rootScope, resolveFunction, locationMap, _issues))
     }
 
-    private fun buildScope(asm: AsmSimple, rootScope: ScopeSimple<AsmElementPath>?) {
-        if (null == rootScope) {
-            //
-        } else {
-            asm.traverseDepthFirst(object : AsmSimpleTreeWalker() {
+    private fun buildScope(asm: AsmSimple, rootScope: ScopeSimple<AsmElementPath>) {
+        asm.traverseDepthFirst(object : AsmSimpleTreeWalker {
 
-                val currentScope = mutableStackOf(rootScope)
+            val currentScope = mutableStackOf(rootScope)
 
-                override fun root(root: AsmElementSimple) {
-                    addToScope(currentScope.peek(), root)
-                }
+            override fun root(root: AsmElementSimple) {
+                addToScope(currentScope.peek(), root)
+            }
 
-                override fun beforeElement(propertyName: String?, element: AsmElementSimple) {
-                    val scope = currentScope.peek()
-                    addToScope(scope, element)
-                    val chScope = createScope(scope, element)
-                    currentScope.push(chScope)
-                }
+            override fun beforeElement(propertyName: String?, element: AsmElementSimple) {
+                val scope = currentScope.peek()
+                addToScope(scope, element)
+                val chScope = createScope(scope, element)
+                currentScope.push(chScope)
+            }
 
-                override fun afterElement(propertyName: String?, element: AsmElementSimple) {
-                    currentScope.pop()
-                }
+            override fun afterElement(propertyName: String?, element: AsmElementSimple) {
+                currentScope.pop()
+            }
 
-                override fun property(property: AsmElementProperty) {
-                    // do nothing
-                }
+            override fun property(element: AsmElementSimple, property: AsmElementProperty) {
+                // do nothing
+            }
 
-            })
-        }
-
+        })
     }
 
     private fun createScope(scope: ScopeSimple<AsmElementPath>, el: AsmElementSimple): ScopeSimple<AsmElementPath> {

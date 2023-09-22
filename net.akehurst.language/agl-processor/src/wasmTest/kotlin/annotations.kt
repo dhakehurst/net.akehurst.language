@@ -14,21 +14,8 @@
  * limitations under the License.
  *
  */
-package net.akehurst.language.api.sppt
+package net.akehurst.language.test
 
-import net.akehurst.language.agl.sppt.TreeDataComplete
-import kotlin.test.assertEquals
+actual annotation class FixMethodOrder(actual val value: MethodSorters)
 
-object SPPTTest {
-
-    fun matches(expected: SharedPackedParseTree, actual: SharedPackedParseTree) {
-        assertEquals(expected.seasons, actual.seasons)
-        assertEquals(expected.maxNumHeads, actual.maxNumHeads)
-        matches(expected.treeData, actual.treeData)
-    }
-
-    fun matches(expected: TreeDataComplete<*>, actual: TreeDataComplete<*>) {
-        assertEquals(expected.completeChildren.size, actual.completeChildren.size)
-        TODO()
-    }
-}
+actual enum class MethodSorters { NAME_ASCENDING, JVM, DEFAULT }

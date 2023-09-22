@@ -15,10 +15,14 @@
  *
  */
 
-package net.akehurst.language.agl.regex
+package net.akehurst.language.api.scopes.test
 
-//actual fun String.asRegexLiteral() :Regex {
-//    val escaped = this.replace("\\W","\\\\$&")
-//    return Regex("\\Q${this}\\E")
-//}
+import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 
+object ScopeModelTest {
+
+    fun assertEqual(expected: ScopeModelAgl, actual: ScopeModelAgl) {
+
+    }
+
+}

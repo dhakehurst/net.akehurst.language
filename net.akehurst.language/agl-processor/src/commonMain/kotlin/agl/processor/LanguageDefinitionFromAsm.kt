@@ -24,12 +24,19 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
     override val identity: String,
     grammar: Grammar,
     buildForDefaultGoal: Boolean,
-    configuration: LanguageProcessorConfiguration<AsmType, ContextType>
+    initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
     grammar,
     buildForDefaultGoal,
-    configuration
+    initialConfiguration
 ) {
+    private val _configuration = initialConfiguration
+    override var configuration: LanguageProcessorConfiguration<AsmType, ContextType>
+        get() = _configuration
+        set(value) {
+            error("Cannot set the configuration of a LanguageDefinitionFromAsm")
+        }
+
     override var grammarStr: String?
         get() = this.grammar.toString() //TODO:
         set(value) {

@@ -82,7 +82,7 @@ interface SemanticAnalysisOptions<AsmType : Any, ContextType : Any> {
     var context: ContextType?
     var checkReferences: Boolean
     var resolveReferences: Boolean
-    val options: Map<String, Any>
+    val other: Map<String, Any>
 }
 
 interface CompletionProviderOptions<AsmType : Any, ContextType : Any> {

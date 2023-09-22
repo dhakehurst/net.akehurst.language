@@ -14,11 +14,22 @@
  * limitations under the License.
  *
  */
+package net.akehurst.language.api.sppt.test
 
-package net.akehurst.language.agl.regex
+import net.akehurst.language.agl.sppt.TreeDataComplete
+import net.akehurst.language.api.sppt.SharedPackedParseTree
+import kotlin.test.assertEquals
 
-//actual fun String.asRegexLiteral() :Regex {
-//    val escaped = this.replace("\\W","\\\\$&")
-//    return Regex("\\Q${this}\\E")
-//}
+object SPPTTest {
 
+    fun matches(expected: SharedPackedParseTree, actual: SharedPackedParseTree) {
+        assertEquals(expected.seasons, actual.seasons)
+        assertEquals(expected.maxNumHeads, actual.maxNumHeads)
+        matches(expected.treeData, actual.treeData)
+    }
+
+    fun matches(expected: TreeDataComplete<*>, actual: TreeDataComplete<*>) {
+        assertEquals(expected.completeChildren.size, actual.completeChildren.size)
+        TODO()
+    }
+}

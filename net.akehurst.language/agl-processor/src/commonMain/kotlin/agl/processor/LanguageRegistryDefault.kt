@@ -69,7 +69,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                 identity = grammarLanguageIdentity,
                 AglGrammarGrammar,
                 buildForDefaultGoal = false,
-                configuration = Agl.configuration {
+                initialConfiguration = Agl.configuration {
                     targetGrammarName(AglGrammarGrammar.name)
                     defaultGoalRuleName(AglGrammarGrammar.goalRuleName)
                     typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(AglGrammarGrammar), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -94,7 +94,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                 identity = scopesLanguageIdentity,
                 AglScopesGrammar,
                 buildForDefaultGoal = false,
-                configuration = Agl.configuration {
+                initialConfiguration = Agl.configuration {
                     targetGrammarName(AglScopesGrammar.name)
                     defaultGoalRuleName(AglScopesGrammar.goalRuleName)
                     typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(AglScopesGrammar), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -119,7 +119,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                 identity = formatLanguageIdentity,
                 AglFormatGrammar,
                 buildForDefaultGoal = false,
-                configuration = Agl.configuration {
+                initialConfiguration = Agl.configuration {
                     targetGrammarName(AglFormatGrammar.name)
                     defaultGoalRuleName(AglFormatGrammar.goalRuleName)
                     typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(AglFormatGrammar), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -149,7 +149,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                 identity = styleLanguageIdentity,
                 AglStyleGrammar,
                 buildForDefaultGoal = false,
-                configuration = Agl.configuration {
+                initialConfiguration = Agl.configuration {
                     targetGrammarName(AglStyleGrammar.name)
                     defaultGoalRuleName(AglStyleGrammar.goalRuleName)
                     typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -191,7 +191,7 @@ class LanguageRegistryDefault : LanguageRegistry {
             grammarStrArg = grammarStr,
             aglOptions = aglOptions,
             buildForDefaultGoal = buildForDefaultGoal,
-            configuration = configuration
+            initialConfiguration = configuration
         )
     )
 
@@ -221,7 +221,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                 grammarStrArg = null,
                 aglOptions = aglOptions,
                 buildForDefaultGoal = false,
-                configuration = LanguageProcessorConfigurationDefault()
+                initialConfiguration = Agl.configurationEmpty()
             )
             registerFromDefinition(placeholder)
         } else {

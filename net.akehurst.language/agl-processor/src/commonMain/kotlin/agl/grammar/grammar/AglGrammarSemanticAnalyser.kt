@@ -61,9 +61,14 @@ class AglGrammarSemanticAnalyser(
         return emptyList()
     }
 
-    override fun analyse(asm: List<Grammar>, locationMap: Map<Any, InputLocation>?, context: GrammarContext?, options: Map<String, Any>): SemanticAnalysisResult {
+    override fun analyse(
+        asm: List<Grammar>,
+        locationMap: Map<Any, InputLocation>?,
+        context: GrammarContext?,
+        options: SemanticAnalysisOptions<List<Grammar>, GrammarContext>
+    ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
-        this._analyseAmbiguities = options[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? ?: false
+        this._analyseAmbiguities = options.other[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? ?: false
 
         asm.forEach { languageRegistry.registerGrammar(it) }
 

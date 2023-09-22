@@ -24,6 +24,10 @@ plugins {
     // id("io.kotest.multiplatform") version ("5.7.2")
 }
 
+// do not publish
+tasks.withType<PublishToMavenLocal> { onlyIf { false } }
+
+
 dependencies {
 
     commonTestImplementation(project(":agl-processor"))
@@ -59,8 +63,4 @@ kotlin {
             resources.srcDir(projectDir.resolve("languages"))
         }
     }
-}
-
-tasks.withType<PublishToMavenLocal> {
-    onlyIf { false }
 }

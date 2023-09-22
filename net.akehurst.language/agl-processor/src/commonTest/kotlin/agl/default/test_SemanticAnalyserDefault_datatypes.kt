@@ -34,7 +34,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class test_SemanticAnalyserSimple_datatypes {
+class test_SemanticAnalyserDefault_datatypes {
 
     private companion object {
         val grammarProc = Agl.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
@@ -92,6 +92,7 @@ class test_SemanticAnalyserSimple_datatypes {
                 scopeModelResolver { ProcessResultDefault(scopeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
                 typeModelResolver { ProcessResultDefault(typeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
                 syntaxAnalyserResolver { ProcessResultDefault(syntaxAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) }
+                semanticAnalyserResolver { ProcessResultDefault(SemanticAnalyserDefault(scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
             }
         ).processor!!
     }
@@ -102,8 +103,12 @@ class test_SemanticAnalyserSimple_datatypes {
             datatype A { }
         """.trimIndent()
 
-        val result = processor.process(sentence)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        val result = processor.process(sentence, Agl.options {
+            semanticAnalysis {
+                context(ContextSimple())
+            }
+        })
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.asm)
 
         val expected = asmSimple {
@@ -127,9 +132,13 @@ class test_SemanticAnalyserSimple_datatypes {
             datatype B { }
         """.trimIndent()
 
-        val result = processor.process(sentence)
+        val result = processor.process(sentence, Agl.options {
+            semanticAnalysis {
+                context(ContextSimple())
+            }
+        })
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
 
         val expected = asmSimple {
             element("Unit") {
@@ -216,7 +225,7 @@ class test_SemanticAnalyserSimple_datatypes {
             }
         )
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
 
         val expected = asmSimple(scopeModel, ContextSimple()) {
             element("Unit") {

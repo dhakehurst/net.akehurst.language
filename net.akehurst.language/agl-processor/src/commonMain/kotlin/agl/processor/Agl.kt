@@ -39,6 +39,19 @@ object Agl {
 
     val registry: LanguageRegistry = LanguageRegistryDefault()
 
+    fun <AsmType : Any, ContextType : Any> configurationEmpty(): LanguageProcessorConfiguration<AsmType, ContextType> =
+        LanguageProcessorConfigurationDefault(
+            targetGrammarName = null,
+            defaultGoalRuleName = null,
+            typeModelResolver = null,
+            scopeModelResolver = null,
+            syntaxAnalyserResolver = null,
+            semanticAnalyserResolver = null,
+            formatterResolver = null,
+            styleResolver = null,
+            completionProvider = null
+        )
+
     fun configurationDefault(): LanguageProcessorConfiguration<AsmSimple, ContextSimple> = Agl.configuration {
         targetGrammarName(null) //use default
         defaultGoalRuleName(null) //use default
@@ -93,7 +106,7 @@ object Agl {
         grammar: Grammar,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = null
     ): LanguageProcessor<AsmType, ContextType> {
-        val config = configuration ?: LanguageProcessorConfigurationDefault()
+        val config = configuration ?: configurationEmpty()
         return LanguageProcessorDefault<AsmType, ContextType>(grammar, config)
     }
 

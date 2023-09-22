@@ -19,6 +19,12 @@ kotlin {
             customField("description:", "For defining types")
         }
     }
+
+//    @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
+//    wasm("wasm") {
+//        binaries.library()
+//        browser()
+//    }
 }
 
 exportPublic {

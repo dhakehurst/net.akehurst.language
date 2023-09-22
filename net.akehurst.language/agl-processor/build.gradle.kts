@@ -4,11 +4,6 @@ plugins {
 
 dependencies {
     commonMainApi(project(":type-model"))
-
-    jvm8TestImplementation(project(":type-model", configuration = "jvm8TestFixture"))
-    jsTestImplementation(project(":type-model", configuration = "jsTestFixture"))
-    //jvm8TestImplementation(group = "$group", name = "type-model-jvm8", version = "$version", classifier = "testFixture")
-    //jsTestImplementation(group = "$group", name = "type-model-js", version = "$version", classifier = "testFixture")
 }
 
 kotlin {
@@ -29,6 +24,13 @@ kotlin {
             customField("description:", "Generic Language (DSL) support, (parser, syntax-analyser, formatter, processor, etc), built using Kotlin multiplatform")
         }
     }
+
+    // too many issues in wasm for this to work yet
+//    @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
+//    wasm("wasm") {
+//        binaries.library()
+//        browser()
+//    }
 
     sourceSets {
         commonTest.configure {

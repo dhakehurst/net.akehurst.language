@@ -15,10 +15,18 @@
  *
  */
 
-package net.akehurst.language.agl.regex
+package bugs
 
-//actual fun String.asRegexLiteral() :Regex {
-//    val escaped = this.replace("\\W","\\\\$&")
-//    return Regex("\\Q${this}\\E")
-//}
+import kotlin.test.Test
 
+
+class test_BuggyClass {
+
+    @Test
+    fun testBug() {
+
+        val bc = BuggyClass()
+
+    }
+
+}

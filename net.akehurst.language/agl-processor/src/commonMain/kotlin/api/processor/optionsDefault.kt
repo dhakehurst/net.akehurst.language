@@ -19,15 +19,15 @@ package net.akehurst.language.api.processor
 import net.akehurst.language.api.parser.InputLocation
 
 internal class LanguageProcessorConfigurationDefault<AsmType : Any, ContextType : Any>(
-    override var targetGrammarName: String? = null,
-    override var defaultGoalRuleName: String? = null,
-    override var typeModelResolver: TypeModelResolver<AsmType, ContextType>? = null,
-    override var scopeModelResolver: ScopeModelResolver<AsmType, ContextType>? = null,
-    override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null,
-    override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null,
-    override var formatterResolver: FormatterResolver<AsmType, ContextType>? = null,
-    override var styleResolver: StyleResolver<AsmType, ContextType>? = null,
-    override var completionProvider: CompletionProviderResolver<AsmType, ContextType>? = null
+    override var targetGrammarName: String?,
+    override var defaultGoalRuleName: String?,
+    override var typeModelResolver: TypeModelResolver<AsmType, ContextType>?,
+    override var scopeModelResolver: ScopeModelResolver<AsmType, ContextType>?,
+    override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?,
+    override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?,
+    override var formatterResolver: FormatterResolver<AsmType, ContextType>?,
+    override var styleResolver: StyleResolver<AsmType, ContextType>?,
+    override var completionProvider: CompletionProviderResolver<AsmType, ContextType>?
 ) : LanguageProcessorConfiguration<AsmType, ContextType>
 
 internal class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
@@ -53,9 +53,9 @@ internal class SemanticAnalysisOptionsDefault<AsmType : Any, ContextType : Any>(
     override var active: Boolean = true,
     override var locationMap: Map<Any, InputLocation> = emptyMap(),
     override var context: ContextType? = null,
-    override var checkReferences: Boolean = false,
-    override var resolveReferences: Boolean = false,
-    override val options: Map<String, Any> = mutableMapOf()
+    override var checkReferences: Boolean = true,
+    override var resolveReferences: Boolean = true,
+    override val other: Map<String, Any> = mutableMapOf()
 ) : SemanticAnalysisOptions<AsmType, ContextType>
 
 internal class CompletionProviderOptionsDefault<AsmType : Any, ContextType : Any>(
@@ -241,8 +241,8 @@ class SemanticAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
     private var _active = true
     private var _locationMap = emptyMap<Any, InputLocation>()
     private var _context: ContextType? = null
-    private var _checkReferences = false
-    private var _resolveReferences = false
+    private var _checkReferences = true
+    private var _resolveReferences = true
     private val _options = mutableMapOf<String, Any>()
 
     fun active(value: Boolean) {

@@ -15,10 +15,13 @@
  *
  */
 
-package net.akehurst.language.agl.regex
+package bugs
 
-//actual fun String.asRegexLiteral() :Regex {
-//    val escaped = this.replace("\\W","\\\\$&")
-//    return Regex("\\Q${this}\\E")
-//}
 
+class BuggyClass(
+) {
+
+    private val _hashCode = listOf(1, 2, 3).hashCode()
+    override fun hashCode(): Int = _hashCode
+
+}

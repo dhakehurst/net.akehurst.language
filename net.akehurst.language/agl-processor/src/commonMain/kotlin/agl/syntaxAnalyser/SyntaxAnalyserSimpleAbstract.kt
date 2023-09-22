@@ -46,8 +46,7 @@ data class NodeTypes(
 
 data class DownData(
     val path: AsmElementPath,
-    val typeUse: NodeTypes,
-    val compressedPT: Boolean
+    val typeUse: NodeTypes
 )
 
 data class ChildData(
@@ -95,7 +94,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
 
     override fun walkTree(sentence: Sentence, treeData: TreeDataComplete<out SpptDataNode>, skipDataAsTree: Boolean) {
         val syntaxAnalyserStack = mutableStackOf(this)
-        val downStack = mutableStackOf<DownData?>() //when null don't use branch
+        val downStack = mutableStackOf<DownData>() //when null don't use branch
         val stack = mutableStackOf<ChildData>()
         val walker = object : SpptWalker {
             override fun beginTree() {
@@ -117,7 +116,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
             override fun beginBranch(nodeInfo: SpptDataNodeInfo) {
                 val parentDownData = downStack.peekOrNull()
                 val p = when {
-                    downStack.isEmpty -> AsmElementPath.ROOT
+                    downStack.isEmpty -> AsmElementPath.ROOT + (asm.rootElements.size).toString()
                     null == parentDownData -> AsmElementPath.ROOT.plus("<error>")  // property unused
                     else -> syntaxAnalyserStack.peek().pathFor(parentDownData.path, parentDownData.typeUse.forChildren.type, nodeInfo)
                 }
@@ -130,12 +129,8 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
 
                     else -> syntaxAnalyserStack.peek().typeForNode(parentDownData?.typeUse?.forChildren, nodeInfo)
                 }
-                val tuc = resolveCompressed(tu, nodeInfo)
-                val dd = when {
-                    tuc.forNode.type == typeModel.NothingType -> null //could test for NothingType instead of null when used
-                    else -> DownData(p, tuc, false)
-                }
-                downStack.push(dd)
+                val ddcomp = resolveCompressed(p, tu, nodeInfo)
+                downStack.push(ddcomp)
             }
 
             override fun endBranch(nodeInfo: SpptDataNodeInfo) {
@@ -143,21 +138,9 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
                 val numChildren = nodeInfo.numChildrenAlternatives[opt]!!
                 val children = stack.pop(numChildren)
                 val adjChildren = children.reversed()
-                val downData = when {
-                    true == downStack.peek()?.compressedPT -> {
-                        downStack.pop()
-                        downStack.pop()
-                    }
-
-                    else -> downStack.pop()
-                }
+                val downData = downStack.pop()
                 val value = when {
-                    null == downData -> null //branch not used for element property value, push null for correct num children on stack
-                    //nodeInfo.node.rule.isOptional -> {
-                    //TODO("this currently causes issues")
-                    //    (children[0] as ChildData).value
-                    //}
-
+                    typeModel.NothingType == downData.typeUse.forNode.type -> null //branch not used for element property value, push null for correct num children on stack
                     else -> syntaxAnalyserStack.peek().createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
                 value?.let { locationMap[it] = sentence.locationFor(nodeInfo.node) }
@@ -175,11 +158,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
                 val p = syntaxAnalyserStack.peek().pathFor(parentDownData.path, parentDownData.typeUse.forChildren.type, nodeInfo)
                 val tu = syntaxAnalyserStack.peek().findTypeUsageForRule(embRuleName)
                     ?: error("Type not found for $embRuleName")
-                val tuc = resolveCompressed(tu, nodeInfo)
-                val dd = when {
-                    tuc.forNode.type == typeModel.NothingType -> null //could test for NothingType instead of null when used
-                    else -> DownData(p, tuc, false)
-                }
+                val dd = resolveCompressed(p, tu, nodeInfo)
                 downStack.push(dd)
             }
 
@@ -378,34 +357,44 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
         }
     }
 
-    private fun resolveCompressed(typeUsage: TypeInstance, nodeInfo: SpptDataNodeInfo): NodeTypes {
+    private fun resolveCompressed(p: AsmElementPath, typeUsage: TypeInstance, nodeInfo: SpptDataNodeInfo): DownData {
         val type = typeUsage.type
         return when {
             type is StructuredType && nodeInfo.node.rule.isOptional && nodeInfo.node.rule.hasOnyOneRhsItem && nodeInfo.node.rule.rhsItems[0][0].isTerminal -> {
-                NodeTypes(typeUsage, SimpleTypeModelStdLib.String)
+                DownData(p, NodeTypes(typeUsage, SimpleTypeModelStdLib.String))
             }
 
             type is DataType && type.property.size == 1 -> {
                 // special cases where PT is compressed for lists (and optionals)
                 when {
-                    type.property.values.first().typeInstance.isNullable -> NodeTypes(typeUsage, type.property.values.first().typeInstance)
-                    nodeInfo.node.rule.isOptional -> NodeTypes(typeUsage)
-                    nodeInfo.node.rule.isList -> NodeTypes(typeUsage, type.property.values.first().typeInstance)
-                    else -> NodeTypes(typeUsage)
+                    type.property.values.first().typeInstance.isNullable -> {
+                        val fProp = type.property.values.first()
+                        val pp = p.plus(fProp.name)
+                        DownData(pp, NodeTypes(typeUsage, fProp.typeInstance))
+                    }
+
+                    nodeInfo.node.rule.isOptional -> DownData(p, NodeTypes(typeUsage))
+                    nodeInfo.node.rule.isList -> {
+                        val fProp = type.property.values.first()
+                        val pp = p.plus(fProp.name)
+                        DownData(pp, NodeTypes(typeUsage, fProp.typeInstance))
+                    }
+
+                    else -> DownData(p, NodeTypes(typeUsage))
                 }
             }
 
             type is UnnamedSuperTypeType -> when {
                 // special cases where PT is compressed for choice of concats
                 nodeInfo.node.rule.isChoice -> when {
-                    type.subtypes[nodeInfo.alt.option].type is TupleType -> NodeTypes(typeUsage, type.subtypes[nodeInfo.alt.option])
-                    else -> NodeTypes(typeUsage)
+                    type.subtypes[nodeInfo.alt.option].type is TupleType -> DownData(p, NodeTypes(typeUsage, type.subtypes[nodeInfo.alt.option]))
+                    else -> DownData(p, NodeTypes(typeUsage))
                 }
 
-                else -> NodeTypes(typeUsage)
+                else -> DownData(p, NodeTypes(typeUsage))
             }
 
-            else -> NodeTypes(typeUsage)
+            else -> DownData(p, NodeTypes(typeUsage))
         }
     }
 

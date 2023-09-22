@@ -15,16 +15,15 @@
  */
 
 import com.github.gmazzo.gradle.plugins.BuildConfigExtension
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 plugins {
-    kotlin("multiplatform") version ("1.9.10") apply false
+    kotlin("multiplatform") version ("1.9.20-Beta") apply false
     id("org.jetbrains.dokka") version ("1.8.20") apply false
     id("com.github.gmazzo.buildconfig") version ("4.1.2") apply false
     id("nu.studer.credentials") version ("3.0")
-    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version ("1.9.10") apply false
+    id("net.akehurst.kotlin.gradle.plugin.exportPublic") version ("1.9.20-Beta") apply false
 }
 val kotlin_languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9
 val kotlin_apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9
@@ -115,76 +114,13 @@ subprojects {
                 }
             }
         }
+
         //macosX64("macosX64") {
         //}
 
         sourceSets {
             all {
                 languageSettings.optIn("kotlin.ExperimentalStdlibApi")
-            }
-        }
-    }
-
-    // --- Add TestFixtures TODO: update when fixed in kotlin
-    configurations {
-        val jvm8TestFixture by creating { extendsFrom(configurations["jvm8TestImplementation"]) }
-        val jsTestFixture by creating { extendsFrom(configurations["jsTestImplementation"]) }
-    }
-    @OptIn(ExperimentalKotlinGradlePluginApi::class)
-    configure<KotlinMultiplatformExtension> {
-        val COMMON_TEST_FIXTURE = "commonTestFixture"
-        sourceSets {
-            val commonTestFixture = create(COMMON_TEST_FIXTURE) {
-                dependencies {
-                    implementation(kotlin("test"))
-                    implementation(kotlin("test-annotations-common"))
-                }
-            }
-        }
-        targets {
-            val jvm8 by getting {
-                val tgt = this
-                compilations {
-                    val main by getting
-                    val test by getting
-                    val testFixture by creating {
-                        this.associateWith(main)
-                        defaultSourceSet { dependsOn(sourceSets[COMMON_TEST_FIXTURE]) }
-                        test.associateWith(this)
-                    }
-                    tasks.register<Jar>("jvm8TestFixtureJar") {
-                        group = "build"
-                        archiveAppendix.set("jvm8")
-                        archiveClassifier.set("testFixture")
-                        from(testFixture.output)
-                    }.also {
-                        tasks["assemble"].dependsOn(it)
-                        artifacts.add("jvm8TestFixture", it.get()) // for 'project(...)' dependencies
-                        tgt.mavenPublication { artifact(it.get()) }
-                    }
-                }
-            }
-            val js by getting {
-                val tgt = this
-                compilations {
-                    val main by getting
-                    val test by getting
-                    val testFixture by creating {
-                        this.associateWith(main)
-                        defaultSourceSet { dependsOn(sourceSets[COMMON_TEST_FIXTURE]) }
-                        test.associateWith(this)
-                    }
-                    tasks.register<Jar>("jsTestFixtureJar") {
-                        group = "build"
-                        archiveAppendix.set("js")
-                        archiveClassifier.set("testFixture")
-                        from(testFixture.output)
-                    }.also {
-                        tasks["assemble"].dependsOn(it)
-                        artifacts.add("jsTestFixture", it.get()) // for 'project(...)' dependencies
-                        tgt.mavenPublication { artifact(it.get()) }
-                    }
-                }
             }
         }
     }

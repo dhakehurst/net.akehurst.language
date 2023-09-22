@@ -25,10 +25,7 @@ import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.processor.SemanticAnalysisResult
-import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.style.AglStyleSelectorKind
 
@@ -65,7 +62,12 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, SentenceConte
         return emptyList()
     }
 
-    override fun analyse(asm: AglStyleModel, locationMap: Map<Any, InputLocation>?, context: SentenceContext<String>?, options: Map<String, Any>): SemanticAnalysisResult {
+    override fun analyse(
+        asm: AglStyleModel,
+        locationMap: Map<Any, InputLocation>?,
+        context: SentenceContext<String>?,
+        options: SemanticAnalysisOptions<AglStyleModel, SentenceContext<String>>
+    ): SemanticAnalysisResult {
         val locMap = locationMap ?: mapOf()
         val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
         if (null != context) {

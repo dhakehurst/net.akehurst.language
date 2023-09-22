@@ -71,7 +71,7 @@ class test_CompletionProviderDefault {
         """
         val sentence = ""
         val expected = listOf(
-            CompletionItem(CompletionItemKind.LITERAL, "<[a-z]>", "\"[a-z]\"")
+            CompletionItem(CompletionItemKind.PATTERN, "<\"[a-z]\">", "[a-z]")
         )
         test(grammarStr, sentence, sentence.length, expected)
     }

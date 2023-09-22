@@ -16,14 +16,7 @@
 package net.akehurst.language.agl.grammar.scopes
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
 import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.asm.AsmElementPath
-import net.akehurst.language.api.asm.AsmElementReference
-import net.akehurst.language.api.asm.AsmElementSimple
-import net.akehurst.language.api.asm.children
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.ProcessResult
 import net.akehurst.language.api.processor.SentenceContext
 
@@ -77,6 +70,7 @@ class ScopeModelAgl
         return null != getReferablePropertyNameFor(scopeFor, typeName)
     }
 
+    /*
     internal fun resolveReferencesElement(
         issues: IssueHolder,
         el: AsmElementSimple,
@@ -110,7 +104,7 @@ class ScopeModelAgl
                                 "Cannot find '${v.reference}' as reference for '${el.typeName}.${prop.name}'"
                             )
                         } else {
-                            val rel = el.asm.index[referred]
+                            val rel = el.asm.elementIndex[referred]
                             if (null == rel) {
                                 val location = locationMap?.get(el) //TODO: should be property location
                                 issues.error(
@@ -138,6 +132,7 @@ class ScopeModelAgl
             }
         }
     }
+     */
 }
 
 data class ScopeDefinition(

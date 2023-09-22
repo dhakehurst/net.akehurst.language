@@ -299,7 +299,7 @@ grammar Dot  {
 
         val result = processor.process(sentence)
         val actual = result.asm?.rootElements?.firstOrNull()
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(actual)
 
         val expected = asmSimple {
@@ -335,7 +335,7 @@ grammar Dot  {
         val result = processor.process(sentence)
         val actual = result.asm?.rootElements?.firstOrNull()
         assertNotNull(actual)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
     }
 
     @Test

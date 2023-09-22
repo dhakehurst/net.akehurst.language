@@ -150,7 +150,8 @@ internal class AglGrammarSyntaxAnalyser(
         val extendNameList = children as List<String>
         val sl = extendNameList.toSeparatedList<String, String>()
         val extendedGrammars = sl.items.map {
-            GrammarReferenceDefault(localNamespace, it)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
+            // need to manually add the GrammarReference as it is not seen by the super class
+            GrammarReferenceDefault(localNamespace, it).also { this.locationMap[it] = sentence.locationFor(target.node) }
         }
         return extendedGrammars
     }

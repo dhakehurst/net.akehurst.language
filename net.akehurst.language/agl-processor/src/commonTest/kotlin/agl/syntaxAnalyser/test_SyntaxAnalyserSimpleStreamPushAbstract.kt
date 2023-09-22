@@ -133,7 +133,12 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
 
             override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> = emptyList()
 
-            override fun analyse(asm: String, locationMap: Map<Any, InputLocation>?, context: ContextSimple?, options: Map<String, Any>): SemanticAnalysisResult {
+            override fun analyse(
+                asm: String,
+                locationMap: Map<Any, InputLocation>?,
+                context: ContextSimple?,
+                options: SemanticAnalysisOptions<String, ContextSimple>
+            ): SemanticAnalysisResult {
                 return SemanticAnalysisResultDefault(IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS))
             }
 

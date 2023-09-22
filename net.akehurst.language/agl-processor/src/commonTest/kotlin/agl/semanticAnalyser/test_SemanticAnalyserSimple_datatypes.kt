@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.syntaxAnalyser
+package net.akehurst.language.agl.semanticAnalyser
 
+import net.akehurst.language.agl.default.SemanticAnalyserDefault
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
-import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
-import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
+import net.akehurst.language.agl.syntaxAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
@@ -34,7 +36,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class test_SyntaxAnalyserSimple_datatypes {
+class test_SemanticAnalyserSimple_datatypes {
 
     private companion object {
         val grammarProc = Agl.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
@@ -65,7 +67,18 @@ class test_SyntaxAnalyserSimple_datatypes {
             assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
             TypeModelFromGrammar.create(result.asm!!.last())
         }
-        val scopeModel = ScopeModelAgl()
+        val scopeModel = ScopeModelAgl.fromString(
+            ContextFromTypeModel(grammar.qualifiedName, typeModel), """
+            identify Unit by §nothing
+            scope Unit {
+                identify Primitive by id
+                identify Datatype by id
+            }
+            references {
+                in TypeReference property type refers-to Primitive|Datatype
+            }
+        """
+        ).asm!!
         val syntaxAnalyser = SyntaxAnalyserDefault(grammar.qualifiedName, typeModel, scopeModel)
         val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
             grammarStr,
@@ -73,50 +86,9 @@ class test_SyntaxAnalyserSimple_datatypes {
                 scopeModelResolver { ProcessResultDefault(scopeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
                 typeModelResolver { ProcessResultDefault(typeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
                 syntaxAnalyserResolver { ProcessResultDefault(syntaxAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) }
+                semanticAnalyserResolver { ProcessResultDefault(SemanticAnalyserDefault(scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
             }
         ).processor!!
-    }
-
-    @Test
-    fun typeModel() {
-        val actual = processor.typeModel
-        val expected = grammarTypeModel("test.Test", "Test", "Unit") {
-            //unit = declaration* ;
-            dataType("unit", "Unit") {
-                propertyListTypeOf("declaration", "Declaration", false, 0)
-            }
-            // primitive = 'primitive' ID ;
-            dataType("primitive", "Primitive") {
-                propertyPrimitiveType("id", "String", false, 1)
-            }
-            // datatype = 'datatype' ID '{' property* '}' ;
-            dataType("datatype", "Datatype") {
-                propertyPrimitiveType("id", "String", false, 1)
-                propertyListTypeOf("property", "Property", false, 3)
-            }
-            // declaration = datatype | primitive ;
-            dataType("declaration", "Declaration") {
-                subtypes("Datatype", "Primitive")
-            }
-            // property = ID ':' typeReference ;
-            dataType("property", "Property") {
-                propertyPrimitiveType("id", "String", false, 0)
-                propertyDataTypeOf("typeReference", "TypeReference", false, 2)
-            }
-            // typeReference = type typeArguments? ;
-            dataType("typeReference", "TypeReference") {
-                propertyPrimitiveType("type", "String", false, 0)
-                propertyDataTypeOf("typeArguments", "TypeArguments", true, 1)
-            }
-            // typeArguments = '<' [typeReference / ',']+ '>' ;
-            dataType("typeArguments", "TypeArguments") {
-                propertyListTypeOf("typeReference", "TypeReference", false, 1)
-            }
-            stringTypeFor("ID")
-            stringTypeFor("type")
-        }
-
-        GrammarTypeModelTest.tmAssertEquals(expected, actual)
     }
 
     @Test
@@ -127,7 +99,7 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val result = processor.process(sentence)
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty())
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
 
         val expected = asmSimple {
             element("Unit") {
@@ -189,9 +161,8 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         )
         assertNotNull(result.asm)
-        assertTrue(result.issues.errors.isEmpty())
 
-        val expected = asmSimple {
+        val expected = asmSimple(ScopeModelAgl(), ContextSimple()) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Datatype") {
@@ -200,7 +171,7 @@ class test_SyntaxAnalyserSimple_datatypes {
                             element("Property") {
                                 propertyString("id", "a")
                                 propertyElementExplicitType("typeReference", "TypeReference") {
-                                    propertyString("type", "String") // no scope model - not a reference
+                                    reference("type", "String")
                                     propertyString("typeArguments", null)
                                 }
                             }
@@ -209,7 +180,12 @@ class test_SyntaxAnalyserSimple_datatypes {
                 }
             }
         }
-        val expItems = emptyList<LanguageIssue>()
+        val expItems = listOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(21, 9, 2, 7),
+                "Cannot find 'String' as reference for 'TypeReference.type'", null
+            )
+        )
 
         assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
         assertEquals(expItems, result.issues.errors)
@@ -247,7 +223,7 @@ class test_SyntaxAnalyserSimple_datatypes {
                             element("Property") {
                                 propertyString("id", "a")
                                 propertyElementExplicitType("typeReference", "TypeReference") {
-                                    propertyString("type", "String") // no scope model - not a reference
+                                    reference("type", "String") // no scope model - not a reference
                                     propertyString("typeArguments", null)
                                 }
                             }

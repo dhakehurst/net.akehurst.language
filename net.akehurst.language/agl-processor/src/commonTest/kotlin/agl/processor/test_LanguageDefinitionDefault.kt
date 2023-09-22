@@ -172,7 +172,7 @@ class test_LanguageDefinitionDefault {
                 LanguageIssue(
                     LanguageIssueKind.ERROR,
                     LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                    InputLocation(34, 35, 1, 3),
+                    InputLocation(34, 35, 1, 2),
                     "Grammar 'XX' not found",
                     null
                 )

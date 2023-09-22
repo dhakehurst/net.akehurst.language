@@ -17,12 +17,13 @@
 package net.akehurst.language.api.asm
 
 import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
+import net.akehurst.language.agl.default.ReferenceResolverDefault
+import net.akehurst.language.agl.default.ResolveFunction
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
 import net.akehurst.language.agl.syntaxAnalyser.createReferenceLocalToScope
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.simple.TupleTypeSimple
 
@@ -75,26 +76,27 @@ class AsmSimpleBuilder(
         return list
     }
 
-    private fun resolveReferences(issues: IssueHolder, o: Any?, locationMap: Map<Any, InputLocation>?, context: ScopeSimple<AsmElementPath>?) {
-        when (o) {
-            is AsmElementSimple -> _scopeModel.resolveReferencesElement(issues, o, locationMap, context?.rootScope)
-            is List<*> -> o.forEach { resolveReferences(issues, it, locationMap, context) }
-        }
-    }
+//    private fun resolveReferences(issues: IssueHolder, o: Any?, locationMap: Map<Any, InputLocation>?, context: ScopeSimple<AsmElementPath>?) {
+//        when (o) {
+//            is AsmElementSimple -> _scopeModel.resolveReferencesElement(issues, o, locationMap, context?.rootScope)
+//            is List<*> -> o.forEach { resolveReferences(issues, it, locationMap, context) }
+//        }
+//    }
 
     fun build(): AsmSimple {
         val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
-        if (resolveReferences) {
-            _asm.rootElements.forEach { el ->
-                resolveReferences(issues, el, emptyMap(), _context?.rootScope)
+        if (resolveReferences && null != _context) {
+            val resolveFunction: ResolveFunction = { ref ->
+                _asm.elementIndex[ref]
             }
+            _asm.traverseDepthFirst(ReferenceResolverDefault(_scopeModel, _context.rootScope, resolveFunction, null, issues))
         }
-        if (issues.all.isEmpty()) {
-            return _asm
-        } else {
-            error("Issues building asm:\n${issues.all.joinToString(separator = "\n") { "$it" }}")
-        }
+        //       if (issues.all.isEmpty()) {
+        return _asm
+//        } else {
+//            error("Issues building asm:\n${issues.all.joinToString(separator = "\n") { "$it" }}")
     }
+    //   }
 }
 
 @AsmSimpleBuilderMarker
