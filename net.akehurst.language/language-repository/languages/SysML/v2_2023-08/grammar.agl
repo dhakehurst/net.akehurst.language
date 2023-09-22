@@ -1,0 +1,182 @@
+namespace net.akehurst.language.SysMLv2
+
+grammar Base {
+    skip leaf WS = "\s+" ;
+
+    leaf DEFINED_BY  = ':'   | 'defined' 'by' ;
+    leaf SPECIALIZES = ':>'  | 'specializes' ;
+    leaf SUBSETS     = ':>'  | 'subsets' ;
+    leaf REFERENCES  = '::>' | 'references' ;
+    leaf REDEFINES   = ':>>' | 'redefines';
+
+    leaf STRING_VALUE = "\"(\\\"|[^\"])*\"" ;
+    leaf REGULAR_COMMENT =  "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*/" ;
+    leaf ID = "[a-zA-Z_]" ;
+    leaf UNRESTRICTED_NAME = "'([^'\\]|\\'|\\\\)*'" ;
+
+    NAME = ID | UNRESTRICTED_NAME  ;
+    QualifiedName = [NAME / '::']+ ;
+
+    Identification = ( '<' declaredShortName '>' )? declaredName? ;
+    declaredShortName = NAME ;
+    declaredName = NAME ;
+
+}
+
+// 8.2.2.4
+grammar Annotations extends Base {
+    Annotation = QualifiedName ;
+    OwnedAnnotation = AnnotatingElement ;
+    AnnotatingMember = AnnotatingElement ;
+    AnnotatingElement
+        = Comment
+        | Documentation
+        | TextualRepresentation
+        //| MetadataFeature  // not defined in the std ?
+        ;
+
+    Comment = 'comment' Identification ( 'about' [Annotation / ',']+ )? REGULAR_COMMENT ;
+    Documentation = 'doc' Identification REGULAR_COMMENT ;
+
+    TextualRepresentation = ( 'rep' Identification )? 'language' STRING_VALUE REGULAR_COMMENT ;
+}
+
+/*
+grammar Metadata extends Annotations {
+
+    MetadataDefinition = 'abstract'? 'def' Definition ;
+    PrefixMetadataAnnotation = PrefixMetadataUsage ;
+    MetadataUsage =
+        ('meadata' | '@') MetadataUsageDeclaration ( 'about' [Annotation / ',' ]+ )?
+    	MetadataBody
+    ;
+
+    PrefixMetadataUsage =  MetadataTyping
+    //	 MetadataBodyUsageMember*
+    ;
+
+    MetadataUsageDeclaration =	( Identification? DEFINED_BY )?  MetadataTyping ;
+
+    MetadataTyping = QualifiedName ;
+
+    MetadataBody =
+    	  ';'
+    	| '{' (  DefinitionMember
+    		  |  MetadataBodyUsageMember
+    		  |  AliasMember
+    		  |  Import
+    	      )*
+    	  '}'
+    ;
+
+    MetadataBodyUsageMember = MetadataBodyUsage ;
+    MetadataBodyUsage =
+	    'ref'? REDEFINES? OwnedRedefinition FeatureSpecializationPart? ValuePart?
+	    MetadataBody
+    ;
+
+    RedefinedElement = ; //
+}
+*/
+
+// 8.2.2.2
+grammar ElementsAndRelationships extends Annotations {
+
+    RelationshipBody = ';' | '{' OwnedAnnotation* '}' ;
+
+
+    // temp dummmy substitues for metatdata
+    PrefixMetadataAnnotation = 'meta-ann' ;
+    PrefixMetadataMember = 'meta-mem' ;
+}
+
+// 8.2.2.3
+grammar Dependencies extends ElementsAndRelationships {
+    Dependency =
+        PrefixMetadataAnnotation*
+        'dependency' DependencyDeclaration RelationshipBody
+    ;
+
+    DependencyDeclaration = ( Identification 'from' )? [QualifiedName / ',' ]+ 'to' [QualifiedName / ',' ]+ ;
+}
+
+grammar Expressions {
+
+    OwnedExpression =  ;
+
+}
+
+
+// 8.2.2.5
+grammar NamespacesAndPackages extends Dependencies, Expressions {
+
+    //RootNamespace = PackageBodyElement* ;
+    Package =  PrefixMetadataMember* PackageDeclaration PackageBody ;
+    LibraryPackage = 'standard' 'library' PrefixMetadataMember* PackageDeclaration PackageBody ;
+    PackageDeclaration = 'package' Identification ;
+    PackageBody = ';' | '{' PackageBodyElement* '}' ;
+    PackageBodyElement
+      = PackageMember
+      | ElementFilterMember
+      | AliasMember
+      |  Import
+      ;
+
+    MemberPrefix = VisibilityIndicator? ;
+    PackageMember = MemberPrefix ( DefinitionElement | UsageElement ) ;
+    ElementFilterMember = MemberPrefix 'filter' OwnedExpression ';' ;
+    AliasMember = MemberPrefix 'alias' ( '<' NAME '>' )? NAME?
+        'for' QualifiedName
+        RelationshipBody
+      ;
+
+    Import = VisibilityIndicator? 'import' 'all'? ( ImportedNamespace | ImportedFilterPackage ) RelationshipBody ;
+    ImportedNamespace = QualifiedName? ( NAME | '*' ) ( '::' '**' )? ;
+    ImportedFilterPackage = FilterPackage ;
+    FilterPackage = FilterPackageImport FilterPackageMember+ ;
+    FilterPackageImport = ImportedNamespace ;
+    FilterPackageMember = '[' OwnedExpression ']' ;
+    VisibilityIndicator = 'public' | 'private' | 'protected' ;
+
+
+    DefinitionElement
+        = Package
+        | LibraryPackage
+        | AnnotatingElement
+        | Dependency
+/*
+        | AttributeDefinition
+        | EnumerationDefinition
+        | OccurrenceDefinition
+        | IndividualDefinition
+        | ItemDefinition
+        | PartDefinition
+        | ConnectionDefinition
+        | FlowConnectionDefinition
+        | InterfaceDefinition
+        | PortDefinition
+        | ActionDefinition
+        | CalculationDefinition
+        | StateDefinition
+        | ConstraintDefinition
+        | RequirementDefinition
+        | ConcernDefinition
+        | StakeholderDefinition
+        | CaseDefinition
+        | AnalysisCaseDefinition
+        | VerificationCaseDefinition
+        | UseCaseDefinition
+        | ViewDefinition
+        | ViewpointDefinition
+        | RenderingDefinition
+        | MetadataDefinition
+        | ExtendedDefinition
+*/
+        ;
+
+    UsageElement
+        = //NonOccurrenceUsageElement
+        //| OccurrenceUsageElement
+        ;
+}
+
