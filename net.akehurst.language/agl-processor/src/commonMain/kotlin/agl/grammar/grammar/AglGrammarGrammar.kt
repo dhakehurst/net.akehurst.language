@@ -151,10 +151,11 @@ IDENTIFIER {
     //TODO: gen this from the ASM
     override fun toString(): String = """
 namespace net.akehurst.language.agl
+
 grammar AglGrammar {
     skip WHITESPACE = "\s+" ;
     skip MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*/" ;
-    skip SINGLE_LINE_COMMENT = "//[\n\r]*?" ;
+    skip SINGLE_LINE_COMMENT = "//[^\n\r]*" ;
 
     grammarDefinition = namespace definitions ;
     namespace = 'namespace' qualifiedName ;
@@ -174,7 +175,7 @@ grammar AglGrammar {
     priorityChoice = [ concatenation / '<' ]2+ ;
     simpleChoice = [ concatenation / '|' ]2+ ;
     concatenation = concatenationItem+ ;
-    concatenationItem = simpleItem | listOfItems ;
+    concatenationItem = simpleItemOrGroup | listOfItems ;
     simpleItemOrGroup = simpleItem | group ;
     simpleItem = terminal | nonTerminal | embedded ;
     listOfItems = simpleList | separatedList ;

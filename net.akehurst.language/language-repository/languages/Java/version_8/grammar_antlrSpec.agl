@@ -60,6 +60,11 @@ namespace java8.antlr.spec
 
 grammar Java8ParserSpec {
 
+// moved to top so it is used as the default goal rule
+compilationUnit
+	=	packageDeclaration? importDeclaration* typeDeclaration*
+	;
+
 literal
 	=	IntegerLiteral
 	|	FloatingPointLiteral
@@ -226,9 +231,10 @@ ambiguousName
  * Productions from §7 (Packages)
  */
 
-compilationUnit
-	=	packageDeclaration? importDeclaration* typeDeclaration*
-	;
+// moved to top so it is used as the default goal rule
+//compilationUnit
+//	=	packageDeclaration? importDeclaration* typeDeclaration*
+//	;
 
 packageDeclaration
 	=	packageModifier* 'package' packageName ';'

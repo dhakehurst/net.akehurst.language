@@ -656,28 +656,6 @@ grammar Mscript {
     }
 
     @Test
-    fun process_script_empty() {
-
-        val text = ""
-        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
-
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
-    }
-
-    @Test
-    fun process_script_blankline() {
-
-        val text = """
-        """
-        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
-
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
-
-    }
-
-    @Test
     fun process_func_100_args() {
         val text = "fprintf(''" + ",0".repeat(99) + ");"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
@@ -725,43 +703,6 @@ grammar Mscript {
 
         val text = "func();"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("statementList") })
-
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
-
-    }
-
-    @Test
-    fun process_script_func() {
-
-        val text = "func();"
-        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
-
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
-
-    }
-
-    @Test
-    fun process_script_func3() {
-
-        val text = """
-            func();
-            func();
-            func();
-        """.trimIndent()
-        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
-
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
-
-    }
-
-    @Test
-    fun parse_script_func_args() {
-
-        val text = "func(false,1,'abc',3.14, root);"
-        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty())

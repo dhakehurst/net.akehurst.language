@@ -97,8 +97,10 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
         val downStack = mutableStackOf<DownData>() //when null don't use branch
         val stack = mutableStackOf<ChildData>()
         val walker = object : SpptWalker {
+            var isRoot = true
             override fun beginTree() {
                 syntaxAnalyserStack.peek().createAsm()
+                isRoot = true
             }
 
             override fun endTree() {
@@ -118,10 +120,12 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
                 val p = when {
                     downStack.isEmpty -> AsmElementPath.ROOT + (asm.rootElements.size).toString()
                     null == parentDownData -> AsmElementPath.ROOT.plus("<error>")  // property unused
+                    isRoot -> parentDownData.path
                     else -> syntaxAnalyserStack.peek().pathFor(parentDownData.path, parentDownData.typeUse.forChildren.type, nodeInfo)
                 }
                 val tu = when {
-                    downStack.isEmpty -> {
+                    isRoot -> {
+                        isRoot = false
                         val typeUse = syntaxAnalyserStack.peek().findTypeUsageForRule(nodeInfo.node.rule.tag)
                             ?: error("Type not found for ${nodeInfo.node.rule.tag}")
                         typeUse
@@ -165,7 +169,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
             override fun endEmbedded(nodeInfo: SpptDataNodeInfo) {
                 val embSyntaxAnalyser = syntaxAnalyserStack.pop()
                 val embeddedAsm = embSyntaxAnalyser._asm!!
-
+                downStack.pop()
                 val value = embeddedAsm.rootElements[0]
                 value?.let { locationMap[it] = sentence.locationFor(nodeInfo.node) }
                 stack.push(ChildData(nodeInfo, value))

@@ -30,123 +30,7 @@ class test_Dot_Singles {
 
     private companion object {
 
-        private val grammarStr = """
-/**
- * Copyright (C) 2020 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/*
- * There are two grammars.
- * The dot grammar contains Xml as an embedded grammar.
- */
-
-namespace net.akehurst.language.example.dot
-
-grammar Xml {
-
-	skip COMMENT = "<!-- [.]* -->" ;
-
-	file = element? ;
-
-	element = elementEmpty | elementContent ;
-	elementEmpty = '<' WS? NAME WS? attribute* '/>' ;
-    elementContent = startTag content endTag ;
-	startTag = '<' WS? NAME WS? attribute* '>' ;
-	endTag = '</' WS? NAME WS? '>' ;
-
-	content = (CHARDATA | element)* ;
-
-	attribute = NAME WS? '=' WS? string WS? ;
-	string = DOUBLE_QUOTE_STRING | SINGLE_QUOTE_STRING ;
-	WS = "\s+" ;
-	CHARDATA = "[^<]+" ;
-	NAME = "[a-zA-Z][a-zA-Z0-9]*" ;
-	DOUBLE_QUOTE_STRING = "\"([^\"\\]|\.)*\"" ;
-	SINGLE_QUOTE_STRING = "['][^']*[']" ;
-}
-
-grammar Dot  {
-
-    skip leaf WHITESPACE = "\s+" ;
-	skip leaf MULTI_LINE_COMMENT = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
-	skip leaf SINGLE_LINE_COMMENT = "//[^\n\r]*" ;
-	skip leaf C_PREPROCESSOR = "#[^\n\r]*" ;
-
-	graph =
-	  STRICT? type ID? '{' stmt_list '}'
-	;
-    type = GRAPH | DIGRAPH ;
-
-	stmt_list = stmt1 * ;
-    stmt1 = stmt  ';'? ;
-	stmt
-	  = node_stmt
-      | edge_stmt
-      | attr_stmt
-      | assign
-      | subgraph
-      ;
-
-    assign = ID '=' ID ;
-
-    node_stmt = node_id attr_lists? ;
-    node_id = ID port? ;
-    port =
-        ':' ID (':' compass_pt)?
-      | ':' compass_pt
-      ;
-    leaf compass_pt	= 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw' | 'c' | '_' ;
-
-    edge_stmt =	edge_list attr_lists? ;
-    edge_list = [edge_end / EDGEOP ]2+ ;
-    edge_end = node_id | subgraph ;
-    leaf EDGEOP = '--' | '->' ;
-
-    attr_stmt = attr_type attr_lists ;
-    attr_type = GRAPH | NODE | EDGE ;
-    attr_lists = attr_list+ ;
-    attr_list = '[' attr_list_content ']' ;
-    attr_list_content = [ attr / a_list_sep ]* ;
-    attr = ID '=' ID ;
-    a_list_sep = (';' | ',')? ;
-
-    subgraph = subgraph_id? '{' stmt_list '}' ;
-    subgraph_id = SUBGRAPH ID? ;
-
-
-	leaf STRICT = "[Ss][Tt][Rr][Ii][Cc][Tt]";
-	leaf GRAPH = "[Gg][Rr][Aa][Pp][Hh]" ;
-	leaf DIGRAPH = "[Dd][Ii][Gg][Rr][Aa][Pp][Hh]" ;
-	leaf SUBGRAPH = "[Ss][Uu][Bb][Gg][Rr][Aa][Pp][Hh]" ;
-	leaf NODE = "[Nn][Oo][Dd][Ee]" ;
-    leaf EDGE = "[Ee][Dd][Gg][Ee]" ;
-
-	ID =
-	  ALPHABETIC_ID
-	| NUMERAL
-	| DOUBLE_QUOTE_STRING
-	| HTML
-	;
-
-	leaf ALPHABETIC_ID = "[a-zA-Z_][a-zA-Z_0-9]*" ; //"[a-zA-Z\200-\377_][a-zA-Z\200-\377_0-9]*" ;
-
-	leaf NUMERAL = "[-+]?([0-9]+([.][0-9]+)?|([.][0-9]+))" ;
-	leaf DOUBLE_QUOTE_STRING = "\"(?:[^\"\\]|\\.)*\"" ;
-	HTML = '<' Xml::elementContent '>' ;
-}
-        """
+        private val grammarStr = this::class.java.getResource("/dot/version_9.0.0/grammar.agl").readText()
         var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
 
     }
@@ -212,7 +96,7 @@ grammar Dot  {
             ID { HTML {
               '<'
               WHITESPACE : ' '
-              §Xml§elementContent§embedded1 { Xml::elementContent {
+              §Xml§elementContent§embedded1 : Xml::elementContent {
                 startTag {
                   '<'
                   §startTag§opt1 { §empty }
@@ -229,7 +113,7 @@ grammar Dot  {
                   §endTag§opt2 { §empty }
                   '>'
                 }
-              } }
+              }
               WHITESPACE : ' '
               '>'
             } }

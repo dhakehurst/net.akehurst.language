@@ -47,8 +47,12 @@ private suspend fun fetchTestData(): List<TestData> {
                 if (fileName.startsWith("grammar") && fileName.endsWith(".agl")) {
                     val grammarStr = rootFs[lang][ver][fileName].readString()
                     rootFs[lang][ver]["valid"].list().collectIndexed { _, value ->
-                        val sentence = value.readString()
-                        testData.add(TestData("$grammarPath/$fileName", grammarStr, "valid/${value.baseName}", sentence, true))
+                        if (value.isDirectory()) {
+
+                        } else {
+                            val sentence = value.readString()
+                            testData.add(TestData("$grammarPath/$fileName", grammarStr, "valid/${value.baseName}", sentence, true))
+                        }
                     }
                     rootFs[lang][ver]["invalid"].list().collectIndexed { _, value ->
                         val sentence = value.readString()

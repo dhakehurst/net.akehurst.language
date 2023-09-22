@@ -1,0 +1,81 @@
+namespace com.yakindu.modelviewer.parser
+
+grammar Mscript {
+
+    // end-of-line ('\n') is not whitespace as it marks end of a line in a statementList
+    skip leaf WHITESPACE = "[ \t\x0B\f]+" ;
+    skip leaf LINE_CONTINUATION =  "[.][.][.](?:.*)[\r\n]" ;
+    skip leaf COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
+    skip leaf MULTI_LINE_COMMENT = "%[{](?:.|\n)*?%[}]" ;
+    skip leaf SINGLE_LINE_COMMENT = "(?:%[^{].+$)|(?:%$)" ;
+
+    script = statementList ;
+    statementList = [line / "[\r\n]+"]* ;
+    // if we treat '\n' as part of the WHITESPACE skip rule, we get ambiguity in statements
+    line = [statement / ';']* ';'? ;
+
+    statement
+      = conditional
+      | assignment
+      | expressionStatement
+      //TODO: others
+      ;
+
+    conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
+    assignment = rootVariable '=' expression ;
+
+    expressionStatement = expression ;
+
+    expression
+      = rootVariable
+      | literalExpression
+      | matrix
+      | functionCallOrIndex
+      | prefixExpression
+      | infixExpression
+      | groupExpression
+      ;
+
+    groupExpression = '(' expression ')' ;
+
+    functionCallOrIndex = NAME '(' argumentList ')' ;
+    argumentList = [ argument / ',' ]* ;
+    argument = expression | colonOperator ;
+
+    prefixExpression = prefixOperator expression ;
+    prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
+
+    infixExpression =  [ expression / infixOperator ]2+ ;
+    infixOperator
+        = '.*' | '*' | './' | '/' | '.\\' | '\\' | '+' | '-'    // arithmetic
+        | '==' | '~=' | '>' | '>=' | '<' | '<='                 // relational
+        | '&' | '|' | '&&' | '||' | '~'                         // logical
+        | ':'                                                   // vector creation
+        ;
+    colonOperator = COLON ; // for index operations
+
+    matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatenation!
+    row = expression (','? expression)* ;
+
+    literalExpression = literalValue ;
+
+    literalValue
+      = BOOLEAN
+      | number
+      | SINGLE_QUOTE_STRING
+      | DOUBLE_QUOTE_STRING
+      ;
+
+    rootVariable = NAME ;
+
+    number = INTEGER | REAL ;
+
+    leaf NAME = "[a-zA-Z_][a-zA-Z_0-9]*" ;
+
+    leaf COLON               = ':' ;
+    leaf BOOLEAN             = 'true' | 'false' ;
+    leaf INTEGER             = "([+]|[-])?[0-9]+" ;
+    leaf REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;
+    leaf SINGLE_QUOTE_STRING = "'(?:[^'\\]|\\.)*'" ;
+    leaf DOUBLE_QUOTE_STRING = "\"(?:[^\"\\]|\\.)*\"" ;
+}
