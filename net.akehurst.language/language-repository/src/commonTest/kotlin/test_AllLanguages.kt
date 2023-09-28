@@ -18,9 +18,8 @@ package net.akehurst.language.repository
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.datatest.withData
-import korlibs.io.file.baseName
+import korlibs.io.file.VfsFile
 import korlibs.io.file.std.localCurrentDirVfs
-import kotlinx.coroutines.flow.collectIndexed
 import net.akehurst.language.agl.processor.Agl
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -37,6 +36,17 @@ data class TestData(
     override fun toString(): String = "$grammarPath - $sentencePath"
 }
 
+suspend fun VfsFile.walk(func: suspend (file: VfsFile) -> Unit = { }) {
+    for (file in listSimple()) {
+        val stat = file.stat()
+        if (stat.isDirectory) {
+            file.walk(func)
+        } else {
+            func(file)
+        }
+    }
+}
+
 private suspend fun fetchTestData(): List<TestData> {
     val testData = mutableListOf<TestData>()
     println("listNames ${rootFs.listNames()}")
@@ -46,17 +56,16 @@ private suspend fun fetchTestData(): List<TestData> {
             rootFs[lang][ver].listNames().forEach { fileName ->
                 if (fileName.startsWith("grammar") && fileName.endsWith(".agl")) {
                     val grammarStr = rootFs[lang][ver][fileName].readString()
-                    rootFs[lang][ver]["valid"].list().collectIndexed { _, value ->
-                        if (value.isDirectory()) {
-
+                    rootFs[lang][ver]["valid"].walk { file ->
+                        if (file.isDirectory()) {
                         } else {
-                            val sentence = value.readString()
-                            testData.add(TestData("$grammarPath/$fileName", grammarStr, "valid/${value.baseName}", sentence, true))
+                            val sentence = file.readString()
+                            testData.add(TestData("$grammarPath/$fileName", grammarStr, file.relativePathTo(rootFs[lang][ver])!!, sentence, true))
                         }
                     }
-                    rootFs[lang][ver]["invalid"].list().collectIndexed { _, value ->
-                        val sentence = value.readString()
-                        testData.add(TestData("$grammarPath/$fileName", grammarStr, "valid/${value.baseName}", sentence, false))
+                    rootFs[lang][ver]["invalid"].walk { file ->
+                        val sentence = file.readString()
+                        testData.add(TestData("$grammarPath/$fileName", grammarStr, file.relativePathTo(rootFs[lang][ver])!!, sentence, false))
                     }
                 }
             }

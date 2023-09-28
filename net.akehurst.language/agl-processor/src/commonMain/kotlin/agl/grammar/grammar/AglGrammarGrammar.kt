@@ -18,6 +18,7 @@ package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarAbstract
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.grammar.grammar.asm.GrammarOptionDefault
 import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.api.grammar.GrammarRule
 
@@ -35,16 +36,27 @@ internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehur
         b.rule("namespace").concatenation(b.terminalLiteral("namespace"), b.nonTerminal("qualifiedName"))
         b.rule("grammar").concatenation(
             b.terminalLiteral("grammar"), b.nonTerminal("IDENTIFIER"), b.nonTerminal("extendsOpt"),
-            b.terminalLiteral("{"), b.nonTerminal("rules"), b.terminalLiteral("}")
+            b.terminalLiteral("{"), b.nonTerminal("options"), b.nonTerminal("rules"), b.terminalLiteral("}")
         )
+        b.rule("options").multi(0, -1, b.nonTerminal("option"))
+        b.rule("option").concatenation(b.terminalLiteral("@"), b.nonTerminal("IDENTIFIER"), b.terminalLiteral(":"), b.nonTerminal("value"))
+        b.rule("value").choiceLongestFromConcatenationItem(b.nonTerminal("IDENTIFIER"), b.nonTerminal("LITERAL"))
         b.rule("extendsOpt").optional(b.nonTerminal("extends"))
         b.rule("extends").concatenation(b.terminalLiteral("extends"), b.nonTerminal("extendsList"))
         b.rule("extendsList").separatedList(1, -1, b.terminalLiteral(","), b.nonTerminal("qualifiedName"))
         b.rule("rules").multi(1, -1, b.nonTerminal("rule"))
-        b.rule("rule").choiceLongestFromConcatenationItem(b.nonTerminal("grammarRule"), b.nonTerminal("preferenceRule"))
+        b.rule("rule").choiceLongestFromConcatenationItem(b.nonTerminal("grammarRule"), b.nonTerminal("overrideRule"), b.nonTerminal("preferenceRule"))
         b.rule("grammarRule").concatenation(b.nonTerminal("ruleTypeLabels"), b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="), b.nonTerminal("rhs"), b.terminalLiteral(";"))
-        b.rule("ruleTypeLabels").concatenation(b.nonTerminal("isOverride"), b.nonTerminal("isSkip"), b.nonTerminal("isLeaf"))
-        b.rule("isOverride").optional(b.terminalLiteral("override"))
+        b.rule("overrideRule").concatenation(
+            b.terminalLiteral("override"),
+            b.nonTerminal("ruleTypeLabels"),
+            b.nonTerminal("IDENTIFIER"),
+            b.nonTerminal("overrideOperator"),
+            b.nonTerminal("rhs"),
+            b.terminalLiteral(";")
+        )
+        b.rule("overrideOperator").choiceLongestFromConcatenationItem(b.terminalLiteral("="), b.terminalLiteral("+=|"))
+        b.rule("ruleTypeLabels").concatenation(b.nonTerminal("isSkip"), b.nonTerminal("isLeaf"))
         b.rule("isSkip").optional(b.terminalLiteral("skip"))
         b.rule("isLeaf").optional(b.terminalLiteral("leaf"))
         b.rule("rhs").choiceLongestFromConcatenationItem(b.nonTerminal("empty"), b.nonTerminal("concatenation"), b.nonTerminal("choice"))
@@ -109,6 +121,8 @@ internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehur
     }
     //}
 
+    override val options = listOf(GrammarOptionDefault("defaultGoal", "grammarDefinition"))
+
     const val styleStr: String = """'namespace' {
   foreground: darkgreen;
   font-style: bold;
@@ -160,15 +174,20 @@ grammar AglGrammar {
     grammarDefinition = namespace definitions ;
     namespace = 'namespace' qualifiedName ;
     definitions = grammar+ ;
-    grammar = 'grammar' IDENTIFIER extendsOpt '{' rules '}' ;
+    grammar = 'grammar' IDENTIFIER extendsOpt '{' parseOptions rules '}' ;
     extendsOpt = extends? ;
     extends = 'extends' extendsList ;
     extendsList = [qualifiedName / ',']+ ;
+    options = option* ;
+    option = '@' IDENTIFIER ':' value ;
+    value = IDENTIFIER | LITERAL ;
     rules = rule+ ;
-    rule = grammarRule | preferenceRule ;
+    rule = grammarRule | overrideRule | preferenceRule ;
     grammarRule = ruleTypeLabels IDENTIFIER '=' rhs ';' ;
+    overrideRule = 'override' ruleTypeLabels IDENTIFIER overrideOperator rhs ';' ;
+    overrideOperator = '=' | '+=|' ;
     rhs = empty | concatenation | choice ;
-    ruleTypeLabels = 'override'? 'skip'? 'leaf'? ;
+    ruleTypeLabels = 'skip'? 'leaf'? ;
     empty = ;
     choice = ambiguousChoice | priorityChoice | simpleChoice ;
     ambiguousChoice = [ concatenation / '||' ]2+ ;

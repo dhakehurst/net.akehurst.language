@@ -36,7 +36,7 @@ internal class FirstOf(
     }
 
     // index by RuntimeRule.number
-    private val _firstOfNotEmpty = hashMapOf<Int,FirstOfResult>()
+    private val _firstOfNotEmpty = hashMapOf<Int, FirstOfResult>()
 
     /*
      * return the LookaheadSet for the given RulePosition.
@@ -51,17 +51,19 @@ internal class FirstOf(
             rulePosition.isAtEnd -> ifReachedEnd
             else -> {
                 // this will iterate .next() until end of rule so no need to do it here
-                val res = firstOfRpNotEmpty(rulePosition, mutableMapOf(), hashMapOf<Int,Boolean>())
+                val res = firstOfRpNotEmpty(rulePosition, mutableMapOf(), hashMapOf<Int, Boolean>())
                 when {
                     res.needsFirstOfParentNext -> when {
                         rulePosition.isAtEnd -> res.result.union(ifReachedEnd)
                         else -> {
-                            val ne = rulePosition.next()
-                                .map { nrp -> this.expectedAt(nrp,ifReachedEnd) }
-                                .fold(LookaheadSetPart.EMPTY) {acc,it -> acc.union(it)}
+                            val next = rulePosition.next()
+                            val notSelf = next - rulePosition
+                            val ne = notSelf.map { nrp -> this.expectedAt(nrp, ifReachedEnd) }
+                                .fold(LookaheadSetPart.EMPTY) { acc, it -> acc.union(it) }
                             res.result.union(ne)
                         }
                     }
+
                     else -> res.result
                 }
                 //res.endResult(ifReachedEnd)
@@ -69,7 +71,7 @@ internal class FirstOf(
         }
     }
 
-    private fun firstOfRpNotEmpty(rulePosition: RulePosition, doneRp: MutableMap<RulePosition, FirstOfResult>, done: MutableMap<Int,Boolean>): FirstOfResult {
+    private fun firstOfRpNotEmpty(rulePosition: RulePosition, doneRp: MutableMap<RulePosition, FirstOfResult>, done: MutableMap<Int, Boolean>): FirstOfResult {
         var existing = doneRp[rulePosition]
         if (null == existing) {
             /*DEBUG*/ if (rulePosition.isAtEnd) error("Internal Error")
@@ -108,7 +110,11 @@ internal class FirstOf(
                                     is RuntimeRuleRhsNonTerminal -> {
                                         val f = firstOfNotEmpty(item, doneRp, done)
                                         result = result.union(f.result)
-                                        if (f.needsFirstOfParentNext) nrps.addAll(rp.next())
+                                        if (f.needsFirstOfParentNext) {
+                                            val rpnxt = rp.next()
+                                            val notSelf = rpnxt - rp
+                                            nrps.addAll(notSelf)
+                                        }
                                     }
 
                                 }
@@ -124,7 +130,7 @@ internal class FirstOf(
         return existing
     }
 
-    private fun firstOfNotEmpty(rule: RuntimeRule, doneRp: MutableMap<RulePosition, FirstOfResult>, done: MutableMap<Int,Boolean>): FirstOfResult {
+    private fun firstOfNotEmpty(rule: RuntimeRule, doneRp: MutableMap<RulePosition, FirstOfResult>, done: MutableMap<Int, Boolean>): FirstOfResult {
         return when {
             0 > rule.ruleNumber -> when (rule.ruleNumber) {
                 // handle special kinds of RuntimeRule
@@ -149,7 +155,7 @@ internal class FirstOf(
         }
     }
 
-    private fun firstOfNotEmptySafe(rule: RuntimeRule, doneRp: MutableMap<RulePosition, FirstOfResult>, done: MutableMap<Int,Boolean>): FirstOfResult {
+    private fun firstOfNotEmptySafe(rule: RuntimeRule, doneRp: MutableMap<RulePosition, FirstOfResult>, done: MutableMap<Int, Boolean>): FirstOfResult {
         var needsNext = false
         var result = LookaheadSetPart.EMPTY
         val rps = rule.rulePositionsAtStart

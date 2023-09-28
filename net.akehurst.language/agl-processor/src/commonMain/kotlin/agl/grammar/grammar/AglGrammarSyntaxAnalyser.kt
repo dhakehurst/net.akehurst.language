@@ -19,7 +19,6 @@ package net.akehurst.language.agl.grammar.grammar
 import net.akehurst.language.agl.collections.toSeparatedList
 import net.akehurst.language.agl.grammar.grammar.asm.*
 import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.syntaxAnalyser.BranchHandler
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.*
@@ -40,49 +39,53 @@ internal class AglGrammarSyntaxAnalyser(
     override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<List<Grammar>>> = emptyMap()
 
     override fun registerHandlers() {
-        this.registerFor("grammarDefinition", this::grammarDefinition)
-        this.registerFor("namespace", this::namespace as BranchHandler<Namespace>)
-        this.registerFor("definitions", this::definitions as BranchHandler<List<Grammar>>)
-        this.registerFor("grammar", this::grammar as BranchHandler<Grammar>)
-        this.registerFor("extendsOpt", this::extendsOpt as BranchHandler<List<GrammarReference>>)
-        this.registerFor("extends", this::extends as BranchHandler<List<GrammarReference>>)
-        this.registerFor("extendsList", this::extendsList as BranchHandler<List<GrammarReference>>)
-        this.registerFor("rules", this::rules as BranchHandler<List<GrammarRule>>)
-        this.registerFor("rule", this::rule as BranchHandler<GrammarItem>)
-        this.registerFor("grammarRule", this::grammarRule as BranchHandler<GrammarRule>)
-        this.registerFor("preferenceRule", this::preferenceRule as BranchHandler<PreferenceRule>)
-        this.registerFor("ruleTypeLabels", this::ruleTypeLabels as BranchHandler<List<String>>)
-        // this.register("ruleType", this::ruleType as BranchHandler2<GrammarRule>)
-        this.registerFor("rhs", this::rhs as BranchHandler<RuleItem>)
-        this.registerFor("empty", this::empty as BranchHandler<RuleItem>)
-        this.registerFor("choice", this::choice as BranchHandler<RuleItem>)
-        this.registerFor("simpleChoice", this::simpleChoice as BranchHandler<RuleItem>)
-        this.registerFor("priorityChoice", this::priorityChoice as BranchHandler<RuleItem>)
-        this.registerFor("ambiguousChoice", this::ambiguousChoice as BranchHandler<RuleItem>)
-        this.registerFor("concatenation", this::concatenation as BranchHandler<Concatenation>)
-        this.registerFor("concatenationItem", this::concatenationItem as BranchHandler<ConcatenationItem>)
-        this.registerFor("simpleItemOrGroup", this::simpleItemOrGroup as BranchHandler<SimpleItem>)
-        this.registerFor("simpleItem", this::simpleItem as BranchHandler<SimpleItem>)
-        this.registerFor("listOfItems", this::listOfItems as BranchHandler<ListOfItems>)
-        this.registerFor("multiplicity", this::multiplicity as BranchHandler<Pair<Int, Int>>)
-        this.registerFor("range", this::range as BranchHandler<Pair<Int, Int>>)
-        this.registerFor("rangeUnBraced", this::rangeUnBraced as BranchHandler<Pair<Int, Int>>)
-        this.registerFor("rangeBraced", this::rangeBraced as BranchHandler<Pair<Int, Int>>)
-        this.registerFor("rangeMaxOpt", this::rangeMaxOpt as BranchHandler<Int>)
-        this.registerFor("rangeMax", this::rangeMax as BranchHandler<Int>)
-        this.registerFor("rangeMaxBounded", this::rangeMaxBounded as BranchHandler<Int>)
-        this.registerFor("rangeMaxUnbounded", this::rangeMaxUnbounded as BranchHandler<Int>)
-        this.registerFor("simpleList", this::simpleList as BranchHandler<SimpleList>)
-        this.registerFor("group", this::group as BranchHandler<Group>)
-        this.registerFor("groupedContent", this::groupedContent as BranchHandler<RuleItem>)
-        this.registerFor("separatedList", this::separatedList as BranchHandler<SeparatedList>)
-        this.registerFor("nonTerminal", this::nonTerminal as BranchHandler<NonTerminal>)
-        this.registerFor("embedded", this::embedded as BranchHandler<Embedded>)
-        this.registerFor("terminal", this::terminal as BranchHandler<Terminal>)
-        this.registerFor("qualifiedName", this::qualifiedName as BranchHandler<String>)
-        this.registerFor("preferenceOption", this::preferenceOption as BranchHandler<PreferenceOption>)
-        this.registerFor("choiceNumber", this::choiceNumber as BranchHandler<Int?>)
-        this.registerFor("associativity", this::associativity as BranchHandler<Int?>)
+        this.register(this::grammarDefinition)
+        this.register(this::namespace)
+        this.register(this::definitions)
+        this.register(this::grammar)
+        this.register(this::options)
+        this.register(this::option)
+        this.register(this::value)
+        this.register(this::extendsOpt)
+        this.register(this::extends)
+        this.register(this::extendsList)
+        this.register(this::rules)
+        this.register(this::rule)
+        this.register(this::grammarRule)
+        this.register(this::overrideRule)
+        this.register(this::overrideOperator)
+        this.register(this::preferenceRule)
+        this.register(this::ruleTypeLabels)
+        this.register(this::rhs)
+        this.register(this::empty)
+        this.register(this::choice)
+        this.register(this::simpleChoice)
+        this.register(this::priorityChoice)
+        this.register(this::ambiguousChoice)
+        this.register(this::concatenation)
+        this.register(this::concatenationItem)
+        this.register(this::simpleItemOrGroup)
+        this.register(this::simpleItem)
+        this.register(this::listOfItems)
+        this.register(this::multiplicity)
+        this.register(this::range)
+        this.register(this::rangeUnBraced)
+        this.register(this::rangeBraced)
+        this.register(this::rangeMaxOpt)
+        this.register(this::rangeMax)
+        this.register(this::rangeMaxBounded)
+        this.register(this::rangeMaxUnbounded)
+        this.register(this::simpleList)
+        this.register(this::group)
+        this.register(this::groupedContent)
+        this.register(this::separatedList)
+        this.register(this::nonTerminal)
+        this.register(this::embedded)
+        this.register(this::terminal)
+        this.register(this::qualifiedName)
+        this.register(this::preferenceOption)
+        this.register(this::choiceNumber)
+        this.register(this::associativity)
     }
 
     override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
@@ -111,24 +114,45 @@ internal class AglGrammarSyntaxAnalyser(
         return ns
     }
 
-    // grammar : 'grammar' IDENTIFIER extendsOpt '{' rules '}' ;
+    // grammar : 'grammar' IDENTIFIER extendsOpt '{' options rules '}' ;
     private fun grammar(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Grammar {
         val namespace = _localStore["namespace"] as Namespace
         val name = children[1] as String
         val extends = (children[2] as List<GrammarReference>?) ?: emptyList()
-        val grmr = GrammarDefault(namespace, name)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
+        val options = children[4] as List<GrammarOption>
+        val rules = children[5] as List<(Grammar) -> GrammarItem>
+
+        val grmr = GrammarDefault(namespace, name, options)
         grmr.extends.addAll(extends)
         _localStore["grammar"] = grmr
-        val rules = children[4] as List<GrammarItem>
-        rules.forEach {
-            (it as GrammarItemAbstract).grammar = grmr
-            when (it) {
-                is GrammarRule -> grmr.grammarRule.add(it)
-                is PreferenceRule -> grmr.preferenceRule.add(it)
+        rules.forEach { f ->
+            val item = f(grmr)
+            when (item) {
+                is OverrideRule -> grmr.grammarRule.add(item)
+                is GrammarRule -> grmr.grammarRule.add(item)
+                is PreferenceRule -> grmr.preferenceRule.add(item)
                 else -> error("Not handled")
             }
         }
         return grmr
+    }
+
+    // options = option* ;
+    private fun options(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<GrammarOption> =
+        children as List<GrammarOption>
+
+    // option = '@' IDENTIFIER ':' value ;
+    private fun option(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarOption {
+        val name = children[1] as String
+        val value = children[3] as String
+        return GrammarOptionDefault(name, value)
+    }
+
+    // value = IDENTIFIER | LITERAL ;
+    private fun value(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String = when (target.alt.option) {
+        0 -> children[0] as String
+        1 -> (children[0] as String).let { it.substring(1, it.length - 1) }
+        else -> error("Unsupported choice")
     }
 
     // extendsOpt = extends?
@@ -157,29 +181,56 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // rules : rule+ ;
-    private fun rules(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<GrammarItem> =
-        children as List<GrammarItem>
+    private fun rules(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<(Grammar) -> GrammarItem> =
+        children as List<(Grammar) -> GrammarItem>
 
-    // rule = grammarRule | preferenceRule
-    private fun rule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarItem =
-        children[0] as GrammarItem
-
+    // rule = overrideRule | grammarRule | preferenceRule
+    private fun rule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (Grammar) -> GrammarItem =
+        children[0] as (Grammar) -> GrammarItem
 
     // grammarRule : ruleTypeLabels IDENTIFIER '=' rhs ';' ;
-    private fun grammarRule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): GrammarRule {
+    private fun grammarRule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (Grammar) -> NormalRule {
         val type = children[0] as List<String>
-        val isOverride = type.contains("override")
         val isSkip = type.contains("skip")
         val isLeaf = type.contains("leaf")
         val name = children[1] as String
-        val result = GrammarRuleDefault(name, isOverride, isSkip, isLeaf)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
         val rhs = children[3] as RuleItem
-        result.rhs = rhs
-        return result
+
+        return { grammar ->
+            val result = NormalRuleDefault(grammar, name, isSkip, isLeaf)
+            result.rhs = rhs
+            result
+                .also { this.locationMap[it] = sentence.locationFor(target.node) }
+        }
     }
 
+    // overrideRule : 'override' ruleTypeLabels IDENTIFIER overrideOperator rhs ';' ;
+    private fun overrideRule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (Grammar) -> OverrideRule {
+        val type = children[1] as List<String>
+        val isSkip = type.contains("skip")
+        val isLeaf = type.contains("leaf")
+        val identifier = children[2] as String
+        val overrideOperator = children[3] as String
+        val overrideKind = when (overrideOperator) {
+            "=" -> OverrideKind.REPLACE
+            "+=|" -> OverrideKind.APPEND_ALTERNATIVE
+            else -> error("overrideOperator $overrideOperator not handled")
+        }
+        val rhs = children[4] as RuleItem
+
+        return { grammar ->
+            val result = OverrideRuleDefault(grammar, identifier, isSkip, isLeaf, overrideKind)
+            result.overridenRhs = rhs
+            result
+                .also { this.locationMap[it] = sentence.locationFor(target.node) }
+        }
+    }
+
+    // overrideOperator = '=' | '+|' ;
+    private fun overrideOperator(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
+        children[0] as String
+
     // ruleTypeLabels : isOverride isSkip isLeaf ;
-    // isOverride = 'override' ? ;
     // isSkip = 'leaf' ? ;
     // isLeaf = 'skip' ? ;
     private fun ruleTypeLabels(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> {
@@ -386,10 +437,13 @@ internal class AglGrammarSyntaxAnalyser(
     }
 
     // preferenceRule = 'preference' simpleItem '{' preferenceOptionList '}' ;
-    private fun preferenceRule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PreferenceRule {
+    private fun preferenceRule(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (Grammar) -> PreferenceRule {
         val forItem = children[1] as SimpleItem
         val optionList = children[3] as List<PreferenceOption>
-        return PreferenceRuleDefault(forItem, optionList)
+        return { grammar ->
+            PreferenceRuleDefault(grammar, forItem, optionList)
+                .also { this.locationMap[it] = sentence.locationFor(target.node) }
+        }
     }
 
     // preferenceOption = nonTerminal choiceNumber 'on' terminalList associativity ;

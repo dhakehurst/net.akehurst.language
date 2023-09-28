@@ -631,7 +631,6 @@ class test_AglGrammar_item {
             """
             rules { rule { grammarRule {
                 ruleTypeLabels {
-                    isOverride|1 { §empty }
                     isSkip|1 { §empty }
                     isLeaf|1 { §empty }
                 }
@@ -757,7 +756,6 @@ class test_AglGrammar_item {
             """
             rule { grammarRule {
                 ruleTypeLabels {
-                    isOverride { §empty }
                     isSkip { §empty }
                     isLeaf { §empty }
                 }
@@ -819,7 +817,6 @@ class test_AglGrammar_item {
             """
 rule { grammarRule {
   ruleTypeLabels {
-    isOverride { §empty }
     isSkip {
       'skip'
       WHITESPACE : ' '
@@ -853,7 +850,6 @@ rule { grammarRule {
             """
             rule { grammarRule {
                 ruleTypeLabels {
-                    isOverride|1 {  §empty } 
                     isSkip|1 {  §empty } 
                     isLeaf {  'leaf' WHITESPACE : ' ' } 
                 }
@@ -882,7 +878,6 @@ rule { grammarRule {
             """
 rule { grammarRule {
   ruleTypeLabels {
-    isOverride { §empty }
     isSkip {
       'skip'
       WHITESPACE : ' '
@@ -919,7 +914,6 @@ rule { grammarRule {
             """
             rule { grammarRule {
               ruleTypeLabels {
-                isOverride { §empty }
                 isSkip { §empty }
                 isLeaf { §empty }
               }
@@ -953,7 +947,6 @@ rule { grammarRule {
             """
 rule { grammarRule {
   ruleTypeLabels {
-    isOverride { §empty }
     isSkip { §empty }
     isLeaf { §empty }
   }
@@ -986,7 +979,6 @@ rule { grammarRule {
             """
             rules { rule { grammarRule {
               ruleTypeLabels {
-                isOverride { §empty }
                 isSkip { §empty }
                 isLeaf { §empty }
               }
@@ -1022,7 +1014,6 @@ rule { grammarRule {
             """
             rules { rule { grammarRule {
               ruleTypeLabels {
-                isOverride { §empty }
                 isSkip { §empty }
                 isLeaf { §empty }
               }
@@ -1064,7 +1055,6 @@ rule { grammarRule {
             """
 rules { rule { grammarRule {
   ruleTypeLabels {
-    isOverride { §empty }
     isSkip { §empty }
     isLeaf { §empty }
   }
@@ -1122,7 +1112,6 @@ grammar {
   WHITESPACE : ' '
   rules { rule { grammarRule {
     ruleTypeLabels {
-      isOverride { §empty }
       isSkip { §empty }
       isLeaf { §empty }
     }
@@ -1164,7 +1153,6 @@ grammar {
   WHITESPACE : ' '
   rules { rule { grammarRule {
     ruleTypeLabels {
-      isOverride { §empty }
       isSkip {
         'skip'
         WHITESPACE : ' '

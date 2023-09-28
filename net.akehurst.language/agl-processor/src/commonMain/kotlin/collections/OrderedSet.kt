@@ -36,7 +36,12 @@ fun <T> Iterable<T>.toMutableOrderedSet(): MutableOrderedSet<T> = when (this) {
     else -> MutableOrderedSetImpl(this.toMutableSet())
 }
 
-operator fun <T> OrderedSet<T>.plus(elements: Iterable<T>): OrderedSet<T> = OrderedSetImpl<T>(this + elements)
+operator fun <T> OrderedSet<T>.plus(elements: Iterable<T>): OrderedSet<T> {
+    //val result = OrderedSetImpl<T>(mapCapacity(elements.collectionSizeOrNull()?.let { this.size + it } ?: this.size * 2))
+    val result = this.toMutableList()
+    result.addAll(elements)
+    return OrderedSetImpl<T>(result)
+}
 
 operator fun <T> MutableOrderedSet<T>.plusAssign(elements: Iterable<T>) {
     this.addAll(elements)

@@ -20,7 +20,6 @@ import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
-import net.akehurst.language.api.processor.LanguageProcessorException
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import kotlin.test.*
 
@@ -1409,7 +1408,6 @@ class test_AglGrammar {
 
     @Test
     fun nonTerminal_slist_range_unbraced_bounded_maxZero() {
-
         val grammarStr = """
             namespace test
             grammar Test {
@@ -1418,11 +1416,8 @@ class test_AglGrammar {
             }
         """.trimIndent()
 
-        assertFailsWith<LanguageProcessorException> {
-            val pr = Agl.processorFromStringDefault(grammarStr)
-        }
-
-
+        val pr = Agl.processorFromStringDefault(grammarStr)
+        assertTrue(pr.issues.errors.isEmpty(), pr.issues.toString())
     }
 
     @Test

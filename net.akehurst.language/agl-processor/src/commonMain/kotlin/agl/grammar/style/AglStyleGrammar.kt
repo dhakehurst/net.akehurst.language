@@ -17,6 +17,7 @@ package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarAbstract
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.grammar.grammar.asm.GrammarOptionDefault
 import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.api.grammar.GrammarRule
 
@@ -49,7 +50,8 @@ internal object AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst
 
         return b.grammar.grammarRule
     }
-    //}
+
+    override val options = listOf(GrammarOptionDefault("defaultGoal", "rules"))
 
     const val styleStr = """META_IDENTIFIER {
   foreground: orange;

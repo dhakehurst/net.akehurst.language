@@ -17,6 +17,7 @@ package net.akehurst.language.agl.grammar.scopes
 
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarAbstract
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.grammar.grammar.asm.GrammarOptionDefault
 import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.api.grammar.GrammarRule
 
@@ -58,7 +59,8 @@ internal object AglScopesGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
         return b.grammar.grammarRule
     }
 
-    //}
+    override val options = listOf(GrammarOptionDefault("defaultGoal", "declarations"))
+
     const val grammarStr = """
 namespace net.akehurst.language.agl
 grammar AglScopes {

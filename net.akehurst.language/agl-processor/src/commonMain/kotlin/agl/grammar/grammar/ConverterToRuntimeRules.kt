@@ -364,7 +364,7 @@ internal class ConverterToRuntimeRules(
             1 -> error("Internal Error: choice should have more than one alternative") //createRhs(rule, target.alternative[0], arg)
             else -> {
                 val choiceKind = when (target) {
-                    is ChoiceEqual -> RuntimeRuleChoiceKind.LONGEST_PRIORITY
+                    is ChoiceLongest -> RuntimeRuleChoiceKind.LONGEST_PRIORITY
                     is ChoicePriority -> RuntimeRuleChoiceKind.PRIORITY_LONGEST
                     is ChoiceAmbiguous -> RuntimeRuleChoiceKind.AMBIGUOUS
                     else -> throw RuntimeException("unsupported")

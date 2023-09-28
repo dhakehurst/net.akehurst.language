@@ -16,6 +16,8 @@
 
 package net.akehurst.language.api.grammar
 
+import net.akehurst.language.agl.collections.OrderedSet
+
 interface GrammarItem {
     val grammar: Grammar
 }
@@ -25,6 +27,11 @@ interface GrammarReference {
     val nameOrQName: String
     val resolved: Grammar?
     fun resolveAs(resolved: Grammar)
+}
+
+interface GrammarOption {
+    val name: String
+    val value: String
 }
 
 /**
@@ -56,6 +63,8 @@ interface Grammar {
      */
     val extends: List<GrammarReference>
 
+    val options: List<GrammarOption>
+
     val grammarRule: List<GrammarRule>
     val preferenceRule: List<PreferenceRule>
 
@@ -64,9 +73,9 @@ interface Grammar {
      * the order of the rules is the order they are defined in with the top of the grammar extension
      * hierarchy coming first (in extension order where more than one grammar is extended)
      */
-    val allResolvedGrammarRule: List<GrammarRule>
+    val allResolvedGrammarRule: OrderedSet<GrammarRule>
 
-    val allResolvedPreferenceRuleRule: List<PreferenceRule>
+    val allResolvedPreferenceRuleRule: OrderedSet<PreferenceRule>
 
     /**
      * the Set of all non-terminal rules in this grammar and those that this grammar extends
@@ -87,6 +96,14 @@ interface Grammar {
 
     val allResolvedEmbeddedGrammars: Set<Grammar>
 
+    /**
+     * find rule with given name in all rules that this grammar extends - but not in this grammar
+     */
+    fun findAllSuperNonTerminalRule(ruleName: String): List<GrammarRule>
+
+    /**
+     * find rule with given name in all rules from this grammar and ones that this grammar extends
+     */
     fun findAllNonTerminalRule(ruleName: String): List<GrammarRule>
 
     fun findNonTerminalRule(ruleName: String): GrammarRule?

@@ -66,7 +66,11 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         SPPTParserDefault((parser as ScanOnDemandParser).runtimeRuleSet, embeddedRuntimeRuleSets)
     }
 
-    protected val defaultGoalRuleName: String? by lazy { configuration.defaultGoalRuleName ?: grammar.grammarRule.first { it.isSkip.not() }.name }
+    protected val defaultGoalRuleName: String? by lazy {
+        configuration.defaultGoalRuleName
+            ?: grammar.options.firstOrNull { it.name == "defaultGoal" }?.value
+            ?: grammar.grammarRule.first { it.isSkip.not() }.name
+    }
 
     //override val grammar: Grammar? by lazy {
     //    val res = configuration.grammarResolver?.invoke()

@@ -37,8 +37,16 @@ interface GrammarRule : GrammarItem {
     val isSkip: Boolean
     val isLeaf: Boolean
     val isOneEmbedded: Boolean
-    var rhs: RuleItem
-    val nodeType: NodeType
+    val rhs: RuleItem
 
     val compressedLeaf: Terminal
+}
+
+interface NormalRule : GrammarRule {
+}
+
+enum class OverrideKind { REPLACE, APPEND_ALTERNATIVE }
+
+interface OverrideRule : GrammarRule {
+    val overrideKind: OverrideKind
 }

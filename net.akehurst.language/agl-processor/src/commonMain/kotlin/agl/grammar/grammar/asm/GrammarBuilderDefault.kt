@@ -20,7 +20,7 @@ import net.akehurst.language.api.grammar.*
 
 class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
 
-    val grammar = GrammarDefault(namespace, name)
+    val grammar = GrammarDefault(namespace, name, emptyList())
 
     private val _terminals = mutableMapOf<String, Terminal>()
     private fun terminal(value: String, isPattern: Boolean): Terminal {
@@ -40,22 +40,19 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
     }
 
     fun rule(name: String): RuleBuilder {
-        return RuleBuilder(GrammarRuleDefault(name, false, false, false).also {
-            it.grammar = this.grammar
+        return RuleBuilder(NormalRuleDefault(grammar, name, false, false).also {
             this.grammar.grammarRule.add(it)
         })
     }
 
     fun skip(name: String, isLeaf: Boolean = false): RuleBuilder {
-        return RuleBuilder(GrammarRuleDefault(name, false, true, isLeaf).also {
-            it.grammar = this.grammar
+        return RuleBuilder(NormalRuleDefault(grammar, name, true, isLeaf).also {
             this.grammar.grammarRule.add(it)
         })
     }
 
     fun leaf(name: String): RuleBuilder {
-        return RuleBuilder(GrammarRuleDefault(name, false, false, true).also {
-            it.grammar = this.grammar
+        return RuleBuilder(NormalRuleDefault(grammar, name, false, true).also {
             this.grammar.grammarRule.add(it)
         })
     }
@@ -86,7 +83,7 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
         return ConcatenationDefault(sequence.toList())
     }
 
-    class RuleBuilder(val rule: GrammarRule) {
+    class RuleBuilder(val rule: NormalRuleDefault) {
 
         fun empty() {
             this.rule.rhs = EmptyRuleDefault()
@@ -101,8 +98,6 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
         }
 
         fun choiceLongestFromConcatenationItem(vararg alternative: ConcatenationItem) {
-            val alternativeConcats = alternative.map { ConcatenationDefault(listOf(it)) }
-//            this.rule.rhs = ChoiceLongestDefault(alternativeConcats);
             this.rule.rhs = ChoiceLongestDefault(alternative.asList());
         }
 

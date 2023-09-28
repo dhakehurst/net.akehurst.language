@@ -35,7 +35,7 @@ interface Concatenation : RuleItem {
 
 interface ConcatenationItem : RuleItem
 
-interface ChoiceEqual : Choice
+interface ChoiceLongest : Choice
 interface ChoicePriority : Choice
 interface ChoiceAmbiguous : Choice
 

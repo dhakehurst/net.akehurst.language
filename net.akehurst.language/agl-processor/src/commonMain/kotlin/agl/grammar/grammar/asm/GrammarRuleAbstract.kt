@@ -19,15 +19,10 @@ package net.akehurst.language.agl.grammar.grammar.asm
 import net.akehurst.language.api.grammar.*
 
 abstract class GrammarItemAbstract() : GrammarItem {
-    override lateinit var grammar: Grammar
+    //override lateinit var grammar: Grammar
 }
 
-data class GrammarRuleDefault(
-    override val name: String,
-    override val isOverride: Boolean,
-    override val isSkip: Boolean,
-    override val isLeaf: Boolean
-) : GrammarItemAbstract(), GrammarRule {
+abstract class GrammarRuleAbstract() : GrammarItemAbstract(), GrammarRule {
 
     companion object {
         class CompressedLeafRule(
@@ -54,7 +49,7 @@ data class GrammarRuleDefault(
             return Regex.escape(value)
         }
 
-        private fun compressRuleItem(compressedName: String, item: RuleItem): CompressedLeafRule {
+        fun compressRuleItem(compressedName: String, item: RuleItem): CompressedLeafRule {
             val grammar = item.owningRule.grammar
             val cr = when (item) {
                 is Terminal -> when {
@@ -117,27 +112,7 @@ data class GrammarRuleDefault(
 
     }
 
-    private var _rhs: RuleItem? = null
-    override var rhs: RuleItem
-        get() {
-            return this._rhs ?: throw GrammarExeception("rhs of rule must be set", null)
-        }
-        set(value) {
-            value.setOwningRule(this, listOf(0))
-            this._rhs = value
-        }
-
     override val isOneEmbedded: Boolean get() = this.rhs is Embedded || (this.rhs is Concatenation) && (this.rhs as Concatenation).items[0] is Embedded
 
-    override val nodeType: NodeType = NodeTypeDefault(this.name)
-
     override val compressedLeaf: Terminal by lazy { compressRuleItem(this.name, this.rhs) }
-
-    override fun toString(): String {
-        var f = ""
-        if (isOverride) f += "override "
-        if (isSkip) f += "skip "
-        if (isLeaf) f += "leaf "
-        return "$f$name = $rhs ;"
-    }
 }

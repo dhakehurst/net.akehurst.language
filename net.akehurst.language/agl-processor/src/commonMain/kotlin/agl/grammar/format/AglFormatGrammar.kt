@@ -17,6 +17,7 @@ package net.akehurst.language.agl.grammar.format
 
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarAbstract
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.grammar.grammar.asm.GrammarOptionDefault
 import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.agl.grammar.scopes.AglScopesGrammar
 import net.akehurst.language.api.grammar.GrammarRule
@@ -39,7 +40,7 @@ internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
             b.nonTerminal("whenExpression")
         )
         b.rule("whenExpression").concatenation(b.terminalLiteral("when"), b.terminalLiteral("{"), b.nonTerminal("whenOptionList"), b.terminalLiteral("}"))
-        b.rule("whenOptionList").multi(0,-1,b.nonTerminal("whenOption"))
+        b.rule("whenOptionList").multi(0, -1, b.nonTerminal("whenOption"))
         b.rule("whenOption").concatenation(b.nonTerminal("expression"), b.terminalLiteral("->"), b.nonTerminal("formatExpression"))
         b.rule("stringExpression").choiceLongestFromConcatenationItem(
             b.nonTerminal("literalString"),
@@ -47,7 +48,7 @@ internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
         )
         b.rule("literalString").concatenation(b.nonTerminal("LITERAL_STRING"))
         b.rule("templateString").concatenation(b.terminalLiteral("\""), b.nonTerminal("templateContentList"), b.terminalLiteral("\""))
-        b.rule("templateContentList").multi(0,-1,b.nonTerminal("templateContent"))
+        b.rule("templateContentList").multi(0, -1, b.nonTerminal("templateContent"))
         b.rule("templateContent").choiceLongestFromConcatenationItem(
             b.nonTerminal("text"),
             b.nonTerminal("templateExpression")
@@ -58,7 +59,7 @@ internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
             b.nonTerminal("templateExpressionEmbedded")
         )
         b.rule("templateExpressionSimple").concatenation(b.nonTerminal("DOLLAR_IDENTIFIER"))
-        b.rule("templateExpressionEmbedded").concatenation(b.terminalLiteral("\${"),b.nonTerminal("expression"),b.terminalLiteral("}"))
+        b.rule("templateExpressionEmbedded").concatenation(b.terminalLiteral("\${"), b.nonTerminal("expression"), b.terminalLiteral("}"))
         //TODO b.rule("expression").concatenation(b.embed("",""))
         b.rule("expression").concatenation(b.nonTerminal("propertyReference"))
         b.rule("propertyReference").concatenation(b.nonTerminal("IDENTIFIER"))
@@ -71,6 +72,8 @@ internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
         return b.grammar.grammarRule
     }
     //}
+
+    override val options = listOf(GrammarOptionDefault("defaultGoal", "unit"))
 
     const val grammarStr = """
         namespace net.akehurst.language.agl

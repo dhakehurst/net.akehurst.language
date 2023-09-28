@@ -58,6 +58,9 @@ subprojects {
     }
 
     configure<BuildConfigExtension> {
+        useKotlinOutput {
+            this.internalVisibility = false
+        }
         val now = java.time.Instant.now()
         fun fBbuildStamp(): String = java.time.format.DateTimeFormatter.ISO_DATE_TIME.withZone(java.time.ZoneId.of("UTC")).format(now)
         fun fBuildDate(): String = java.time.format.DateTimeFormatter.ofPattern("yyyy-MMM-dd").withZone(java.time.ZoneId.of("UTC")).format(now)

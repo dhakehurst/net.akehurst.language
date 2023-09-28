@@ -116,6 +116,10 @@ class AglGrammarSemanticAnalyser(
         // default usage is false for all rules in this grammar
         grammar.grammarRule.forEach {
             when {
+                this._usedRules[grammar]!!.containsKey(it) -> { //assumes grammar rule id is its name
+                    issueError(it, "More than one rule named '${it.name}' found in grammar '${grammar.name}'", null)
+                }
+
                 it.isSkip -> this._usedRules[grammar]!![it] = true
                 else -> this._usedRules[grammar]!![it] = false
             }
@@ -150,7 +154,14 @@ class AglGrammarSemanticAnalyser(
                     all.isEmpty() -> issueError(rhs, "GrammarRule '${rhs.name}' not found in grammar '${grammar.name}'", null)
                     all.size > 1 -> {
                         this._usedRules[grammar]!![all.first()] = true
-                        issueError(rhs, "More than one rule named '${rhs.name}' in grammar '${grammar.name}', have you remembered the 'override' modifier", null)
+                        issueError(rhs, "More than one rule named '${rhs.name}' found in grammar '${grammar.name}'", null)
+                        all.forEach { r ->
+                            if (r.grammar == grammar) {
+                                issueError(r, "More than one rule named '${rhs.name}' found in grammar '${grammar.name}'", null)
+                            } else {
+                                issueError(r, "More than one rule named '${rhs.name}' found in grammar '${grammar.name}', you need to 'override' to resolve", null)
+                            }
+                        }
                     }
 
                     else -> {

@@ -16,12 +16,10 @@
 
 package net.akehurst.language.agl.grammar.grammar.asm
 
-import net.akehurst.language.api.grammar.NonTerminal
-import net.akehurst.language.api.grammar.PreferenceOption
-import net.akehurst.language.api.grammar.PreferenceRule
-import net.akehurst.language.api.grammar.SimpleItem
+import net.akehurst.language.api.grammar.*
 
 data class PreferenceRuleDefault(
+    override val grammar: Grammar,
     override val forItem: SimpleItem,
     override val optionList: List<PreferenceOption>
 ) : GrammarItemAbstract(), PreferenceRule {
