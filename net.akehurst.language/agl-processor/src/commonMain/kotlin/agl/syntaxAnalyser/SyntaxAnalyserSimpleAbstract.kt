@@ -180,7 +180,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
             }
 
             override fun error(msg: String, path: () -> List<SpptDataNode>) {
-                TODO("not implemented")
+                issues.error(null, "Error 'msg' at '${path().joinToString(separator = "/")}'")
             }
 
         }

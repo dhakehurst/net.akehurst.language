@@ -98,7 +98,7 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, SentenceConte
                             }
                         }
 
-                        AglStyleSelectorKind.META -> TODO("Is this unused?")
+                        AglStyleSelectorKind.META -> Unit // nothing to check
                     }
 
                 }

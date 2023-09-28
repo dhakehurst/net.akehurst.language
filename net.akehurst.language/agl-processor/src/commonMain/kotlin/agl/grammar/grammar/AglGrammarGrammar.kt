@@ -45,7 +45,7 @@ internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehur
         b.rule("extends").concatenation(b.terminalLiteral("extends"), b.nonTerminal("extendsList"))
         b.rule("extendsList").separatedList(1, -1, b.terminalLiteral(","), b.nonTerminal("qualifiedName"))
         b.rule("rules").multi(1, -1, b.nonTerminal("rule"))
-        b.rule("rule").choiceLongestFromConcatenationItem(b.nonTerminal("grammarRule"), b.nonTerminal("overrideRule"), b.nonTerminal("preferenceRule"))
+        b.rule("rule").choiceLongestFromConcatenationItem(b.nonTerminal("overrideRule"), b.nonTerminal("grammarRule"), b.nonTerminal("preferenceRule"))
         b.rule("grammarRule").concatenation(b.nonTerminal("ruleTypeLabels"), b.nonTerminal("IDENTIFIER"), b.terminalLiteral("="), b.nonTerminal("rhs"), b.terminalLiteral(";"))
         b.rule("overrideRule").concatenation(
             b.terminalLiteral("override"),
@@ -174,7 +174,7 @@ grammar AglGrammar {
     grammarDefinition = namespace definitions ;
     namespace = 'namespace' qualifiedName ;
     definitions = grammar+ ;
-    grammar = 'grammar' IDENTIFIER extendsOpt '{' parseOptions rules '}' ;
+    grammar = 'grammar' IDENTIFIER extendsOpt '{' options rules '}' ;
     extendsOpt = extends? ;
     extends = 'extends' extendsList ;
     extendsList = [qualifiedName / ',']+ ;
