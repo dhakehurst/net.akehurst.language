@@ -213,6 +213,7 @@ class LanguageRegistryDefault : LanguageRegistry {
     override fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
         identity: String,
         aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
+        configuration: LanguageProcessorConfiguration<AsmType, ContextType>?
     ): LanguageDefinition<AsmType, ContextType> {
         val existing = this.findOrNull<AsmType, ContextType>(identity)
         return if (null == existing) {
@@ -221,7 +222,7 @@ class LanguageRegistryDefault : LanguageRegistry {
                 grammarStrArg = null,
                 aglOptions = aglOptions,
                 buildForDefaultGoal = false,
-                initialConfiguration = Agl.configurationEmpty()
+                initialConfiguration = configuration ?: Agl.configurationEmpty()
             )
             registerFromDefinition(placeholder)
         } else {

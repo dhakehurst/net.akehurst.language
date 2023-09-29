@@ -416,13 +416,13 @@ class test_AglScopes {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(51, 39, 2, 5),
+                InputLocation(51, 39, 2, 11),
                 "For reference in 'RuleX' referred to type 'RuleZ' not found"
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(57, 45, 2, 6),
+                InputLocation(51, 39, 2, 11),
                 "For reference in 'RuleX' referred to type 'RuleW' not found"
             )
         )

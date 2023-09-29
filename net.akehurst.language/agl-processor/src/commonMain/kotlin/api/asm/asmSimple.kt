@@ -61,7 +61,15 @@ open class AsmSimple() {
         (rootElements as MutableList).add(root)
     }
 
-    fun createElement(asmPath: AsmElementPath, typeName: String) = AsmElementSimple(asmPath, this, typeName)
+    fun removeRoot(root: Any) {
+        (rootElements as MutableList).remove(root)
+    }
+
+    fun createElement(asmPath: AsmElementPath, typeName: String): AsmElementSimple {
+        val el = AsmElementSimple(asmPath, typeName)// this, typeName)
+        this.elementIndex[asmPath] = el
+        return el
+    }
 
     fun traverseDepthFirst(callback: AsmSimpleTreeWalker) {
         fun traverse(propertyName: String?, element: Any?) {
@@ -102,11 +110,11 @@ open class AsmSimple() {
 
 class AsmElementSimple(
     val asmPath: AsmElementPath,
-    val asm: AsmSimple,
+//    val asm: AsmSimple,
     val typeName: String
 ) {
     init {
-        this.asm.elementIndex[asmPath] = this
+//        this.asm.elementIndex[asmPath] = this
     }
 
     private var _properties = mutableMapOf<String, AsmElementProperty>()
@@ -207,7 +215,7 @@ class AsmElementSimple(
     override fun hashCode(): Int = asmPath.hashCode()
 
     override fun equals(other: Any?): Boolean = when (other) {
-        is AsmElementSimple -> this.asmPath == other.asmPath && this.asm == other.asm
+        is AsmElementSimple -> this.asmPath == other.asmPath //&& this.asm == other.asm
         else -> false
     }
 

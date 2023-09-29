@@ -76,4 +76,20 @@ class test_CompletionProviderDefault {
         test(grammarStr, sentence, sentence.length, expected)
     }
 
+    @Test
+    fun atStart_leaf_pattern() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                S = PAT;
+                leaf PAT = "[a-z]" ;
+            }
+        """
+        val sentence = ""
+        val expected = listOf(
+            CompletionItem(CompletionItemKind.PATTERN, "<PAT>", "[a-z]")
+        )
+        test(grammarStr, sentence, sentence.length, expected)
+    }
+
 }

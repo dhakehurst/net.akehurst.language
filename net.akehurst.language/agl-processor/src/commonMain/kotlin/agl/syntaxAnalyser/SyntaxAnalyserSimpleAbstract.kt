@@ -99,13 +99,16 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
         val walker = object : SpptWalker {
             var isRoot = true
             override fun beginTree() {
-                syntaxAnalyserStack.peek().createAsm()
+                // use same asm for all embedded trees
+                // otherwise need to combine and adjust indexes
+                // faster to use same asm in first place
+                syntaxAnalyserStack.peek().setAsm(_asm ?: AsmSimple())
                 isRoot = true
             }
 
             override fun endTree() {
                 val root = stack.pop()
-                syntaxAnalyserStack.peek().setAsmRoot(root.value!!)
+                syntaxAnalyserStack.peek().addAsmRoot(root.value!!)
                 //do not pop the asm, leave it here, so it can be retrieved when wanted.
                 // embedded ASMs are popped in endEmbedded
             }
@@ -170,7 +173,8 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
                 val embSyntaxAnalyser = syntaxAnalyserStack.pop()
                 val embeddedAsm = embSyntaxAnalyser._asm!!
                 downStack.pop()
-                val value = embeddedAsm.rootElements[0]
+                val value = embeddedAsm.rootElements.last()
+                removeAsmRoot(value)
                 value?.let { locationMap[it] = sentence.locationFor(nodeInfo.node) }
                 stack.push(ChildData(nodeInfo, value))
             }
@@ -187,12 +191,16 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
         treeData.traverseTreeDepthFirst(walker, false)
     }
 
-    private fun createAsm() {
-        this._asm = AsmSimple()
+    private fun setAsm(value: AsmSimple) {
+        this._asm = value
     }
 
-    private fun setAsmRoot(value: Any) {
+    private fun addAsmRoot(value: Any) {
         this._asm!!.addRoot(value)
+    }
+
+    private fun removeAsmRoot(value: Any) {
+        this._asm!!.removeRoot(value)
     }
 
     private fun createAsmElement(path: AsmElementPath, name: String): AsmElementSimple =

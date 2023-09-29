@@ -1,16 +1,19 @@
 namespace com.yakindu.modelviewer.parser
 
-grammar Mscript {
+grammar MScript {
+
+    @defaultGoal : script
 
     // end-of-line ('\n') is not whitespace as it marks end of a line in a statementList
     skip leaf WHITESPACE = "[ \t\x0B\f]+" ;
     skip leaf LINE_CONTINUATION =  "[.][.][.](?:.*)[\r\n]" ;
     skip leaf COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
-    skip leaf MULTI_LINE_COMMENT = "%[{](?:.|\n)*?%[}]" ;
-    skip leaf SINGLE_LINE_COMMENT = "(?:%[^{].+$)|(?:%$)" ;
+    leaf MULTI_LINE_COMMENT = "%[{]([^%]|(\r?\n))*%[}]" ;
+    leaf SINGLE_LINE_COMMENT = "%([^{\n].*)?(?=(\r?\n)|$)" ;
+    leaf EOL = "(\r?\n)" ;
 
     script = statementList ;
-    statementList = [line / "[\r\n]+"]* ;
+    statementList = [line / EOL]* ;
     // if we treat '\n' as part of the WHITESPACE skip rule, we get ambiguity in statements
     line = [statement / ';']* ';'? ;
 
@@ -21,8 +24,9 @@ grammar Mscript {
       //TODO: others
       ;
 
+    assignment = lhs '=' expression ;
+    lhs = rootVariable | matrix ;
     conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
-    assignment = rootVariable '=' expression ;
 
     expressionStatement = expression ;
 
@@ -47,15 +51,16 @@ grammar Mscript {
 
     infixExpression =  [ expression / infixOperator ]2+ ;
     infixOperator
-        = '.*' | '*' | './' | '/' | '.\\' | '\\' | '+' | '-'    // arithmetic
-        | '==' | '~=' | '>' | '>=' | '<' | '<='                 // relational
-        | '&' | '|' | '&&' | '||' | '~'                         // logical
-        | ':'                                                   // vector creation
+        = '.*' | '*' | './' | '/' | '.\\' | '\\' | '+' | '-' | '^'   // arithmetic
+        | '==' | '~=' | '>' | '>=' | '<' | '<='                      // relational
+        | '&' | '|' | '&&' | '||' | '~'                              // logical
+        | ':'                                                        // vector creation
         ;
     colonOperator = COLON ; // for index operations
 
     matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatenation!
-    row = expression (','? expression)* ;
+    row = [expression / rowSep ]+ ;
+    rowSep = ','? ;
 
     literalExpression = literalValue ;
 

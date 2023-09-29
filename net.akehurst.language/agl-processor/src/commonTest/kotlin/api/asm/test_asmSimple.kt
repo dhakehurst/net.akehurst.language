@@ -24,7 +24,7 @@ class test_asmSimple {
     @Test
     fun xxxxx() {
         val asm = AsmSimple()
-        val el = AsmElementSimple(AsmElementPath("/"), asm, "Test")
+        val el = asm.createElement(AsmElementPath("/"), "Test")
         // el.zzzzz = "hello"
 
         //assertEquals("hello",el.zzzzz)

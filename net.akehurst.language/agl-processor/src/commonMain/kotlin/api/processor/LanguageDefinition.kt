@@ -17,7 +17,6 @@
 package net.akehurst.language.api.processor
 
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
-import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.AglLanguages
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
@@ -53,7 +52,8 @@ interface LanguageRegistry : GrammarRegistry {
 
     fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
         identity: String,
-        aglOptions: ProcessOptions<List<Grammar>, GrammarContext>? = Agl.registry.agl.grammar.processor?.optionsDefault(),
+        aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
+        configuration: LanguageProcessorConfiguration<AsmType, ContextType>?
     ): LanguageDefinition<AsmType, ContextType>
 }
 

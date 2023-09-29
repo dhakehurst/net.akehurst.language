@@ -69,8 +69,8 @@ class test_StatechartTools_Singles {
         val goal = "Expression"
         val sentence = "integer"
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
-        assertNotNull(result.asm, result.issues.toString())
-        assertEquals(0, result.issues.size)
+        assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+
 
         val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)
@@ -81,8 +81,8 @@ class test_StatechartTools_Singles {
         val goal = "Expression"
         val sentence = "97"
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
-        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+
 
         val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)
@@ -93,8 +93,8 @@ class test_StatechartTools_Singles {
         val goal = "Expression"
         val sentence = "integer = 97"
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
-        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+
 
         val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)
@@ -105,8 +105,8 @@ class test_StatechartTools_Singles {
         val goal = "ReactionEffect"
         val sentence = "integer = 97"
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
-        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+
 
         val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)
@@ -117,8 +117,8 @@ class test_StatechartTools_Singles {
         val goal = "ScopeDeclaration"
         val sentence = "var MyVar : integer"
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
-        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+
 
         val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)
@@ -129,8 +129,7 @@ class test_StatechartTools_Singles {
         val goal = "ScopeDeclaration"
         val sentence = "var MyVar : integer = 97"
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
-        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
 
         val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)
@@ -141,8 +140,8 @@ class test_StatechartTools_Singles {
         val goal = "Expression"
         val sentence = "a.b()"
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
-        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+
 
         val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)
@@ -153,8 +152,8 @@ class test_StatechartTools_Singles {
         val goal = "Expression"
         val sentence = "a.b[1]"
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
-        assertNotNull(result.asm, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
+        assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+
 
         val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)
@@ -165,8 +164,8 @@ class test_StatechartTools_Singles {
         val goal = "ReactionTrigger"
         val sentence = "exit"
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString("\n") { it.toString() })
-        assertNotNull(result.asm)
+        assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+
 
         val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)
@@ -177,8 +176,8 @@ class test_StatechartTools_Singles {
         val goal = "TransitionReaction"
         val sentence = "after 10 s / raise ABC.intEvent"
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
-        assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString("\n") { it.toString() })
-        assertNotNull(result.asm)
+        assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+
 
         val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)
@@ -189,8 +188,8 @@ class test_StatechartTools_Singles {
         val goal = "StextTrigger"
         val sentence = "else"
         val result = processor.process(sentence, Agl.options { parse { goalRuleName(goal) } })
-        assertEquals(0, result.issues.size, result.issues.joinToString("\n") { it.toString() })
-        assertNotNull(result.asm)
+        assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
+
 
         val resultStr = processor.formatAsm(result.asm!!).sentence
         assertEquals(sentence, resultStr)

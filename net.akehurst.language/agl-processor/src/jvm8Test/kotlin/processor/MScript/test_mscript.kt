@@ -1,23 +1,25 @@
-/**
- * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+/*
+ * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ *          http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
-package net.akehurst.language.agl.processor
+package net.akehurst.language.agl.processor.MScript
 
 import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
+import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException
@@ -28,89 +30,7 @@ import kotlin.test.*
 
 class test_mscript {
     private companion object {
-        val grammarStr = """
-namespace com.yakindu.modelviewer.parser
-
-grammar Mscript {
-
-    // end-of-line ('\n') is not whitespace as it marks end of a line in a statementList
-    skip leaf WHITESPACE = "[ \t\x0B\f]+" ;
-    skip leafLINE_CONTINUATION =  "[.][.][.](?:.*)[\r\n]" ;
-    skip leaf COMMENT = MULTI_LINE_COMMENT | SINGLE_LINE_COMMENT ;
-         leaf MULTI_LINE_COMMENT = "%[{](?:.|\n)*?%[}]" ;
-         leaf SINGLE_LINE_COMMENT = "(?:%[^{].+${'$'})|(?:%${'$'})" ;
-
-    script = statementList ;
-    statementList = [line / "[\r\n]+"]* ;
-    // if we treat '\n' as part of the WHITESPACE skip rule, we get ambiguity in statements
-    line = [statement / ';']* ';'? ;
-
-    statement
-      = conditional
-      | assignment
-      | expressionStatement
-      //TODO: others
-      ;
-
-    conditional = 'if' expression 'then' statementList 'else' statementList 'end' ;
-    assignment = rootVariable '=' expression ;
-
-    expressionStatement = expression ;
-
-    expression
-      = rootVariable
-      | literalExpression
-      | matrix
-      | functionCallOrIndex
-      | prefixExpression
-      | infixExpression
-      | groupExpression
-      ;
-
-    groupExpression = '(' expression ')' ;
-
-    functionCallOrIndex = NAME '(' argumentList ')' ;
-    argumentList = [ argument / ',' ]* ;
-    argument = expression | colonOperator ;
-
-    prefixExpression = prefixOperator expression ;
-    prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
-
-    infixExpression =  [ expression / infixOperator ]2+ ;
-    infixOperator
-        = '.*' | '*' | './' | '/' | '.\\' | '\\' | '+' | '-'    // arithmetic
-        | '==' | '~=' | '>' | '>=' | '<' | '<='                 // relational
-        | '&' | '|' | '&&' | '||' | '~'                         // logical
-        | ':'                                                   // vector creation
-        ;
-    colonOperator = COLON ; // for index operations
-
-    matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatenation!
-    row = expression (','? expression)* ;
-
-    literalExpression = literalValue ;
-    
-    literalValue
-      = BOOLEAN
-      | number
-      | SINGLE_QUOTE_STRING
-      | DOUBLE_QUOTE_STRING
-      ;
-
-    rootVariable = NAME ;
-
-    number = INTEGER | REAL ;
-
-    leaf NAME = "[a-zA-Z_][a-zA-Z_0-9]*" ;
-
-    leaf COLON               = ':' ;
-    leaf BOOLEAN             = 'true' | 'false' ;
-    leaf INTEGER             = "([+]|[-])?[0-9]+" ;
-    leaf REAL                = "[-+]?[0-9]*[.][0-9]+([eE][-+]?[0-9]+)?" ;
-    leaf SINGLE_QUOTE_STRING = "'(?:[^'\\]|\\.)*'" ;
-    leaf DOUBLE_QUOTE_STRING = "\"(?:[^\"\\]|\\.)*\"" ;
-}
-    """.trimIndent()
+        private val grammarStr = this::class.java.getResource("/MScript/version_/grammar.agl").readText()
         val sut = Agl.processorFromStringDefault(grammarStr).processor!!
     }
 
@@ -252,13 +172,53 @@ grammar Mscript {
     }
 
     @Test
+    fun process_empty_line() {
+
+        val text = """
+        """
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
+
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.errors.isEmpty())
+
+    }
+
+    @Test
+    fun process_empty_line_several() {
+
+        val text = """
+
+
+        """
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
+
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.errors.isEmpty())
+
+    }
+
+    @Test
     fun process_single_line_comment() {
 
         val text = "% this is a comment"
         val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
 
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.errors.isEmpty())
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+
+    }
+
+    @Test
+    fun process_single_line_comment_several() {
+
+        val text = """
+            % this is a comment
+            % this is a comment
+            % this is a comment
+            % this is a comment
+        """.trimIndent()
+        val result = sut.parse(text, Agl.parseOptions { goalRuleName("script") })
+
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
     }
 
@@ -748,5 +708,121 @@ grammar Mscript {
         assertTrue(result.issues.errors.isEmpty())
         assertEquals(expected.asString(" "), result.asm?.asString(" "))
     }
+
+    @Test
+    fun process_assigment_var_literal() {
+
+        val text = "x=1"
+        val parseResult = sut.parse(text, Agl.parseOptions { goalRuleName("assignment") })
+        assertTrue(parseResult.issues.errors.isEmpty())
+
+        val result = sut.process(text, Agl.options { parse { goalRuleName("assignment") } })
+        assertTrue(result.issues.errors.isEmpty())
+        val actual = result.asm!!
+        val expected = asmSimple {
+            element("Assignment") {
+                propertyElementExplicitType("lhs", "RootVariable") {
+                    propertyString("name", "x")
+                }
+                propertyElementExplicitType("expression", "LiteralExpression") {
+                    propertyString("literalValue", "1")
+                }
+            }
+        }
+
+        assertEquals(expected.asString("  ", ""), actual.asString("  ", ""))
+    }
+
+    @Test
+    fun process_assigment_matrix_var() {
+
+        val text = "[x,y] = pair"
+        val parseResult = sut.parse(text, Agl.parseOptions { goalRuleName("assignment") })
+        assertTrue(parseResult.issues.errors.isEmpty(), parseResult.issues.toString())
+
+        val result = sut.process(text, Agl.options { parse { goalRuleName("assignment") } })
+        assertTrue(result.issues.errors.isEmpty())
+        val actual = result.asm!!
+        val expected = asmSimple {
+            element("Assignment") {
+                propertyElementExplicitType("lhs", "Matrix") {
+                    propertyListOfElement("row") {
+                        element("Row") {
+                            propertyElementExplicitType("expression", "RootVariable") {
+                                propertyString("name", "x")
+                            }
+                            propertyListOfElement("\$list") {
+                                tuple {
+                                    propertyElementExplicitType("expression", "RootVariable") {
+                                        propertyString("name", "y")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                propertyElementExplicitType("expression", "RootVariable") {
+                    propertyString("name", "pair")
+                }
+            }
+        }
+
+        assertEquals(expected.asString("  ", ""), actual.asString("  ", ""))
+    }
+
+    @Test
+    fun demo() {
+
+        val sentence = """
+            %{
+              Adapted from an example in the MathWorks Script Documentation
+              https://uk.mathworks.com/help/matlab/learn_matlab/scripts.html
+            %}
+            % Create and plot a sphere with radius r.
+            [x,y,z] = sphere;       % Create a unit sphere.
+            r = 2;
+            surf(x*r,y*r,z*r)       % Adjust each dimension and plot.
+            axis(equal)             % Use the same scale for each axis. 
+             
+            % Find the surface area and volume.
+            A = 4*pi*r^2;
+            V = (4/3)*pi*r^3;
+        """.trimIndent()
+
+        val parseResult = sut.parse(sentence)
+        assertTrue(parseResult.issues.errors.isEmpty(), parseResult.issues.toString())
+
+        val result = sut.process(sentence)
+        assertTrue(result.issues.errors.isEmpty(), parseResult.issues.toString())
+
+    }
+
+    @Test
+    fun bug() {
+
+        val sentence = """
+            %{
+              Adapted from an example in the MathWorks Script Documentation
+              https://uk.mathworks.com/help/matlab/learn_matlab/scripts.html
+            %}
+            % Create and plot a sphere with radius r.
+            [x,y,z] = sphere;       % Create a unit sphere.
+            r = 2;
+            surf(x*r,y*r,z*r)       % Adjust each dimension and plot.
+            axis(equal)             % Use the same scale for each axis. 
+             
+            % Find the surface area and volume.
+            A = 4*pi*r^2;
+            V = (4/3)*pi*r^3;
+        """.trimIndent()
+
+        val parseResult = sut.parse(sentence)
+        assertTrue(parseResult.issues.errors.isEmpty(), parseResult.issues.toString())
+
+        val result = sut.process(sentence)
+        assertTrue(result.issues.errors.isEmpty(), parseResult.issues.toString())
+
+    }
+
 
 }

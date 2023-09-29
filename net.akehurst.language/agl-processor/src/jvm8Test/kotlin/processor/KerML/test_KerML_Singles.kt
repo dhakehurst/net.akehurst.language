@@ -61,7 +61,6 @@ class test_KerML_Singles {
 
     @Test
     fun MULTI_LINE_NOTE() {
-        val goal = "graph"
         val sentence = """
           //* a note
             * that covers
@@ -69,7 +68,7 @@ class test_KerML_Singles {
             * lines
             */
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence)
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
         assertEquals(sentence, result.sppt!!.asSentence)
@@ -77,14 +76,13 @@ class test_KerML_Singles {
 
     @Test
     fun MULTI_LINE_COMMENT() {
-        val goal = "graph"
         val sentence = """
           /* a comment
            * over multiple
            * lines
            */
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence)
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
@@ -95,7 +93,7 @@ class test_KerML_Singles {
         val sentence = """
           package ;
         """.trimIndent()
-        val result = processor.parse(sentence) //, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence)
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }

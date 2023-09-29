@@ -236,7 +236,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
                     val rhs = it.rhs
                     when (rhs) {
                         is RuntimeRuleRhsLiteral -> CompletionItem(CompletionItemKind.LITERAL, rhs.literalUnescaped, it.tag)
-                        is RuntimeRuleRhsPattern -> CompletionItem(CompletionItemKind.PATTERN, rhs.patternUnescaped, it.tag)
+                        is RuntimeRuleRhsPattern -> CompletionItem(CompletionItemKind.PATTERN, "<${it.tag}>", rhs.patternUnescaped)
                         else -> CompletionItem(CompletionItemKind.LITERAL, it.tag, it.tag)
                     }
                 }

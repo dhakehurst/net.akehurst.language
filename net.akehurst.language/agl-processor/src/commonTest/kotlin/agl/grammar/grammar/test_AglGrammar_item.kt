@@ -1110,6 +1110,7 @@ grammar {
   extendsOpt { §empty }
   '{'
   WHITESPACE : ' '
+  options { <EMPTY> }
   rules { rule { grammarRule {
     ruleTypeLabels {
       isSkip { §empty }
@@ -1151,6 +1152,7 @@ grammar {
   extendsOpt { §empty }
   '{'
   WHITESPACE : ' '
+  options { <EMPTY> }
   rules { rule { grammarRule {
     ruleTypeLabels {
       isSkip {

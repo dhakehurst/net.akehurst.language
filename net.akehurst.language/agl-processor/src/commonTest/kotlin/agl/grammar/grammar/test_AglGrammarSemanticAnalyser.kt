@@ -194,6 +194,12 @@ class test_AglGrammarSemanticAnalyser {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(89, 7, 7, 1),
+                "More than one rule named 'A' found in grammar 'Test'"
+            ),
+            LanguageIssue(
+                LanguageIssueKind.ERROR,
+                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(37, 5, 3, 14),
                 "More than one rule named 'A' found in grammar 'Test', you need to 'override' to resolve"
             ),
@@ -201,10 +207,10 @@ class test_AglGrammarSemanticAnalyser {
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(95, 3, 8, 10),
-                "More than one rule named 'A' found in grammar 'Test', you need to 'override' to resolve"
+                "More than one rule named 'A' found in grammar 'Test'"
             )
         )
-        assertEquals(expIssues, res.issues.all)
+        assertEquals(expIssues.joinToString(separator = "\n"), res.issues.all.joinToString(separator = "\n"))
     }
 
     @Test

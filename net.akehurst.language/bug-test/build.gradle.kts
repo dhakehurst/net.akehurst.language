@@ -19,8 +19,7 @@ kotlin {
 
     sourceSets {
         commonTest.configure {
-            // add language repository so we can test the grammars with specific sentences here
-            resources.srcDir(projectDir.resolve("../language-repository/languages"))
+            //      resources.srcDir(projectDir.resolve("../language-repository/languages"))
         }
     }
 }
