@@ -1,8 +1,10 @@
 namespace com.itemis.sysml.kerml.cst
 
+grammar KerML {
 
-grammar Base {
+    @defaultGoal: RootNamespace
 
+    // 8.2.2 Root
     // 8.2.2.1 Line Terminators and White Space
     skip leaf WHITE_SPACE = "\s+" ;
 
@@ -23,7 +25,7 @@ grammar Base {
     leaf STRING_VALUE = "\"(\\\"|[^\"])*\"" ;
 
     // 8.2.2.7 Symbols
-    leaf TYPED_BY = ':' | 'typed' 'by' ;
+    leaf TYPED_BY = ':' | "typed(\s+)by" ;
     leaf SPECIALIZES = ':>' | 'specializes' ;
     leaf SUBSETS = ':>' | 'subsets' ;
     leaf REFERENCES = '::>' | 'references' ;
@@ -32,7 +34,6 @@ grammar Base {
 
     // 8.2.3.1 Elements and Relationships Concrete Syntax
     Identification = ( '<' NAME '>' )? NAME? ;
-
     RelationshipBody = ';' | '{' RelationshipOwnedElement* '}' ;
     RelationshipOwnedElement = OwnedRelatedElement | OwnedAnnotation ;
     OwnedRelatedElement = NonFeatureElement | FeatureElement ;
@@ -42,6 +43,7 @@ grammar Base {
         PrefixMetadataAnnotation* 'dependency'
         ( Identification? 'from' )? QualifiedName ( ',' QualifiedName)*
         'to' QualifiedName ( ',' QualifiedName)*
+        RelationshipBody
     ;
 
     // 8.2.3.3.1 Annotations
@@ -54,17 +56,11 @@ grammar Base {
         | MetadataFeature
     ;
 
-    Comment = 'comment' Identification ( 'about' Annotation ( ',' Annotation)*  )? REGULAR_COMMENT ;
+    Comment = ( 'comment' Identification ( 'about' Annotation ( ',' Annotation)*  )? )? REGULAR_COMMENT ;
     Documentation = 'doc' Identification REGULAR_COMMENT ;
 
     // 8.2.3.3.3 Textual Representation
     TextualRepresentation = ( 'rep' Identification )? 'language' STRING_VALUE REGULAR_COMMENT ;
-
-}
-
-grammar KerML extends Root {
-
-    @defaultGoal: RootNamespace
 
     // 8.2.3.4.1 Namespaces
     RootNamespace = NamespaceBodyElement* ;
@@ -168,8 +164,8 @@ grammar KerML extends Root {
     // 8.2.4.1.3 Conjugation
     Conjugation =
         ( 'conjugation' Identification )?
-        'conjugate' ( QualifiedName |  FeatureChain )
-        CONJUGATES  ( QualifiedName FeatureChain)
+        'conjugate' ( QualifiedName | FeatureChain )
+        CONJUGATES  ( QualifiedName | FeatureChain)
         RelationshipBody
     ;
     OwnedConjugation = QualifiedName | FeatureChain ;
@@ -296,7 +292,7 @@ grammar KerML extends Root {
 
 /* Feature Conjugation */
 
-FeatureConjugationPart = ( '~' | 'conjugates' ) FeatureConjugation ;
+FeatureConjugationPart = CONJUGATES FeatureConjugation ;
 FeatureConjugation = QualifiedName ;
 
 
@@ -370,6 +366,7 @@ ConnectorEnd = (NAME REFERENCES )? OwnedReferenceSubsetting OwnedMultiplicity? ;
     OwnedExpressionMember = OwnedExpression ;
     OwnedExpression
         = ConditionalExpression
+        | ConditionalBinaryOperatorExpression
         | BinaryOperatorExpression
         | UnaryOperatorExpression
         | ClassificationExpression
@@ -550,7 +547,7 @@ ConnectorEnd = (NAME REFERENCES )? OwnedReferenceSubsetting OwnedMultiplicity? ;
 
     // 8.2.5.13 Packages Concrete Syntax
     Package = PrefixMetadataMember* PackageDeclaration PackageBody ;
-    LibraryPackage = 'standard' 'library' PrefixMetadataMember* PackageDeclaration PackageBody ;
+    LibraryPackage = 'standard'? 'library' PrefixMetadataMember* PackageDeclaration PackageBody ;
     PackageDeclaration = 'package' Identification ;
     PackageBody
         = ';'

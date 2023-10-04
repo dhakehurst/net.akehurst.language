@@ -24,34 +24,34 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class test_KerML_Singles {
+class test_SysML_UseCase_Singles {
 
     private companion object {
 
-        private val grammarStr = this::class.java.getResource("/KerML/v2_2023-08/grammar.agl").readText()
+        private val grammarStr = this::class.java.getResource("/SysML/v2_2023-08/grammar.agl").readText()
         var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
 
     }
 
     @Test
     fun parse_grammar() {
-        val grammarStr = this::class.java.getResource("/KerML/v2_2023-08/grammar.agl").readText()
+        val grammarStr = this::class.java.getResource("/SysML/v2_2023-08/grammar.agl").readText()
         val res = Agl.registry.agl.grammar.processor!!.parse(grammarStr)
         assertTrue(res.issues.isEmpty(), res.issues.toString())
     }
 
     @Test
     fun process_grammar() {
-        val grammarStr = this::class.java.getResource("/KerML/v2_2023-08/grammar.agl").readText()
+        val grammarStr = this::class.java.getResource("/SysML/v2_2023-08/grammar.agl").readText()
         val res = Agl.registry.agl.grammar.processor!!.process(grammarStr)
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }
 
     @Test
-    fun SINGLE_LINE_NOTE() {
+    fun SINGLE_LINE_COMMENT() {
         val goal = "graph"
         val sentence = """
-          // a note
+          // a comment
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
@@ -60,40 +60,23 @@ class test_KerML_Singles {
     }
 
     @Test
-    fun MULTI_LINE_NOTE() {
-        val sentence = """
-          //* a note
-            * that covers
-            * multiple
-            * lines
-            */
-        """.trimIndent()
-        val result = processor.parse(sentence)
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
-        assertEquals(sentence, result.sppt!!.asSentence)
-    }
-
-    @Test
     fun MULTI_LINE_COMMENT() {
+        val goal = "graph"
         val sentence = """
-          /* a comment
-           * over multiple
-           * lines
-           */
+          /* a comment */
         """.trimIndent()
-        val result = processor.parse(sentence)
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
 
     @Test
     fun package_empty() {
-        //val goal = "Package"
+        val goal = "Package"
         val sentence = """
           package ;
         """.trimIndent()
-        val result = processor.parse(sentence)
+        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }
