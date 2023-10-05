@@ -22,6 +22,31 @@ grammar Base {
 
     NAME = BASIC_NAME | UNRESTRICTED_NAME ;
     Identification = ( '<' NAME '>' )? NAME? ;
+    QualifiedName = [NAME / '::']+ ;
+    QualifiedNameList = [QualifiedName / ',']+ ;
+
+    TypeReference = QualifiedName ;
+    FunctionReference = QualifiedName ;
+    FeatureReference = QualifiedName ;
+    FeatureChain = [ FeatureReference / '.' ]+ ;
+    FeatureChainList = [FeatureChain / ',']+ ;
+}
+
+grammar Annotations extends Base {
+
+    Comment = ( 'comment' Identification ( 'about' QualifiedNameList )? )? REGULAR_COMMENT ;
+    Documentation = 'doc' Identification REGULAR_COMMENT ;
+
+    TextualRepresentation = ( 'rep' Identification )? 'language' STRING_VALUE REGULAR_COMMENT ;
+
+    Annotation
+        = Comment
+        | Documentation
+        | TextualRepresentation
+    ;
+
+    MemberPrefix = VisibilityIndicator? ;
+    VisibilityIndicator = 'public' | 'private' | 'protected' ;
 }
 
 grammar LiteralExpressions extends Base {
@@ -111,117 +136,21 @@ grammar Expressions extends LiteralExpressions {
 
     NullExpression = 'null' | '(' ')' ;
 
-    InvocationExpression = GeneralType '(' ArgumentList? ')' ;
-    ArgumentList = PositionalArgumentList | NamedArgumentList
+    InvocationExpression = FeatureChain '(' ArgumentList? ')' ;
+    ArgumentList = PositionalArgumentList | NamedArgumentList ;
     PositionalArgumentList = [Expression / ',']+ ;
     NamedArgumentList = [NamedArgument / ',']+ ;
     NamedArgument = NAME '=' Expression ;
 
     ExpressionBody = '{' FunctionBodyPart '}' ;
 
-    TypeReference = QualifiedName ;
-    FunctionReference = QualifiedName ;
-    FeatureReference = QualifiedName ;
-    FeatureChain = [ FeatureReference / '.' ]+ ;
-
 }
 
-grammar KerML {
-
-    RelationshipBody = ';' | '{' RelationshipOwnedElement* '}' ;
-    RelationshipOwnedElement = OwnedRelatedElement | AnnotatingElement ;
-    OwnedRelatedElement = NonFeatureElement | FeatureElement ;
-
-    // 8.2.3.3.1 Annotations
-    Annotation = QualifiedName ;
-    AnnotatingElement
-        = Comment
-        | Documentation
-        | TextualRepresentation
-    ;
-
-    Dependency =
-        'dependency'
-        ( Identification? 'from' )? QualifiedName ( ',' QualifiedName)*
-        'to' QualifiedName ( ',' QualifiedName)*
-        RelationshipBody
-    ;
-
-    Comment = ( 'comment' Identification ( 'about' Annotation ( ',' Annotation)*  )? )? REGULAR_COMMENT ;
-    Documentation = 'doc' Identification REGULAR_COMMENT ;
-
-    // 8.2.3.3.3 Textual Representation
-    TextualRepresentation = ( 'rep' Identification )? 'language' STRING_VALUE REGULAR_COMMENT ;
-
-    // 8.2.3.4.1 Namespaces
-    RootNamespace = NamespaceBodyElement* ;
-    Namespace = NamespaceDeclaration NamespaceBody ;
-    NamespaceDeclaration = 'namespace' Identification ;
-    NamespaceBody = ';' | '{' NamespaceBodyElement* '}' ;
-    NamespaceBodyElement = NamespaceMember | AliasMember | Import ;
-    MemberPrefix = VisibilityIndicator? ;
-    VisibilityIndicator = 'public' | 'private' | 'protected' ;
-    NamespaceMember = NonFeatureMember | NamespaceFeatureMember ;
-    NonFeatureMember = MemberPrefix MemberElement ;
-    NamespaceFeatureMember = MemberPrefix FeatureElement ;
-    AliasMember = MemberPrefix 'alias' ( '<' NAME '>' )? NAME? 'for' QualifiedName RelationshipBody ;
-    QualifiedName = (NAME '::')* NAME ;
-
-    // 8.2.3.4.2 Imports
-    Import = VisibilityIndicator? 'import' 'all'? ImportDeclaration RelationshipBody ;
-    ImportDeclaration = MembershipImport | NamespaceImport ;
-    MembershipImport = QualifiedName ( '::' '**' )? ;
-    NamespaceImport = QualifiedName '::' '*' ( '::' '**' )?  |  FilterPackage ;
-    FilterPackage = ImportDeclaration FilterPackageMember+ ;
-    FilterPackageMember = '[' Expression ']' ;
-
-    // 8.2.3.4.3 Namespace Elements
-    MemberElement = AnnotatingElement | NonFeatureElement ;
-    NonFeatureElement
-        = Dependency
-        | Namespace
-        | Type
-        | Classifier
-        | DataType
-        | Class
-        | Structure
-        | Association
-        | AssociationStructure
-        | Interaction
-        | Behavior
-        | Function
-        | Predicate
-        | Multiplicity
-        | Package
-        | LibraryPackage
-        | Specialization
-        | Conjugation
-        | Subclassification
-        | Disjoining
-        | FeatureInverting
-        | FeatureTyping
-        | Subsetting
-        | Redefinition
-        | TypeFeaturing
-    ;
-
-    FeatureElement
-        = Feature
-        | Step
-        | ExpressionElement
-        | BooleanExpression
-        | Invariant
-        | Connector
-        | BindingConnector
-        | Succession
-        | ItemFlow
-        | SuccessionItemFlow
-    ;
-
+grammar Types extends LiteralExpressions, Annotations {
     Type = TypePrefix 'type' TypeDeclaration TypeBody ;
     TypePrefix = 'abstract'? ; //separate rule so it can be overridden to add PrefixMetadataMember*
     TypeDeclaration = 'all'? Identification MultiplicityBounds? ( SpecializationPart | ConjugationPart )+ TypeRelationshipPart* ;
-    SpecializationPart = SPECIALIZES [GeneralType / ',']+ ;
+    SpecializationPart = SPECIALIZES FeatureChainList ;
     ConjugationPart = CONJUGATES FeatureChain ;
     TypeRelationshipPart
         = DisjoiningPart
@@ -229,47 +158,82 @@ grammar KerML {
         | IntersectingPart
         | DifferencingPart
     ;
-    DisjoiningPart = 'disjoint' 'from' [FeatureChain / ',']+ ;
-    UnioningPart = 'unions' [FeatureChain / ',']+ ;
-    IntersectingPart = 'intersects' [FeatureChain / ',']+ ;
-    DifferencingPart = 'differences' [FeatureChain / ',']+ ;
+    DisjoiningPart = 'disjoint' 'from' FeatureChainList ;
+    UnioningPart = 'unions' FeatureChainList ;
+    IntersectingPart = 'intersects' FeatureChainList ;
+    DifferencingPart = 'differences' FeatureChainList ;
     TypeBody = ';' | '{' TypeBodyElement* '}' ;
     TypeBodyElement
-        = NonFeatureMember
-        | FeatureMember
-        | AliasMember
-        | Import
+        = Annotation
     ;
 
-    // 8.2.4.1.2 Specialization
-    Specialization = ( 'specialization' Identification )? 'subtype' FeatureChain SPECIALIZES FeatureChain RelationshipBody ;
-    GeneralType = FeatureChain ;
+    Multiplicity = MultiplicitySubset | MultiplicityRange ;
+    MultiplicitySubset = 'multiplicity' Identification SUBSETS FeatureChain TypeBody ;
+    MultiplicityRange = 'multiplicity' Identification MultiplicityBounds TypeBody ;
+    MultiplicityBounds = '[' ( MultiplicityExpressionMember '..' )? MultiplicityExpressionMember ']' ;
+    MultiplicityExpressionMember =  LiteralExpression | FeatureReference ;
+}
 
-    // 8.2.4.1.3 Conjugation
-    Conjugation =
-        ( 'conjugation' Identification )?
-        'conjugate' FeatureChain
-        CONJUGATES  FeatureChain
-        RelationshipBody
-    ;
+grammar Classifiers extends Types {
 
-    Disjoining = ( 'disjoining' Identification )? 'disjoint' FeatureChain 'from' FeatureChain RelationshipBody ;
-
-    FeatureMember = TypeFeatureMember | OwnedFeatureMember ;
-    TypeFeatureMember = MemberPrefix 'member' FeatureElement ;
-    OwnedFeatureMember = MemberPrefix FeatureElement ;
-
-    Classifier = TypePrefix 'classifier' ClassifierDeclaration TypeBody ;
+    SimpleClassifier = TypePrefix 'classifier' ClassifierDeclaration TypeBody ;
     ClassifierDeclaration =
         'all'? Identification MultiplicityBounds? ( SuperclassingPart | ConjugationPart )?
         TypeRelationshipPart*
     ;
-    SuperclassingPart = SPECIALIZES [QualifiedName / ',' ]+ ;
+    SuperclassingPart = SPECIALIZES QualifiedNameList ;
 
-    Subclassification =
-        ( 'specialization' Identification )? 'subclassifier' QualifiedName SPECIALIZES QualifiedName
-        RelationshipBody
+    DataType = TypePrefix 'datatype' ClassifierDeclaration TypeBody ;
+    Class = TypePrefix 'class' ClassifierDeclaration TypeBody ;
+    Structure = TypePrefix 'struct' ClassifierDeclaration TypeBody ;
+    Association = TypePrefix 'assoc' ClassifierDeclaration TypeBody ;
+    AssociationStructure = TypePrefix 'assoc' 'struct' ClassifierDeclaration TypeBody ;
+
+    Classifier
+        = SimpleClassifier
+        | DataType
+        | Class
+        | Structure
+        | Association
+        | AssociationStructure
     ;
+}
+
+grammar Relationships extends Annotations {
+
+    RelationshipBody = ';' | '{' RelationshipElement* '}' ;
+    RelationshipElement = Annotation ;
+
+    Dependency = 'dependency' ( Identification? 'from' )? QualifiedNameList 'to' QualifiedNameList RelationshipBody ;
+
+    SpecializationIdentifier = 'specialization' Identification ;
+    Specialization = SpecializationIdentifier? 'subtype' FeatureChain SPECIALIZES FeatureChain RelationshipBody ;
+    FeatureTyping = SpecializationIdentifier? 'typing' QualifiedName TYPED_BY FeatureChain RelationshipBody ;
+    Subsetting = SpecializationIdentifier? 'subset' FeatureChain SUBSETS FeatureChain RelationshipBody ;
+    Redefinition = SpecializationIdentifier? 'redefinition' FeatureChain REDEFINES FeatureChain RelationshipBody ;
+    FeatureInverting = SpecializationIdentifier? 'inverse' FeatureChain 'of' FeatureChain RelationshipBody ;
+    Subclassification = SpecializationIdentifier? 'subclassifier' QualifiedName SPECIALIZES QualifiedName RelationshipBody ;
+
+    Conjugation = ( 'conjugation' Identification )? 'conjugate' FeatureChain CONJUGATES FeatureChain RelationshipBody ;
+    Disjoining = ( 'disjoining' Identification )? 'disjoint' FeatureChain 'from' FeatureChain RelationshipBody ;
+
+    TypeFeaturing = 'featuring' ( Identification 'of' )? QualifiedName 'by' QualifiedName RelationshipBody ;
+
+    Relationship
+        = Dependency
+        | Specialization
+        | FeatureTyping
+        | Subsetting
+        | Redefinition
+        | FeatureInverting
+        | Subclassification
+        | Conjugation
+        | Disjoining
+        | TypeFeaturing
+    ;
+}
+
+grammar Features extends Types {
 
     Feature = FeaturePrefix 'feature'? FeatureDeclaration? FeatureValue? TypeBody ;
     FeaturePrefix = FeatureDirection? 'abstract'? ( 'composite' | 'portion' )? 'readonly'? 'derived'?  'end'? ;
@@ -283,15 +247,7 @@ grammar KerML {
         FeatureRelationshipPart*
     ;
 
-    FeatureRelationshipPart
-        = TypeRelationshipPart
-        | ChainingPart
-        | InvertingPart
-        | TypeFeaturingPart
-    ;
-    ChainingPart = 'chains' FeatureChain ;
-    InvertingPart = 'inverse' 'of' OwnedFeatureInverting ;
-    TypeFeaturingPart = 'featured' 'by' [QualifiedName / ',']+ ;
+    FeatureValue = ( '=' | ':=' | 'default' ( '=' | ':=' )? ) Expression ;
     FeatureSpecializationPart
         = FeatureSpecialization+ MultiplicityPart? FeatureSpecialization*
         | MultiplicityPart FeatureSpecialization*
@@ -300,64 +256,34 @@ grammar KerML {
         = MultiplicityBounds
         | MultiplicityBounds? ( 'ordered' 'nonunique'? | 'nonunique' 'ordered'? )
     ;
+
     FeatureSpecialization = Typings | Subsettings | References | Redefinitions ;
-    Typings = TypedBy ( ',' GeneralType )* ;
-    TypedBy = TYPED_BY GeneralType ;
-    Subsettings = Subsets ( ',' GeneralType )* ;
-    Subsets = SUBSETS GeneralType ;
-    References = REFERENCES GeneralType ;
-    Redefinitions = Redefines ( ',' OwnedRedefinition )* ;
-    Redefines = REDEFINES OwnedRedefinition ;
-
-    //8.2.4.3.2 Feature Typing
-    FeatureTyping =
-        ( 'specialization' Identification )?
-        'typing' QualifiedName
-        TYPED_BY GeneralType
-        RelationshipBody
-    ;
-
-    //8.2.4.3.3 Subsetting
-    Subsetting =
-        ( 'specialization' Identification )?
-        'subset' FeatureChain
-        SUBSETS GeneralType
-        RelationshipBody
-    ;
-
-    //8.2.4.3.4 Redefinition
-    Redefinition =
-        ( 'specialization' Identification )?
-        'redefinition' FeatureChain
-        REDEFINES GeneralType
-        RelationshipBody
-    ;
-    OwnedRedefinition = GeneralType ;
-
-    //8.2.4.3.6 Feature Inverting
-    FeatureInverting =
-        ( 'inverting' Identification? )?
-        'inverse' FeatureChain
-        'of' FeatureChain
-        RelationshipBody
-    ;
-    OwnedFeatureInverting = FeatureChain;
+    Typings = TYPED_BY FeatureChainList ;
+    Subsettings = SUBSETS FeatureChainList ;
+    References = REFERENCES FeatureChain ;
+    Redefinitions = REDEFINES FeatureChainList ;
 
     FeatureConjugationPart = CONJUGATES QualifiedName ;
 
-    TypeFeaturing = 'featuring' ( Identification 'of' )? QualifiedName 'by' QualifiedName RelationshipBody ;
-    DataType = TypePrefix 'datatype' ClassifierDeclaration TypeBody ;
-    Class = TypePrefix 'class' ClassifierDeclaration TypeBody ;
-    Structure = TypePrefix 'struct' ClassifierDeclaration TypeBody ;
-    Association = TypePrefix 'assoc' ClassifierDeclaration TypeBody ;
-    AssociationStructure = TypePrefix 'assoc' 'struct' ClassifierDeclaration TypeBody ;
+    FeatureRelationshipPart
+        = TypeRelationshipPart
+        | ChainingPart
+        | InvertingPart
+        | TypeFeaturingPart
+    ;
+    ChainingPart = 'chains' FeatureChain ;
+    InvertingPart = 'inverse' 'of' FeatureChain ;
+    TypeFeaturingPart = 'featured' 'by' QualifiedNameList ;
+}
+
+grammar Connectors extends Features {
 
     Connector = FeaturePrefix 'connector' ConnectorDeclaration TypeBody ;
     ConnectorDeclaration = BinaryConnectorDeclaration | NaryConnectorDeclaration ;
     BinaryConnectorDeclaration = ( FeatureDeclaration? 'from' | 'all'? 'from'? )? ConnectorEndMember 'to' ConnectorEndMember ;
     NaryConnectorDeclaration = FeatureDeclaration ( '(' [ConnectorEndMember /',']2+ ')' )? ;
     ConnectorEndMember = ConnectorEnd ;
-    ConnectorEnd = (NAME REFERENCES )? GeneralType MultiplicityBounds? ;
+    ConnectorEnd = (NAME REFERENCES )? FeatureChain MultiplicityBounds? ;
 
     BindingConnector  = FeaturePrefix 'binding' BindingConnectorDeclaration TypeBody ;
     BindingConnectorDeclaration
@@ -370,93 +296,119 @@ grammar KerML {
         = FeatureDeclaration ( 'first' ConnectorEndMember 'then' ConnectorEndMember )?
         | 'all'? ( 'first'? ConnectorEndMember 'then' ConnectorEndMember )?
     ;
+}
 
-    // 8.2.5.6 Behaviors
-    //8.2.5.6.1 Behaviors
-    Behavior = TypePrefix 'behavior' ClassifierDeclaration TypeBody ;
-    //8.2.5.6.2 Steps
+grammar Behaviors extends Features, Classifiers {
+
+    SimpleBehavior = TypePrefix 'behavior' ClassifierDeclaration TypeBody ;
     Step = FeaturePrefix 'step' FeatureDeclaration FeatureValue? TypeBody ;
 
-    //8.2.5.7 Functions Concrete Syntax
-    //8.2.5.7.1 Functions
     Function = TypePrefix 'function' ClassifierDeclaration FunctionBody ;
     FunctionBody = ';' | '{' FunctionBodyPart '}' ;
     FunctionBodyPart = ( TypeBodyElement | ReturnFeatureMember )* ( ResultExpressionMember )? ;
     ReturnFeatureMember = MemberPrefix 'return' FeatureElement ;
     ResultExpressionMember = MemberPrefix Expression ;
 
-    ExpressionElement = FeaturePrefix 'expr' FeatureDeclaration FeatureValue? FunctionBody ;
-
-    //8.2.5.7.3 Predicates
     Predicate = TypePrefix 'predicate' ClassifierDeclaration Function ;
 
-    // 8.2.5.7.4 Boolean Expressions and Invariants
+    ExpressionElement = FeaturePrefix 'expr' FeatureDeclaration FeatureValue? FunctionBody ;
+
     BooleanExpression = FeaturePrefix 'bool' FeatureDeclaration FeatureValue? FunctionBody ;
     Invariant = FeaturePrefix 'inv' ( 'true' | 'false' )? FeatureDeclaration FeatureValue? FunctionBody ;
 
-
-    //8.2.5.9 Interactions Concrete Syntax
-    //8.2.5.9.1 Interactions
     Interaction = TypePrefix 'interaction' ClassifierDeclaration TypeBody ;
 
-    //8.2.5.9.2 Item Flows
     ItemFlow = FeaturePrefix 'flow' ItemFlowDeclaration TypeBody ;
     SuccessionItemFlow = FeaturePrefix 'succession' 'flow' ItemFlowDeclaration TypeBody ;
     ItemFlowDeclaration
-        = FeatureDeclaration FeatureValue? ( 'of' ItemFeatureMember )? ( 'from' ItemFlowEndMember 'to' ItemFlowEndMember )?
+        = FeatureDeclaration FeatureValue? ( 'of' ItemFeature )? ( 'from' ItemFlowEndMember 'to' ItemFlowEndMember )?
         | 'all'? ItemFlowEndMember 'to' ItemFlowEndMember
     ;
-    ItemFeatureMember = ItemFeature ;
     ItemFeature
         = Identification ItemFeatureSpecializationPart FeatureValue?
-        | GeneralType MultiplicityBounds?
-        | MultiplicityBounds GeneralType?
+        | FeatureChain MultiplicityBounds?
+        | MultiplicityBounds FeatureChain?
     ;
     ItemFeatureSpecializationPart = FeatureSpecialization+ MultiplicityPart? FeatureSpecialization* | MultiplicityPart FeatureSpecialization+ ;
     ItemFlowEndMember = ItemFlowEnd ;
-    ItemFlowEnd = ( GeneralType '.' )? ItemFlowFeatureMember ;
+    ItemFlowEnd = ( FeatureChain '.' )? ItemFlowFeatureMember ;
     ItemFlowFeatureMember = ItemFlowFeature ;
     ItemFlowFeature = ItemFlowRedefinition ;
     ItemFlowRedefinition = QualifiedName ;
 
-    FeatureValue = ( '=' | ':=' | 'default' ( '=' | ':=' )? ) Expression ;
-
-    Multiplicity = MultiplicitySubset | MultiplicityRange ;
-    MultiplicitySubset = 'multiplicity' Identification Subsets TypeBody ;
-    MultiplicityRange = 'multiplicity' Identification MultiplicityBounds TypeBody ;
-    MultiplicityBounds = '[' ( MultiplicityExpressionMember '..' )? MultiplicityExpressionMember ']' ;
-    MultiplicityExpressionMember =  LiteralExpression | FeatureReference ;
-
-}
-
-grammar Packages {
-    // 8.2.5.13 Packages Concrete Syntax
-    Package = PackageDeclaration PackageBody ;
-    LibraryPackage = 'standard'? 'library' PrefixMetadataMember* PackageDeclaration PackageBody ;
-    PackageDeclaration = 'package' Identification ;
-    PackageBody
-        = ';'
-        | '{' ( NamespaceBodyElement | ElementFilterMember )* '}'
+    FeatureElement
+        = Feature
+        | Step
+        | ExpressionElement
+        | BooleanExpression
+        | Invariant
+        | ItemFlow
+        | SuccessionItemFlow
     ;
-    ElementFilterMember = MemberPrefix 'filter' Expression ';' ;
+
+    Behavior
+        = SimpleBehavior
+        | Function
+        | Interaction
+        | Predicate
+        ;
 }
 
-grammar Meta extends Packages {
+grammar Containers extends Relationships {
+
+    Container = Namespace | Package | LibraryPackage ;
+
+    Package = PackageDeclaration PackageBody ;
+    LibraryPackage = 'standard'? 'library' PackageDeclaration PackageBody ;
+    PackageDeclaration = 'package' Identification ;
+    PackageBody = ';' | '{' PackageBodyElement* '}' ;
+    PackageBodyElement = NamespaceBodyElement | ElementFilterMember ;
+    ElementFilterMember = MemberPrefix 'filter' Expression ';' ;
+
+    Namespace = NamespaceDeclaration NamespaceBody ;
+    NamespaceDeclaration = 'namespace' Identification ;
+    NamespaceBody = ';' | '{' NamespaceBodyElement* '}' ;
+    NamespaceBodyElement = NamespaceMember | AliasMember | Import ;
+
+    NamespaceMember = NonFeatureMember | NamespaceFeatureMember ;
+    NonFeatureMember = MemberPrefix MemberElement ;
+    NamespaceFeatureMember = MemberPrefix FeatureElement ;
+    AliasMember = MemberPrefix 'alias' ( '<' NAME '>' )? NAME? 'for' QualifiedName RelationshipBody ;
+
+    Import = VisibilityIndicator? 'import' 'all'? ImportDeclaration RelationshipBody ;
+    ImportDeclaration = MembershipImport | NamespaceImport ;
+    MembershipImport = QualifiedName ( '::' '**' )? ;
+    NamespaceImport = QualifiedName '::' '*' ( '::' '**' )?  |  FilterPackage ;
+    FilterPackage = ImportDeclaration FilterPackageMember+ ;
+    FilterPackageMember = '[' Expression ']' ;
+
+    MemberElement = Annotation | NonFeatureElement ;
+
+    NonFeatureElement
+        =  Namespace
+        // to be extended
+    ;
+
+    FeatureElement
+        = Annotation
+        // to be extended
+    ;
+
+}
+
+grammar Meta extends Containers, Classifiers, Features {
 
     override Expression +=| MetaclassificationExpression ;
     override NonFeatureChainPrimaryExpression +=| MetadataAccessExpression ;
-    override AnnotatingElement +=| MetadataFeature ;
-    override Dependency =
-        PrefixMetadataAnnotation* 'dependency'
-        ( Identification? 'from' )? QualifiedName ( ',' QualifiedName)*
-        'to' QualifiedName ( ',' QualifiedName)*
-        RelationshipBody
-    ;
+
+    override Annotation +=| MetadataFeature ;
+    override Dependency = PrefixMetadataAnnotation* 'dependency' ( Identification? 'from' )? QualifiedNameList 'to' QualifiedNameList RelationshipBody ;
     override Namespace = PrefixMetadataMember* NamespaceDeclaration NamespaceBody ;
     override NonFeatureElement +=| Metaclass ;
     override TypePrefix = 'abstract'? PrefixMetadataMember* ;
     override FeaturePrefix = FeatureDirection? 'abstract'? ( 'composite' | 'portion' )? 'readonly'? 'derived'?  'end'? PrefixMetadataMember* ;
     override Package = PrefixMetadataMember* PackageDeclaration PackageBody ;
+    override LibraryPackage = 'standard'? 'library' PrefixMetadataMember* PackageDeclaration PackageBody ;
 
     MetadataAccessExpression = QualifiedName '.' 'metadata' ;
     MetaclassificationExpression =
@@ -473,9 +425,9 @@ grammar Meta extends Packages {
     Metaclass = TypePrefix 'metaclass' ClassifierDeclaration TypeBody ;
     PrefixMetadataAnnotation = '#' PrefixMetadataFeature ;
     PrefixMetadataMember = '#' PrefixMetadataFeature ;
-    PrefixMetadataFeature = GeneralType ;
-    MetadataFeature = ( '@' | 'metadata' ) MetadataFeatureDeclaration ( 'about' Annotation ( ',' Annotation )* )? MetadataBody ;
-    MetadataFeatureDeclaration = ( Identification TYPED_BY )? GeneralType ;
+    PrefixMetadataFeature = FeatureChain ;
+    MetadataFeature = ( '@' | 'metadata' ) MetadataFeatureDeclaration ( 'about' QualifiedNameList )? MetadataBody ;
+    MetadataFeatureDeclaration = ( Identification TYPED_BY )? FeatureChain ;
     MetadataBody = ';' | '{' MetadataBodyElement* '}' ;
 
     MetadataBodyElement
@@ -485,10 +437,49 @@ grammar Meta extends Packages {
         | Import
     ;
     MetadataBodyFeatureMember = MetadataBodyFeature ;
-    MetadataBodyFeature = 'feature'? REDEFINES? OwnedRedefinition FeatureSpecializationPart? FeatureValue? MetadataBody ;
+    MetadataBodyFeature = 'feature'? REDEFINES? FeatureChain FeatureSpecializationPart? FeatureValue? MetadataBody ;
 
 }
 
-grammar KerML extends Meta {
+grammar KerML extends Meta, Behaviors, Connectors {
+    RootNamespace = NamespaceBodyElement* ;
 
+    FeatureMember = TypeFeatureMember | OwnedFeatureMember ;
+    TypeFeatureMember = MemberPrefix 'member' FeatureElement ;
+    OwnedFeatureMember = MemberPrefix FeatureElement ;
+
+    override NonFeatureElement
+        = Container
+        | Type
+        | Classifier
+        | Behavior
+        | Multiplicity
+        | Relationship
+    ;
+
+    override FeatureElement
+        = Feature
+        | Step
+        | ExpressionElement
+        | BooleanExpression
+        | Invariant
+        | ItemFlow
+        | SuccessionItemFlow
+        | Connector
+        | BindingConnector
+        | Succession
+    ;
+
+    override TypeBodyElement
+        = NonFeatureMember
+        | FeatureMember
+        | AliasMember
+        | Import
+    ;
+
+    override RelationshipElement
+        = NonFeatureElement
+        | FeatureElement
+        | Annotation
+    ;
 }

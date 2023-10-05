@@ -24,25 +24,26 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class test_KerML_Singles {
+class test_KerML_agl_Singles {
 
     private companion object {
-
-        private val grammarStr = this::class.java.getResource("/KerML/v2_2023-08/grammar.agl").readText()
-        var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
-
+        private val grammarPathStr = "/KerML/v2_2023-08/grammars/agl/grammar.agl"
+        private val grammarStr = this::class.java.getResource(grammarPathStr).readText()
+        val processor: LanguageProcessor<AsmSimple, ContextSimple> by lazy {
+            Agl.processorFromStringDefault(grammarStr).processor!!
+        }
     }
 
     @Test
     fun parse_grammar() {
-        val grammarStr = this::class.java.getResource("/KerML/v2_2023-08/grammar.agl").readText()
+        val grammarStr = this::class.java.getResource(grammarPathStr).readText()
         val res = Agl.registry.agl.grammar.processor!!.parse(grammarStr)
         assertTrue(res.issues.isEmpty(), res.issues.toString())
     }
 
     @Test
     fun process_grammar() {
-        val grammarStr = this::class.java.getResource("/KerML/v2_2023-08/grammar.agl").readText()
+        val grammarStr = this::class.java.getResource(grammarPathStr).readText()
         val res = Agl.registry.agl.grammar.processor!!.process(grammarStr)
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }

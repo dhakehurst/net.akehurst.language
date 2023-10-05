@@ -45,7 +45,7 @@ class test_AglGrammarSemanticAnalyser {
         """.trimIndent()
         val result = aglProc.process(grammarStr)
         val expected = setOf(
-            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(38, 9, 3, 1), "GrammarRule 'b' not found in grammar 'Test'")
+            LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(38, 9, 3, 1), "Rule 'b' not found in grammar 'Test'")
         )
         assertEquals(expected, result.issues.all)
     }
@@ -60,7 +60,6 @@ class test_AglGrammarSemanticAnalyser {
                 b = 'b' ;
             }
         """.trimIndent()
-        //val proc = Agl.processor(grammarStr)
         val result = aglProc.process(grammarStr)
         val expected = setOf(
             LanguageIssue(
@@ -69,6 +68,12 @@ class test_AglGrammarSemanticAnalyser {
                 InputLocation(position = 60, column = 5, line = 5, length = 9),
                 "More than one rule named 'b' found in grammar 'Test'"
             ),
+//            LanguageIssue(
+//                LanguageIssueKind.ERROR,
+//                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+//                InputLocation(position = 38, column = 9, line = 3, length = 1),
+//                "More than one rule named 'b' found in grammar 'Test'"
+//            ),
         )
         assertEquals(expected, result.issues.all)
     }
@@ -84,7 +89,7 @@ class test_AglGrammarSemanticAnalyser {
         """.trimIndent()
         val result = aglProc.process(grammarStr)
         val expected = setOf(
-            LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(48, 5, 4, 9), "Grammar Rule 'c' is not used.")
+            LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(48, 5, 4, 9), "Rule 'c' is not used in grammar Test.")
         )
         assertEquals(expected, result.issues.all)
     }
@@ -106,8 +111,8 @@ class test_AglGrammarSemanticAnalyser {
             }
         })
         val expected = setOf(
-            LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(57, 10, 4, 4), "Ambiguity on [<EOT>] with b2"),
-            LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(72, 10, 5, 4), "Ambiguity on [<EOT>] with b1")
+            LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(57, 10, 4, 3), "Ambiguity on [<EOT>] with b2"),
+            LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(72, 10, 5, 3), "Ambiguity on [<EOT>] with b1")
         )
         result.issues.forEach {
             println(it)
@@ -134,8 +139,8 @@ class test_AglGrammarSemanticAnalyser {
         val baseG = asm[0]
         val testG = asm[1]
 
-        assertTrue(baseG.findNonTerminalRule("A") != null)
-        assertTrue(testG.findNonTerminalRule("A") != null)
+        assertTrue(baseG.findAllResolvedNonTerminalRule("A") != null)
+        assertTrue(testG.findAllResolvedNonTerminalRule("A") != null)
         assertEquals(1, testG.grammarRule.size)
         assertEquals(2, testG.allResolvedGrammarRule.size)
 
@@ -165,10 +170,10 @@ class test_AglGrammarSemanticAnalyser {
         val base2G = asm[1]
         val testG = asm[2]
 
-        assertTrue(base1G.findNonTerminalRule("A") != null)
-        assertTrue(base2G.findNonTerminalRule("B") != null)
-        assertTrue(testG.findNonTerminalRule("A") != null)
-        assertTrue(testG.findNonTerminalRule("B") != null)
+        assertTrue(base1G.findAllResolvedNonTerminalRule("A") != null)
+        assertTrue(base2G.findAllResolvedNonTerminalRule("B") != null)
+        assertTrue(testG.findAllResolvedNonTerminalRule("A") != null)
+        assertTrue(testG.findAllResolvedNonTerminalRule("B") != null)
         assertEquals(1, testG.grammarRule.size)
         assertEquals(3, testG.allResolvedGrammarRule.size)
 
@@ -210,7 +215,7 @@ class test_AglGrammarSemanticAnalyser {
                 "More than one rule named 'A' found in grammar 'Test'"
             )
         )
-        assertEquals(expIssues.joinToString(separator = "\n"), res.issues.all.joinToString(separator = "\n"))
+        assertEquals(expIssues, res.issues.all)
     }
 
     @Test
@@ -233,8 +238,8 @@ class test_AglGrammarSemanticAnalyser {
         val baseG = asm[0]
         val testG = asm[1]
 
-        assertTrue(baseG.findNonTerminalRule("A") != null)
-        assertTrue(testG.findNonTerminalRule("A") != null)
+        assertTrue(baseG.findAllResolvedNonTerminalRule("A") != null)
+        assertTrue(testG.findAllResolvedNonTerminalRule("A") != null)
         assertEquals(2, testG.grammarRule.size)
         assertEquals(2, testG.allResolvedGrammarRule.size)
 
@@ -266,10 +271,10 @@ class test_AglGrammarSemanticAnalyser {
         val base2G = asm[1]
         val testG = asm[2]
 
-        assertTrue(base1G.findNonTerminalRule("A") != null)
-        assertTrue(base2G.findNonTerminalRule("B") != null)
-        assertTrue(testG.findNonTerminalRule("A") != null)
-        assertTrue(testG.findNonTerminalRule("B") != null)
+        assertTrue(base1G.findAllResolvedNonTerminalRule("A") != null)
+        assertTrue(base2G.findAllResolvedNonTerminalRule("B") != null)
+        assertTrue(testG.findAllResolvedNonTerminalRule("A") != null)
+        assertTrue(testG.findAllResolvedNonTerminalRule("B") != null)
         assertEquals(3, testG.grammarRule.size)
         assertEquals(3, testG.allResolvedGrammarRule.size)
 
@@ -278,7 +283,7 @@ class test_AglGrammarSemanticAnalyser {
     }
 
     @Test
-    fun extends_two_same_rule_name_and_rhs_in_bases() {
+    fun extends_two_same_rule_name_and_rhs_in_bases_fails() {
         val sentence = """
             namespace ns.test
             grammar Base1 {
@@ -301,6 +306,12 @@ class test_AglGrammarSemanticAnalyser {
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR,
+                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(75, 5, 6, 14),
+                "More than one rule named 'A' found in grammar 'Test'"
+            ),
+            LanguageIssue(
+                LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(38, 5, 3, 14), "More than one rule named 'A' found in grammar 'Test', you need to 'override' to resolve"
             ),
             LanguageIssue(
@@ -308,6 +319,7 @@ class test_AglGrammarSemanticAnalyser {
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(75, 5, 6, 14), "More than one rule named 'A' found in grammar 'Test', you need to 'override' to resolve"
             )
         )
+
         assertEquals(expIssues, res.issues.all)
     }
 
@@ -337,14 +349,14 @@ class test_AglGrammarSemanticAnalyser {
         val mid2G = asm[2]
         val testG = asm[3]
 
-        assertTrue(baseG.findNonTerminalRule("A") != null)
-        assertTrue(mid1G.findNonTerminalRule("B") != null)
-        assertTrue(mid1G.findNonTerminalRule("A") != null)
-        assertTrue(mid2G.findNonTerminalRule("C") != null)
-        assertTrue(mid1G.findNonTerminalRule("A") != null)
-        assertTrue(testG.findNonTerminalRule("A") != null)
-        assertTrue(testG.findNonTerminalRule("B") != null)
-        assertTrue(testG.findNonTerminalRule("C") != null)
+        assertTrue(baseG.findAllResolvedNonTerminalRule("A") != null)
+        assertTrue(mid1G.findAllResolvedNonTerminalRule("B") != null)
+        assertTrue(mid1G.findAllResolvedNonTerminalRule("A") != null)
+        assertTrue(mid2G.findAllResolvedNonTerminalRule("C") != null)
+        assertTrue(mid1G.findAllResolvedNonTerminalRule("A") != null)
+        assertTrue(testG.findAllResolvedNonTerminalRule("A") != null)
+        assertTrue(testG.findAllResolvedNonTerminalRule("B") != null)
+        assertTrue(testG.findAllResolvedNonTerminalRule("C") != null)
         assertEquals(1, baseG.allResolvedGrammarRule.size)
         assertEquals(2, mid1G.allResolvedGrammarRule.size)
         assertEquals(2, mid2G.allResolvedGrammarRule.size)
@@ -374,14 +386,14 @@ class test_AglGrammarSemanticAnalyser {
         val baseG = asm[0]
         val testG = asm[1]
 
-        assertNotNull(baseG.findNonTerminalRule("C"))
-        assertNotNull(testG.findNonTerminalRule("C"))
+        assertNotNull(baseG.findAllResolvedNonTerminalRule("C"))
+        assertNotNull(testG.findAllResolvedNonTerminalRule("C"))
         assertEquals(2, testG.grammarRule.size)
         assertEquals(2, testG.allResolvedGrammarRule.size)
         assertTrue(baseG.findAllNonTerminalRule("C")[0].rhs is Choice)
         assertEquals(2, (baseG.findAllNonTerminalRule("C")[0].rhs as Choice).alternative.size)
         assertTrue(testG.findAllNonTerminalRule("C")[0].rhs is ChoiceLongest)
-        assertEquals(3, (testG.findAllNonTerminalRule("C")[0].rhs as ChoiceLongest).alternative.size)
+        assertEquals(3, (testG.findAllResolvedNonTerminalRule("C")!!.rhs as ChoiceLongest).alternative.size)
 
         val proc = Agl.processorFromStringDefault(sentence).processor!!
         assertTrue(proc.parse("a").issues.errors.isEmpty())
@@ -389,4 +401,115 @@ class test_AglGrammarSemanticAnalyser {
         assertTrue(proc.parse("c").issues.errors.isEmpty())
     }
 
+    @Test
+    fun extends_diamond_repeate_no_override_fails() {
+        val sentence = """
+            namespace ns.test
+            grammar Base {
+                leaf A = 'a' ;
+            }
+            grammar Mid1 extends Base {
+                leaf B = 'b' ;
+            }
+            grammar Mid2 extends Base {
+                leaf A = 'c' ;
+            }
+            grammar Test extends Mid1, Mid2 {
+              S = A B;
+            }
+        """.trimIndent()
+        val res = aglProc.process(sentence)
+
+        val expIssues = setOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(135, 5, 9, 14),
+                "More than one rule named 'A' found in grammar 'Mid2'"
+            ),
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(192, 7, 12, 1),
+                "More than one rule named 'A' found in grammar 'Test'"
+            ),
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(37, 5, 3, 14),
+                "More than one rule named 'A' found in grammar 'Test', you need to 'override' to resolve"
+            ),
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(135, 5, 9, 14),
+                "More than one rule named 'A' found in grammar 'Test', you need to 'override' to resolve"
+            )
+        )
+
+        assertEquals(expIssues, res.issues.all)
+    }
+
+    @Test
+    fun extends_diamond_repeate_with_override() {
+        val sentence = """
+            namespace ns.test
+            grammar Base {
+                leaf A = 'a' ;
+            }
+            grammar Mid1 extends Base {
+                leaf B = 'b' ;
+            }
+            grammar Mid2 extends Base {
+                leaf B = 'c' ;
+            }
+            grammar Test extends Mid1, Mid2 {
+              S = A B;
+              override B = 'd' ;
+            }
+        """.trimIndent()
+        val res = aglProc.process(sentence)
+
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+    }
+
+    @Test
+    fun extends_diamond_repeate_with_override2_fails() {
+        val sentence = """
+            namespace ns.test
+            grammar Base {
+                leaf A = 'a' ;
+            }
+            grammar Mid1 extends Base {
+                leaf B = 'b' ;
+            }
+            grammar Mid2 extends Base {
+                leaf A = 'c' ;
+            }
+            grammar Test extends Mid1, Mid2 {
+              S = B;
+            }
+        """.trimIndent()
+        val res = aglProc.process(sentence)
+
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+    }
+
+    @Test
+    fun extends_diamond_repeate_with_override2() {
+        val sentence = """
+            namespace ns.test
+            grammar Base {
+                leaf A = 'a' ;
+            }
+            grammar Mid1 extends Base {
+                leaf B = 'b' ;
+            }
+            grammar Mid2 extends Base {
+                override leaf A +=| 'c' ;
+            }
+            grammar Test extends Mid1, Mid2 {
+              S = A B;
+            }
+        """.trimIndent()
+        val res = aglProc.process(sentence)
+
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+    }
 }

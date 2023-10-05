@@ -59,7 +59,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
     }
 
     @Test
@@ -168,7 +168,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
     }
 
     @Test
@@ -186,7 +186,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
     }
 
     @Test
@@ -203,7 +203,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
     }
 
     @Test
@@ -220,7 +220,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
     }
 
     @Test
@@ -237,7 +237,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
     }
 
     @Test
@@ -254,7 +254,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
     }
 
     @Test
@@ -271,7 +271,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
     }
 
     @Test
@@ -288,7 +288,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
     }
 
     @Test
@@ -305,7 +305,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
     }
 
     @Test
@@ -322,7 +322,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
     }
 
     @Test
@@ -375,7 +375,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
     }
 
     @Test
@@ -394,6 +394,6 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
     }
 }

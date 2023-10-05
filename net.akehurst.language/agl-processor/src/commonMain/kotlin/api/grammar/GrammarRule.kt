@@ -49,4 +49,5 @@ enum class OverrideKind { REPLACE, APPEND_ALTERNATIVE }
 
 interface OverrideRule : GrammarRule {
     val overrideKind: OverrideKind
+    val overridenRhs: RuleItem
 }

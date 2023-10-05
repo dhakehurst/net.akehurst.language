@@ -68,7 +68,11 @@ class CompletionProviderDefault(
 
                 is NonTerminal -> {
                     //TODO: handle overridden vs embedded rules!
-                    getItems(item.referencedRule(this.targetGrammar).rhs, desiredDepth - 1, context, done + item)
+                    val refRule = item.referencedRuleOrNull(this.targetGrammar)
+                    when (refRule) {
+                        null -> emptyList()
+                        else -> getItems(refRule.rhs, desiredDepth - 1, context, done + item)
+                    }
                 }
 
                 is SeparatedList -> {

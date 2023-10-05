@@ -19,6 +19,7 @@ package net.akehurst.language.agl.grammar.grammar.asm
 import net.akehurst.language.agl.collections.OrderedSet
 import net.akehurst.language.agl.collections.plus
 import net.akehurst.language.agl.collections.toMutableOrderedSet
+import net.akehurst.language.agl.collections.toOrderedSet
 import net.akehurst.language.api.grammar.*
 
 /**
@@ -60,6 +61,10 @@ abstract class GrammarAbstract(
     override val name: String
 ) : Grammar {
 
+    private companion object {
+
+    }
+
     override val qualifiedName: String get() = "${namespace.qualifiedName}.$name"
 
     override val extends = mutableListOf<GrammarReference>()
@@ -67,28 +72,50 @@ abstract class GrammarAbstract(
     override val grammarRule = mutableListOf<GrammarRule>()
     override val preferenceRule = mutableListOf<PreferenceRule>()
 
+    override val allGrammarRule: List<GrammarRule> by lazy {
+        val inheritedRules = this.extends.flatMap { it.resolved?.allGrammarRule ?: emptyList() }
+        inheritedRules + grammarRule
+    }
+
     override val allResolvedGrammarRule: OrderedSet<GrammarRule> by lazy {
-        val rules = this.extends.flatMap { it.resolved?.allResolvedGrammarRule ?: emptyList() }.toMutableOrderedSet()
-        this.grammarRule.forEach { rule ->
-            when {
-                rule.isOverride -> {
-                    val overridden = rules.find { it.name == rule.name }
-                        ?: error("GrammarRule ${rule.name} is marked as override, but there is no super rule with that name to override.")
-                    rules.remove(overridden)
-                    rules.add(rule)
+        val resolvedRules = linkedMapOf<String, GrammarRule>() //use linkedMap so order stayes the same
+        val inheritedRules = this.extends.flatMap { it.resolved?.allResolvedGrammarRule ?: emptyList() }
+
+        fun f(rule: GrammarRule): GrammarRule? {
+            return when {
+                rule is OverrideRule -> {
+                    val overridden = inheritedRules.find { it.name == rule.name }
+                    when (overridden) {
+                        null -> {
+                            // overridden rule not found, so add it as a NormalRule to enable best-effort, though this is an error
+                            val nr = NormalRuleDefault(rule.grammar, rule.name, rule.isSkip, rule.isLeaf)
+                            nr.rhs = (rule as OverrideRule).overridenRhs
+                            nr.rhs.setOwningRule(nr, emptyList())
+                            nr
+                        }
+
+                        else -> rule
+                    }
                 }
 
-                rules.contains(rule) -> { //assumes rule is identified by grammar and rule.name
+                resolvedRules.containsKey(rule.name) -> {
                     // already got this rule...probably comes from extending same grammar more than once
-                    // don't add it twice
+                    // replace with last rule found as best-effort, though this is an error
+                    rule
                 }
 
-                else -> {
-                    rules.add(rule)
-                }
+                else -> rule
             }
         }
-        rules
+        inheritedRules.forEach { rule ->
+            val r = f(rule)
+            resolvedRules[rule.name] = rule
+        }
+        this.grammarRule.forEach { rule ->
+            val r = f(rule)
+            resolvedRules[rule.name] = rule
+        }
+        resolvedRules.values.toOrderedSet()
     }
 
     override val allResolvedTerminal: Set<Terminal> by lazy {
@@ -126,14 +153,14 @@ abstract class GrammarAbstract(
     }
 
     override fun findAllSuperNonTerminalRule(ruleName: String): List<GrammarRule> {
-        val rules = this.extends.flatMap { it.resolved?.allResolvedGrammarRule ?: emptyList() }.toMutableOrderedSet()
+        val rules = this.extends.flatMap { it.resolved?.allGrammarRule ?: emptyList() }.toMutableOrderedSet()
         return rules.filter { it.grammar != this && it.name == ruleName }
     }
 
     override fun findAllNonTerminalRule(ruleName: String): List<GrammarRule> =
-        this.allResolvedGrammarRule.filter { it.name == ruleName }
+        this.allGrammarRule.filter { it.name == ruleName }
 
-    override fun findNonTerminalRule(ruleName: String): GrammarRule? {
+    override fun findAllResolvedNonTerminalRule(ruleName: String): GrammarRule? {
         val all = this.allResolvedGrammarRule.filter { it.name == ruleName }
         return when {
             all.isEmpty() -> null
@@ -142,7 +169,7 @@ abstract class GrammarAbstract(
         }
     }
 
-    override fun findTerminalRule(terminalPattern: String): Terminal {
+    override fun findAllResolvedTerminalRule(terminalPattern: String): Terminal {
         val all = this.allResolvedTerminal.filter { it.value == terminalPattern }
         when {
             all.isEmpty() -> error("$terminalPattern in Grammar(${this.name}).findTerminalRule")

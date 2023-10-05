@@ -38,7 +38,9 @@ class AglGrammarSemanticAnalyser(
     private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private var _locationMap: Map<*, InputLocation>? = null
     private var _analyseAmbiguities = true
-    private val _usedRules = mutableMapOf<Grammar, MutableMap<GrammarRule, Boolean>>()
+
+    // Grammar -> RuleName -> Rule  null if used, not null if unused so we can find the unused rule
+    private val _usedRules = mutableMapOf<Grammar, MutableMap<String, MutableList<GrammarRule>>>()
 
     private fun issueWarn(item: Any?, message: String, data: Any?) {
         val location = this._locationMap?.get(item)
@@ -104,10 +106,19 @@ class AglGrammarSemanticAnalyser(
 
     private fun checkRuleUsage(grammar: Grammar) {
         _usedRules[grammar]!!.entries.forEach {
-            when (it.value) {
-                true -> Unit
-                else -> issueWarn(it.key, "Grammar Rule '${it.key.name}' is not used.", null)
+            val rules = it.value
+            when {
+                rules.isEmpty() -> Unit
+                else -> issueWarn(rules.first(), "Rule '${it.key}' is not used in grammar ${grammar.name}.", null)
             }
+        }
+    }
+    private fun recordUnusedRule(grammar: Grammar, rule:GrammarRule) {
+        val list = this._usedRules[grammar]!![rule.name]
+        if (null==list) {
+            this._usedRules[grammar]!![rule.name] = mutableListOf(rule)
+        } else {
+            list.add(rule)
         }
     }
 
@@ -116,20 +127,38 @@ class AglGrammarSemanticAnalyser(
         // default usage is false for all rules in this grammar
         grammar.grammarRule.forEach {
             when {
-                this._usedRules[grammar]!!.containsKey(it) -> { //assumes grammar rule id is its name
+                it is OverrideRule -> Unit // expect duplicate name
+                it === this._usedRules[grammar]!![it.name] -> Unit //same rule included twice (i.e. diamond extension)
+                this._usedRules[grammar]!!.containsKey(it.name) -> {
+                    // checks for duplicate rule names in same grammar (not inherited)
                     issueError(it, "More than one rule named '${it.name}' found in grammar '${grammar.name}'", null)
                 }
 
-                it.isSkip -> this._usedRules[grammar]!![it] = true
-                else -> this._usedRules[grammar]!![it] = false
+                it.isSkip -> this._usedRules[grammar]!![it.name] = mutableListOf()
+                else -> recordUnusedRule(grammar,it)
             }
         }
-        // first rule is default goal rule
-        this._usedRules[grammar]!![grammar.grammarRule[0]] = true
+        // first rule is default goal rule //TODO: adjust for 'option defaultRule'
+        this._usedRules[grammar]!![grammar.grammarRule[0].name] = mutableListOf()
 
         grammar.grammarRule.forEach {
-            val rhs = it.rhs
-            this.analyseRuleItem(grammar, rhs)
+            when (it) {
+                is OverrideRule -> {
+                    //need to check what is overridden exists, before analysing the rule
+                    val overridden = grammar.findAllSuperNonTerminalRule(it.name)
+                    when {
+                        overridden.isEmpty() -> issueError(
+                            it,
+                            "Rule '${it.name}' is defined as override, but no rule with same name is found in extended grammars of '${grammar.name}'",
+                            null
+                        )
+
+                        else -> this.analyseRuleItem(grammar, it.rhs)
+                    }
+                }
+
+                is NormalRule -> this.analyseRuleItem(grammar, it.rhs)
+            }
         }
     }
 
@@ -150,22 +179,33 @@ class AglGrammarSemanticAnalyser(
 
             is NonTerminal -> {
                 val all = grammar.findAllNonTerminalRule(rhs.name)
+                    .toSet() //convert result to set so that same rule from same grammar is not repeated
                 when {
-                    all.isEmpty() -> issueError(rhs, "GrammarRule '${rhs.name}' not found in grammar '${grammar.name}'", null)
+                    all.isEmpty() -> issueError(rhs, "Rule '${rhs.name}' not found in grammar '${grammar.name}'", null)
                     all.size > 1 -> {
-                        this._usedRules[grammar]!![all.first()] = true
-                        issueError(rhs, "More than one rule named '${rhs.name}' found in grammar '${grammar.name}'", null)
-                        all.forEach { r ->
-                            if (r.grammar == grammar) {
-                                issueError(r, "More than one rule named '${rhs.name}' found in grammar '${grammar.name}'", null)
-                            } else {
-                                issueError(r, "More than one rule named '${rhs.name}' found in grammar '${grammar.name}', you need to 'override' to resolve", null)
+                        all.forEach { this._usedRules[grammar]!![it.name] = mutableListOf() }
+                        val or = all.firstOrNull { it.grammar == grammar && it is OverrideRule }
+                        when (or) {
+                            null -> {
+                                issueError(rhs, "More than one rule named '${rhs.name}' found in grammar '${grammar.name}'", null)
+                                all.forEach { r ->
+                                    // only results in one issue marking last rule found, if in same grammar
+                                    // because location is indexed by GrammarRule id, which is the same for both
+                                    if (r.grammar == grammar) {
+                                        issueError(r, "More than one rule named '${rhs.name}' found in grammar '${grammar.name}'", null)
+                                    } else {
+                                        issueError(r, "More than one rule named '${rhs.name}' found in grammar '${grammar.name}', you need to 'override' to resolve", null)
+                                    }
+                                }
                             }
+
+                            else -> Unit // OK because we have a local override defined
                         }
+
                     }
 
                     else -> {
-                        this._usedRules[grammar]!![all.first()] = true
+                        this._usedRules[grammar]!![all.first().name] = mutableListOf()
                     }
                 }
             }

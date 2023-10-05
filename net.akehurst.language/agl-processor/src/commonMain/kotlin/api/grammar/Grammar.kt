@@ -69,7 +69,14 @@ interface Grammar {
     val preferenceRule: List<PreferenceRule>
 
     /**
-     * the List of rules defined by this grammar and those that this grammar extends
+     * List of all grammar rules, including those overridden
+     * the order of the rules is the order they are defined in with the top of the grammar extension
+     * hierarchy coming first (in extension order where more than one grammar is extended)
+     */
+    val allGrammarRule: List<GrammarRule>
+
+    /**
+     * the List of rules defined by this grammar and those that this grammar extends, with best-effort to handle repetition and overrides
      * the order of the rules is the order they are defined in with the top of the grammar extension
      * hierarchy coming first (in extension order where more than one grammar is extended)
      */
@@ -106,8 +113,8 @@ interface Grammar {
      */
     fun findAllNonTerminalRule(ruleName: String): List<GrammarRule>
 
-    fun findNonTerminalRule(ruleName: String): GrammarRule?
+    fun findAllResolvedNonTerminalRule(ruleName: String): GrammarRule?
 
-    fun findTerminalRule(terminalPattern: String): Terminal
+    fun findAllResolvedTerminalRule(terminalPattern: String): Terminal
 
 }

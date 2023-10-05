@@ -29,7 +29,7 @@ data class OverrideRuleDefault(
     override val isOverride: Boolean = true
 
     private var _overridenRhs: RuleItem? = null
-    var overridenRhs: RuleItem
+    override var overridenRhs: RuleItem
         get() {
             return this._overridenRhs ?: throw GrammarExeception("overridenRhs of rule must be set", null)
         }
@@ -42,18 +42,40 @@ data class OverrideRuleDefault(
         get() = when (overrideKind) {
             OverrideKind.REPLACE -> overridenRhs
             OverrideKind.APPEND_ALTERNATIVE -> {
-                val or = this.grammar.findAllSuperNonTerminalRule(this.name).first()
-                when (or.rhs) {
-                    is ChoiceLongest -> {
-                        val appendedAlternatives = (or.rhs as ChoiceLongest).alternative + overridenRhs
-                        val ac = ChoiceLongestDefault(appendedAlternatives)
-                        val indices = (or.rhs as ChoiceLongestDefault).index!!
-                        val ni = indices.dropLast(1) + indices.last() + 1
-                        ac.setOwningRule(this, ni)
-                        ac
+                val or = this.grammar.findAllSuperNonTerminalRule(this.name).firstOrNull()
+                when {
+                    null == or -> {
+                        error("Rule ${this.name} is marked as override, but there is no super rule with that name to override.")
                     }
 
-                    else -> error("Cannot append choice to a non-longest-choice rule")
+                    else -> when (or.rhs) {
+                        is ChoiceLongest -> {
+                            val appendedAlternatives = (or.rhs as ChoiceLongest).alternative + overridenRhs
+                            val ac = ChoiceLongestDefault(appendedAlternatives)
+                            val indices = (or.rhs as ChoiceLongestDefault).index!!
+                            val ni = indices.dropLast(1) + indices.last() + 1
+                            ac.setOwningRule(this, ni)
+                            ac
+                        }
+
+                        is NonTerminal -> {
+                            val appendedAlternatives = listOf(or.rhs, overridenRhs)
+                            val ac = ChoiceLongestDefault(appendedAlternatives)
+                            val ni = listOf(0, 1)
+                            ac.setOwningRule(this, ni)
+                            ac
+                        }
+                        
+                        is Terminal -> {
+                            val appendedAlternatives = listOf(or.rhs, overridenRhs)
+                            val ac = ChoiceLongestDefault(appendedAlternatives)
+                            val ni = listOf(0, 1)
+                            ac.setOwningRule(this, ni)
+                            ac
+                        }
+
+                        else -> error("Cannot append choice overriden rule is not a choice or single NonTerminal")
+                    }
                 }
             }
         }

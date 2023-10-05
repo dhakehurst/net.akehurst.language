@@ -37,7 +37,7 @@ object TypeModelFromGrammar {
         val grmrTypeModel = TypeModelSimple(grammar.name)
         grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
         val goalRuleName = defaultGoalRuleName ?: grammar.grammarRule.first { it.isSkip.not() }.name
-        val goalRule = grammar.findNonTerminalRule(goalRuleName) ?: error("Cannot find grammar rule '$goalRuleName'")
+        val goalRule = grammar.findAllResolvedNonTerminalRule(goalRuleName) ?: error("Cannot find grammar rule '$goalRuleName'")
         val ns = GrammarTypeNamespaceFromGrammar(grmrTypeModel, grammar, grammar)
         grmrTypeModel.addNamespace(ns)
         grmrTypeModel.resolveImports()
@@ -190,8 +190,9 @@ class GrammarTypeNamespaceFromGrammar(
                 is EmptyRule -> SimpleTypeModelStdLib.NothingType.instance()
                 is Terminal -> if (forProperty) SimpleTypeModelStdLib.NothingType.instance() else SimpleTypeModelStdLib.String
                 is NonTerminal -> {
-                    val refRule = ruleItem.referencedRule(this.grammar)
+                    val refRule = ruleItem.referencedRuleOrNull(this.grammar)
                     when {
+                        null == refRule -> SimpleTypeModelStdLib.NothingType.instance()
                         refRule.isLeaf -> SimpleTypeModelStdLib.String
                         refRule.rhs is EmptyRule -> SimpleTypeModelStdLib.NothingType.instance()
                         else -> typeForGrammarRule(refRule)
@@ -380,7 +381,7 @@ class GrammarTypeNamespaceFromGrammar(
             is Embedded -> createPropertyDeclarationForEmbedded(et, ruleItem, childIndex)
 
             is NonTerminal -> {
-                val refRule = ruleItem.referencedRule(this.grammar)
+                val refRule = ruleItem.referencedRuleOrNull(this.grammar)
                 createPropertyDeclarationForReferencedRule(refRule, et, ruleItem, childIndex)
             }
 
@@ -440,8 +441,8 @@ class GrammarTypeNamespaceFromGrammar(
         }
     }
 
-    private fun createPropertyDeclarationForReferencedRule(refRule: GrammarRule, et: StructuredType, ruleItem: SimpleItem, childIndex: Int) {
-        val rhs = refRule.rhs
+    private fun createPropertyDeclarationForReferencedRule(refRule: GrammarRule?, et: StructuredType, ruleItem: SimpleItem, childIndex: Int) {
+        val rhs = refRule?.rhs
         when (rhs) {
             is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, SimpleTypeModelStdLib.String.type), SimpleTypeModelStdLib.String, childIndex)
 
