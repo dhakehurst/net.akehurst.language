@@ -71,11 +71,15 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
         return EmbeddedDefault(embeddedGoalName, embeddedGrammarRef)
     }
 
-    fun nonTerminal(name: String): NonTerminal {
-        if (name.contains(".")) {
-            TODO("Not supported")
+    fun nonTerminal(qname: String): NonTerminal {
+        return if (qname.contains(".")) {
+            val nonTerminalQualified = qname
+            val nonTerminalRef = nonTerminalQualified.substringAfterLast(".")
+            val grammarRef = nonTerminalQualified.substringBeforeLast(".")
+            val gr = GrammarReferenceDefault(this.grammar.namespace, grammarRef)
+            NonTerminalDefault(gr, nonTerminalRef)
         } else {
-            return NonTerminalDefault(name)
+            NonTerminalDefault(null, qname)
         }
     }
 

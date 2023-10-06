@@ -19,6 +19,8 @@ package net.akehurst.language.agl.grammar.grammar
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.grammar.Choice
 import net.akehurst.language.api.grammar.ChoiceLongest
+import net.akehurst.language.api.grammar.NonTerminal
+import net.akehurst.language.api.grammar.NormalRule
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -51,6 +53,26 @@ class test_AglGrammarSemanticAnalyser {
     }
 
     @Test
+    fun rule_nonTerminalQualified() {
+        val grammarStr = """
+            namespace ns.test
+            grammar Base {
+                A = 'a' ;
+            }
+            grammar Test {
+              S = Base.A ;
+            }
+        """.trimIndent()
+        val res = aglProc.process(grammarStr)
+        val gBase = res.asm!![0]
+        val gTest = res.asm!![1]
+        assertTrue(gTest.findAllResolvedNonTerminalRule("S") != null)
+        val rS = gTest.findAllResolvedNonTerminalRule("S") as NormalRule
+        assertTrue(rS.rhs is NonTerminal)
+        assertEquals("Base", (rS.rhs as NonTerminal).referencedRuleOrNull(gTest)?.grammar?.name)
+    }
+
+    @Test
     fun duplicateRule() {
         val grammarStr = """
             namespace test
@@ -75,6 +97,7 @@ class test_AglGrammarSemanticAnalyser {
 //                "More than one rule named 'b' found in grammar 'Test'"
 //            ),
         )
+
         assertEquals(expected, result.issues.all)
     }
 
@@ -199,14 +222,8 @@ class test_AglGrammarSemanticAnalyser {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(89, 7, 7, 1),
-                "More than one rule named 'A' found in grammar 'Test'"
-            ),
-            LanguageIssue(
-                LanguageIssueKind.ERROR,
-                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(37, 5, 3, 14),
-                "More than one rule named 'A' found in grammar 'Test', you need to 'override' to resolve"
+                "More than one rule named 'A' found in grammar 'Test'"
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR,
@@ -301,25 +318,16 @@ class test_AglGrammarSemanticAnalyser {
             LanguageIssue(
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(134, 7, 9, 1),
-                "More than one rule named 'A' found in grammar 'Test'"
-            ),
-            LanguageIssue(
-                LanguageIssueKind.ERROR,
-                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(75, 5, 6, 14),
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR,
-                LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(38, 5, 3, 14), "More than one rule named 'A' found in grammar 'Test', you need to 'override' to resolve"
+                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(38, 5, 3, 14),
+                "More than one rule named 'A' found in grammar 'Test'"
             ),
-            LanguageIssue(
-                LanguageIssueKind.ERROR,
-                LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(75, 5, 6, 14), "More than one rule named 'A' found in grammar 'Test', you need to 'override' to resolve"
-            )
         )
-
         assertEquals(expIssues, res.issues.all)
     }
 
@@ -390,9 +398,9 @@ class test_AglGrammarSemanticAnalyser {
         assertNotNull(testG.findAllResolvedNonTerminalRule("C"))
         assertEquals(2, testG.grammarRule.size)
         assertEquals(2, testG.allResolvedGrammarRule.size)
-        assertTrue(baseG.findAllNonTerminalRule("C")[0].rhs is Choice)
-        assertEquals(2, (baseG.findAllNonTerminalRule("C")[0].rhs as Choice).alternative.size)
-        assertTrue(testG.findAllNonTerminalRule("C")[0].rhs is ChoiceLongest)
+        assertTrue(baseG.findAllNonTerminalRuleList("C")[0].rhs is Choice)
+        assertEquals(2, (baseG.findAllNonTerminalRuleList("C")[0].rhs as Choice).alternative.size)
+        assertTrue(testG.findAllNonTerminalRuleList("C")[0].rhs is ChoiceLongest)
         assertEquals(3, (testG.findAllResolvedNonTerminalRule("C")!!.rhs as ChoiceLongest).alternative.size)
 
         val proc = Agl.processorFromStringDefault(sentence).processor!!
@@ -402,7 +410,7 @@ class test_AglGrammarSemanticAnalyser {
     }
 
     @Test
-    fun extends_diamond_repeate_no_override_fails() {
+    fun extends_diamond_repeat_no_override_fails() {
         val sentence = """
             namespace ns.test
             grammar Base {
@@ -428,26 +436,25 @@ class test_AglGrammarSemanticAnalyser {
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(192, 7, 12, 1),
+                InputLocation(37, 5, 3, 14),
+                "More than one rule named 'A' found in grammar 'Mid2'"
+            ),
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(135, 5, 9, 14),
                 "More than one rule named 'A' found in grammar 'Test'"
             ),
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(37, 5, 3, 14),
-                "More than one rule named 'A' found in grammar 'Test', you need to 'override' to resolve"
+                "More than one rule named 'A' found in grammar 'Test'"
             ),
-            LanguageIssue(
-                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(135, 5, 9, 14),
-                "More than one rule named 'A' found in grammar 'Test', you need to 'override' to resolve"
-            )
         )
-
         assertEquals(expIssues, res.issues.all)
     }
 
     @Test
-    fun extends_diamond_repeate_with_override() {
+    fun extends_diamond_repeat_with_override() {
         val sentence = """
             namespace ns.test
             grammar Base {
@@ -470,7 +477,7 @@ class test_AglGrammarSemanticAnalyser {
     }
 
     @Test
-    fun extends_diamond_repeate_with_override2_fails() {
+    fun extends_diamond_repeat_with_override2_fails1() {
         val sentence = """
             namespace ns.test
             grammar Base {
@@ -488,11 +495,33 @@ class test_AglGrammarSemanticAnalyser {
         """.trimIndent()
         val res = aglProc.process(sentence)
 
-        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+        val expIssues = setOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(37, 5, 3, 14),
+                "More than one rule named 'A' found in grammar 'Mid2'"
+            ),
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(135, 5, 9, 14),
+                "More than one rule named 'A' found in grammar 'Mid2'"
+            ),
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(37, 5, 3, 14),
+                "More than one rule named 'A' found in grammar 'Test'"
+            ),
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(135, 5, 9, 14),
+                "More than one rule named 'A' found in grammar 'Test'"
+            ),
+        )
+        assertEquals(expIssues, res.issues.all)
     }
 
     @Test
-    fun extends_diamond_repeate_with_override2() {
+    fun extends_diamond_repeat_with_override2_fails2() {
         val sentence = """
             namespace ns.test
             grammar Base {
@@ -506,6 +535,118 @@ class test_AglGrammarSemanticAnalyser {
             }
             grammar Test extends Mid1, Mid2 {
               S = A B;
+            }
+        """.trimIndent()
+        val res = aglProc.process(sentence)
+
+        val expIssues = setOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(37, 5, 3, 14),
+                "More than one rule named 'A' found in grammar 'Test'"
+            ),
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(135, 5, 9, 25),
+                "More than one rule named 'A' found in grammar 'Test'"
+            ),
+        )
+        assertEquals(expIssues, res.issues.all)
+    }
+
+    @Test
+    fun extends_diamond_repeat_with_override2() {
+        val sentence = """
+            namespace ns.test
+            grammar Base {
+                leaf A = 'a' ;
+            }
+            grammar Mid1 extends Base {
+                leaf B = 'b' ;
+            }
+            grammar Mid2 extends Base {
+                override leaf A +=| 'c' ;
+            }
+            grammar Test extends Mid1, Mid2 {
+                override leaf A = Mid2.A ;
+                S = A B;
+            }
+        """.trimIndent()
+        val res = aglProc.process(sentence)
+
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+    }
+
+    @Test
+    fun extends_diamond_repeat_with_override3() {
+        val sentence = """
+            namespace ns.test
+            grammar Annotations {
+                Annotation = 'annotation' ;
+            }
+            grammar Mid1 extends Base {
+                leaf B = 'b' ;
+            }
+            grammar Mid2 extends Base {
+                override leaf A +=| 'c' ;
+            }
+            grammar Test extends Mid1, Mid2 {
+                override leaf A = Mid2.A ;
+                S = A B;
+            }
+        """.trimIndent()
+        val res = aglProc.process(sentence)
+
+        assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+    }
+
+    @Test
+    fun extends_xxx_fails() {
+        val sentence = """
+            namespace ns.test
+            
+            grammar Base {
+                leaf ID = "[a-z]+" ;
+            }
+            grammar Annotations extends Base {
+                Annotation = 'annotation' ;
+            }
+            grammar Relationships extends Annotations {
+                Relationship = 'relationship' ;
+            }
+            grammar Containers extends Relationships {
+                Container = 'container' ;
+            }
+            
+            grammar LiteralExpressions extends Base {
+                LiteralExpression = 'literal-expression' ;
+            }
+            grammar Expressions extends LiteralExpressions {
+                Expression = '{' FunctionBodyPart '}' ;
+                FunctionBodyPart = 'expr' ;
+            }
+            grammar Types extends LiteralExpressions, Annotations {
+                Type = 'type' ;
+            }   
+            grammar Classifiers extends Types {
+                Classifier = 'classifier' ;
+            }
+            grammar Features extends Types, Expressions {
+                Feature = 'feature' ;
+            }
+            
+            grammar Connectors extends Features {
+                Connector = 'connector' ;
+            }
+            grammar Behaviors extends Features, Classifiers {
+                override FunctionBodyPart = 'function-body' ;
+            }
+            grammar Meta extends Features, Classifiers, Containers {
+                Meta = 'meta' ;
+            }            
+            grammar KerML extends Connectors, Behaviors, Meta {
+                KerML = 'KerML' ;
+                override FunctionBodyPart = Behaviors.FunctionBodyPart ;
             }
         """.trimIndent()
         val res = aglProc.process(sentence)

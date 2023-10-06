@@ -57,7 +57,7 @@ class test_AglGrammar_expectedTerminalsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, 9, 1)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z_][a-zA-Z_0-9-]*", "IDENTIFIER")
+            CompletionItem(CompletionItemKind.PATTERN, "<IDENTIFIER>", "[a-zA-Z_][a-zA-Z_0-9-]*")
         )
 
         assertEquals(expected, result.items)
@@ -70,7 +70,7 @@ class test_AglGrammar_expectedTerminalsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, 10, 1)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z_][a-zA-Z_0-9-]*", "IDENTIFIER")
+            CompletionItem(CompletionItemKind.PATTERN, "<IDENTIFIER>", "[a-zA-Z_][a-zA-Z_0-9-]*")
         )
 
         assertEquals(expected, result.items)
@@ -97,7 +97,7 @@ class test_AglGrammar_expectedTerminalsAt {
         val result = Agl.registry.agl.grammar.processor!!.expectedTerminalsAt(sentence, sentence.length, 1)
 
         val expected = listOf<CompletionItem>(
-            CompletionItem(CompletionItemKind.PATTERN, "[a-zA-Z_][a-zA-Z_0-9-]*", "IDENTIFIER")
+            CompletionItem(CompletionItemKind.PATTERN, "<IDENTIFIER>", "[a-zA-Z_][a-zA-Z_0-9-]*")
         )
 
         assertEquals(expected, result.items)

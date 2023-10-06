@@ -60,11 +60,14 @@ data class SentenceData(
     val goalRule: String?
 )
 
-suspend fun VfsFile.walk(func: suspend (file: VfsFile) -> Unit = { }) {
+suspend fun VfsFile.walk(recursive: Boolean, func: suspend (file: VfsFile) -> Unit = { }) {
     for (file in listSimple()) {
         val stat = file.stat()
         if (stat.isDirectory) {
-            file.walk(func)
+            func(file)
+            if (recursive) {
+                file.walk(recursive, func)
+            }
         } else {
             func(file)
         }
@@ -79,7 +82,7 @@ suspend fun fetchGrammars(langDir: VfsFile): List<GrammarData> {
         }
 
         langDir["grammars"].exists() && langDir["grammars"].isDirectory() -> {
-            langDir["grammars"].walk { grammarsEntry ->
+            langDir["grammars"].walk(false) { grammarsEntry ->
                 when {
                     grammarsEntry.isDirectory() -> {
                         when {
@@ -130,7 +133,7 @@ suspend fun fetchSentences(langDir: VfsFile, sentenceKind: String): List<Sentenc
         }
 
         langDir[sentenceKind].exists() && langDir[sentenceKind].isDirectory() -> {
-            langDir[sentenceKind].walk { entry ->
+            langDir[sentenceKind].walk(true) { entry ->
                 when {
                     entry.isFile() -> {
                         val content = entry.readString()
@@ -203,8 +206,9 @@ private suspend fun fetchTestData(): List<TestData> {
         rootFs[lang].listNames().forEach { ver ->
             //val grammarPath = "$lang/$ver"
             val grammars = fetchGrammars(rootFs[lang][ver])
+            println("grammars for $lang/$ver: ${grammars.joinToString { it.name }}")
             val validSentences = fetchSentences(rootFs[lang][ver], "valid")
-            println("validSentences ${validSentences.joinToString { it.name }}")
+            //println("validSentences ${validSentences.joinToString { it.name }}")
             val invalidSentences = fetchSentences(rootFs[lang][ver], "invalid")
             grammars.forEach { grammarData ->
                 validSentences.forEach { sentenceData ->

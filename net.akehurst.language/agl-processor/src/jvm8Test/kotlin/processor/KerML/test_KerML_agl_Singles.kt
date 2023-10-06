@@ -50,11 +50,10 @@ class test_KerML_agl_Singles {
 
     @Test
     fun SINGLE_LINE_NOTE() {
-        val goal = "graph"
         val sentence = """
           // a note
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence)
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
         assertEquals(sentence, result.sppt!!.asSentence)
@@ -93,6 +92,18 @@ class test_KerML_agl_Singles {
         //val goal = "Package"
         val sentence = """
           package ;
+        """.trimIndent()
+        val result = processor.parse(sentence)
+        assertNotNull(result.sppt)
+        assertTrue(result.issues.isEmpty())
+    }
+
+    @Test
+    fun package_body_empty() {
+        //val goal = "Package"
+        val sentence = """
+          package Pkg {
+          }
         """.trimIndent()
         val result = processor.parse(sentence)
         assertNotNull(result.sppt)

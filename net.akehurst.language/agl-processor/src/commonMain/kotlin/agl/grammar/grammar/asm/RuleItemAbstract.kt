@@ -211,15 +211,17 @@ class TerminalDefault(
 }
 
 class NonTerminalDefault(
+    override val targetGrammar: GrammarReference?,
     override val name: String
 ) : TangibleItemAbstract(), NonTerminal {
 
     override fun referencedRuleOrNull(targetGrammar: Grammar): GrammarRule? =
-        targetGrammar.findAllResolvedNonTerminalRule(this.name)
+        this.targetGrammar?.resolved?.findAllResolvedNonTerminalRule(this.name)
+            ?: targetGrammar.findAllResolvedNonTerminalRule(this.name)
 
     override fun referencedRule(targetGrammar: Grammar): GrammarRule {
         return referencedRuleOrNull(targetGrammar)
-            ?: error("Grammar GrammarRule ($name) not found in grammar (${targetGrammar.name})")
+            ?: error("Grammar Rule ($name) not found in grammar (${targetGrammar.name})")
     }
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {

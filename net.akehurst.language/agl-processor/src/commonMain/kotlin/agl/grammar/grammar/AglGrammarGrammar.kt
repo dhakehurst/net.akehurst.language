@@ -55,7 +55,7 @@ internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehur
             b.nonTerminal("rhs"),
             b.terminalLiteral(";")
         )
-        b.rule("overrideOperator").choiceLongestFromConcatenationItem(b.terminalLiteral("="), b.terminalLiteral("+=|"))
+        b.rule("overrideOperator").choiceLongestFromConcatenationItem(b.terminalLiteral("=="), b.terminalLiteral("="), b.terminalLiteral("+=|"))
         b.rule("ruleTypeLabels").concatenation(b.nonTerminal("isSkip"), b.nonTerminal("isLeaf"))
         b.rule("isSkip").optional(b.terminalLiteral("skip"))
         b.rule("isLeaf").optional(b.terminalLiteral("leaf"))
@@ -68,7 +68,8 @@ internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehur
         b.rule("concatenation").multi(1, -1, b.nonTerminal("concatenationItem"))
         b.rule("concatenationItem").choiceLongestFromConcatenationItem(b.nonTerminal("simpleItemOrGroup"), b.nonTerminal("listOfItems"))
         b.rule("simpleItemOrGroup").choiceLongestFromConcatenationItem(b.nonTerminal("simpleItem"), b.nonTerminal("group"))
-        b.rule("simpleItem").choiceLongestFromConcatenationItem(b.nonTerminal("terminal"), b.nonTerminal("nonTerminal"), b.nonTerminal("embedded"))
+        b.rule("simpleItem")
+            .choiceLongestFromConcatenationItem(b.nonTerminal("terminal"), b.nonTerminal("nonTerminal"), b.nonTerminal("embedded"))
         b.rule("listOfItems").choiceLongestFromConcatenationItem(b.nonTerminal("simpleList"), b.nonTerminal("separatedList"))  // TODO: Associative lists
         b.rule("multiplicity").choiceLongestFromConcatenationItem(
             b.terminalLiteral("*"),
@@ -96,7 +97,7 @@ internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehur
         )
         b.rule("group").concatenation(b.terminalLiteral("("), b.nonTerminal("groupedContent"), b.terminalLiteral(")"))
         b.rule("groupedContent").choiceLongestFromConcatenationItem(b.nonTerminal("concatenation"), b.nonTerminal("choice"))
-        b.rule("nonTerminal").concatenation(b.nonTerminal("IDENTIFIER"))
+        b.rule("nonTerminal").concatenation(b.nonTerminal("qualifiedName"))
         b.rule("embedded").concatenation(b.nonTerminal("qualifiedName"), b.terminalLiteral("::"), b.nonTerminal("nonTerminal"))
         b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"))
         b.rule("terminal").choiceLongestFromConcatenationItem(b.nonTerminal("LITERAL"), b.nonTerminal("PATTERN"))
@@ -185,7 +186,7 @@ grammar AglGrammar {
     rule = grammarRule | overrideRule | preferenceRule ;
     grammarRule = ruleTypeLabels IDENTIFIER '=' rhs ';' ;
     overrideRule = 'override' ruleTypeLabels IDENTIFIER overrideOperator rhs ';' ;
-    overrideOperator = '=' | '+=|' ;
+    overrideOperator = '==' | '=' | '+=|' ;
     rhs = empty | concatenation | choice ;
     ruleTypeLabels = 'skip'? 'leaf'? ;
     empty = ;

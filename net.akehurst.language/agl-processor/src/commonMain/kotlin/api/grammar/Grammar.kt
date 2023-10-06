@@ -59,24 +59,58 @@ interface Grammar {
     val qualifiedName: String
 
     /**
-     * the List of grammars extended by this one
+     * the List of grammar references directly extended by this one (non-transitive)
      */
     val extends: List<GrammarReference>
+
+    val extendsResolved: List<Grammar>
 
     val options: List<GrammarOption>
 
     val grammarRule: List<GrammarRule>
     val preferenceRule: List<PreferenceRule>
 
+    val allGrammarReferencesInRules: List<GrammarReference>
+
     /**
-     * List of all grammar rules, including those overridden
+     * the OrderedSet of grammars references extended by this one or those it extends (transitive)
+     */
+    val allExtends: OrderedSet<GrammarReference>
+
+    /**
+     * the OrderedSet of grammars extended by this one or those it extends (transitive)
+     */
+    val allExtendsResolved: OrderedSet<Grammar>
+
+    /**
+     * List of all grammar rules that belong to grammars this one extends (non-transitive)
+     */
+    val directInheritedGrammarRule: List<GrammarRule>
+
+    /**
+     * List of all grammar rules (transitive over extended grammars), including those overridden
      * the order of the rules is the order they are defined in with the top of the grammar extension
      * hierarchy coming first (in extension order where more than one grammar is extended)
      */
     val allGrammarRule: List<GrammarRule>
 
     /**
-     * the List of rules defined by this grammar and those that this grammar extends, with best-effort to handle repetition and overrides
+     * List of all grammar rules that belong to grammars this one extends (non-transitive)
+     * with best-effort to resolve repetition and override
+     */
+    val directInheritedResolvedGrammarRule: OrderedSet<GrammarRule>
+
+    /**
+     * List of all grammar rules that belong to grammars this one extends (transitive)
+     * with best-effort to resolve repetition and override
+     */
+    val allInheritedResolvedGrammarRule: OrderedSet<GrammarRule>
+
+    val resolvedGrammarRule: OrderedSet<GrammarRule>
+
+    /**
+     * the List of rules defined by this grammar and those that this grammar extends (transitive),
+     * with best-effort to handle repetition and overrides
      * the order of the rules is the order they are defined in with the top of the grammar extension
      * hierarchy coming first (in extension order where more than one grammar is extended)
      */
@@ -111,7 +145,7 @@ interface Grammar {
     /**
      * find rule with given name in all rules from this grammar and ones that this grammar extends
      */
-    fun findAllNonTerminalRule(ruleName: String): List<GrammarRule>
+    fun findAllNonTerminalRuleList(ruleName: String): List<GrammarRule>
 
     fun findAllResolvedNonTerminalRule(ruleName: String): GrammarRule?
 

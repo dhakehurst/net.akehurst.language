@@ -41,6 +41,32 @@ data class OverrideRuleDefault(
     override val rhs: RuleItem
         get() = when (overrideKind) {
             OverrideKind.REPLACE -> overridenRhs
+            OverrideKind.SUBSTITUTION -> {
+                when (overridenRhs) {
+                    is NonTerminal -> {
+                        val tg = (overridenRhs as NonTerminal).targetGrammar?.resolved
+                        when {
+                            tg == null -> error("Override rule using substitution must contain a \"qualified\" non-terminal, there is no reference to an extended grammar.")
+                            this.grammar.allExtendsResolved.any { eg -> tg == eg } -> {
+                                val or = tg.findAllResolvedNonTerminalRule(this.name)
+                                when {
+                                    null == or -> error("Cannot find rule '${(overridenRhs as NonTerminal).name}' in grammar '${tg.name}' for override substitution.")
+                                    else -> {
+                                        or.rhs
+                                    }
+                                }
+                            }
+
+                            else -> error("Grammar '${tg.name}' is not extended by this grammar, cannot substitute a rule if it is not inherited.")
+                        }
+                    }
+
+                    else -> {
+                        error("Override rule using inherited rule must contain a single qualified non-terminal.")
+                    }
+                }
+            }
+
             OverrideKind.APPEND_ALTERNATIVE -> {
                 val or = this.grammar.findAllSuperNonTerminalRule(this.name).firstOrNull()
                 when {
@@ -65,7 +91,7 @@ data class OverrideRuleDefault(
                             ac.setOwningRule(this, ni)
                             ac
                         }
-                        
+
                         is Terminal -> {
                             val appendedAlternatives = listOf(or.rhs, overridenRhs)
                             val ac = ChoiceLongestDefault(appendedAlternatives)

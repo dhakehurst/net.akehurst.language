@@ -47,12 +47,12 @@ package Core {
         LiteralReal
         LiteralInfinity
     }
-}
-
-package Kernel {
     class Expressions {
         Expression
     }
+}
+
+package Kernel {
     class Connectors {
         Connector
         BindingConnector
@@ -75,23 +75,22 @@ package Kernel {
     }
 }
 
-
-
+Annotations --|> Base
+LiteralExpressions --|> Base
+Expressions ---|> LiteralExpressions
 Types --|> LiteralExpressions
 Types --|> Annotations
-Relationships --|> Annotations
-Expressions ---|> LiteralExpressions
-LiteralExpressions --|> Base
-Annotations --|> Base
 Classifiers --|> Types
+Relationships --|> Annotations
 Features --|> Types
+Features --|> Expressions
 Connectors --|> Features
 Behaviors --|> Features
 Behaviors --|> Classifiers
 Containers --|> Relationships
+Meta --|> Containers
 Meta --|> Classifiers
 Meta --|> Features
-Meta --|> Containers
 KerML --|> Meta
 KerML --|> Behaviors
 KerML --|> Connectors

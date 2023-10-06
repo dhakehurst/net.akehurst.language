@@ -49,11 +49,10 @@ class test_KerML_standard_Singles {
 
     @Test
     fun SINGLE_LINE_NOTE() {
-        val goal = "graph"
         val sentence = """
           // a note
         """.trimIndent()
-        val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
+        val result = processor.parse(sentence)
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
         assertEquals(sentence, result.sppt!!.asSentence)

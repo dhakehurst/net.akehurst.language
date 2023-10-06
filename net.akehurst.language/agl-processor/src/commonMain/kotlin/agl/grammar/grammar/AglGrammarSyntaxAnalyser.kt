@@ -212,6 +212,7 @@ internal class AglGrammarSyntaxAnalyser(
         val identifier = children[2] as String
         val overrideOperator = children[3] as String
         val overrideKind = when (overrideOperator) {
+            "==" -> OverrideKind.SUBSTITUTION
             "=" -> OverrideKind.REPLACE
             "+=|" -> OverrideKind.APPEND_ALTERNATIVE
             else -> error("overrideOperator $overrideOperator not handled")
@@ -397,11 +398,21 @@ internal class AglGrammarSyntaxAnalyser(
         children[0] as RuleItem
 
 
-    // nonTerminal : IDENTIFIER ;
+    // nonTerminal : qualifiedName ;
     private fun nonTerminal(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NonTerminal {
-        val nonTerminalRef = children[0] as String
-        val nt = NonTerminalDefault(nonTerminalRef)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
-        return nt
+        val qualifiedName = children[0] as String
+        return if (qualifiedName.contains(".")) {
+            val localNamespace = _localStore["namespace"] as Namespace
+            val nonTerminalQualified = children[0] as String
+            val nonTerminalRef = nonTerminalQualified.substringAfterLast(".")
+            val grammarRef = nonTerminalQualified.substringBeforeLast(".")
+            val gr = GrammarReferenceDefault(localNamespace, grammarRef).also { this.locationMap[it] = sentence.locationFor(target.node) }
+            val nt = NonTerminalDefault(gr, nonTerminalRef)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
+            return nt
+        } else {
+            val nt = NonTerminalDefault(null, qualifiedName)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
+            nt
+        }
     }
 
     // embedded = qualifiedName '::' nonTerminal ;

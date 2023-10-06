@@ -73,6 +73,7 @@ interface Terminal : TangibleItem, GrammarItem {
 }
 
 interface NonTerminal : TangibleItem {
+    val targetGrammar: GrammarReference?
     fun referencedRuleOrNull(targetGrammar: Grammar): GrammarRule?
     fun referencedRule(targetGrammar: Grammar): GrammarRule
 }

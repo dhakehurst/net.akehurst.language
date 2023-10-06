@@ -16,10 +16,7 @@
 
 package net.akehurst.language.agl.grammar.grammar.asm
 
-import net.akehurst.language.agl.collections.OrderedSet
-import net.akehurst.language.agl.collections.plus
-import net.akehurst.language.agl.collections.toMutableOrderedSet
-import net.akehurst.language.agl.collections.toOrderedSet
+import net.akehurst.language.agl.collections.*
 import net.akehurst.language.api.grammar.*
 
 /**
@@ -62,26 +59,7 @@ abstract class GrammarAbstract(
 ) : Grammar {
 
     private companion object {
-
-    }
-
-    override val qualifiedName: String get() = "${namespace.qualifiedName}.$name"
-
-    override val extends = mutableListOf<GrammarReference>()
-
-    override val grammarRule = mutableListOf<GrammarRule>()
-    override val preferenceRule = mutableListOf<PreferenceRule>()
-
-    override val allGrammarRule: List<GrammarRule> by lazy {
-        val inheritedRules = this.extends.flatMap { it.resolved?.allGrammarRule ?: emptyList() }
-        inheritedRules + grammarRule
-    }
-
-    override val allResolvedGrammarRule: OrderedSet<GrammarRule> by lazy {
-        val resolvedRules = linkedMapOf<String, GrammarRule>() //use linkedMap so order stayes the same
-        val inheritedRules = this.extends.flatMap { it.resolved?.allResolvedGrammarRule ?: emptyList() }
-
-        fun f(rule: GrammarRule): GrammarRule? {
+        fun resolve(rule: GrammarRule, inheritedRules: List<GrammarRule>): GrammarRule? {
             return when {
                 rule is OverrideRule -> {
                     val overridden = inheritedRules.find { it.name == rule.name }
@@ -98,22 +76,113 @@ abstract class GrammarAbstract(
                     }
                 }
 
-                resolvedRules.containsKey(rule.name) -> {
-                    // already got this rule...probably comes from extending same grammar more than once
-                    // replace with last rule found as best-effort, though this is an error
-                    rule
+                else -> {
+                    val overriddenBy = inheritedRules.find { it.name == rule.name && it is OverrideRule }
+                    when (overriddenBy) {
+                        null -> rule
+                        else -> overriddenBy
+                    }
                 }
-
-                else -> rule
             }
         }
+    }
+
+    override val qualifiedName: String get() = "${namespace.qualifiedName}.$name"
+
+    override val extends = mutableListOf<GrammarReference>()
+
+    override val grammarRule = mutableListOf<GrammarRule>()
+    override val preferenceRule = mutableListOf<PreferenceRule>()
+
+    override val allGrammarReferencesInRules: List<GrammarReference> by lazy {
+        val refs: List<GrammarReference> = allGrammarRule.flatMap {
+            when {
+                it is OverrideRule -> {
+                    if (it.overridenRhs is NonTerminal) {
+                        (it.overridenRhs as NonTerminal).targetGrammar?.let { listOf(it) } ?: emptyList<GrammarReference>()
+                    } else {
+                        emptyList<GrammarReference>()
+                    }
+                }
+
+                else -> {
+                    it.rhs.allEmbedded.map {
+                        it.embeddedGrammarReference
+                    }
+                }
+            }
+        }
+
+        this.extends + refs
+    }
+
+
+    override val extendsResolved: List<Grammar> get() = extends.mapNotNull { it.resolved }
+
+    override val allExtends: OrderedSet<GrammarReference> by lazy {
+        val inherited = extends.flatMap { it.resolved?.allExtends ?: orderedSetOf() }.toOrderedSet()
+        inherited + extends
+    }
+
+    override val allExtendsResolved: OrderedSet<Grammar>
+        get() {
+            return allExtends.flatMap {
+                it.resolved?.allExtendsResolved ?: orderedSetOf()
+            }.toOrderedSet() + extendsResolved
+        }
+
+    override val directInheritedGrammarRule: List<GrammarRule> by lazy {
+        val inheritedRules = this.extends.flatMap { it.resolved?.grammarRule ?: emptyList() }
+        inheritedRules
+    }
+
+    override val allGrammarRule: List<GrammarRule> by lazy {
+        val inheritedRules = this.extends.flatMap { it.resolved?.allGrammarRule ?: emptyList() }
+        inheritedRules + grammarRule
+    }
+
+    override val directInheritedResolvedGrammarRule: OrderedSet<GrammarRule> by lazy {
+        val resolvedRules = linkedMapOf<String, GrammarRule>() //use linkedMap so order stays the same
+        val inheritedRules = this.extends.flatMap { it.resolved?.resolvedGrammarRule ?: emptyList() }
         inheritedRules.forEach { rule ->
-            val r = f(rule)
-            resolvedRules[rule.name] = rule
+            val r = resolve(rule, inheritedRules) ?: rule
+            resolvedRules[r.name] = r
+        }
+        resolvedRules.values.toOrderedSet()
+    }
+
+    override val allInheritedResolvedGrammarRule: OrderedSet<GrammarRule> by lazy {
+//        val resolvedRules = linkedSetOf<GrammarRule>() //use linkedMap so order stays the same
+//        val inheritedRules = this.extends.flatMap { it.resolved?.allResolvedGrammarRule ?: emptyList() }
+//        inheritedRules.forEach { rule ->
+//            val r = resolve(rule, inheritedRules) ?: rule
+//            resolvedRules.add(r)
+//        }
+//        resolvedRules.toOrderedSet()
+        this.extends.flatMap { it.resolved?.allResolvedGrammarRule ?: emptyList() }.toOrderedSet()
+    }
+
+    override val resolvedGrammarRule: OrderedSet<GrammarRule> by lazy {
+        val resolvedRules = linkedMapOf<String, GrammarRule>() //use linkedMap so order stays the same
+        val inheritedRules = emptyList<GrammarRule>()
+        this.grammarRule.forEach { rule ->
+            val r = resolve(rule, inheritedRules) ?: rule
+            resolvedRules[r.name] = r
+        }
+        resolvedRules.values.toOrderedSet()
+    }
+
+    override val allResolvedGrammarRule: OrderedSet<GrammarRule> by lazy {
+        val resolvedRules = linkedMapOf<String, GrammarRule>() //use linkedMap so order stayes the same
+        val inheritedRules = this.extends.flatMap { it.resolved?.allResolvedGrammarRule ?: emptyList() }
+
+        inheritedRules.forEach { rule ->
+            val r = resolve(rule, inheritedRules) ?: rule
+            resolvedRules[r.name] = r
         }
         this.grammarRule.forEach { rule ->
-            val r = f(rule)
-            resolvedRules[rule.name] = rule
+            val r = resolve(rule, inheritedRules) ?: rule
+            resolvedRules[r.name] = r
         }
         resolvedRules.values.toOrderedSet()
     }
@@ -157,7 +226,7 @@ abstract class GrammarAbstract(
         return rules.filter { it.grammar != this && it.name == ruleName }
     }
 
-    override fun findAllNonTerminalRule(ruleName: String): List<GrammarRule> =
+    override fun findAllNonTerminalRuleList(ruleName: String): List<GrammarRule> =
         this.allGrammarRule.filter { it.name == ruleName }
 
     override fun findAllResolvedNonTerminalRule(ruleName: String): GrammarRule? {

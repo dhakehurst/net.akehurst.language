@@ -45,7 +45,7 @@ interface GrammarRule : GrammarItem {
 interface NormalRule : GrammarRule {
 }
 
-enum class OverrideKind { REPLACE, APPEND_ALTERNATIVE }
+enum class OverrideKind { REPLACE, APPEND_ALTERNATIVE, SUBSTITUTION }
 
 interface OverrideRule : GrammarRule {
     val overrideKind: OverrideKind

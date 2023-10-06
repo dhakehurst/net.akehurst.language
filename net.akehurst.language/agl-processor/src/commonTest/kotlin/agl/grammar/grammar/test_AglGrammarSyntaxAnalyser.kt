@@ -17,6 +17,8 @@
 package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.grammar.NonTerminal
+import net.akehurst.language.api.grammar.NormalRule
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
 import kotlin.test.Test
@@ -172,6 +174,49 @@ class test_AglGrammarSyntaxAnalyser {
     }
 
     @Test
+    fun rule_nonTerminal() {
+        val sentence = """
+            namespace ns.test
+            grammar Test {
+               S = A ;
+               A = 'a' ;
+            }
+        """.trimIndent()
+        val sppt = aglProc.parse(sentence).sppt!!
+        //println(sppt.toStringAll)
+        val sut = AglGrammarSyntaxAnalyser()
+        val res = sut.transform(sppt) { _, _ -> TODO() }
+
+        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("S") != null)
+        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("A") != null)
+    }
+
+    @Test
+    fun rule_nonTerminalQualified() {
+        val sentence = """
+            namespace ns.test
+            grammar Base {
+                A = 'a' ;
+            }
+            grammar Test {
+              S = Base.A ;
+            }
+        """.trimIndent()
+        val sppt = aglProc.parse(sentence).sppt!!
+        //println(sppt.toStringAll)
+        val sut = AglGrammarSyntaxAnalyser()
+        val res = sut.transform(sppt) { _, _ -> TODO() }
+        println(res.asm!![0].toString())
+        val gBase = res.asm!![0]
+        val gTest = res.asm!![1]
+        assertTrue(gTest.findAllResolvedNonTerminalRule("S") != null)
+        val rS = gTest.findAllResolvedNonTerminalRule("S") as NormalRule
+        assertTrue(rS.rhs is NonTerminal)
+        //("Base", (rS.rhs as NonTerminal).referencedRuleOrNull(gTest)?.grammar?.name)
+        assertEquals(null, (rS.rhs as NonTerminal).referencedRuleOrNull(gTest)?.grammar?.name) //is null because GrammarReferences are not resolved until semantic analysis
+    }
+
+    @Test
     fun rule_skip_terminal() {
         val sentence = """
             namespace ns.test
@@ -188,6 +233,7 @@ class test_AglGrammarSyntaxAnalyser {
 
         assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
     }
+
 
     @Test
     fun rule_multiplicity_0n() {
