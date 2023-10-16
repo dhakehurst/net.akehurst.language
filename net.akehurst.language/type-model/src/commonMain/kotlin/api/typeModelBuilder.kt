@@ -17,21 +17,21 @@
 
 package net.akehurst.language.typemodel.api
 
+import net.akehurst.language.typemodel.simple.EnumTypeSimple
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.simple.TypeModelSimple
-import kotlin.reflect.KClass
+import net.akehurst.language.typemodel.simple.TypeNamespaceSimple
 
 @DslMarker
 annotation class TypeModelDslMarker
 
 fun typeModel(
-    namespace: String,
     name: String,
-    rootTypeName: String? = null,
-    imports: Set<TypeModel> = setOf(SimpleTypeModelStdLib),
+    resolveImports: Boolean,
+    namespaces: List<TypeNamespace> = listOf(SimpleTypeModelStdLib),
     init: TypeModelBuilder.() -> Unit
 ): TypeModel {
-    val b = TypeModelBuilder(namespace, name, rootTypeName, imports)
+    val b = TypeModelBuilder(name, resolveImports, namespaces)
     b.init()
     val m = b.build()
     return m
@@ -39,43 +39,75 @@ fun typeModel(
 
 @TypeModelDslMarker
 class TypeModelBuilder(
-    val namespace: String,
     val name: String,
-    val rootTypeName: String?,
-    imports: Set<TypeModel>
+    private val resolveImports: Boolean,
+    val namespaces: List<TypeNamespace>
+) {
+    val _model = TypeModelSimple(name)
+
+    fun namespace(qualifiedName: String, imports: List<String> = listOf(SimpleTypeModelStdLib.qualifiedName), init: TypeNamespaceBuilder.() -> Unit): TypeNamespace {
+        val b = TypeNamespaceBuilder(qualifiedName, imports)
+        b.init()
+        val ns = b.build()
+        _model.addNamespace(ns)
+        return ns
+    }
+
+    fun build(): TypeModel {
+        namespaces.forEach {
+            _model.addNamespace(it)
+        }
+        if (resolveImports) {
+            _model.resolveImports()
+        }
+        return _model
+    }
+}
+
+@TypeModelDslMarker
+class TypeNamespaceBuilder(
+    val qualifiedName: String,
+    imports: List<String>
 ) {
 
-    private val _model = TypeModelSimple(namespace, name, rootTypeName, imports)
+    private val _namespace = TypeNamespaceSimple(qualifiedName, imports)
     private val _typeReferences = mutableListOf<TypeUsageReferenceBuilder>()
 
-    fun primitiveType(typeName: String): PrimitiveType = _model.findOrCreatePrimitiveTypeNamed(typeName)
+    fun primitiveType(typeName: String): PrimitiveType = _namespace.findOwnedOrCreatePrimitiveTypeNamed(typeName)
+
+    fun enumType(typeName: String, literals: List<String>): EnumType {
+        val et = EnumTypeSimple(_namespace, typeName, literals)
+        _namespace.addDeclaration(et)
+        return et
+    }
+
+    fun collectionType(typeName: String, typeParams: List<String>): CollectionType =
+        _namespace.findOwnedOrCreateCollectionTypeNamed(typeName).also { (it.typeParameters as MutableList).addAll(typeParams) }
 
     /**
      * create a list type of the indicated typeName
-     * if typeName is not already defined, it will be defined as an ElementType
+     * if typeName is not already defined, it will be defined as an DataType
      */
-    fun listTypeOf(typeName: String): TypeUsage {
-        val elementType = _model.findTypeNamed(typeName) ?: _model.findOrCreateElementTypeNamed(typeName)
-        return ListSimpleType.ofType(TypeUsage.ofType(elementType))
-    }
+    /*
+        fun listTypeOf(elementTypeName: String): TypeInstance {
+            return collectionTypeOf(SimpleTypeModelStdLib.List.name, elementTypeName)
+        }
 
-    fun listSeparatedTypeOf(itemType: TypeDefinition, separatorType: TypeDefinition): TypeUsage {
-        return ListSeparatedType.ofType(TypeUsage.ofType(itemType), TypeUsage.ofType(separatorType))
-    }
+        fun listSeparatedType(itemType: TypeDefinition, separatorType: TypeDefinition): TypeInstance {
+            val collType = SimpleTypeModelStdLib.ListSeparated
+            return collectionType(collType, listOf(itemType.instance(), separatorType.instance()))
+        }
 
-    fun listSeparatedTypeOf(itemTypeName: String, separatorType: TypeDefinition): TypeUsage {
-        val itemType = _model.findTypeNamed(itemTypeName) ?: _model.findOrCreateElementTypeNamed(itemTypeName)
-        return ListSeparatedType.ofType(TypeUsage.ofType(itemType), TypeUsage.ofType(separatorType))
-    }
+        fun listSeparatedTypeOf(itemTypeName: String, separatorTypeName: String): TypeInstance {
+            val collType = SimpleTypeModelStdLib.ListSeparated
+            val itemType = _namespace.findTypeNamed(itemTypeName) ?: _namespace.findOrCreateElementTypeNamed(itemTypeName)
+            val separatorType = _namespace.findTypeNamed(separatorTypeName) ?: _namespace.findOrCreateElementTypeNamed(separatorTypeName)
+            return collectionType(collType, listOf(itemType.instance(), separatorType.instance()))
+        }
+    */
 
-    fun listSeparatedTypeOf(itemTypeName: String, separatorTypeName: String): TypeUsage {
-        val itemType = _model.findTypeNamed(itemTypeName) ?: _model.findOrCreateElementTypeNamed(itemTypeName)
-        val separatorType = _model.findTypeNamed(separatorTypeName) ?: _model.findOrCreateElementTypeNamed(separatorTypeName)
-        return listSeparatedTypeOf(itemType, separatorType)
-    }
-
-    fun elementType(typeName: String, init: ElementTypeBuilder.() -> Unit = {}): ElementType {
-        val b = ElementTypeBuilder(_model, _typeReferences, typeName)
+    fun dataType(typeName: String, init: DataTypeBuilder.() -> Unit = {}): DataType {
+        val b = DataTypeBuilder(_namespace, _typeReferences, typeName)
         b.init()
         val et = b.build()
         return et
@@ -84,40 +116,61 @@ class TypeModelBuilder(
     fun unnamedSuperTypeTypeFor(subtypes: List<Any>): UnnamedSuperTypeType {
         val sts = subtypes.map {
             when (it) {
-                is String -> _model.findOrCreateElementTypeNamed(it)!!
+                is String -> _namespace.findOwnedOrCreateDataTypeNamed(it)!!
                 is TypeDefinition -> it
                 else -> error("Cannot map to TypeDefinition: $it")
             }
         }
-        val t = _model.createUnnamedSuperTypeType(sts.map { TypeUsage.ofType(it) })
+        val t = _namespace.createUnnamedSuperTypeType(sts.map { it.instance() })
         return t
     }
 
-    fun build(): TypeModel {
-        _typeReferences.forEach {
-            it.resolve()
-        }
-        return _model
+    fun build(): TypeNamespace {
+        return _namespace
     }
 }
 
 @TypeModelDslMarker
 abstract class StructuredTypeBuilder(
-    protected val _model: TypeModel,
+    protected val _namespace: TypeNamespace,
     private val _typeReferences: MutableList<TypeUsageReferenceBuilder>
 ) {
-    protected abstract val _structuredType: StructuredRuleType
+    protected abstract val _structuredType: StructuredType
+
+    val COMPOSITE = PropertyCharacteristic.COMPOSITE
+    val REFERENCE = PropertyCharacteristic.REFERENCE
+    val IDENTITY = PropertyCharacteristic.IDENTITY
+    val MEMBER = PropertyCharacteristic.MEMBER
+    val CONSTRUCTOR = PropertyCharacteristic.CONSTRUCTOR
+
+    fun propertyOf(
+        characteristics: Set<PropertyCharacteristic>,
+        propertyName: String,
+        typeName: String,
+        typeArgs: List<String> = emptyList(),
+        isNullable: Boolean = false,
+        init: TypeArgumentBuilder.() -> Unit = {}
+    ): PropertyDeclaration {
+        val tab = TypeArgumentBuilder(_namespace)
+        tab.init()
+        val btargs = tab.build()
+        val atargs = typeArgs.map { _namespace.createTypeInstance(it, emptyList(), false) }
+        val targs = if (btargs.isEmpty()) atargs else btargs
+        val ti = _namespace.createTypeInstance(typeName, targs, isNullable)
+        return _structuredType.appendProperty(propertyName, ti, characteristics)
+    }
 
     fun propertyPrimitiveType(propertyName: String, typeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
-        property(propertyName, TypeUsage.ofType(this._model.findTypeNamed(typeName)!!, emptyList(), isNullable), childIndex)
+        property(propertyName, this._namespace.createTypeInstance(typeName, emptyList(), isNullable), childIndex)
 
-    fun propertyListTypeOf(propertyName: String, elementTypeName: String, nullable: Boolean, childIndex: Int): PropertyDeclaration =
+    fun propertyListTypeOf(propertyName: String, dataTypeName: String, nullable: Boolean, childIndex: Int): PropertyDeclaration =
         propertyListType(propertyName, nullable, childIndex) {
-            elementTypeOf(elementTypeName)
+            elementRef(dataTypeName)
         }
 
     fun propertyListType(propertyName: String, nullable: Boolean, childIndex: Int, init: TypeUsageReferenceBuilder.() -> Unit): PropertyDeclaration {
-        val tb = TypeUsageReferenceBuilder(this._model, ListSimpleType, nullable)
+        val collType = SimpleTypeModelStdLib.List
+        val tb = TypeUsageReferenceBuilder(this._namespace, collType, nullable)
         tb.init()
         _typeReferences.add(tb)
         val tu = tb.build()
@@ -126,61 +179,67 @@ abstract class StructuredTypeBuilder(
 
     // ListSeparated
     fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-        val itemType = _model.findTypeNamed(itemTypeName) ?: _model.findOrCreateElementTypeNamed(itemTypeName)!!
-        val separatorType = _model.findTypeNamed(itemTypeName) ?: _model.findOrCreateElementTypeNamed(separatorTypeName)!!
+        val itemType = _namespace.findTypeNamed(itemTypeName) ?: _namespace.findOwnedOrCreateDataTypeNamed(itemTypeName)!!
+        val separatorType = _namespace.findTypeNamed(itemTypeName) ?: _namespace.findOwnedOrCreateDataTypeNamed(separatorTypeName)!!
         return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
     }
 
     fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorType: TypeDefinition, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-        val itemType = _model.findOrCreateElementTypeNamed(itemTypeName)!!
+        val itemType = _namespace.findOwnedOrCreateDataTypeNamed(itemTypeName)!!
         return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
     }
 
-    fun propertyListSeparatedType(propertyName: String, itemType: TypeDefinition, separatorType: TypeDefinition, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
-        property(propertyName, ListSeparatedType.ofType(TypeUsage.ofType(itemType), TypeUsage.ofType(separatorType), isNullable), childIndex)
+    fun propertyListSeparatedType(propertyName: String, itemType: TypeDefinition, separatorType: TypeDefinition, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
+        val collType = SimpleTypeModelStdLib.ListSeparated
+        val propType = collType.instance(listOf(itemType.instance(), separatorType.instance()), isNullable)
+        return property(propertyName, propType, childIndex)
+    }
 
     // Tuple
     fun propertyListOfTupleType(propertyName: String, isNullable: Boolean, childIndex: Int, init: TupleTypeBuilder.() -> Unit = {}): PropertyDeclaration {
-        val b = TupleTypeBuilder(_model, _typeReferences)
+        val b = TupleTypeBuilder(_namespace, _typeReferences)
         b.init()
         val tt = b.build()
-        val t = ListSimpleType.ofType(TypeUsage.ofType(tt))
+        val collType = SimpleTypeModelStdLib.List
+        val t = collType.instance(listOf(tt.instance()))
         return property(propertyName, t, childIndex)
     }
 
     fun propertyTupleType(propertyName: String, isNullable: Boolean, childIndex: Int, init: TupleTypeBuilder.() -> Unit): PropertyDeclaration {
-        val b = TupleTypeBuilder(_model, _typeReferences)
+        val b = TupleTypeBuilder(_namespace, _typeReferences)
         b.init()
         val tt = b.build()
-        return property(propertyName, TypeUsage.ofType(tt), childIndex)
+        return property(propertyName, tt.instance(), childIndex)
     }
 
     fun propertyUnnamedSuperType(propertyName: String, isNullable: Boolean, childIndex: Int, init: SubtypeListBuilder.() -> Unit): PropertyDeclaration {
-        val b = SubtypeListBuilder(_model, _typeReferences)
+        val b = SubtypeListBuilder(_namespace, _typeReferences)
         b.init()
         val stu = b.build()
-        val t = _model.createUnnamedSuperTypeType(stu)
-        return property(propertyName, TypeUsage.ofType(t, emptyList(), isNullable), childIndex)
+        val t = _namespace.createUnnamedSuperTypeType(stu)
+        return property(propertyName, t.instance(emptyList(), isNullable), childIndex)
     }
 
     //
-    fun propertyElementTypeOf(propertyName: String, elementTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-        val t = _model.findOrCreateElementTypeNamed(elementTypeName)!!
-        return property(propertyName, TypeUsage.ofType(t, emptyList(), isNullable), childIndex)
+    fun propertyDataTypeOf(propertyName: String, elementTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
+        val t = _namespace.findOwnedOrCreateDataTypeNamed(elementTypeName)!!
+        return property(propertyName, t.instance(emptyList(), isNullable), childIndex)
     }
 
-    fun property(propertyName: String, typeUse: TypeUsage, childIndex: Int): PropertyDeclaration {
-        return PropertyDeclaration(_structuredType, propertyName, typeUse, childIndex)
+    fun property(propertyName: String, typeUse: TypeInstance, childIndex: Int): PropertyDeclaration {
+        check(childIndex >= _structuredType.property.size) { "Incorrect property index" }
+        val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
+        return _structuredType.appendProperty(propertyName, typeUse, characteristics, childIndex)
     }
 }
 
 @TypeModelDslMarker
 class TupleTypeBuilder(
-    _model: TypeModel,
+    _namespace: TypeNamespace,
     _typeReferences: MutableList<TypeUsageReferenceBuilder>
-) : StructuredTypeBuilder(_model, _typeReferences) {
+) : StructuredTypeBuilder(_namespace, _typeReferences) {
 
-    override val _structuredType = TupleType()
+    override val _structuredType = _namespace.createTupleType()
 
     fun build(): TupleType {
         return _structuredType
@@ -188,111 +247,105 @@ class TupleTypeBuilder(
 }
 
 @TypeModelDslMarker
-class ElementTypeBuilder(
-    _model: TypeModel,
+class DataTypeBuilder(
+    _namespace: TypeNamespace,
     _typeReferences: MutableList<TypeUsageReferenceBuilder>,
     _elementName: String
-) : StructuredTypeBuilder(_model, _typeReferences) {
+) : StructuredTypeBuilder(_namespace, _typeReferences) {
 
-    private val _elementType = _model.findOrCreateElementTypeNamed(_elementName) as ElementType
-    override val _structuredType: StructuredRuleType get() = _elementType
+    private val _elementType = _namespace.findOwnedOrCreateDataTypeNamed(_elementName) as DataType
+    override val _structuredType: StructuredType get() = _elementType
 
     fun typeParameters(vararg parameters: String) {
-        (_elementType as ElementType).typeParameters.addAll(parameters)
+        ((_elementType as DataType).typeParameters as MutableList).addAll(parameters)
     }
 
-    fun superType(superTypeName: String) {
-        val st = _model.findOrCreateElementTypeNamed(superTypeName)
-        _elementType.addSuperType(st as ElementType)
-    }
-
-    fun subTypes(vararg elementTypeName: String) {
-        elementTypeName.forEach {
-            val st = _model.findOrCreateElementTypeNamed(it) as ElementType
-            st.addSuperType(_elementType)
+    fun supertypes(vararg superTypes: String) {
+        superTypes.forEach {
+            _elementType.addSupertype(it)
         }
     }
 
-    fun build(): ElementType {
+    fun subtypes(vararg elementTypeName: String) {
+        elementTypeName.forEach {
+            _elementType.addSubtype(it)
+            (_namespace.findOwnedTypeNamed(it) as DataType?)?.addSupertype(_elementType.name)
+        }
+    }
+
+    fun build(): DataType {
         return _elementType
     }
 
 }
 
+@TypeModelDslMarker
 class TypeUsageReferenceBuilder(
-    val _model: TypeModel,
+    val _namespace: TypeNamespace,
     val type: TypeDefinition,
     val nullable: Boolean
 ) {
-    private val _refs = mutableListOf<String>()
-    private val _args = mutableListOf<TypeUsage>()
-    private lateinit var _refClass: KClass<*>
+    private val _args = mutableListOf<TypeInstance>()
 
-    fun primitiveType(typeName: String) {
-        _refClass = PrimitiveType::class
-        _refs.add(typeName)
+    fun primitiveRef(typeName: String) {
+        _args.add(_namespace.createTypeInstance(typeName, emptyList(), nullable))
     }
 
-    fun elementTypeOf(typeName: String) {
-        _refClass = ElementType::class
-        _refs.add(typeName)
+    fun elementRef(typeName: String) {
+        _args.add(_namespace.createTypeInstance(typeName, emptyList(), nullable))
     }
 
     fun unnamedSuperTypeOf(vararg subtypeNames: String) {
-        _refClass = UnnamedSuperTypeType::class
-        _refs.addAll(subtypeNames)
+        val subtypes = subtypeNames.map { _namespace.createTypeInstance(it, emptyList(), false) }
+        val t = _namespace.createUnnamedSuperTypeType(subtypes)
+        _args.add(t.instance(emptyList(), nullable))
     }
 
-    fun build(): TypeUsage {
-        return TypeUsage.ofType(type, _args, false)
+    fun build(): TypeInstance {
+        return type.instance(_args, false)
+    }
+}
+
+@TypeModelDslMarker
+class TypeArgumentBuilder(
+    private val _namespace: TypeNamespace
+) {
+    private val list = mutableListOf<TypeInstance>()
+    fun typeArgument(qualifiedTypeName: String, typeArguments: TypeArgumentBuilder.() -> Unit = {}): TypeInstance {
+        val tab = TypeArgumentBuilder(_namespace)
+        tab.typeArguments()
+        val typeArgs = tab.build()
+        val tref = _namespace.createTypeInstance(qualifiedTypeName, typeArgs, false)
+        list.add(tref)
+        return tref
     }
 
-    fun resolve() {
-        when (_refClass) {
-            PrimitiveType::class -> {
-                val ref = _refs.first()
-                val t = _model.findTypeNamed(ref) ?: error("Type not found: '$ref'")
-                _args.add(TypeUsage.ofType(t, emptyList(), nullable))
-            }
-
-            ElementType::class -> {
-                val ref = _refs.first()
-                val t = _model.findTypeNamed(ref) ?: error("Type not found: '$ref'")
-                _args.add(TypeUsage.ofType(t, emptyList(), nullable))
-            }
-
-            UnnamedSuperTypeType::class -> {
-                val subtypes = _refs.map { _model.findTypeNamed(it) ?: error("Type not found: '$it'") }
-                val stu = subtypes.map { TypeUsage.ofType(it) }
-                val t = _model.createUnnamedSuperTypeType(stu)
-                _args.add(TypeUsage.ofType(t, emptyList(), nullable))
-            }
-
-            else -> error("Not handled: ${_refClass.simpleName}")
-        }
+    fun build(): List<TypeInstance> {
+        return list
     }
 }
 
 @TypeModelDslMarker
 class SubtypeListBuilder(
-    val _model: TypeModel,
+    val _namespace: TypeNamespace,
     private val _typeReferences: MutableList<TypeUsageReferenceBuilder>
 ) {
 
-    val _subtypeList = mutableListOf<TypeUsage>()
+    val _subtypeList = mutableListOf<TypeInstance>()
 
     fun primitiveRef(typeName: String) {
-        val t = _model.findTypeNamed(typeName) ?: error("Type not found: '$typeName'")
-        _subtypeList.add(t.typeUse())
+        val ti = _namespace.createTypeInstance(typeName, emptyList(), false)
+        _subtypeList.add(ti)
     }
 
     fun elementRef(elementTypeName: String) {
-        val t = _model.findOrCreateElementTypeNamed(elementTypeName) as ElementType
-        _subtypeList.add(TypeUsage.ofType(t))
+        val ti = _namespace.createTypeInstance(elementTypeName, emptyList(), false)
+        _subtypeList.add(ti)
     }
 
     fun listType(nullable: Boolean, init: TypeUsageReferenceBuilder.() -> Unit) {
-        val tb = TypeUsageReferenceBuilder(this._model, ListSimpleType, nullable)
+        val collType = SimpleTypeModelStdLib.List
+        val tb = TypeUsageReferenceBuilder(this._namespace, collType, nullable)
         tb.init()
         _typeReferences.add(tb)
         val tu = tb.build()
@@ -300,25 +353,25 @@ class SubtypeListBuilder(
     }
 
     fun tupleType(init: TupleTypeBuilder.() -> Unit) {
-        val b = TupleTypeBuilder(_model, mutableListOf())
+        val b = TupleTypeBuilder(_namespace, mutableListOf())
         b.init()
         val t = b.build()
-        _subtypeList.add(TypeUsage.ofType(t))
+        _subtypeList.add(t.instance())
     }
 
     fun unnamedSuperTypeOf(vararg subtypeNames: String) {
-        val sts = subtypeNames.map { _model.findOrCreateElementTypeNamed(it)!! }
-        val t = _model.createUnnamedSuperTypeType(sts.map { TypeUsage.ofType(it) })
-        _subtypeList.add(TypeUsage.ofType(t))
+        val sts = subtypeNames.map { _namespace.findOwnedOrCreateDataTypeNamed(it)!! }
+        val t = _namespace.createUnnamedSuperTypeType(sts.map { it.instance() })
+        _subtypeList.add(t.instance())
     }
 
     fun unnamedSuperType(init: SubtypeListBuilder.() -> Unit) {
-        val b = SubtypeListBuilder(_model, _typeReferences)
+        val b = SubtypeListBuilder(_namespace, _typeReferences)
         b.init()
         val stu = b.build()
-        val t = _model.createUnnamedSuperTypeType(stu)
-        _subtypeList.add(TypeUsage.ofType(t))
+        val t = _namespace.createUnnamedSuperTypeType(stu)
+        _subtypeList.add(t.instance())
     }
 
-    fun build(): List<TypeUsage> = _subtypeList
+    fun build(): List<TypeInstance> = _subtypeList
 }

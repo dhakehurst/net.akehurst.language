@@ -34,35 +34,47 @@ data class CompleteTreeDataNode(
     override val nextInputPosition: Int,
     override val nextInputNoSkip: Int,
     override val option: Int
-) : SpptDataNode
+) : SpptDataNode {
+
+    private val _hashCode_cache = arrayOf(rule, startPosition, nextInputPosition).contentHashCode()
+    override fun hashCode(): Int = _hashCode_cache
+    override fun equals(other: Any?): Boolean = when {
+        other !is SpptDataNode -> false
+        this.startPosition != other.startPosition -> false
+        this.nextInputPosition != other.nextInputPosition -> false
+        this.rule != other.rule -> false
+        else -> true
+    }
+
+    override fun toString(): String = "CN(${rule.tag}|${option},$startPosition-$nextInputPosition)"
+}
 
 // public so it can be serialised
 class TreeDataComplete<CN : SpptDataNode>(
-    val forStateSetNumber: Int
+    val forStateSetNumber: Int,
+    // the following are optional arguments to allow for serialisation
+    root: CN? = null,
+    initialSkip: TreeDataComplete<CN>? = null
 ) {
 
     companion object {
-
         private val SpptDataNode.preferred get() = PreferredNode(this.rule, this.startPosition)
     }
 
-    // --- used to create SPPT ---
-
+    val isEmpty: Boolean get() = null == root && null == initialSkip && this._complete.isEmpty() && this._skipDataAfter.isEmpty() && this._embeddedFor.isEmpty()
     val completeChildren: Map<CN, Map<Int, List<CN>>> get() = this._complete
-    var root: CN? = null; private set
-    var initialSkip: TreeDataComplete<CN>? = null; private set
+    var root: CN? = root; private set
+    var initialSkip: TreeDataComplete<CN>? = initialSkip; private set
 
-    // needed when parsing embedded sentences and skip
-    //val startPosition: Int? get() = root?.startPosition
-    //val nextInputPosition: Int? get() = root?.nextInputPosition
+    val userRoot get() = childrenFor(root!!).first().second.first()
 
     fun setUserGoalChildrenAfterInitialSkip(nug: CN, userGoalChildren: List<CN>) {
         this._complete[nug] = mutableMapOf(0 to userGoalChildren.toMutableList())
     }
 
-    fun childrenFor(branch: SpptDataNode): List<Pair<Int, List<CN>>> {
+    fun childrenFor(node: SpptDataNode): List<Pair<Int, List<CN>>> {
         val keys = this._complete.keys.filter {
-            it.startPosition == branch.startPosition && it.nextInputPosition == branch.nextInputPosition && it.rule == branch.rule
+            it.startPosition == node.startPosition && it.nextInputPosition == node.nextInputPosition && it.rule == node.rule
         }
         return when (keys.size) {
             0 -> emptyList()
@@ -81,9 +93,24 @@ class TreeDataComplete<CN : SpptDataNode>(
         }
     }
 
-    fun skipDataAfter(nodeIndex: SpptDataNode) = this._skipDataAfter[nodeIndex]
-    fun embeddedFor(nodeIndex: SpptDataNode) = this._embeddedFor[nodeIndex]
+    fun skipDataAfter(node: SpptDataNode) = this._skipDataAfter[node]
+    fun embeddedFor(node: SpptDataNode) = this._embeddedFor[node]
 
+    fun skipNodesAfter(node: SpptDataNode): List<CN> {
+        /* remember
+         * <SKIP-MULTI> = <SKIP-CHOICE>+
+         * <SKIP-CHOICE> = SR-0 | ... | SR-n
+         */
+        val skipTreeData = this.skipDataAfter(node)
+        return when (skipTreeData) {
+            null -> emptyList()
+            else -> {
+                val sur = skipTreeData.userRoot
+                val skpCh = skipTreeData.childrenFor(sur)
+                return skpCh[0].second
+            }
+        }
+    }
     // --- private implementation ---
 
     // index --> map-of-alternatives (optionList,lists-of-children)
@@ -164,6 +191,15 @@ class TreeDataComplete<CN : SpptDataNode>(
     fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean) {
         val walker = TreeDataWalkerDepthFirst<CN>(this)
         walker.traverse(callback, skipDataAsTree)
+    }
+
+    fun matches(other: TreeDataComplete<CN>) = when {
+        this.initialSkip != other.initialSkip -> false
+        this._embeddedFor != other._embeddedFor -> false
+        this._skipDataAfter != other._skipDataAfter -> false
+        this._preferred != other._preferred -> false
+        this._complete != other._complete -> false
+        else -> true
     }
 
     override fun hashCode(): Int = this.forStateSetNumber

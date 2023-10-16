@@ -16,14 +16,13 @@
 package net.akehurst.language.processor.dot
 
 
+import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
-import net.akehurst.language.typemodel.api.asString
 import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -33,7 +32,7 @@ import kotlin.test.assertTrue
 class test_Dot_SyntaxAnalyser {
 
     companion object {
-        private val grammarStr = this::class.java.getResource("/dot/Dot.agl").readText()
+        private val grammarStr = this::class.java.getResource("/dot/version_9.0.0/grammar.agl").readText()
         var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
     }
 
@@ -42,7 +41,7 @@ class test_Dot_SyntaxAnalyser {
         val actual = processor.typeModel
         val expected = grammarTypeModel("net.akehurst.language.example.dot", "Dot", "Graph") {
             // graph = STRICT? type ID? '{' stmt_list '}' ;
-            elementType("graph", "Graph") {
+            dataType("graph", "Graph") {
                 propertyPrimitiveType("STRICT", "String", true, 0)
                 propertyPrimitiveType("type", "String", false, 1)
                 propertyPrimitiveType("ID", "String", true, 2)
@@ -51,8 +50,8 @@ class test_Dot_SyntaxAnalyser {
             // stmt_list = stmt1 * ;
             listTypeOf("stmt_list", "Stmt1")
             // stmt1 = stmt  ';'? ;
-            elementType("stmt1", "Stmt1") {
-                propertyElementTypeOf("stmt", "Stmt", false, 0)
+            dataType("stmt1", "Stmt1") {
+                propertyDataTypeOf("stmt", "Stmt", false, 0)
             }
             // 	stmt
             //	    = node_stmt
@@ -61,24 +60,24 @@ class test_Dot_SyntaxAnalyser {
             //      | ID '=' ID
             //      | subgraph
             //      ;
-            elementType("stmt", "Stmt") {
-                subTypes("Node_stmt", "Edge_stmt", "Attr_stmt", "Subgraph")
+            dataType("stmt", "Stmt") {
+                subtypes("Node_stmt", "Edge_stmt", "Attr_stmt", "Subgraph")
             }
             // node_stmt = node_id attr_lists? ;
-            elementType("node_stmt", "Node_stmt") {
-                propertyElementTypeOf("node_id", "Node_id", false, 1)
-                propertyElementTypeOf("attr_lists", "Attr_lists", true, 1)
+            dataType("node_stmt", "Node_stmt") {
+                propertyDataTypeOf("node_id", "Node_id", false, 1)
+                propertyDataTypeOf("attr_lists", "Attr_lists", true, 1)
             }
             // node_id = ID port? ;
-            elementType("node_id", "Node_id") {
-                propertyElementTypeOf("id", "Id", false, 0)
-                propertyElementTypeOf("port", "Port", true, 1)
+            dataType("node_id", "Node_id") {
+                propertyDataTypeOf("id", "Id", false, 0)
+                propertyDataTypeOf("port", "Port", true, 1)
             }
-            elementType("", "expressionStatement") {
+            dataType("", "expressionStatement") {
                 // expressionStatement = expression ;
-                propertyElementTypeOf("expression", "expression", false, 0)
+                propertyDataTypeOf("expression", "expression", false, 0)
             }
-            elementType("", "expression") {
+            dataType("", "expression") {
                 // expression
                 //   = rootVariable
                 //   | literalExpression
@@ -88,36 +87,36 @@ class test_Dot_SyntaxAnalyser {
                 //   | infixExpression
                 //   | groupExpression
                 //   ;
-                subTypes("rootVariable", "literalExpression", "matrix", "functionCallOrIndex", "prefixExpression", "infixExpression", "groupExpression")
+                subtypes("rootVariable", "literalExpression", "matrix", "functionCallOrIndex", "prefixExpression", "infixExpression", "groupExpression")
             }
-            elementType("", "groupExpression") {
+            dataType("", "groupExpression") {
                 // groupExpression = '(' expression ')' ;
-                propertyElementTypeOf("expression", "expression", false, 1)
+                propertyDataTypeOf("expression", "expression", false, 1)
             }
-            elementType("", "functionCallOrIndex") {
+            dataType("", "functionCallOrIndex") {
                 // functionCall = NAME '(' argumentList ')' ;
                 propertyPrimitiveType("NAME", "String", false, 0)
                 propertyListSeparatedTypeOf("argumentList", "argument", "String", false, 2)
             }
-            elementType("argumentList", "argumentList") {
+            dataType("argumentList", "argumentList") {
                 // argumentList = [ argument / ',' ]* ;
                 propertyListSeparatedTypeOf("argument", "argument", "String", false, 0)
             }
-            elementType("argument", "argument") {
+            dataType("argument", "argument") {
                 // argument = expression | colonOperator ;
-                subTypes("expression", "colonOperator")
+                subtypes("expression", "colonOperator")
             }
-            elementType("", "prefixExpression") {
+            dataType("", "prefixExpression") {
                 // prefixExpression = prefixOperator expression ;
                 propertyPrimitiveType("prefixOperator", "String", false, 0)
-                propertyElementTypeOf("expression", "expression", false, 1)
+                propertyDataTypeOf("expression", "expression", false, 1)
             }
             stringTypeFor("prefixOperator")
             //elementType("prefixOperator") {
             // prefixOperator = '.\'' | '.^' | '\'' | '^' | '+' | '-' | '~' ;
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
-            elementType("", "infixExpression") {
+            dataType("", "infixExpression") {
                 // infixExpression =  [ expression / infixOperator ]2+ ;
                 propertyListSeparatedTypeOf("expression", "expression", "String", false, 0)
             }
@@ -131,22 +130,22 @@ class test_Dot_SyntaxAnalyser {
             //        ;
             //    propertyUnnamedPrimitiveType(StringType, false, 0)
             //}
-            elementType("", "colonOperator") {
+            dataType("", "colonOperator") {
                 propertyPrimitiveType("COLON", "String", false, 0)
             }
-            elementType("", "matrix") {
+            dataType("", "matrix") {
                 // matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
                 propertyListSeparatedTypeOf("row", "row", "String", false, 1)
             }
-            elementType("", "row") {
+            dataType("", "row") {
                 // row = expression (','? expression)* ;
-                propertyElementTypeOf("expression", "expression", false, 0)
+                propertyDataTypeOf("expression", "expression", false, 0)
                 propertyListOfTupleType("\$group", false, 1) {
-                    propertyPrimitiveType(TypeModelFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, "String", true, 0)
-                    propertyElementTypeOf("expression", "expression", false, 1)
+                    propertyPrimitiveType(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, "String", true, 0)
+                    propertyDataTypeOf("expression", "expression", false, 1)
                 }
             }
-            elementType("", "literalExpression") {
+            dataType("", "literalExpression") {
                 propertyPrimitiveType("literalValue", "String", false, 0)
             }
             stringTypeFor("literalValue")
@@ -159,7 +158,7 @@ class test_Dot_SyntaxAnalyser {
             //      ;
             //    propertyUnnamedPrimitiveType(PrimitiveType.ANY, false, 0)
             //}
-            elementType("", "rootVariable") {
+            dataType("", "rootVariable") {
                 // rootVariable = NAME ;
                 propertyPrimitiveType("NAME", "String", false, 0)
             }
@@ -170,7 +169,7 @@ class test_Dot_SyntaxAnalyser {
             //}
         }
         assertEquals(expected.asString(), actual?.asString())
-        TypeModelTest.assertEquals(expected, actual)
+        TypeModelTest.tmAssertEquals(expected, actual)
     }
 
     @Test
@@ -182,9 +181,11 @@ class test_Dot_SyntaxAnalyser {
             }
         """.trimIndent()
 
-        val result = processor.process(sentence)
+        val result = processor.process(sentence, Agl.options {
+            semanticAnalysis { context(ContextSimple()) }
+        })
         val actual = result.asm?.rootElements?.firstOrNull()
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(actual)
 
         val expected = asmSimple {
@@ -217,68 +218,31 @@ class test_Dot_SyntaxAnalyser {
             }
         """.trimIndent()
 
-        val result = processor.process(sentence)
+        val result = processor.process(sentence, Agl.options {
+            semanticAnalysis { context(ContextSimple()) }
+        })
         val actual = result.asm?.rootElements?.firstOrNull()
         assertNotNull(actual)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
     }
 
     @Test
-    fun psg() {
+    fun one_node_html() {
         val sentence = """
-        // file and comments taken from [https://graphviz.gitlab.io/_pages/Gallery/directed/psg.html]
-/*
-   I made a program to generate dot files representing the LR(0) state graph along with computed LALR(1)
-   lookahead for an arbitrary context-free grammar, to make the diagrams I used in this article: http://blog.lab49.com/archives/2471.
-   The program also highlights errant nodes in red if the grammar would produce a shift/reduce or
-   reduce/reduce conflict -- you may be able to go to http://kthielen.dnsalias.com:8082/ to produce a
-   graph more to your liking". Contributed by Kalani Thielen.
-*/
-
-##Command to get the layout: "dot -Gsize=10,15 -Tpng thisfile > thisfile.png"
-
-digraph g {
-  graph [fontsize=30 labelloc="t" label="" splines=true overlap=false rankdir = "LR"];
-  ratio = auto;
-  "state0" [
-    style = "filled, bold"
-    penwidth = 5
-    fillcolor = "white"
-    fontname = "Courier New"
-    shape = "Mrecord"
-    label = <
-        <table border="0" cellborder="0" cellpadding="3" bgcolor="white">
-            <tr>
-                <td bgcolor="black" align="center" colspan="2">
-                    <font color="white">State #0</font>
-                </td>
-            </tr>
-            <tr><td align="left" port="r0">&#40;0&#41; s -&gt; &bull;e ${'$'} </td></tr>
-            <tr><td align="left" port="r1">&#40;1&#41; e -&gt; &bull;l '=' r </td></tr>
-            <tr><td align="left" port="r2">&#40;2&#41; e -&gt; &bull;r </td></tr>
-            <tr><td align="left" port="r3">&#40;3&#41; l -&gt; &bull;'*' r </td></tr>
-            <tr><td align="left" port="r4">&#40;4&#41; l -&gt; &bull;'n' </td></tr>
-            <tr><td align="left" port="r5">&#40;5&#41; r -&gt; &bull;l </td></tr>
-        </table>
-    > 
-    ];
-  "state1" [
-    style = "filled" penwidth = 1 fillcolor = "white" fontname = "Courier New" shape = "Mrecord"
-    label =<
-        <table border="0" cellborder="0" cellpadding="3" bgcolor="white">
-            <tr><td bgcolor="black" align="center" colspan="2"><font color="white">State #1</font></td></tr>
-            <tr><td align="left" port="r3">&#40;3&#41; l -&gt; &bull;'*' r </td></tr>
-            <tr><td align="left" port="r3">&#40;3&#41; l -&gt; '*' &bull;r </td></tr>
-            <tr><td align="left" port="r4">&#40;4&#41; l -&gt; &bull;'n' </td></tr>
-            <tr><td align="left" port="r5">&#40;5&#41; r -&gt; &bull;l </td></tr>
-        </table>
-    >
-  ];
-  state0 -> state1 [ penwidth = 1 fontsize = 14 fontcolor = "grey28" label = "'*'" ];
-  state1 -> state1 [ penwidth = 1 fontsize = 14 fontcolor = "grey28" label = "'*'" ];
+graph {
+  < <table></table> >
 }
         """.trimIndent()
         val result = processor.process(sentence)
+        val actual = result.asm?.rootElements?.firstOrNull()
+        assertNotNull(actual)
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+    }
+
+    @Test
+    fun ID_html() {
+        val sentence = "<<x></x>>"
+        val result = processor.process(sentence, Agl.options { parse { goalRuleName("ID") } })
         val actual = result.asm?.rootElements?.firstOrNull()
         assertNotNull(actual)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())

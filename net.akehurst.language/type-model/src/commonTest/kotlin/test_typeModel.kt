@@ -24,13 +24,15 @@ class test_typeModelBuilder {
 
     @Test
     fun test() {
-        val tm = typeModel("ns", "name") {
-            elementType("Person") {
-                propertyPrimitiveType("name", "String", false, 0)
+        val tm = typeModel("name", true) {
+            namespace("ns") {
+                dataType("Person") {
+                    propertyPrimitiveType("name", "String", false, 0)
+                }
             }
         }
 
-        TypeModelTest.assertEquals(tm, tm)
+        TypeModelTest.tmAssertEquals(tm, tm)
     }
 
 }

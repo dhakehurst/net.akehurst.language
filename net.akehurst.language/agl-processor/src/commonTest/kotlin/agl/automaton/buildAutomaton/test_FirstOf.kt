@@ -178,16 +178,16 @@ internal class test_FirstOf : test_AutomatonUtilsAbstract() {
         //
         // leaf IDENTIFIER = "[A-Za-z]+" ;
         val rrs = runtimeRuleSet {
-            choice("NavigableExpression",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("NavigableExpression", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("MethodReference")
                 ref("GenericMethodInvocation")
             }
             concatenation("MethodReference") { ref("MethodInvocation"); literal("::"); ref("IDENTIFIER") }
             concatenation("GenericMethodInvocation") { ref("optTypeArguments"); ref("MethodInvocation"); }
-            concatenation("MethodInvocation") { ref("IDENTIFIER"); literal("("); ref("Expression"); literal(")")}
-            multi("optTypeArguments",0,1,"TypeArguments")
+            concatenation("MethodInvocation") { ref("IDENTIFIER"); literal("("); ref("Expression"); literal(")") }
+            multi("optTypeArguments", 0, 1, "TypeArguments")
             concatenation("TypeArguments") { literal("<>") }
-            choice("Expression",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("Expression", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("Postfix")
                 ref("IDENTIFIER")
             }
@@ -199,12 +199,123 @@ internal class test_FirstOf : test_AutomatonUtilsAbstract() {
         val IDENTIFIER = rrs.findTerminalRule("IDENTIFIER")
         val oc = rrs.findTerminalRule("'<>'")
 
-        check_expectedAt(RP(G, o0, SOR), LookaheadSetPart.EOT, expected = setOf(IDENTIFIER,oc))
+        check_expectedAt(RP(G, o0, SOR), LookaheadSetPart.EOT, expected = setOf(IDENTIFIER, oc))
         check_expectedAt(RP(G, o0, EOR), LookaheadSetPart.EMPTY, expected = emptySet())
 
-        check_expectedAt(RP(NavigableExpression, o0, SOR), LookaheadSetPart.EOT, expected = setOf(IDENTIFIER,oc))
+        check_expectedAt(RP(NavigableExpression, o0, SOR), LookaheadSetPart.EOT, expected = setOf(IDENTIFIER, oc))
         check_expectedAt(RP(NavigableExpression, o0, EOR), LookaheadSetPart.EOT, expected = setOf(EOT))
 
+
+    }
+
+    @Test
+    fun empty() {
+        // S =  'a' | E
+        // E =  ;
+        val rrs = runtimeRuleSet {
+            choice("S", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("a")
+                ref("B")
+            }
+            concatenation("B") { empty() }
+        }
+        val S = rrs.findRuntimeRule("S")
+        val G = rrs.goalRuleFor[S]
+        val B = rrs.findRuntimeRule("B")
+        val a = rrs.findRuntimeRule("'a'")
+
+        // G = . S
+        check_expectedAt(RP(G, o0, SR), LookaheadSetPart.EOT, expected = setOf(a, EOT))
+        // G = S .
+        check_expectedAt(RP(G, o0, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
+
+        // S = . 'a'
+        check_expectedAt(RP(S, o0, SR), LookaheadSetPart.EOT, expected = setOf(a))
+        // S = 'a' .
+        check_expectedAt(RP(S, o0, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
+
+        // S = . E
+        check_expectedAt(RP(S, o1, SR), LookaheadSetPart.EOT, expected = setOf(EOT))
+
+        // S = E .
+        check_expectedAt(RP(S, o1, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
+    }
+
+    @Test
+    fun empty2() {
+        // S = PD PB
+        // PD = 'p' 'q'?
+        // PB = 'f' | 'b' PBC 'e'
+        // PBC = PBE*
+        // PBE = PM | IM
+        // IM = 'i'
+        // PM = MP PMc
+        // PMc = DE | UE
+        // DE = S
+        // MP = 'v'?
+        // PM = UE
+        // UE = ;
+        val rrs = runtimeRuleSet {
+            concatenation("S") { ref("PD"); ref("PB") }
+            concatenation("PD") { literal("p"); literal("q") }
+            choice("PB", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                literal("f")
+                concatenation { literal("b"); ref("PBC");literal("e") }
+            }
+            multi("PBC", 0, -1, "PBE")
+            choice("PBE", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("PM")
+                ref("IM")
+            }
+            concatenation("IM") { literal("i") }
+            concatenation("PM") { ref("MP"); ref("PMc") }
+            choice("PBE", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+                ref("DE")
+                ref("UE")
+            }
+            concatenation("DE") { ref("S") }
+            optional("MP", "'v'")
+            concatenation("PM") { ref("UE") }
+            concatenation("UE") { empty() }
+            literal("'v'", "v")
+        }
+        val S = rrs.findRuntimeRule("S")
+        val G = rrs.goalRuleFor[S]
+        val PD = rrs.findRuntimeRule("PD")
+        val PB = rrs.findRuntimeRule("PB")
+        val p = rrs.findRuntimeRule("'p'")
+        val f = rrs.findRuntimeRule("'f'")
+        val b = rrs.findRuntimeRule("'b'")
+
+        /*        // G = . S
+                check_expectedAt(RP(G, o0, SR), LookaheadSetPart.EOT, expected = setOf(p))
+                // G = S .
+                check_expectedAt(RP(G, o0, ER), LookaheadSetPart.EOT, expected = setOf(EOT))
+
+                // S = . PD PB
+                check_expectedAt(RP(S, o0, SR), LookaheadSetPart.EOT, expected = setOf(p))
+                // S = PD . PB
+                check_expectedAt(RP(S, o0, p1), LookaheadSetPart.EOT, expected = setOf(f, b))
+        */
+
+        // PB = 'b' . PBC 'e'
+        check_expectedAt(RP(PB, o1, p1), LookaheadSetPart.EOT, expected = setOf(f, b))
+
+    }
+
+    @Test
+    fun empty3() {
+        // S = E*
+        // E = ;
+        val rrs = runtimeRuleSet {
+            multi("S", 0, -1, "E")
+            concatenation("E") { empty() }
+        }
+        val S = rrs.findRuntimeRule("S")
+        val G = rrs.goalRuleFor[S]
+
+        // S = . E*
+        check_expectedAt(RP(S, o0, SR), LookaheadSetPart.EOT, expected = setOf(EOT))
 
     }
 

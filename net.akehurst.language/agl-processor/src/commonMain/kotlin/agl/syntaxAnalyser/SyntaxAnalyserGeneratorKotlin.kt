@@ -28,26 +28,31 @@ class SyntaxAnalyserGeneratorKotlin {
         val indent = "    "
         val lineSep = "\n"
         val register = grammar.grammarRule.joinToString(separator = lineSep) {
-            "super.register(this::${functionNameFor(it)})"
+            val fName = functionNameFor(it)
+            when {
+                fName == it.name -> "super.register(this::${functionNameFor(it)})"
+                else -> "super.registerFor(\"${it.name}\", this::${functionNameFor(it)})"
+            }
         }
         val functions = grammar.grammarRule.joinToString(separator = lineSep) {
             val fName = functionNameFor(it)
             val type = "Any"
             """
             $indent// ${it.toString()}
-            ${indent}private fun $fName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, arg: Any): $type = TODO()
+            ${indent}private fun $fName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): $type = TODO()
             """.trimIndent()
         }
 
         return """
 package ${grammar.namespace.qualifiedName}
 
+import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromTreeDataAbstract
 
-class ${grammar.name}SyntaxAnalyser : SyntaxAnalyserFromTreeDataAbstract<TgqlAsmNode>() {
+class ${grammar.name}SyntaxAnalyser : SyntaxAnalyserFromTreeDataAbstract<AsmType>() {
 
-    init {
+    override fun registerHandlers() {
 $register
     }
     

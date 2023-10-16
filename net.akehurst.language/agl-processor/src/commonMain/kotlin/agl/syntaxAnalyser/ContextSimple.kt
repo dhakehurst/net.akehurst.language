@@ -55,7 +55,7 @@ class ScopeSimple<AsmElementIdType>(
     val forTypeName: String
 ) : Scope<AsmElementIdType> {
 
-    //should only be usde for rootScope
+    //should only be used for rootScope
     val scopeMap = mutableMapOf<AsmElementIdType, ScopeSimple<AsmElementIdType>>()
 
     private val _childScopes = mutableMapOf<String, ScopeSimple<AsmElementIdType>>()
@@ -73,7 +73,7 @@ class ScopeSimple<AsmElementIdType>(
     override val childScopes: Map<String, ScopeSimple<AsmElementIdType>> = _childScopes
 
     // accessor needed for serialisation which assumes mutableMap for deserialisation
-    val items: Map<String, Map<String, AsmElementIdType>> = _items
+    override val items: Map<String, Map<String, AsmElementIdType>> get() = _items
 
     val path: List<String> by lazy {
         if (null == parent) emptyList() else parent.path + forReferenceInParent
@@ -98,7 +98,7 @@ class ScopeSimple<AsmElementIdType>(
         m[referableName] = asmElementId
     }
 
-    fun findOrNull(referableName: String, typeName: String): AsmElementIdType? = this._items[typeName]?.get(referableName)
+    override fun findOrNull(referableName: String, typeName: String): AsmElementIdType? = this.items[typeName]?.get(referableName)
 
     override fun isMissing(referableName: String, typeName: String): Boolean = null == this.findOrNull(referableName, typeName)
 

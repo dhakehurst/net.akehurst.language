@@ -16,6 +16,6 @@
 
 package net.akehurst.language.agl.regex
 
-expect fun String.asRegexLiteral():Regex
+//expect fun String.asRegexLiteral():Regex
 
 

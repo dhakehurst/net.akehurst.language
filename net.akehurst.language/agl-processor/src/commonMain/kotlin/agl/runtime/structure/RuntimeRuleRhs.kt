@@ -16,6 +16,8 @@
 
 package net.akehurst.language.agl.runtime.structure
 
+import net.akehurst.language.agl.api.runtime.Rule
+
 enum class RuntimeRuleChoiceKind {
     NONE,
     AMBIGUOUS,
@@ -26,6 +28,7 @@ enum class RuntimeRuleChoiceKind {
 internal sealed class RuntimeRuleRhs(
     val rule: RuntimeRule
 ) {
+    abstract val rhsItems: List<List<Rule>>
 
     abstract val rulePositionsNotAtStart: Set<RulePosition>
     abstract val rulePositionsAtStart: Set<RulePosition>
@@ -42,6 +45,8 @@ internal sealed class RuntimeRuleRhs(
 internal sealed class RuntimeRuleRhsTerminal(
     rule: RuntimeRule
 ) : RuntimeRuleRhs(rule) {
+
+    override val rhsItems get() = emptyList<List<Rule>>()
     override val rulePositionsNotAtStart: Set<RulePosition> get() = emptySet()
     override val rulePositionsAtStart: Set<RulePosition> get() = emptySet()
     override fun rhsItemsAt(option: Int, position: Int): Set<RuntimeRule> = emptySet()
@@ -64,19 +69,33 @@ internal class RuntimeRuleRhsCommonTerminal(
 
 internal class RuntimeRuleRhsPattern(
     rule: RuntimeRule,
-    val pattern: String
+    val patternUnescaped: String
 ) : RuntimeRuleRhsTerminal(rule) {
-    internal val regex by lazy { Regex(this.pattern) }
-    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsPattern(clonedRules[rule.tag]!!, pattern)
-    override fun toString(): String = "\"$pattern\""
+    companion object {
+        fun unescape(literalEscaped: String) =
+            literalEscaped
+                .replace("\\\"", "\"")
+    }
+
+    val regex by lazy { Regex(this.patternUnescaped) }
+    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsPattern(clonedRules[rule.tag]!!, patternUnescaped)
+    override fun toString(): String = "\"$patternUnescaped\""
 }
 
 internal class RuntimeRuleRhsLiteral(
     rule: RuntimeRule,
-    val value: String
+    val literalUnescaped: String
 ) : RuntimeRuleRhsTerminal(rule) {
-    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsLiteral(clonedRules[rule.tag]!!, value)
-    override fun toString(): String = "'$value'"
+
+    companion object {
+        fun unescape(literalEscaped: String) =
+            literalEscaped
+                .replace("\\'", "'")
+                .replace("\\\\", "\\")
+    }
+
+    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsLiteral(clonedRules[rule.tag]!!, literalUnescaped)
+    override fun toString(): String = "'$literalUnescaped'"
 }
 
 internal class RuntimeRuleRhsEmbedded(
@@ -107,7 +126,8 @@ internal class RuntimeRuleRhsGoal(
     rule: RuntimeRule,
     val userGoalRuleItem: RuntimeRule
 ) : RuntimeRuleRhsNonTerminal(rule) {
-    //override val rhsItems: Set<RuntimeRule> = setOf(userGoalRuleItem)
+    override val rhsItems = listOf(listOf(userGoalRuleItem))
+
     override val rulePositionsNotAtStart: Set<RulePosition>
         get() = setOf(
             RulePosition(rule, 0, RulePosition.START_OF_RULE),
@@ -139,7 +159,7 @@ internal class RuntimeRuleRhsConcatenation(
     val concatItems: List<RuntimeRule>
 ) : RuntimeRuleRhsNonTerminal(rule) {
 
-    //override val rhsItems: Set<RuntimeRule> get() = concatItems.toSet()
+    override val rhsItems get() = listOf(concatItems)
 
     private val _rulePositions: List<RulePosition>
         get() = this.concatItems.mapIndexedNotNull { index, _ ->
@@ -180,6 +200,8 @@ internal class RuntimeRuleRhsChoice(
     val options: List<RuntimeRuleRhs>
 ) : RuntimeRuleRhsNonTerminal(rule) {
 
+    override val rhsItems get() = options.map { it.rhsItems[0] }
+
     override val rulePositionsNotAtStart: Set<RulePosition>
         get() = options.flatMapIndexed { op, choiceRhs ->
             choiceRhs.rulePositionsNotAtStart.map { RulePosition(rule, op, it.position) }
@@ -211,6 +233,53 @@ internal class RuntimeRuleRhsChoice(
 
 }
 
+internal class RuntimeRuleRhsOptional(
+    rule: RuntimeRule,
+    val optionalItem: RuntimeRule
+) : RuntimeRuleRhsNonTerminal(rule) {
+
+    override val rhsItems: List<List<Rule>> get() = listOf(listOf(optionalItem), listOf(RuntimeRuleSet.EMPTY))
+
+    override val rulePositionsAtStart: Set<RulePosition>
+        get() = setOf(
+            RulePosition(rule, RulePosition.OPTION_OPTIONAL_ITEM, RulePosition.START_OF_RULE),
+            RulePosition(rule, RulePosition.OPTION_OPTIONAL_EMPTY, RulePosition.START_OF_RULE)
+        )
+
+    override val rulePositionsNotAtStart: Set<RulePosition>
+        get() = setOf(
+            RulePosition(rule, RulePosition.OPTION_OPTIONAL_ITEM, RulePosition.END_OF_RULE),
+            RulePosition(rule, RulePosition.OPTION_OPTIONAL_EMPTY, RulePosition.END_OF_RULE)
+        )
+
+    override fun rhsItemsAt(option: Int, position: Int): Set<RuntimeRule> = when (option) {
+        RulePosition.OPTION_OPTIONAL_EMPTY -> when (position) {
+            RulePosition.START_OF_RULE -> setOf(RuntimeRuleSet.EMPTY)
+            else -> emptySet()
+        }
+
+        RulePosition.OPTION_OPTIONAL_ITEM -> when (position) {
+            RulePosition.START_OF_RULE -> setOf(optionalItem)
+            RulePosition.END_OF_RULE -> emptySet()
+            else -> emptySet()
+        }
+
+        else -> error("Internal Error: Invalid option value for Optional")
+    }
+
+    override fun nextRulePositions(current: RulePosition): Set<RulePosition> = when {
+        current.isAtStart -> setOf(current.atEnd())
+        else -> emptySet()
+    }
+
+    override fun clone(clonedRules: Map<String, RuntimeRule>): RuntimeRuleRhs = RuntimeRuleRhsOptional(
+        clonedRules[rule.tag]!!,
+        clonedRules[optionalItem.tag]!!
+    )
+
+    override fun toString(): String = "OPTIONAL ${optionalItem.tag}"
+}
+
 internal sealed class RuntimeRuleRhsList(
     rule: RuntimeRule,
 ) : RuntimeRuleRhsNonTerminal(rule) {
@@ -228,6 +297,12 @@ internal class RuntimeRuleRhsListSimple(
     override val max: Int,
     val repeatedRhsItem: RuntimeRule
 ) : RuntimeRuleRhsList(rule) {
+
+    override val rhsItems: List<List<Rule>>
+        get() = when {
+            min == 0 -> listOf(listOf(repeatedRhsItem), listOf(RuntimeRuleSet.EMPTY))
+            else -> listOf(listOf(repeatedRhsItem))
+        }
 
     override val rulePositionsAtStart: Set<RulePosition>
         get() = when {
@@ -340,6 +415,12 @@ internal class RuntimeRuleRhsListSeparated(
     val repeatedRhsItem: RuntimeRule,
     val separatorRhsItem: RuntimeRule
 ) : RuntimeRuleRhsList(rule) {
+
+    override val rhsItems: List<List<Rule>>
+        get() = when {
+            min == 0 -> listOf(listOf(repeatedRhsItem), listOf(separatorRhsItem), listOf(RuntimeRuleSet.EMPTY))
+            else -> listOf(listOf(repeatedRhsItem), listOf(separatorRhsItem))
+        }
 
     override val rulePositionsAtStart: Set<RulePosition>
         get() = when {

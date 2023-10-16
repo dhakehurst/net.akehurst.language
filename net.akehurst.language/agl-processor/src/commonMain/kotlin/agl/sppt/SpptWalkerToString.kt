@@ -17,12 +17,13 @@
 
 package net.akehurst.language.agl.agl.sppt
 
+import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.sppt.SpptWalker
 
-class SpptWalkerToString(
-    val sentence: String,
+internal class SpptWalkerToString(
+    val sentence: Sentence,
     val indentDelta: String
 ) : SpptWalker {
     private var currentIndent = ""
@@ -30,8 +31,14 @@ class SpptWalkerToString(
 
     val output get() = sb.toString()
 
+    override fun beginTree() {}
+
+    override fun endTree() {
+        sb.append("\n")
+    }
+
     override fun skip(startPosition: Int, nextInputPosition: Int) {
-        val matchedText = sentence.substring(startPosition, nextInputPosition).replace("\n", "\u23CE").replace("\t", "\u2B72")
+        val matchedText = sentence.text.substring(startPosition, nextInputPosition).replace("\n", "\u23CE").replace("\t", "\u2B72")
         sb.append("${currentIndent}<SKIP> : '$matchedText'\n")
     }
 
@@ -40,11 +47,15 @@ class SpptWalkerToString(
         val siblings = nodeInfo.child.total
         val ind = if (siblings == 1) "" else currentIndent
         val eol = if (siblings == 1) " " else "\n"
-        val matchedText = sentence.substring(nodeInfo.node.startPosition, nodeInfo.node.nextInputNoSkip).replace("\n", "\u23CE").replace("\t", "\u2B72")
+        val matchedText = sentence.matchedTextNoSkip(nodeInfo.node)
+            .replace("\n", "\u23CE")
+            .replace("\t", "\u2B72")
+            .replace("'", "\\'")
         when {
             nodeInfo.node.rule.isEmptyTerminal -> sb.append("${ind}${nodeInfo.node.rule.tag}$eol")
             nodeInfo.node.rule.isPattern -> sb.append("${ind}${nodeInfo.node.rule.tag} : '${matchedText}'$eol")
-            else -> sb.append("${ind}'${matchedText}'$eol")
+            "'${matchedText}'" == nodeInfo.node.rule.tag -> sb.append("${ind}'${matchedText}'$eol")
+            else -> sb.append("${ind}${nodeInfo.node.rule.tag} : '${matchedText}'$eol")
         }
     }
 
@@ -80,13 +91,13 @@ class SpptWalkerToString(
     }
 
     override fun beginEmbedded(nodeInfo: SpptDataNodeInfo) {
-        this.beginBranch(nodeInfo)
+        val tag = "${nodeInfo.node.rule.tag}"
+        sb.append("${currentIndent}$tag : <EMBED>::")
     }
 
     override fun endEmbedded(nodeInfo: SpptDataNodeInfo) {
-        this.endBranch(nodeInfo)
-    }
 
+    }
 
     override fun error(msg: String, path: () -> List<SpptDataNode>) {
         val p = path()

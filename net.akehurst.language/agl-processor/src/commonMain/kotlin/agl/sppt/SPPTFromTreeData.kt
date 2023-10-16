@@ -18,81 +18,38 @@ package net.akehurst.language.agl.sppt
 
 import net.akehurst.language.agl.agl.sppt.SpptWalkerToInputSentence
 import net.akehurst.language.agl.agl.sppt.SpptWalkerToString
-import net.akehurst.language.agl.parser.InputFromString
-import net.akehurst.language.agl.runtime.graph.CompleteNodeIndex
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.api.sppt.*
 
 internal class SPPTFromTreeData(
     override val treeData: TreeDataComplete<SpptDataNode>,
-    val input: InputFromString,
+    internal val sentence: Sentence,
     override val seasons: Int,
     override val maxNumHeads: Int
 ) : SharedPackedParseTree {
 
-    override fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean) {
-        this.treeData.traverseTreeDepthFirst(callback, skipDataAsTree)
-    }
-
-    override val root: SPPTNode
-        get() {
-            val goalChildren = treeData.childrenFor(treeData.root!!)
-            val userGoal = goalChildren.first().second[0] as CompleteNodeIndex
-            val userGoalOption = userGoal.option //TODO: will ther ever by more than 1 element?
-            //TODO: if goal is a leaf !
-
-            val startPositionBeforeInitialSkip = treeData.initialSkip?.root?.startPosition ?: userGoal.startPosition
-            //TODO: much of this code should move to TreeData I think
-            val uags = treeData.initialSkip?.let { td ->
-                val sg = td.completeChildren[td.root]!!.values.first().get(0)
-                val skipChildren = td.completeChildren[sg]!!.values.first().map {
-                    td.completeChildren[it]!!.values.first().get(0)
-                }
-                val nug = CompleteNodeIndex(userGoal.state, startPositionBeforeInitialSkip, userGoal.nextInputPositionBeforeSkip, td.root!!.nextInputNoSkip)
-                val userGoalChildren = skipChildren + treeData.completeChildren[userGoal]!!.values.first()
-                treeData.setUserGoalChildrenAfterInitialSkip(nug, userGoalChildren)
-                nug
-            } ?: userGoal
-
-            return when {
-                uags.isEmbedded -> {
-                    val rp = when (uags.rulePositions.size) {
-                        1 -> uags.rulePositions[0]
-                        else -> {
-                            TODO()
-                            //    val possChild = this.runtimeRule.rulePositionsAt[childIndx].first { prioList.contains(it.option) }
-                            //    child.rulePositions.first { it.rule == possChild.item }
-                        }
-                    }
-                    val uagsTreeData = this.treeData.embeddedFor(uags) as TreeDataComplete<CompleteNodeIndex>? ?: error("No tree-data found for $uags")
-                    SPPTBranchFromTreeData(uagsTreeData, input, rp.rule as RuntimeRule, rp.option, uags.startPosition, uags.nextInputPositionBeforeSkip, -1)
-                }
-
-                uags.isLeaf -> {
-                    val eolPositions = emptyList<Int>() //TODO calc ?
-                    SPPTLeafFromInput(input, uags.firstRule, uags.startPosition, uags.nextInputPositionBeforeSkip, -1)
-                }
-
-                else -> SPPTBranchFromTreeData(
-                    treeData as TreeDataComplete<CompleteNodeIndex>,
-                    input,
-                    userGoal.highestPriorityRule,
-                    userGoalOption,
-                    startPositionBeforeInitialSkip,
-                    uags.nextInputPositionBeforeSkip,
-                    -1
-                )
-            }
-        }
-
-    override fun contains(other: SharedPackedParseTree): Boolean {
-        return this.root.contains(other.root)
-    }
-
     private val _tokensByLine: List<List<LeafData>> by lazy {
-        val visitor = TokensByLineVisitor2(input.text)
+        val visitor = TokensByLineVisitor(sentence)
         visitor.visitTree(this, emptyList())
         visitor.lines
+    }
+
+    override val asSentence: String by lazy {
+        //SPPT2InputText().visitTree(this, "")
+        val walker = SpptWalkerToInputSentence(sentence)
+        this.treeData.traverseTreeDepthFirst(walker, false)
+        walker.output
+    }
+
+    override val countTrees: Int by lazy {
+        CountTreesVisitor().visitTree(this, Unit)
+    }
+
+    override val toStringAll: String by lazy {
+        this.toStringAllWithIndent("  ", true)
+    }
+
+    override fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean) {
+        this.treeData.traverseTreeDepthFirst(callback, skipDataAsTree)
     }
 
     override fun tokensByLineAll(): List<List<LeafData>> {
@@ -108,50 +65,19 @@ internal class SPPTFromTreeData(
         }
     }
 
-    override val asString: String by lazy {
-        //SPPT2InputText().visitTree(this, "")
-        val walker = SpptWalkerToInputSentence(input.text)
-        this.treeData.traverseTreeDepthFirst(walker, false)
-        walker.output
-    }
-
-    override val countTrees: Int by lazy {
-        CountTreesVisitor().visitTree(this, Unit)
-    }
-
-    override val toStringAll: String by lazy {
-        this.toStringAllWithIndent("  ", true)
-    }
-
-    fun toStringAllWithIndent1(indentIncrement: String): String {
-        val visitor = ToStringVisitor("\n", indentIncrement)
-        val all: Set<String> = visitor.visitTree(this, "  ")
-        val total = all.size
-        val sep = "\n"
-        var cur = 0
-        var res = ""
-        for (pt in all) {
-            cur++
-            res += "Tree ${cur} of ${total}\n"
-            res += pt
-            res += "\n"
-        }
-        return all.joinToString(sep)
-    }
-
     override fun toStringAllWithIndent(indentIncrement: String, skipDataAsTree: Boolean): String {
-        val walker = SpptWalkerToString(input.text, indentIncrement)
+        val walker = SpptWalkerToString(sentence, indentIncrement)
         this.treeData.traverseTreeDepthFirst(walker, skipDataAsTree)
         return walker.output
     }
 
-    override fun hashCode(): Int = this.root.hashCode()
+    fun matches(other: SPPTFromTreeData) = this.treeData.matches(other.treeData)
 
-    override fun equals(other: Any?): Boolean {
-        return if (other is SharedPackedParseTree) {
-            this.root == other.root
-        } else {
-            false
-        }
+    override fun hashCode(): Int = this.treeData.hashCode()
+
+    override fun equals(other: Any?): Boolean = when {
+        other !is SharedPackedParseTree -> false
+        this.treeData.matches(other.treeData).not() -> false
+        else -> true
     }
 }

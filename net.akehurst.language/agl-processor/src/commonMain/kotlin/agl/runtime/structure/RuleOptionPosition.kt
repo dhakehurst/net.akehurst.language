@@ -36,6 +36,9 @@ internal class RulePosition(
         const val START_OF_RULE = 0
         const val END_OF_RULE = -1
 
+        const val OPTION_OPTIONAL_ITEM = 0
+        const val OPTION_OPTIONAL_EMPTY = 1
+
         const val OPTION_MULTI_ITEM = 0
         const val OPTION_MULTI_EMPTY = 1
 
@@ -93,6 +96,12 @@ internal class RulePosition(
                 is RuntimeRuleRhsGoal -> option
                 is RuntimeRuleRhsConcatenation -> option
                 is RuntimeRuleRhsChoice -> option
+                is RuntimeRuleRhsOptional -> when (option) {
+                    OPTION_MULTI_EMPTY -> "E"
+                    OPTION_MULTI_ITEM -> "I"
+                    else -> option
+                }
+
                 is RuntimeRuleRhsList -> when (option) {
                     OPTION_MULTI_EMPTY -> "E"
                     OPTION_MULTI_ITEM -> "I"
@@ -111,6 +120,12 @@ internal class RulePosition(
                 is RuntimeRuleRhsGoal -> pos
                 is RuntimeRuleRhsConcatenation -> pos
                 is RuntimeRuleRhsChoice -> pos
+                is RuntimeRuleRhsOptional -> when (position) {
+                    START_OF_RULE -> "BR"
+                    END_OF_RULE -> "ER"
+                    else -> pos
+                }
+
                 is RuntimeRuleRhsList -> when (rhs) {
                     is RuntimeRuleRhsListSimple -> when (position) {
                         START_OF_RULE -> "BR"

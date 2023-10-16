@@ -18,8 +18,8 @@ package net.akehurst.language.agl.runtime.structure
 
 import net.akehurst.language.agl.api.runtime.*
 
-internal fun runtimeRuleSet(init: RuntimeRuleSetBuilder2.() -> Unit): RuntimeRuleSet {
-    val b = RuntimeRuleSetBuilder2()
+internal fun runtimeRuleSet(qualifiedName: String = "Grammar", init: RuntimeRuleSetBuilder2.() -> Unit): RuntimeRuleSet {
+    val b = RuntimeRuleSetBuilder2(qualifiedName)
     b.init()
     return b.build()
 }
@@ -36,7 +36,9 @@ internal data class RuntimeRuleRef(val tag: String) {
 }
 
 @RuntimeRuleSetDslMarker
-internal class RuntimeRuleSetBuilder2 : RuleSetBuilder {
+internal class RuntimeRuleSetBuilder2(
+    val qualifiedName: String
+) : RuleSetBuilder {
 
     private val ruleSetNumber = RuntimeRuleSet.nextRuntimeRuleSetNumber++
     private val _ruleBuilders = mutableMapOf<String, RuntimeRuleBuilder>()
@@ -57,7 +59,7 @@ internal class RuntimeRuleSetBuilder2 : RuleSetBuilder {
         val precRules = _precedenceRuleBuilders.map {
             it.build(ruleMap)
         }
-        return RuntimeRuleSet(ruleSetNumber, rules, precRules)
+        return RuntimeRuleSet(ruleSetNumber, qualifiedName, rules, precRules)
     }
 
     private fun _rule(
@@ -72,27 +74,27 @@ internal class RuntimeRuleSetBuilder2 : RuleSetBuilder {
         this._ruleBuilders[name] = rb
     }
 
-    fun literal(value: String, isSkip: Boolean = false) = literal(null, value, isSkip)
-    fun literal(name: String?, value: String, isSkip: Boolean = false) {
-        val tag = name ?: "'$value'"
+    fun literal(literalUnescaped: String, isSkip: Boolean = false) = literal(null, literalUnescaped, isSkip)
+    fun literal(name: String?, literalUnescaped: String, isSkip: Boolean = false) {
+        val tag = name ?: "'$literalUnescaped'"
         if (this._ruleBuilders.containsKey(tag)) {
             //do nothing
         } else {
             val rb = RuntimeRuleBuilder(ruleSetNumber, name, tag, isSkip) { rule, _ ->
-                RuntimeRuleRhsLiteral(rule, value)
+                RuntimeRuleRhsLiteral(rule, literalUnescaped)
             }
             this._ruleBuilders[tag] = rb
         }
     }
 
     fun pattern(value: String, isSkip: Boolean = false) = pattern(null, value, isSkip)
-    fun pattern(name: String?, pattern: String, isSkip: Boolean = false) {
-        val tag = name ?: "\"$pattern\""
+    fun pattern(name: String?, patternUnescaped: String, isSkip: Boolean = false) {
+        val tag = name ?: "\"$patternUnescaped\""
         if (this._ruleBuilders.containsKey(tag)) {
             //do nothing
         } else {
             val rb = RuntimeRuleBuilder(ruleSetNumber, name, tag, isSkip) { rule, _ ->
-                RuntimeRuleRhsPattern(rule, pattern)
+                RuntimeRuleRhsPattern(rule, patternUnescaped)
             }
             this._ruleBuilders[tag] = rb
         }
@@ -118,6 +120,13 @@ internal class RuntimeRuleSetBuilder2 : RuleSetBuilder {
         b.init()
         _rule(ruleName, isSkip) { rule, ruleMap ->
             b.buildRhs(rule, ruleMap)
+        }
+    }
+
+    fun optional(ruleName: String, itemRef: String, isSkip: Boolean = false) {
+        _rule(ruleName, isSkip) { rule, ruleMap ->
+            val item = RuntimeRuleRef(itemRef).resolve(ruleMap)
+            RuntimeRuleRhsOptional(rule, item)
         }
     }
 

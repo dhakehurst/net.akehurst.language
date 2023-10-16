@@ -38,21 +38,21 @@ internal class test_expessions_hidden_right : test_ScanOnDemandParserAbstract() 
     private companion object {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("E") }
-            choice("E",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            choice("E", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("I")
                 ref("P")
             }
-            concatenation("I") { ref("E"); literal("o"); ref("E")  }
-            choice("P",RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
+            concatenation("I") { ref("E"); literal("o"); ref("E") }
+            choice("P", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
                 ref("C")
                 ref("n")
             }
-            concatenation("C") { ref("R"); ref("Ao")  }
-            concatenation("R") { ref("v"); ref("Ao")  }
-            multi("Ao",0,1,"a")
-            literal("a","a")
-            literal("v","v")
-            literal("n","n")
+            concatenation("C") { ref("R"); ref("Ao") }
+            concatenation("R") { ref("v"); ref("Ao") }
+            optional("Ao", "a")
+            literal("a", "a")
+            literal("v", "v")
+            literal("n", "n")
         }
         val goal = "S"
     }
@@ -72,11 +72,11 @@ internal class test_expessions_hidden_right : test_ScanOnDemandParserAbstract() 
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -99,11 +99,11 @@ internal class test_expessions_hidden_right : test_ScanOnDemandParserAbstract() 
 
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 

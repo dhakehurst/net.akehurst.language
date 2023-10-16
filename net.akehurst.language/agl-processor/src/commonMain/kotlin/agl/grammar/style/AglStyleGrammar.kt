@@ -17,6 +17,7 @@ package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarAbstract
 import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.grammar.grammar.asm.GrammarOptionDefault
 import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
 import net.akehurst.language.api.grammar.GrammarRule
 
@@ -45,11 +46,13 @@ internal object AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst
         b.rule("styleList").multi(0, -1, b.nonTerminal("style"))
         b.rule("style").concatenation(b.nonTerminal("STYLE_ID"), b.terminalLiteral(":"), b.nonTerminal("STYLE_VALUE"), b.terminalLiteral(";"))
         b.leaf("STYLE_ID").concatenation(b.terminalPattern("[-a-zA-Z_][-a-zA-Z_0-9]*"));
-        b.leaf("STYLE_VALUE").concatenation(b.terminalPattern("([^;:]*)"))
+        b.leaf("STYLE_VALUE").concatenation(b.terminalPattern("[^;: \\t\\n\\x0B\\f\\r]+"))
 
         return b.grammar.grammarRule
     }
-    //}
+
+    override val options = listOf(GrammarOptionDefault("defaultGoal", "rules"))
+    override val defaultRule: GrammarRule get() = this.findAllResolvedGrammarRule("rules")!!
 
     const val styleStr = """META_IDENTIFIER {
   foreground: orange;
@@ -109,7 +112,7 @@ grammar AglStyle {
     leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
     leaf META_IDENTIFIER = "[\\${'$'}][a-zA-Z_][a-zA-Z_0-9-]*" ;
     leaf STYLE_ID = "[-a-zA-Z_][-a-zA-Z_0-9]*" ;
-    leaf STYLE_VALUE = "([^;:]*)" ;
+    leaf STYLE_VALUE = "[^;: \t\n\x0B\f\r]+" ;
 }
     """.trimIndent()
 }

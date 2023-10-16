@@ -15,18 +15,16 @@
  */
 
 package net.akehurst.language.agl.runtime.graph
-
+/*
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuleOption
 import net.akehurst.language.agl.runtime.structure.RulePosition
 
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
-import net.akehurst.language.agl.sppt.SPPTBranchFromInputAndGrownChildren
 import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 class test_GrowingChildren {
 
@@ -315,120 +313,120 @@ class test_GrowingChildren {
         assertEquals("(0,2,'a'|0) -> 'a'|0, WS", sut1.toString())
     }
 
-    @Test
-    fun appendChild_atStart() {
-        val input = InputFromString(rrs.terminalRules.size, "")
-        val leaf = SPPTLeafFromInput(input, a, 0, 1, 0)
-        val sut = GrowingChildren()
+        @Test
+        fun appendChild_atStart() {
+            val input = InputFromString(rrs.terminalRules.size, "")
+            val leaf = SPPTLeafFromInput(input, a, 0, 1, 0)
+            val sut = GrowingChildren()
 
-        val actual = sut.appendChild(st_a.rulePositionIdentity, listOf(leaf))
+            val actual = sut.appendChild(st_a.rulePositionIdentity, listOf(leaf))
 
-        assertEquals(sut, actual)
-        assertEquals(1, actual.length)
-        assertEquals(1, actual.numberNonSkip)
-        assertEquals(1, actual.nextInputPosition)
-        assertEquals(0, actual.startPosition)
-        assertEquals(listOf(leaf), actual.firstChild(ruleOptionList_S)?.children)
-        assertEquals("(0,1,'a'|0) -> 'a'|0", actual.toString())
-    }
+            assertEquals(sut, actual)
+            assertEquals(1, actual.length)
+            assertEquals(1, actual.numberNonSkip)
+            assertEquals(1, actual.nextInputPosition)
+            assertEquals(0, actual.startPosition)
+            assertEquals(listOf(leaf), actual.firstChild(ruleOptionList_S)?.children)
+            assertEquals("(0,1,'a'|0) -> 'a'|0", actual.toString())
+        }
 
-    @Test
-    fun appendChild_goalAtStart() {
-        val input = InputFromString(rrs.terminalRules.size, "")
-        val goal = SPPTBranchFromInputAndGrownChildren(input, G, 0, 0, 1, 0)
-        val sut = GrowingChildren()
+        @Test
+        fun appendChild_goalAtStart() {
+            val input = InputFromString(rrs.terminalRules.size, "")
+            val goal = SPPTBranchFromInputAndGrownChildren(input, G, 0, 0, 1, 0)
+            val sut = GrowingChildren()
 
-        val actual = sut.appendChild(s0.rulePositionIdentity, listOf(goal))
+            val actual = sut.appendChild(s0.rulePositionIdentity, listOf(goal))
 
-        assertEquals(sut, actual)
-        assertEquals(1, actual?.length)
-        assertEquals(1, actual?.numberNonSkip)
-        assertEquals(1, actual?.nextInputPosition)
-        assertEquals(0, actual?.startPosition)
-        assertEquals(listOf(goal), actual?.firstChild(s0.rulePositionIdentity)?.children)
-        assertEquals("(0,1,<GOAL>|0) -> <GOAL>|0", actual.toString())
-    }
+            assertEquals(sut, actual)
+            assertEquals(1, actual?.length)
+            assertEquals(1, actual?.numberNonSkip)
+            assertEquals(1, actual?.nextInputPosition)
+            assertEquals(0, actual?.startPosition)
+            assertEquals(listOf(goal), actual?.firstChild(s0.rulePositionIdentity)?.children)
+            assertEquals("(0,1,<GOAL>|0) -> <GOAL>|0", actual.toString())
+        }
 
-    @Test
-    fun appendChild_goalAfterSkip() {
-        val input = InputFromString(rrs.terminalRules.size, "")
-        val ws1 = SPPTLeafFromInput(input, WS, 0, 1, 0)
-        val goal = SPPTBranchFromInputAndGrownChildren(input, G, 0, 1, 2, 0)
-        val sut = GrowingChildren()
+        @Test
+        fun appendChild_goalAfterSkip() {
+            val input = InputFromString(rrs.terminalRules.size, "")
+            val ws1 = SPPTLeafFromInput(input, WS, 0, 1, 0)
+            val goal = SPPTBranchFromInputAndGrownChildren(input, G, 0, 1, 2, 0)
+            val sut = GrowingChildren()
 
-        sut.appendSkipIfNotEmpty(emptySet(), listOf(ws1))
-        val actual = sut.appendChild(s0.rulePositionIdentity, listOf(goal))!!
+            sut.appendSkipIfNotEmpty(emptySet(), listOf(ws1))
+            val actual = sut.appendChild(s0.rulePositionIdentity, listOf(goal))!!
 
-        assertEquals(sut, actual)
-        assertEquals(2, actual.length)
-        assertEquals(1, actual.numberNonSkip)
-        assertEquals(2, actual.nextInputPosition)
-        assertEquals(0, actual.startPosition)
-        assertEquals(listOf(ws1), actual.firstChild(s0.rulePositionIdentity)?.children)
-        assertEquals(listOf(goal), actual.firstChild(s0.rulePositionIdentity)?.nextChild!!.children)
-        assertEquals("(0,2,<GOAL>[0]) -> WS, <GOAL>", actual.toString())
-    }
+            assertEquals(sut, actual)
+            assertEquals(2, actual.length)
+            assertEquals(1, actual.numberNonSkip)
+            assertEquals(2, actual.nextInputPosition)
+            assertEquals(0, actual.startPosition)
+            assertEquals(listOf(ws1), actual.firstChild(s0.rulePositionIdentity)?.children)
+            assertEquals(listOf(goal), actual.firstChild(s0.rulePositionIdentity)?.nextChild!!.children)
+            assertEquals("(0,2,<GOAL>[0]) -> WS, <GOAL>", actual.toString())
+        }
 
-    @Test
-    fun mergeOrDropWithPriority_secondGoalAtStart() {
-        val input = InputFromString(rrs.terminalRules.size, "")
-        val goal1 = SPPTBranchFromInputAndGrownChildren(input, G, 0, 0, 2, 0)
-        val goal2 = SPPTBranchFromInputAndGrownChildren(input, G, 0, 0, 3, 0)
+        @Test
+        fun mergeOrDropWithPriority_secondGoalAtStart() {
+            val input = InputFromString(rrs.terminalRules.size, "")
+            val goal1 = SPPTBranchFromInputAndGrownChildren(input, G, 0, 0, 2, 0)
+            val goal2 = SPPTBranchFromInputAndGrownChildren(input, G, 0, 0, 3, 0)
 
-        val sut1 = GrowingChildren()
-            .appendChild(s0.rulePositionIdentity, listOf(goal1))
+            val sut1 = GrowingChildren()
+                .appendChild(s0.rulePositionIdentity, listOf(goal1))
 
-        val sut2 = GrowingChildren()
-            .appendChild(s0.rulePositionIdentity, listOf(goal2))
+            val sut2 = GrowingChildren()
+                .appendChild(s0.rulePositionIdentity, listOf(goal2))
 
-        sut1.mergeOrDropWithPriority(sut2)
-        val actual = sut1
+            sut1.mergeOrDropWithPriority(sut2)
+            val actual = sut1
 
-        //assertNotEquals(sut1, actual)
-        assertEquals(1, actual.length) //error!
-        assertEquals(1, actual.numberNonSkip)
-        assertEquals(3, actual.nextInputPosition)
-        assertEquals(0, actual.startPosition)
-        assertEquals(null, actual.firstChild(ruleOptionList_G0)?.nextChild)
-        assertNotNull(actual.firstChild(ruleOptionList_G0))
-        assertEquals(listOf(goal1), actual.firstChild(ruleOptionList_G0)?.children)
-        assertEquals(listOf(goal2), actual.firstChild(ruleOptionList_G0)?.children)
-        assertEquals("(0,3,<GOAL>|0) -> <GOAL>|0", actual.toString())
-    }
+            //assertNotEquals(sut1, actual)
+            assertEquals(1, actual.length) //error!
+            assertEquals(1, actual.numberNonSkip)
+            assertEquals(3, actual.nextInputPosition)
+            assertEquals(0, actual.startPosition)
+            assertEquals(null, actual.firstChild(ruleOptionList_G0)?.nextChild)
+            assertNotNull(actual.firstChild(ruleOptionList_G0))
+            assertEquals(listOf(goal1), actual.firstChild(ruleOptionList_G0)?.children)
+            assertEquals(listOf(goal2), actual.firstChild(ruleOptionList_G0)?.children)
+            assertEquals("(0,3,<GOAL>|0) -> <GOAL>|0", actual.toString())
+        }
 
-    @Test
-    fun mergeOrDropWithPriority_secondGoalAfterSkip() {
-        val input = InputFromString(rrs.terminalRules.size, "")
-        val ws1 = SPPTLeafFromInput(input, WS, 0, 1, 0)
-        val goal1 = SPPTBranchFromInputAndGrownChildren(input, G, 0, 1, 2, 0)
-        val goal2 = SPPTBranchFromInputAndGrownChildren(input, G, 0, 1, 3, 0)
-        var sut = GrowingChildren()
+        @Test
+        fun mergeOrDropWithPriority_secondGoalAfterSkip() {
+            val input = InputFromString(rrs.terminalRules.size, "")
+            val ws1 = SPPTLeafFromInput(input, WS, 0, 1, 0)
+            val goal1 = SPPTBranchFromInputAndGrownChildren(input, G, 0, 1, 2, 0)
+            val goal2 = SPPTBranchFromInputAndGrownChildren(input, G, 0, 1, 3, 0)
+            var sut = GrowingChildren()
 
-        val sut1 = GrowingChildren()
-            .appendSkipIfNotEmpty(emptySet(), listOf(ws1))
-            .appendChild(s0.rulePositionIdentity, listOf(goal1))
+            val sut1 = GrowingChildren()
+                .appendSkipIfNotEmpty(emptySet(), listOf(ws1))
+                .appendChild(s0.rulePositionIdentity, listOf(goal1))
 
-        val sut2 = GrowingChildren()
-            .appendSkipIfNotEmpty(emptySet(), listOf(ws1))
-            .appendChild(s0.rulePositionIdentity, listOf(goal2))
+            val sut2 = GrowingChildren()
+                .appendSkipIfNotEmpty(emptySet(), listOf(ws1))
+                .appendChild(s0.rulePositionIdentity, listOf(goal2))
 
-        sut1.mergeOrDropWithPriority(sut2)
-        val actual = sut1
+            sut1.mergeOrDropWithPriority(sut2)
+            val actual = sut1
 
-        assertEquals(2, actual.length)
-        assertEquals(1, actual.numberNonSkip)
-        assertEquals(3, actual.nextInputPosition)
-        assertEquals(0, actual.startPosition)
-        assertEquals(listOf(ws1), actual.firstChild(s0.rulePositionIdentity)?.children)
-        assertEquals(null, actual.firstChild(s0.rulePositionIdentity)?.nextChild)
-        assertNotNull(actual.firstChild(s0.rulePositionIdentity)?.nextChildAlternatives)
-        assertEquals(1, actual.firstChild(s0.rulePositionIdentity)?.nextChildAlternatives!!.size)
-        assertEquals(2, actual.firstChild(s0.rulePositionIdentity)?.nextChildAlternatives!![ruleOptionList_G0]!!.size)
-        assertEquals(listOf(goal1), actual.firstChild(s0.rulePositionIdentity)?.nextChildAlternatives!![ruleOptionList_G0]!![0].children)
-        assertEquals(listOf(goal2), actual.firstChild(s0.rulePositionIdentity)?.nextChildAlternatives!![ruleOptionList_G0]!![1].children)
-        // assertEquals(listOf(goal2), actual.lastChild?.children)
-        assertEquals("(0,3,<GOAL>[0]) -> WS, <GOAL>", actual.toString())
-    }
+            assertEquals(2, actual.length)
+            assertEquals(1, actual.numberNonSkip)
+            assertEquals(3, actual.nextInputPosition)
+            assertEquals(0, actual.startPosition)
+            assertEquals(listOf(ws1), actual.firstChild(s0.rulePositionIdentity)?.children)
+            assertEquals(null, actual.firstChild(s0.rulePositionIdentity)?.nextChild)
+            assertNotNull(actual.firstChild(s0.rulePositionIdentity)?.nextChildAlternatives)
+            assertEquals(1, actual.firstChild(s0.rulePositionIdentity)?.nextChildAlternatives!!.size)
+            assertEquals(2, actual.firstChild(s0.rulePositionIdentity)?.nextChildAlternatives!![ruleOptionList_G0]!!.size)
+            assertEquals(listOf(goal1), actual.firstChild(s0.rulePositionIdentity)?.nextChildAlternatives!![ruleOptionList_G0]!![0].children)
+            assertEquals(listOf(goal2), actual.firstChild(s0.rulePositionIdentity)?.nextChildAlternatives!![ruleOptionList_G0]!![1].children)
+            // assertEquals(listOf(goal2), actual.lastChild?.children)
+            assertEquals("(0,3,<GOAL>[0]) -> WS, <GOAL>", actual.toString())
+        }
 
     @Test
     fun get_whenEmpty() {
@@ -470,3 +468,4 @@ class test_GrowingChildren {
     fun get_when3NonSkipStartAnd3Has3Alts() {
     }
 }
+ */

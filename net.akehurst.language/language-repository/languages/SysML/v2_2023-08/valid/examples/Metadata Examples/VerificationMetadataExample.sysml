@@ -1,0 +1,15 @@
+package VerificationMetadataExample {
+	import VerificationCases::*;
+	import VerificationMethodKind::*;
+	
+    verification def MassTest;
+    verification massTests:MassTest {
+        @VerificationMethod{ kind = (test,demo); }
+        objective {
+        }
+        action weighVehicle {
+        	@VerificationMethod{ kind = analyze; }
+        }
+    }
+	
+}

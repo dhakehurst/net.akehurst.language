@@ -53,11 +53,11 @@ class test_Java8_Compare(val data: Data) {
 
     companion object {
 
-        var aglSpecProcessor: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor("/java8/Java8AglSpec.agl", true)
-        var aglOptmProcessor: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor("/java8/Java8AglOptm.agl", true)
+        var aglSpecProcessor: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor("/Java/version_8/grammar_aglSpec.agl", true)
+        var aglOptmProcessor: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor("/Java/version_8/grammar_aglOptm.agl", true)
 
-        var antlrSpecProcessor: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor("/java8/Java8AntlrSpec.agl")
-        var antlrOptmProcessor: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor("/java8/Java8AntlrOptm.agl")
+        var antlrSpecProcessor: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor("/Java/version_8/grammar_antlrSpec.agl")
+        var antlrOptmProcessor: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor("/Java/version_8/grammar_antlrOptm.agl")
 
         fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<AsmSimple, ContextSimple> {
             println("Building $path")
@@ -146,7 +146,7 @@ class test_Java8_Compare(val data: Data) {
         val result = proc.parse(queryStr, Agl.parseOptions { goalRuleName(grammarRule) })
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
-        val resultStr = clean(result.sppt!!.asString)
+        val resultStr = clean(result.sppt!!.asSentence)
         assertEquals(queryStr, resultStr)
     }
 

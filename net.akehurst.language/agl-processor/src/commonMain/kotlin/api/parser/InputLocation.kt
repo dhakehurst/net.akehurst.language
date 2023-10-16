@@ -15,14 +15,13 @@
  */
 package net.akehurst.language.api.parser;
 
-import kotlin.js.JsExport
 
 data class InputLocation(
-        val position:Int,
-        val column: Int,
-        val line: Int,
-        var length: Int // var so that when adding children we can increment this rather than create a new object
+    val position: Int,
+    val column: Int,
+    val line: Int,
+    var length: Int
 ) {
 
-    val endPosition get() = position+length
+    val endPosition get() = position + length
 }

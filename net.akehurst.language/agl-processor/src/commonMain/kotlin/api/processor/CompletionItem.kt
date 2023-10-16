@@ -16,15 +16,22 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.api.grammar.RuleItem
+
 enum class CompletionItemKind {
-	LITERAL,
-	PATTERN,
-	SEGMENT
+    LITERAL,
+    PATTERN,
+    SEGMENT
 }
 
 data class CompletionItem(
-	val kind: CompletionItemKind,
-	val ruleName:String,
-	val text: String
-){
+    val kind: CompletionItemKind,
+    val text: String,
+    val name: String
+) {
+    var description: String = ""
+}
+
+interface CompletionProvider<in AsmType, in ContextType> {
+    fun provide(nextExpected: Set<RuleItem>, context: ContextType?, options: Map<String, Any>): List<CompletionItem>
 }

@@ -64,12 +64,12 @@ internal class test_Processor_Ambiguity6 : test_ScanOnDemandParserAbstract() {
             concatenation("Rt") { ref("ID") }
             concatenation("Mc") { ref("ID"); ref("Al") }
             concatenation("Al") { literal("("); ref("Go"); literal(")") }
-            multi("Go",0,1,"Gl")
-            multi("Gl",1,-1,"Ag")
+            optional("Go", "Gl")
+            multi("Gl", 1, -1, "Ag")
             concatenation("Ag") { ref("No"); ref("Ex") }
-            multi("No",0,1,"N")
+            optional("No", "N")
             concatenation("N") { ref("ID"); literal("=") }
-            pattern("ID","[a-z]+")
+            pattern("ID", "[a-z]+")
         }
         val goal = "Ex"
     }
@@ -82,7 +82,7 @@ internal class test_Processor_Ambiguity6 : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(0, 1, 1, 1), "^", setOf("ID","'vo'"))
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("ID", "'vo'"))
             ), issues.errors
         )
     }
@@ -146,13 +146,13 @@ internal class test_Processor_Ambiguity6 : test_ScanOnDemandParserAbstract() {
             expectedTrees = arrayOf(expected)
         ) ?: error("error")
 
-        val Ex = actual.root.asBranch
-        val Pr = Ex.nonSkipChildren[0].asBranch
-        val Ev = Pr.nonSkipChildren[0].asBranch
+        val Ex = actual.treeData.userRoot
+        val Pr = actual.treeData.childrenFor(Ex)[0].second[0]
+        val Ev = actual.treeData.childrenFor(Pr)[0].second[0]
 
-        assertEquals("Ex", Ex.name)
-        assertEquals("Pr", Pr.name)
-        assertEquals("Ev", Ev.name)
+        assertEquals("Ex", Ex.rule.tag)
+        assertEquals("Pr", Pr.rule.tag)
+        assertEquals("Ev", Ev.rule.tag)
 
         assertEquals(0, Ex.option)
         assertEquals(1, Pr.option)
@@ -184,6 +184,6 @@ internal class test_Processor_Ambiguity6 : test_ScanOnDemandParserAbstract() {
             expectedTrees = arrayOf(expected)
         ) ?: error("error")
 
-        actual.root
+        //actual.root
     }
 }

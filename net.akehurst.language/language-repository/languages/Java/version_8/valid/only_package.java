@@ -1,0 +1,1 @@
+package just.an.empty.pkg;

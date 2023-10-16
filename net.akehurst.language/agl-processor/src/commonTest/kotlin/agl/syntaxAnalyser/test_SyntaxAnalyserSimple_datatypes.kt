@@ -16,6 +16,8 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
+import net.akehurst.language.agl.default.SyntaxAnalyserDefault
+import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
@@ -61,10 +63,10 @@ class test_SyntaxAnalyserSimple_datatypes {
             val result = grammarProc.process(grammarStr)
             assertNotNull(result.asm)
             assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
-            TypeModelFromGrammar.createFrom(result.asm!!.last())
+            TypeModelFromGrammar.create(result.asm!!.last())
         }
         val scopeModel = ScopeModelAgl()
-        val syntaxAnalyser = SyntaxAnalyserSimple(typeModel, scopeModel)
+        val syntaxAnalyser = SyntaxAnalyserDefault(grammar.qualifiedName, typeModel, scopeModel)
         val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
             grammarStr,
             Agl.configuration {
@@ -78,41 +80,43 @@ class test_SyntaxAnalyserSimple_datatypes {
     @Test
     fun typeModel() {
         val actual = processor.typeModel
-        val expected = grammarTypeModel("test", "Test", "Unit") {
+        val expected = grammarTypeModel("test.Test", "Test", "Unit") {
             //unit = declaration* ;
-            elementType("unit", "Unit") {
+            dataType("unit", "Unit") {
                 propertyListTypeOf("declaration", "Declaration", false, 0)
             }
-            // declaration = datatype | primitive ;
-            elementType("declaration", "Declaration") {
-                subTypes("Datatype", "Primitive")
-            }
             // primitive = 'primitive' ID ;
-            elementType("primitive", "Primitive") {
+            dataType("primitive", "Primitive") {
                 propertyPrimitiveType("id", "String", false, 1)
             }
             // datatype = 'datatype' ID '{' property* '}' ;
-            elementType("datatype", "Datatype") {
+            dataType("datatype", "Datatype") {
                 propertyPrimitiveType("id", "String", false, 1)
                 propertyListTypeOf("property", "Property", false, 3)
             }
+            // declaration = datatype | primitive ;
+            dataType("declaration", "Declaration") {
+                subtypes("Datatype", "Primitive")
+            }
             // property = ID ':' typeReference ;
-            elementType("property", "Property") {
+            dataType("property", "Property") {
                 propertyPrimitiveType("id", "String", false, 0)
-                propertyElementTypeOf("typeReference", "TypeReference", false, 2)
+                propertyDataTypeOf("typeReference", "TypeReference", false, 2)
             }
             // typeReference = type typeArguments? ;
-            elementType("typeReference", "TypeReference") {
+            dataType("typeReference", "TypeReference") {
                 propertyPrimitiveType("type", "String", false, 0)
-                propertyElementTypeOf("typeArguments", "TypeArguments", true, 1)
+                propertyDataTypeOf("typeArguments", "TypeArguments", true, 1)
             }
             // typeArguments = '<' [typeReference / ',']+ '>' ;
-            elementType("typeArguments", "TypeArguments") {
+            dataType("typeArguments", "TypeArguments") {
                 propertyListTypeOf("typeReference", "TypeReference", false, 1)
             }
+            stringTypeFor("ID")
+            stringTypeFor("type")
         }
 
-        GrammarTypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.tmAssertEquals(expected, actual)
     }
 
     @Test
@@ -123,7 +127,7 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val result = processor.process(sentence)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
 
         val expected = asmSimple {
             element("Unit") {
@@ -148,7 +152,7 @@ class test_SyntaxAnalyserSimple_datatypes {
 
         val result = processor.process(sentence)
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.errors.isEmpty())
 
         val expected = asmSimple {
             element("Unit") {
@@ -185,6 +189,7 @@ class test_SyntaxAnalyserSimple_datatypes {
             }
         )
         assertNotNull(result.asm)
+        assertTrue(result.issues.errors.isEmpty())
 
         val expected = asmSimple {
             element("Unit") {

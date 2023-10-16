@@ -1,0 +1,435 @@
+namespace net.akehurst.language.SysMLv2
+
+grammar Base {
+    skip leaf WS = "\s+" ;
+
+    leaf DEFINED_BY  = ':'   | 'defined' 'by' ;
+    leaf SPECIALIZES = ':>'  | 'specializes' ;
+    leaf SUBSETS     = ':>'  | 'subsets' ;
+    leaf REFERENCES  = '::>' | 'references' ;
+    leaf REDEFINES   = ':>>' | 'redefines';
+
+    leaf STRING_VALUE = "\"(\\\"|[^\"])*\"" ;
+    leaf REGULAR_COMMENT =  "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*/" ;
+    leaf ID = "[a-zA-Z_][0-9a-zA-Z_]+" ;
+    leaf UNRESTRICTED_NAME = "'([^'\\]|\\'|\\\\)*'" ;
+
+    NAME = ID | UNRESTRICTED_NAME  ;
+    QualifiedName = [NAME / '::']+ ;
+
+    Identification = ( '<' declaredShortName '>' )? declaredName? ;
+    declaredShortName = NAME ;
+    declaredName = NAME ;
+
+}
+
+// 8.2.2.4
+grammar Annotations extends Base {
+    Annotation = QualifiedName ;
+    OwnedAnnotation = AnnotatingElement ;
+    AnnotatingMember = AnnotatingElement ;
+    AnnotatingElement
+        = Comment
+        | Documentation
+        | TextualRepresentation
+        //| MetadataFeature  // not defined in the std ?
+        ;
+
+    Comment = 'comment' Identification ( 'about' [Annotation / ',']+ )? REGULAR_COMMENT ;
+    Documentation = 'doc' Identification REGULAR_COMMENT ;
+
+    TextualRepresentation = ( 'rep' Identification )? 'language' STRING_VALUE REGULAR_COMMENT ;
+}
+
+// 8.2.2.2
+grammar ElementsAndRelationships extends Annotations {
+
+    RelationshipBody = ';' | '{' OwnedAnnotation* '}' ;
+
+
+    // temp dummmy substitues for metatdata
+    PrefixMetadataAnnotation = 'meta-ann' ;
+    PrefixMetadataMember = 'meta-mem' ;
+}
+
+// 8.2.2.3
+grammar Dependencies extends ElementsAndRelationships {
+    Dependency =
+        PrefixMetadataAnnotation*
+        'dependency' DependencyDeclaration RelationshipBody
+    ;
+
+    DependencyDeclaration = ( Identification 'from' )? [QualifiedName / ',' ]+ 'to' [QualifiedName / ',' ]+ ;
+}
+
+grammar Expressions {
+
+    OwnedExpression =  ;
+
+}
+
+
+// 8.2.2.5
+grammar NamespacesAndPackages extends Dependencies, Expressions {
+
+    RootNamespace = PackageBodyElement* ;
+    Package =  PrefixMetadataMember* PackageDeclaration PackageBody ;
+    LibraryPackage = 'standard' 'library' PrefixMetadataMember* PackageDeclaration PackageBody ;
+    PackageDeclaration = 'package' Identification ;
+    PackageBody = ';' | '{' PackageBodyContents '}' ;
+    PackageBodyContents = PackageBodyElement* ;
+    PackageBodyElement
+      = PackageMember
+      | ElementFilterMember
+      | AliasMember
+      |  Import
+      ;
+
+    MemberPrefix = VisibilityIndicator? ;
+    PackageMember = MemberPrefix ( DefinitionElement | UsageElement ) ;
+    ElementFilterMember = MemberPrefix 'filter' OwnedExpression ';' ;
+    AliasMember = MemberPrefix 'alias' ( '<' NAME '>' )? NAME?
+        'for' QualifiedName
+        RelationshipBody
+      ;
+
+    Import = VisibilityIndicator? 'import' 'all'? ( ImportedNamespace | ImportedFilterPackage ) RelationshipBody ;
+    ImportedNamespace = QualifiedName? ( NAME | '*' ) ( '::' '**' )? ;
+    ImportedFilterPackage = FilterPackage ;
+    FilterPackage = FilterPackageImport FilterPackageMember+ ;
+    FilterPackageImport = ImportedNamespace ;
+    FilterPackageMember = '[' OwnedExpression ']' ;
+    VisibilityIndicator = 'public' | 'private' | 'protected' ;
+
+
+    DefinitionElement
+        = Package
+        | LibraryPackage
+        | AnnotatingElement
+        | Dependency
+/*
+        | AttributeDefinition
+        | EnumerationDefinition
+        | OccurrenceDefinition
+        | IndividualDefinition
+        | ItemDefinition
+*/
+        | PartDefinition
+/*
+        | ConnectionDefinition
+        | FlowConnectionDefinition
+        | InterfaceDefinition
+        | PortDefinition
+        | ActionDefinition
+        | CalculationDefinition
+        | StateDefinition
+        | ConstraintDefinition
+        | RequirementDefinition
+        | ConcernDefinition
+        | StakeholderDefinition
+        | CaseDefinition
+        | AnalysisCaseDefinition
+        | VerificationCaseDefinition
+        | UseCaseDefinition
+        | ViewDefinition
+        | ViewpointDefinition
+        | RenderingDefinition
+        | MetadataDefinition
+        | ExtendedDefinition
+*/
+        ;
+
+    UsageElement
+        = //NonOccurrenceUsageElement
+        //| OccurrenceUsageElement
+        ;
+}
+
+// 8.2.2.6
+grammar DefinitionsAndUsage {
+    // Definitions
+    BasicDefinitionPrefix = 'abstract'? | 'variation'? ;
+    DefinitionExtensionKeyword = PrefixMetadataMember ;
+    DefinitionPrefix = BasicDefinitionPrefix? DefinitionExtensionKeyword* ;
+    Definition = DefinitionDeclaration DefinitionBody ;
+    DefinitionDeclaration = Identification SubclassificationPart? ;
+    DefinitionBody = ';' | '{' DefinitionBodyItem* '}' ;
+    DefinitionBodyItem
+        = DefinitionMember
+        | VariantUsageMember
+        | NonOccurrenceUsageMember
+        | SourceSuccessionMember? OccurrenceUsageMember
+        | AliasMember
+        | Import
+    ;
+    DefinitionMember = MemberPrefix DefinitionElement ;
+    VariantUsageMember = MemberPrefix 'variant' VariantUsageElement ;
+    NonOccurrenceUsageMember = MemberPrefix NonOccurrenceUsageElement ;
+    OccurrenceUsageMember = MemberPrefix OccurrenceUsageElement ;
+    StructureUsageMember = MemberPrefix StructureUsageElement ;
+    BehaviorUsageMember = MemberPrefix BehaviorUsageElement ;
+
+    // Usages
+    FeatureDirection = 'in' | 'out' | 'inout' ;
+    RefPrefix = FeatureDirection? ('abstract' | 'variation')? 'readonly'? 'derived'? 'end'? ;
+    BasicUsagePrefix = RefPrefix 'ref'? ;
+    UsageExtensionKeyword = PrefixMetadataMember ;
+    UsagePrefix = BasicUsagePrefix UsageExtensionKeyword* ;
+    Usage = UsageDeclaration UsageCompletion ;
+    UsageDeclaration = Identification FeatureSpecializationPart? ;
+    UsageCompletion = ValuePart? UsageBody ;
+    UsageBody = DefinitionBody ;
+    ValuePart = FeatureValue ;
+    FeatureValue = ( '=' | ':='? | 'default'? ('='|':=')? ) OwnedExpression ;
+
+    // Reference Usages
+    DefaultReferenceUsage = RefPrefix Usage ;
+    ReferenceUsage = RefPrefix 'ref' Usage ;
+    VariantReference = OwnedReferenceSubsetting FeatureSpecialization* UsageBody ;
+
+    // Body Elements
+    NonOccurrenceUsageElement
+        = DefaultReferenceUsage
+        | ReferenceUsage
+        | AttributeUsage
+        | EnumerationUsage
+        | BindingConnectorAsUsage
+        | SuccessionAsUsage
+        | ExtendedUsage
+    ;
+    OccurrenceUsageElement = StructureUsageElement | BehaviorUsageElement ;
+    StructureUsageElement
+        = OccurrenceUsage
+        | IndividualUsage
+        | PortionUsage
+        | EventOccurrenceUsage
+        | ItemUsage
+        | PartUsage
+        | ViewUsage
+        | RenderingUsage
+        | PortUsage
+        | ConnectionUsage
+        | InterfaceUsage
+        | AllocationUsage
+        | Message
+        | FlowConnectionUsage
+        | SuccessionFlowConnectionUsage
+    ;
+    BehaviorUsageElement
+        = ActionUsage
+        | CalculationUsage
+        | StateUsage
+        | ConstraintUsage
+        | RequirementUsage
+        | ConcernUsage
+        | CaseUsage
+        | AnalysisCaseUsage
+        | VerificationCaseUsage
+        | UseCaseUsage
+        | ViewpointUsage
+        | PerformActionUsage
+        | ExhibitStateUsage
+        | IncludeUseCaseUsage
+        | AssertConstraintUsage
+        | SatisfyRequirementUsage
+    ;
+    VariantUsageElement
+        = VariantReference
+        | ReferenceUsage
+        | AttributeUsage
+        | BindingConnector
+        | Succession
+        | OccurrenceUsage
+        | IndividualUsage
+        | PortionUsage
+        | EventOccurrenceUsage
+        | ItemUsage
+        | PartUsage
+        | ViewUsage
+        | RenderingUsage
+        | PortUsage
+        | ConnectionUsage
+        | InterfaceUsage
+        | AllocationUsage
+        | Message
+        | FlowConnectionUsage
+        | SuccessionFlowConnectionUsage
+        | BehaviorUsageElement
+    ;
+
+    // 8.2.2.6.5 Specialization
+    SubclassificationPart = SPECIALIZES [OwnedSubclassification / ',']+ ;
+    OwnedSubclassification = QualifiedName ;
+    FeatureSpecializationPart
+        = FeatureSpecialization+ MultiplicityPart? FeatureSpecialization*
+        | MultiplicityPart FeatureSpecialization*
+    ;
+    FeatureSpecialization = Typings | Subsettings | References | Redefinitions ;
+    Typings = TypedBy ( ',' FeatureTyping )* ;
+    TypedBy =  DEFINED_BY FeatureTyping ;
+    FeatureTyping = OwnedFeatureTyping | ConjugatePortTyping ;
+    OwnedFeatureTyping = QualifiedName  | OwnedFeatureChain ;
+    Subsettings = Subsets ( ',' OwnedSubsetting )* ;
+    Subsets = SUBSETS OwnedSubsetting ;
+    OwnedSubsetting = QualifiedName | OwnedFeatureChain ;
+    References = REFERENCES OwnedReferenceSubsetting ;
+    OwnedReferenceSubsetting = QualifiedName | OwnedFeatureChain ;
+    Redefinitions = Redefines ( ',' OwnedRedefinition )* ;
+    Redefines = REDEFINES OwnedRedefinition ;
+    OwnedRedefinition = QualifiedName | OwnedFeatureChain ;
+    OwnedFeatureChain = OwnedFeatureChaining ( '.' OwnedFeatureChaining )+ ;
+    OwnedFeatureChaining = QualifiedName ;
+
+    //8.2.2.6.6 Multiplicity
+    MultiplicityPart
+        = OwnedMultiplicity
+        | OwnedMultiplicity? ('ordered' 'nonunique'? )?
+        | 'nonunique' 'ordered'?
+    ;
+    OwnedMultiplicity = MultiplicityRange ;
+    MultiplicityRange = '[' ( MultiplicityExpressionMember '..' )? MultiplicityExpressionMember ']' ;
+    MultiplicityExpressionMember = LiteralExpression | FeatureReferenceExpression ;
+
+}
+
+// 8.2.2.7
+grammar Attributes {
+    AttributeDefinition = DefinitionPrefix 'attribute' 'def' Definition ;
+    AttributeUsage = UsagePrefix 'attribute' Usage ;
+}
+
+// 8.2.2.8
+grammar Enumerations {
+    EnumerationDefinition =  'enum' 'def' DefinitionDeclaration EnumerationBody ;
+    EnumerationBody = ';' | '{' ( AnnotatingMember |  EnumerationUsageMember )* '}' ;
+    AnnotatingMember = AnnotatingElement ;
+    EnumerationUsageMember = MemberPrefix EnumeratedValue ;
+    EnumeratedValue = 'enum'? Usage ;
+    EnumerationUsage = UsagePrefix 'enum' Usage ;
+}
+
+// 8.2.2.9
+grammar Occurrences {
+    OccurrenceDefinitionPrefix = BasicDefinitionPrefix? 'individual'? DefinitionExtensionKeyword* ;
+    OccurrenceDefinition = OccurrenceDefinitionPrefix 'occurrence' 'def' Definition ;
+    IndividualDefinition = BasicDefinitionPrefix? 'individual'? DefinitionExtensionKeyword* 'def' Definition ;
+
+    // 8.2.2.9.2 Occurrence Usages
+    OccurrenceUsagePrefix = BasicUsagePrefix 'individual'? PortionKind? UsageExtensionKeyword* ;
+    OccurrenceUsage = OccurrenceUsagePrefix 'occurrence' Usage ;
+    IndividualUsage =  BasicUsagePrefix 'individual'? UsageExtensionKeyword* Usage ;
+    PortionUsage = BasicUsagePrefix 'individual'? PortionKind UsageExtensionKeyword* Usage ;
+    PortionKind = 'snapshot' | 'timeslice' ;
+    EventOccurrenceUsage =
+        OccurrenceUsagePrefix 'event'
+        ( OwnedReferenceSubsettingFeatureSpecializationPart? | 'occurrence' UsageDeclaration? )
+        UsageCompletion
+        ;
+
+    // 8.2.2.9.3 Occurrence Successions
+    SourceSuccessionMember = 'then' SourceSuccession ;
+    SourceSuccession = SourceEndMember ;
+    SourceEndMember = SourceEnd ;
+    SourceEnd = OwnedMultiplicity? ;
+}
+
+// 8.2.2.10
+grammar Items {
+    ItemDefinition = OccurrenceDefinitionPrefix 'item' 'def' Definition ;
+    ItemUsage = OccurrenceUsagePrefix 'item' Usage ;
+}
+
+// 8.2.2.11
+grammar Parts {
+    PartDefinition = OccurrenceDefinitionPrefix 'part' 'def' Definition ;
+    PartUsage = OccurrenceUsagePrefix 'part' Usage ;
+}
+
+// 8.2.2.21
+grammar Cases {
+    CaseDefinition = OccurrenceDefinitionPrefix 'case' 'def' DefinitionDeclaration CaseBody ;
+    CaseUsage = OccurrenceUsagePrefix 'case' CalculationUsageDeclaration CaseBody ;
+    CaseBody = ';' | '{' CaseBodyItem* ResultExpressionMember? '}' ;
+    CaseBodyItem
+        = ActionBodyItem
+        | SubjectMember
+        | ActorMember
+        | ObjectiveMember
+    ;
+    ObjectiveMember = MemberPrefix 'objective' ObjectiveRequirementUsage ;
+    ObjectiveRequirementUsage = UsageExtensionKeyword* CalculationUsageDeclaration RequirementBody ;
+}
+
+// 8.2.2.22 Analysis Cases
+grammar AnalysisCases extends Cases {
+    AnalysisCaseDefinition = OccurrenceDefinitionPrefix 'analysis' 'def' DefinitionDeclaration CaseBody ;
+    AnalysisCaseUsage = OccurrenceUsagePrefix 'analysis' CalculationUsageDeclaration CaseBody ;
+}
+
+// 8.2.2.23 Verification Cases
+grammar VerificationCases extends Cases {
+    VerificationCaseDefinition = OccurrenceDefinitionPrefix 'verification' 'def' DefinitionDeclaration CaseBody ;
+    VerificationCaseUsage = OccurrenceUsagePrefix 'verification' CalculationUsageDeclaration CaseBody ;
+    RequirementVerificationMember = MemberPrefix 'verify' RequirementVerificationUsage ;
+    RequirementVerificationUsage
+        = OwnedReferenceSubsetting FeatureSpecialization* RequirementBody
+        | ( UsageExtensionKeyword* 'requirement' | UsageExtensionKeyword+ ) CalculationUsageDeclaration RequirementBody
+    ;
+}
+
+// 8.2.2.24
+grammar UseCases {
+
+    UseCaseDefinition = OccurrenceDefinitionPrefix 'use' 'case' 'def' DefinitionDeclaration CaseBody ;
+    UseCaseUsage = OccurrenceUsagePrefix 'use' 'case' CalculationUsageDeclaration CaseBody ;
+    IncludeUseCaseUsage =
+        OccurrenceUsagePrefix 'include'
+        ( OwnedReferenceSubsetting FeatureSpecializationPart? | 'use' 'case' UsageDeclaration )
+        ValuePart? CaseBody
+    ;
+
+}
+
+// 8.2.2.25
+grammar ViewsAndViewpoints {
+    ViewDefinition = OccurrenceDefinitionPrefix 'view' 'def' DefinitionDeclaration ViewDefinitionBody ;
+}
+
+/*
+// 8.2.2.26
+grammar Metadata extends Annotations {
+
+    MetadataDefinition = 'abstract'? 'def' Definition ;
+    PrefixMetadataAnnotation = PrefixMetadataUsage ;
+    MetadataUsage =
+        ('meadata' | '@') MetadataUsageDeclaration ( 'about' [Annotation / ',' ]+ )?
+    	MetadataBody
+    ;
+
+    PrefixMetadataUsage =  MetadataTyping
+    //	 MetadataBodyUsageMember*
+    ;
+
+    MetadataUsageDeclaration =	( Identification? DEFINED_BY )?  MetadataTyping ;
+
+    MetadataTyping = QualifiedName ;
+
+    MetadataBody =
+    	  ';'
+    	| '{' (  DefinitionMember
+    		  |  MetadataBodyUsageMember
+    		  |  AliasMember
+    		  |  Import
+    	      )*
+    	  '}'
+    ;
+
+    MetadataBodyUsageMember = MetadataBodyUsage ;
+    MetadataBodyUsage =
+	    'ref'? REDEFINES? OwnedRedefinition FeatureSpecializationPart? ValuePart?
+	    MetadataBody
+    ;
+
+    RedefinedElement = ; //
+}
+*/

@@ -22,7 +22,7 @@ import net.akehurst.language.agl.processor.Agl;
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple;
 import net.akehurst.language.api.asm.AsmSimple;
 import net.akehurst.language.api.processor.*;
-import net.akehurst.language.api.sppt.SPPTLeaf;
+import net.akehurst.language.api.sppt.LeafData;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,7 +36,7 @@ public class test_LanguageProcessor {
             + "grammar Test {" + EOL
             + "  skip WS = \"\\s+\" ;" + EOL
             + "  S = H W ;" + EOL
-            + "  H = 'hello' ;"+EOL
+            + "  H = 'hello' ;" + EOL
             + "  W = 'world' '!' ;" + EOL
             + "}";
 
@@ -51,7 +51,7 @@ public class test_LanguageProcessor {
     @Test
     public void scan() {
 
-        List<SPPTLeaf> result = proc.scan("hello world !");
+        List<LeafData> result = proc.scan("hello world !");
 
         Assert.assertNotNull(result);
         Assert.assertEquals(5, result.size());
@@ -79,7 +79,7 @@ public class test_LanguageProcessor {
     @Test
     public void parse_buildOptions() {
 
-        ParseResult result = proc.parse("world !", Agl.INSTANCE.parseOptions( b-> {
+        ParseResult result = proc.parse("world !", Agl.INSTANCE.parseOptions(b -> {
             b.goalRuleName("W");
             return Unit.INSTANCE;
         }));

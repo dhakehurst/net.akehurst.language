@@ -28,6 +28,13 @@ interface SpptDataNode {
     val option: Int
 }
 
+interface Sentence {
+    val text: String
+    fun matchedTextNoSkip(node: SpptDataNode): String
+    fun locationFor(position: Int, length: Int): InputLocation
+    fun locationFor(node: SpptDataNode): InputLocation
+}
+
 data class ChildInfo(
     val propertyIndex: Int, // property index for a list is different to child index
     val index: Int,
@@ -53,6 +60,9 @@ interface SpptDataNodeInfo {
 }
 
 interface SpptWalker {
+    fun beginTree()
+    fun endTree()
+
     fun skip(startPosition: Int, nextInputPosition: Int)
     fun leaf(nodeInfo: SpptDataNodeInfo)
 
@@ -75,6 +85,7 @@ interface SpptWalker {
 
 data class LeafData(
     val name: String,
+    val isPattern: Boolean,
     val location: InputLocation,
     val matchedText: String,
     val tagList: List<String>
@@ -101,40 +112,9 @@ data class LeafData(
 interface SharedPackedParseTree {
 
     /**
-     * Diagnostic info.
-     */
-    val seasons: Int
-
-    /**
-     * Diagnostic info. Indication of ambiguity if > 1
-     */
-    val maxNumHeads: Int
-
-    /**
-     * The root of the tree
-     */
-    val root: SPPTNode
-
-    fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean)
-
-    val treeData: TreeDataComplete<SpptDataNode>
-
-    /**
-     * Determines if there is an equivalent tree in this forest for every tree in the other forest.
-     *
-     * @param other tree
-     * @return true if this tree contains the other
-     */
-    fun contains(other: SharedPackedParseTree): Boolean
-
-    fun tokensByLineAll(): List<List<LeafData>>
-
-    fun tokensByLine(line: Int): List<LeafData>
-
-    /**
      *  the original input text
      */
-    val asString: String
+    val asSentence: String
 
     /**
      *
@@ -147,5 +127,24 @@ interface SharedPackedParseTree {
      */
     val toStringAll: String
 
+    val treeData: TreeDataComplete<SpptDataNode>
+
+    /**
+     * Diagnostic info.
+     */
+    val seasons: Int
+
+    /**
+     * Diagnostic info. Indication of ambiguity if > 1
+     */
+    val maxNumHeads: Int
+
+    fun traverseTreeDepthFirst(callback: SpptWalker, skipDataAsTree: Boolean)
+
+    fun tokensByLineAll(): List<List<LeafData>>
+
+    fun tokensByLine(line: Int): List<LeafData>
+
     fun toStringAllWithIndent(indentIncrement: String, skipDataAsTree: Boolean = false): String
+
 }

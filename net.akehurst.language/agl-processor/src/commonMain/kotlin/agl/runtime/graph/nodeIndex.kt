@@ -136,10 +136,10 @@ internal class CompleteNodeIndex(
 
     override fun hashCode(): Int = this._hashCode_cache
     override fun equals(other: Any?): Boolean = when {
-        other !is CompleteNodeIndex -> false
-        other.startPosition != this.startPosition -> false
-        other.nextInputPositionAfterSkip != this.nextInputPositionAfterSkip -> false
-        other.runtimeRulesAsSet != this.runtimeRulesAsSet -> false
+        other !is SpptDataNode -> false
+        this.startPosition != other.startPosition -> false
+        this.nextInputPosition != other.nextInputPosition -> false
+        this.rule != other.rule -> false
         else -> true
     }
 

@@ -35,7 +35,7 @@ interface Concatenation : RuleItem {
 
 interface ConcatenationItem : RuleItem
 
-interface ChoiceEqual : Choice
+interface ChoiceLongest : Choice
 interface ChoicePriority : Choice
 interface ChoiceAmbiguous : Choice
 
@@ -73,6 +73,7 @@ interface Terminal : TangibleItem, GrammarItem {
 }
 
 interface NonTerminal : TangibleItem {
+    val targetGrammar: GrammarReference?
     fun referencedRuleOrNull(targetGrammar: Grammar): GrammarRule?
     fun referencedRule(targetGrammar: Grammar): GrammarRule
 }

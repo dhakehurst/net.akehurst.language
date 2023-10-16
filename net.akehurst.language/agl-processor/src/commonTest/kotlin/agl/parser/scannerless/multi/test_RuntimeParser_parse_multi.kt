@@ -33,8 +33,8 @@ internal class test_RuntimeParser_parse_multi : test_ScanOnDemandParserAbstract(
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("m") }
             concatenation("m") { literal("a"); ref("bm"); literal("a") }
-            multi("bm",0,1,"'b'")
-            literal("'b'","b")
+            optional("bm", "'b'")
+            literal("'b'", "b")
         }
         val goal = "S"
     }
@@ -43,22 +43,26 @@ internal class test_RuntimeParser_parse_multi : test_ScanOnDemandParserAbstract(
     fun empty_fails() {
         val sentence = ""
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(0,1,1,1),"^",setOf("'a'"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(0, 1, 1, 1), "^", setOf("'a'"))
+            ), issues.errors
+        )
     }
 
     @Test
     fun a_fails() {
         val sentence = "a"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"a^",setOf("'b'","'a'"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1, 2, 1, 1), "a^", setOf("'b'", "'a'"))
+            ), issues.errors
+        )
     }
 
     @Test

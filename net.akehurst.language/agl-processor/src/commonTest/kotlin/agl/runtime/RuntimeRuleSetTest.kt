@@ -53,8 +53,8 @@ internal object RuntimeRuleSetTest {
 
     fun RuntimeRuleRhsCommonTerminal.matches(other: RuntimeRuleRhsCommonTerminal) = this.rule == other.rule
     fun RuntimeRuleRhsEmpty.matches(other: RuntimeRuleRhsEmpty): Boolean = true
-    fun RuntimeRuleRhsLiteral.matches(other: RuntimeRuleRhsLiteral): Boolean = this.value == other.value
-    fun RuntimeRuleRhsPattern.matches(other: RuntimeRuleRhsPattern): Boolean = this.pattern == other.pattern
+    fun RuntimeRuleRhsLiteral.matches(other: RuntimeRuleRhsLiteral): Boolean = this.literalUnescaped == other.literalUnescaped
+    fun RuntimeRuleRhsPattern.matches(other: RuntimeRuleRhsPattern): Boolean = this.patternUnescaped == other.patternUnescaped
     fun RuntimeRuleRhsEmbedded.matches(other: RuntimeRuleRhsEmbedded): Boolean = when {
         this.embeddedRuntimeRuleSet.matches(other.embeddedRuntimeRuleSet).not() -> false
         this.embeddedStartRule.matches(other.embeddedStartRule).not() -> false
@@ -65,6 +65,7 @@ internal object RuntimeRuleSetTest {
         is RuntimeRuleRhsGoal -> other is RuntimeRuleRhsGoal && this.matches(other)
         is RuntimeRuleRhsConcatenation -> other is RuntimeRuleRhsConcatenation && this.matches(other)
         is RuntimeRuleRhsChoice -> other is RuntimeRuleRhsChoice && this.matches(other)
+        is RuntimeRuleRhsOptional -> other is RuntimeRuleRhsOptional && this.matches(other)
         is RuntimeRuleRhsList -> other is RuntimeRuleRhsList && this.matches(other)
     }
 
@@ -79,6 +80,10 @@ internal object RuntimeRuleSetTest {
 
     fun RuntimeRuleRhsChoice.matches(other: RuntimeRuleRhsChoice): Boolean {
         return this.options.matches(other.options) { t, o -> t.matches(o) }
+    }
+
+    fun RuntimeRuleRhsOptional.matches(other: RuntimeRuleRhsOptional): Boolean {
+        return this.optionalItem.tag == other.optionalItem.tag
     }
 
     fun RuntimeRuleRhsList.matches(other: RuntimeRuleRhsList): Boolean {

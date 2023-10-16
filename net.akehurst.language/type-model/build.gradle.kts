@@ -19,12 +19,19 @@ kotlin {
             customField("description:", "For defining types")
         }
     }
+
+//    @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
+//    wasm("wasm") {
+//        binaries.library()
+//        browser()
+//    }
 }
 
 exportPublic {
     exportPatterns.set(
         listOf(
             "net.akehurst.language.typemodel.api.**",
+            "net.akehurst.language.typemodel.simple.**",
         )
     )
 }

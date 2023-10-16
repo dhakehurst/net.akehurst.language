@@ -34,7 +34,7 @@ class test_Java8Agl_Annotations(val data: Data) {
 
     companion object {
 
-        private val grammarStr = this::class.java.getResource("/java8/Java8AglOptm.agl").readText()
+        private val grammarStr = this::class.java.getResource("/Java/version_8/grammar_aglOptm.agl").readText()
 
         val processor: LanguageProcessor<Any, Any> by lazy {
             Agl.processorFromString(
@@ -93,7 +93,7 @@ class test_Java8Agl_Annotations(val data: Data) {
         val result = processor.parse(this.data.text)
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asString
+        val resultStr = result.sppt!!.asSentence
         assertEquals(this.data.text, resultStr)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }

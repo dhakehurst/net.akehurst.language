@@ -43,7 +43,7 @@ class test_DataTypes {
             }
         """.trimIndent()
         val goal = "unit"
-        val processor = Agl.processorFromString<Any,Any>(grammarStr).processor!!
+        val processor = Agl.processorFromString<Any, Any>(grammarStr).processor!!
 
         val testData = listOf(
             /*
@@ -70,7 +70,7 @@ class test_DataTypes {
             Data("class A { p: X<Y>",17, listOf("ID", "}")),
             Data("class A { p: X<Y> }",19, listOf("'class'","<EOT>")),
 */
-            Data("class A { p: X<Y",16, listOf("'<'", "','","'>'")),
+            Data("class A { p: X<Y", 16, listOf("'<'", "','", "'>'")),
         )
     }
 
@@ -81,8 +81,8 @@ class test_DataTypes {
             val sentence = data.sentence
             val position = data.position
 
-            val result = processor.expectedTerminalsAt(sentence, position, 1, Agl.options { parse { goalRuleName(goal) } } )
-            val actual = result.items.map { it.ruleName }
+            val result = processor.expectedTerminalsAt(sentence, position, 1, Agl.options { parse { goalRuleName(goal) } })
+            val actual = result.items.map { it.name }
             val expected = data.expected
             assertEquals(expected.toSet(), actual.toSet(), data.toString())
         }

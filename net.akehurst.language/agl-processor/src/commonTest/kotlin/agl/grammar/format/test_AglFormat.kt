@@ -16,7 +16,7 @@
 package net.akehurst.language.agl.grammar.format
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.format.FormatModelTest
+import net.akehurst.language.api.format.test.FormatModelTest
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.formatter.formatModel
 import net.akehurst.language.typemodel.api.typeModel
@@ -41,17 +41,19 @@ class test_AglFormat {
     @Test
     fun typeModel() {
         val actual = aglProc.typeModel
-        val expected = typeModel("net.akehurst.language.agl", "AglFormat") {
-            //unit = ruleList ;
-            //ruleList = [formatRule]* ;
-            //formatRule = typeReference '->' formatExpression ;
-            //formatExpression
-            // = stringExpression
-            // | whenExpression
-            // ;
+        val expected = typeModel("AglFormat", true) {
+            namespace("net.akehurst.language.agl") {
+                //unit = ruleList ;
+                //ruleList = [formatRule]* ;
+                //formatRule = typeReference '->' formatExpression ;
+                //formatExpression
+                // = stringExpression
+                // | whenExpression
+                // ;
+            }
         }
 
-        TypeModelTest.assertEquals(expected, actual)
+        TypeModelTest.tmAssertEquals(expected, actual)
     }
 
     @Test

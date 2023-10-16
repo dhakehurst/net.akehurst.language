@@ -75,7 +75,7 @@ class test_StatechartTools(val data: Data) {
         val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName(data.ruleName) })
         assertNotNull(result.sppt, result.issues.toString())
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        val resultStr = result.sppt!!.asString
+        val resultStr = result.sppt!!.asSentence
         assertEquals(this.data.text, resultStr)
     }
 

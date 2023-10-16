@@ -21,7 +21,6 @@ package net.akehurst.language.agl.processor.xml
 //import java.io.InputStreamReader
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -30,7 +29,7 @@ class test_Xml_Singles {
 
     private companion object {
 
-        val grammarStr = this::class.java.getResource("/xml/Xml.agl").readText()
+        val grammarStr = this::class.java.getResource("/xml/version_/grammar.agl").readText()
         const val goal = "document"
 
         var processor = Agl.processorFromStringDefault(grammarStr).processor!!
@@ -44,8 +43,8 @@ class test_Xml_Singles {
             <root ></root>
         """.trimIndent()
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-            assertNull(result.sppt)
-            assertTrue(result.issues.isNotEmpty())
+        assertNull(result.sppt)
+        assertTrue(result.issues.isNotEmpty())
     }
 
 }

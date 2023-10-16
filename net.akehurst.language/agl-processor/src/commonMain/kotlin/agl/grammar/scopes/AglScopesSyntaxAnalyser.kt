@@ -16,17 +16,18 @@
 package net.akehurst.language.agl.grammar.scopes
 
 import net.akehurst.language.agl.collections.toSeparatedList
-import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserFromTreeDataAbstract
-import net.akehurst.language.agl.syntaxAnalyser.locationIn
+import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
+import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 
-class AglScopesSyntaxAnalyser : SyntaxAnalyserFromTreeDataAbstract<ScopeModelAgl>() {
+class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<ScopeModelAgl>() {
 
-    init {
+    override fun registerHandlers() {
         super.register(this::declarations)
         super.register(this::rootIdentifiables)
         super.register(this::scopes)
@@ -48,12 +49,14 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserFromTreeDataAbstract<ScopeModelAgl
         val value: String
     )
 
+    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<ScopeModelAgl>> = emptyMap()
+
     override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
         return emptyList()
     }
 
     // declarations = rootIdentifiables scopes referencesOpt
-    private fun declarations(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): ScopeModelAgl {
+    private fun declarations(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeModelAgl {
         val asm = ScopeModelAgl()
         val rootIdentifiables = children[0] as List<Identifiable>
         val scopes = children[1] as List<ScopeDefinition>
@@ -65,15 +68,15 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserFromTreeDataAbstract<ScopeModelAgl
     }
 
     // rootIdentifiables = identifiable*
-    private fun rootIdentifiables(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<Identifiable> =
-        (children as List<Identifiable?>).filterNotNull()
+    private fun rootIdentifiables(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Identifiable> =
+        children as List<Identifiable>
 
     // scopes = scope* ;
-    private fun scopes(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<ScopeDefinition> =
-        (children as List<ScopeDefinition?>).filterNotNull()
+    private fun scopes(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ScopeDefinition> =
+        children as List<ScopeDefinition>
 
     // scope = 'scope' typeReference '{' identifiables '}
-    private fun scope(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): ScopeDefinition {
+    private fun scope(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeDefinition {
         val typeReference = children[1] as String
         val identifiables = children[3] as List<Identifiable>
         val scope = ScopeDefinition(typeReference)
@@ -83,11 +86,11 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserFromTreeDataAbstract<ScopeModelAgl
     }
 
     // identifiables = identifiable*
-    private fun identifiables(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<Identifiable> =
-        (children as List<Identifiable?>).filterNotNull()
+    private fun identifiables(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Identifiable> =
+        (children as List<Identifiable>?) ?: emptyList()
 
     // identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
-    private fun identifiable(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): Identifiable {
+    private fun identifiable(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Identifiable {
         val typeName = children[1] as String
         val propertyName = children[3] as String
         val identifiable = Identifiable(typeName, propertyName)
@@ -97,19 +100,19 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserFromTreeDataAbstract<ScopeModelAgl
     }
 
     // referencesOpt = references?
-    private fun referencesOpt(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<ReferenceDefinition>? =
+    private fun referencesOpt(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ReferenceDefinition>? =
         children[0] as List<ReferenceDefinition>?
 
     // references = 'references' '{' referenceDefinitions '}'
-    private fun references(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<ReferenceDefinition> =
+    private fun references(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ReferenceDefinition> =
         children[2] as List<ReferenceDefinition>
 
     // referenceDefinitions = referenceDefinition*
-    private fun referenceDefinitions(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<ReferenceDefinition> =
-        (children as List<ReferenceDefinition?>).filterNotNull()
+    private fun referenceDefinitions(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ReferenceDefinition> =
+        children as List<ReferenceDefinition>
 
     // referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
-    private fun referenceDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): ReferenceDefinition {
+    private fun referenceDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ReferenceDefinition {
         val inTypeName = children[1] as String
         val referringPropertyName = children[3] as String
         val typeReferences = children[5] as List<Pair<String, InputLocation>>
@@ -123,15 +126,15 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserFromTreeDataAbstract<ScopeModelAgl
     }
 
     // typeReferences = [typeReferences / ',']+
-    private fun typeReferences(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): List<Pair<String, InputLocation>> {
+    private fun typeReferences(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Pair<String, InputLocation>> {
         return children.toSeparatedList<String, String>().items.mapIndexed { i, n ->
             val ref = n as String
-            Pair(ref, nodeInfo.node.locationIn(sentence))
+            Pair(ref, sentence.locationFor(nodeInfo.node))
         }
     }
 
     // propertyReferenceOrNothing = '§nothing' | propertyReference
-    private fun propertyReferenceOrNothing(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): String {
+    private fun propertyReferenceOrNothing(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
         val text = children[0] as String
         return when (text) {
             "§nothing" -> ScopeModelAgl.IDENTIFY_BY_NOTHING
@@ -140,12 +143,12 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserFromTreeDataAbstract<ScopeModelAgl
     }
 
     // typeReference = IDENTIFIER
-    private fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): String {
+    private fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
         return children[0] as String
     }
 
     // propertyReference = IDENTIFIER
-    private fun propertyReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: String): String {
+    private fun propertyReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
         return children[0] as String
     }
 }

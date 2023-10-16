@@ -156,11 +156,10 @@ internal class test_embedded1 : test_ScanOnDemandParserAbstract() {
         val goal = "S"
         val sentence = "abc"
 
-        //TODO("how should we express embedded rules in the following string ?")
         val expected = """
             S {
               'a'
-              gB { B::B { 'b' } }
+              gB : B::B { 'b' }
               'c'
             }
         """.trimIndent()

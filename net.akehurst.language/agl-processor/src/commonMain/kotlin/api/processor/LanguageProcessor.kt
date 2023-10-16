@@ -22,10 +22,10 @@ import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.sppt.LeafData
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.typemodel.api.TypeModel
 
 /**
  * A LanguageProcessor is used to process a sentence using a given grammar.
@@ -37,7 +37,7 @@ import net.akehurst.language.api.sppt.SharedPackedParseTree
  */
 interface LanguageProcessor<AsmType : Any, ContextType : Any> {
 
-    val issues: IssueCollection
+    val issues: IssueCollection<LanguageIssue>
 
     val grammar: Grammar?
 
@@ -51,7 +51,7 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     /**
      * model of the types instantiated by syntaxAnalysis for the LanguageDefinition of this LanguageProcessor
      */
-    val typeModel: GrammarTypeModel
+    val typeModel: TypeModel
 
     /*
      * model of the scopes and references for the LanguageDefinition of this LanguageProcessor
@@ -65,6 +65,8 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?
 
     val formatter: Formatter<AsmType>?
+
+    val completionProvider: CompletionProvider<AsmType, ContextType>?
 
     /**
      * can be called from a different thread to stop the parser
@@ -143,6 +145,9 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
      */
     fun expectedTerminalsAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>? = null): ExpectedAtResult
 
-    //List<CompletionItem> expectedAt(Reader reader, String goalRuleName, int position, int desiredDepth)
+    /**
+     * returns list of expected items according to the given completionProvider, or list of terminalItems if no completion provider given
+     */
+    fun expectedItemsAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>? = null): ExpectedAtResult
 
 }

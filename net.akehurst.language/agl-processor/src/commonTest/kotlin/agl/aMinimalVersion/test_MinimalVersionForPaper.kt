@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.aMinimalVersion
 
+import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.agl.sppt.SpptWalkerToString
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
@@ -44,7 +45,7 @@ class test_MinimalVersionForPaper {
             println(sut.automaton.usedAutomatonToString(true))
             assertNotNull(actual)
             println("Duration: $duration1  --  $duration2")
-            val walker = SpptWalkerToString(s, "  ")
+            val walker = SpptWalkerToString(SentenceDefault(s), "  ")
             actual.traverseTreeDepthFirst(walker, true)
             val out = walker.output
             println(out.substring(0, min(maxOut, out.length)))

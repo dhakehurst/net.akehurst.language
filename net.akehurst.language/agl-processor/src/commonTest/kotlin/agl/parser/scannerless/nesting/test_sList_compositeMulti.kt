@@ -20,7 +20,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.parser.scanondemand.test_ScanOnDemandParserAbstract
 import kotlin.test.Test
 
-internal class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
+internal class test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
 
     // S = [nl / ';']*
     // nl = N cnm
@@ -31,14 +31,14 @@ internal class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
     private companion object {
         val rrs = runtimeRuleSet {
             //pattern("WS", "\\s+", true)
-            sList("S",0,-1,"nl","SMI")
+            sList("S", 0, -1, "nl", "SMI")
             concatenation("nl") { ref("N"); ref("cnm") }
-            multi("cnm",0,-1,"cn")
+            multi("cnm", 0, -1, "cn")
             concatenation("cn") { ref("CMR"); ref("N"); }
-            //multi("cmOp",0,1,"cm")
-            literal("CMR",",")
-            literal("SMI",";")
-            pattern("N","[0-9]+")
+            //optional("cmOp","cm")
+            literal("CMR", ",")
+            literal("SMI", ";")
+            pattern("N", "[0-9]+")
         }
     }
 
@@ -55,12 +55,12 @@ internal class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
             printAutomaton = true,
-                expectedTrees = arrayOf(expected)
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -77,11 +77,11 @@ internal class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 
@@ -105,11 +105,11 @@ internal class  test_sList_compositeMulti : test_ScanOnDemandParserAbstract() {
         """.trimIndent()
 
         super.test(
-                rrs = rrs,
-                goal = goal,
-                sentence = sentence,
-                expectedNumGSSHeads = 1,
-                expectedTrees = arrayOf(expected)
+            rrs = rrs,
+            goal = goal,
+            sentence = sentence,
+            expectedNumGSSHeads = 1,
+            expectedTrees = arrayOf(expected)
         )
     }
 }

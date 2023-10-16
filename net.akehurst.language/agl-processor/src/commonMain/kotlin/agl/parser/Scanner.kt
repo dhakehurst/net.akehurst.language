@@ -17,11 +17,10 @@
 
 package net.akehurst.language.agl.agl.parser
 
+//import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.agl.sppt.SPPTLeafFromInput
 import net.akehurst.language.api.sppt.LeafData
-import net.akehurst.language.api.sppt.SPPTLeaf
 
 internal class Scanner(
     internal val runtimeRuleSet: RuntimeRuleSet
@@ -39,50 +38,63 @@ internal class Scanner(
 
         var startPosition = 0
         var nextInputPosition = 0
+        var currentUndefinedText = ""
+        var currentUndefinedStart = -1
         while (!input.isEnd(nextInputPosition)) {
-            val matches: List<SPPTLeaf> = terminals.mapNotNull {
+            val matches: List<LeafData> = terminals.mapNotNull {
                 val match = input.tryMatchText(nextInputPosition, it)
                 if (null == match) {
                     null
                 } else {
                     val ni = nextInputPosition + match.matchedText.length
-                    val leaf = SPPTLeafFromInput(input, it, startPosition, ni, (if (it.isPattern) 0 else 1))
-                    //leaf.eolPositions = match.eolPositions
-                    leaf
+                    val loc = input.locationFor(startPosition, ni - startPosition)
+                    val matchedText = match.matchedText //inputText.substring(loc.position, loc.length)
+                    LeafData(it.tag, it.isPattern, loc, matchedText, emptyList())
                 }
             }
             // prefer literals over patterns
-            val longest = matches.maxWithOrNull(Comparator<SPPTLeaf> { l1, l2 ->
+            val longest = matches.maxWithOrNull(Comparator<LeafData> { l1, l2 ->
                 when {
-                    l1.isLiteral && l2.isPattern -> 1
-                    l1.isPattern && l2.isLiteral -> -1
+                    l1.isPattern.not() && l2.isPattern -> 1
+                    l1.isPattern && l2.isPattern.not() -> -1
                     else -> when {
-                        l1.matchedTextLength > l2.matchedTextLength -> 1
-                        l2.matchedTextLength > l1.matchedTextLength -> -1
+                        l1.location.length > l2.location.length -> 1
+                        l2.location.length > l1.location.length -> -1
                         else -> 0
                     }
                 }
             })
             when {
-                (null == longest || longest.matchedTextLength == 0) -> {
-                    //TODO: collate unscanned, rather than make a separate token for each char
+                (null == longest || longest.location.length == 0) -> {
                     val text = inputText[nextInputPosition].toString()
-                    nextInputPosition += text.length
-                    val eolPositions = emptyList<Int>()//TODO calculate
-                    val unscanned = SPPTLeafFromInput(input, undefined, startPosition, nextInputPosition, 0)
-                    //unscanned.eolPositions = input.eolPositions(text)
-                    result.add(LeafData(unscanned.name, unscanned.location, unscanned.matchedText, emptyList()))
+                    if (-1 == currentUndefinedStart) {
+                        currentUndefinedStart = nextInputPosition
+                    }
+                    currentUndefinedText += text
+                    nextInputPosition += 1
                 }
 
                 else -> {
-                    result.add(LeafData(longest.name, longest.location, longest.matchedText, longest.tagList))
-                    nextInputPosition += longest.matchedTextLength
+                    if (-1 != currentUndefinedStart) {
+                        val loc = input.locationFor(currentUndefinedStart, currentUndefinedText.length)
+                        val ud = LeafData(undefined.tag, false, loc, currentUndefinedText, emptyList())
+                        result.add(ud)
+                        currentUndefinedStart = -1
+                        currentUndefinedText = ""
+                    }
+                    result.add(longest)
+                    nextInputPosition += longest.location.length
                 }
             }
             startPosition = nextInputPosition
         }
+        //catch undefined stuff at end
+        if (-1 != currentUndefinedStart) {
+            val loc = input.locationFor(currentUndefinedStart, currentUndefinedText.length)
+            val ud = LeafData(undefined.tag, false, loc, currentUndefinedText, emptyList())
+            result.add(ud)
+        }
         return result
     }
-
 
 }

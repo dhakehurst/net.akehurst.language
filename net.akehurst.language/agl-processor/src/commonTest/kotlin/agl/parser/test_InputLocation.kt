@@ -16,13 +16,17 @@
 
 package net.akehurst.language.parser
 
+import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.sppt.SpptDataNode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
+fun SpptDataNode.children(treeData: TreeDataComplete<SpptDataNode>, alternative: Int = 0) = treeData.childrenFor(this)[alternative].second
 
 internal class test_InputLocation_singleLine {
 
@@ -38,18 +42,20 @@ internal class test_InputLocation_singleLine {
 
     @Test
     fun abc() {
+        val sentence = "abc"
+        val ss = SentenceDefault(sentence)
         val sp = ScanOnDemandParser(S)
 
-        val result = sp.parseForGoal("S", "abc")
+        val result = sp.parseForGoal("S", sentence)
 
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.root.location)
-        assertEquals(InputLocation(0, 1, 1, 1), result.sppt!!.root.asBranch.children[0].location)
-        assertEquals(InputLocation(1, 2, 1, 1), result.sppt!!.root.asBranch.children[1].location)
-        assertEquals(InputLocation(2, 3, 1, 1), result.sppt!!.root.asBranch.children[2].location)
+        assertEquals(InputLocation(0, 1, 1, 3), ss.locationFor(result.sppt!!.treeData.userRoot!!))
+        assertEquals(InputLocation(0, 1, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[0]))
+        assertEquals(InputLocation(1, 2, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[1]))
+        assertEquals(InputLocation(2, 3, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[2]))
 
     }
 
@@ -69,68 +75,87 @@ class test_InputLocation_multiLine {
 
     @Test
     fun abc() {
+        val sentence = "abc"
+        val ss = SentenceDefault(sentence)
         val sp = ScanOnDemandParser(S)
 
-        val result = sp.parseForGoal("S", "abc")
+        val result = sp.parseForGoal("S", sentence)
 
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.root.location)
-        assertEquals(InputLocation(0, 1, 1, 1), result.sppt!!.root.asBranch.children[0].location)
-        assertEquals(InputLocation(1, 2, 1, 1), result.sppt!!.root.asBranch.children[1].location)
-        assertEquals(InputLocation(2, 3, 1, 1), result.sppt!!.root.asBranch.children[2].location)
+        assertEquals(InputLocation(0, 1, 1, 3), ss.locationFor(result.sppt!!.treeData.userRoot!!))
+        assertEquals(InputLocation(0, 1, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[0]))
+        assertEquals(InputLocation(1, 2, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[1]))
+        assertEquals(InputLocation(2, 3, 1, 1), ss.locationFor(result.sppt!!.treeData.userRoot!!.children(result.sppt!!.treeData)[2]))
 
     }
 
     @Test
     fun a_b_c() {
+        val sentence = "a b c"
+        val ss = SentenceDefault(sentence)
         val sp = ScanOnDemandParser(S)
 
-        val result = sp.parseForGoal("S", "a b c")
+        val result = sp.parseForGoal("S", sentence)
 
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 5), result.sppt!!.root.location)
-        assertEquals(InputLocation(0, 1, 1, 1), result.sppt!!.root.asBranch.children[0].location)
-        assertEquals(InputLocation(1, 2, 1, 1), result.sppt!!.root.asBranch.children[1].location)
-        assertEquals(InputLocation(2, 3, 1, 1), result.sppt!!.root.asBranch.children[2].location)
-        assertEquals(InputLocation(3, 4, 1, 1), result.sppt!!.root.asBranch.children[3].location)
-        assertEquals(InputLocation(4, 5, 1, 1), result.sppt!!.root.asBranch.children[4].location)
+        val td = result.sppt!!.treeData
+        val ur = td.userRoot!!
+        val url = ss.locationFor(ur)
+        val children = ur.children(td)
+        val c0 = ss.locationFor(children[0])                          // 'a'
+        assertEquals(1, td.skipNodesAfter(children[0]).size)
+        val c1 = ss.locationFor(td.skipNodesAfter(children[0])[0])    // ' '
+        val c2 = ss.locationFor(children[1])                          // 'b'
+        assertEquals(1, td.skipNodesAfter(children[1]).size)
+        val c3 = ss.locationFor(td.skipNodesAfter(children[1])[0])    // ' '
+        val c4 = ss.locationFor(children[2])                          // 'c'
+        assertEquals(0, td.skipNodesAfter(children[2]).size)
+
+        assertEquals(InputLocation(0, 1, 1, 5), url)
+        // 'a'
+        assertEquals(InputLocation(0, 1, 1, 1), c0)
+        // ' '
+        assertEquals(InputLocation(1, 2, 1, 1), c1)
+        // 'b'
+        assertEquals(InputLocation(2, 3, 1, 1), c2)
+        // ' '
+        assertEquals(InputLocation(3, 4, 1, 1), c3)
+        // 'c'
+        assertEquals(InputLocation(4, 5, 1, 1), c4)
 
     }
 
-
     @Test
     fun aNLbNLc() {
-        val sp = ScanOnDemandParser(S)
-
-        val result = sp.parseForGoal(
-            "S", """
+        val sentence = """
             a
             b
             c
         """.trimIndent()
-        )
+        val ss = SentenceDefault(sentence)
+        val sp = ScanOnDemandParser(S)
+
+        val result = sp.parseForGoal("S", sentence)
 
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 5), result.sppt!!.root.location)
-        assertEquals("a", result.sppt!!.root.asBranch.children[0].matchedText)
-        assertEquals(InputLocation(0, 1, 1, 1), result.sppt!!.root.asBranch.children[0].location)
-        assertEquals("\n", result.sppt!!.root.asBranch.children[1].matchedText)
-        assertEquals(InputLocation(1, 2, 1, 1), result.sppt!!.root.asBranch.children[1].location)
-        assertEquals("b", result.sppt!!.root.asBranch.children[2].matchedText)
-        assertEquals(InputLocation(2, 1, 2, 1), result.sppt!!.root.asBranch.children[2].location)
-        assertEquals("\n", result.sppt!!.root.asBranch.children[3].matchedText)
-        assertEquals(InputLocation(3, 2, 2, 1), result.sppt!!.root.asBranch.children[3].location)
-        assertEquals("c", result.sppt!!.root.asBranch.children[4].matchedText)
-        assertEquals(InputLocation(4, 1, 3, 1), result.sppt!!.root.asBranch.children[4].location)
+        val sppt = result.sppt!!
+        val userRoot = sppt.treeData.userRoot
+        assertEquals(InputLocation(0, 1, 1, 5), ss.locationFor(userRoot))
+        assertEquals("a", ss.matchedTextNoSkip(userRoot.children(sppt.treeData)[0]))
+        assertEquals(InputLocation(0, 1, 1, 1), ss.locationFor(userRoot.children(sppt.treeData)[0]))
+        assertEquals("b", ss.matchedTextNoSkip(userRoot.children(sppt.treeData)[1]))
+        assertEquals(InputLocation(2, 1, 2, 1), ss.locationFor(userRoot.children(sppt.treeData)[1]))
+        assertEquals("c", ss.matchedTextNoSkip(userRoot.children(sppt.treeData)[2]))
+        assertEquals(InputLocation(4, 1, 3, 1), ss.locationFor(userRoot.children(sppt.treeData)[2]))
 
     }
 }
@@ -149,128 +174,133 @@ class test_InputLocation_multiLine2 {
 
     @Test
     fun abc() {
+        val sentence = "aaabbbccc"
+        val ss = SentenceDefault(sentence)
         val sp = ScanOnDemandParser(S)
 
-        val result = sp.parseForGoal("S", "aaabbbccc")
-
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
-        assertEquals(1, result.sppt!!.maxNumHeads)
-
-        assertEquals(InputLocation(0, 1, 1, 9), result.sppt!!.root.location)
-        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.root.asBranch.children[0].location)
-        assertEquals(InputLocation(3, 4, 1, 3), result.sppt!!.root.asBranch.children[1].location)
-        assertEquals(InputLocation(6, 7, 1, 3), result.sppt!!.root.asBranch.children[2].location)
-
-    }
-
-    @Test
-    fun a_b_c() {
-        val sp = ScanOnDemandParser(S)
-
-        val result = sp.parseForGoal("S", "aaa bbb ccc")
-
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
-        assertEquals(1, result.sppt!!.maxNumHeads)
-
-        assertEquals(InputLocation(0, 1, 1, 11), result.sppt!!.root.location)
-        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.root.asBranch.children[0].location)
-        assertEquals(InputLocation(3, 4, 1, 1), result.sppt!!.root.asBranch.children[1].location)
-        assertEquals(InputLocation(4, 5, 1, 3), result.sppt!!.root.asBranch.children[2].location)
-        assertEquals(InputLocation(7, 8, 1, 1), result.sppt!!.root.asBranch.children[3].location)
-        assertEquals(InputLocation(8, 9, 1, 3), result.sppt!!.root.asBranch.children[4].location)
-
-    }
-
-    @Test
-    fun aNLbNLc() {
-        val sp = ScanOnDemandParser(S)
-
-        val result = sp.parseForGoal(
-            "S", """
-            aaa
-            bbb
-            ccc
-        """.trimIndent()
-        )
-
-        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
-        assertEquals(0, result.issues.size)
-        assertEquals(1, result.sppt!!.maxNumHeads)
-
-        assertEquals(InputLocation(0, 1, 1, 11), result.sppt!!.root.location)
-        assertEquals("aaa", result.sppt!!.root.asBranch.children[0].matchedText)
-        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.root.asBranch.children[0].location)
-        assertEquals("\n", result.sppt!!.root.asBranch.children[1].matchedText)
-        assertEquals(InputLocation(3, 4, 1, 1), result.sppt!!.root.asBranch.children[1].location)
-        assertEquals("bbb", result.sppt!!.root.asBranch.children[2].matchedText)
-        assertEquals(InputLocation(4, 1, 2, 3), result.sppt!!.root.asBranch.children[2].location)
-        assertEquals("\n", result.sppt!!.root.asBranch.children[3].matchedText)
-        assertEquals(InputLocation(7, 4, 2, 1), result.sppt!!.root.asBranch.children[3].location)
-        assertEquals("ccc", result.sppt!!.root.asBranch.children[4].matchedText)
-        assertEquals(InputLocation(8, 1, 3, 3), result.sppt!!.root.asBranch.children[4].location)
-
-    }
-
-    @Test
-    fun NLaNLbNLc() {
-        val sp = ScanOnDemandParser(S)
-        val sentence = """
-            
-            aaa
-            bbb
-            ccc
-        """.trimIndent()
         val result = sp.parseForGoal("S", sentence)
 
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 12), result.sppt!!.root.location)
-        assertEquals("\n", result.sppt!!.root.asBranch.children[0].matchedText)
-        assertEquals(InputLocation(0, 1, 1, 1), result.sppt!!.root.asBranch.children[0].location)
-        assertEquals("aaa", result.sppt!!.root.asBranch.children[1].matchedText)
-        assertEquals(InputLocation(1, 1, 2, 3), result.sppt!!.root.asBranch.children[1].location)
-        assertEquals("\n", result.sppt!!.root.asBranch.children[2].matchedText)
-        assertEquals(InputLocation(4, 4, 2, 1), result.sppt!!.root.asBranch.children[2].location)
-        assertEquals("bbb", result.sppt!!.root.asBranch.children[3].matchedText)
-        assertEquals(InputLocation(5, 1, 3, 3), result.sppt!!.root.asBranch.children[3].location)
-        assertEquals("\n", result.sppt!!.root.asBranch.children[4].matchedText)
-        assertEquals(InputLocation(8, 4, 3, 1), result.sppt!!.root.asBranch.children[4].location)
-        assertEquals("ccc", result.sppt!!.root.asBranch.children[5].matchedText)
-        assertEquals(InputLocation(9, 1, 4, 3), result.sppt!!.root.asBranch.children[5].location)
+        assertEquals(InputLocation(0, 1, 1, 9), ss.locationFor(result.sppt!!.treeData.root!!))
+        assertEquals(InputLocation(0, 1, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
+        assertEquals(InputLocation(3, 4, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
+        assertEquals(InputLocation(6, 7, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
 
     }
 
     @Test
-    fun aNLbSPSPNLc() {
+    fun a_b_c() {
+        val sentence = "aaa bbb ccc"
+        val ss = SentenceDefault(sentence)
         val sp = ScanOnDemandParser(S)
 
-        val result = sp.parseForGoal(
-            "S", """
-            aaa
-              bbb
-            ccc
-        """.trimIndent()
-        )
+        val result = sp.parseForGoal("S", sentence)
 
         assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
         assertEquals(0, result.issues.size)
         assertEquals(1, result.sppt!!.maxNumHeads)
 
-        assertEquals(InputLocation(0, 1, 1, 13), result.sppt!!.root.location)
-        assertEquals("aaa", result.sppt!!.root.asBranch.children[0].matchedText)
-        assertEquals(InputLocation(0, 1, 1, 3), result.sppt!!.root.asBranch.children[0].location)
-        assertEquals("\n  ", result.sppt!!.root.asBranch.children[1].matchedText)
-        assertEquals(InputLocation(3, 4, 1, 3), result.sppt!!.root.asBranch.children[1].location)
-        assertEquals("bbb", result.sppt!!.root.asBranch.children[2].matchedText)
-        assertEquals(InputLocation(6, 3, 2, 3), result.sppt!!.root.asBranch.children[2].location)
-        assertEquals("\n", result.sppt!!.root.asBranch.children[3].matchedText)
-        assertEquals(InputLocation(9, 6, 2, 1), result.sppt!!.root.asBranch.children[3].location)
-        assertEquals("ccc", result.sppt!!.root.asBranch.children[4].matchedText)
-        assertEquals(InputLocation(10, 1, 3, 3), result.sppt!!.root.asBranch.children[4].location)
+        assertEquals(InputLocation(0, 1, 1, 11), ss.locationFor(result.sppt!!.treeData.root!!))
+        assertEquals(InputLocation(0, 1, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
+        assertEquals(InputLocation(3, 4, 1, 1), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
+        assertEquals(InputLocation(4, 5, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
+        assertEquals(InputLocation(7, 8, 1, 1), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
+        assertEquals(InputLocation(8, 9, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
+
+    }
+
+    @Test
+    fun aNLbNLc() {
+        val sentence = """
+            aaa
+            bbb
+            ccc
+        """.trimIndent()
+        val ss = SentenceDefault(sentence)
+        val sp = ScanOnDemandParser(S)
+
+        val result = sp.parseForGoal("S", sentence)
+
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+
+        assertEquals(InputLocation(0, 1, 1, 11), ss.locationFor(result.sppt!!.treeData.root!!))
+        assertEquals("aaa", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
+        assertEquals(InputLocation(0, 1, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
+        assertEquals("\n", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
+        assertEquals(InputLocation(3, 4, 1, 1), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
+        assertEquals("bbb", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
+        assertEquals(InputLocation(4, 1, 2, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
+        assertEquals("\n", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
+        assertEquals(InputLocation(7, 4, 2, 1), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
+        assertEquals("ccc", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
+        assertEquals(InputLocation(8, 1, 3, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
+
+    }
+
+    @Test
+    fun NLaNLbNLc() {
+        val sentence = """
+            
+            aaa
+            bbb
+            ccc
+        """.trimIndent()
+        val ss = SentenceDefault(sentence)
+        val sp = ScanOnDemandParser(S)
+        val result = sp.parseForGoal("S", sentence)
+
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+
+        assertEquals(InputLocation(0, 1, 1, 12), ss.locationFor(result.sppt!!.treeData.root!!))
+        assertEquals("\n", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
+        assertEquals(InputLocation(0, 1, 1, 1), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
+        assertEquals("aaa", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
+        assertEquals(InputLocation(1, 1, 2, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
+        assertEquals("\n", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
+        assertEquals(InputLocation(4, 4, 2, 1), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
+        assertEquals("bbb", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
+        assertEquals(InputLocation(5, 1, 3, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
+        assertEquals("\n", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
+        assertEquals(InputLocation(8, 4, 3, 1), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
+        assertEquals("ccc", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[5]))
+        assertEquals(InputLocation(9, 1, 4, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[5]))
+
+    }
+
+    @Test
+    fun aNLbSPSPNLc() {
+        val sentence = """
+            aaa
+              bbb
+            ccc
+        """.trimIndent()
+        val ss = SentenceDefault(sentence)
+        val sp = ScanOnDemandParser(S)
+
+        val result = sp.parseForGoal("S", sentence)
+
+        assertNotNull(result.sppt, result.issues.joinToString("\n") { it.toString() })
+        assertEquals(0, result.issues.size)
+        assertEquals(1, result.sppt!!.maxNumHeads)
+
+        assertEquals(InputLocation(0, 1, 1, 13), ss.locationFor(result.sppt!!.treeData.root!!))
+        assertEquals("aaa", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
+        assertEquals(InputLocation(0, 1, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[0]))
+        assertEquals("\n  ", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
+        assertEquals(InputLocation(3, 4, 1, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[1]))
+        assertEquals("bbb", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
+        assertEquals(InputLocation(6, 3, 2, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[2]))
+        assertEquals("\n", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
+        assertEquals(InputLocation(9, 6, 2, 1), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[3]))
+        assertEquals("ccc", ss.matchedTextNoSkip(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
+        assertEquals(InputLocation(10, 1, 3, 3), ss.locationFor(result.sppt!!.treeData.root!!.children(result.sppt!!.treeData)[4]))
 
     }
 }

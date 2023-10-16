@@ -30,6 +30,14 @@ class GraphStructuredStack<E>(
     //private val _growingHeadHeap: BinaryHeap<GrowingNodeIndex, GrowingNodeIndex> = headHeap
 
     private val _previous = previous
+
+    /**
+     * when (count[node]) {
+     *   null -> node is not in the GSS
+     *   0 -> node is the head of a stack
+     *   else -> count is the number of stacks that node is in (not as the head of a stack)
+     * }
+     */
     private val _count = count
 
     val roots: List<E> get() = this._count.entries.filter { it.value == 0 }.map { it.key }
@@ -110,7 +118,7 @@ class GraphStructuredStack<E>(
         val added = set.add(currentHead)
         if (added) {
             val hc = this._count[currentHead]
-            if (null == hc) {
+            if (null == hc) { // should not happen !
                 _previous[currentHead] = hashSetOf()
                 this._count[currentHead] = 1
             } else {
@@ -170,29 +178,34 @@ class GraphStructuredStack<E>(
         }
     }
 
-    fun dropStack(head: E) {
-        this._growingHeadHeap.remove(head)
-        this.removeStack(head)
+    /**
+     * return true if stack was dropped
+     * if the head is part of other stacks it will not be dropped
+     */
+    fun dropStack(head: E, ifDropped: (n: E) -> Unit): Boolean {
+        val d = this._growingHeadHeap.remove(head)
+        return this.removeStack(head, ifDropped)
     }
 
-    private fun removeStack(head: E) {
-        val count = this._count[head]
-        if (null == count) {
-            // do nothing
-        } else {
-            //count -= 1
-            //this._count[head] = count
-            if (0 == count) {
-                _count.remove(head)
-                val prev = _previous.remove(head)!!
+    private fun removeStack(node: E, ifDropped: (n: E) -> Unit): Boolean {
+        val count = this._count[node]
+        return when (count) {
+            null -> true // node is not in this GSS, so result is equivalent of stack removed
+            0 -> {
+                // head is the head of a stack and not in any other stack
+                // so remove it and decrement count for each of its prevs
+                _count.remove(node)
+                val prev = _previous.remove(node)!!
                 prev.forEach {
                     val c = this._count[it]!!
                     this._count[it] = c - 1
-                    removeStack(it)
+                    removeStack(it, ifDropped)
                 }
-            } else {
-                // do nothing
+                ifDropped(node)
+                true
             }
+
+            else -> false // node is not a head so stack not removed
         }
     }
 

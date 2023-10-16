@@ -15,28 +15,31 @@
  */
 package net.akehurst.language.agl.grammar.format
 
+import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
-import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimple
 import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.typemodel.api.TypeModel
 
 internal class AglFormatSyntaxAnalyser(
-    val typeModel: GrammarTypeModel,
+    grammarNamespaceQualifiedName: String,
+    val typeModel: TypeModel,
     val scopeModel: ScopeModel
 ) : SyntaxAnalyser<AglFormatterModel> {
 
-    private val _sa = SyntaxAnalyserSimple(typeModel, scopeModel)
+    private val _sa = SyntaxAnalyserDefault(grammarNamespaceQualifiedName, typeModel, scopeModel)
 
     override val locationMap: Map<Any, InputLocation> get() = _sa.locationMap
+
+    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<AglFormatterModel>> = emptyMap()
 
     override fun clear() {
         //TODO("not implemented")
@@ -47,7 +50,7 @@ internal class AglFormatSyntaxAnalyser(
         return emptyList()
     }
 
-    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem): SyntaxAnalysisResult<AglFormatterModel> {
+    override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem?): SyntaxAnalysisResult<AglFormatterModel> {
         val res = _sa.transform(sppt, mapToGrammar)
         val asm = AglFormatterModelDefault(res.asm)
         return SyntaxAnalysisResultDefault(asm, res.issues, this.locationMap)

@@ -80,7 +80,7 @@ class test_ProjectIT(val data: Data) {
             val result = processor.parse(this.data.text, Agl.parseOptions { goalRuleName("projectionGroup") })
             assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
             assertNotNull(result.sppt)
-            val resultStr = result.sppt!!.asString
+            val resultStr = result.sppt!!.asSentence
             assertEquals(this.data.text, resultStr)
             println(result.sppt!!.toStringAll)
         } else {

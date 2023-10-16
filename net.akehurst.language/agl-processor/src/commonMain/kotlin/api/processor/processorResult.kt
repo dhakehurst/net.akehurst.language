@@ -19,39 +19,39 @@ package net.akehurst.language.api.processor
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
-interface IssueCollection : Collection<LanguageIssue> {
-    val all:Set<LanguageIssue>
-    val errors:List<LanguageIssue>
-    val warnings:List<LanguageIssue>
-    val informations:List<LanguageIssue>
+interface IssueCollection<T : Any> : Collection<T> {
+    val all: Set<T>
+    val errors: List<T>
+    val warnings: List<T>
+    val informations: List<T>
 }
 
 interface ParseResult {
     val sppt: SharedPackedParseTree?
-    val issues: IssueCollection
+    val issues: IssueCollection<LanguageIssue>
 }
 
-interface SyntaxAnalysisResult<out AsmType: Any> {
+interface SyntaxAnalysisResult<out AsmType : Any> {
     val asm: AsmType?
-    val issues: IssueCollection
+    val issues: IssueCollection<LanguageIssue>
     val locationMap: Map<Any, InputLocation>
 }
 
 interface SemanticAnalysisResult {
-    val issues: IssueCollection
+    val issues: IssueCollection<LanguageIssue>
 }
 
-interface  ProcessResult<out AsmType: Any> {
+interface ProcessResult<out AsmType : Any> {
     val asm: AsmType?
-    val issues: IssueCollection
+    val issues: IssueCollection<LanguageIssue>
 }
 
 interface FormatResult {
     val sentence: String?
-    val issues: IssueCollection
+    val issues: IssueCollection<LanguageIssue>
 }
 
-interface ExpectedAtResult{
-    val items:List<CompletionItem>
-    val issues:IssueCollection
+interface ExpectedAtResult {
+    val items: List<CompletionItem>
+    val issues: IssueCollection<LanguageIssue>
 }

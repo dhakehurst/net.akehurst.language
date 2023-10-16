@@ -16,11 +16,16 @@
 
 package net.akehurst.language.agl.grammar.grammar.asm
 
+import net.akehurst.language.agl.collections.*
 import net.akehurst.language.api.grammar.*
 
+/**
+ * ID -> qualifiedName
+ */
 class GrammarDefault(
     override val namespace: Namespace,
-    override val name: String
+    override val name: String,
+    override val options: List<GrammarOption>
 ) : GrammarAbstract(namespace, name) {
 
     companion object {
@@ -29,9 +34,15 @@ class GrammarDefault(
         }
     }
 
-    // override this so that property is correctly exported/defined in JS and available for serialisation
-    //override val rule: MutableList<GrammarRule> get() = super.rule
+    override val defaultRule: GrammarRule
+        get() = options.firstOrNull { it.name == "defaultGoal" }?.let { findAllResolvedGrammarRule(it.value) }
+            ?: this.allResolvedGrammarRule.first { it.isSkip.not() }
 }
+
+data class GrammarOptionDefault(
+    override val name: String,
+    override val value: String
+) : GrammarOption
 
 data class GrammarReferenceDefault(
     override val localNamespace: Namespace,
@@ -48,6 +59,35 @@ abstract class GrammarAbstract(
     override val name: String
 ) : Grammar {
 
+    private companion object {
+        fun resolve(rule: GrammarRule, inheritedRules: List<GrammarRule>): GrammarRule? {
+            return when {
+                rule is OverrideRule -> {
+                    val overridden = inheritedRules.find { it.name == rule.name }
+                    when (overridden) {
+                        null -> {
+                            // overridden rule not found, so add it as a NormalRule to enable best-effort, though this is an error
+                            val nr = NormalRuleDefault(rule.grammar, rule.name, rule.isSkip, rule.isLeaf)
+                            nr.rhs = (rule as OverrideRule).overridenRhs
+                            nr.rhs.setOwningRule(nr, emptyList())
+                            nr
+                        }
+
+                        else -> rule
+                    }
+                }
+
+                else -> {
+                    val overriddenBy = inheritedRules.find { it.name == rule.name && it is OverrideRule }
+                    when (overriddenBy) {
+                        null -> rule
+                        else -> overriddenBy
+                    }
+                }
+            }
+        }
+    }
+
     override val qualifiedName: String get() = "${namespace.qualifiedName}.$name"
 
     override val extends = mutableListOf<GrammarReference>()
@@ -55,20 +95,96 @@ abstract class GrammarAbstract(
     override val grammarRule = mutableListOf<GrammarRule>()
     override val preferenceRule = mutableListOf<PreferenceRule>()
 
-    override val allResolvedGrammarRule: List<GrammarRule> by lazy {
-        //TODO: Handle situation where super grammar/rule is included more than once ?
-        val rules = this.extends.flatMap { it.resolved?.allResolvedGrammarRule ?: emptyList() }.toMutableList()
-        this.grammarRule.forEach { rule ->
-            if (rule.isOverride) {
-                val overridden = rules.find { it.name == rule.name }
-                    ?: error("GrammarRule ${rule.name} is marked as override, but there is no super rule with that name to override.")
-                rules.remove(overridden)
-                rules.add(rule)
-            } else {
-                rules.add(rule)
+    override val allGrammarReferencesInRules: List<GrammarReference> by lazy {
+        val refs: List<GrammarReference> = allGrammarRule.flatMap {
+            when {
+                it is OverrideRule -> {
+                    if (it.overridenRhs is NonTerminal) {
+                        (it.overridenRhs as NonTerminal).targetGrammar?.let { listOf(it) } ?: emptyList<GrammarReference>()
+                    } else {
+                        emptyList<GrammarReference>()
+                    }
+                }
+
+                else -> {
+                    it.rhs.allEmbedded.map {
+                        it.embeddedGrammarReference
+                    }
+                }
             }
         }
-        rules
+
+        this.extends + refs
+    }
+
+    override val extendsResolved: List<Grammar> get() = extends.mapNotNull { it.resolved }
+
+    override val allExtends: OrderedSet<GrammarReference> by lazy {
+        val inherited = extends.flatMap { it.resolved?.allExtends ?: orderedSetOf() }.toOrderedSet()
+        inherited + extends
+    }
+
+    override val allExtendsResolved: OrderedSet<Grammar>
+        get() {
+            return allExtends.flatMap {
+                it.resolved?.allExtendsResolved ?: orderedSetOf()
+            }.toOrderedSet() + extendsResolved
+        }
+
+    override val directInheritedGrammarRule: List<GrammarRule> by lazy {
+        val inheritedRules = this.extends.flatMap { it.resolved?.grammarRule ?: emptyList() }
+        inheritedRules
+    }
+
+    override val allGrammarRule: List<GrammarRule> by lazy {
+        val inheritedRules = this.extends.flatMap { it.resolved?.allGrammarRule ?: emptyList() }
+        inheritedRules + grammarRule
+    }
+
+    override val directInheritedResolvedGrammarRule: OrderedSet<GrammarRule> by lazy {
+        val resolvedRules = linkedMapOf<String, GrammarRule>() //use linkedMap so order stays the same
+        val inheritedRules = this.extends.flatMap { it.resolved?.resolvedGrammarRule ?: emptyList() }
+        inheritedRules.forEach { rule ->
+            val r = resolve(rule, inheritedRules) ?: rule
+            resolvedRules[r.name] = r
+        }
+        resolvedRules.values.toOrderedSet()
+    }
+
+    override val allInheritedResolvedGrammarRule: OrderedSet<GrammarRule> by lazy {
+//        val resolvedRules = linkedSetOf<GrammarRule>() //use linkedMap so order stays the same
+//        val inheritedRules = this.extends.flatMap { it.resolved?.allResolvedGrammarRule ?: emptyList() }
+//        inheritedRules.forEach { rule ->
+//            val r = resolve(rule, inheritedRules) ?: rule
+//            resolvedRules.add(r)
+//        }
+//        resolvedRules.toOrderedSet()
+        this.extends.flatMap { it.resolved?.allResolvedGrammarRule ?: emptyList() }.toOrderedSet()
+    }
+
+    override val resolvedGrammarRule: OrderedSet<GrammarRule> by lazy {
+        val resolvedRules = linkedMapOf<String, GrammarRule>() //use linkedMap so order stays the same
+        val inheritedRules = emptyList<GrammarRule>()
+        this.grammarRule.forEach { rule ->
+            val r = resolve(rule, inheritedRules) ?: rule
+            resolvedRules[r.name] = r
+        }
+        resolvedRules.values.toOrderedSet()
+    }
+
+    override val allResolvedGrammarRule: OrderedSet<GrammarRule> by lazy {
+        val resolvedRules = linkedMapOf<String, GrammarRule>() //use linkedMap so order stayes the same
+        val inheritedRules = this.extends.flatMap { it.resolved?.allResolvedGrammarRule ?: emptyList() }
+
+        inheritedRules.forEach { rule ->
+            val r = resolve(rule, inheritedRules) ?: rule
+            resolvedRules[r.name] = r
+        }
+        this.grammarRule.forEach { rule ->
+            val r = resolve(rule, inheritedRules) ?: rule
+            resolvedRules[r.name] = r
+        }
+        resolvedRules.values.toOrderedSet()
     }
 
     override val allResolvedTerminal: Set<Terminal> by lazy {
@@ -91,8 +207,8 @@ abstract class GrammarAbstract(
         this.allResolvedGrammarRule.filter { it.isLeaf.not() }.toSet()
     }
 
-    override val allResolvedPreferenceRuleRule: List<PreferenceRule> by lazy {
-        val rules = this.extends.flatMap { it.resolved?.allResolvedPreferenceRuleRule ?: emptyList() }.toMutableList()
+    override val allResolvedPreferenceRuleRule: OrderedSet<PreferenceRule> by lazy {
+        val rules = this.extends.flatMap { it.resolved?.allResolvedPreferenceRuleRule ?: emptyList() }.toMutableOrderedSet()
         rules + this.preferenceRule
     }
 
@@ -105,18 +221,24 @@ abstract class GrammarAbstract(
         egs + egs.flatMap { it.allResolvedEmbeddedGrammars }.toSet()//FIXME: recursion
     }
 
-    override fun findAllNonTerminalRule(ruleName: String): List<GrammarRule> = this.allResolvedGrammarRule.filter { it.name == ruleName }
+    override fun findAllSuperGrammarRule(ruleName: String): List<GrammarRule> {
+        val rules = this.extends.flatMap { it.resolved?.allGrammarRule ?: emptyList() }.toMutableOrderedSet()
+        return rules.filter { it.grammar != this && it.name == ruleName }
+    }
 
-    override fun findNonTerminalRule(ruleName: String): GrammarRule? {
+    override fun findAllGrammarRuleList(ruleName: String): List<GrammarRule> =
+        this.allGrammarRule.filter { it.name == ruleName }
+
+    override fun findAllResolvedGrammarRule(ruleName: String): GrammarRule? {
         val all = this.allResolvedGrammarRule.filter { it.name == ruleName }
         return when {
-            all.isEmpty() -> null//throw GrammarRuleNotFoundException("NonTerminal GrammarRule '${ruleName}' not found in grammar '${this.name}'")
-            all.size > 1 -> error("More than one rule named '${ruleName}' in grammar '${this.name}', have you remembered the 'override' modifier")
+            all.isEmpty() -> null
+            all.toSet().size > 1 -> error("More than one rule named '${ruleName}' in grammar '${this.name}', have you remembered the 'override' modifier")
             else -> all.first()
         }
     }
 
-    override fun findTerminalRule(terminalPattern: String): Terminal {
+    override fun findAllResolvedTerminalRule(terminalPattern: String): Terminal {
         val all = this.allResolvedTerminal.filter { it.value == terminalPattern }
         when {
             all.isEmpty() -> error("$terminalPattern in Grammar(${this.name}).findTerminalRule")
@@ -124,5 +246,13 @@ abstract class GrammarAbstract(
         }
         return all.first()
     }
+
+    override fun hashCode(): Int = this.qualifiedName.hashCode()
+    override fun equals(other: Any?): Boolean = when (other) {
+        !is Grammar -> false
+        else -> this.qualifiedName == other.qualifiedName
+    }
+
+    override fun toString(): String = qualifiedName
 
 }

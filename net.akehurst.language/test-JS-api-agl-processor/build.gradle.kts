@@ -34,3 +34,7 @@ tasks.create<Copy>("overwriteTestEntryFile") {
 }
 tasks["jsNodeTest"].dependsOn("overwriteTestEntryFile")
 tasks["jsBrowserTest"].dependsOn("overwriteTestEntryFile")
+
+tasks.withType<PublishToMavenLocal> {
+    onlyIf { false }
+}

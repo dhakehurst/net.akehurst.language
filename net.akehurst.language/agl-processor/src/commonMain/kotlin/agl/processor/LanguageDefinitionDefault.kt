@@ -19,6 +19,7 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
+import net.akehurst.language.api.processor.LanguageProcessorConfigurationDefault
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.ProcessOptions
 import kotlin.properties.Delegates
@@ -29,16 +30,33 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     grammarStrArg: String?,
     private val aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
     buildForDefaultGoal: Boolean,
-    configuration: LanguageProcessorConfiguration<AsmType, ContextType>
+    initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
     null,
     buildForDefaultGoal,
-    configuration,
+    initialConfiguration
 ) {
 
     private var _doObservableUpdates = true
 
     override val isModifiable: Boolean = true
+
+    override var configuration: LanguageProcessorConfiguration<AsmType, ContextType>
+        get() = LanguageProcessorConfigurationDefault(
+            targetGrammarName = this.targetGrammarName,
+            defaultGoalRuleName = this.defaultGoalRule,
+            typeModelResolver = this._typeModelResolver,
+            scopeModelResolver = this._scopeModelResolver,
+            syntaxAnalyserResolver = this._syntaxAnalyserResolver,
+            semanticAnalyserResolver = this._semanticAnalyserResolver,
+            formatterResolver = this._formatterResolver,
+            styleResolver = this._styleResolver, //not used to create processor
+            completionProvider = this._completionProviderResolver
+        )
+        set(value) {
+            this.updateConfiguration(value)
+            super._processor_cache.reset()
+        }
 
     override var grammarStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
         if (_doObservableUpdates) {
@@ -86,6 +104,20 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         updateGrammarStr(oldGrammarStr, grammarStr)
         updateScopeModelStr(oldScopeModelStr, scopeModelStr)
         updateStyleStr(oldStyleStr, styleStr)
+        this._doObservableUpdates = true
+    }
+
+    private fun updateConfiguration(configuration: LanguageProcessorConfiguration<AsmType, ContextType>) {
+        this._doObservableUpdates = false
+        this.targetGrammarName = configuration.targetGrammarName
+        this.defaultGoalRule = configuration.defaultGoalRuleName
+        this._typeModelResolver = configuration.typeModelResolver
+        this._scopeModelResolver = configuration.scopeModelResolver
+        this._syntaxAnalyserResolver = configuration.syntaxAnalyserResolver
+        this._semanticAnalyserResolver = configuration.semanticAnalyserResolver
+        this._formatterResolver = configuration.formatterResolver
+        this._styleResolver = configuration.styleResolver
+        this._completionProviderResolver = configuration.completionProvider
         this._doObservableUpdates = true
     }
 

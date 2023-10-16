@@ -20,7 +20,6 @@ package net.akehurst.language.processor.java8
 //import com.soywiz.korio.file.std.resourcesVfs
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.sppt.SPPT2InputText
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.parser.InputLocation
@@ -37,7 +36,7 @@ import kotlin.test.assertNull
 class test_Java8_Singles_aglSpec {
 
     private companion object {
-        val grammarFile = "/java8/Java8AglSpec.agl"
+        val grammarFile = "/Java/version_8/grammar_aglSpec.agl"
         val aglSpecProcessor: LanguageProcessor<AsmSimple, ContextSimple> by lazy { createJava8Processor(grammarFile, true) }
 
         val proc = aglSpecProcessor
@@ -49,7 +48,7 @@ class test_Java8_Singles_aglSpec {
                 aglOptions = Agl.options {
                     semanticAnalysis {
                         // switch off ambiguity analysis for performance
-                        option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS,false)
+                        option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }
                 }
             ).processor!!
@@ -270,7 +269,7 @@ public class BadBinaryLiterals {
         assertNotNull(result.sppt)
         assertEquals(emptyList(), result.issues.errors)
         val actual = result.sppt!!.toStringAll
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -282,7 +281,7 @@ public class BadBinaryLiterals {
         assertNotNull(result.sppt)
         assertEquals(emptyList(), result.issues.errors)
         val actual = result.sppt!!.toStringAll
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
@@ -299,7 +298,7 @@ public class BadBinaryLiterals {
         assertEquals(emptyList(), result.issues.errors)
 
         // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
         assertEquals(1, result.sppt!!.maxNumHeads)
     }
@@ -356,7 +355,7 @@ public class BadBinaryLiterals {
         assertEquals(emptyList(), result.issues.errors)
 
         // println( t.toStringAll )
-        val resultStr = SPPT2InputText().visitTree(result.sppt!!, "")
+        val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 

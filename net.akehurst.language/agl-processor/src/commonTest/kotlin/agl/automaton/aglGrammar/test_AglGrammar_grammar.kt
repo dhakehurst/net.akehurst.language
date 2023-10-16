@@ -33,7 +33,7 @@ internal class test_AglGrammar_grammar : test_AutomatonAbstract() {
     private val R_namespace = rrs.findRuntimeRule("namespace")
     private val R_rule = rrs.findRuntimeRule("rule")
 
-    private val R_isOverride = rrs.findRuntimeRule("isOverride")
+//    private val R_isOverride = rrs.findRuntimeRule("isOverride")
 //    private   val R_override = R_isOverride.rhs.items[RuntimeRuleRhs.MULTI__ITEM]
 //    private   val R_overrideEmpty = R_isOverride.rhs.items[RuntimeRuleRhs.MULTI__EMPTY_RULE]
 

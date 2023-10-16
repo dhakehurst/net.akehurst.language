@@ -40,14 +40,14 @@ internal class test_Processor_Ambiguity4 : test_ScanOnDemandParserAbstract() {
     private companion object {
         val Inner = runtimeRuleSet {
             concatenation("SP") { ref("xopt") }
-            multi("xopt", 0, 1, "x")
+            optional("xopt", "x")
             literal("x", "x")
         }
         val rrs = runtimeRuleSet {
             concatenation("S") { literal("s"); ref("n"); literal("{"); ref("Popt"); ref("RList"); literal("}") }
-            multi("Popt", 0, 1, "P")
+            optional("Popt", "P")
             concatenation("P") { literal("p"); literal("{"); ref("SPopt"); literal("}") }
-            multi("SPopt", 0, 1, "eSP")
+            optional("SPopt", "eSP")
             embedded("eSP", Inner, "SP")
             multi("RList", 0, -1, "R")
             concatenation("R") { literal("r"); ref("n"); literal("{"); ref("SList"); literal("}") }
@@ -141,7 +141,7 @@ internal class test_Processor_Ambiguity4 : test_ScanOnDemandParserAbstract() {
               Popt { P {
                 'p'
                 '{'
-                SPopt { eSP { Inner::SP { xopt { §empty } } } }
+                SPopt { eSP : Inner::SP { xopt { §empty } } }
                 '}'
               } }
               RList { §empty }
@@ -175,7 +175,7 @@ internal class test_Processor_Ambiguity4 : test_ScanOnDemandParserAbstract() {
               Popt { P {
                 'p'
                 '{'
-                SPopt {  eSP { Inner::SP { xopt { x:'x' } } } }
+                SPopt {  eSP : Inner::SP { xopt { x:'x' } } }
                 '}'
               } }
               RList { §empty }
@@ -257,7 +257,7 @@ internal class test_Processor_Ambiguity4 : test_ScanOnDemandParserAbstract() {
               Popt { P {
                 'p'
                 '{'
-                SPopt { eSP { Inner::SP { xopt { §empty } } } }
+                SPopt { eSP : Inner::SP { xopt { §empty } } }
                 '}'
               } }
               RList { R {

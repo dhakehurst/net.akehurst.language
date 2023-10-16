@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.syntaxAnalyser
 
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeModel
+import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.typemodel.api.*
 
@@ -24,8 +24,8 @@ import net.akehurst.language.typemodel.api.*
 
 class ContextFromTypeModel(
 ) : SentenceContext<String> {
-    constructor(typeModel: GrammarTypeModel) : this() {
-        createScopeFrom(typeModel)
+    constructor(grammarNamespaceQualifiedName: String, typeModel: TypeModel) : this() {
+        createScopeFrom(grammarNamespaceQualifiedName, typeModel)
     }
 
     companion object {
@@ -39,26 +39,31 @@ class ContextFromTypeModel(
         this.rootScope = ScopeSimple<String>(null, "", "")
     }
 
-    fun createScopeFrom(typeModel: GrammarTypeModel) {
-        val scope = ScopeSimple<String>(null, "", typeModel.name)
-        typeModel.allRuleNameToType.forEach {
+    fun createScopeFrom(grammarNamespaceQualifiedName: String, typeModel: TypeModel) {
+        val ns = typeModel.namespace[grammarNamespaceQualifiedName] as GrammarTypeNamespace
+            ?: error("TypeNamespace '$grammarNamespaceQualifiedName' not found")
+        val scope = ScopeSimple<String>(null, "", grammarNamespaceQualifiedName)
+        ns.allRuleNameToType.forEach {
             scope.addToScope(it.value.type.name, TYPE_NAME_FOR_TYPES, it.value.type.name)
             val type = it.value.type
             when (type) {
-                is NothingType -> Unit
-                is AnyType -> Unit
+
                 is PrimitiveType -> Unit
-                is ListSimpleType -> Unit
-                is ListSeparatedType -> Unit
+                is CollectionType -> Unit
                 is UnnamedSuperTypeType -> Unit
                 is TupleType -> {
                 }
 
-                is ElementType -> {
+                is DataType -> {
                     val chs = scope.createOrGetChildScope(type.name, type.name, type.name)
                     type.property.values.forEach {
                         chs.addToScope(it.name, TYPE_NAME_FOR_PROPERTIES, it.name)
                     }
+                }
+
+                else -> when (type) {
+                    typeModel.NothingType -> Unit
+                    typeModel.AnyType -> Unit
                 }
             }
         }

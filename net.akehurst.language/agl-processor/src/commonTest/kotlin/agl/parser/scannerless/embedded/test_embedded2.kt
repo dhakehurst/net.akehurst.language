@@ -32,11 +32,11 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
             pattern("WS", "\\s+", true)
             pattern("COMMENT", "/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/", true)
             concatenation("TR") { ref("optST"); ref("optRE"); ref("optTP") }
-            multi("optST", 0, 1, "ST")
+            optional("optST", "ST")
             concatenation("ST") { ref("ID") }
-            multi("optRE", 0, 1, "RE")
+            optional("optRE", "RE")
             concatenation("RE") { literal("/"); ref("EX") }
-            multi("optTP", 0, 1, "TP")
+            optional("optTP", "TP")
             concatenation("TP") { literal("#"); ref("ID") }
 
             choice("EX", RuntimeRuleChoiceKind.LONGEST_PRIORITY) {
@@ -118,11 +118,11 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               's' '{'
-              I { Inner::TR {
+              I : Inner::TR {
                 optST{ §empty }
                 optRE{ §empty }
                 optTP{ §empty }
-              } }
+              }
               '}'
             }
         """.trimIndent()
@@ -148,11 +148,11 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               's' '{' WS : ' '
-              I { Inner::TR {
+              I : Inner::TR {
                 optST{ §empty }
                 optRE{ §empty }
                 optTP{ §empty }
-              } }
+              }
               '}'
             }
         """.trimIndent()
@@ -178,11 +178,11 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               's' '{'
-              I { Inner::TR {
+              I : Inner::TR {
                 optST{ ST { ID : 'a' } }
                 optRE{ §empty }
                 optTP{ §empty }
-              } }
+              }
               '}'
             }
         """.trimIndent()
@@ -208,12 +208,12 @@ internal class test_embedded2 : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               's' '{'
-              I { Inner::TR {
+              I : Inner::TR {
                 COMMENT:'/*xx*/'
                 optST{ §empty }
                 optRE{ §empty }
                 optTP{ §empty }
-              } }
+              }
               '}'
             }
         """.trimIndent()

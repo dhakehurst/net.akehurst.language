@@ -30,7 +30,7 @@ class test_Dot_Singles {
 
     private companion object {
 
-        private val grammarStr = this::class.java.getResource("/dot/Dot.agl")?.readText() ?: error("File not found")
+        private val grammarStr = this::class.java.getResource("/dot/version_9.0.0/grammar.agl").readText()
         var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
 
     }
@@ -50,7 +50,7 @@ class test_Dot_Singles {
         val result = processor.parse(sentence, Agl.parseOptions { goalRuleName(goal) })
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
-        assertEquals(sentence, result.sppt!!.asString)
+        assertEquals(sentence, result.sppt!!.asSentence)
     }
 
     @Test
@@ -96,7 +96,7 @@ class test_Dot_Singles {
             ID { HTML {
               '<'
               WHITESPACE : ' '
-              §Xml§elementContent§embedded1 { Xml::elementContent {
+              §Xml§elementContent§embedded1 : Xml::elementContent {
                 startTag {
                   '<'
                   §startTag§opt1 { §empty }
@@ -113,7 +113,7 @@ class test_Dot_Singles {
                   §endTag§opt2 { §empty }
                   '>'
                 }
-              } }
+              }
               WHITESPACE : ' '
               '>'
             } }

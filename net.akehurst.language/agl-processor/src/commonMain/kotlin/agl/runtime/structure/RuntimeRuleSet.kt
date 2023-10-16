@@ -26,6 +26,7 @@ import net.akehurst.language.collections.lazyMutableMapNonNull
 
 internal class RuntimeRuleSet(
     val number: Int,
+    val qualifiedName: String,
     val runtimeRules: List<RuntimeRule>,
     val precedenceRules: List<RuntimePreferenceRule>
 ) : RuleSet {
@@ -131,12 +132,16 @@ internal class RuntimeRuleSet(
     private val states_cache = mutableMapOf<String, ParserStateSet>()
     private val skipStateSet = mutableMapOf<RuntimeRule, ParserStateSet>()
 
+    /**
+     * <SKIP-MULTI> = <SKIP-CHOICE>+
+     * <SKIP-CHOICE> = SR-0 | ... | SR-n
+     */
     internal val skipParserStateSet: ParserStateSet? by lazy {
         if (skipRules.isEmpty()) {
             null
         } else {
             val skipChoiceRule = RuntimeRule(this.number, SKIP_CHOICE_RULE_NUMBER, SKIP_CHOICE_RULE_TAG, false).also {
-                val options = skipRules.mapIndexed { index, skpRl ->
+                val options = skipRules.map { skpRl ->
                     RuntimeRuleRhsConcatenation(it, listOf(skpRl))
                 }
                 val rhs = RuntimeRuleRhsChoice(it, RuntimeRuleChoiceKind.LONGEST_PRIORITY, options)
@@ -416,7 +421,7 @@ internal class RuntimeRuleSet(
             }
             RuntimePreferenceRule(clonedCtx, clonedPrecRules)
         }
-        val clone = RuntimeRuleSet(cloneNumber, rules, clonedPrecedenceRules)
+        val clone = RuntimeRuleSet(cloneNumber, qualifiedName, rules, clonedPrecedenceRules)
         return clone
     }
 
@@ -427,7 +432,7 @@ internal class RuntimeRuleSet(
                 "  " + it.asString
             }.joinToString("\n")
         return """
-RuntimeRuleSet {
+RuntimeRuleSet '$qualifiedName' {
 ${rulesStr}
 }
 """.trimIndent()

@@ -25,10 +25,7 @@ import net.akehurst.language.agl.syntaxAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.processor.SemanticAnalysisResult
-import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.processor.*
 
 class AglScopesSemanticAnalyser : SemanticAnalyser<ScopeModelAgl, SentenceContext<String>> {
 
@@ -40,7 +37,12 @@ class AglScopesSemanticAnalyser : SemanticAnalyser<ScopeModelAgl, SentenceContex
         return emptyList()
     }
 
-    override fun analyse(asm: ScopeModelAgl, locationMap: Map<Any, InputLocation>?, context: SentenceContext<String>?, options: Map<String, Any>): SemanticAnalysisResult {
+    override fun analyse(
+        asm: ScopeModelAgl,
+        locationMap: Map<Any, InputLocation>?,
+        context: SentenceContext<String>?,
+        options: SemanticAnalysisOptions<ScopeModelAgl, SentenceContext<String>>
+    ): SemanticAnalysisResult {
         val locMap = locationMap ?: mapOf()
         val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
         if (null != context) {
@@ -60,10 +62,11 @@ class AglScopesSemanticAnalyser : SemanticAnalyser<ScopeModelAgl, SentenceContex
                 scope.identifiables.forEach { identifiable ->
                     val typeScope = context.rootScope.childScopes[identifiable.typeName]
                     when {
-                        null==typeScope -> {
+                        null == typeScope -> {
                             val loc = locMap[AglScopesSyntaxAnalyser.PropertyValue(identifiable, "typeReference")]
                             issues.error(loc, "Type '${identifiable.typeName}' not found in scope")
                         }
+
                         ScopeModelAgl.IDENTIFY_BY_NOTHING == identifiable.propertyName -> Unit
                         else -> {
                             // only check this if the typeName is valid - else it is always invalid

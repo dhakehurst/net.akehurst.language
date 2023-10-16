@@ -76,41 +76,41 @@ grammar Mdl {
         val actual = processor.typeModel
         val expected = grammarTypeModel("test", "Mdl", "File") {
             //file = section+ ;
-            elementType("file", "File") {
+            dataType("file", "File") {
                 propertyListTypeOf("section", "Section", false, 0)
             }
             //section = IDENTIFIER '{' content* '}' ;
-            elementType("section", "Section") {
+            dataType("section", "Section") {
                 propertyPrimitiveType("identifier", "String", false, 0)
                 propertyListTypeOf("content", "Content", false, 1)
             }
             //content = section | parameter ;
-            elementType("content", "Content") {
-                subTypes("Section", "Parameter")
+            dataType("content", "Content") {
+                subtypes("Section", "Parameter")
             }
             //parameter = IDENTIFIER value ;
-            elementType("parameter", "Parameter") {
+            dataType("parameter", "Parameter") {
                 propertyPrimitiveType("identifier", "String", false, 0)
-                propertyElementTypeOf("value", "Value", false, 1)
+                propertyDataTypeOf("value", "Value", false, 1)
             }
             //value = stringList | matrix | identifier | literal ;
-            elementType("value", "Value") {
-                subTypes("StringList", "Matrix", "Identifier", "Literal")
+            dataType("value", "Value") {
+                subtypes("StringList", "Matrix", "Identifier", "Literal")
             }
             //identifier = IDENTIFIER ;
-            elementType("identifier", "Identifier") {
+            dataType("identifier", "Identifier") {
                 propertyPrimitiveType("identifier", "String", false, 0)
             }
             //matrix = '['  [row / ';']*  ']' ; //strictly speaking ',' and ';' are operators in mscript for array concatination!
             //row = [literal / ',']+ | literal+ ;
 
             //stringList = DOUBLE_QUOTE_STRING+ ;
-            elementType("stringList", "StringList") {
-                propertyListType("double_quoted_string", false, 0) { primitiveType("String") }
+            dataType("stringList", "StringList") {
+                propertyListType("double_quoted_string", false, 0) { primitiveRef("String") }
             }
         }
 
-        GrammarTypeModelTest.assertEquals(expected, actual)
+        GrammarTypeModelTest.tmAssertEquals(expected, actual)
     }
 
     @Test
@@ -605,7 +605,7 @@ grammar Mdl {
         assertNotNull(result.sppt)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         //assertEquals(expected.toStringAll, result.sppt!!.toStringAll)
-        assertEquals("section", result.sppt!!.root.name)
+        assertEquals("section", result.sppt!!.treeData.userRoot.rule.tag)
         //TODO
     }
 }

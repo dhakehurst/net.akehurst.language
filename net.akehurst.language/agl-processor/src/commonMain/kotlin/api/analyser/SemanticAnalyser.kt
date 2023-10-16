@@ -19,21 +19,26 @@ package net.akehurst.language.api.analyser
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.processor.SentenceContext
-import kotlin.js.JsExport
 
 /**
  *
  * A Semantic Analyser, language specific functionality
  *
  */
-interface SemanticAnalyser<in AsmType, in ContextType> {
+interface SemanticAnalyser<AsmType : Any, ContextType : Any> {
 
     fun clear()
 
     fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue>
 
-    fun analyse(asm: AsmType, locationMap: Map<Any, InputLocation>? = null, context: ContextType? = null, options: Map<String, Any> = emptyMap()): SemanticAnalysisResult
+    fun analyse(
+        asm: AsmType,
+        locationMap: Map<Any, InputLocation>? = null,
+        context: ContextType? = null,
+        options: SemanticAnalysisOptions<AsmType, ContextType>
+    ): SemanticAnalysisResult
 }
 

@@ -17,33 +17,18 @@
 
 package net.akehurst.language.api.grammarTypeModel
 
-import net.akehurst.language.typemodel.api.PrimitiveType
-import net.akehurst.language.typemodel.api.TypeModel
-import net.akehurst.language.typemodel.api.TypeUsage
+import net.akehurst.language.typemodel.api.TypeInstance
+import net.akehurst.language.typemodel.api.TypeNamespace
 
-interface GrammarTypeModel : TypeModel {
+interface GrammarTypeNamespace : TypeNamespace {
     /**
      * grammarRuleName -> TypeUsage
      */
-    val allRuleNameToType: Map<String, TypeUsage>
+    val allRuleNameToType: Map<String, TypeInstance>
 
-    val allTypesByRuleName: Collection<Pair<String, TypeUsage>>
+    val allTypesByRuleName: Collection<Pair<String, TypeInstance>>
 
-    fun findTypeUsageForRule(ruleName: String): TypeUsage?
+    fun findTypeUsageForRule(ruleName: String): TypeInstance?
 
     //fun asString(): String
-}
-
-val GrammarTypeModel.StringType: PrimitiveType get() = this.findOrCreatePrimitiveTypeNamed("String")
-
-fun GrammarTypeModel.asString(): String {
-    val rules = this.allRuleNameToType.entries.sortedBy { it.key }
-    val ruleToType = rules.joinToString(separator = "\n") { it.key + "->" + it.value.signature(this, 0) }
-    val types = this.allTypesByName.entries.sortedBy { it.key }.joinToString(separator = "\n") { it.value.asString(this) }
-    val s = """typemodel '$namespace.$name' {
-$ruleToType
-
-$types
-}""".trimIndent()
-    return s
 }

@@ -99,7 +99,7 @@ sealed class ChoiceAbstract(
 
 }
 
-class ChoiceLongestDefault(override val alternative: List<RuleItem>) : ChoiceAbstract(alternative), ChoiceEqual {}
+class ChoiceLongestDefault(override val alternative: List<RuleItem>) : ChoiceAbstract(alternative), ChoiceLongest {}
 class ChoicePriorityDefault(override val alternative: List<RuleItem>) : ChoiceAbstract(alternative), ChoicePriority {}
 class ChoiceAmbiguousDefault(override val alternative: List<RuleItem>) : ChoiceAbstract(alternative), ChoiceAmbiguous {}
 
@@ -190,7 +190,7 @@ class TerminalDefault(
 
     override lateinit var grammar: Grammar
 
-    override val name: String = if (isPattern) "\"$value\"" else "'$value'"
+    override val name: String = if (isPattern) "\"$value\"" else "'${value}'"
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
         this._owningRule = rule
@@ -211,14 +211,17 @@ class TerminalDefault(
 }
 
 class NonTerminalDefault(
+    override val targetGrammar: GrammarReference?,
     override val name: String
 ) : TangibleItemAbstract(), NonTerminal {
 
-    override fun referencedRuleOrNull(targetGrammar: Grammar): GrammarRule? = targetGrammar.findNonTerminalRule(this.name)
+    override fun referencedRuleOrNull(targetGrammar: Grammar): GrammarRule? =
+        this.targetGrammar?.resolved?.findAllResolvedGrammarRule(this.name)
+            ?: targetGrammar.findAllResolvedGrammarRule(this.name)
 
     override fun referencedRule(targetGrammar: Grammar): GrammarRule {
         return referencedRuleOrNull(targetGrammar)
-            ?: error("Grammar GrammarRule ($name) not found in grammar (${targetGrammar.name})")
+            ?: error("Grammar Rule ($name) not found in grammar (${targetGrammar.name})")
     }
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {
@@ -247,7 +250,7 @@ class EmbeddedDefault(
     override val name: String get() = this.embeddedGoalName
 
     override fun referencedRule(targetGrammar: Grammar): GrammarRule {
-        return targetGrammar.findNonTerminalRule(this.name) ?: error("Grammar GrammarRule '$name' not found in grammar '${targetGrammar.name}'")
+        return targetGrammar.findAllResolvedGrammarRule(this.name) ?: error("Grammar GrammarRule '$name' not found in grammar '${targetGrammar.name}'")
     }
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {

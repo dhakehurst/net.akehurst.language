@@ -27,7 +27,7 @@ abstract class PrimitiveValueAbstract(
     override val type: TypeDefinition
 ) : AnyValue(type) {
 }
-
+/*
 object NothingValue : PrimitiveValueAbstract(NothingType) {
     override val asValue: Nothing? = null
     override fun toString(): String = "NOTHING"
@@ -75,9 +75,10 @@ class ListSeparatedValue<I, S>(
         else -> this.asValue == other.asValue
     }
 }
+*/
 
 abstract class StructuredValue(
-    override val type: StructuredRuleType
+    override val type: StructuredType
 ) : AnyValue(type) {
 }
 

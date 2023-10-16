@@ -21,7 +21,7 @@ import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 
 interface RuleSet {
     companion object {
-        fun build(init: RuleSetBuilder.() -> Unit): RuleSet = runtimeRuleSet(init)
+        fun build(name: String, init: RuleSetBuilder.() -> Unit): RuleSet = runtimeRuleSet(name, init)
     }
 }
 
@@ -43,6 +43,9 @@ interface Rule {
     val isListSeparated: Boolean
 
     val isOptional: Boolean
+    val isListOptional: Boolean
+
+    val rhsItems: List<List<Rule>>
 }
 
 @DslMarker

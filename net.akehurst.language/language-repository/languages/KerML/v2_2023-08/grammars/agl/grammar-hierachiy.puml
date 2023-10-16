@@ -1,0 +1,97 @@
+@startuml
+!pragma layout smetana
+
+package Root {
+    class Base {
+        Identification
+        QualifiedName
+        FeatureChain
+    }
+    class Annotations {
+        Annotation
+        VisibilityIndicator
+    }
+    class Relationships {
+        Dependency
+        Specialization
+        FeatureTyping
+        Subsetting
+        Redefinition
+        FeatureInverting
+        Subclassification
+        Conjugation
+        Disjoining
+        TypeFeaturing
+    }
+    class Containers {
+        Namespace
+        Package
+    }
+}
+
+package Core {
+    class Types {
+        Type
+        Multiplicity
+    }
+    class Classifiers {
+        Classifier
+    }
+    class Features {
+        Feature
+    }
+    class LiteralExpressions {
+        LiteralBoolean
+        LiteralString
+        LiteralInteger
+        LiteralReal
+        LiteralInfinity
+    }
+    class Expressions {
+        Expression
+    }
+}
+
+package Kernel {
+    class Connectors {
+        Connector
+        BindingConnector
+    }
+    class Behaviors {
+        SimpleBehavior
+        Function
+        Interaction
+        Predicate
+    }
+    class Meta {
+        MetadataFeature
+        PrefixMetadataAnnotation
+        Metaclass
+        PrefixMetadataMember
+        MetadataAccessExpression
+    }
+    class KerML {
+        RootNamespace
+    }
+}
+
+Annotations --|> Base
+LiteralExpressions --|> Base
+Expressions ---|> LiteralExpressions
+Types --|> LiteralExpressions
+Types --|> Annotations
+Classifiers --|> Types
+Relationships --|> Annotations
+Features --|> Types
+Features --|> Expressions
+Connectors --|> Features
+Behaviors --|> Features
+Behaviors --|> Classifiers
+Containers --|> Relationships
+Meta --|> Containers
+Meta --|> Classifiers
+Meta --|> Features
+KerML --|> Meta
+KerML --|> Behaviors
+KerML --|> Connectors
+@enduml

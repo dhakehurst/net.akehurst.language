@@ -26,17 +26,18 @@ import kotlin.test.assertNull
 internal class test_embeddedInnerOptional : test_ScanOnDemandParserAbstract() {
 
     private companion object {
-        // two grammars, B embedded in S
-        // Bs = B+ ;
-        // B = b ;
+        // skip US='_'
+        // optB = B?
+        // B = 'b' ;
         val Inner = runtimeRuleSet {
             literal("US", "_", true)
-            multi("optB", 0, 1, "B")
+            optional("optB", "B")
             concatenation("B") { literal("b") }
         }
 
-        // S = a gB c ;
-        // gB = Inner::B ;
+        // skip DT = '.'
+        // S = a I c ;
+        // I = Inner::B ;
         val S = runtimeRuleSet {
             literal("DT", ".", true)
             concatenation("S") { literal("a"); ref("I"); literal("c"); }
@@ -92,7 +93,7 @@ internal class test_embeddedInnerOptional : test_ScanOnDemandParserAbstract() {
         assertNull(sppt)
         assertEquals(
             listOf(
-                parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'b'", "'c'"))
+                parseError(InputLocation(2, 3, 1, 1), "ab^", setOf("'c'"))
             ), issues.errors
         )
     }
@@ -105,7 +106,7 @@ internal class test_embeddedInnerOptional : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               'a'
-              I { Inner::optB { B{ 'b' } } }
+              I : Inner::optB { B{ 'b' } }
               'c'
             }
         """.trimIndent()
@@ -131,7 +132,7 @@ internal class test_embeddedInnerOptional : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               'a'
-              I { Inner::optB { §empty } }
+              I : Inner::optB { §empty }
               'c'
             }
         """.trimIndent()
@@ -157,10 +158,10 @@ internal class test_embeddedInnerOptional : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               'a'
-              I { Inner::optB {
-               US:'_'
-               B{ 'b' US:'_' }
-              } }
+              I : Inner::optB {
+                    US:'_'
+                    B{ 'b' US:'_' }
+                  }
               'c'
             }
         """.trimIndent()
@@ -186,9 +187,7 @@ internal class test_embeddedInnerOptional : test_ScanOnDemandParserAbstract() {
         val expected = """
             S {
               'a' DT:'.'
-              I { Inner::optB {
-               B{ 'b' }
-              } }
+              I : Inner::optB { B{ 'b' } }
               DT:'.'
               'c'
             }

@@ -23,8 +23,12 @@ import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
  */
 interface Scope<AsmElementIdType> {
 
-    val childScopes:Map<String, ScopeSimple<AsmElementIdType>>
+    val items: Map<String, Map<String, AsmElementIdType>>
 
-    fun isMissing(referableName:String, typeName:String): Boolean
+    val childScopes: Map<String, ScopeSimple<AsmElementIdType>>
+
+    fun isMissing(referableName: String, typeName: String): Boolean
+
+    fun findOrNull(referableName: String, typeName: String): AsmElementIdType?
 
 }

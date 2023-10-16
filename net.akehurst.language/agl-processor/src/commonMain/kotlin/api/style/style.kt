@@ -18,30 +18,36 @@
 package net.akehurst.language.api.style
 
 interface AglStyleModel {
-    val rules:List<AglStyleRule>
+    val rules: List<AglStyleRule>
 }
 
 data class AglStyleRule(
-        val selector:List<String>
+    val selector: List<AglStyleSelector>
 ) {
-    var styles = mutableMapOf<String,AglStyle>()
+    var styles = mutableMapOf<String, AglStyle>()
 
-    fun getStyle(name:String) : AglStyle? {
+    fun getStyle(name: String): AglStyle? {
         return this.styles[name]
     }
 
     fun toCss(): String {
         return """
-            ${this.selector.joinToString(separator = ", ") { it }} {
-                ${this.styles.values.joinToString(separator = "\n"){it.toCss()}}
+            ${this.selector.joinToString(separator = ", ") { it.value }} {
+                ${this.styles.values.joinToString(separator = "\n") { it.toCss() }}
             }
          """.trimIndent()
     }
 }
 
+enum class AglStyleSelectorKind { LITERAL, PATTERN, RULE_NAME, META }
+data class AglStyleSelector(
+    val value: String,
+    val kind: AglStyleSelectorKind
+)
+
 data class AglStyle(
-        val name: String,
-        val value:String
+    val name: String,
+    val value: String
 ) {
     fun toCss() = "$name : $value ;"
 }

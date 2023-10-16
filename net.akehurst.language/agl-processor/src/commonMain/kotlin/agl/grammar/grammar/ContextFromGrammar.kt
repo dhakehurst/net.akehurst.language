@@ -16,12 +16,10 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammar
-import net.akehurst.language.agl.syntaxAnalyser.TypeModelFromGrammarConfiguration
 import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammar.GrammarItem
+import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.processor.SentenceContext
 
 // used by other languages that reference rules  in a grammar
@@ -29,11 +27,8 @@ import net.akehurst.language.api.processor.SentenceContext
 class ContextFromGrammar(
 ) : SentenceContext<String> {
     constructor(grammar: Grammar) : this(listOf(grammar))
-    constructor(grammars: List<Grammar>) : this() { createScopeFrom(grammars) }
-
-    companion object {
-        const val GRAMMAR_RULE_CONTEXT_TYPE_NAME = "GrammarRule"
-        const val GRAMMAR_TERMINAL_CONTEXT_TYPE_NAME = "Terminal"
+    constructor(grammars: List<Grammar>) : this() {
+        createScopeFrom(grammars)
     }
 
     override var rootScope = ScopeSimple<String>(null, "", "")
@@ -46,14 +41,25 @@ class ContextFromGrammar(
         val scope = ScopeSimple<String>(null, "", grammars.last().name)
         grammars.forEach { g ->
             g.allResolvedGrammarRule.forEach {
-                scope.addToScope(it.name, GRAMMAR_RULE_CONTEXT_TYPE_NAME, it.name)
+                val rType = namespace.findTypeUsageForRule("grammarRule") ?: error("Type not found for rule '${it.name}'")
+                scope.addToScope(it.name, rType.type.qualifiedName, it.name)
             }
             g.allResolvedTerminal.forEach {
-                scope.addToScope(it.name, GRAMMAR_TERMINAL_CONTEXT_TYPE_NAME, it.name)
+                val rTypeName = when {
+                    it.isPattern -> "PATTERN" //namespace.findTypeUsageForRule("PATTERN") ?: error("Type not found for rule 'PATTERN'")
+                    else -> "LITERAL" //namespace.findTypeUsageForRule("LITERAL") ?: error("Type not found for rule 'LITERAL'")
+                }
+                scope.addToScope(it.name, rTypeName, it.name)
             }
         }
         this.rootScope = scope
     }
+
+    private val aglGrammarTypeModel = Agl.registry.agl.grammar.processor!!.typeModel
+    private val namespace: GrammarTypeNamespace
+        get() =
+            aglGrammarTypeModel.namespace[Agl.registry.agl.grammar.processor!!.grammar!!.qualifiedName] as GrammarTypeNamespace? ?: error("")
+
 
     override fun hashCode(): Int = rootScope.hashCode()
 
@@ -62,5 +68,6 @@ class ContextFromGrammar(
         this.rootScope != other.rootScope -> false
         else -> true
     }
+
     override fun toString(): String = "ContextFromGrammar"
 }

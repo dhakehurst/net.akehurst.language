@@ -59,16 +59,19 @@ internal class ScanOnDemandParser(
     })
 
     override fun parse(sentence: String, options: ParseOptions): ParseResult {
+        check(sentence.length < Int.MAX_VALUE) { "The parser can only handle a max sentence size < ${Int.MAX_VALUE} characters, requested size was ${sentence.length}" }
         val goalRuleName = options.goalRuleName ?: error("Must define a goal rule in options")
         val automatonKind = options.automatonKind
         val reportErrors = options.reportErrors
+        val reportGrammarAmbiguities = options.reportGrammarAmbiguities
+        val cacheSkip = options.cacheSkip
         _issues.clear()
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, sentence)
-        val rp = createRuntimeParser(goalRuleName, input, automatonKind)
+        val rp = createRuntimeParser(goalRuleName, input, automatonKind, cacheSkip)
         this.runtimeParser = rp
 
         val possibleEndOfText = setOf(LookaheadSet.EOT)
-        val parseArgs = RuntimeParser.Companion.GrowArgs(true, false, false, false, reportErrors)
+        val parseArgs = RuntimeParser.Companion.GrowArgs(true, false, false, false, reportErrors, reportGrammarAmbiguities)
         rp.start(0, possibleEndOfText, parseArgs)
         var seasons = 1
         var maxNumHeads = rp.graph.numberOfHeads
@@ -85,7 +88,7 @@ internal class ScanOnDemandParser(
         val match = rp.graph.treeData.complete as TreeDataComplete<SpptDataNode>
         return if (match.root != null) {
             //val sppt = SharedPackedParseTreeDefault(match, seasons, maxNumHeads)
-            val sppt = SPPTFromTreeData(match, input, seasons, maxNumHeads)
+            val sppt = SPPTFromTreeData(match, input.sentence, seasons, maxNumHeads)
             ParseResultDefault(sppt, this._issues)
         } else {
             //val nextExpected = this.findNextExpectedAfterError2(rp, lastToTryWidth, input, possibleEndOfText) //this possibly modifies rp and hence may change the longestLastGrown
@@ -96,11 +99,11 @@ internal class ScanOnDemandParser(
         }
     }
 
-    private fun createRuntimeParser(goalRuleName: String, input: InputFromString, automatonKind: AutomatonKind): RuntimeParser {
+    private fun createRuntimeParser(goalRuleName: String, input: InputFromString, automatonKind: AutomatonKind, cacheSkip: Boolean): RuntimeParser {
         val goalRule = this.runtimeRuleSet.findRuntimeRule(goalRuleName)
         val s0 = runtimeRuleSet.fetchStateSetFor(goalRuleName, automatonKind).startState
         val skipStateSet = runtimeRuleSet.skipParserStateSet
-        return RuntimeParser(s0.stateSet, skipStateSet, goalRule, input, _issues)
+        return RuntimeParser(s0.stateSet, skipStateSet, cacheSkip, goalRule, input, _issues)
     }
 
     private fun addParseIssue(
@@ -555,10 +558,14 @@ internal class ScanOnDemandParser(
         return result
     }
 */
-    override fun expectedAt(goalRuleName: String, inputText: String, position: Int, automatonKind: AutomatonKind): Set<RuntimeRule> {
-        val usedText = inputText.substring(0, position)
+
+    override fun expectedAt(sentence: String, position: Int, options: ParseOptions): Set<RuntimeRule> {
+        val goalRuleName = options.goalRuleName ?: error("Must define a goal rule in options")
+        val automatonKind = options.automatonKind
+        val cacheSkip = options.cacheSkip
+        val usedText = sentence.substring(0, position)
         val input = InputFromString(this.runtimeRuleSet.terminalRules.size, usedText)
-        val rp = createRuntimeParser(goalRuleName, input, automatonKind)
+        val rp = createRuntimeParser(goalRuleName, input, automatonKind, cacheSkip)
         this.runtimeParser = rp
 
         val possibleEndOfText = setOf(LookaheadSet.EOT)
@@ -591,8 +598,8 @@ internal class ScanOnDemandParser(
         }
     }
 
-    override fun expectedTerminalsAt(goalRuleName: String, inputText: String, position: Int, automatonKind: AutomatonKind): Set<RuntimeRule> {
-        return this.expectedAt(goalRuleName, inputText, position, automatonKind)
+    override fun expectedTerminalsAt(sentence: String, position: Int, options: ParseOptions): Set<RuntimeRule> {
+        return this.expectedAt(sentence, position, options)
             .flatMap {
                 when {
                     it.isTerminal -> listOf(it)

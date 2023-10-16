@@ -56,13 +56,13 @@ class test_AglStyle {
             }
         """.trimIndent()
         )?.asm?.first()!!
-    }
 
-    private fun process(sentence: String) = aglProc.process(
-        sentence,
-        Agl.options {
-            semanticAnalysis { context(ContextFromGrammar(testGrammar)) }
-        })
+        fun process(sentence: String) = aglProc.process(
+            sentence,
+            Agl.options {
+                semanticAnalysis { context(ContextFromGrammar(testGrammar)) }
+            })
+    }
 
 
     @Test
@@ -110,7 +110,7 @@ class test_AglStyle {
         assertEquals(1, result.asm?.rules?.size)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(0, 1, 1, 7), "GrammarRule 'xxx' not found for style rule", null)
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(0, 1, 1, 3), "Grammar Rule 'xxx' not found for style rule", null)
             ), result.issues.all
         )
     }
@@ -143,7 +143,7 @@ class test_AglStyle {
 
         assertNotNull(result.asm)
         assertEquals(1, result.asm?.rules?.size)
-        assertEquals("ID", result.asm!!.rules[0].selector.first())
+        assertEquals("ID", result.asm!!.rules[0].selector.first().value)
         assertEquals(2, result.asm!!.rules[0].styles.size)
         assertEquals(0, result.issues.size, result.issues.joinToString("\n") { "$it" })
     }

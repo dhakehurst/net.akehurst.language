@@ -6,27 +6,30 @@ grammar Query {
     skip leaf MULTI_LINE_COMMENT = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
     skip leaf SINGLE_LINE_COMMENT = "//[^\n\r]*" ;
 
-    query = singleQuery | compositeQuery ;
+    query = singleQuery | compositeQuery | letInQuery;
     singleQuery = timespanDefinition? querySource? returnDefinition? ;
-    compositeQuery = query compositionOperator query ;
-    leaf compositionOperator = 'UNION' | 'JOIN' ;
+    compositeQuery = [ singleQuery / compositionOperator ]2+ ;
+    compositionOperator = 'UNION' | 'JOIN' ;
+    letInQuery = 'LET' [namedQuery / ';']+ 'IN' query ;
+    namedQuery = STORED_QUERY_ID ':=' query ;
 
-    timespanDefinition = 'FOR' timeDef nameDefinition? ;
+    timespanDefinition = 'FOR' timeDef aliasDefinition? ;
 	timeDef =  time | timespan ;
 	time = 'TIME' timePoint ;
-	timePoint = 'start' | 'now' | timestamp ;
+	timePoint = 'first' | 'last' | 'now' | timestamp ;
 	timestamp = SINGLE_QUOTE_STRING ;
 	timespan = 'TIMESPAN' timeRange 'EVERY' PERIOD ;
 	timeRange = 'all' | timePoint 'UNTIL' timePoint ;
 	leaf PERIOD = 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year' ;
 
 
-	querySource = pathQuery | storedQueryReference ;
-	storedQueryReference = 'FROM' STORED_QUERY_ID ;
+	querySource = pathQuery | storedQueryReference | preQuery;
+	storedQueryReference = 'FROM' STORED_QUERY_ID whereClause? ;
+    preQuery = 'FROM' query pathQuery;
     pathQuery = 'MATCH' pathExpression whereClause? ;
     pathExpression =  nodeSelector linkedNodeSelectorPath? ;
 
-	nodeSelector = nodeTypeReferenceExpression nameDefinition? ;
+	nodeSelector = nodeTypeReferenceExpression aliasDefinition? ;
     nodeTypeReferenceExpression
         = nodeTypeReference
         < NONE_NODE_TYPE
@@ -40,7 +43,7 @@ grammar Query {
     linkedNodeSelector = linkSelectorExpression ;
     linkedNodeSelectorNegated = linkSelectorNegated ;
 	linkSelectorExpression = linkSelector | linkSelectorGroupedPath ;
-	linkSelector = 'LINKED' links? multiplicity? via? ('TO'|'FROM'|'WITH') nodeSelector ;
+	linkSelector = 'LINKED' links? multiplicity? via? aliasDefinition? ('TO'|'FROM'|'WITH') nodeSelector ;
 
 	links = 'USING' range 'LINKS' ;
 	multiplicity = range 'TIMES' ;
@@ -63,9 +66,9 @@ grammar Query {
 
 	whereClause = 'WHERE' expression ;
 
-	returnDefinition = returnExpression | returnTable | returnSelect | returnGraph ;
+	returnDefinition = returnValue | returnTable | returnSelect | returnGraph ;
 
-	returnExpression = 'RETURN' aggregateFunctionCallOrExpression ;
+	returnValue = 'RETURN' ' VALUE' aggregateFunctionCallOrExpression ;
 
 	returnTable = 'RETURN' 'TABLE' columnDefinition+ orderBy? ;
 	columnDefinition = 'COLUMN' NAME 'CONTAINING' aggregateFunctionCallOrExpression whereClause? ;
@@ -76,8 +79,10 @@ grammar Query {
     propertyReference = NAME '.' NAME ;
 
 	returnGraph = 'RETURN' 'GRAPH' subgraphConstruction ;
-	subgraphConstruction = nodeConstruction linkedSubGraphConstruction? whereConstructionClause? ;
-	nodeConstruction = nodeTypeConstructionExpression '{' nodeIdentityExpressionConstruction nodePropertyAssignmentExpressionList? '}' nameDefinition? ;
+	subgraphConstruction = nodeSrc linkedSubGraphConstruction? whereConstructionClause?;
+    nodeSrc = nodeConstruction | nodeReference ; 
+    nodeReference = NAME ;
+	nodeConstruction = nodeTypeConstructionExpression '{' nodeIdentityExpressionConstruction nodePropertyAssignmentExpressionList? '}' aliasDefinition?;
 	nodeTypeConstructionExpression = expression < nodeTypeReference ;
     nodeIdentityExpressionConstruction = expression ;
     nodePropertyAssignmentExpressionList = '|' nodePropertyAssignmentExpression+ ;
@@ -91,22 +96,17 @@ grammar Query {
 	linkedNodeConstructionGroupItem = linkedNodeConstructionPath |  linkedNodeConstructionGroupItemOperator ;
 	linkedNodeConstructionGroupItemOperator =  linkedNodeConstructionExpression 'AND' linkedNodeConstructionExpression ;
 
-	whereConstructionClause = 'WHERE' constructionExpression ;
-
-	constructionExpression = andConstructionExpression
-	                       < propertyAssignment
-                           ;
-
+	whereConstructionClause = 'WHERE' constructionExpressionList ;
+	constructionExpressionList = [propertyAssignment / ';']+ ;
 	propertyAssignment = propertyCall ':=' expression ;
-	andConstructionExpression = constructionExpression 'AND' constructionExpression ;
 
 	aggregateFunctionCallOrExpression = aggregateFunctionCall | expression ;
 	aggregateFunctionCall = aggregateFunctionName '(' expression ')' ;
     expression
 		= root
 		| literalValue
-		| propertyCall
-		| methodCall
+		| navigationExpression
+        | indexOperatorCall
 		| infixLogical
 		| infixArithmetic
 		| infixComparison
@@ -116,17 +116,21 @@ grammar Query {
 	preference expression {
 	  conditionalExpression on '?' left
 	  infixLogical on logicalOperator left
+	  aggregateFunctionCallOrExpression 1 on 'ORDER' left
 	  infixComparison on comparisonOperator left
 	  infixArithmetic on arithmeticOperator left
-  	  propertyCall on '.' left
+  	  navigationExpression on '.' left
 	}
 
-    nameDefinition = 'AS' NAME ;
+    aliasDefinition = 'AS' NAME ;
 
     groupExpression = '(' expression ')' ;
 	root = NAME ;
-	propertyCall = expression '.' NAME ;
-	methodCall = expression '.' NAME '(' argList ')';
+	navigationExpression = expression '.' navigationCall ;
+	navigationCall = propertyCall | methodCall ;
+	propertyCall = NAME ;
+	methodCall = NAME '(' argList ')';
+	indexOperatorCall = expression '[' expression ']' ;
 	argList = [expression / ',']* ;
 	infixLogical = [expression / logicalOperator]2+ ;
 	infixArithmetic = [expression / arithmeticOperator]2+ ;

@@ -28,8 +28,8 @@ internal class test_multi01 : test_ScanOnDemandParserAbstract() {
     // S = 'a'?
     private companion object {
         val rrs = runtimeRuleSet {
-            multi("S",0,1,"'a'")
-            literal("'a'","a")
+            optional("S", "'a'")
+            literal("'a'", "a")
         }
         val goal = "S"
     }
@@ -61,11 +61,13 @@ internal class test_multi01 : test_ScanOnDemandParserAbstract() {
     fun aa_fails() {
         val sentence = "aa"
 
-        val (sppt,issues)=super.testFail(rrs, goal, sentence,1)
+        val (sppt, issues) = super.testFail(rrs, goal, sentence, 1)
         assertNull(sppt)
-        assertEquals(listOf(
-            parseError(InputLocation(1,2,1,1),"a^a", setOf("<EOT>"))
-        ),issues.errors)
+        assertEquals(
+            listOf(
+                parseError(InputLocation(1, 2, 1, 1), "a^a", setOf("<EOT>"))
+            ), issues.errors
+        )
     }
 
 }

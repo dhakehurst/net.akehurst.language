@@ -73,6 +73,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
     private val stack = MutableStack<StackData>()
 
     fun traverse(callback: SpptWalker, skipDataAsTree: Boolean) {
+        callback.beginTree()
         // handle <GOAL>
         val goal = treeData.root!!
         val userRoot = treeData.childrenFor(goal)[0].second[0]
@@ -108,7 +109,7 @@ internal class TreeDataWalkerDepthFirst<CN : SpptDataNode>(
             val info = stack.pop()
             traverseStackData(callback, skipDataAsTree, info)
         }
-
+        callback.endTree()
     }
 
     /**

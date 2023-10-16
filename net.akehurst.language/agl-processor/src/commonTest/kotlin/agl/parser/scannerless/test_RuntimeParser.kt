@@ -17,6 +17,7 @@
 package net.akehurst.language.parser.scanondemand
 
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
@@ -27,7 +28,7 @@ internal class test_RuntimeParser {
 
     @Test
     fun construct() {
-        val rrs = runtimeRuleSet {  }
+        val rrs = runtimeRuleSet { }
         val sp = ScanOnDemandParser(rrs)
 
         assertNotNull(sp)
@@ -51,10 +52,13 @@ internal class test_RuntimeParser {
         }
 
         val sp = ScanOnDemandParser(rrs)
+        val sentence = ""
+        val goal = "S"
+        val position = 0
 
-        val actual = sp.expectedAt("S", "", 0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
+        val actual = sp.expectedAt(sentence, position, Agl.parseOptions { goalRuleName(goal) })
 
-        val expected = listOf(rrs.findTerminalRule("'a'"))
+        val expected = setOf(rrs.findTerminalRule("'a'"))
 
         assertEquals(expected, actual)
     }
@@ -66,10 +70,13 @@ internal class test_RuntimeParser {
         }
 
         val sp = ScanOnDemandParser(rrs)
+        val sentence = ""
+        val goal = "S"
+        val position = 0
 
-        val actual = sp.expectedTerminalsAt("S", "", 0, AutomatonKind.LOOKAHEAD_1).toList() //to list to make assertions easier
+        val actual = sp.expectedTerminalsAt(sentence, position, Agl.parseOptions { goalRuleName(goal) })
 
-        val expected = listOf(rrs.findTerminalRule("'a'"))
+        val expected = setOf(rrs.findTerminalRule("'a'"))
 
         assertEquals(expected, actual)
     }
