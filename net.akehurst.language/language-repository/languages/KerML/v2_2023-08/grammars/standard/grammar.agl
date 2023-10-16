@@ -1,3 +1,24 @@
+/**
+ * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
+ * This grammar does not work too well with AGL as it is written for a top-down LL parser (which AGL is not).
+ * There is another grammar written specifically for AGL and modularised which is better in many ways.
+ */
+
 namespace com.itemis.sysml.kerml.cst
 
 grammar KerML {
@@ -74,7 +95,7 @@ grammar KerML {
     NonFeatureMember = MemberPrefix MemberElement ;
     NamespaceFeatureMember = MemberPrefix FeatureElement ;
     AliasMember = MemberPrefix 'alias' ( '<' NAME '>' )? NAME? 'for' QualifiedName RelationshipBody ;
-    QualifiedName = (NAME '::')* NAME ;
+    QualifiedName = NAME ('::' NAME)* ; // QualifiedName = (NAME '::')* NAME ;
 
     // 8.2.3.4.2 Imports
     Import = VisibilityIndicator? 'import' 'all'? ImportDeclaration RelationshipBody ;
@@ -353,7 +374,7 @@ ConnectorEnd = (NAME REFERENCES )? OwnedReferenceSubsetting OwnedMultiplicity? ;
     Expression = FeaturePrefix 'expr' FeatureDeclaration ValuePart? FunctionBody ;
 
     //8.2.5.7.3 Predicates
-    Predicate = TypePrefix 'predicate' ClassifierDeclaration Function ;
+    Predicate = TypePrefix 'predicate' ClassifierDeclaration FunctionBody ;
 
     // 8.2.5.7.4 Boolean Expressions and Invariants
     BooleanExpression = FeaturePrefix 'bool' FeatureDeclaration ValuePart? FunctionBody ;
@@ -380,7 +401,7 @@ ConnectorEnd = (NAME REFERENCES )? OwnedReferenceSubsetting OwnedMultiplicity? ;
     BinaryOperatorExpression = ArgumentMember BinaryOperator ArgumentMember ;
     BinaryOperator =
         '|' | '&' | 'xor' | '..'
-        | '==' | '!=' | '===' | '!=='
+        | '===' | '!==' | '==' | '!='
         | '<' | '>' | '<=' | '>='
         | '+' | '-' | '*' | '/'
         | '%' | '^' | '**'

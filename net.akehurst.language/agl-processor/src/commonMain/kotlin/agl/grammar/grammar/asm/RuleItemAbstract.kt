@@ -216,8 +216,8 @@ class NonTerminalDefault(
 ) : TangibleItemAbstract(), NonTerminal {
 
     override fun referencedRuleOrNull(targetGrammar: Grammar): GrammarRule? =
-        this.targetGrammar?.resolved?.findAllResolvedNonTerminalRule(this.name)
-            ?: targetGrammar.findAllResolvedNonTerminalRule(this.name)
+        this.targetGrammar?.resolved?.findAllResolvedGrammarRule(this.name)
+            ?: targetGrammar.findAllResolvedGrammarRule(this.name)
 
     override fun referencedRule(targetGrammar: Grammar): GrammarRule {
         return referencedRuleOrNull(targetGrammar)
@@ -250,7 +250,7 @@ class EmbeddedDefault(
     override val name: String get() = this.embeddedGoalName
 
     override fun referencedRule(targetGrammar: Grammar): GrammarRule {
-        return targetGrammar.findAllResolvedNonTerminalRule(this.name) ?: error("Grammar GrammarRule '$name' not found in grammar '${targetGrammar.name}'")
+        return targetGrammar.findAllResolvedGrammarRule(this.name) ?: error("Grammar GrammarRule '$name' not found in grammar '${targetGrammar.name}'")
     }
 
     override fun setOwningRule(rule: GrammarRule, indices: List<Int>) {

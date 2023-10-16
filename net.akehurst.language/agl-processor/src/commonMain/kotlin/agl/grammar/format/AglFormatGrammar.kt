@@ -74,6 +74,7 @@ internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
     //}
 
     override val options = listOf(GrammarOptionDefault("defaultGoal", "unit"))
+    override val defaultRule: GrammarRule get() = this.findAllResolvedGrammarRule("unit")!!
 
     const val grammarStr = """
         namespace net.akehurst.language.agl

@@ -48,7 +48,7 @@ data class OverrideRuleDefault(
                         when {
                             tg == null -> error("Override rule using substitution must contain a \"qualified\" non-terminal, there is no reference to an extended grammar.")
                             this.grammar.allExtendsResolved.any { eg -> tg == eg } -> {
-                                val or = tg.findAllResolvedNonTerminalRule(this.name)
+                                val or = tg.findAllResolvedGrammarRule(this.name)
                                 when {
                                     null == or -> error("Cannot find rule '${(overridenRhs as NonTerminal).name}' in grammar '${tg.name}' for override substitution.")
                                     else -> {
@@ -68,7 +68,7 @@ data class OverrideRuleDefault(
             }
 
             OverrideKind.APPEND_ALTERNATIVE -> {
-                val or = this.grammar.findAllSuperNonTerminalRule(this.name).firstOrNull()
+                val or = this.grammar.findAllSuperGrammarRule(this.name).firstOrNull()
                 when {
                     null == or -> {
                         error("Rule ${this.name} is marked as override, but there is no super rule with that name to override.")

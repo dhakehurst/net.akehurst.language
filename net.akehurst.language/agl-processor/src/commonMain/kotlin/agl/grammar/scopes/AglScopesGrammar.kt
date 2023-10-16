@@ -60,6 +60,7 @@ internal object AglScopesGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
     }
 
     override val options = listOf(GrammarOptionDefault("defaultGoal", "declarations"))
+    override val defaultRule: GrammarRule get() = this.findAllResolvedGrammarRule("declarations")!!
 
     const val grammarStr = """
 namespace net.akehurst.language.agl

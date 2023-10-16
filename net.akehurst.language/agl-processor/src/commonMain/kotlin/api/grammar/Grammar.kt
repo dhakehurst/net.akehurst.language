@@ -67,6 +67,8 @@ interface Grammar {
 
     val options: List<GrammarOption>
 
+    val defaultRule: GrammarRule
+
     val grammarRule: List<GrammarRule>
     val preferenceRule: List<PreferenceRule>
 
@@ -140,14 +142,14 @@ interface Grammar {
     /**
      * find rule with given name in all rules that this grammar extends - but not in this grammar
      */
-    fun findAllSuperNonTerminalRule(ruleName: String): List<GrammarRule>
+    fun findAllSuperGrammarRule(ruleName: String): List<GrammarRule>
 
     /**
      * find rule with given name in all rules from this grammar and ones that this grammar extends
      */
-    fun findAllNonTerminalRuleList(ruleName: String): List<GrammarRule>
+    fun findAllGrammarRuleList(ruleName: String): List<GrammarRule>
 
-    fun findAllResolvedNonTerminalRule(ruleName: String): GrammarRule?
+    fun findAllResolvedGrammarRule(ruleName: String): GrammarRule?
 
     fun findAllResolvedTerminalRule(terminalPattern: String): Terminal
 

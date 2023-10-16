@@ -52,6 +52,7 @@ internal object AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst
     }
 
     override val options = listOf(GrammarOptionDefault("defaultGoal", "rules"))
+    override val defaultRule: GrammarRule get() = this.findAllResolvedGrammarRule("rules")!!
 
     const val styleStr = """META_IDENTIFIER {
   foreground: orange;

@@ -37,7 +37,7 @@ object TypeModelFromGrammar {
         val grmrTypeModel = TypeModelSimple(grammar.name)
         grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
         val goalRuleName = defaultGoalRuleName ?: grammar.grammarRule.first { it.isSkip.not() }.name
-        val goalRule = grammar.findAllResolvedNonTerminalRule(goalRuleName) ?: error("Cannot find grammar rule '$goalRuleName'")
+        val goalRule = grammar.findAllResolvedGrammarRule(goalRuleName) ?: error("Cannot find grammar rule '$goalRuleName'")
         val ns = GrammarTypeNamespaceFromGrammar(grmrTypeModel, grammar, grammar)
         grmrTypeModel.addNamespace(ns)
         grmrTypeModel.resolveImports()

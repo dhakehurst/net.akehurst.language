@@ -31,35 +31,11 @@ typealias BranchHandler<T> = KFunction3<SpptDataNodeInfo, List<Any?>, Sentence, 
 
 abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : SyntaxAnalyserFromTreeDataAbstract<AsmType>() {
 
-    private val branchHandlers: MutableMap<String, BranchHandler<*>> = mutableMapOf()
-    private val branchHandlers_begin: MutableMap<String, BranchHandler<*>> = mutableMapOf()
+    abstract fun registerHandlers()
 
-    protected fun <T : Any?> register(handler: BranchHandler<T>) {
-        this.branchHandlers[handler.name] = handler as BranchHandler<T>
-    }
-
-    protected fun <T : Any?> registerFor(branchName: String, handler: BranchHandler<T>) {
-        this.branchHandlers[branchName] = handler
-    }
-
-    protected fun <T : Any?> registerForBeginHandler(branchName: String, handler: BranchHandler<T>) {
-        this.branchHandlers_begin[branchName] = handler as BranchHandler<T>
-    }
-
-    private fun <T : Any?> findBranchHandler(branchName: String, begin: Boolean): BranchHandler<T>? {
-        return when {
-            begin -> this.branchHandlers_begin[branchName] as BranchHandler<T>?
-            else -> this.branchHandlers[branchName] as BranchHandler<T>?
-        }
-    }
-
-    private var _root: AsmType? = null
     override val asm: AsmType get() = _root ?: error("Root of asm not set, walk must have failed")
 
     override fun walkTree(sentence: Sentence, treeData: TreeDataComplete<out SpptDataNode>, skipDataAsTree: Boolean) {
-        if (branchHandlers.isEmpty()) {
-            registerHandlers()
-        }
         val syntaxAnalyserStack = mutableStackOf(this)
         val stack = mutableStackOf<Any?>()
         val walker = object : SpptWalker {
@@ -179,6 +155,36 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
         this._root = root as AsmType
     }
 
-    abstract fun registerHandlers()
+    // --- ---
+
+    protected fun <T : Any?> register(handler: BranchHandler<T>) {
+        this.branchHandlers[handler.name] = handler as BranchHandler<T>
+    }
+
+    protected fun <T : Any?> registerFor(branchName: String, handler: BranchHandler<T>) {
+        this.branchHandlers[branchName] = handler
+    }
+
+    protected fun <T : Any?> registerForBeginHandler(branchName: String, handler: BranchHandler<T>) {
+        this.branchHandlers_begin[branchName] = handler as BranchHandler<T>
+    }
+
+    // --- implementation ---
+
+    private val branchHandlers: MutableMap<String, BranchHandler<*>> = mutableMapOf()
+    private val branchHandlers_begin: MutableMap<String, BranchHandler<*>> = mutableMapOf()
+
+    private fun <T : Any?> findBranchHandler(branchName: String, begin: Boolean): BranchHandler<T>? {
+        if (branchHandlers.isEmpty()) {
+            registerHandlers()
+        }
+        return when {
+            begin -> this.branchHandlers_begin[branchName] as BranchHandler<T>?
+            else -> this.branchHandlers[branchName] as BranchHandler<T>?
+        }
+    }
+
+    private var _root: AsmType? = null
+
 
 }

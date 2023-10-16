@@ -61,7 +61,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
     }
 
     @Test
@@ -170,7 +170,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
     }
 
     @Test
@@ -187,8 +187,8 @@ class test_AglGrammarSyntaxAnalyser {
         val sut = AglGrammarSyntaxAnalyser()
         val res = sut.transform(sppt) { _, _ -> TODO() }
 
-        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("S") != null)
-        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("A") != null)
+        assertTrue(res.asm!![0].findAllResolvedGrammarRule("S") != null)
+        assertTrue(res.asm!![0].findAllResolvedGrammarRule("A") != null)
     }
 
     @Test
@@ -209,8 +209,8 @@ class test_AglGrammarSyntaxAnalyser {
         println(res.asm!![0].toString())
         val gBase = res.asm!![0]
         val gTest = res.asm!![1]
-        assertTrue(gTest.findAllResolvedNonTerminalRule("S") != null)
-        val rS = gTest.findAllResolvedNonTerminalRule("S") as NormalRule
+        assertTrue(gTest.findAllResolvedGrammarRule("S") != null)
+        val rS = gTest.findAllResolvedGrammarRule("S") as NormalRule
         assertTrue(rS.rhs is NonTerminal)
         //("Base", (rS.rhs as NonTerminal).referencedRuleOrNull(gTest)?.grammar?.name)
         assertEquals(null, (rS.rhs as NonTerminal).referencedRuleOrNull(gTest)?.grammar?.name) //is null because GrammarReferences are not resolved until semantic analysis
@@ -231,7 +231,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
     }
 
 
@@ -249,7 +249,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
     }
 
     @Test
@@ -266,7 +266,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
     }
 
     @Test
@@ -283,7 +283,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
     }
 
     @Test
@@ -300,7 +300,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
     }
 
     @Test
@@ -317,7 +317,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
     }
 
     @Test
@@ -334,7 +334,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
     }
 
     @Test
@@ -351,7 +351,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
     }
 
     @Test
@@ -368,7 +368,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
     }
 
     @Test
@@ -421,7 +421,7 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
     }
 
     @Test
@@ -440,6 +440,6 @@ class test_AglGrammarSyntaxAnalyser {
         val res = sut.transform(sppt) { _, _ -> TODO() }
         println(res.asm!![0].toString())
 
-        assertTrue(res.asm!![0].findAllResolvedNonTerminalRule("a") != null)
+        assertTrue(res.asm!![0].findAllResolvedGrammarRule("a") != null)
     }
 }

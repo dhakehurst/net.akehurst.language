@@ -141,7 +141,7 @@ class AglGrammarSemanticAnalyser(
                 is NormalRule -> this.analyseRuleItem(grammar, it.rhs)
                 is OverrideRule -> {
                     //need to check what is overridden exists, before analysing the rule
-                    val overridden = grammar.findAllSuperNonTerminalRule(it.name)
+                    val overridden = grammar.findAllSuperGrammarRule(it.name)
                     when {
                         overridden.isEmpty() -> issueError(
                             it,
@@ -232,7 +232,7 @@ class AglGrammarSemanticAnalyser(
 
             is NonTerminal -> {
                 rhs.targetGrammar?.let { checkGrammarExistsAndResolve(it) }
-                val rule = grammar.findAllResolvedNonTerminalRule(rhs.name)
+                val rule = grammar.findAllResolvedGrammarRule(rhs.name)
                 //    .toSet() //convert result to set so that same rule from same grammar is not repeated
                 when {
                     null == rule -> {
@@ -253,7 +253,7 @@ class AglGrammarSemanticAnalyser(
         val conv = ConverterToRuntimeRules(grammar)
         val rrs = conv.runtimeRuleSet
         //TODO: pass in goalRuleName
-        val goalRuleName = grammar.grammarRule.first { it.isSkip.not() }.name
+        val goalRuleName = grammar.defaultRule.name
         //TODO: optionally do this...as it builds the automaton..we don't always want to build it!
         // and if built want to  reuse the build
         val automaton = rrs.automatonFor(goalRuleName, automatonKind)
@@ -282,12 +282,14 @@ class AglGrammarSemanticAnalyser(
                                     val lhg2 = tr2.lookahead.map { it.guard.part }.reduce { acc, it -> acc.intersect(it) }
                                     val lhi = lhg1.intersect(lhg2)
                                     if (lhi.isNotEmpty) {
+                                        val frOr = conv.originalRuleItemFor(tr1.from.runtimeRules.first().runtimeRuleSetNumber, tr1.from.runtimeRules.first().ruleNumber)
                                         val ori1 = conv.originalRuleItemFor(tr1.to.runtimeRules.first().runtimeRuleSetNumber, tr1.to.runtimeRules.first().ruleNumber) //FIXME
                                         val ori2 = conv.originalRuleItemFor(tr2.to.runtimeRules.first().runtimeRuleSetNumber, tr2.to.runtimeRules.first().ruleNumber) //FIXME
-                                        //val or1 = ori1.owningRule
+                                        val orF = frOr?.owningRule
+                                        val or1 = ori1?.owningRule
                                         val or2 = ori2?.owningRule
                                         val lhStr = lhi.fullContent.map { it.tag }
-                                        val msg = "Ambiguity on $lhStr with ${or2?.name}"
+                                        val msg = "Ambiguity: [${tr1.action}/${tr2.action}] conflict from '${orF?.name}' into '${or1?.name}/${or2?.name}' on $lhStr"
                                         issueWarn(ori1, msg, null)
                                         //issueWarn(ori2, msg, null)
                                     }

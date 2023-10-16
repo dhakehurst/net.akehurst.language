@@ -66,8 +66,8 @@ class test_AglGrammarSemanticAnalyser {
         val res = aglProc.process(grammarStr)
         val gBase = res.asm!![0]
         val gTest = res.asm!![1]
-        assertTrue(gTest.findAllResolvedNonTerminalRule("S") != null)
-        val rS = gTest.findAllResolvedNonTerminalRule("S") as NormalRule
+        assertTrue(gTest.findAllResolvedGrammarRule("S") != null)
+        val rS = gTest.findAllResolvedGrammarRule("S") as NormalRule
         assertTrue(rS.rhs is NonTerminal)
         assertEquals("Base", (rS.rhs as NonTerminal).referencedRuleOrNull(gTest)?.grammar?.name)
     }
@@ -162,8 +162,8 @@ class test_AglGrammarSemanticAnalyser {
         val baseG = asm[0]
         val testG = asm[1]
 
-        assertTrue(baseG.findAllResolvedNonTerminalRule("A") != null)
-        assertTrue(testG.findAllResolvedNonTerminalRule("A") != null)
+        assertTrue(baseG.findAllResolvedGrammarRule("A") != null)
+        assertTrue(testG.findAllResolvedGrammarRule("A") != null)
         assertEquals(1, testG.grammarRule.size)
         assertEquals(2, testG.allResolvedGrammarRule.size)
 
@@ -193,10 +193,10 @@ class test_AglGrammarSemanticAnalyser {
         val base2G = asm[1]
         val testG = asm[2]
 
-        assertTrue(base1G.findAllResolvedNonTerminalRule("A") != null)
-        assertTrue(base2G.findAllResolvedNonTerminalRule("B") != null)
-        assertTrue(testG.findAllResolvedNonTerminalRule("A") != null)
-        assertTrue(testG.findAllResolvedNonTerminalRule("B") != null)
+        assertTrue(base1G.findAllResolvedGrammarRule("A") != null)
+        assertTrue(base2G.findAllResolvedGrammarRule("B") != null)
+        assertTrue(testG.findAllResolvedGrammarRule("A") != null)
+        assertTrue(testG.findAllResolvedGrammarRule("B") != null)
         assertEquals(1, testG.grammarRule.size)
         assertEquals(3, testG.allResolvedGrammarRule.size)
 
@@ -255,8 +255,8 @@ class test_AglGrammarSemanticAnalyser {
         val baseG = asm[0]
         val testG = asm[1]
 
-        assertTrue(baseG.findAllResolvedNonTerminalRule("A") != null)
-        assertTrue(testG.findAllResolvedNonTerminalRule("A") != null)
+        assertTrue(baseG.findAllResolvedGrammarRule("A") != null)
+        assertTrue(testG.findAllResolvedGrammarRule("A") != null)
         assertEquals(2, testG.grammarRule.size)
         assertEquals(2, testG.allResolvedGrammarRule.size)
 
@@ -288,10 +288,10 @@ class test_AglGrammarSemanticAnalyser {
         val base2G = asm[1]
         val testG = asm[2]
 
-        assertTrue(base1G.findAllResolvedNonTerminalRule("A") != null)
-        assertTrue(base2G.findAllResolvedNonTerminalRule("B") != null)
-        assertTrue(testG.findAllResolvedNonTerminalRule("A") != null)
-        assertTrue(testG.findAllResolvedNonTerminalRule("B") != null)
+        assertTrue(base1G.findAllResolvedGrammarRule("A") != null)
+        assertTrue(base2G.findAllResolvedGrammarRule("B") != null)
+        assertTrue(testG.findAllResolvedGrammarRule("A") != null)
+        assertTrue(testG.findAllResolvedGrammarRule("B") != null)
         assertEquals(3, testG.grammarRule.size)
         assertEquals(3, testG.allResolvedGrammarRule.size)
 
@@ -357,14 +357,14 @@ class test_AglGrammarSemanticAnalyser {
         val mid2G = asm[2]
         val testG = asm[3]
 
-        assertTrue(baseG.findAllResolvedNonTerminalRule("A") != null)
-        assertTrue(mid1G.findAllResolvedNonTerminalRule("B") != null)
-        assertTrue(mid1G.findAllResolvedNonTerminalRule("A") != null)
-        assertTrue(mid2G.findAllResolvedNonTerminalRule("C") != null)
-        assertTrue(mid1G.findAllResolvedNonTerminalRule("A") != null)
-        assertTrue(testG.findAllResolvedNonTerminalRule("A") != null)
-        assertTrue(testG.findAllResolvedNonTerminalRule("B") != null)
-        assertTrue(testG.findAllResolvedNonTerminalRule("C") != null)
+        assertTrue(baseG.findAllResolvedGrammarRule("A") != null)
+        assertTrue(mid1G.findAllResolvedGrammarRule("B") != null)
+        assertTrue(mid1G.findAllResolvedGrammarRule("A") != null)
+        assertTrue(mid2G.findAllResolvedGrammarRule("C") != null)
+        assertTrue(mid1G.findAllResolvedGrammarRule("A") != null)
+        assertTrue(testG.findAllResolvedGrammarRule("A") != null)
+        assertTrue(testG.findAllResolvedGrammarRule("B") != null)
+        assertTrue(testG.findAllResolvedGrammarRule("C") != null)
         assertEquals(1, baseG.allResolvedGrammarRule.size)
         assertEquals(2, mid1G.allResolvedGrammarRule.size)
         assertEquals(2, mid2G.allResolvedGrammarRule.size)
@@ -394,14 +394,14 @@ class test_AglGrammarSemanticAnalyser {
         val baseG = asm[0]
         val testG = asm[1]
 
-        assertNotNull(baseG.findAllResolvedNonTerminalRule("C"))
-        assertNotNull(testG.findAllResolvedNonTerminalRule("C"))
+        assertNotNull(baseG.findAllResolvedGrammarRule("C"))
+        assertNotNull(testG.findAllResolvedGrammarRule("C"))
         assertEquals(2, testG.grammarRule.size)
         assertEquals(2, testG.allResolvedGrammarRule.size)
-        assertTrue(baseG.findAllNonTerminalRuleList("C")[0].rhs is Choice)
-        assertEquals(2, (baseG.findAllNonTerminalRuleList("C")[0].rhs as Choice).alternative.size)
-        assertTrue(testG.findAllNonTerminalRuleList("C")[0].rhs is ChoiceLongest)
-        assertEquals(3, (testG.findAllResolvedNonTerminalRule("C")!!.rhs as ChoiceLongest).alternative.size)
+        assertTrue(baseG.findAllGrammarRuleList("C")[0].rhs is Choice)
+        assertEquals(2, (baseG.findAllGrammarRuleList("C")[0].rhs as Choice).alternative.size)
+        assertTrue(testG.findAllGrammarRuleList("C")[0].rhs is ChoiceLongest)
+        assertEquals(3, (testG.findAllResolvedGrammarRule("C")!!.rhs as ChoiceLongest).alternative.size)
 
         val proc = Agl.processorFromStringDefault(sentence).processor!!
         assertTrue(proc.parse("a").issues.errors.isEmpty())

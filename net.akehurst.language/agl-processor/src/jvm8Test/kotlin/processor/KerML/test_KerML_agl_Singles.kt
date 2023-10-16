@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.agl.processor.dot
 
+import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
@@ -46,6 +47,20 @@ class test_KerML_agl_Singles {
         val grammarStr = this::class.java.getResource(grammarPathStr).readText()
         val res = Agl.registry.agl.grammar.processor!!.process(grammarStr)
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
+    }
+
+    @Test
+    fun check_grammar() {
+        val grammarStr = this::class.java.getResource(grammarPathStr).readText()
+        val res = Agl.registry.agl.grammar.processor!!.process(
+            grammarStr,
+            Agl.options {
+                semanticAnalysis {
+                    option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                }
+            }
+        )
+        assertTrue(res.issues.isEmpty(), res.issues.toString())
     }
 
     @Test

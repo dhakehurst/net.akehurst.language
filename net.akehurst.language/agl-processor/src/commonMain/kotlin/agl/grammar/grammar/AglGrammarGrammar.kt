@@ -123,6 +123,7 @@ internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehur
     //}
 
     override val options = listOf(GrammarOptionDefault("defaultGoal", "grammarDefinition"))
+    override val defaultRule: GrammarRule get() = this.findAllResolvedGrammarRule("grammarDefinition")!!
 
     const val styleStr: String = """'namespace' {
   foreground: darkgreen;

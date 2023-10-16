@@ -34,8 +34,9 @@ class GrammarDefault(
         }
     }
 
-    // override this so that property is correctly exported/defined in JS and available for serialisation
-    //override val rule: MutableList<GrammarRule> get() = super.rule
+    override val defaultRule: GrammarRule
+        get() = options.firstOrNull { it.name == "defaultGoal" }?.let { findAllResolvedGrammarRule(it.value) }
+            ?: this.allResolvedGrammarRule.first { it.isSkip.not() }
 }
 
 data class GrammarOptionDefault(
@@ -115,7 +116,6 @@ abstract class GrammarAbstract(
 
         this.extends + refs
     }
-
 
     override val extendsResolved: List<Grammar> get() = extends.mapNotNull { it.resolved }
 
@@ -221,15 +221,15 @@ abstract class GrammarAbstract(
         egs + egs.flatMap { it.allResolvedEmbeddedGrammars }.toSet()//FIXME: recursion
     }
 
-    override fun findAllSuperNonTerminalRule(ruleName: String): List<GrammarRule> {
+    override fun findAllSuperGrammarRule(ruleName: String): List<GrammarRule> {
         val rules = this.extends.flatMap { it.resolved?.allGrammarRule ?: emptyList() }.toMutableOrderedSet()
         return rules.filter { it.grammar != this && it.name == ruleName }
     }
 
-    override fun findAllNonTerminalRuleList(ruleName: String): List<GrammarRule> =
+    override fun findAllGrammarRuleList(ruleName: String): List<GrammarRule> =
         this.allGrammarRule.filter { it.name == ruleName }
 
-    override fun findAllResolvedNonTerminalRule(ruleName: String): GrammarRule? {
+    override fun findAllResolvedGrammarRule(ruleName: String): GrammarRule? {
         val all = this.allResolvedGrammarRule.filter { it.name == ruleName }
         return when {
             all.isEmpty() -> null
