@@ -263,6 +263,10 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
             dataType("S", "S") {
                 subtypes("A", "B", "C")
             }
@@ -333,6 +337,11 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             stringTypeFor("S")
             stringTypeFor("L")
             stringTypeFor("M")
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("x")
+            stringTypeFor("y")
         }
 
         GrammarTypeModelTest.tmAssertEquals(expected, actual)

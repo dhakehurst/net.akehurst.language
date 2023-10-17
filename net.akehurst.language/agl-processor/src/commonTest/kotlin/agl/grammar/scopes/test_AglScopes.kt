@@ -49,7 +49,7 @@ class test_AglScopes {
                 propertyListTypeOf("identifiables", "Identifiable", false, 0)
             }
             // scopes = scope*
-            dataType("scopes", "Scope") {
+            dataType("scopes", "Scopes") {
                 propertyListTypeOf("scope", "Scope", false, 0)
             }
             // scope = 'scope' typeReference '{' identifiables '}
@@ -58,7 +58,7 @@ class test_AglScopes {
                 propertyListTypeOf("identifiables", "Identifiable", false, 1)
             }
             // identifiables = identifiable*
-            dataType("identifiables", "Identifiable") {
+            dataType("identifiables", "Identifiables") {
                 propertyListTypeOf("identifiable", "Identifiable", false, 0)
             }
             // identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
@@ -71,7 +71,7 @@ class test_AglScopes {
                 propertyListTypeOf("referenceDefinitions", "ReferenceDefinition", false, 1)
             }
             // referenceDefinitions = referenceDefinition*
-            dataType("referenceDefinitions", "ReferenceDefinition") {
+            dataType("referenceDefinitions", "ReferenceDefinitions") {
                 propertyListTypeOf("referenceDefinition", "ReferenceDefinition", false, 0)
             }
             // referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
@@ -81,7 +81,7 @@ class test_AglScopes {
                 propertyListTypeOf("typeReferences", "TypeReference", false, 2)
             }
             // typeReferences = [typeReferences / '|']+
-            dataType("typeReferences", "TypeReference") {
+            dataType("typeReferences", "TypeReferences") {
                 propertyListSeparatedTypeOf("typeReference", "TypeReference", "String", false, 0)
             }
             // propertyReferenceOrNothing = '§nothing' | propertyReference
@@ -236,7 +236,7 @@ class test_AglScopes {
 
         val expected = ScopeModelAgl().apply {
             scopes["Rule1"] = (ScopeDefinition("Rule1").apply {
-                identifiables.add(Identifiable("Rule2", "rule3"))
+                identifiables.add(Identifiable("Rule2", Navigation("rule3")))
             })
         }
 
@@ -274,7 +274,7 @@ class test_AglScopes {
 
         val expected = ScopeModelAgl().apply {
             scopes["Rule1"] = (ScopeDefinition("Rule1").apply {
-                identifiables.add(Identifiable("RuleX", "rule3"))
+                identifiables.add(Identifiable("RuleX", Navigation("rule3")))
             })
         }
 
@@ -322,7 +322,7 @@ class test_AglScopes {
 
         val expected = ScopeModelAgl().apply {
             scopes["Rule1"] = (ScopeDefinition("Rule1").apply {
-                identifiables.add(Identifiable("Rule2", "ruleX"))
+                identifiables.add(Identifiable("Rule2", Navigation("ruleX")))
             })
         }
 
@@ -356,7 +356,9 @@ class test_AglScopes {
 
         val text = """
             references {
-                in Rule2 property rule3 refers-to Rule1
+                in Rule2 {
+                    property rule3 refers-to Rule1
+                }
             }
         """.trimIndent()
 
@@ -368,13 +370,20 @@ class test_AglScopes {
         )
 
         val expected = ScopeModelAgl().apply {
-            references.add(ReferenceDefinition("Rule2", "rule3", listOf("Rule1")))
+            references.add(
+                ReferenceDefinition(
+                    "Rule2", listOf(
+                        PropertyReferenceExpression("rule3", listOf("Rule1"), null)
+                    )
+                )
+            )
         }
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, result.asm?.references)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+
     }
 
     @Test
@@ -392,7 +401,9 @@ class test_AglScopes {
 
         val text = """
             references {
-                in RuleX property ruleY refers-to RuleZ|RuleW
+                in RuleX {
+                    property ruleY refers-to RuleZ|RuleW
+                }
             }
         """.trimIndent()
 
@@ -404,7 +415,7 @@ class test_AglScopes {
         )
 
         val expected = ScopeModelAgl().apply {
-            references.add(ReferenceDefinition("RuleX", "ruleY", listOf("RuleZ", "RuleW")))
+            references.add(ReferenceDefinition("RuleX", listOf(PropertyReferenceExpression("ruleY", listOf("RuleZ", "RuleW"), null))))
         }
         val expectedIssues = listOf(
             LanguageIssue(
@@ -440,20 +451,23 @@ class test_AglScopes {
     fun one_reference_to_three() {
         val text = """
             references {
-                in Type1 property prop refers-to Type2|Type3|Type4
+                in Type1 {
+                    property prop refers-to Type2|Type3|Type4
+                }
             }
         """.trimIndent()
 
         val result = aglProc.process(text)
 
         val expected = ScopeModelAgl().apply {
-            references.add(ReferenceDefinition("Type1", "prop", listOf("Type2", "Type3", "Type4")))
+            references.add(ReferenceDefinition("Type1", listOf(PropertyReferenceExpression("prop", listOf("Type2", "Type3", "Type4"), null))))
         }
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertEquals(expected.scopes, result.asm?.scopes)
         assertEquals(expected.scopes.flatMap { it.value.identifiables }, result.asm?.scopes?.flatMap { it.value.identifiables })
         assertEquals(expected.references, result.asm?.references)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+
     }
 
     //TODO more checks + check rules (types/properties) exist in context of grammar

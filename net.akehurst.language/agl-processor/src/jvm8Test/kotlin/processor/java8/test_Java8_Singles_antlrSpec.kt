@@ -36,7 +36,7 @@ import kotlin.time.measureTimedValue
 class test_Java8_Singles_antlrSpec {
 
     private companion object {
-        val grammarFile = "/Java/version_8/grammar_antlrSpec.agl"
+        val grammarFile = "/Java/version_8/grammars/grammar_antlrSpec.agl"
         val antlrSpecProcessor: LanguageProcessor<AsmSimple, ContextSimple> by lazy { createJava8Processor(grammarFile) }
 
         val proc = antlrSpecProcessor

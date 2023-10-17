@@ -55,6 +55,19 @@ class test_SemanticAnalyserDefault_datatypes {
                 leaf type = ID;
             }
         """.trimIndent()
+        val scopeModelStr2 = """
+                identify Unit by §nothing
+                scope Unit {
+                    identify Primitive by id
+                    identify Datatype by id
+                    identify Collection by id
+                }
+                references {
+                    in TypeReference //{
+                      property type refers-to Primitive|Datatype|Collection
+                   // }
+                }
+            """.trimIndent()
         val scopeModelStr = """
                 identify Unit by §nothing
                 scope Unit {

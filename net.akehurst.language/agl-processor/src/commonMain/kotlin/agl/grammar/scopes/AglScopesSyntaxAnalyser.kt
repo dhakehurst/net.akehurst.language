@@ -17,7 +17,6 @@ package net.akehurst.language.agl.grammar.scopes
 
 import net.akehurst.language.agl.collections.toSeparatedList
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
-import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -35,6 +34,11 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
         super.register(this::references)
         super.register(this::referenceDefinitions)
         super.register(this::referenceDefinition)
+        super.register(this::referenceExpression)
+        super.register(this::propertyReferenceExpression)
+        super.register(this::from)
+        super.register(this::collectionReferenceExpression)
+        super.register(this::navigation)
         super.register(this::typeReferences)
         super.register(this::propertyReferenceOrNothing)
         super.register(this::typeReference)
@@ -86,13 +90,13 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
     private fun identifiables(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Identifiable> =
         (children as List<Identifiable>?) ?: emptyList()
 
-    // identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing
+    // identifiable = 'identify' typeReference 'by' navigation
     private fun identifiable(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Identifiable {
-        val typeName = children[1] as String
-        val propertyName = children[3] as String
-        val identifiable = Identifiable(typeName, propertyName)
-        locationMap[PropertyValue(identifiable, "typeReference")] = locationMap[typeName]!!
-        locationMap[PropertyValue(identifiable, "propertyName")] = locationMap[propertyName]!!
+        val typeReference = children[1] as String
+        val navigation = children[3] as Navigation
+        val identifiable = Identifiable(typeReference, navigation)
+        locationMap[PropertyValue(identifiable, "typeReference")] = locationMap[typeReference]!!
+        locationMap[PropertyValue(identifiable, "navigation")] = locationMap[navigation]!!
         return identifiable
     }
 
@@ -108,26 +112,57 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
     private fun referenceDefinitions(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ReferenceDefinition> =
         children as List<ReferenceDefinition>
 
-    // referenceDefinition = 'in' typeReference 'property' propertyReference 'refers-to' typeReferences
+    // referenceDefinition = 'in' typeReference '{' referenceExpressionList '}'
     private fun referenceDefinition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ReferenceDefinition {
         val inTypeName = children[1] as String
-        val referringPropertyName = children[3] as String
-        val typeReferences = children[5] as List<Pair<String, InputLocation>>
-        val def = ReferenceDefinition(inTypeName, referringPropertyName, typeReferences.map { it.first })
-        locationMap[PropertyValue(def, "in")] = locationMap[inTypeName]!!
-        locationMap[PropertyValue(def, "propertyReference")] = locationMap[referringPropertyName]!!
-        typeReferences.forEachIndexed { i, n ->
-            locationMap[PropertyValue(def, "typeReferences[$i]")] = n.second
-        }
+        val referenceExpressionList = children[3] as List<ReferenceExpression>
+        val def = ReferenceDefinition(inTypeName, referenceExpressionList)
+        //locationMap[PropertyValue(def, "in")] = locationMap[inTypeName]!!
+        // locationMap[PropertyValue(def, "propertyReference")] = locationMap[referringPropertyName]!!
+        //typeReferences.forEachIndexed { i, n ->
+        //    locationMap[PropertyValue(def, "typeReferences[$i]")] = n.second
+        //}
         return def
     }
 
+    // referenceExpressionList = referenceExpression* ;
+    private fun referenceExpressionList(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ReferenceExpression> =
+        children as List<ReferenceExpression>
+
+    //referenceExpression = propertyReferenceExpression | collectionReferenceExpression ;
+    private fun referenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ReferenceExpression =
+        children[0] as ReferenceExpression
+
+    //propertyReferenceExpression = 'property' propertyReference 'refers-to' typeReferences from? ;
+    private fun propertyReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyReferenceExpression {
+        val propertyReference = children[1] as String
+        val typeReferences = children[3] as List<String>
+        val navigation = children[4] as Navigation?
+        return PropertyReferenceExpression(propertyReference, typeReferences, navigation)
+    }
+
+    // from = 'from' navigation
+    private fun from(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Navigation =
+        children[1] as Navigation
+
+    //collectionReferenceExpression = 'forall' navigation '{' referenceExpressionList '}' ;
+    private fun collectionReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CollectionReferenceExpression {
+        val navigation = children[1] as Navigation
+        val referenceExpression = children[3] as List<ReferenceExpression>
+        return CollectionReferenceExpression(navigation, referenceExpression)
+    }
+
+    //navigation = [propertyReference / '.']+ ;
+    private fun navigation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Navigation =
+        Navigation(children.toSeparatedList<String, String>().items)
+
     // typeReferences = [typeReferences / ',']+
-    private fun typeReferences(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Pair<String, InputLocation>> {
-        return children.toSeparatedList<String, String>().items.mapIndexed { i, n ->
-            val ref = n as String
-            Pair(ref, sentence.locationFor(nodeInfo.node))
-        }
+    private fun typeReferences(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> { //List<Pair<String, InputLocation>> {
+        return children.toSeparatedList<String, String>().items
+//            .mapIndexed { i, n ->
+//            val ref = n as String
+//            Pair(ref, sentence.locationFor(nodeInfo.node))
+//        }
     }
 
     // propertyReferenceOrNothing = '§nothing' | propertyReference

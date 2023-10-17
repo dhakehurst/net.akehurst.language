@@ -33,7 +33,7 @@ import kotlin.test.*
 class test_Java8_Singles_aglOptm {
 
     companion object {
-        val grammarFile = "/Java/version_8/grammar_aglOptm.agl"
+        val grammarFile = "/Java/version_8/grammars/grammar_aglOptm.agl"
         val proc: LanguageProcessor<AsmSimple, ContextSimple> = createJava8Processor(grammarFile, true)
 
         fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<AsmSimple, ContextSimple> {

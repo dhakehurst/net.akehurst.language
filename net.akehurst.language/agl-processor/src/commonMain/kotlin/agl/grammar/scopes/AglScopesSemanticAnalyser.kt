@@ -17,8 +17,7 @@
 
 package net.akehurst.language.agl.agl.grammar.scopes
 
-import net.akehurst.language.agl.grammar.scopes.AglScopesSyntaxAnalyser
-import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
+import net.akehurst.language.agl.grammar.scopes.*
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
@@ -26,27 +25,27 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
+import net.akehurst.language.api.semanticAnalyser.Scope
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
 class AglScopesSemanticAnalyser : SemanticAnalyser<ScopeModelAgl, SentenceContext<String>> {
 
+    private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+    private var locationMap: Map<Any, InputLocation> = emptyMap()
+
     override fun clear() {
-
+        locationMap = emptyMap()
+        issues.clear()
     }
-
-//    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
-//        return emptyList()
-//    }
 
     override fun analyse(
         asm: ScopeModelAgl,
-        locationMap: Map<Any, InputLocation>?,
+        locMap: Map<Any, InputLocation>?,
         context: SentenceContext<String>?,
         options: SemanticAnalysisOptions<ScopeModelAgl, SentenceContext<String>>
     ): SemanticAnalysisResult {
-        val locMap = locationMap ?: mapOf()
-        val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
+        this.locationMap = locMap ?: mapOf()
         if (null != context) {
             asm.scopes.forEach { (_, scope) ->
                 val msgStart = if (ScopeModelAgl.ROOT_SCOPE_TYPE_NAME == scope.scopeFor) {
@@ -54,8 +53,7 @@ class AglScopesSemanticAnalyser : SemanticAnalyser<ScopeModelAgl, SentenceContex
                     "In root scope"
                 } else {
                     if (context.rootScope.isMissing(scope.scopeFor, ContextFromTypeModel.TYPE_NAME_FOR_TYPES)) {
-                        val loc = locMap[AglScopesSyntaxAnalyser.PropertyValue(scope, "typeReference")]
-                        issues.error(loc, "Type '${scope.scopeFor}' not found in scope")
+                        raiseError(AglScopesSyntaxAnalyser.PropertyValue(scope, "typeReference"), "Type '${scope.scopeFor}' not found in scope")
                     } else {
                         //OK
                     }
@@ -65,22 +63,22 @@ class AglScopesSemanticAnalyser : SemanticAnalyser<ScopeModelAgl, SentenceContex
                     val typeScope = context.rootScope.childScopes[identifiable.typeName]
                     when {
                         null == typeScope -> {
-                            val loc = locMap[AglScopesSyntaxAnalyser.PropertyValue(identifiable, "typeReference")]
-                            issues.error(loc, "Type '${identifiable.typeName}' not found in scope")
+                            raiseError(AglScopesSyntaxAnalyser.PropertyValue(identifiable, "typeReference"), "Type '${identifiable.typeName}' not found in scope")
                         }
 
-                        ScopeModelAgl.IDENTIFY_BY_NOTHING == identifiable.propertyName -> Unit
+                        identifiable.navigation.isNothing -> Unit
                         else -> {
                             // only check this if the typeName is valid - else it is always invalid
                             //TODO: check this in context of typeName GrammarRule
-                            if (typeScope.isMissing(identifiable.propertyName, ContextFromTypeModel.TYPE_NAME_FOR_PROPERTIES)) {
-                                val loc = locMap[AglScopesSyntaxAnalyser.PropertyValue(identifiable, "propertyName")]
-                                issues.error(
-                                    loc,
-                                    "$msgStart, '${identifiable.propertyName}' not found for identifying property of '${identifiable.typeName}'"
-                                )
-                            } else {
-                                //OK
+                            for (part in identifiable.navigation.value) {
+                                if (typeScope.isMissing(part, ContextFromTypeModel.TYPE_NAME_FOR_PROPERTIES)) {
+                                    raiseError(
+                                        AglScopesSyntaxAnalyser.PropertyValue(identifiable, "propertyName"),
+                                        "$msgStart, '${identifiable.navigation}' not found for identifying property of '${identifiable.typeName}'"
+                                    )
+                                } else {
+                                    //OK
+                                }
                             }
                         }
                     }
@@ -89,24 +87,21 @@ class AglScopesSemanticAnalyser : SemanticAnalyser<ScopeModelAgl, SentenceContex
 
             asm.references.forEach { ref ->
                 if (context.rootScope.isMissing(ref.inTypeName, ContextFromTypeModel.TYPE_NAME_FOR_TYPES)) {
-                    val loc = locMap[AglScopesSyntaxAnalyser.PropertyValue(ref, "in")]
-                    issues.error(loc, "Referring type '${ref.inTypeName}' not found in scope")
+                    raiseError(
+                        AglScopesSyntaxAnalyser.PropertyValue(ref, "in"),
+                        "Referring type '${ref.inTypeName}' not found in scope"
+                    )
                 } else {
                     val typeScope = context.rootScope.childScopes[ref.inTypeName]
                     if (null == typeScope) {
-                        val loc = locMap[AglScopesSyntaxAnalyser.PropertyValue(ref, "propertyReference")]
-                        issues.error(loc, "Child scope '${ref.inTypeName}' not found")
+                        raiseError(
+                            AglScopesSyntaxAnalyser.PropertyValue(ref, "propertyReference"),
+                            "Child scope '${ref.inTypeName}' not found"
+                        )
                     } else {
-                        if (typeScope.isMissing(ref.referringPropertyName, ContextFromTypeModel.TYPE_NAME_FOR_PROPERTIES)) {
-                            val loc = locMap[AglScopesSyntaxAnalyser.PropertyValue(ref, "propertyReference")]
-                            issues.error(loc, "For reference in '${ref.inTypeName}' referring property '${ref.referringPropertyName}' not found")
+                        for (refExpr in ref.referenceExpressionList) {
+                            checkReferenceExpression(typeScope, ref, refExpr)
                         }
-                    }
-                }
-                ref.refersToTypeName.forEachIndexed { i, n ->
-                    if (context.rootScope.isMissing(n, ContextFromTypeModel.TYPE_NAME_FOR_TYPES)) {
-                        val loc = locMap[AglScopesSyntaxAnalyser.PropertyValue(ref, "typeReferences[$i]")]
-                        issues.error(loc, "For reference in '${ref.inTypeName}' referred to type '$n' not found")
                     }
                 }
             }
@@ -114,4 +109,44 @@ class AglScopesSemanticAnalyser : SemanticAnalyser<ScopeModelAgl, SentenceContex
 
         return SemanticAnalysisResultDefault(issues)
     }
+
+    private fun raiseError(obj: Any, message: String) {
+        val loc = locationMap[obj]
+        issues.error(loc, message)
+    }
+
+    private fun checkReferenceExpression(typeScope: Scope<String>, ref: ReferenceDefinition, refExpr: ReferenceExpression) = when (refExpr) {
+        is PropertyReferenceExpression -> checkPropertyReferenceExpression(typeScope, ref, refExpr)
+        is CollectionReferenceExpression -> checkCollectionReferenceExpression(typeScope, ref, refExpr)
+        else -> error("subtype of 'ReferenceExpression' not handled: '${refExpr::class.simpleName}'")
+    }
+
+    private fun checkCollectionReferenceExpression(
+        typeScope: Scope<String>,
+        ref: ReferenceDefinition,
+        refExpr: CollectionReferenceExpression
+    ) {
+        for (re in ref.referenceExpressionList) {
+            checkReferenceExpression(typeScope, ref, re)
+        }
+    }
+
+    private fun checkPropertyReferenceExpression(typeScope: Scope<String>, ref: ReferenceDefinition, refExpr: PropertyReferenceExpression) {
+        if (typeScope.isMissing(refExpr.referringPropertyName, ContextFromTypeModel.TYPE_NAME_FOR_PROPERTIES)) {
+            raiseError(
+                AglScopesSyntaxAnalyser.PropertyValue(refExpr, "propertyReference"),
+                "For reference in '${ref.inTypeName}' referring property '${refExpr.referringPropertyName}' not found"
+            )
+        }
+        refExpr.refersToTypeName.forEachIndexed { i, n ->
+            if (typeScope.isMissing(n, ContextFromTypeModel.TYPE_NAME_FOR_TYPES)) {
+                raiseError(
+                    AglScopesSyntaxAnalyser.PropertyValue(ref, "typeReferences[$i]"),
+                    "For reference in '${ref.inTypeName}' referred to type '$n' not found"
+                )
+            }
+        }
+    }
+
+
 }

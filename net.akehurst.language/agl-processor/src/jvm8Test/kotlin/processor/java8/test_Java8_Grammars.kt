@@ -25,7 +25,7 @@ class test_Java8_Grammars {
 
     @Test(timeout = 5000)
     fun aglSpec() {
-        val grammarStr = this::class.java.getResource("/Java/version_8/grammar_aglSpec.agl").readText()
+        val grammarStr = this::class.java.getResource("/Java/version_8/grammars/grammar_aglSpec.agl").readText()
         val result = Agl.registry.agl.grammar.processor!!.process(
             sentence = grammarStr,
             options = Agl.options {
@@ -41,7 +41,7 @@ class test_Java8_Grammars {
 
     @Test(timeout = 5000)
     fun aglOptm() {
-        val grammarStr = this::class.java.getResource("/Java/version_8/grammar_aglOptm.agl").readText()
+        val grammarStr = this::class.java.getResource("/Java/version_8/grammars/grammar_aglOptm.agl").readText()
         val result = Agl.registry.agl.grammar.processor!!.process(
             sentence = grammarStr,
             options = Agl.options {
@@ -58,7 +58,7 @@ class test_Java8_Grammars {
     @Test(timeout = 5000)
     fun antrlSpec() {
         //val grammarStr = this::class.java.getResource("/java8/Java8_all.agl").readText()
-        val grammarStr = this::class.java.getResource("/Java/version_8/grammar_antlrSpec.agl").readText()
+        val grammarStr = this::class.java.getResource("/Java/version_8/grammars/grammar_antlrSpec.agl").readText()
         val result = Agl.registry.agl.grammar.processor!!.process(
             sentence = grammarStr,
             options = Agl.options {
@@ -75,7 +75,7 @@ class test_Java8_Grammars {
 
     @Test(timeout = 5000)
     fun antlrOptm() {
-        val grammarStr = this::class.java.getResource("/Java/version_8/grammar_antlrOptm.agl").readText()
+        val grammarStr = this::class.java.getResource("/Java/version_8/grammars/grammar_antlrOptm.agl").readText()
         val result = Agl.registry.agl.grammar.processor!!.process(
             sentence = grammarStr,
             options = Agl.options {

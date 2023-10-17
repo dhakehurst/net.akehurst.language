@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
+import net.akehurst.language.agl.grammar.scopes.Navigation
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.AsmElementSimple
@@ -42,12 +43,21 @@ class ContextSimple() : SentenceContext<AsmElementPath> {
     override fun toString(): String = "ContextSimple"
 }
 
-fun ScopeModelAgl.createReferenceLocalToScope(scope: ScopeSimple<AsmElementPath>, element: AsmElementSimple): String? {
-    val prop = this.getReferablePropertyNameFor(scope.forTypeName, element.typeName)
-    return when (prop) {
+fun Navigation.evaluateFor(root: AsmElementSimple?) = this.value.fold(root as Any?) { acc, it ->
+    when (acc) {
         null -> null
-        ScopeModelAgl.IDENTIFY_BY_NOTHING -> ""
-        else -> element.getPropertyAsStringOrNull(prop)
+        is AsmElementSimple -> acc.getProperty(it)
+        else -> error("Cannot evaluate $this on object of type '${acc::class.simpleName}'")
+    }
+}
+
+fun ScopeModelAgl.createReferenceLocalToScope(scope: ScopeSimple<AsmElementPath>, element: AsmElementSimple): String? {
+    val nav = this.getReferablePropertyNameFor(scope.forTypeName, element.typeName)
+    val res = nav?.evaluateFor(element)
+    return when (res) {
+        null -> null
+        is String -> res
+        else -> error("Evaluation of navigation '$nav' on '$element' should result in a String, but it does not!")
     }
 }
 

@@ -24,6 +24,7 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
 import net.akehurst.language.agl.semanticAnalyser.createReferenceLocalToScope
+import net.akehurst.language.agl.semanticAnalyser.evaluateFor
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.simple.TupleTypeSimple
 
@@ -169,8 +170,13 @@ class AsmElementSimpleBuilder(
             //do nothing
         } else {
             val scopeFor = es.forTypeName
-            val referablePropertyName = _scopeModel.getReferablePropertyNameFor(scopeFor, _element.typeName)
-            val referableName = referablePropertyName?.let { _element.getPropertyAsStringOrNull(it) }
+            val nav = _scopeModel.getReferablePropertyNameFor(scopeFor, _element.typeName)
+            val res = nav?.let { it.evaluateFor(_element) }
+            val referableName = when (res) {
+                null -> null
+                is String -> res
+                else -> error("Evaluation of navigation '$nav' on '$_element' should result in a String, but it does not!")
+            }
             if (null != referableName) {
                 es.addToScope(referableName, _element.typeName, _element.asmPath)
             }

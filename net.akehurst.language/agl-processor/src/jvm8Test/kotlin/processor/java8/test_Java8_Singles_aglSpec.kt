@@ -36,7 +36,7 @@ import kotlin.test.assertNull
 class test_Java8_Singles_aglSpec {
 
     private companion object {
-        val grammarFile = "/Java/version_8/grammar_aglSpec.agl"
+        val grammarFile = "/Java/version_8/grammars/grammar_aglSpec.agl"
         val aglSpecProcessor: LanguageProcessor<AsmSimple, ContextSimple> by lazy { createJava8Processor(grammarFile, true) }
 
         val proc = aglSpecProcessor

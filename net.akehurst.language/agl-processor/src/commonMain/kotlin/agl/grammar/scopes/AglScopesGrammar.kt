@@ -38,18 +38,42 @@ internal object AglScopesGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
         b.rule("scopes").multi(0, -1, b.nonTerminal("scope"))
         b.rule("scope").concatenation(b.terminalLiteral("scope"), b.nonTerminal("typeReference"), b.terminalLiteral("{"), b.nonTerminal("identifiables"), b.terminalLiteral("}"))
         b.rule("identifiables").multi(0, -1, b.nonTerminal("identifiable"))
-        b.rule("identifiable").concatenation(b.terminalLiteral("identify"), b.nonTerminal("typeReference"), b.terminalLiteral("by"), b.nonTerminal("propertyReferenceOrNothing"))
+        b.rule("identifiable").concatenation(b.terminalLiteral("identify"), b.nonTerminal("typeReference"), b.terminalLiteral("by"), b.nonTerminal("navigation"))
         b.rule("referencesOpt").optional(b.nonTerminal("references"))
         b.rule("references").concatenation(b.terminalLiteral("references"), b.terminalLiteral("{"), b.nonTerminal("referenceDefinitions"), b.terminalLiteral("}"))
         b.rule("referenceDefinitions").multi(0, -1, b.nonTerminal("referenceDefinition"))
         b.rule("referenceDefinition").concatenation(
             b.terminalLiteral("in"),
             b.nonTerminal("typeReference"),
+            b.terminalLiteral("{"),
+            b.nonTerminal("referenceExpressionList"),
+            b.terminalLiteral("}"),
+        )
+        b.rule("referenceExpressionList").multi(0, -1, b.nonTerminal("referenceExpression"))
+        b.rule("referenceExpression").choiceLongestFromConcatenationItem(
+            b.nonTerminal("propertyReferenceExpression"),
+            b.nonTerminal("collectionReferenceExpression"),
+        )
+        b.rule("propertyReferenceExpression").concatenation(
             b.terminalLiteral("property"),
             b.nonTerminal("propertyReference"),
             b.terminalLiteral("refers-to"),
-            b.nonTerminal("typeReferences")
+            b.nonTerminal("typeReferences"),
+            b.nonTerminal("fromOpt")
         )
+        b.rule("fromOpt").optional(b.nonTerminal("from"))
+        b.rule("from").concatenation(
+            b.terminalLiteral("from"),
+            b.nonTerminal("navigation")
+        )
+        b.rule("collectionReferenceExpression").concatenation(
+            b.terminalLiteral("forall"),
+            b.nonTerminal("navigation"),
+            b.terminalLiteral("{"),
+            b.terminalLiteral("referenceExpressionList"),
+            b.terminalLiteral("}"),
+        )
+        b.rule("navigation").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("propertyReference"))
         b.rule("typeReferences").separatedList(1, -1, b.terminalLiteral("|"), b.nonTerminal("typeReference"))
         b.rule("typeReference").concatenation(b.nonTerminal("IDENTIFIER"))
         b.rule("propertyReferenceOrNothing").choiceLongestFromConcatenationItem(b.terminalLiteral("§nothing"), b.nonTerminal("propertyReference"))
@@ -75,21 +99,21 @@ grammar AglScopes {
     scopes = scope* ;
     scope = 'scope' typeReference '{' identifiables '}' ;
     identifiables = identifiable* ;
-    identifiable = 'identify' typeReference 'by' propertyReferenceOrNothing ;
+    identifiable = 'identify' typeReference 'by' navigation ;
 
     references = 'references' '{' referenceDefinitions '}' ;
     referenceDefinitions = referenceDefinition* ;
     referenceDefinition = 'in' typeReference '{' referenceExpression* '}' ;
     referenceExpression = propertyReferenceExpression | collectionReferenceExpression ;
-    propertyReferenceExpression = 'property' propertyReference 'refers-to' typeReferences from ;
-    collectionReferenceExpression = 'forall' navigation '{' referenceExpression '}' ;
+    propertyReferenceExpression = 'property' propertyReference 'refers-to' typeReferences from? ;
     from = 'from' navigation ;
+    collectionReferenceExpression = 'forall' navigation '{' referenceExpressionList '}' ;
     navigation = [propertyReference / '.']+ ;
     typeReferences = [typeReference / '|']+ ;
 
     propertyReferenceOrNothing = '§nothing' | propertyReference ;
-    typeReference = IDENTIFIER ;     // same as grammar rule name
-    propertyReference = IDENTIFIER ; // same as grammar rule name
+    typeReference = IDENTIFIER ;
+    propertyReference = IDENTIFIER ;
     leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
 }
     """

@@ -51,19 +51,19 @@ class ScopeModelAgl
     override fun isReference(inTypeName: String, propertyName: String): Boolean {
         return references.any {
             it.inTypeName == inTypeName
-                    && it.referringPropertyName == propertyName
+                    && it.referenceExpressionList.any { it.isReference(propertyName) }
         }
     }
 
-    fun getReferablePropertyNameFor(scopeFor: String, typeName: String): String? {
+    fun getReferablePropertyNameFor(scopeFor: String, typeName: String): Navigation? {
         val scope = scopes[scopeFor]
         val identifiable = scope?.identifiables?.firstOrNull { it.typeName == typeName }
-        return identifiable?.propertyName
+        return identifiable?.navigation
     }
 
     override fun getReferredToTypeNameFor(inTypeName: String, referringPropertyName: String): List<String> {
-        val def = references.firstOrNull { it.inTypeName == inTypeName && it.referringPropertyName == referringPropertyName }
-        return def?.refersToTypeName ?: emptyList()
+        val def = references.firstOrNull { it.inTypeName == inTypeName && it.referenceExpressionList.any { it.isReference(referringPropertyName) } }
+        return def?.referredToTypeNameFor(referringPropertyName) ?: emptyList()
     }
 
     fun shouldCreateReference(scopeFor: String, typeName: String): Boolean {
@@ -143,20 +143,68 @@ data class ScopeDefinition(
 
 data class Identifiable(
     val typeName: String,
-    val propertyName: String
+    val navigation: Navigation
 )
+
+data class Navigation(
+    val value: List<String>
+) {
+    constructor(vararg values: String) : this(values.toList())
+
+    val isNothing: Boolean get() = 1 == value.size && ScopeModelAgl.IDENTIFY_BY_NOTHING == value.first()
+
+    override fun toString(): String = value.joinToString(separator = ".")
+}
 
 data class ReferenceDefinition(
     /**
      * name of the asm type in which the property is a reference
      */
     val inTypeName: String,
+
+    val referenceExpressionList: List<ReferenceExpression>
+) {
+    fun referredToTypeNameFor(propertyName: String): List<String> =
+        referenceExpressionList.flatMap { it.referredToTypeNameFor(propertyName) }
+}
+
+abstract class ReferenceExpression {
+    abstract fun referredToTypeNameFor(propertyName: String): List<String>
+    abstract fun isReference(propertyName: String): Boolean
+}
+
+data class PropertyReferenceExpression(
     /**
      * name of the property that is a reference
      */
-    val referringPropertyName: String,
+    val referringPropertyNavigation: Navigation,
+
     /**
      * type of the asm element referred to
      */
-    val refersToTypeName: List<String>
-)
+    val refersToTypeName: List<String>,
+
+    val fromNavigation: Navigation?
+) : ReferenceExpression() {
+
+    override fun isReference(propertyName: String): Boolean {
+        return this.referringPropertyName == propertyName
+    }
+
+    override fun referredToTypeNameFor(propertyName: String): List<String> = when (propertyName) {
+        this.referringPropertyName -> this.refersToTypeName
+        else -> emptyList()
+    }
+}
+
+data class CollectionReferenceExpression(
+    val navigation: Navigation,
+    val referenceExpressionList: List<ReferenceExpression>
+) : ReferenceExpression() {
+    override fun isReference(propertyName: String): Boolean {
+        return this.referenceExpressionList.any { it.isReference(propertyName) }
+    }
+
+    override fun referredToTypeNameFor(propertyName: String): List<String> = emptyList()
+
+}
