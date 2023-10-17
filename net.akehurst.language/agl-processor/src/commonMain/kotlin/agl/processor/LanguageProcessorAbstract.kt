@@ -29,17 +29,17 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTParserDefault
-import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.semanticAnalyser.ScopeModel
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.sppt.LeafData
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.typemodel.api.TypeModel
 
 internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : Any>(

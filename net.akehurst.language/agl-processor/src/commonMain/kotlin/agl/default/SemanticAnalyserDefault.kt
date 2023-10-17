@@ -20,15 +20,16 @@ package net.akehurst.language.agl.default
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
-import net.akehurst.language.agl.syntaxAnalyser.createReferenceLocalToScope
-import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.analyser.SemanticAnalyser
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
+import net.akehurst.language.agl.semanticAnalyser.createReferenceLocalToScope
 import net.akehurst.language.api.asm.*
-import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.SemanticAnalysisOptions
+import net.akehurst.language.api.processor.SemanticAnalysisResult
+import net.akehurst.language.api.semanticAnalyser.ScopeModel
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.collections.mutableStackOf
 
 class SemanticAnalyserDefault(
@@ -43,10 +44,10 @@ class SemanticAnalyserDefault(
         _issues.clear()
     }
 
-    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
-        //TODO: pass grammar as context ?
-        return emptyList()
-    }
+//    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
+//        //TODO: pass grammar as context ?
+//        return emptyList()
+//    }
 
     override fun analyse(
         asm: AsmSimple,

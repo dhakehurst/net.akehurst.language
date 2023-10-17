@@ -71,7 +71,15 @@ internal class ScanOnDemandParser(
         this.runtimeParser = rp
 
         val possibleEndOfText = setOf(LookaheadSet.EOT)
-        val parseArgs = RuntimeParser.Companion.GrowArgs(true, false, false, false, reportErrors, reportGrammarAmbiguities)
+        val parseArgs = RuntimeParser.Companion.GrowArgs(
+            true,
+            false,
+            false,
+            false,
+            reportErrors,
+            reportGrammarAmbiguities,
+            false
+        )
         rp.start(0, possibleEndOfText, parseArgs)
         var seasons = 1
         var maxNumHeads = rp.graph.numberOfHeads
@@ -439,12 +447,12 @@ internal class ScanOnDemandParser(
 */
     private fun findNextExpectedAfterError3(
         input: InputFromString,
-        failedParseReasons: List<FailedParseReason>,
+        failedParseReasons: Map<Int, MutableList<FailedParseReason>>,
         automatonKind: AutomatonKind,
         stateSet: ParserStateSet
     ): Pair<InputLocation, Set<RuntimeRule>> {
-        val max = failedParseReasons.maxOf { it.position }
-        val maxReasons = failedParseReasons.filter { it.position == max }
+        val max = failedParseReasons.keys.max() //Of { it.position }
+        val maxReasons = failedParseReasons[max]!!
         val x = maxReasons.map { fr ->
             when (fr) {
                 is FailedParseReasonWidthTo -> Pair(input.locationFor(fr.position, 0), setOf(fr.transition.to.firstRule))

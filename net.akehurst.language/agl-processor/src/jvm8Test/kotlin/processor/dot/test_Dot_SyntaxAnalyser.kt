@@ -19,7 +19,7 @@ package net.akehurst.language.processor.dot
 import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor

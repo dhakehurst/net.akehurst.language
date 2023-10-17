@@ -16,7 +16,7 @@
 package net.akehurst.language.agl.processor.vistraq
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParseFailedException

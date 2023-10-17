@@ -21,14 +21,14 @@ import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.processor.Formatter
+import net.akehurst.language.api.semanticAnalyser.ScopeModel
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
 abstract class GeneratedLanguageProcessorAbstract<AsmType : Any, ContextType : Any> {
 

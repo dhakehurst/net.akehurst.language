@@ -17,14 +17,14 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.default.TypeModelFromGrammar
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.api.analyser.ScopeModel
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.api.style.AglStyleModel
 import kotlin.test.*
 

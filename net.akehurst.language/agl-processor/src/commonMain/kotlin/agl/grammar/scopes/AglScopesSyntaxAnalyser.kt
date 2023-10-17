@@ -17,13 +17,10 @@ package net.akehurst.language.agl.grammar.scopes
 
 import net.akehurst.language.agl.collections.toSeparatedList
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
-import net.akehurst.language.api.analyser.SyntaxAnalyser
-import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
 class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<ScopeModelAgl>() {
 
@@ -51,9 +48,9 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
 
     override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<ScopeModelAgl>> = emptyMap()
 
-    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
-        return emptyList()
-    }
+//    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
+//        return emptyList()
+//    }
 
     // declarations = rootIdentifiables scopes referencesOpt
     private fun declarations(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeModelAgl {

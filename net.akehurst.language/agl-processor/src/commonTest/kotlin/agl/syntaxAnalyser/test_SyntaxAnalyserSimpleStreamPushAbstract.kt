@@ -22,13 +22,15 @@ import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.semanticAnalyser.ScopeModel
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.typemodel.api.DataType
 import net.akehurst.language.typemodel.api.PrimitiveType
 import net.akehurst.language.typemodel.api.PropertyDeclaration
@@ -131,7 +133,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
         class SemanticAnalyserToString() : SemanticAnalyser<String, ContextSimple> {
             override fun clear() {}
 
-            override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> = emptyList()
+            //override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> = emptyList()
 
             override fun analyse(
                 asm: String,

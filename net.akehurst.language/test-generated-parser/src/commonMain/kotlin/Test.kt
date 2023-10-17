@@ -24,14 +24,14 @@ import net.akehurst.language.agl.formatter.FormatterSimple
 import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyser
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.semanticAnalyser.ScopeModel
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
 // sample
 object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<AsmSimple, ContextSimple>() {

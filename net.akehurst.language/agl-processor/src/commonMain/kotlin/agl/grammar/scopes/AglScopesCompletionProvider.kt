@@ -22,7 +22,7 @@ import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.grammar.Terminal
 import net.akehurst.language.api.processor.CompletionItem
-import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
 class AglScopesCompletionProvider : CompletionProviderAbstract<ScopeModelAgl, SentenceContext<String>>() {
 

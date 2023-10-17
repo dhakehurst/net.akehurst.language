@@ -19,13 +19,13 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
+import net.akehurst.language.api.semanticAnalyser.ScopeModel
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
 internal class LanguageProcessorFromGenerated<AsmType : Any, ContextType : Any>(
     val generated: GeneratedLanguageProcessorAbstract<AsmType, ContextType>,

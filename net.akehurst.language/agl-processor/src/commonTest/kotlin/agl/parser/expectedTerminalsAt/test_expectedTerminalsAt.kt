@@ -247,13 +247,11 @@ internal class test_expectedTerminalsAt {
                 is RuntimeRuleRhsLiteral -> rhs.literalUnescaped
                 else -> it.tag
             }
-        }
+        }.toSet()
 
         assertEquals(2, actual.size)
         assertEquals(true, actual.all { it.isTerminal })
-        assertEquals("a", actStr[0])
-        assertEquals(true, actual.all { it.isTerminal })
-        assertEquals("b", actStr[1])
+        assertEquals(setOf("a", "b"), actStr)
     }
 
     @Test
@@ -272,9 +270,9 @@ internal class test_expectedTerminalsAt {
                 is RuntimeRuleRhsLiteral -> rhs.literalUnescaped
                 else -> it.tag
             }
-        }
+        }.toSet()
 
-        assertEquals(setOf(), actual)
+        assertEquals(setOf(), actStr)
     }
 
     @Test
@@ -293,8 +291,8 @@ internal class test_expectedTerminalsAt {
                 is RuntimeRuleRhsLiteral -> rhs.literalUnescaped
                 else -> it.tag
             }
-        }
+        }.toSet()
 
-        assertEquals(setOf(), actual)
+        assertEquals(setOf(), actStr)
     }
 }

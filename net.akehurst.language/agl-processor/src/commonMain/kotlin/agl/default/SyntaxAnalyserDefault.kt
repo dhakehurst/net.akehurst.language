@@ -18,10 +18,10 @@ package net.akehurst.language.agl.default
 
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimpleAbstract
-import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.semanticAnalyser.ScopeModel
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.collections.lazyMap
 import net.akehurst.language.typemodel.api.*
 

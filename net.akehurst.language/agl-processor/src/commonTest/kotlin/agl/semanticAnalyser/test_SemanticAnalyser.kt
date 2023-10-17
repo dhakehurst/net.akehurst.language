@@ -15,14 +15,15 @@
  *
  */
 
-package agl.semanticAnalyser
+package net.akehurst.language.agl.semanticAnalyser
 
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.SemanticAnalysisOptions
+import net.akehurst.language.api.processor.SemanticAnalysisResult
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import kotlin.test.Test
 
 class test_SemanticAnalyser {
@@ -32,9 +33,9 @@ class test_SemanticAnalyser {
             TODO("not implemented")
         }
 
-        override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
-            TODO("not implemented")
-        }
+//        override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
+//            TODO("not implemented")
+//        }
 
         override fun analyse(asm: Any, locationMap: Map<Any, InputLocation>?, context: Any?, options: SemanticAnalysisOptions<Any, Any>): SemanticAnalysisResult {
             val ih = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)

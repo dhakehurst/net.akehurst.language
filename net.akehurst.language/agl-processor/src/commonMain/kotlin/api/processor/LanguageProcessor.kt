@@ -16,15 +16,15 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.semanticAnalyser.ScopeModel
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.sppt.LeafData
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.typemodel.api.TypeModel
 
 /**
@@ -146,7 +146,10 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     fun expectedTerminalsAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>? = null): ExpectedAtResult
 
     /**
-     * returns list of expected items according to the given completionProvider, or list of terminalItems if no completion provider given
+     * returns
+     * list of expected items according to the given completionProvider, or
+     * list of terminalItems if no completion provider given, or
+     * emptyList if no context given and there is a completion provider
      */
     fun expectedItemsAt(sentence: String, position: Int, desiredDepth: Int, options: ProcessOptions<AsmType, ContextType>? = null): ExpectedAtResult
 

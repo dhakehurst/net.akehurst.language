@@ -18,12 +18,12 @@ package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.api.analyser.SemanticAnalyser
 import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.processor.GrammarRegistry
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 
 
 class AglGrammarSemanticAnalyser(
@@ -58,10 +58,10 @@ class AglGrammarSemanticAnalyser(
         _locationMap = null
     }
 
-    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
-        //TODO
-        return emptyList()
-    }
+//    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
+//        //TODO
+//        return emptyList()
+//    }
 
     override fun analyse(
         asm: List<Grammar>,

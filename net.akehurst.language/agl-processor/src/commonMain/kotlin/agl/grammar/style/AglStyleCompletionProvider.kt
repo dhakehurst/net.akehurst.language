@@ -24,7 +24,7 @@ import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.CompletionProvider
-import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.typemodel.api.TypeInstance
 

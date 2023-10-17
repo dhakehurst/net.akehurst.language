@@ -21,11 +21,13 @@ import net.akehurst.language.agl.grammar.style.AglStyleSyntaxAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.SemanticAnalysisOptions
+import net.akehurst.language.api.processor.SemanticAnalysisResult
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.style.AglStyleSelectorKind
 
@@ -58,9 +60,9 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, SentenceConte
 
     }
 
-    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
-        return emptyList()
-    }
+//    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
+//        return emptyList()
+//    }
 
     override fun analyse(
         asm: AglStyleModel,

@@ -26,6 +26,8 @@ import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.grammar.style.AglStyleModelDefault
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.*
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.grammar.Grammar

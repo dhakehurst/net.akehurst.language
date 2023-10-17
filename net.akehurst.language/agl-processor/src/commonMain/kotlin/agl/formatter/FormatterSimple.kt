@@ -44,6 +44,7 @@ class FormatterSimple<AsmType>(
     private fun formatAny(o: Any?): String {
         return when (o) {
             null -> ""
+            is String -> o
             is AsmElementSimple -> o.format(model)
             is List<*> -> o.joinToString(separator = "") { formatAny(it) }
             else -> error("Internal Error: type '${o::class.simpleName}' not supported")

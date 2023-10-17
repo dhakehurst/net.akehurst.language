@@ -21,7 +21,6 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
 import net.akehurst.language.agl.sppt.TreeDataComplete
-import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
@@ -29,6 +28,7 @@ import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.sppt.SpptDataNode
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
 val SpptDataNode.isEmptyMatch get() = this.startPosition == this.nextInputPosition
 //fun SpptDataNode.locationIn(sentence: Sentence) = sentence.locationFor(this)

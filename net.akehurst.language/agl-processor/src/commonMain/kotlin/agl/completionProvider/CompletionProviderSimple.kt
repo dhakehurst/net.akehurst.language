@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl.completionProvider
 
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.processor.CompletionItem

@@ -18,11 +18,13 @@
 package net.akehurst.language.agl.default
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.api.analyser.ScopeModel
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.processor.CompletionItem
+import net.akehurst.language.api.processor.CompletionItemKind
+import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.typemodel.api.TypeModel
 
 class CompletionProviderDefault(
@@ -42,8 +44,16 @@ class CompletionProviderDefault(
 
     private fun provideFor(item: RuleItem, desiredDepth: Int, context: ContextSimple?): List<CompletionItem> {
         val rule = item.owningRule
-        val cis = getItems(item, desiredDepth, context, emptySet())
-        return cis.mapNotNull { it }.toSet().toList()
+        return when {
+            rule.isLeaf -> listOf(
+                CompletionItem(CompletionItemKind.PATTERN, "<${rule.name}>", rule.compressedLeaf.value)
+            )
+
+            else -> {
+                val cis = getItems(item, desiredDepth, context, emptySet())
+                cis.mapNotNull { it }.toSet().toList()
+            }
+        }
     }
 
     // uses null to indicate that there is an empty item

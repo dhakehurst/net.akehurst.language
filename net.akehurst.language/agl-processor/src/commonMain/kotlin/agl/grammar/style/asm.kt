@@ -17,7 +17,7 @@ package net.akehurst.language.agl.grammar.style
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.ProcessResult
-import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.style.AglStyleRule
 

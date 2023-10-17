@@ -21,13 +21,12 @@ import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.formatter.AglFormatExpression
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.formatter.AglFormatterRule
-import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.processor.ProcessResult
-import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
 class AglFormatterModelDefault(
     val asm: AsmSimple?
-) :  AglFormatterModel {
+) : AglFormatterModel {
 
     companion object {
         fun fromString(context: SentenceContext<String>, aglFormatterModelSentence: String): ProcessResult<AglFormatterModel> {
@@ -50,7 +49,7 @@ class AglFormatterModelDefault(
             else -> (asm.rootElements[0] as AsmElementSimple).getPropertyAsList("ruleList").associate {
                 when (it) {
                     is AsmElementSimple -> {
-                        val rule = AglFormatterRuleDefault(this,it)
+                        val rule = AglFormatterRuleDefault(this, it)
                         Pair(rule.forTypeName, rule)
                     }
 

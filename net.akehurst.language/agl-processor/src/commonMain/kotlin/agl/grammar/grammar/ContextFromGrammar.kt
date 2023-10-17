@@ -17,10 +17,10 @@
 package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
+import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
 // used by other languages that reference rules  in a grammar
 

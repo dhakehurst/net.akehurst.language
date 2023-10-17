@@ -14,35 +14,12 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.analyser
+package net.akehurst.language.api.syntaxAnalyser
 
-import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.api.sppt.SharedPackedParseTree
-
-interface ScopeModel {
-
-    /**
-     * Is the property inTypeName.propertyName a reference ?
-     *
-     * @param inTypeName name of the asm type in which contains the property
-     * @param propertyName name of the property that might be a reference
-     */
-    fun isReference(inTypeName: String, propertyName: String): Boolean
-
-    /**
-     *
-     * Find the name of the type referred to by the property inTypeName.referringPropertyName
-     *
-     * @param inTypeName name of the asm type in which the property is a reference
-     * @param referringPropertyName name of the property that is a reference
-     */
-    fun getReferredToTypeNameFor(inTypeName: String, referringPropertyName: String): List<String>
-}
 
 /**
  *
@@ -71,7 +48,7 @@ interface SyntaxAnalyser<out AsmType : Any> { //TODO: make transform type argume
     /**
      * configure the SyntaxAnalyser
      */
-    fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any> = emptyMap()): List<LanguageIssue>
+    //fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any> = emptyMap()): List<LanguageIssue>
 
     /**
      * map the tree into an instance of the targetType

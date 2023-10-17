@@ -17,13 +17,8 @@
 
 package net.akehurst.language.agl.default
 
-import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.agl.syntaxAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
@@ -37,8 +32,6 @@ import kotlin.test.assertTrue
 class test_SemanticAnalyserDefault_datatypes {
 
     private companion object {
-        val grammarProc = Agl.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
-
         val grammarStr = """
             namespace test
             
@@ -62,16 +55,7 @@ class test_SemanticAnalyserDefault_datatypes {
                 leaf type = ID;
             }
         """.trimIndent()
-        val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!.first()
-        val typeModel by lazy {
-            val result = grammarProc.process(grammarStr)
-            assertNotNull(result.asm)
-            assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
-            TypeModelFromGrammar.create(result.asm!!.last())
-        }
-        val scopeModel = ScopeModelAgl.fromString(
-            ContextFromTypeModel(grammar.qualifiedName, TypeModelFromGrammar.create(grammar)),
-            """
+        val scopeModelStr = """
                 identify Unit by §nothing
                 scope Unit {
                     identify Primitive by id
@@ -84,16 +68,10 @@ class test_SemanticAnalyserDefault_datatypes {
                    // }
                 }
             """.trimIndent()
-        ).asm!!
-        val syntaxAnalyser = SyntaxAnalyserDefault(grammar.qualifiedName, typeModel, scopeModel)
-        val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
+        val scopeModel = Agl.registry.agl.scopes.processor!!.process(scopeModelStr).asm!!
+        val processor = Agl.processorFromStringDefault(
             grammarStr,
-            Agl.configuration {
-                scopeModelResolver { ProcessResultDefault(scopeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
-                typeModelResolver { ProcessResultDefault(typeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
-                syntaxAnalyserResolver { ProcessResultDefault(syntaxAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) }
-                semanticAnalyserResolver { ProcessResultDefault(SemanticAnalyserDefault(scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
-            }
+            scopeModelStr
         ).processor!!
     }
 

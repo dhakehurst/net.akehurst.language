@@ -45,5 +45,5 @@ internal class FailedParseReasonGraftRTG(
 internal class FailedParseReasonEmbedded(
     position: Int,
     transition: Transition,
-    val embededFailedParseReasons: List<FailedParseReason>
+    val embededFailedParseReasons: Map<Int, MutableList<FailedParseReason>>
 ) : FailedParseReason(position, transition)

@@ -17,7 +17,7 @@ package net.akehurst.language.agl.processor.dot
 
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test

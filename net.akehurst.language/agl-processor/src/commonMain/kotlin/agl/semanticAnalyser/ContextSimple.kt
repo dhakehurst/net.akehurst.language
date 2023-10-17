@@ -1,26 +1,28 @@
-/**
- * Copyright (C) 2021 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+/*
+ * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ *          http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package net.akehurst.language.agl.syntaxAnalyser
+package net.akehurst.language.agl.semanticAnalyser
 
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.AsmElementSimple
-import net.akehurst.language.api.asm.Scope
-import net.akehurst.language.api.processor.SentenceContext
+
+import net.akehurst.language.api.semanticAnalyser.Scope
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
 class ContextSimple() : SentenceContext<AsmElementPath> {
 
@@ -101,6 +103,17 @@ class ScopeSimple<AsmElementIdType>(
     override fun findOrNull(referableName: String, typeName: String): AsmElementIdType? = this.items[typeName]?.get(referableName)
 
     override fun isMissing(referableName: String, typeName: String): Boolean = null == this.findOrNull(referableName, typeName)
+
+    override fun asString(currentIndent: String, indentIncrement: String): String {
+        val newIndent = currentIndent + indentIncrement
+        val content = items.entries.joinToString {
+            val itemContent = it.value.entries.joinToString {
+                "${it.key} -> ${it.value.toString()}"
+            }
+            "${newIndent}item ${it.key} {\n$itemContent\n${newIndent}}"
+        }
+        return """scope $forTypeName {$content\n}"""
+    }
 
     override fun hashCode(): Int = arrayOf(parent, forReferenceInParent, forTypeName).contentHashCode()
 

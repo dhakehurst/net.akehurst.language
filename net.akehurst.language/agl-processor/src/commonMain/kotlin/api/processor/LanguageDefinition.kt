@@ -18,13 +18,13 @@ package net.akehurst.language.api.processor
 
 import net.akehurst.language.agl.grammar.grammar.GrammarContext
 import net.akehurst.language.agl.processor.AglLanguages
-import net.akehurst.language.api.analyser.ScopeModel
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammar.Namespace
+import net.akehurst.language.api.semanticAnalyser.ScopeModel
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.style.AglStyleModel
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
 interface GrammarRegistry {
     fun registerGrammar(grammar: Grammar)

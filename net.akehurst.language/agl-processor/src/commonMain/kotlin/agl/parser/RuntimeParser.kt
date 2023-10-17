@@ -55,13 +55,14 @@ internal class RuntimeParser(
             val heightGraftOnly: Boolean,
             val nonEmptyWidthOnly: Boolean,
             val reportErrors: Boolean,
-            val reportGrammarAmbiguities: Boolean
+            val reportGrammarAmbiguities: Boolean,
+            val allowEOTAfterSkip: Boolean
         )
 
         //val normalArgs = GrowArgs(true, false, false, false, true)
-        val forPossErrors = GrowArgs(false, true, false, true, true, true)
-        val heightGraftOnly = GrowArgs(false, true, true, false, false, true)
-        val forExpectedAt = GrowArgs(false, false, false, false, true, false)
+        //val forPossErrors = GrowArgs(false, true, false, true, true, true)
+        //val heightGraftOnly = GrowArgs(false, true, true, false, false, true)
+        val forExpectedAt = GrowArgs(false, false, false, false, true, false, true)
 
     }
 
@@ -70,12 +71,12 @@ internal class RuntimeParser(
     //var lastGrown: Set<ParseGraph.Companion.ToProcessTriple> = mutableSetOf()
     val canGrow: Boolean get() = this.graph.canGrow
 
-    var lastToGrow = listOf<ParseGraph.Companion.ToProcessTriple>()
+    //var lastToGrow = listOf<ParseGraph.Companion.ToProcessTriple>()
 
     //val lastDropped = mutableSetOf<ParseGraph.Companion.NextToProcess>()
     //val embeddedLastDropped = mutableMapOf<Transition, Set<ParseGraph.Companion.NextToProcess>>()
     //val lastToTryWidthTrans = mutableListOf<GrowingNodeIndex>()
-    val failedReasons = mutableListOf<FailedParseReason>()
+    val failedReasons = mutableMapOf<Int, MutableList<FailedParseReason>>()
 
     private var interruptedMessage: String? = null
 
@@ -196,15 +197,15 @@ internal class RuntimeParser(
     }
 
     fun grow3(possibleEndOfText: Set<LookaheadSet>, growArgs: GrowArgs): Int {
-        this.failedReasons.clear()
+        val currentNextInputPosition = this.graph.nextHeadNextInputPosition
+        this.failedReasonsClear(currentNextInputPosition)
         //this.lastDropped.clear()
-        this.lastToGrow = this.graph.peekAllNextToProcess()
+        //this.lastToGrow = this.graph.peekAllNextToProcess()
 
         var steps = 0
         val progressSteps = lazyMutableMapNonNull<GrowingNodeIndex, Int> { 0 }
         val doneEmpties = mutableSetOf<Pair<ParserState, Set<GrowingNodeIndex>>>()
 
-        val currentNextInputPosition = this.graph.nextHeadNextInputPosition
         while (this.graph.hasNextHead && this.graph.nextHeadNextInputPosition <= currentNextInputPosition) {
             checkForTerminationRequest()
             val graph = this.graph //TODO: remove..for debug only
@@ -893,7 +894,7 @@ internal class RuntimeParser(
                         this.graph.pushToStackOf(head, transition.to, setOf(LookaheadSet.EMPTY), startPosition, nextInputPosition, skipData)
                     } else {
                         val pos = if (null != skipParser && skipParser.failedReasons.isNotEmpty()) {
-                            skipParser.failedReasons.maxOf { it.position }
+                            skipParser.failedReasons.keys.max()//maxOf { it.position }
                         } else {
                             nextInputPositionAfterSkip
                         }
@@ -1021,7 +1022,11 @@ internal class RuntimeParser(
             } else {
                 setOf(lh)
             }
-            this.tryParseSkipUntilNone(skipLh, atPosition, growArgs)
+            val slh = when (growArgs.allowEOTAfterSkip) {
+                true -> skipLh + LookaheadSet.EOT
+                false -> skipLh
+            }
+            this.tryParseSkipUntilNone(slh, atPosition, growArgs)
         }
     }
 
@@ -1159,39 +1164,55 @@ internal class RuntimeParser(
         _issues.raise(LanguageIssueKind.WARNING, LanguageProcessorPhase.GRAMMAR, loc, "Ambiguity in parse (on $ambigOnStr):\n  ($from) into $into", ambigOn)
     }
 
+    private fun failedReasonsClear(beforePosition: Int) {
+        val rmv = failedReasons.keys.filter { it < beforePosition }
+        rmv.forEach {
+            failedReasons.remove(it)
+        }
+    }
+
+    private fun failedReasonsAdd(fr: FailedParseReason) {
+        val l = failedReasons[fr.position]
+        if (null == l) {
+            failedReasons[fr.position] = mutableListOf(fr)
+        } else {
+            l.add(fr)
+        }
+    }
+
     private fun recordFailedWidthTo(parseArgs: GrowArgs, position: Int, transition: Transition) {
         if (parseArgs.reportErrors) {
-            failedReasons.add(FailedParseReasonWidthTo(position, transition))
+            failedReasonsAdd(FailedParseReasonWidthTo(position, transition))
         }
     }
 
     private fun recordFailedWidthLH(parseArgs: GrowArgs, position: Int, transition: Transition, runtimeLhs: Set<LookaheadSet>, possibleEndOfText: Set<LookaheadSet>) {
         if (parseArgs.reportErrors) {
-            failedReasons.add(FailedParseReasonLookahead(position, transition, runtimeLhs, possibleEndOfText))
+            failedReasonsAdd(FailedParseReasonLookahead(position, transition, runtimeLhs, possibleEndOfText))
         }
     }
 
-    private fun recordFailedEmbedded(parseArgs: GrowArgs, position: Int, transition: Transition, failedEmbeddedReasons: List<FailedParseReason>) {
+    private fun recordFailedEmbedded(parseArgs: GrowArgs, position: Int, transition: Transition, failedEmbeddedReasons: Map<Int, MutableList<FailedParseReason>>) {
         if (parseArgs.reportErrors) {
-            failedReasons.add(FailedParseReasonEmbedded(position, transition, failedEmbeddedReasons))
+            failedReasonsAdd(FailedParseReasonEmbedded(position, transition, failedEmbeddedReasons))
         }
     }
 
     private fun recordFailedHeightLh(parseArgs: GrowArgs, position: Int, transition: Transition, runtimeLhs: Set<LookaheadSet>, possibleEndOfText: Set<LookaheadSet>) {
         if (parseArgs.reportErrors) {
-            failedReasons.add(FailedParseReasonLookahead(position, transition, runtimeLhs, possibleEndOfText))
+            failedReasonsAdd(FailedParseReasonLookahead(position, transition, runtimeLhs, possibleEndOfText))
         }
     }
 
     private fun recordFailedGraftRTG(parseArgs: GrowArgs, position: Int, transition: Transition, prevNumNonSkipChildren: Int) {
         if (parseArgs.reportErrors) {
-            failedReasons.add(FailedParseReasonGraftRTG(position, transition, prevNumNonSkipChildren))
+            failedReasonsAdd(FailedParseReasonGraftRTG(position, transition, prevNumNonSkipChildren))
         }
     }
 
     private fun recordFailedGraftLH(parseArgs: GrowArgs, position: Int, transition: Transition, runtimeLhs: Set<LookaheadSet>, possibleEndOfText: Set<LookaheadSet>) {
         if (parseArgs.reportErrors) {
-            failedReasons.add(FailedParseReasonLookahead(position, transition, runtimeLhs, possibleEndOfText))
+            failedReasonsAdd(FailedParseReasonLookahead(position, transition, runtimeLhs, possibleEndOfText))
         }
     }
 }

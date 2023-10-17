@@ -21,11 +21,13 @@ import net.akehurst.language.agl.grammar.scopes.AglScopesSyntaxAnalyser
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
-import net.akehurst.language.agl.syntaxAnalyser.ContextFromTypeModel
-import net.akehurst.language.api.analyser.SemanticAnalyser
-import net.akehurst.language.api.grammar.GrammarItem
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.SemanticAnalysisOptions
+import net.akehurst.language.api.processor.SemanticAnalysisResult
+import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
 class AglScopesSemanticAnalyser : SemanticAnalyser<ScopeModelAgl, SentenceContext<String>> {
 
@@ -33,9 +35,9 @@ class AglScopesSemanticAnalyser : SemanticAnalyser<ScopeModelAgl, SentenceContex
 
     }
 
-    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
-        return emptyList()
-    }
+//    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
+//        return emptyList()
+//    }
 
     override fun analyse(
         asm: ScopeModelAgl,

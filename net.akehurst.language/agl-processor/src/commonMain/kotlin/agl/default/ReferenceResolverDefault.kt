@@ -18,10 +18,11 @@
 package net.akehurst.language.agl.default
 
 import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
-import net.akehurst.language.api.analyser.ScopeModel
+import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
+
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.collections.mutableStackOf
 
 typealias ResolveFunction = (ref: AsmElementPath) -> AsmElementSimple?

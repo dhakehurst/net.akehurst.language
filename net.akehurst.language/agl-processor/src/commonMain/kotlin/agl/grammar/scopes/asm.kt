@@ -16,9 +16,9 @@
 package net.akehurst.language.agl.grammar.scopes
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.processor.ProcessResult
-import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.semanticAnalyser.ScopeModel
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
 class ScopeModelAgl
     : ScopeModel {

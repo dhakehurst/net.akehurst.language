@@ -20,13 +20,11 @@ import net.akehurst.language.agl.collections.toSeparatedList
 import net.akehurst.language.agl.grammar.grammar.asm.*
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
-import net.akehurst.language.api.analyser.SyntaxAnalyser
 import net.akehurst.language.api.grammar.*
-import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageProcessorPhase
-import net.akehurst.language.api.processor.SentenceContext
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
+import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
 internal class AglGrammarSyntaxAnalyser(
     //val languageRegistry: LanguageRegistryDefault
@@ -88,10 +86,10 @@ internal class AglGrammarSyntaxAnalyser(
         this.register(this::associativity)
     }
 
-    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
-        //TODO
-        return emptyList()
-    }
+//    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
+//        //TODO
+//        return emptyList()
+//    }
 
     // grammarDefinition : namespace definitions ;
     private fun grammarDefinition(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Grammar> {

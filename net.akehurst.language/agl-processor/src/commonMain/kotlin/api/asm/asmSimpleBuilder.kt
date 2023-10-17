@@ -21,9 +21,9 @@ import net.akehurst.language.agl.default.ReferenceResolverDefault
 import net.akehurst.language.agl.default.ResolveFunction
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple
-import net.akehurst.language.agl.syntaxAnalyser.ScopeSimple
-import net.akehurst.language.agl.syntaxAnalyser.createReferenceLocalToScope
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
+import net.akehurst.language.agl.semanticAnalyser.createReferenceLocalToScope
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.simple.TupleTypeSimple
 

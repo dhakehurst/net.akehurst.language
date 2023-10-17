@@ -24,14 +24,11 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsListSeparated
 import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.agl.util.Debug
-import net.akehurst.language.api.analyser.ScopeModel
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.AsmSimple
-import net.akehurst.language.api.grammar.GrammarItem
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.api.processor.LanguageIssue
-import net.akehurst.language.api.processor.SentenceContext
+import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.api.sppt.*
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.typemodel.api.*
@@ -88,9 +85,9 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
         this._asm = null
     }
 
-    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
-        return emptyList()
-    }
+//    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
+//        return emptyList()
+//    }
 
     override fun walkTree(sentence: Sentence, treeData: TreeDataComplete<out SpptDataNode>, skipDataAsTree: Boolean) {
         val syntaxAnalyserStack = mutableStackOf(this)
