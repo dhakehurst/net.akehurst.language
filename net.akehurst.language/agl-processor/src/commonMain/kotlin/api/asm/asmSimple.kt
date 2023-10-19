@@ -129,7 +129,7 @@ class AsmElementSimple(
     val children: List<AsmElementSimple>
         get() = this.properties.values
             .filterNot { it.isReference }
-            .flatMap { if (it.value is List<*>) it.value else listOf(it.value) }
+            .flatMap { if (it.value is List<*>) it.value as List<*> else listOf(it.value) }
             .filterIsInstance<AsmElementSimple>()
 
     fun hasProperty(name: String): Boolean = properties.containsKey(name)
@@ -152,22 +152,12 @@ class AsmElementSimple(
         fun setPropertyAsListOfString(name: String, value: List<String>?) = setProperty(name, value, false)
         fun setPropertyAsAsmElement(name: String, value: AsmElementSimple?, isReference: Boolean) = setProperty(name, value, isReference)
     */
-    fun setProperty(name: String, value: Any?, isReference: Boolean, childIndex: Int) {
-        if (isReference) {
-            val ref = AsmElementReference(value as String, null)
-            _properties[name] = AsmElementProperty(name, childIndex, ref, true)
-        } else {
-            _properties[name] = AsmElementProperty(name, childIndex, value, false)
-        }
+    fun setProperty(name: String, value: Any?, childIndex: Int) {
+        _properties[name] = AsmElementProperty(name, childIndex, value)
     }
 
-    fun setPropertyFromDeclaration(declaration: PropertyDeclaration, value: Any?, isReference: Boolean) {
-        if (isReference) {
-            val ref = AsmElementReference(value as String, null)
-            _properties[declaration.name] = AsmElementProperty(declaration.name, declaration.index, ref, true)
-        } else {
-            _properties[declaration.name] = AsmElementProperty(declaration.name, declaration.index, value, false)
-        }
+    fun setPropertyFromDeclaration(declaration: PropertyDeclaration, value: Any?) {
+        setProperty(declaration.name, value, declaration.index)
     }
 
     fun addAllProperty(value: List<AsmElementProperty>) {
@@ -206,7 +196,7 @@ class AsmElementSimple(
             } else if (null == it.value) {
                 "${it.name} = null"
             } else {
-                "${it.name} = ${it.value.asStringAny(indent, newIndent)}"
+                "${it.name} = ${it.value!!.asStringAny(indent, newIndent)}"
             }
         }
         return ":$typeName $propsStr"
@@ -219,7 +209,7 @@ class AsmElementSimple(
         else -> false
     }
 
-    override fun toString(): String = ":$typeName($asmPath)"
+    override fun toString(): String = ":$typeName([${asmPath.value}])"
 
 }
 
@@ -243,9 +233,25 @@ class AsmElementReference(
 class AsmElementProperty(
     val name: String,
     val childIndex: Int,
-    val value: Any?,
-    val isReference: Boolean
+    value: Any?
 ) {
+    var value: Any? = value; private set
+    val isReference: Boolean get() = this.value is AsmElementReference
+
+    fun convertToReferenceTo(referredValue: AsmElementSimple?) {
+        val v = this.value
+        when (v) {
+            null -> error("Cannot convert property '$this' a reference, it has value null")
+            is AsmElementReference -> v.value = referredValue
+            is String -> {
+                val ref = AsmElementReference(v, referredValue)
+                this.value = ref
+            }
+
+            else -> error("Cannot convert property '$this' a reference, it has value of type '${v::class.simpleName}'")
+        }
+    }
+
     fun equalTo(other: AsmElementProperty): Boolean {
         return when {
             this.name != other.name -> false
@@ -271,11 +277,12 @@ class AsmElementProperty(
     }
 
     override fun toString(): String {
-        return when (value) {
-            is AsmElementSimple -> "$name = :${value.typeName}"
+        val v = this.value
+        return when (v) {
+            is AsmElementSimple -> "$name = :${v.typeName}"
             is List<*> -> "$name = [...]"
-            is String -> if (isReference) "$name = &${value}" else "$name = ${value}"
-            else -> "$name = ${value}"
+            is String -> if (isReference) "$name = &${v}" else "$name = ${v}"
+            else -> "$name = ${v}"
         }
     }
 }

@@ -203,7 +203,7 @@ class test_AglScopes {
         assertEquals(expected.references, result.asm?.references)
         assertEquals(
             setOf(
-                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(6, 7, 1, 5), "Type 'RuleX' not found in scope")
+                LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(6, 7, 1, 5), "Type 'RuleX' not found")
             ), result.issues.all
         )
     }
@@ -287,7 +287,7 @@ class test_AglScopes {
                     LanguageIssueKind.ERROR,
                     LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                     InputLocation(27, 14, 2, 5),
-                    "Type 'RuleX' not found in scope"
+                    "Type 'RuleX' not found"
                 )
             ),
             result.issues.errors
@@ -373,7 +373,7 @@ class test_AglScopes {
             references.add(
                 ReferenceDefinition(
                     "Rule2", listOf(
-                        PropertyReferenceExpression("rule3", listOf("Rule1"), null)
+                        PropertyReferenceExpression(Navigation("rule3"), listOf("Rule1"), null)
                     )
                 )
             )
@@ -415,7 +415,7 @@ class test_AglScopes {
         )
 
         val expected = ScopeModelAgl().apply {
-            references.add(ReferenceDefinition("RuleX", listOf(PropertyReferenceExpression("ruleY", listOf("RuleZ", "RuleW"), null))))
+            references.add(ReferenceDefinition("RuleX", listOf(PropertyReferenceExpression(Navigation("ruleY"), listOf("RuleZ", "RuleW"), null))))
         }
         val expectedIssues = listOf(
             LanguageIssue(
@@ -460,7 +460,7 @@ class test_AglScopes {
         val result = aglProc.process(text)
 
         val expected = ScopeModelAgl().apply {
-            references.add(ReferenceDefinition("Type1", listOf(PropertyReferenceExpression("prop", listOf("Type2", "Type3", "Type4"), null))))
+            references.add(ReferenceDefinition("Type1", listOf(PropertyReferenceExpression(Navigation("prop"), listOf("Type2", "Type3", "Type4"), null))))
         }
 
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())

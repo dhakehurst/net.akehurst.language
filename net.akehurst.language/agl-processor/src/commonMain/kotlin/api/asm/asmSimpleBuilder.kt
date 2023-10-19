@@ -16,6 +16,7 @@
 
 package net.akehurst.language.api.asm
 
+import net.akehurst.language.agl.agl.default.ScopeCreator
 import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.agl.default.ReferenceResolverDefault
 import net.akehurst.language.agl.default.ResolveFunction
@@ -31,8 +32,14 @@ import net.akehurst.language.typemodel.simple.TupleTypeSimple
 @DslMarker
 annotation class AsmSimpleBuilderMarker
 
-fun asmSimple(scopeModel: ScopeModelAgl = ScopeModelAgl(), context: ContextSimple? = null, resolveReferences: Boolean = true, init: AsmSimpleBuilder.() -> Unit): AsmSimple {
-    val b = AsmSimpleBuilder(scopeModel, context, resolveReferences)
+fun asmSimple(
+    scopeModel: ScopeModelAgl = ScopeModelAgl(),
+    context: ContextSimple? = null,
+    resolveReferences: Boolean = true,
+    failIfIssues: Boolean = true,
+    init: AsmSimpleBuilder.() -> Unit
+): AsmSimple {
+    val b = AsmSimpleBuilder(scopeModel, context, resolveReferences, failIfIssues)
     b.init()
     return b.build()
 }
@@ -41,7 +48,8 @@ fun asmSimple(scopeModel: ScopeModelAgl = ScopeModelAgl(), context: ContextSimpl
 class AsmSimpleBuilder(
     private val _scopeModel: ScopeModelAgl,
     private val _context: ContextSimple?,
-    private val resolveReferences: Boolean
+    private val resolveReferences: Boolean,
+    private val failIfIssues: Boolean
 ) {
 
     private val _asm = AsmSimple()
@@ -87,17 +95,21 @@ class AsmSimpleBuilder(
     fun build(): AsmSimple {
         val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
         if (resolveReferences && null != _context) {
+            val scopeCreator = ScopeCreator(_scopeModel as ScopeModelAgl, _context.rootScope, emptyMap(), issues)
+            _asm.traverseDepthFirst(scopeCreator)
+
             val resolveFunction: ResolveFunction = { ref ->
                 _asm.elementIndex[ref]
             }
-            _asm.traverseDepthFirst(ReferenceResolverDefault(_scopeModel, _context.rootScope, resolveFunction, null, issues))
+            _asm.traverseDepthFirst(ReferenceResolverDefault(_scopeModel, _context.rootScope, resolveFunction, emptyMap(), issues))
         }
-        //       if (issues.all.isEmpty()) {
-        return _asm
-//        } else {
-//            error("Issues building asm:\n${issues.all.joinToString(separator = "\n") { "$it" }}")
+        if (failIfIssues && issues.isNotEmpty()) {
+            error("Issues building asm:\n${issues.all.joinToString(separator = "\n") { "$it" }}")
+
+        } else {
+            return _asm
+        }
     }
-    //   }
 }
 
 @AsmSimpleBuilderMarker
@@ -128,7 +140,7 @@ class AsmElementSimpleBuilder(
     }
 
     private fun _property(name: String, value: Any?) {
-        _element.setProperty(name, value, false, 0)//TODO childIndex
+        _element.setProperty(name, value, 0)//TODO childIndex
     }
 
     fun propertyUnnamedString(value: String?) = this._property(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, value)
@@ -144,7 +156,7 @@ class AsmElementSimpleBuilder(
         val b = AsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, newPath, typeName, false, _elementScope)
         b.init()
         val el = b.build()
-        this._element.setProperty(name, el, false, 0)//TODO childIndex
+        this._element.setProperty(name, el, 0)//TODO childIndex
         return el
     }
 
@@ -156,12 +168,13 @@ class AsmElementSimpleBuilder(
         val b = ListAsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, newPath, _elementScope)
         b.init()
         val list = b.build()
-        this._element.setProperty(name, list, false, 0)//TODO childIndex
+        this._element.setProperty(name, list, 0)//TODO childIndex
         return list
     }
 
     fun reference(name: String, elementReference: String) {
-        _element.setProperty(name, elementReference, true, 0)//TODO childIndex
+        val ref = AsmElementReference(elementReference, null)
+        _element.setProperty(name, ref, 0)//TODO childIndex
     }
 
     fun build(): AsmElementSimple {

@@ -20,10 +20,12 @@ package net.akehurst.language.agl.semanticAnalyser
 import net.akehurst.language.agl.grammar.scopes.Navigation
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.api.asm.AsmElementPath
+import net.akehurst.language.api.asm.AsmElementProperty
 import net.akehurst.language.api.asm.AsmElementSimple
 
 import net.akehurst.language.api.semanticAnalyser.Scope
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.typemodel.api.*
 
 class ContextSimple() : SentenceContext<AsmElementPath> {
 
@@ -43,28 +45,73 @@ class ContextSimple() : SentenceContext<AsmElementPath> {
     override fun toString(): String = "ContextSimple"
 }
 
-fun Navigation.evaluateFor(root: AsmElementSimple?) = this.value.fold(root as Any?) { acc, it ->
-    when (acc) {
-        null -> null
-        is AsmElementSimple -> acc.getProperty(it)
-        else -> error("Cannot evaluate $this on object of type '${acc::class.simpleName}'")
+fun Navigation.evaluateFor(root: AsmElementSimple?) = when {
+    this.isNothing -> null
+    else -> this.value.fold(root as Any?) { acc, it ->
+        when (acc) {
+            null -> null
+            is AsmElementSimple -> acc.getProperty(it)
+            else -> error("Cannot evaluate $this on object of type '${acc::class.simpleName}'")
+        }
     }
 }
 
-fun ScopeModelAgl.createReferenceLocalToScope(scope: ScopeSimple<AsmElementPath>, element: AsmElementSimple): String? {
+fun Navigation.propertyFor(root: AsmElementSimple?): AsmElementProperty {
+    return when {
+        null == root -> error("Cannot navigate '$this' from null value")
+        else -> {
+            val front = this.value.dropLast(1)
+            var el = root
+            for (pn in front) {
+                val pv = el?.getProperty(pn)
+                el = when (pv) {
+                    null -> error("Cannot navigate '$pn' from null value")
+                    is AsmElementSimple -> pv
+                    else -> error("Cannot navigate '$pn' from value of type '${pv::class.simpleName}'")
+                }
+            }
+            el?.properties?.get(this.value.last()) ?: error("Cannot navigate '$this' from null value")
+        }
+    }
+}
+
+fun Navigation.propertyDeclarationFor(root: TypeDefinition?): PropertyDeclaration? {
+    var type = root
+    var pd: PropertyDeclaration? = null
+    for (pn in this.value) {
+        pd = when (type) {
+            null -> null
+            is DataType -> type.allProperty[pn]
+            is TupleType -> type.property[pn]
+            is CollectionType -> TODO()
+            is UnnamedSuperTypeType -> TODO()
+            else -> error("subtype of TypeDefinition not handled: '${type::class.simpleName}'")
+        }
+        type = pd?.typeInstance?.type
+    }
+    return pd
+}
+
+fun ScopeModelAgl.createReferenceLocalToScope(scope: Scope<AsmElementPath>, element: AsmElementSimple): String? {
     val nav = this.getReferablePropertyNameFor(scope.forTypeName, element.typeName)
-    val res = nav?.evaluateFor(element)
-    return when (res) {
-        null -> null
-        is String -> res
-        else -> error("Evaluation of navigation '$nav' on '$element' should result in a String, but it does not!")
+    return when {
+        null == nav -> null
+        nav.isNothing -> ""
+        else -> {
+            val res = nav?.evaluateFor(element)
+            when (res) {
+                null -> null
+                is String -> res
+                else -> error("Evaluation of navigation '$nav' on '$element' should result in a String, but it does not!")
+            }
+        }
     }
 }
 
 class ScopeSimple<AsmElementIdType>(
     val parent: ScopeSimple<AsmElementIdType>?,
     val forReferenceInParent: String,
-    val forTypeName: String
+    override val forTypeName: String
 ) : Scope<AsmElementIdType> {
 
     //should only be used for rootScope
@@ -75,7 +122,7 @@ class ScopeSimple<AsmElementIdType>(
     // typeName -> referableName -> item
     private val _items: MutableMap<String, MutableMap<String, AsmElementIdType>> = mutableMapOf()
 
-    val rootScope: ScopeSimple<AsmElementIdType> by lazy {
+    override val rootScope: ScopeSimple<AsmElementIdType> by lazy {
         var s = this
         while (null != s.parent) s = s.parent!!
         s
@@ -91,7 +138,7 @@ class ScopeSimple<AsmElementIdType>(
         if (null == parent) emptyList() else parent.path + forReferenceInParent
     }
 
-    fun createOrGetChildScope(forReferenceInParent: String, forTypeName: String, elementId: AsmElementIdType): ScopeSimple<AsmElementIdType> {
+    override fun createOrGetChildScope(forReferenceInParent: String, forTypeName: String, elementId: AsmElementIdType): ScopeSimple<AsmElementIdType> {
         var child = this._childScopes[forReferenceInParent]
         if (null == child) {
             child = ScopeSimple<AsmElementIdType>(this, forReferenceInParent, forTypeName)
@@ -101,7 +148,7 @@ class ScopeSimple<AsmElementIdType>(
         return child
     }
 
-    fun addToScope(referableName: String, typeName: String, asmElementId: AsmElementIdType) {
+    override fun addToScope(referableName: String, typeName: String, asmElementId: AsmElementIdType) {
         var m = this._items[typeName]
         if (null == m) {
             m = mutableMapOf()

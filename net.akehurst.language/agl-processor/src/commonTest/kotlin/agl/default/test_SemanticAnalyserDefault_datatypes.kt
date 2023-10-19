@@ -17,7 +17,9 @@
 
 package net.akehurst.language.agl.default
 
+import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
@@ -55,19 +57,6 @@ class test_SemanticAnalyserDefault_datatypes {
                 leaf type = ID;
             }
         """.trimIndent()
-        val scopeModelStr2 = """
-                identify Unit by §nothing
-                scope Unit {
-                    identify Primitive by id
-                    identify Datatype by id
-                    identify Collection by id
-                }
-                references {
-                    in TypeReference //{
-                      property type refers-to Primitive|Datatype|Collection
-                   // }
-                }
-            """.trimIndent()
         val scopeModelStr = """
                 identify Unit by §nothing
                 scope Unit {
@@ -76,16 +65,23 @@ class test_SemanticAnalyserDefault_datatypes {
                     identify Collection by id
                 }
                 references {
-                    in TypeReference //{
+                    in TypeReference {
                       property type refers-to Primitive|Datatype|Collection
-                   // }
+                    }
                 }
             """.trimIndent()
-        val scopeModel = Agl.registry.agl.scopes.processor!!.process(scopeModelStr).asm!!
+        val scopeModel = ScopeModelAgl.fromString(null, scopeModelStr).let { it.asm ?: error(it.issues.toString()) }
         val processor = Agl.processorFromStringDefault(
             grammarStr,
             scopeModelStr
         ).processor!!
+    }
+
+    @Test
+    fun check_scopeModel() {
+        val context = ContextFromTypeModel(processor.grammar!!.qualifiedName, processor.typeModel)
+        val res = ScopeModelAgl.fromString(context, scopeModelStr)
+        assertTrue(res.issues.isEmpty(), res.issues.toString())
     }
 
     @Test
@@ -190,12 +186,12 @@ class test_SemanticAnalyserDefault_datatypes {
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(21, 9, 2, 7),
-                "Cannot find 'String' as reference for 'TypeReference.type'"
+                "No target of type(s) [Primitive, Datatype, Collection] found for referring value 'String' in scope of element ':TypeReference([/0/declaration/0/property/0/typeReference])'"
             )
         )
 
-        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
         assertEquals(expItems, result.issues.errors)
+        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
     }
 
     @Test

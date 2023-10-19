@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.agl.processor.dot
+package net.akehurst.language.agl.processor.KerML
 
 import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl

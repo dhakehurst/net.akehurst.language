@@ -48,7 +48,9 @@ exportPublic {
             "net.akehurst.language.agl.processor.**",
             "net.akehurst.language.agl.grammar.**",
             "net.akehurst.language.agl.syntaxAnalyser.**",
+            "net.akehurst.language.agl.semanticAnalyser.**",
             "net.akehurst.language.agl.sppt.**",
+            "net.akehurst.language.agl.default.**"
         )
     )
 }

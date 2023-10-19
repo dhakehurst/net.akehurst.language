@@ -17,67 +17,73 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
-import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
-import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.typemodel.api.TypeModel
 
 // used by other languages that reference rules  in a grammar
 
 class ContextFromTypeModel(
+    val targetNamespaceQualifiedName: String,
+    val typeModel: TypeModel
 ) : SentenceContext<String> {
-    constructor(grammarNamespaceQualifiedName: String, typeModel: TypeModel) : this() {
-        createScopeFrom(grammarNamespaceQualifiedName, typeModel)
-    }
 
     companion object {
         const val TYPE_NAME_FOR_TYPES = "\$Type"
         const val TYPE_NAME_FOR_PROPERTIES = "\$Property"
     }
 
-    override var rootScope = ScopeSimple<String>(null, "", "")
+    /*    init {
+            createScopeFrom(targetNamespaceQualifiedName, typeModel)
+        }*/
+
+    val targetNamespace get() = typeModel.namespace[targetNamespaceQualifiedName]!!
+
+    override val rootScope = ScopeSimple<String>(null, "", "")
 
     fun clear() {
-        this.rootScope = ScopeSimple<String>(null, "", "")
+        //this.rootScope = ScopeSimple<String>(null, "", "")
     }
 
-    fun createScopeFrom(grammarNamespaceQualifiedName: String, typeModel: TypeModel) {
-        val ns = typeModel.namespace[grammarNamespaceQualifiedName] as GrammarTypeNamespace
-            ?: error("TypeNamespace '$grammarNamespaceQualifiedName' not found")
-        val scope = ScopeSimple<String>(null, "", grammarNamespaceQualifiedName)
-        ns.allRuleNameToType.forEach {
-            scope.addToScope(it.value.type.name, TYPE_NAME_FOR_TYPES, it.value.type.name)
-            val type = it.value.type
-            when (type) {
+    /*
+        fun createScopeFrom(grammarNamespaceQualifiedName: String, typeModel: TypeModel) {
+            val ns = typeModel.namespace[grammarNamespaceQualifiedName] as GrammarTypeNamespace
+                ?: error("TypeNamespace '$grammarNamespaceQualifiedName' not found")
+            val scope = ScopeSimple<String>(null, "", grammarNamespaceQualifiedName)
+            ns.allRuleNameToType.forEach {
+                scope.addToScope(it.value.type.name, TYPE_NAME_FOR_TYPES, it.value.type.name)
+                val type = it.value.type
+                when (type) {
+                    is PrimitiveType -> Unit
+                    is CollectionType -> Unit
+                    is UnnamedSuperTypeType -> Unit
+                    is TupleType -> {
+                    }
 
-                is PrimitiveType -> Unit
-                is CollectionType -> Unit
-                is UnnamedSuperTypeType -> Unit
-                is TupleType -> {
-                }
+                    is DataType -> {
+                        val chs = scope.createOrGetChildScope(type.name, type.name, type.name)
+                        type.property.values.forEach {
+                            chs.addToScope(it.name, TYPE_NAME_FOR_PROPERTIES, it.name)
+                        }
+                    }
 
-                is DataType -> {
-                    val chs = scope.createOrGetChildScope(type.name, type.name, type.name)
-                    type.property.values.forEach {
-                        chs.addToScope(it.name, TYPE_NAME_FOR_PROPERTIES, it.name)
+                    else -> when (type) {
+                        typeModel.NothingType -> Unit
+                        typeModel.AnyType -> Unit
                     }
                 }
-
-                else -> when (type) {
-                    typeModel.NothingType -> Unit
-                    typeModel.AnyType -> Unit
-                }
             }
+            this.rootScope = scope
         }
-        this.rootScope = scope
-    }
+    */
 
-    override fun hashCode(): Int = rootScope.hashCode()
+    override fun hashCode(): Int = targetNamespaceQualifiedName.hashCode()
 
     override fun equals(other: Any?): Boolean = when {
         other !is ContextFromTypeModel -> false
-        this.rootScope != other.rootScope -> false
+        this.targetNamespaceQualifiedName != other.targetNamespaceQualifiedName -> false
+        this.typeModel != other.typeModel -> false
         else -> true
     }
 
-    override fun toString(): String = "ContextFromTypeModel"
+    override fun toString(): String = "ContextFromTypeModel($targetNamespaceQualifiedName)"
 }

@@ -38,7 +38,7 @@ class FormatModelBuilder(
     private val _ruleList = mutableListOf<AsmElementSimple>()
     private val rules = _asm.createElement(AsmElementPath(""), "Unit").also {
         _asm.addRoot(it)
-        it.setProperty("ruleList", _ruleList, false,0)//TODO childIndex
+        it.setProperty("ruleList", _ruleList, 0)//TODO childIndex
     }
 
     fun rule(forTypeName: String, init: FormatExpressionBuilder.() -> Unit) {
@@ -47,9 +47,9 @@ class FormatModelBuilder(
         val expr = b.build()
         val formatRuleElement = _asm.createElement(AsmElementPath(""), "FormatRule")
         val typeReference = _asm.createElement(AsmElementPath(""), "TypeReference")
-        typeReference.setProperty("identifier", forTypeName, false,0)//TODO childIndex
-        formatRuleElement.setProperty("typeReference", typeReference, false,0)//TODO childIndex
-        formatRuleElement.setProperty("formatExpression", expr, false,0)//TODO childIndex
+        typeReference.setProperty("identifier", forTypeName, 0)//TODO childIndex
+        formatRuleElement.setProperty("typeReference", typeReference, 0)//TODO childIndex
+        formatRuleElement.setProperty("formatExpression", expr, 0)//TODO childIndex
         _ruleList.add(formatRuleElement)
     }
 
@@ -70,7 +70,7 @@ class FormatExpressionBuilder(
             asmPath = AsmElementPath(""),
             typeName = "LiteralString"
         )
-        el.setProperty("literal_string", value, false,0)//TODO childIndex
+        el.setProperty("literal_string", value, 0)//TODO childIndex
         _exp = el
     }
 

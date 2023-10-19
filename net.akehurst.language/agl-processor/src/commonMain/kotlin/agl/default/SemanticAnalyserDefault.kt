@@ -17,20 +17,22 @@
 
 package net.akehurst.language.agl.default
 
+import net.akehurst.language.agl.agl.default.ScopeCreator
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
 import net.akehurst.language.agl.semanticAnalyser.createReferenceLocalToScope
-import net.akehurst.language.api.asm.*
+import net.akehurst.language.api.asm.AsmElementPath
+import net.akehurst.language.api.asm.AsmElementSimple
+import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.collections.mutableStackOf
 
 class SemanticAnalyserDefault(
     val scopeModel: ScopeModel
@@ -38,7 +40,7 @@ class SemanticAnalyserDefault(
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private val _scopeModel = scopeModel as ScopeModelAgl?
-    private lateinit var _locationMap: Map<*, InputLocation>
+    private lateinit var _locationMap: Map<Any, InputLocation>
 
     override fun clear() {
         _issues.clear()
@@ -68,13 +70,13 @@ class SemanticAnalyserDefault(
                     _issues.info(null, "Semantic Analysis option 'resolveReferences' is off, references checked but not resolved.")
                     false
                 }
-                this.walkReferences(asm, locationMap, context.rootScope, resolve)
+                this.walkReferences(asm, _locationMap, context.rootScope, resolve)
             }
         }
         return SemanticAnalysisResultDefault(this._issues)
     }
 
-    private fun walkReferences(asm: AsmSimple, locationMap: Map<Any, InputLocation>?, rootScope: ScopeSimple<AsmElementPath>, resolve: Boolean) {
+    private fun walkReferences(asm: AsmSimple, locationMap: Map<Any, InputLocation>, rootScope: ScopeSimple<AsmElementPath>, resolve: Boolean) {
         val resolveFunction: ResolveFunction? = if (resolve) {
             { ref -> asm.elementIndex[ref] }
         } else {
@@ -84,30 +86,8 @@ class SemanticAnalyserDefault(
     }
 
     private fun buildScope(asm: AsmSimple, rootScope: ScopeSimple<AsmElementPath>) {
-        asm.traverseDepthFirst(object : AsmSimpleTreeWalker {
-
-            val currentScope = mutableStackOf(rootScope)
-
-            override fun root(root: AsmElementSimple) {
-                addToScope(currentScope.peek(), root)
-            }
-
-            override fun beforeElement(propertyName: String?, element: AsmElementSimple) {
-                val scope = currentScope.peek()
-                addToScope(scope, element)
-                val chScope = createScope(scope, element)
-                currentScope.push(chScope)
-            }
-
-            override fun afterElement(propertyName: String?, element: AsmElementSimple) {
-                currentScope.pop()
-            }
-
-            override fun property(element: AsmElementSimple, property: AsmElementProperty) {
-                // do nothing
-            }
-
-        })
+        val scopeCreator = ScopeCreator(scopeModel as ScopeModelAgl, rootScope, _locationMap, _issues)
+        asm.traverseDepthFirst(scopeCreator)
     }
 
     private fun createScope(scope: ScopeSimple<AsmElementPath>, el: AsmElementSimple): ScopeSimple<AsmElementPath> {
@@ -143,6 +123,5 @@ class SemanticAnalyserDefault(
             // no need to add it to scope
         }
     }
-
 
 }

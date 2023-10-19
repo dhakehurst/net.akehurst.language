@@ -17,26 +17,20 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
-import net.akehurst.language.agl.default.SyntaxAnalyserDefault
-import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.processor.ProcessResultDefault
-import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class test_SemanticAnalyserDefault_sql {
 
     private companion object {
-        val grammarProc = Agl.registry.agl.grammar.processor ?: error("Internal error: AGL language processor not found")
-
         val grammarStr = """
 namespace net.akehurst.language
 
@@ -101,16 +95,7 @@ grammar SQL {
     leaf VALUES = "values|VALUES"   ;
 }
         """.trimIndent()
-        val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!.first()
-        val typeModel by lazy {
-            val result = grammarProc.process(grammarStr)
-            assertNotNull(result.asm)
-            assertTrue(result.issues.none { it.kind == LanguageIssueKind.ERROR }, result.issues.toString())
-            TypeModelFromGrammar.create(result.asm!!.last())
-        }
-        val scopeModel = ScopeModelAgl.fromString(
-            ContextFromTypeModel(grammar.qualifiedName, TypeModelFromGrammar.create(grammar)),
-            """
+        val scopeModelStr = """
                 identify TableDefinition by table-id
                 scope TableDefinition {
                     identify ColumnDefinition by column-id
@@ -118,7 +103,7 @@ grammar SQL {
                 references {
                     in Select {
                         property tableRef.ref refers-to TableDefinition
-                        forall columns {
+                        forall columns of-type ColumnRef {
                             property ref refers-to ColumnDefinition from tableRef.ref
                         }
                     }
@@ -130,24 +115,24 @@ grammar SQL {
                     }
                     in Insert {
                         property tableRef.ref refers-to TableDefinition
-                        forall columns {
+                        forall columns of-type ColumnRef {
                             property ref refers-to ColumnDefinition from tableRef.ref
                         }
                     }
                 }
             """.trimIndent()
-        ).let {
-            it.asm ?: error("Unable to parse ScopeModel\n${it.issues}")
-        }
-        val syntaxAnalyser = SyntaxAnalyserDefault(grammar.qualifiedName, typeModel, scopeModel)
-        val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
+        val scopeModel = ScopeModelAgl.fromString(null, scopeModelStr).let { it.asm ?: error(it.issues.toString()) }
+        val processor = Agl.processorFromStringDefault(
             grammarStr,
-            Agl.configuration {
-                scopeModelResolver { ProcessResultDefault(scopeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
-                typeModelResolver { ProcessResultDefault(typeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
-                syntaxAnalyserResolver { ProcessResultDefault(syntaxAnalyser, IssueHolder(LanguageProcessorPhase.ALL)) }
-            }
+            scopeModelStr
         ).processor!!
+    }
+
+    @Test
+    fun check_scopeModel() {
+        val context = ContextFromTypeModel(processor.grammar!!.qualifiedName, processor.typeModel)
+        val res = ScopeModelAgl.fromString(context, scopeModelStr)
+        assertTrue(res.issues.isEmpty(), res.issues.toString())
     }
 
     @Test
@@ -161,18 +146,46 @@ grammar SQL {
         """.trimIndent()
 
         val result = processor.process(sentence)
-        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        assertNotNull(result.asm)
 
-        val expected = asmSimple {
-
+        val expected = asmSimple(scopeModel, ContextSimple()) {
+            element("StatementList") {
+                propertyListOfElement("terminatedStatement") {
+                    element("TerminatedStatement") {
+                        propertyElementExplicitType("statement", "TableDefinition") {
+                            propertyString("create", "CREATE")
+                            propertyString("table", "TABLE")
+                            propertyString("table-id", "table1")
+                            propertyListOfElement("columnDefinitionList") {
+                                element("ColumnDefinition") {
+                                    propertyString("column-id", "col1")
+                                    propertyString("datatype-ref", "int")
+                                    propertyString("datatype-size", null)
+                                }
+                                element("ColumnDefinition") {
+                                    propertyString("column-id", "col2")
+                                    propertyString("datatype-ref", "int")
+                                    propertyString("datatype-size", null)
+                                }
+                                element("ColumnDefinition") {
+                                    propertyString("column-id", "col3")
+                                    propertyString("datatype-ref", "varchar")
+                                    propertyElementExplicitType("datatype-size", "Datatype-size") {
+                                        propertyString("integer", "255")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
     }
 
     @Test
-    fun select_with_references() {
+    fun select_with_one_column_ref() {
         val sentence = """
             CREATE TABLE table1 (
                 col1 int,
@@ -184,13 +197,202 @@ grammar SQL {
         """.trimIndent()
 
         val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextSimple()) } })
-        assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty(), result.issues.toString())
 
-        val expected = asmSimple {
-
+        val expected = asmSimple(scopeModel, ContextSimple()) {
+            element("StatementList") {
+                propertyListOfElement("terminatedStatement") {
+                    element("TerminatedStatement") {
+                        propertyElementExplicitType("statement", "TableDefinition") {
+                            propertyString("create", "CREATE")
+                            propertyString("table", "TABLE")
+                            propertyString("table-id", "table1")
+                            propertyListOfElement("columnDefinitionList") {
+                                element("ColumnDefinition") {
+                                    propertyString("column-id", "col1")
+                                    propertyString("datatype-ref", "int")
+                                    propertyString("datatype-size", null)
+                                }
+                                element("ColumnDefinition") {
+                                    propertyString("column-id", "col2")
+                                    propertyString("datatype-ref", "int")
+                                    propertyString("datatype-size", null)
+                                }
+                                element("ColumnDefinition") {
+                                    propertyString("column-id", "col3")
+                                    propertyString("datatype-ref", "varchar")
+                                    propertyElementExplicitType("datatype-size", "Datatype-size") {
+                                        propertyString("integer", "255")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    element("TerminatedStatement") {
+                        propertyElementExplicitType("statement", "Select") {
+                            propertyString("select", "SELECT")
+                            propertyListOfElement("columns") {
+                                element("ColumnRef") {
+                                    reference("ref", "col1")
+                                }
+                            }
+                            propertyString("from", "FROM")
+                            propertyElementExplicitType("tableRef", "TableRef") {
+                                reference("ref", "table1")
+                            }
+                        }
+                    }
+                }
+            }
         }
 
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
+    }
+
+    @Test
+    fun select_with_one_column_ref_fail() {
+        val sentence = """
+            CREATE TABLE table1 (
+                col1 int,
+                col2 int,
+                col3 varchar(255)
+            );
+            
+            SELECT col7 FROM table1 ;
+        """.trimIndent()
+
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextSimple()) } })
+
+        val expected = asmSimple(
+            scopeModel,
+            ContextSimple(),
+            failIfIssues = false //there are failing references expected
+        ) {
+            element("StatementList") {
+                propertyListOfElement("terminatedStatement") {
+                    element("TerminatedStatement") {
+                        propertyElementExplicitType("statement", "TableDefinition") {
+                            propertyString("create", "CREATE")
+                            propertyString("table", "TABLE")
+                            propertyString("table-id", "table1")
+                            propertyListOfElement("columnDefinitionList") {
+                                element("ColumnDefinition") {
+                                    propertyString("column-id", "col1")
+                                    propertyString("datatype-ref", "int")
+                                    propertyString("datatype-size", null)
+                                }
+                                element("ColumnDefinition") {
+                                    propertyString("column-id", "col2")
+                                    propertyString("datatype-ref", "int")
+                                    propertyString("datatype-size", null)
+                                }
+                                element("ColumnDefinition") {
+                                    propertyString("column-id", "col3")
+                                    propertyString("datatype-ref", "varchar")
+                                    propertyElementExplicitType("datatype-size", "Datatype-size") {
+                                        propertyString("integer", "255")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    element("TerminatedStatement") {
+                        propertyElementExplicitType("statement", "Select") {
+                            propertyString("select", "SELECT")
+                            propertyListOfElement("columns") {
+                                element("ColumnRef") {
+                                    reference("ref", "col7")
+                                }
+                            }
+                            propertyString("from", "FROM")
+                            propertyElementExplicitType("tableRef", "TableRef") {
+                                reference("ref", "table1")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        val expIssues = setOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(83, 8, 7, 4),
+                "No target of type(s) [ColumnDefinition] found for referring value 'col7' in scope of element ':ColumnRef([/0/terminatedStatement/1/statement/columns/0])'"
+            )
+        )
+
+        assertEquals(expIssues, result.issues.toSet())
+        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
+    }
+
+    @Test
+    fun select_with_multiple_column_refs() {
+        val sentence = """
+            CREATE TABLE table1 (
+                col1 int,
+                col2 int,
+                col3 varchar(255)
+            );
+            
+            SELECT col1,col2,col3 FROM table1 ;
+        """.trimIndent()
+
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextSimple()) } })
+
+        val expected = asmSimple(scopeModel, ContextSimple()) {
+            element("StatementList") {
+                propertyListOfElement("terminatedStatement") {
+                    element("TerminatedStatement") {
+                        propertyElementExplicitType("statement", "TableDefinition") {
+                            propertyString("create", "CREATE")
+                            propertyString("table", "TABLE")
+                            propertyString("table-id", "table1")
+                            propertyListOfElement("columnDefinitionList") {
+                                element("ColumnDefinition") {
+                                    propertyString("column-id", "col1")
+                                    propertyString("datatype-ref", "int")
+                                    propertyString("datatype-size", null)
+                                }
+                                element("ColumnDefinition") {
+                                    propertyString("column-id", "col2")
+                                    propertyString("datatype-ref", "int")
+                                    propertyString("datatype-size", null)
+                                }
+                                element("ColumnDefinition") {
+                                    propertyString("column-id", "col3")
+                                    propertyString("datatype-ref", "varchar")
+                                    propertyElementExplicitType("datatype-size", "Datatype-size") {
+                                        propertyString("integer", "255")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    element("TerminatedStatement") {
+                        propertyElementExplicitType("statement", "Select") {
+                            propertyString("select", "SELECT")
+                            propertyListOfElement("columns") {
+                                element("ColumnRef") {
+                                    reference("ref", "col1")
+                                }
+                                element("ColumnRef") {
+                                    reference("ref", "col2")
+                                }
+                                element("ColumnRef") {
+                                    reference("ref", "col3")
+                                }
+                            }
+                            propertyString("from", "FROM")
+                            propertyElementExplicitType("tableRef", "TableRef") {
+                                reference("ref", "table1")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
     }
 

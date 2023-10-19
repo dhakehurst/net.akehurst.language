@@ -759,15 +759,17 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
         }
     }
 
-    private fun isReference(el: AsmElementSimple, name: String): Boolean {
-        return scopeModel?.isReference(el.typeName, name) ?: false
-    }
+//    private fun isReference(el: AsmElementSimple, name: String): Boolean {
+//        return scopeModel.isReference(el.typeName, name) ?: false
+//    }
 
     private fun setPropertyOrReferenceFromDeclaration(el: AsmElementSimple, declaration: PropertyDeclaration, value: Any?) {
-        val isRef = this.isReference(el, declaration.name)
-        when {
-            isRef -> el.setPropertyFromDeclaration(declaration, value, true)
-            else -> el.setPropertyFromDeclaration(declaration, value, false)
-        }
+//        val isRef = this.isReference(el, declaration.name)
+//        when {
+//            isRef -> el.setPropertyFromDeclaration(declaration, value, true)
+//            else -> el.setPropertyFromDeclaration(declaration, value, false)
+//        }
+        // whether it is a reference or not is handled later in Semantic Analysis
+        el.setPropertyFromDeclaration(declaration, value)
     }
 }

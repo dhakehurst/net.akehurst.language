@@ -39,8 +39,9 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
         super.register(this::from)
         super.register(this::collectionReferenceExpression)
         super.register(this::navigation)
+        super.register(this::ofType)
         super.register(this::typeReferences)
-        super.register(this::propertyReferenceOrNothing)
+        super.register(this::navigationOrNothing)
         super.register(this::typeReference)
         super.register(this::propertyReference)
     }
@@ -90,7 +91,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
     private fun identifiables(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<Identifiable> =
         (children as List<Identifiable>?) ?: emptyList()
 
-    // identifiable = 'identify' typeReference 'by' navigation
+    // identifiable = 'identify' typeReference 'by' navigationOrNothing
     private fun identifiable(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Identifiable {
         val typeReference = children[1] as String
         val navigation = children[3] as Navigation
@@ -133,24 +134,29 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
     private fun referenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ReferenceExpression =
         children[0] as ReferenceExpression
 
-    //propertyReferenceExpression = 'property' propertyReference 'refers-to' typeReferences from? ;
+    //propertyReferenceExpression = 'property' navigation 'refers-to' typeReferences from? ;
     private fun propertyReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyReferenceExpression {
-        val propertyReference = children[1] as String
+        val navigation = children[1] as Navigation
         val typeReferences = children[3] as List<String>
-        val navigation = children[4] as Navigation?
-        return PropertyReferenceExpression(propertyReference, typeReferences, navigation)
+        val from = children[4] as Navigation?
+        return PropertyReferenceExpression(navigation, typeReferences, from)
     }
 
     // from = 'from' navigation
     private fun from(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Navigation =
         children[1] as Navigation
 
-    //collectionReferenceExpression = 'forall' navigation '{' referenceExpressionList '}' ;
+    // collectionReferenceExpression = 'forall' navigation ofType? '{' referenceExpressionList '}' ;
     private fun collectionReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CollectionReferenceExpression {
         val navigation = children[1] as Navigation
-        val referenceExpression = children[3] as List<ReferenceExpression>
-        return CollectionReferenceExpression(navigation, referenceExpression)
+        val referenceExpression = children[4] as List<ReferenceExpression>
+        val ofType = children[2] as String?
+        return CollectionReferenceExpression(navigation, ofType, referenceExpression)
     }
+
+    // ofType = 'of-type' typeReference ;
+    private fun ofType(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
+        children[1] as String
 
     //navigation = [propertyReference / '.']+ ;
     private fun navigation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Navigation =
@@ -165,12 +171,13 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
 //        }
     }
 
-    // propertyReferenceOrNothing = '§nothing' | propertyReference
-    private fun propertyReferenceOrNothing(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
-        val text = children[0] as String
-        return when (text) {
-            "§nothing" -> ScopeModelAgl.IDENTIFY_BY_NOTHING
-            else -> text
+    // navigationOrNothing = '§nothing' | navigation
+    private fun navigationOrNothing(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Navigation {
+        val res = children[0] as Any
+        return when (res) {
+            is Navigation -> res
+            is String -> Navigation(ScopeModelAgl.IDENTIFY_BY_NOTHING)
+            else -> error("type '${res::class.simpleName}' not handled")
         }
     }
 

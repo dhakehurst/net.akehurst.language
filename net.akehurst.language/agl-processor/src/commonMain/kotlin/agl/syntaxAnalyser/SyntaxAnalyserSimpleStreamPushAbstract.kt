@@ -661,12 +661,14 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
         }
     }
 
-    private fun isReference(elType: StructuredType, name: String): Boolean {
-        return scopeModel?.isReference(elType.name, name) ?: false
-    }
+//    private fun isReference(elType: StructuredType, name: String): Boolean {
+//        return scopeModel?.isReference(elType.name, name) ?: false
+//    }
 
     private fun setPropertyOrReferenceFromDeclaration(elType: StructuredType, declaration: PropertyDeclaration) {
-        val isRef = this.isReference(elType, declaration.name)
+        //val isRef = this.isReference(elType, declaration.name)
+        val isRef = false
+        // hande refs in semantic analysis
         finishProperty(declaration, isRef)
     }
 }

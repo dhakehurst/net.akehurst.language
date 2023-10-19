@@ -17,6 +17,8 @@
 
 package net.akehurst.language.api.semanticAnalyser
 
+import net.akehurst.language.agl.grammar.scopes.ReferenceExpression
+
 interface ScopeModel {
 
     /**
@@ -25,7 +27,12 @@ interface ScopeModel {
      * @param inTypeName name of the asm type in which contains the property
      * @param propertyName name of the property that might be a reference
      */
-    fun isReference(inTypeName: String, propertyName: String): Boolean
+    //fun isReference(inTypeName: String, propertyName: String): Boolean
+
+    /**
+     * The list of reference-expressions defined for the given type
+     */
+    fun referencesFor(typeName: String): List<ReferenceExpression>
 
     /**
      *
@@ -34,7 +41,9 @@ interface ScopeModel {
      * @param inTypeName name of the asm type in which the property is a reference
      * @param referringPropertyName name of the property that is a reference
      */
-    fun getReferredToTypeNameFor(inTypeName: String, referringPropertyName: String): List<String>
+    //fun getReferredToTypeNameFor(inTypeName: String, referringPropertyName: String): List<String>
+
+    fun isScopeDefinition(scopeFor: String): Boolean
 }
 
 /**
@@ -42,13 +51,21 @@ interface ScopeModel {
  */
 interface Scope<AsmElementIdType> {
 
+    val forTypeName: String
+
     val items: Map<String, Map<String, AsmElementIdType>>
 
     val childScopes: Map<String, Scope<AsmElementIdType>>
 
+    val rootScope: Scope<AsmElementIdType>
+
     fun isMissing(referableName: String, typeName: String): Boolean
 
     fun findOrNull(referableName: String, typeName: String): AsmElementIdType?
+
+    fun createOrGetChildScope(forReferenceInParent: String, forTypeName: String, elementId: AsmElementIdType): Scope<AsmElementIdType>
+
+    fun addToScope(referableName: String, typeName: String, asmElementId: AsmElementIdType)
 
     fun asString(currentIndent: String = "", indentIncrement: String = " "): String
 }
