@@ -326,6 +326,24 @@ grammar SQL {
     }
 
     @Test
+    fun select_with_one_column_any() {
+        val sentence = """
+            CREATE TABLE table1 (
+                col1 int,
+                col2 int,
+                col3 varchar(255)
+            );
+            
+            SELECT * FROM table1 ;
+        """.trimIndent()
+
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextSimple()) } })
+
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
+    }
+
+
+    @Test
     fun select_with_multiple_column_refs() {
         val sentence = """
             CREATE TABLE table1 (

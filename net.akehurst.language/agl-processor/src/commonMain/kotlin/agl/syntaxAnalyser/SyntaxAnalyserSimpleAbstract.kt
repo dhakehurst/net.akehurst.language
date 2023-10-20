@@ -147,7 +147,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
                     typeModel.NothingType == downData.typeUse.forNode.type -> null //branch not used for element property value, push null for correct num children on stack
                     else -> syntaxAnalyserStack.peek().createValueFromBranch(sentence, downData, nodeInfo, adjChildren)
                 }
-                value?.let { locationMap[it] = sentence.locationFor(nodeInfo.node) }
+                value?.let { locationMap[it] = sentence.locationForNode(nodeInfo.node) }
                 stack.push(ChildData(nodeInfo, value))
                 // path = path.parent!!
             }
@@ -173,7 +173,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
                 downStack.pop()
                 val value = embeddedAsm.rootElements.last()
                 removeAsmRoot(value)
-                value?.let { locationMap[it] = sentence.locationFor(nodeInfo.node) }
+                value?.let { locationMap[it] = sentence.locationForNode(nodeInfo.node) }
                 stack.push(ChildData(nodeInfo, value))
             }
 

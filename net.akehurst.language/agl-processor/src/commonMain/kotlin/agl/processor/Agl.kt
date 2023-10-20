@@ -66,7 +66,7 @@ object Agl {
             )
         }
         semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserDefault(p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
-        styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar(p.grammar!!), "") }
+        styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
         formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel), "") }
         completionProvider { p -> ProcessResultDefault(CompletionProviderDefault(p.grammar!!, p.typeModel, p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
     }
@@ -136,7 +136,7 @@ object Agl {
                 scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel), scopeModelStr) }
             }
             if (null != styleModelStr) {
-                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar(p.grammar!!), styleModelStr) }
+                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), styleModelStr) }
             }
             if (null != formatterModelStr) {
                 formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel), formatterModelStr) }

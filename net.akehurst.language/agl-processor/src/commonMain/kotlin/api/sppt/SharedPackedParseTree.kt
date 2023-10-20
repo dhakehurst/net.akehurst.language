@@ -32,7 +32,7 @@ interface Sentence {
     val text: String
     fun matchedTextNoSkip(node: SpptDataNode): String
     fun locationFor(position: Int, length: Int): InputLocation
-    fun locationFor(node: SpptDataNode): InputLocation
+    fun locationForNode(node: SpptDataNode): InputLocation
 }
 
 data class ChildInfo(

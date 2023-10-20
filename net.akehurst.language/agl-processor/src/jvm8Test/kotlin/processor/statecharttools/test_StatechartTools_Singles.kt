@@ -183,7 +183,10 @@ class test_StatechartTools_Singles {
             }
         }).items.map { it.text }.toSet().sorted()
 
-        val expected = setOf("").sorted()
+        val expected = setOf(
+            "!", "#", "(", ",", ".", ".@", "/", "<BinaryLiteral>", "<BoolLiteral>", "<DoubleLiteral>",
+            "<FloatLiteral>", "<HexLiteral>", "<ID>", "<IntLiteral>", "<PrefixUnaryOperator>", "<StringLiteral>", "[", "active", "null", "valueof"
+        ).sorted()
         assertEquals(expected, actual)
     }
 

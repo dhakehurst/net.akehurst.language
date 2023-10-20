@@ -22,7 +22,6 @@ import net.akehurst.language.typemodel.api.DataType
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.simple.TypeNamespaceAbstract
 
-
 class GrammarTypeNamespaceSimple(
     override val qualifiedName: String,
     imports: List<String>

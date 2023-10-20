@@ -17,12 +17,12 @@
 
 package net.akehurst.language.agl.agl.grammar.scopes
 
-import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.agl.grammar.scopes.*
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.propertyDeclarationFor
+import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
@@ -40,7 +40,7 @@ class AglScopesSemanticAnalyser(
     private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private var _locationMap: Map<Any, InputLocation> = emptyMap()
 
-    private var _grammarNamespace: GrammarTypeNamespaceFromGrammar? = null
+    private var _grammarNamespace: GrammarTypeNamespace? = null
 
     override fun clear() {
         _grammarNamespace = null
@@ -56,7 +56,7 @@ class AglScopesSemanticAnalyser(
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: mapOf()
         if (null != context) {
-            _grammarNamespace = (context as ContextFromTypeModel).targetNamespace as GrammarTypeNamespaceFromGrammar
+            _grammarNamespace = (context as ContextFromTypeModel).targetNamespace as GrammarTypeNamespace
             asm.scopes.forEach { (_, scope) ->
                 val msgStart = if (ScopeModelAgl.ROOT_SCOPE_TYPE_NAME == scope.scopeFor) {
                     //do nothing
@@ -125,7 +125,7 @@ class AglScopesSemanticAnalyser(
                 //if (context.rootScope.isMissing(ref.inTypeName, ContextFromTypeModel.TYPE_NAME_FOR_TYPES)) {
                 raiseError(
                     AglScopesSyntaxAnalyser.PropertyValue(ref, "in"),
-                    "Referring type '${ref.inTypeName}' not found in scope"
+                    "Referring type '${ref.inTypeName}' not found"
                 )
             }
 

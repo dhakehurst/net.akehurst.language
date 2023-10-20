@@ -56,7 +56,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
                             null -> sentence.matchedTextNoSkip(nodeInfo.node)
                             else -> {
                                 val res = handler.invoke(nodeInfo, emptyList(), sentence)
-                                res?.let { locationMap[res] = sentence.locationFor(nodeInfo.node) }
+                                res?.let { locationMap[res] = sentence.locationForNode(nodeInfo.node) }
                                 res
                             }
                         }
@@ -89,7 +89,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
                 when {
                     nodeInfo.node.rule.isOptional -> {
                         val obj = adjChildren[0]
-                        obj?.let { locationMap[obj] = sentence.locationFor(nodeInfo.node) }
+                        obj?.let { locationMap[obj] = sentence.locationForNode(nodeInfo.node) }
                         stack.push(obj)
                     }
 
@@ -111,7 +111,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
                                 else -> adjChildren
                             }
                             val obj = handler.invoke(nodeInfo, ch, sentence)
-                            obj?.let { locationMap[obj] = sentence.locationFor(nodeInfo.node) }
+                            obj?.let { locationMap[obj] = sentence.locationForNode(nodeInfo.node) }
                             stack.push(obj)
                         }
                     }
@@ -135,7 +135,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
                     null -> children[0]
                     else -> {
                         val res = handler.invoke(nodeInfo, children, sentence)
-                        res?.let { locationMap[res] = sentence.locationFor(nodeInfo.node) }
+                        res?.let { locationMap[res] = sentence.locationForNode(nodeInfo.node) }
                         res
                     }
                 }

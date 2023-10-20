@@ -37,7 +37,7 @@ class test_CompletionProvider {
 
         fun test(grammarStr: String, sentence: String, position: Int, expected: List<CompletionItem>) {
             val testGrammar = grammarFor(grammarStr)
-            val context = ContextFromGrammar(testGrammar)
+            val context = ContextFromGrammar.createContextFrom(listOf(testGrammar))
             val actual = aglProc.expectedItemsAt(sentence, position, 0, Agl.options {
                 completionProvider {
                     context(context)

@@ -173,7 +173,7 @@ internal class AglGrammarSyntaxAnalyser(
         val sl = extendNameList.toSeparatedList<String, String>()
         val extendedGrammars = sl.items.map {
             // need to manually add the GrammarReference as it is not seen by the super class
-            GrammarReferenceDefault(localNamespace, it).also { this.locationMap[it] = sentence.locationFor(target.node) }
+            GrammarReferenceDefault(localNamespace, it).also { this.locationMap[it] = sentence.locationForNode(target.node) }
         }
         return extendedGrammars
     }
@@ -198,7 +198,7 @@ internal class AglGrammarSyntaxAnalyser(
             val result = NormalRuleDefault(grammar, name, isSkip, isLeaf)
             result.rhs = rhs
             result
-                .also { this.locationMap[it] = sentence.locationFor(target.node) }
+                .also { this.locationMap[it] = sentence.locationForNode(target.node) }
         }
     }
 
@@ -221,7 +221,7 @@ internal class AglGrammarSyntaxAnalyser(
             val result = OverrideRuleDefault(grammar, identifier, isSkip, isLeaf, overrideKind)
             result.overridenRhs = rhs
             result
-                .also { this.locationMap[it] = sentence.locationFor(target.node) }
+                .also { this.locationMap[it] = sentence.locationForNode(target.node) }
         }
     }
 
@@ -404,7 +404,7 @@ internal class AglGrammarSyntaxAnalyser(
             val nonTerminalQualified = children[0] as String
             val nonTerminalRef = nonTerminalQualified.substringAfterLast(".")
             val grammarRef = nonTerminalQualified.substringBeforeLast(".")
-            val gr = GrammarReferenceDefault(localNamespace, grammarRef).also { this.locationMap[it] = sentence.locationFor(target.node) }
+            val gr = GrammarReferenceDefault(localNamespace, grammarRef).also { this.locationMap[it] = sentence.locationForNode(target.node) }
             val nt = NonTerminalDefault(gr, nonTerminalRef)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
             return nt
         } else {
@@ -451,7 +451,7 @@ internal class AglGrammarSyntaxAnalyser(
         val optionList = children[3] as List<PreferenceOption>
         return { grammar ->
             PreferenceRuleDefault(grammar, forItem, optionList)
-                .also { this.locationMap[it] = sentence.locationFor(target.node) }
+                .also { this.locationMap[it] = sentence.locationForNode(target.node) }
         }
     }
 

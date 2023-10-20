@@ -231,10 +231,10 @@ class LanguageRegistryDefault : LanguageRegistry {
         }
     }
 
-    fun findGrammarOrNull(qualifiedName: String): Grammar? = _grammars[qualifiedName]
+    fun findGrammarOrNullByQualifiedName(qualifiedName: String): Grammar? = _grammars[qualifiedName]
 
     override fun findGrammarOrNull(localNamespace: Namespace, nameOrQName: String): Grammar? =
-        findGrammarOrNull("${localNamespace.qualifiedName}.$nameOrQName") ?: findGrammarOrNull(nameOrQName)
+        findGrammarOrNullByQualifiedName("${localNamespace.qualifiedName}.$nameOrQName") ?: findGrammarOrNullByQualifiedName(nameOrQName)
 
     override fun registerGrammar(grammar: Grammar) {
         _grammars[grammar.qualifiedName] = grammar

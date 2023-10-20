@@ -50,7 +50,8 @@ exportPublic {
             "net.akehurst.language.agl.syntaxAnalyser.**",
             "net.akehurst.language.agl.semanticAnalyser.**",
             "net.akehurst.language.agl.sppt.**",
-            "net.akehurst.language.agl.default.**"
+            "net.akehurst.language.agl.grammarTypeModel.**"
+//            "net.akehurst.language.agl.default.**"
         )
     )
 }

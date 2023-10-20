@@ -23,9 +23,7 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
-import net.akehurst.language.agl.semanticAnalyser.createReferenceLocalToScope
 import net.akehurst.language.api.asm.AsmElementPath
-import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
@@ -88,40 +86,6 @@ class SemanticAnalyserDefault(
     private fun buildScope(asm: AsmSimple, rootScope: ScopeSimple<AsmElementPath>) {
         val scopeCreator = ScopeCreator(scopeModel as ScopeModelAgl, rootScope, _locationMap, _issues)
         asm.traverseDepthFirst(scopeCreator)
-    }
-
-    private fun createScope(scope: ScopeSimple<AsmElementPath>, el: AsmElementSimple): ScopeSimple<AsmElementPath> {
-        return if (_scopeModel!!.isScopeDefinition(el.typeName)) {
-            val refInParent = _scopeModel!!.createReferenceLocalToScope(scope, el)
-            if (null != refInParent) {
-                val newScope = scope.createOrGetChildScope(refInParent, el.typeName, el.asmPath)
-                //_scopeMap[el.asmPath] = newScope
-                newScope
-            } else {
-                _issues.error(
-                    this._locationMap[el],
-                    "Trying to create child scope but cannot create a reference for $el"
-                )
-                scope
-            }
-        } else {
-            scope
-        }
-    }
-
-    private fun addToScope(scope: ScopeSimple<AsmElementPath>, el: AsmElementSimple) {
-        if (_scopeModel!!.shouldCreateReference(scope.forTypeName, el.typeName)) {
-            //val reference = _scopeModel!!.createReferenceFromRoot(scope, el)
-            val scopeLocalReference = _scopeModel!!.createReferenceLocalToScope(scope, el)
-            if (null != scopeLocalReference) {
-                val contextRef = el.asmPath
-                scope.addToScope(scopeLocalReference, el.typeName, contextRef)
-            } else {
-                _issues.error(this._locationMap[el], "Cannot create a local reference in '$scope' for $el")
-            }
-        } else {
-            // no need to add it to scope
-        }
     }
 
 }

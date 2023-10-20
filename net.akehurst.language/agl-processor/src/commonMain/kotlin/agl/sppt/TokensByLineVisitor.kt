@@ -68,7 +68,7 @@ internal class TokensByLineVisitor(
         val name = nodeInfo.node.rule.tag
         val isPattern = nodeInfo.node.rule.isPattern
         val tags = tagList + name
-        val location = sentence.locationFor(nodeInfo.node)
+        val location = sentence.locationForNode(nodeInfo.node)
         val matchedText = sentence.matchedTextNoSkip(nodeInfo.node)
         val eolPositions = InputFromString.eolPositions(matchedText)
         when {

@@ -45,7 +45,7 @@ class SentenceDefault(
         }
     }
 
-    override fun locationFor(node: SpptDataNode): InputLocation =
+    override fun locationForNode(node: SpptDataNode): InputLocation =
         locationFor(node.startPosition, node.nextInputNoSkip - node.startPosition)
 
     // --- implementation ---

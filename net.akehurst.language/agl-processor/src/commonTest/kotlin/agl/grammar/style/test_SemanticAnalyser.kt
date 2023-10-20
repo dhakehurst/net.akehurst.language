@@ -39,7 +39,7 @@ class test_SemanticAnalyser {
 
         fun test(grammarStr: String, sentence: String, position: Int, expected: List<LanguageIssue>) {
             val testGrammar = grammarFor(grammarStr)
-            val context = ContextFromGrammar(testGrammar)
+            val context = ContextFromGrammar.createContextFrom(listOf(testGrammar))
             val actual = aglProc.process(sentence, Agl.options {
                 semanticAnalysis {
                     context(context)
@@ -52,7 +52,7 @@ class test_SemanticAnalyser {
 
         fun testFail(grammarStr: String, sentence: String, position: Int, expected: List<LanguageIssue>) {
             val testGrammar = grammarFor(grammarStr)
-            val context = ContextFromGrammar(testGrammar)
+            val context = ContextFromGrammar.createContextFrom(listOf(testGrammar))
             val actual = aglProc.process(sentence, Agl.options {
                 semanticAnalysis {
                     context(context)

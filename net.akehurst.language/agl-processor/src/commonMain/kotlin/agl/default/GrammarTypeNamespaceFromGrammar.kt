@@ -18,8 +18,9 @@
 package net.akehurst.language.agl.default
 
 
-import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceAbstract
+import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
 import net.akehurst.language.api.grammar.*
+import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.simple.TypeModelSimple
@@ -38,7 +39,7 @@ object TypeModelFromGrammar {
         grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
         val goalRuleName = defaultGoalRuleName ?: grammar.grammarRule.first { it.isSkip.not() }.name
         val goalRule = grammar.findAllResolvedGrammarRule(goalRuleName) ?: error("Cannot find grammar rule '$goalRuleName'")
-        val ns = GrammarTypeNamespaceFromGrammar(grmrTypeModel, grammar, grammar)
+        val ns = GrammarTypeNamespaceFromGrammar(grammar).build(grmrTypeModel, grammar)
         grmrTypeModel.addNamespace(ns)
         grmrTypeModel.resolveImports()
         return grmrTypeModel
@@ -68,20 +69,27 @@ object TypeModelFromGrammar {
 }
 
 class GrammarTypeNamespaceFromGrammar(
-    override val qualifiedName: String,
-    imports: List<String> = mutableListOf(SimpleTypeModelStdLib.qualifiedName)
-) : GrammarTypeNamespaceAbstract(imports) {
-    constructor(
-        model: TypeModelSimple, context: Grammar, grammar: Grammar,
+    val grammar: Grammar
+) {
+
+    companion object {
+        const val UNNAMED_PRIMITIVE_PROPERTY_NAME = "\$value"
+        const val UNNAMED_LIST_PROPERTY_NAME = "\$list"
+        const val UNNAMED_TUPLE_PROPERTY_NAME = "\$tuple"
+        const val UNNAMED_GROUP_PROPERTY_NAME = "\$group"
+        const val UNNAMED_CHOICE_PROPERTY_NAME = "\$choice"
+    }
+
+    fun build(
+        model: TypeModelSimple,
+        context: Grammar,
         configuration: TypeModelFromGrammarConfiguration? = TypeModelFromGrammar.defaultConfiguration
-    ) : this("${grammar.namespace.qualifiedName}.${grammar.name}") {
+    ): GrammarTypeNamespace {
         this.contextGrammar = context
         this._configuration = configuration
-        this.grammar = grammar
         this.model = model
-        this.resolveImports(model) //need to resolve std lib
-        val nonSkipRules = grammar.allResolvedGrammarRule
-            .filter { it.isSkip.not() }
+        _namespace.resolveImports(model) //need to resolve std lib
+        val nonSkipRules = grammar.allResolvedGrammarRule.filter { it.isSkip.not() }
         //create DataType for each Rule
         nonSkipRules.forEach {
             //findOrCreateElementType(it) {}
@@ -93,20 +101,15 @@ class GrammarTypeNamespaceFromGrammar(
         this._ruleToType.entries.forEach {
             val key = it.key
             val value = it.value
-            super.allRuleNameToType[key] = value
+            _namespace.allRuleNameToType[key] = value
             //if (value.type is DataType) {
             // super.allTypesByName[value.type.name] = value.type
             //}
         }
+        return this._namespace
     }
 
-    companion object {
-        const val UNNAMED_PRIMITIVE_PROPERTY_NAME = "\$value"
-        const val UNNAMED_LIST_PROPERTY_NAME = "\$list"
-        const val UNNAMED_TUPLE_PROPERTY_NAME = "\$tuple"
-        const val UNNAMED_GROUP_PROPERTY_NAME = "\$group"
-        const val UNNAMED_CHOICE_PROPERTY_NAME = "\$choice"
-    }
+    private val _namespace = GrammarTypeNamespaceSimple("${grammar.namespace.qualifiedName}.${grammar.name}", mutableListOf(SimpleTypeModelStdLib.qualifiedName))
 
     // GrammarRule.name -> ElementType
     private val _ruleToType = mutableMapOf<String, TypeInstance>()
@@ -117,15 +120,12 @@ class GrammarTypeNamespaceFromGrammar(
     private lateinit var model: TypeModelSimple
     private lateinit var contextGrammar: Grammar
 
-    // temp var - changes for each Grammar processed
-    private lateinit var grammar: Grammar
-
     private fun findOrCreateElementType(rule: GrammarRule, ifCreate: (DataType) -> Unit): TypeInstance {
         val ruleName = rule.name
         val existing = _ruleToType[ruleName]
         return if (null == existing) {
             val elTypeName = _configuration?.typeNameFor(rule) ?: ruleName
-            val et = findOwnedOrCreateDataTypeNamed(elTypeName) // DataTypeSimple(this, elTypeName)
+            val et = _namespace.findOwnedOrCreateDataTypeNamed(elTypeName) // DataTypeSimple(this, elTypeName)
             val tt = et.instance()
             _ruleToType[ruleName] = tt
             ifCreate.invoke(et)
@@ -135,20 +135,17 @@ class GrammarTypeNamespaceFromGrammar(
         }
     }
 
-    private fun typeModelForEmbedded(ruleItem: Embedded): GrammarTypeNamespaceFromGrammar {
-        val embTm = GrammarTypeNamespaceFromGrammar(
-            model = model,
-            context = this.contextGrammar,
-            grammar = ruleItem.embeddedGrammarReference.resolved!!,
-            configuration = this._configuration
-        ) //TODO: configuration
-        if (model.namespace.containsKey(embTm.qualifiedName)) {
+    private fun grammarTypeNamespaceBuilderForEmbedded(ruleItem: Embedded): GrammarTypeNamespaceFromGrammar {
+        val embGrammar = ruleItem.embeddedGrammarReference.resolved!!
+        val embBldr = GrammarTypeNamespaceFromGrammar(embGrammar)
+        val embNs = embBldr.build(model, this.contextGrammar, this._configuration)
+        if (model.namespace.containsKey(embNs.qualifiedName)) {
             //already added
         } else {
-            model.addNamespace(embTm)
+            model.addNamespace(embNs)
         }
-        super.addImport(embTm.qualifiedName)
-        return embTm
+        _namespace.addImport(embNs.qualifiedName)
+        return embBldr
     }
 
     private fun typeForGrammarRule(rule: GrammarRule): TypeInstance {
@@ -171,7 +168,7 @@ class GrammarTypeNamespaceFromGrammar(
                         is SimpleList -> findOrCreateElementType(rule) { et -> createPropertyDeclaration(et, rhs, 0) }
                         is SeparatedList -> findOrCreateElementType(rule) { et -> createPropertyDeclaration(et, rhs, 0) }
                         is Group -> typeForGroup(rhs, false)
-                        else -> error("Internal error, unhandled subtype of rule '${rule.name}'.rhs '${rhs::class.simpleName}' when getting TypeModel from grammar '${this.qualifiedName}'")
+                        else -> error("Internal error, unhandled subtype of rule '${rule.name}'.rhs '${rhs::class.simpleName}' when creating TypeNamespace from grammar '${grammar.qualifiedName}'")
                     }
                 }
             }
@@ -200,9 +197,9 @@ class GrammarTypeNamespaceFromGrammar(
                 }
 
                 is Embedded -> {
-                    val embTmfg = typeModelForEmbedded(ruleItem)
-                    val embTm = embTmfg
-                    embTm.findTypeUsageForRule(ruleItem.name) ?: error("Should never happen")
+                    val embBldr = grammarTypeNamespaceBuilderForEmbedded(ruleItem)
+                    val embNs = embBldr._namespace
+                    embNs.findTypeUsageForRule(ruleItem.name) ?: error("Should never happen")
                 }
 
                 is Choice -> typeForChoiceRuleItem(ruleItem, forProperty)
@@ -282,7 +279,7 @@ class GrammarTypeNamespaceFromGrammar(
     }
 
     private fun tupleTypeFor(ruleItem: RuleItem, items: List<RuleItem>): TypeInstance {
-        val concatType = this.createTupleType()
+        val concatType = _namespace.createTupleType()
         val t = concatType.instance()
         this._typeForRuleItem[ruleItem] = t
         items.forEachIndexed { idx, it -> createPropertyDeclaration(concatType, it, idx) }
@@ -337,10 +334,10 @@ class GrammarTypeNamespaceFromGrammar(
                     }
                 }
 
-                else -> super.createUnnamedSuperTypeType(subtypes.map { it }).instance()
+                else -> _namespace.createUnnamedSuperTypeType(subtypes.map { it }).instance()
             }
 
-            else -> super.createUnnamedSuperTypeType(subtypes.map { it }).instance()
+            else -> _namespace.createUnnamedSuperTypeType(subtypes.map { it }).instance()
         }
     }
 
@@ -349,7 +346,7 @@ class GrammarTypeNamespaceFromGrammar(
         return when {
             subtypes.all { it.type == SimpleTypeModelStdLib.NothingType } -> SimpleTypeModelStdLib.NothingType.instance(emptyList(), subtypes.any { it.isNullable })
             subtypes.all { it.type is PrimitiveType } -> SimpleTypeModelStdLib.String
-            subtypes.all { it.type is DataType } -> super.createUnnamedSuperTypeType(subtypes.map { it }).instance()
+            subtypes.all { it.type is DataType } -> _namespace.createUnnamedSuperTypeType(subtypes.map { it }).instance()
             subtypes.all { it.type == SimpleTypeModelStdLib.List } -> { //=== PrimitiveType.LIST } -> {
                 val itemType = SimpleTypeModelStdLib.AnyType.instance()//TODO: compute better elementType ?
                 val choiceType = SimpleTypeModelStdLib.List.instance(listOf(itemType))
@@ -365,10 +362,10 @@ class GrammarTypeNamespaceFromGrammar(
                     }
                 }
 
-                else -> super.createUnnamedSuperTypeType(subtypes.map { it }).instance()
+                else -> _namespace.createUnnamedSuperTypeType(subtypes.map { it }).instance()
             }
 
-            else -> super.createUnnamedSuperTypeType(subtypes.map { it }).instance()
+            else -> _namespace.createUnnamedSuperTypeType(subtypes.map { it }).instance()
         }
     }
 
@@ -488,14 +485,14 @@ class GrammarTypeNamespaceFromGrammar(
 
     //TODO: combine with above by passing in TypeModel
     private fun createPropertyDeclarationForEmbedded(et: StructuredType, ruleItem: Embedded, childIndex: Int) {
-        val embTm = typeModelForEmbedded(ruleItem) //TODO: configuration
+        val embBldr = grammarTypeNamespaceBuilderForEmbedded(ruleItem) //TODO: configuration
         val refRule = ruleItem.referencedRule(ruleItem.embeddedGrammarReference.resolved!!) //TODO: check for null
         val rhs = refRule.rhs
         when (rhs) {
             is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, SimpleTypeModelStdLib.String.type), SimpleTypeModelStdLib.String, childIndex)
 
             is Concatenation -> {
-                val t = embTm.typeForRuleItem(ruleItem, true)
+                val t = embBldr.typeForRuleItem(ruleItem, true)
                 createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, t.type), t, childIndex)
             }
 
@@ -516,19 +513,19 @@ class GrammarTypeNamespaceFromGrammar(
                 if (ignore) {
                     Unit
                 } else {
-                    val propType = embTm.typeForRuleItem(rhs, true) //to get list type
+                    val propType = embBldr.typeForRuleItem(rhs, true) //to get list type
                     createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, propType.type), propType, childIndex)
                 }
             }
 
             is Choice -> {
-                val choiceType = embTm.typeForChoiceRule(rhs, refRule) //pName, rhs.alternative)
+                val choiceType = embBldr.typeForChoiceRule(rhs, refRule) //pName, rhs.alternative)
                 val pName = propertyNameFor(et, ruleItem, choiceType.type)
                 createUniquePropertyDeclaration(et, pName, choiceType, childIndex)
             }
 
             else -> {
-                val propType = embTm.typeForRuleItem(ruleItem, true)
+                val propType = embBldr.typeForRuleItem(ruleItem, true)
                 createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, propType.type), propType, childIndex)
             }
         }
@@ -575,5 +572,4 @@ class GrammarTypeNamespaceFromGrammar(
         return uniqueName
     }
 
-    override fun toString(): String = "TypeModel(${this.qualifiedName})"
 }

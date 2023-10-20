@@ -165,7 +165,16 @@ class ReferenceResolverDefault(
                     for (lv in coll) {
                         when (lv) {
                             null -> Unit //do nothing
-                            is AsmElementSimple -> handleReferenceExpression(re, context, lv)
+                            is AsmElementSimple -> {
+                                //TODO: val ofType = _grammarNamespace?.findTypeNamed(it)
+                                //TODO: need type model to check for subtypes, just check type name for now
+                                val isCorrectType = null == refExpr.ofType || refExpr.ofType == lv.typeName
+                                when {
+                                    isCorrectType -> handleReferenceExpression(re, context, lv)
+                                    else -> Unit
+                                }
+                            }
+
                             else -> error("list element of navigation should be an AsmElementSimple, got '${lv::class.simpleName}'")
                         }
                     }
@@ -175,5 +184,4 @@ class ReferenceResolverDefault(
             }
         }
     }
-
 }

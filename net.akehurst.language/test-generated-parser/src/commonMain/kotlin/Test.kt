@@ -66,7 +66,7 @@ object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<AsmSimple, C
     override val defaultGoalRuleName: String = "S"
     override val mapToGrammar: (Int, Int) -> RuleItem get() = { _, _ -> TODO() }
     override val scopeModel: ScopeModel by lazy {
-        val res = ScopeModelAgl.fromString(ContextFromGrammar(grammar), scopeModelString)
+        val res = ScopeModelAgl.fromString(ContextFromGrammar.createContextFrom(listOf(grammar)), scopeModelString)
         val asm = res.asm ?: error("Error creating ScopeModel.\n${res.issues}")
         asm
     }
