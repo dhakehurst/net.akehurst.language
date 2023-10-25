@@ -75,7 +75,7 @@ object TypeModelTest {
         }
     }
 
-    fun tmAssertEquals(expected: TypeDefinition?, actual: TypeDefinition?, source: String) {
+    fun tmAssertEquals(expected: TypeDeclaration?, actual: TypeDeclaration?, source: String) {
         when {
             null == expected || null == actual -> fail("should never be null")
             expected is PrimitiveType && actual is PrimitiveType -> tmAssertEquals(expected, actual)

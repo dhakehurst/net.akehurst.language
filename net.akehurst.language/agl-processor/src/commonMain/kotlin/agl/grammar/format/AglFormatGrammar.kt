@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.agl.grammar.format
+package net.akehurst.language.agl.language.format
 
-import net.akehurst.language.agl.grammar.grammar.asm.GrammarAbstract
-import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
-import net.akehurst.language.agl.grammar.grammar.asm.GrammarOptionDefault
-import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
-import net.akehurst.language.agl.grammar.scopes.AglScopesGrammar
-import net.akehurst.language.api.grammar.GrammarRule
+import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
+import net.akehurst.language.agl.language.grammar.asm.GrammarAbstract
+import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.language.grammar.asm.GrammarOptionDefault
+import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
+import net.akehurst.language.agl.language.scopes.AglScopesGrammar
+import net.akehurst.language.api.language.grammar.GrammarRule
 
 
 internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglFormat") {
@@ -73,8 +74,8 @@ internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
     }
     //}
 
-    override val options = listOf(GrammarOptionDefault("defaultGoal", "unit"))
-    override val defaultRule: GrammarRule get() = this.findAllResolvedGrammarRule("unit")!!
+    override val options = listOf(GrammarOptionDefault(AglGrammarGrammar.OPTION_defaultGoalRule, "unit"))
+    override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule("unit")!!
 
     const val grammarStr = """
         namespace net.akehurst.language.agl

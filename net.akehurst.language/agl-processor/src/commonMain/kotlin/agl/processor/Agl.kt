@@ -21,16 +21,16 @@ import net.akehurst.language.agl.default.CompletionProviderDefault
 import net.akehurst.language.agl.default.SemanticAnalyserDefault
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.default.TypeModelFromGrammar
-import net.akehurst.language.agl.grammar.format.AglFormatterModelDefault
-import net.akehurst.language.agl.grammar.grammar.ContextFromGrammar
-import net.akehurst.language.agl.grammar.grammar.GrammarContext
-import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
-import net.akehurst.language.agl.grammar.style.AglStyleModelDefault
+import net.akehurst.language.agl.language.format.AglFormatterModelDefault
+import net.akehurst.language.agl.language.grammar.ContextFromGrammar
+import net.akehurst.language.agl.language.grammar.GrammarContext
+import net.akehurst.language.agl.language.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.syntaxAnalyser.*
 import net.akehurst.language.api.asm.AsmSimple
-import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.typemodel.api.TypeModel
 

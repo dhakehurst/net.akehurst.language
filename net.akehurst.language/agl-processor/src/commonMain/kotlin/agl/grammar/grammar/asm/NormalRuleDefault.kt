@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.grammar.grammar.asm
+package net.akehurst.language.agl.language.grammar.asm
 
-import net.akehurst.language.api.grammar.*
+import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.GrammarExeception
+import net.akehurst.language.api.language.grammar.NormalRule
+import net.akehurst.language.api.language.grammar.RuleItem
 
 class NormalRuleDefault(
     override val grammar: Grammar,
@@ -36,7 +39,7 @@ class NormalRuleDefault(
             value.setOwningRule(this, listOf(0))
             this._rhs = value
         }
-    
+
     override fun hashCode(): Int = listOf(name, grammar).hashCode()
     override fun equals(other: Any?): Boolean = when (other) {
         !is NormalRule -> false

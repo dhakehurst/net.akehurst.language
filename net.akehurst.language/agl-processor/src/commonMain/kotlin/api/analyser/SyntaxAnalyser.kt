@@ -16,7 +16,7 @@
 
 package net.akehurst.language.api.syntaxAnalyser
 
-import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.api.sppt.SharedPackedParseTree

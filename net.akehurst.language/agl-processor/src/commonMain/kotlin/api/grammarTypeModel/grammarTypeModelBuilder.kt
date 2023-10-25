@@ -30,10 +30,10 @@ fun grammarTypeModel(
     init: GrammarTypeModelBuilder.() -> Unit
 ): TypeModel {
     val model = TypeModelSimple(name)
-    val b = GrammarTypeModelBuilder(namespaceQualifiedName, imports.map { it.qualifiedName }.toMutableList())
+    imports.forEach { model.addNamespace(it) }
+    val b = GrammarTypeModelBuilder(model, namespaceQualifiedName, imports.map { it.qualifiedName }.toMutableList())
     b.init()
     val ns = b.build()
-    imports.forEach { model.addNamespace(it) }
     model.addNamespace(ns)
     model.resolveImports()
     return model
@@ -41,10 +41,13 @@ fun grammarTypeModel(
 
 @TypeModelDslMarker
 class GrammarTypeModelBuilder(
+    typeModel: TypeModel,
     namespaceQualifiedName: String,
     imports: MutableList<String>
 ) {
-    private val _namespace = GrammarTypeNamespaceSimple(namespaceQualifiedName, imports)
+    private val _namespace = GrammarTypeNamespaceSimple(namespaceQualifiedName, imports).also {
+        it.resolveImports(typeModel)
+    }
     private val _typeReferences = mutableListOf<TypeUsageReferenceBuilder>()
 
     val StringType: PrimitiveType get() = SimpleTypeModelStdLib.String.type as PrimitiveType
@@ -53,7 +56,7 @@ class GrammarTypeModelBuilder(
         _namespace.addTypeFor(name, if (isNullable) SimpleTypeModelStdLib.String.nullable() else SimpleTypeModelStdLib.String)
     }
 
-    fun listTypeFor(name: String, elementType: TypeDefinition): TypeInstance {
+    fun listTypeFor(name: String, elementType: TypeDeclaration): TypeInstance {
         val t = SimpleTypeModelStdLib.List.instance(listOf(elementType.instance()))
         _namespace.addTypeFor(name, t)
         return t
@@ -69,10 +72,10 @@ class GrammarTypeModelBuilder(
         _namespace.addTypeFor(name, t)
     }
 
-    fun listSeparatedTypeFor(name: String, itemType: TypeDefinition, separatorType: TypeDefinition) =
+    fun listSeparatedTypeFor(name: String, itemType: TypeDeclaration, separatorType: TypeDeclaration) =
         listSeparatedTypeFor(name, itemType.instance(), separatorType.instance())
 
-    fun listSeparatedTypeOf(name: String, itemTypeName: String, separatorType: TypeDefinition) {
+    fun listSeparatedTypeOf(name: String, itemTypeName: String, separatorType: TypeDeclaration) {
         val itemType = _namespace.findOwnedOrCreateDataTypeNamed(itemTypeName)!!
         listSeparatedTypeFor(name, itemType, separatorType)
     }
@@ -95,7 +98,7 @@ class GrammarTypeModelBuilder(
         val sts = subtypes.map {
             when (it) {
                 is String -> _namespace.findOwnedOrCreateDataTypeNamed(it)!!
-                is TypeDefinition -> it
+                is TypeDeclaration -> it
                 else -> error("Cannot map to TypeDefinition: $it")
             }
         }

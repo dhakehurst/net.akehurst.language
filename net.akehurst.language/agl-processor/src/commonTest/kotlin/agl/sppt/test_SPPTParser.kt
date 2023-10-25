@@ -16,9 +16,9 @@
 
 package net.akehurst.language.agl.sppt
 
-import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
-import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
-import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
+import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
+import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
 import kotlin.test.Test
 import kotlin.test.assertEquals

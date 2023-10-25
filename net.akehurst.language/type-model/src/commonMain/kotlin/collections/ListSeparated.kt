@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.agl.collections
+package net.akehurst.language.collections
 
 /**
  * I - type of list Items

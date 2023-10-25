@@ -117,7 +117,7 @@ class TypeNamespaceBuilder(
         val sts = subtypes.map {
             when (it) {
                 is String -> _namespace.findOwnedOrCreateDataTypeNamed(it)!!
-                is TypeDefinition -> it
+                is TypeDeclaration -> it
                 else -> error("Cannot map to TypeDefinition: $it")
             }
         }
@@ -157,7 +157,7 @@ abstract class StructuredTypeBuilder(
         val atargs = typeArgs.map { _namespace.createTypeInstance(it, emptyList(), false) }
         val targs = if (btargs.isEmpty()) atargs else btargs
         val ti = _namespace.createTypeInstance(typeName, targs, isNullable)
-        return _structuredType.appendProperty(propertyName, ti, characteristics)
+        return _structuredType.appendStoredProperty(propertyName, ti, characteristics)
     }
 
     fun propertyPrimitiveType(propertyName: String, typeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
@@ -184,12 +184,12 @@ abstract class StructuredTypeBuilder(
         return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
     }
 
-    fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorType: TypeDefinition, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
+    fun propertyListSeparatedTypeOf(propertyName: String, itemTypeName: String, separatorType: TypeDeclaration, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
         val itemType = _namespace.findOwnedOrCreateDataTypeNamed(itemTypeName)!!
         return propertyListSeparatedType(propertyName, itemType, separatorType, isNullable, childIndex)
     }
 
-    fun propertyListSeparatedType(propertyName: String, itemType: TypeDefinition, separatorType: TypeDefinition, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
+    fun propertyListSeparatedType(propertyName: String, itemType: TypeDeclaration, separatorType: TypeDeclaration, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
         val collType = SimpleTypeModelStdLib.ListSeparated
         val propType = collType.instance(listOf(itemType.instance(), separatorType.instance()), isNullable)
         return property(propertyName, propType, childIndex)
@@ -222,14 +222,18 @@ abstract class StructuredTypeBuilder(
 
     //
     fun propertyDataTypeOf(propertyName: String, elementTypeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration {
-        val t = _namespace.findOwnedOrCreateDataTypeNamed(elementTypeName)!!
+        val t = if (elementTypeName.contains(".")) {
+            _namespace.findTypeNamed(elementTypeName)!!
+        } else {
+            _namespace.findOwnedOrCreateDataTypeNamed(elementTypeName)!!
+        }
         return property(propertyName, t.instance(emptyList(), isNullable), childIndex)
     }
 
     fun property(propertyName: String, typeUse: TypeInstance, childIndex: Int): PropertyDeclaration {
         check(childIndex >= _structuredType.property.size) { "Incorrect property index" }
         val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
-        return _structuredType.appendProperty(propertyName, typeUse, characteristics, childIndex)
+        return _structuredType.appendStoredProperty(propertyName, typeUse, characteristics, childIndex)
     }
 }
 
@@ -282,7 +286,7 @@ class DataTypeBuilder(
 @TypeModelDslMarker
 class TypeUsageReferenceBuilder(
     val _namespace: TypeNamespace,
-    val type: TypeDefinition,
+    val type: TypeDeclaration,
     val nullable: Boolean
 ) {
     private val _args = mutableListOf<TypeInstance>()

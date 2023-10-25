@@ -16,8 +16,8 @@
 
 package net.akehurst.language.agl.automaton
 
-import net.akehurst.language.agl.grammar.grammar.AglGrammarGrammar
-import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
+import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
+import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test

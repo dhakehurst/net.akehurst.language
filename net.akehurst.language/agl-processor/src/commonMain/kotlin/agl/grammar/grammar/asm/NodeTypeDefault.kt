@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.grammar.grammar.asm
+package net.akehurst.language.agl.language.grammar.asm
 
-import net.akehurst.language.api.grammar.NodeType;
+import net.akehurst.language.api.language.grammar.NodeType;
 
 data class NodeTypeDefault(override val identity: String) : NodeType {
 

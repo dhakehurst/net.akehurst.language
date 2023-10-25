@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl.completionProvider
 
-import net.akehurst.language.api.grammar.Terminal
+import net.akehurst.language.api.language.grammar.Terminal
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.CompletionProvider

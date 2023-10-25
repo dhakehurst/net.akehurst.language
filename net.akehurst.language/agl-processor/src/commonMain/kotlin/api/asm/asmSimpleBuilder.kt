@@ -20,7 +20,8 @@ import net.akehurst.language.agl.agl.default.ScopeCreator
 import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.agl.default.ReferenceResolverDefault
 import net.akehurst.language.agl.default.ResolveFunction
-import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.scopes.NavigationDefault
+import net.akehurst.language.agl.language.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
@@ -85,13 +86,6 @@ class AsmSimpleBuilder(
         return list
     }
 
-//    private fun resolveReferences(issues: IssueHolder, o: Any?, locationMap: Map<Any, InputLocation>?, context: ScopeSimple<AsmElementPath>?) {
-//        when (o) {
-//            is AsmElementSimple -> _scopeModel.resolveReferencesElement(issues, o, locationMap, context?.rootScope)
-//            is List<*> -> o.forEach { resolveReferences(issues, it, locationMap, context) }
-//        }
-//    }
-
     fun build(): AsmSimple {
         val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
         if (resolveReferences && null != _context) {
@@ -127,8 +121,9 @@ class AsmElementSimpleBuilder(
     }
     private val _elementScope by lazy {
         _parentScope?.let {
-            if (_scopeModel.isScopeDefinition(_element.typeName)) {
-                val refInParent = _scopeModel.createReferenceLocalToScope(_parentScope, _element)
+            if (_scopeModel.isScopeDefinedFor(_element.typeName)) {
+                val nav = _scopeModel.identifyingNavigationFor(_parentScope.forTypeName, _element.typeName) as NavigationDefault
+                val refInParent = nav.createReferenceLocalToScope(_parentScope, _element)
                     ?: error("Trying to create child scope but cannot create a reference for $_element")
                 val newScope = _parentScope.createOrGetChildScope(refInParent, _element.typeName, _element.asmPath)
                 _scopeMap[_asmPath] = newScope
@@ -183,8 +178,8 @@ class AsmElementSimpleBuilder(
             //do nothing
         } else {
             val scopeFor = es.forTypeName
-            val nav = _scopeModel.getReferablePropertyNameFor(scopeFor, _element.typeName)
-            val res = nav?.let { it.evaluateFor(_element) }
+            val nav = _scopeModel.identifyingNavigationFor(scopeFor, _element.typeName) as NavigationDefault?
+            val res = nav?.evaluateFor(_element)
             val referableName = when (res) {
                 null -> null
                 is String -> res

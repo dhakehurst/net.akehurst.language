@@ -15,13 +15,12 @@
  *
  */
 
-package net.akehurst.language.agl.agl.grammar.grammar
+package net.akehurst.language.agl.language.grammar
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
-import net.akehurst.language.agl.grammar.grammar.GrammarContext
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammar.Terminal
+import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.RuleItem
+import net.akehurst.language.api.language.grammar.Terminal
 import net.akehurst.language.api.processor.CompletionItem
 
 class AglGrammarCompletionProvider : CompletionProviderAbstract<List<Grammar>, GrammarContext>() {

@@ -13,26 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.agl.grammar.scopes
 
-import net.akehurst.language.agl.grammar.grammar.asm.GrammarAbstract
-import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
-import net.akehurst.language.agl.grammar.grammar.asm.GrammarOptionDefault
-import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
-import net.akehurst.language.api.grammar.GrammarRule
+package net.akehurst.language.agl.language.scopes
+
+import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
+import net.akehurst.language.agl.language.grammar.asm.GrammarAbstract
+import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.language.grammar.asm.GrammarOptionDefault
+import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
+import net.akehurst.language.api.language.grammar.GrammarRule
 
 /**
 
  */
 internal object AglScopesGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglScopes") {
     //companion object {
-    const val goalRuleName = "declarations"
+    const val goalRuleName = "unit"
     private fun createRules(): List<GrammarRule> {
         val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglStyle");
         b.skip("WHITESPACE", true).concatenation(b.terminalPattern("\\s+"));
         b.skip("MULTI_LINE_COMMENT", true).concatenation(b.terminalPattern("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"));
         b.skip("SINGLE_LINE_COMMENT", true).concatenation(b.terminalPattern("//[^\\n\\r]*"));
 
+        b.rule("unit").multi(0, -1, b.nonTerminal("namespace"))
+        b.rule("namespace")
+            .concatenation(b.terminalLiteral("namespace"), b.nonTerminal("qualifiedName"), b.terminalLiteral("{"), b.nonTerminal("declarations"), b.terminalLiteral("}"))
         b.rule("declarations").concatenation(b.nonTerminal("rootIdentifiables"), b.nonTerminal("scopes"), b.nonTerminal("referencesOpt"))
         b.rule("rootIdentifiables").multi(0, -1, b.nonTerminal("identifiable"))
         b.rule("scopes").multi(0, -1, b.nonTerminal("scope"))
@@ -81,13 +86,14 @@ internal object AglScopesGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
         b.rule("typeReference").concatenation(b.nonTerminal("IDENTIFIER"))
         b.rule("navigationOrNothing").choiceLongestFromConcatenationItem(b.terminalLiteral("§nothing"), b.nonTerminal("navigation"))
         b.rule("propertyReference").concatenation(b.nonTerminal("IDENTIFIER"))
+        b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"))
         b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
 
         return b.grammar.grammarRule
     }
 
-    override val options = listOf(GrammarOptionDefault("defaultGoal", "declarations"))
-    override val defaultRule: GrammarRule get() = this.findAllResolvedGrammarRule("declarations")!!
+    override val options = listOf(GrammarOptionDefault(AglGrammarGrammar.OPTION_defaultGoalRule, goalRuleName))
+    override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule(goalRuleName)!!
 
     const val grammarStr = """
 namespace net.akehurst.language.agl
@@ -97,6 +103,8 @@ grammar AglScopes {
     skip MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
     skip SINGLE_LINE_COMMENT = "//[\n\r]*?" ;
 
+    unit = namespace* ;
+    namespace = 'namespace' qualifiedName '{' declarations '}' ;
     declarations = rootIdentifiables scopes references? ;
     rootIdentifiables = identifiable* ;
     scopes = scope* ;
@@ -118,41 +126,16 @@ grammar AglScopes {
 
     typeReference = IDENTIFIER ;
     propertyReference = IDENTIFIER ;
+    qualifiedName = [IDENTIFIER / '.']+ ;
     leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
 }
-    """
-    const val styleStr = """'scope' {
-  foreground: darkgreen;
-  font-style: bold;
-}
-'identify' {
-  foreground: darkgreen;
-  font-style: bold;
-}
-'by' {
-  foreground: darkgreen;
-  font-style: bold;
-}
-'references' {
-  foreground: darkgreen;
-  font-style: bold;
-}
-'in' {
-  foreground: darkgreen;
-  font-style: bold;
-}
-'property' {
-  foreground: darkgreen;
-  font-style: bold;
-}
-'refers-to' {
-  foreground: darkgreen;
-  font-style: bold;
-}
-'|' {
+"""
+
+    const val styleStr = """${"$"}keyword {
   foreground: darkgreen;
   font-style: bold;
 }"""
+
     const val formatterStr = """
 @TODO
 References -> when {

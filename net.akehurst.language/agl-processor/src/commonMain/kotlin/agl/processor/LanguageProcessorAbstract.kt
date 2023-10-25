@@ -19,9 +19,10 @@ package net.akehurst.language.agl.processor
 import net.akehurst.language.agl.agl.parser.Scanner
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.formatter.FormatterSimple
-import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
-import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
+import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
+import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
+import net.akehurst.language.agl.language.scopes.ScopeModelAgl
 import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
@@ -30,8 +31,8 @@ import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.formatter.AglFormatterModel
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.ScopeModel
@@ -68,7 +69,7 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
 
     protected val defaultGoalRuleName: String? by lazy {
         configuration.defaultGoalRuleName
-            ?: grammar.options.firstOrNull { it.name == "defaultGoal" }?.value
+            ?: grammar.options.firstOrNull { it.name == AglGrammarGrammar.OPTION_defaultGoalRule }?.value
             ?: grammar.grammarRule.first { it.isSkip.not() }.name
     }
 

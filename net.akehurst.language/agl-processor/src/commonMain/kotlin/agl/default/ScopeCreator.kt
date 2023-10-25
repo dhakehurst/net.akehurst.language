@@ -17,7 +17,8 @@
 
 package net.akehurst.language.agl.agl.default
 
-import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.scopes.NavigationDefault
+import net.akehurst.language.agl.language.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.createReferenceLocalToScope
 import net.akehurst.language.api.asm.AsmElementPath
@@ -57,8 +58,9 @@ class ScopeCreator(
     }
 
     private fun createScope(scope: Scope<AsmElementPath>, el: AsmElementSimple): Scope<AsmElementPath> {
-        return if (scopeModel!!.isScopeDefinition(el.typeName)) {
-            val refInParent = scopeModel!!.createReferenceLocalToScope(scope, el)
+        val nav = scopeModel.identifyingNavigationFor(scope.forTypeName, el.typeName) as NavigationDefault?
+        return if (null != nav && scopeModel.isScopeDefinedFor(el.typeName)) {
+            val refInParent = nav.createReferenceLocalToScope(scope, el)
             if (null != refInParent) {
                 val newScope = scope.createOrGetChildScope(refInParent, el.typeName, el.asmPath)
                 //_scopeMap[el.asmPath] = newScope
@@ -76,9 +78,10 @@ class ScopeCreator(
     }
 
     private fun addToScope(scope: Scope<AsmElementPath>, el: AsmElementSimple) {
-        if (scopeModel!!.shouldCreateReference(scope.forTypeName, el.typeName)) {
+        val nav = scopeModel.identifyingNavigationFor(scope.forTypeName, el.typeName) as NavigationDefault?
+        if (null != nav) {
             //val reference = _scopeModel!!.createReferenceFromRoot(scope, el)
-            val scopeLocalReference = scopeModel!!.createReferenceLocalToScope(scope, el)
+            val scopeLocalReference = nav.createReferenceLocalToScope(scope, el)
             if (null != scopeLocalReference) {
                 val contextRef = el.asmPath
                 scope.addToScope(scopeLocalReference, el.typeName, contextRef)

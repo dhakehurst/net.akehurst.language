@@ -17,16 +17,17 @@
 
 package net.akehurst.language.agl.aMinimalVersion
 
+
 import net.akehurst.language.agl.automaton.*
-import net.akehurst.language.agl.collections.GraphStructuredStack
-import net.akehurst.language.agl.collections.binaryHeap
 import net.akehurst.language.agl.parser.InputFromString
+import net.akehurst.language.agl.runtime.graph.GraphStructuredStack
 import net.akehurst.language.agl.runtime.graph.TreeData
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.collections.LazyMutableMapNonNull
+import net.akehurst.language.collections.binaryHeap
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import net.akehurst.language.collections.mutableQueueOf
 

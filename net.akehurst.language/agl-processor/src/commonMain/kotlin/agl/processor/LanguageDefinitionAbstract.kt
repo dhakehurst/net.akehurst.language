@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.formatter.AglFormatterModel
-import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser

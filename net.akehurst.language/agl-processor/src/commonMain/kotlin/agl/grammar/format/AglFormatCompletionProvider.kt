@@ -15,12 +15,12 @@
  *
  */
 
-package net.akehurst.language.agl.agl.grammar.format
+package net.akehurst.language.agl.language.format
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.api.formatter.AglFormatterModel
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammar.Terminal
+import net.akehurst.language.api.language.grammar.RuleItem
+import net.akehurst.language.api.language.grammar.Terminal
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 

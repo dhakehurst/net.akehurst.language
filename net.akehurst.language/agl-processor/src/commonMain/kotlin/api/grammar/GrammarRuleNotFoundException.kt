@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.grammar
+package net.akehurst.language.api.language.grammar
 
 class GrammarRuleNotFoundException(message: String) : RuntimeException(message)

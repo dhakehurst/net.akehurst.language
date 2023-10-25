@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.agl.grammar.format
+
+package net.akehurst.language.agl.language.format
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.asm.AsmElementSimple

@@ -19,8 +19,8 @@ package net.akehurst.language.typemodel.api
 
 interface TypeModel {
 
-    val AnyType: TypeDefinition
-    val NothingType: TypeDefinition
+    val AnyType: TypeDeclaration
+    val NothingType: TypeDeclaration
 
     val name: String
     //val rootTypeName: String?
@@ -34,9 +34,9 @@ interface TypeModel {
 
     fun resolveImports()
 
-    fun findFirstByNameOrNull(typeName: String): TypeDefinition?
+    fun findFirstByNameOrNull(typeName: String): TypeDeclaration?
 
-    fun findByQualifiedNameOrNull(qualifiedName: String): TypeDefinition?
+    fun findByQualifiedNameOrNull(qualifiedName: String): TypeDeclaration?
 
     fun asString(): String
 }
@@ -54,9 +54,9 @@ interface TypeNamespace {
     /**
      * TypeDefinition.name --> TypeDefinition
      */
-    val allTypesByName: Map<String, TypeDefinition>
+    val allTypesByName: Map<String, TypeDeclaration>
 
-    val allTypes: Collection<TypeDefinition>
+    val allTypes: Collection<TypeDeclaration>
 
     val primitiveType: Set<PrimitiveType>
 
@@ -73,18 +73,18 @@ interface TypeNamespace {
     /**
      * find type in this namespace with given name
      */
-    fun findOwnedTypeNamed(typeName: String): TypeDefinition?
+    fun findOwnedTypeNamed(typeName: String): TypeDeclaration?
 
     /**
      * find type in this namespace OR imports with given name
      */
-    fun findTypeNamed(qualifiedOrImportedTypeName: String): TypeDefinition?
+    fun findTypeNamed(qualifiedOrImportedTypeName: String): TypeDeclaration?
 
     fun findOwnedOrCreatePrimitiveTypeNamed(typeName: String): PrimitiveType
     fun findOwnedOrCreateDataTypeNamed(typeName: String): DataType
     fun findOwnedOrCreateCollectionTypeNamed(typeName: String): CollectionType
 
-    fun createTypeInstance(qualifiedOrImportedTypeName: String, typeArguments: List<TypeInstance>, isNullable: Boolean): TypeInstance
+    fun createTypeInstance(qualifiedOrImportedTypeName: String, typeArguments: List<TypeInstance> = emptyList(), isNullable: Boolean = false): TypeInstance
     fun createTupleTypeInstance(type: TupleType, arguments: List<TypeInstance>, nullable: Boolean): TypeInstance
     fun createUnnamedSuperTypeTypeInstance(type: UnnamedSuperTypeType, arguments: List<TypeInstance>, nullable: Boolean): TypeInstance
 
@@ -98,7 +98,7 @@ interface TypeNamespace {
 
 interface TypeInstance {
     val namespace: TypeNamespace
-    val type: TypeDefinition
+    val type: TypeDeclaration
     val typeArguments: List<TypeInstance>
     val isNullable: Boolean
 
@@ -108,11 +108,16 @@ interface TypeInstance {
     fun signature(context: TypeNamespace?, currentDepth: Int): String
 }
 
-interface TypeDefinition {
+interface TypeDeclaration {
     val namespace: TypeNamespace
     val name: String
     val qualifiedName: String
     val typeParameters: List<String>
+
+    val property: Map<String, PropertyDeclaration>
+    val properties: Map<Int, PropertyDeclaration>
+
+    val method: Map<String, MethodDeclaration>
 
     /**
      * information about this type
@@ -123,20 +128,20 @@ interface TypeDefinition {
 
     fun instance(arguments: List<TypeInstance> = emptyList(), nullable: Boolean = false): TypeInstance
 
+    fun appendDerivedProperty(name: String, type: TypeInstance, expression: String)
+    fun appendMethod(name: String, parameters: List<ParameterDefinition>, type: TypeInstance, expression: String)
+
     fun asString(context: TypeNamespace): String
 }
 
-interface PrimitiveType : TypeDefinition {
+interface PrimitiveType : TypeDeclaration {
 }
 
-interface EnumType : TypeDefinition {
+interface EnumType : TypeDeclaration {
     val literals: List<String>
 }
 
-interface StructuredType : TypeDefinition {
-
-    val property: Map<String, PropertyDeclaration>
-    val properties: Map<Int, PropertyDeclaration>
+interface StructuredType : TypeDeclaration {
 
     fun propertiesWithCharacteristic(chr: PropertyCharacteristic): List<PropertyDeclaration>
 
@@ -145,11 +150,18 @@ interface StructuredType : TypeDefinition {
     /**
      * append property at the next index
      */
-    fun appendProperty(name: String, type: TypeInstance, characteristics: Set<PropertyCharacteristic>, index: Int = -1): PropertyDeclaration
+    fun appendStoredProperty(name: String, type: TypeInstance, characteristics: Set<PropertyCharacteristic>, index: Int = -1): PropertyDeclaration
+
 }
 
 interface TupleType : StructuredType {
     val entries: List<Pair<String, TypeInstance>>
+
+    /**
+     * The compares two Tuple types by checking for the same name:Type of all entries.
+     * The 'equals' method compares the namespace and id of the TupleType.
+     */
+    fun equalTo(other: TupleType): Boolean
 }
 
 interface DataType : StructuredType {
@@ -173,11 +185,26 @@ interface DataType : StructuredType {
     fun addSubtype(qualifiedTypeName: String)
 }
 
-/**
- * constructor appends this property to the owner
- */
+interface UnnamedSuperTypeType : TypeDeclaration {
+
+    // identifier, needs a number else can't implement equals without a recursive loop
+    val id: Int
+
+    // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
+    val subtypes: List<TypeInstance>
+}
+
+interface CollectionType : StructuredType {
+    val supertypes: Set<CollectionType>
+
+    val isArray: Boolean
+    val isList: Boolean
+    val isSet: Boolean
+    val isMap: Boolean
+}
+
 interface PropertyDeclaration {
-    val owner: StructuredType
+    val owner: TypeDeclaration
     val name: String
     val typeInstance: TypeInstance
     val characteristics: Set<PropertyCharacteristic>
@@ -197,6 +224,7 @@ interface PropertyDeclaration {
     val isIdentity: Boolean
     val isConstructor: Boolean
     val isMember: Boolean
+    val isDerived: Boolean
 }
 
 enum class PropertyCharacteristic {
@@ -226,24 +254,23 @@ enum class PropertyCharacteristic {
     /**
      * property is a member (not a constructor property)
      */
-    MEMBER
+    MEMBER,
+
+    /**
+     * property is derived, calculated, not stored
+     */
+    DERIVED
 }
 
-interface UnnamedSuperTypeType : TypeDefinition {
-
-    // identifier, needs a number else can't implement equals without a recursive loop
-    val id: Int
-
-    // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
-    val subtypes: List<TypeInstance>
+interface MethodDeclaration {
+    val owner: TypeDeclaration
+    val name: String
+    val parameters: List<ParameterDefinition>
+    val body: String
 }
 
-interface CollectionType : StructuredType {
-    val supertypes: Set<CollectionType>
-
-    val isArray: Boolean
-    val isList: Boolean
-    val isSet: Boolean
-    val isMap: Boolean
+interface ParameterDefinition {
+    val name: String
+    val typeInstance: TypeInstance
+    val defaultValue: String?
 }
-

@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.processor.java8
 
-import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
+import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized

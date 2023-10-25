@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.collections
+package net.akehurst.language.collections
 
 import kotlin.test.*
 
@@ -299,7 +299,7 @@ class test_BinaryHeapMin {
     fun _10_element_peekOneOf_isAKey() {
         insert_10()
 
-        assertTrue(setOf("J1","J2").contains(sut.peekOneOf(10)))
+        assertTrue(setOf("J1", "J2").contains(sut.peekOneOf(10)))
     }
 
     @Test
@@ -313,7 +313,7 @@ class test_BinaryHeapMin {
     fun _10_element_peekAll_isAKey() {
         insert_10()
 
-        assertEquals(setOf("J1","J2"), sut.peekAll(10).toSet())
+        assertEquals(setOf("J1", "J2"), sut.peekAll(10).toSet())
     }
 
     @Test
@@ -347,7 +347,7 @@ class test_BinaryHeapMin {
 
         assertEquals(11, sut.size)
         assertEquals(listOf("C", "C2"), sut[3])
-        assertEquals("C",sut.peekRoot)
+        assertEquals("C", sut.peekRoot)
     }
 
     @Test
@@ -359,7 +359,7 @@ class test_BinaryHeapMin {
         assertEquals(11, sut.size)
         assertEquals(listOf("C"), sut[3])
         assertEquals(listOf("F"), sut[6])
-        assertEquals("C",sut.peekRoot)
+        assertEquals("C", sut.peekRoot)
     }
 
     @Test
@@ -370,8 +370,8 @@ class test_BinaryHeapMin {
 
         assertEquals(11, sut.size)
         assertEquals(listOf("C"), sut[3])
-        assertEquals(listOf("I","I2"), sut[9])
-        assertEquals("C",sut.peekRoot)
+        assertEquals(listOf("I", "I2"), sut[9])
+        assertEquals("C", sut.peekRoot)
     }
 
     @Test
@@ -382,8 +382,8 @@ class test_BinaryHeapMin {
 
         assertEquals(11, sut.size)
         assertEquals(listOf("C"), sut[3])
-        assertEquals(listOf("M","M2"), sut[13])
-        assertEquals("C",sut.peekRoot)
+        assertEquals(listOf("M", "M2"), sut[13])
+        assertEquals("C", sut.peekRoot)
     }
 
     @Test
@@ -395,7 +395,7 @@ class test_BinaryHeapMin {
         assertEquals(11, sut.size)
         assertEquals(listOf("C"), sut[3])
         assertEquals(listOf("Z"), sut[26])
-        assertEquals("C",sut.peekRoot)
+        assertEquals("C", sut.peekRoot)
     }
 
     @Test
@@ -444,7 +444,7 @@ class test_BinaryHeapMin {
 
         assertEquals("C", actual)
         assertEquals(10, sut.size)
-        assertEquals(listOf("I","I2"), sut[9])
+        assertEquals(listOf("I", "I2"), sut[9])
         assertEquals(emptyList(), sut[3])
         assertEquals("D", sut.peekRoot)
     }
@@ -457,7 +457,7 @@ class test_BinaryHeapMin {
 
         assertEquals("C", actual)
         assertEquals(10, sut.size)
-        assertEquals(listOf("M","M2"), sut[13])
+        assertEquals(listOf("M", "M2"), sut[13])
         assertEquals(emptyList(), sut[3])
     }
 
@@ -519,7 +519,7 @@ class test_BinaryHeapMin {
 
         assertEquals("C", actual)
         assertEquals(10, sut.size)
-        assertEquals(setOf("I","I2"), sut[9].toSet())
+        assertEquals(setOf("I", "I2"), sut[9].toSet())
         assertEquals(emptyList(), sut[3])
         assertEquals("D", sut.peekRoot)
     }
@@ -532,7 +532,7 @@ class test_BinaryHeapMin {
 
         assertEquals("C", actual)
         assertEquals(10, sut.size)
-        assertEquals(setOf("M","M2"), sut[13].toSet())
+        assertEquals(setOf("M", "M2"), sut[13].toSet())
         assertEquals(emptyList(), sut[3])
         assertEquals("D", sut.peekRoot)
     }

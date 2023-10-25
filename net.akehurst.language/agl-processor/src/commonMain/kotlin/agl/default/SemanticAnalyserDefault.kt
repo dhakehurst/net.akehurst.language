@@ -18,7 +18,7 @@
 package net.akehurst.language.agl.default
 
 import net.akehurst.language.agl.agl.default.ScopeCreator
-import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple

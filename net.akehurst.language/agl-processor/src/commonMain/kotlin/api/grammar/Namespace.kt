@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.grammar
+package net.akehurst.language.api.language.grammar
 
 interface Namespace {
 
-	val qualifiedName: String
+    val qualifiedName: String
 
 }

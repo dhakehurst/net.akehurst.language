@@ -266,19 +266,22 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
             stringTypeFor("a")
             stringTypeFor("b")
             stringTypeFor("c")
-            stringTypeFor("d")
+            stringTypeFor("x")
             dataType("S", "S") {
                 subtypes("A", "B", "C")
             }
             dataType("A", "A") {
+                supertypes("S")
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyPrimitiveType("x", "String", false, 1)
             }
             dataType("B", "B") {
+                supertypes("S")
                 propertyPrimitiveType("b", "String", false, 0)
                 propertyPrimitiveType("x", "String", false, 1)
             }
             dataType("C", "C") {
+                supertypes("S")
                 propertyPrimitiveType("c", "String", false, 0)
                 propertyPrimitiveType("x", "String", false, 1)
             }
@@ -371,21 +374,30 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("x")
             dataType("S", "S") {
                 subtypes("A", "B", "C")
             }
             dataType("A", "A") {
+                supertypes("S")
                 propertyPrimitiveType("a", "String", false, 0)
                 propertyPrimitiveType("x", "String", false, 1)
             }
             dataType("B", "B") {
+                supertypes("S")
                 subtypes("C", "D")
             }
             dataType("C", "C") {
+                supertypes("S", "B")
                 propertyPrimitiveType("c", "String", false, 0)
                 propertyPrimitiveType("x", "String", false, 1)
             }
             dataType("D", "D") {
+                supertypes("B")
                 propertyPrimitiveType("d", "String", false, 0)
                 propertyPrimitiveType("x", "String", false, 1)
             }
@@ -419,6 +431,11 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("x")
             val B = unnamedSuperTypeTypeOf("B", listOf(StringType, "D"))
             unnamedSuperTypeTypeOf("S", listOf("A", B, "C"))
             dataType("A", "A") {
@@ -1298,6 +1315,11 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
         val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
             val gtb = this
+            stringTypeFor("a")
+            stringTypeFor("b")
+            stringTypeFor("c")
+            stringTypeFor("d")
+            stringTypeFor("e")
             val BC = dataType("BC", "BC") {
                 propertyPrimitiveType("b", "String", false, 0)
                 propertyPrimitiveType("c", "String", false, 1)
@@ -1307,7 +1329,6 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                 propertyUnnamedSuperType("\$choice", false, 1) { elementRef("BC"); listType(false) { primitiveRef("String") } }
                 propertyPrimitiveType("e", "String", false, 2)
             }
-
         }
 
         GrammarTypeModelTest.tmAssertEquals(expected, actual)
@@ -1334,6 +1355,9 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val expected = grammarTypeModel("test.Test", "Test", "S") {
+            stringTypeFor("ID")
+            stringTypeFor("NAME")
+            stringTypeFor("NUMBER")
             dataType("S", "S") {
                 propertyPrimitiveType("id", "String", false, 0)
                 propertyListType("\$choiceList", false, 1) {
@@ -1379,15 +1403,22 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
 
         val actual = TypeModelFromGrammar.create(result.asm!!.last())
         val tmI = grammarTypeModel("test.I", "Inner", "S") {
-            unnamedSuperTypeType("S") {
-                elementRef("A")
-                elementRef("SA")
+            stringTypeFor("a")
+            dataType("S", "S") {
+                subtypes("A", "SA")
             }
-            dataType("SA", "SA")
-            dataType("A", "A")
+            dataType("SA", "SA") {
+                supertypes("S")
+                propertyDataTypeOf("s", "S", false, 0)
+                propertyDataTypeOf("a", "A", false, 1)
+            }
+            dataType("A", "A") {
+                supertypes("S")
+                propertyPrimitiveType("a", "String", false, 0)
+            }
         }
         val expected = grammarTypeModel(
-            "test.O", "Outer", "S", listOf(
+            "test.O", "O", "S", listOf(
                 SimpleTypeModelStdLib,
                 tmI.allNamespace[1]
             )
@@ -1396,6 +1427,7 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                 subtypes("B", "SBC")
             }
             dataType("SBC", "SBC") {
+                supertypes("S")
                 propertyDataTypeOf("s", "S", false, 0)
                 propertyDataTypeOf("bc", "BC", false, 1)
             }
@@ -1403,10 +1435,12 @@ class test_deriveGrammarTypeNamespaceFromGrammar {
                 subtypes("B", "C")
             }
             dataType("C", "C") {
-                propertyPrimitiveType("s", "S", false, 1)
+                supertypes("BC")
+                propertyDataTypeOf("s", "test.I.S", false, 1)
             }
             dataType("B", "B") {
-                propertyPrimitiveType("s", "S", false, 1)
+                supertypes("S", "BC")
+                propertyDataTypeOf("s", "test.I.S", false, 1)
             }
         }
 

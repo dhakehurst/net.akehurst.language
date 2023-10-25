@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.agl.grammar.format
+package net.akehurst.language.agl.language.format
 
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.api.formatter.AglFormatterModel
-import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.ScopeModel

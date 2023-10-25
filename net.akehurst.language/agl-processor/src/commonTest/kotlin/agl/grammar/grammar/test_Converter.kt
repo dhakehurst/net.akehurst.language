@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.grammar.grammar
+package net.akehurst.language.agl.language.grammar
 
-import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
-import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
+import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches

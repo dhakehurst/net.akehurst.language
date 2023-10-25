@@ -20,10 +20,10 @@ package net.akehurst.language.typemodel.api
 import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.Test
 
-class test_typeModelBuilder {
+class test_typeModel {
 
     @Test
-    fun test() {
+    fun testBuilder() {
         val tm = typeModel("name", true) {
             namespace("ns") {
                 dataType("Person") {
@@ -34,5 +34,18 @@ class test_typeModelBuilder {
 
         TypeModelTest.tmAssertEquals(tm, tm)
     }
+
+    /*    @Test
+        fun tuples() {
+
+            val tm = typeModel("name", true) {
+                namespace("ns") {
+                    tupleType {
+                        property("x", "String")
+                    }
+                }
+            }
+
+        }*/
 
 }

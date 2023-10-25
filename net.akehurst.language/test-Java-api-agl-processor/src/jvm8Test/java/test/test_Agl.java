@@ -17,17 +17,14 @@
 
 package test;
 
-import kotlin.Pair;
 import kotlin.Unit;
 import net.akehurst.language.agl.processor.Agl;
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple;
+import net.akehurst.language.agl.semanticAnalyser.ContextSimple;
 import net.akehurst.language.api.asm.AsmSimple;
-import net.akehurst.language.api.processor.*;
-import net.akehurst.language.api.sppt.SharedPackedParseTree;
+import net.akehurst.language.api.processor.LanguageProcessor;
+import net.akehurst.language.api.processor.LanguageProcessorConfiguration;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.List;
 
 public class test_Agl {
 
@@ -51,7 +48,7 @@ public class test_Agl {
 
     @Test
     public void processorFromString_noConfig() {
-        LanguageProcessor<Object,Object> proc = Agl.INSTANCE.processorFromString(grammarStr, null, null).getProcessor();
+        LanguageProcessor<Object, Object> proc = Agl.INSTANCE.processorFromString(grammarStr, null, null).getProcessor();
 
         Assert.assertNotNull(proc);
     }
@@ -67,12 +64,12 @@ public class test_Agl {
 
     @Test
     public void processorFromString_withConfigSet() {
-        LanguageProcessorConfiguration<Object,Object> config = Agl.INSTANCE.configuration(null, b-> {
+        LanguageProcessorConfiguration<Object, Object> config = Agl.INSTANCE.configuration(null, b -> {
             b.targetGrammarName("Test");
             return Unit.INSTANCE;
         });
 
-        LanguageProcessor<Object,Object> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null).getProcessor();
+        LanguageProcessor<Object, Object> proc = Agl.INSTANCE.processorFromString(grammarStr, config, null).getProcessor();
 
         Assert.assertNotNull(proc);
     }

@@ -15,7 +15,7 @@
  */
 package net.akehurst.language.agl.processor.KerML
 
-import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
+import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple

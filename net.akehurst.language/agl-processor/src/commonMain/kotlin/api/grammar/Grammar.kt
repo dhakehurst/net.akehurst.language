@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.grammar
+package net.akehurst.language.api.language.grammar
 
-import net.akehurst.language.agl.collections.OrderedSet
+import net.akehurst.language.collections.OrderedSet
+
 
 interface GrammarItem {
     val grammar: Grammar
@@ -67,7 +68,7 @@ interface Grammar {
 
     val options: List<GrammarOption>
 
-    val defaultRule: GrammarRule
+    val defaultGoalRule: GrammarRule
 
     val grammarRule: List<GrammarRule>
     val preferenceRule: List<PreferenceRule>

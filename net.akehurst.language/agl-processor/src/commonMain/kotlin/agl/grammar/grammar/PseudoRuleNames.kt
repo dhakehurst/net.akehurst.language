@@ -15,9 +15,9 @@
  *
  */
 
-package net.akehurst.language.agl.agl.grammar.grammar
+package net.akehurst.language.agl.language.grammar
 
-import net.akehurst.language.api.grammar.*
+import net.akehurst.language.api.language.grammar.*
 
 /**
  * creates the names of pseudo rules for a real rule.

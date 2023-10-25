@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.grammar.grammar
+package net.akehurst.language.agl.language.grammar
 
-import net.akehurst.language.agl.collections.toSeparatedList
-import net.akehurst.language.agl.grammar.grammar.asm.*
+import net.akehurst.language.agl.language.grammar.asm.*
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
-import net.akehurst.language.api.grammar.*
+import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.collections.toSeparatedList
 
 internal class AglGrammarSyntaxAnalyser(
     //val languageRegistry: LanguageRegistryDefault

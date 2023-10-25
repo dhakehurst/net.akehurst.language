@@ -17,8 +17,8 @@
 
 package net.akehurst.language.agl.agl.syntaxAnalyser
 
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammar.GrammarRule
+import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.GrammarRule
 
 class SyntaxAnalyserGeneratorKotlin {
 

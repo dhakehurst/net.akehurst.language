@@ -17,7 +17,7 @@
 package net.akehurst.language.agl.parser
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.api.grammar.GrammarRuleNotFoundException
+import net.akehurst.language.api.language.grammar.GrammarRuleNotFoundException
 import net.akehurst.language.api.processor.AutomatonKind
 import net.akehurst.language.api.processor.ParseOptions
 import net.akehurst.language.api.processor.ParseResult

@@ -16,8 +16,8 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.grammar.grammar.GrammarContext
-import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.agl.language.grammar.GrammarContext
+import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 import net.akehurst.language.api.processor.LanguageProcessorConfigurationDefault
 import net.akehurst.language.api.processor.LanguageProcessorPhase

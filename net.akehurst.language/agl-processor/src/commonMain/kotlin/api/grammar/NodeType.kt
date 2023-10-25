@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.api.grammar
+package net.akehurst.language.api.language.grammar
 
 interface NodeType {
-	val identity: String
+    val identity: String
 }

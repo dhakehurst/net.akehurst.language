@@ -17,8 +17,8 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
-import net.akehurst.language.agl.grammar.scopes.Navigation
-import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.scopes.NavigationDefault
+import net.akehurst.language.agl.language.scopes.ScopeModelAgl
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.AsmElementProperty
 import net.akehurst.language.api.asm.AsmElementSimple
@@ -45,7 +45,7 @@ class ContextSimple() : SentenceContext<AsmElementPath> {
     override fun toString(): String = "ContextSimple"
 }
 
-fun Navigation.evaluateFor(root: AsmElementSimple?) = when {
+fun NavigationDefault.evaluateFor(root: AsmElementSimple?) = when {
     this.isNothing -> null
     else -> this.value.fold(root as Any?) { acc, it ->
         when (acc) {
@@ -56,7 +56,7 @@ fun Navigation.evaluateFor(root: AsmElementSimple?) = when {
     }
 }
 
-fun Navigation.propertyFor(root: AsmElementSimple?): AsmElementProperty {
+fun NavigationDefault.propertyFor(root: AsmElementSimple?): AsmElementProperty {
     return when {
         null == root -> error("Cannot navigate '$this' from null value")
         else -> {
@@ -75,7 +75,7 @@ fun Navigation.propertyFor(root: AsmElementSimple?): AsmElementProperty {
     }
 }
 
-fun Navigation.propertyDeclarationFor(root: TypeDefinition?): PropertyDeclaration? {
+fun NavigationDefault.propertyDeclarationFor(root: TypeDeclaration?): PropertyDeclaration? {
     var type = root
     var pd: PropertyDeclaration? = null
     for (pn in this.value) {
@@ -92,17 +92,15 @@ fun Navigation.propertyDeclarationFor(root: TypeDefinition?): PropertyDeclaratio
     return pd
 }
 
-fun ScopeModelAgl.createReferenceLocalToScope(scope: Scope<AsmElementPath>, element: AsmElementSimple): String? {
-    val nav = this.getReferablePropertyNameFor(scope.forTypeName, element.typeName)
+fun NavigationDefault.createReferenceLocalToScope(scope: Scope<AsmElementPath>, element: AsmElementSimple): String? {
     return when {
-        null == nav -> null
-        nav.isNothing -> ""
+        this.isNothing -> ""
         else -> {
-            val res = nav?.evaluateFor(element)
+            val res = this.evaluateFor(element)
             when (res) {
                 null -> null
                 is String -> res
-                else -> error("Evaluation of navigation '$nav' on '$element' should result in a String, but it does not!")
+                else -> error("Evaluation of navigation '$this' on '$element' should result in a String, but it does not!")
             }
         }
     }

@@ -21,7 +21,7 @@ package net.akehurst.language.agl.processor.java8
 //import java.io.BufferedReader
 //import java.io.InputStreamReader
 
-import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
+import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.processor.test.utils.notWidth

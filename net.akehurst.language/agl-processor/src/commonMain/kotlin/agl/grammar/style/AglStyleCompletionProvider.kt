@@ -15,12 +15,12 @@
  *
  */
 
-package net.akehurst.language.agl.agl.grammar.style
+package net.akehurst.language.agl.language.style
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammar.Terminal
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.api.language.grammar.RuleItem
+import net.akehurst.language.api.language.grammar.Terminal
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.processor.CompletionProvider

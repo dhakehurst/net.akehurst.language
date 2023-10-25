@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.agl.grammar.style
 
-import net.akehurst.language.agl.grammar.grammar.asm.GrammarAbstract
-import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
-import net.akehurst.language.agl.grammar.grammar.asm.GrammarOptionDefault
-import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
-import net.akehurst.language.api.grammar.GrammarRule
+package net.akehurst.language.agl.language.style
+
+import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
+import net.akehurst.language.agl.language.grammar.asm.GrammarAbstract
+import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.language.grammar.asm.GrammarOptionDefault
+import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
+import net.akehurst.language.api.language.grammar.GrammarRule
 
 internal object AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglStyle") {
     //companion object {
@@ -51,8 +53,8 @@ internal object AglStyleGrammar : GrammarAbstract(NamespaceDefault("net.akehurst
         return b.grammar.grammarRule
     }
 
-    override val options = listOf(GrammarOptionDefault("defaultGoal", "rules"))
-    override val defaultRule: GrammarRule get() = this.findAllResolvedGrammarRule("rules")!!
+    override val options = listOf(GrammarOptionDefault(AglGrammarGrammar.OPTION_defaultGoalRule, "rules"))
+    override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule("rules")!!
 
     const val styleStr = """META_IDENTIFIER {
   foreground: orange;

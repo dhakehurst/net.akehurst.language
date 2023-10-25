@@ -17,9 +17,21 @@
 
 package net.akehurst.language.api.semanticAnalyser
 
-import net.akehurst.language.agl.grammar.scopes.ReferenceExpression
-
 interface ScopeModel {
+
+    val declarationsForNamespace: Map<String, DeclarationsForNamespace>
+
+    fun isScopeDefinedFor(possiblyQualifiedTypeName: String): Boolean
+    fun referencesFor(possiblyQualifiedTypeName: String): List<ReferenceExpression>
+}
+
+interface DeclarationsForNamespace {
+
+    val qualifiedName: String
+    val scopes: Map<String, ScopeDefinition>
+    val references: List<ReferenceDefinition>
+
+    fun isScopeDefinedFor(typeName: String): Boolean
 
     /**
      * Is the property inTypeName.propertyName a reference ?
@@ -36,15 +48,34 @@ interface ScopeModel {
 
     /**
      *
-     * Find the name of the type referred to by the property inTypeName.referringPropertyName
+     * Find the navigation that identifies the given type in the given scope
      *
      * @param inTypeName name of the asm type in which the property is a reference
      * @param referringPropertyName name of the property that is a reference
      */
-    //fun getReferredToTypeNameFor(inTypeName: String, referringPropertyName: String): List<String>
+    fun identifyingNavigationFor(scopeForTypeName: String, typeName: String): Navigation?
 
-    fun isScopeDefinition(scopeFor: String): Boolean
 }
+
+interface ReferenceDefinition {
+
+}
+
+interface ScopeDefinition {
+    val scopeForTypeName: String
+    val identifiables: List<Identifiable>
+}
+
+interface Identifiable {
+    val typeName: String
+    val identifiedBy: Navigation
+}
+
+interface ReferenceExpression {
+
+}
+
+interface Navigation
 
 /**
  * E - type of elements in the scope

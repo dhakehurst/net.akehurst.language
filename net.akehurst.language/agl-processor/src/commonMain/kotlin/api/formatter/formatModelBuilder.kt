@@ -16,7 +16,7 @@
 
 package net.akehurst.language.api.formatter
 
-import net.akehurst.language.agl.grammar.format.AglFormatterModelDefault
+import net.akehurst.language.agl.language.format.AglFormatterModelDefault
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.AsmSimple

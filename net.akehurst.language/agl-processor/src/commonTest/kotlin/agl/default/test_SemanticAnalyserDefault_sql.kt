@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
-import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
@@ -33,7 +33,6 @@ class test_SemanticAnalyserDefault_sql {
     private companion object {
         val grammarStr = """
 namespace net.akehurst.language
-
 
 grammar SQL {
     skip WS = "\s+" ;
@@ -96,6 +95,7 @@ grammar SQL {
 }
         """.trimIndent()
         val scopeModelStr = """
+            namespace net.akehurst.language.SQL {
                 identify TableDefinition by table-id
                 scope TableDefinition {
                     identify ColumnDefinition by column-id
@@ -120,7 +120,8 @@ grammar SQL {
                         }
                     }
                 }
-            """.trimIndent()
+            }
+        """.trimIndent()
         val scopeModel = ScopeModelAgl.fromString(null, scopeModelStr).let { it.asm ?: error(it.issues.toString()) }
         val processor = Agl.processorFromStringDefault(
             grammarStr,

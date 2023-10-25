@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.grammar.grammar
+package net.akehurst.language.agl.language.grammar
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
-import net.akehurst.language.api.grammar.Grammar
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
 // used by other languages that reference rules  in a grammar

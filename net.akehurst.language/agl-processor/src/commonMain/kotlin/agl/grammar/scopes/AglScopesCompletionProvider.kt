@@ -15,12 +15,11 @@
  *
  */
 
-package net.akehurst.language.agl.agl.grammar.scopes
+package net.akehurst.language.agl.language.scopes
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
-import net.akehurst.language.agl.grammar.scopes.ScopeModelAgl
-import net.akehurst.language.api.grammar.RuleItem
-import net.akehurst.language.api.grammar.Terminal
+import net.akehurst.language.api.language.grammar.RuleItem
+import net.akehurst.language.api.language.grammar.Terminal
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 

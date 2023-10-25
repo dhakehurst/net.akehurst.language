@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.formatter
 
-import net.akehurst.language.agl.grammar.format.AglFormatExpressionDefault
+import net.akehurst.language.agl.language.format.AglFormatExpressionDefault
 import net.akehurst.language.agl.processor.FormatResultDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.AsmElementSimple

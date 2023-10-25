@@ -15,7 +15,7 @@
  */
 package net.akehurst.language.agl.processor.KerML
 
-import net.akehurst.language.agl.grammar.grammar.AglGrammarSemanticAnalyser
+import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
@@ -68,8 +68,7 @@ class test_KerML_standard_Singles {
           // a note
         """.trimIndent()
         val result = processor.parse(sentence)
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertEquals(sentence, result.sppt!!.asSentence)
     }
 
@@ -83,8 +82,7 @@ class test_KerML_standard_Singles {
             */
         """.trimIndent()
         val result = processor.parse(sentence)
-        assertNotNull(result.sppt)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertEquals(sentence, result.sppt!!.asSentence)
     }
 
@@ -97,6 +95,7 @@ class test_KerML_standard_Singles {
            */
         """.trimIndent()
         val result = processor.parse(sentence)
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
     }

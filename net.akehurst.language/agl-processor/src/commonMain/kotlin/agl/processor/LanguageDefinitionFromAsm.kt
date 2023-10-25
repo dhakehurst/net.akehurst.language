@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.api.grammar.Grammar
+import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 
 //TODO: has to be public at present because otherwise JSNames are not correct for properties

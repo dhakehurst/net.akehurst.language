@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.grammar.grammar
+package net.akehurst.language.agl.language.grammar
 
 class GrammarContext {
     //TODO: should provide other registered grammars

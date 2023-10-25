@@ -16,11 +16,12 @@
 
 package net.akehurst.language.agl.grammar.grammar
 
+import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.grammar.Choice
-import net.akehurst.language.api.grammar.ChoiceLongest
-import net.akehurst.language.api.grammar.NonTerminal
-import net.akehurst.language.api.grammar.NormalRule
+import net.akehurst.language.api.language.grammar.Choice
+import net.akehurst.language.api.language.grammar.ChoiceLongest
+import net.akehurst.language.api.language.grammar.NonTerminal
+import net.akehurst.language.api.language.grammar.NormalRule
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind

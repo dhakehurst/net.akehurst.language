@@ -19,8 +19,8 @@ package net.akehurst.language.agl.default
 
 
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeNamespaceSimple
-import net.akehurst.language.api.grammar.*
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.simple.TypeModelSimple
@@ -279,17 +279,17 @@ class GrammarTypeNamespaceFromGrammar(
     }
 
     private fun tupleTypeFor(ruleItem: RuleItem, items: List<RuleItem>): TypeInstance {
-        val concatType = _namespace.createTupleType()
-        val t = concatType.instance()
-        this._typeForRuleItem[ruleItem] = t
-        items.forEachIndexed { idx, it -> createPropertyDeclaration(concatType, it, idx) }
+        val tt = _namespace.createTupleType()
+        val ti = _namespace.createTupleTypeInstance(tt, emptyList(), false)
+        this._typeForRuleItem[ruleItem] = ti
+        items.forEachIndexed { idx, it -> createPropertyDeclaration(tt, it, idx) }
         return when {
-            concatType.property.isEmpty() -> {
+            tt.property.isEmpty() -> {
                 this._typeForRuleItem[ruleItem] = SimpleTypeModelStdLib.NothingType.instance()
                 SimpleTypeModelStdLib.NothingType.instance()
             }
 
-            else -> t
+            else -> ti
         }
     }
 
@@ -531,7 +531,7 @@ class GrammarTypeNamespaceFromGrammar(
         }
     }
 
-    private fun propertyNameFor(et: StructuredType, ruleItem: RuleItem, ruleItemType: TypeDefinition): String {
+    private fun propertyNameFor(et: StructuredType, ruleItem: RuleItem, ruleItemType: TypeDeclaration): String {
         return when (_configuration) {
             null -> when (ruleItem) {
                 is EmptyRule -> error("should not happen")
@@ -556,7 +556,7 @@ class GrammarTypeNamespaceFromGrammar(
     private fun createUniquePropertyDeclaration(et: StructuredType, name: String, type: TypeInstance, childIndex: Int): PropertyDeclaration {
         val uniqueName = createUniquePropertyNameFor(et, name)
         val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
-        return et.appendProperty(uniqueName, type, characteristics, childIndex)
+        return et.appendStoredProperty(uniqueName, type, characteristics, childIndex)
     }
 
     private fun createUniquePropertyNameFor(et: StructuredType, name: String): String {

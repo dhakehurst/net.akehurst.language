@@ -21,7 +21,7 @@ import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 
 import net.akehurst.language.api.asm.AsmSimple
-import net.akehurst.language.api.grammar.*
+import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.processor.CompletionItemKind
 import net.akehurst.language.api.semanticAnalyser.ScopeModel

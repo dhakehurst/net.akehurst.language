@@ -15,9 +15,8 @@
  *
  */
 
-package net.akehurst.language.agl.agl.grammar.style
+package net.akehurst.language.agl.language.style
 
-import net.akehurst.language.agl.grammar.style.AglStyleSyntaxAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault

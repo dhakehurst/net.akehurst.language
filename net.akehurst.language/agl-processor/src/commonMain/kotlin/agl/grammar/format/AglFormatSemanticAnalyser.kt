@@ -15,7 +15,7 @@
  *
  */
 
-package net.akehurst.language.agl.agl.grammar.format
+package net.akehurst.language.agl.language.format
 
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault

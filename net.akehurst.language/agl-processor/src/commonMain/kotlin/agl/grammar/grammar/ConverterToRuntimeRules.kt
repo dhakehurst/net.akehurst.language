@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.grammar.grammar
+package net.akehurst.language.agl.language.grammar
 
-import net.akehurst.language.agl.agl.grammar.grammar.PseudoRuleNames
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.util.Debug
-import net.akehurst.language.api.grammar.*
+import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.collections.LazyMutableMapNonNull
 import net.akehurst.language.collections.lazyMutableMapNonNull

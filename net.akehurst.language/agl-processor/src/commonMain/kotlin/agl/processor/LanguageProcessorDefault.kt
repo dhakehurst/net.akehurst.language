@@ -16,9 +16,9 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.grammar.grammar.ConverterToRuntimeRules
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
+import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 
 internal class LanguageProcessorDefault<AsmType : Any, ContextType : Any>(

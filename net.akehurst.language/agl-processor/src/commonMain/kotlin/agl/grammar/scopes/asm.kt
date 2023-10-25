@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.agl.grammar.scopes
+
+package net.akehurst.language.agl.language.scopes
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.ProcessResult
-import net.akehurst.language.api.semanticAnalyser.ScopeModel
-import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.api.semanticAnalyser.*
 
 class ScopeModelAgl
     : ScopeModel {
@@ -37,25 +37,75 @@ class ScopeModelAgl
         }
     }
 
-    val scopes = mutableMapOf<String, ScopeDefinition>()
-    val references = mutableListOf<ReferenceDefinition>()
+    override val declarationsForNamespace = mutableMapOf<String, DeclarationsForNamespace>()
+
+    override fun isScopeDefinedFor(possiblyQualifiedTypeName: String): Boolean {
+        return when {
+            possiblyQualifiedTypeName.contains(".") -> {
+                val qName = possiblyQualifiedTypeName.substringBeforeLast(".")
+                val tName = possiblyQualifiedTypeName.substringAfterLast(".")
+                val ns = this.declarationsForNamespace[qName]
+                return ns?.isScopeDefinedFor(tName) ?: false
+            }
+
+            else -> {
+                declarationsForNamespace.values.any {
+                    it.isScopeDefinedFor(possiblyQualifiedTypeName)
+                }
+            }
+        }
+    }
+
+    override fun referencesFor(possiblyQualifiedTypeName: String): List<ReferenceExpression> {
+        return when {
+            possiblyQualifiedTypeName.contains(".") -> {
+                val qName = possiblyQualifiedTypeName.substringBeforeLast(".")
+                val tName = possiblyQualifiedTypeName.substringAfterLast(".")
+                val ns = this.declarationsForNamespace[qName]
+                return ns?.referencesFor(tName) ?: emptyList()
+            }
+
+            else -> {
+                declarationsForNamespace.values.flatMap {
+                    it.referencesFor(possiblyQualifiedTypeName)
+                }
+            }
+        }
+    }
+
+    fun identifyingNavigationFor(scopeForTypeName: String, possiblyQualifiedTypeName: String): Navigation? {
+        return when {
+            possiblyQualifiedTypeName.contains(".") -> {
+                val qName = possiblyQualifiedTypeName.substringBeforeLast(".")
+                val tName = possiblyQualifiedTypeName.substringAfterLast(".")
+                val ns = this.declarationsForNamespace[qName]
+                return ns?.identifyingNavigationFor(scopeForTypeName, tName)
+            }
+
+            else -> {
+                declarationsForNamespace.values.firstNotNullOfOrNull {
+                    it.identifyingNavigationFor(scopeForTypeName, possiblyQualifiedTypeName)
+                }
+            }
+        }
+    }
+}
+
+data class DeclarationsForNamespaceDefault(
+    override val qualifiedName: String
+) : DeclarationsForNamespace {
+    override val scopes = mutableMapOf<String, ScopeDefinitionDefault>()
+    override val references = mutableListOf<ReferenceDefinitionDefault>()
 
     init {
-        scopes[ROOT_SCOPE_TYPE_NAME] = ScopeDefinition(ROOT_SCOPE_TYPE_NAME)
+        scopes[ScopeModelAgl.ROOT_SCOPE_TYPE_NAME] = ScopeDefinitionDefault(ScopeModelAgl.ROOT_SCOPE_TYPE_NAME)
     }
 
-    override fun isScopeDefinition(scopeFor: String): Boolean {
-        return scopes.containsKey(scopeFor)
+    override fun isScopeDefinedFor(typeName: String): Boolean {
+        return scopes.containsKey(typeName)
     }
 
-//    override fun isReference(inTypeName: String, propertyName: String): Boolean {
-//        return references.any {
-//            it.inTypeName == inTypeName
-//                    && it.referenceExpressionList.any { it.isReference(propertyName) }
-//        }
-//    }
-
-    override fun referencesFor(typeName: String): List<ReferenceExpression> {
+    override fun referencesFor(typeName: String): List<ReferenceExpressionAbstract> {
         return references.filter {
             it.inTypeName == typeName
         }.flatMap {
@@ -63,36 +113,27 @@ class ScopeModelAgl
         }
     }
 
-    fun getReferablePropertyNameFor(scopeFor: String, typeName: String): Navigation? {
-        val scope = scopes[scopeFor]
+    override fun identifyingNavigationFor(scopeForTypeName: String, typeName: String): NavigationDefault? {
+        val scope = scopes[scopeForTypeName]
         val identifiable = scope?.identifiables?.firstOrNull { it.typeName == typeName }
-        return identifiable?.navigation
-    }
-
-    /*    override fun getReferredToTypeNameFor(inTypeName: String, referringPropertyName: String): List<String> {
-            val def = references.firstOrNull { it.inTypeName == inTypeName && it.referenceExpressionList.any { it.isReference(referringPropertyName) } }
-            return def?.referredToTypeNameFor(referringPropertyName) ?: emptyList()
-        }*/
-
-    fun shouldCreateReference(scopeFor: String, typeName: String): Boolean {
-        return null != getReferablePropertyNameFor(scopeFor, typeName)
+        return identifiable?.identifiedBy
     }
 }
 
-data class ScopeDefinition(
-    val scopeFor: String
-) {
-    val identifiables = mutableListOf<Identifiable>()
+data class ScopeDefinitionDefault(
+    override val scopeForTypeName: String
+) : ScopeDefinition {
+    override val identifiables = mutableListOf<IdentifiableDefault>()
 }
 
-data class Identifiable(
-    val typeName: String,
-    val navigation: Navigation
-)
+data class IdentifiableDefault(
+    override val typeName: String,
+    override val identifiedBy: NavigationDefault
+) : Identifiable
 
-data class Navigation(
+data class NavigationDefault(
     val value: List<String>
-) {
+) : Navigation {
     constructor(vararg values: String) : this(values.toList())
 
     val isNothing: Boolean get() = 1 == value.size && ScopeModelAgl.IDENTIFY_BY_NOTHING == value.first()
@@ -100,36 +141,31 @@ data class Navigation(
     override fun toString(): String = value.joinToString(separator = ".")
 }
 
-data class ReferenceDefinition(
+data class ReferenceDefinitionDefault(
     /**
      * name of the asm type in which the property is a reference
      */
     val inTypeName: String,
 
-    val referenceExpressionList: List<ReferenceExpression>
-) {
-    /*    fun referredToTypeNameFor(propertyName: String): List<String> =
-            referenceExpressionList.flatMap { it.referredToTypeNameFor(propertyName) }*/
+    val referenceExpressionList: List<ReferenceExpressionAbstract>
+) : ReferenceDefinition {
 }
 
-abstract class ReferenceExpression {
-//    abstract fun referredToTypeNameFor(propertyName: String): List<String>
-//    abstract fun isReference(propertyName: String): Boolean
-}
+abstract class ReferenceExpressionAbstract : ReferenceExpression
 
-data class PropertyReferenceExpression(
+data class PropertyReferenceExpressionDefault(
     /**
      * navigation to the property that is a reference
      */
-    val referringPropertyNavigation: Navigation,
+    val referringPropertyNavigation: NavigationDefault,
 
     /**
      * type of the asm element referred to
      */
     val refersToTypeName: List<String>,
 
-    val fromNavigation: Navigation?
-) : ReferenceExpression() {
+    val fromNavigation: NavigationDefault?
+) : ReferenceExpressionAbstract() {
 
     /*    override fun isReference(propertyName: String): Boolean {
             return this.referringPropertyName == propertyName
@@ -141,11 +177,11 @@ data class PropertyReferenceExpression(
         }*/
 }
 
-data class CollectionReferenceExpression(
-    val navigation: Navigation,
+data class CollectionReferenceExpressionDefault(
+    val navigation: NavigationDefault,
     val ofType: String?,
-    val referenceExpressionList: List<ReferenceExpression>
-) : ReferenceExpression() {
+    val referenceExpressionList: List<ReferenceExpressionAbstract>
+) : ReferenceExpressionAbstract() {
     /*    override fun isReference(propertyName: String): Boolean {
             return this.referenceExpressionList.any { it.isReference(propertyName) }
         }

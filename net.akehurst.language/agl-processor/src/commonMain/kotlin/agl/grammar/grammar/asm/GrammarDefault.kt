@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.grammar.grammar.asm
+package net.akehurst.language.agl.language.grammar.asm
 
-import net.akehurst.language.agl.collections.*
-import net.akehurst.language.api.grammar.*
+import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
+import net.akehurst.language.api.language.grammar.*
+import net.akehurst.language.collections.*
 
 /**
  * ID -> qualifiedName
@@ -34,8 +35,8 @@ class GrammarDefault(
         }
     }
 
-    override val defaultRule: GrammarRule
-        get() = options.firstOrNull { it.name == "defaultGoal" }?.let { findAllResolvedGrammarRule(it.value) }
+    override val defaultGoalRule: GrammarRule
+        get() = options.firstOrNull { it.name == AglGrammarGrammar.OPTION_defaultGoalRule }?.let { findAllResolvedGrammarRule(it.value) }
             ?: this.allResolvedGrammarRule.first { it.isSkip.not() }
 }
 

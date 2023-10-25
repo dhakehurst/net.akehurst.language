@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.grammar.grammar
+package net.akehurst.language.agl.language.grammar
 
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.grammar.NonTerminal
-import net.akehurst.language.api.grammar.NormalRule
+import net.akehurst.language.api.language.grammar.NonTerminal
+import net.akehurst.language.api.language.grammar.NormalRule
 import net.akehurst.language.test.FixMethodOrder
 import net.akehurst.language.test.MethodSorters
 import kotlin.test.Test

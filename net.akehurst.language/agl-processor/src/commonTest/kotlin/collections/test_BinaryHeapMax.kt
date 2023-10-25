@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.collections
+package net.akehurst.language.collections
 
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -316,7 +316,7 @@ class test_BinaryHeapMax {
     fun _10_element_peekAll_isAKey() {
         insert_10()
 
-        assertEquals(setOf("J1","J2"), sut.peekAll(10).toSet())
+        assertEquals(setOf("J1", "J2"), sut.peekAll(10).toSet())
     }
 
     @Test
@@ -350,7 +350,7 @@ class test_BinaryHeapMax {
 
         assertEquals(11, sut.size)
         assertEquals(listOf("C", "C2"), sut[3])
-        assertEquals("M",sut.peekRoot)
+        assertEquals("M", sut.peekRoot)
     }
 
     @Test
@@ -362,7 +362,7 @@ class test_BinaryHeapMax {
         assertEquals(11, sut.size)
         assertEquals(listOf("C"), sut[3])
         assertEquals(listOf("F"), sut[6])
-        assertEquals("C",sut.peekRoot)
+        assertEquals("C", sut.peekRoot)
     }
 
     @Test
@@ -373,8 +373,8 @@ class test_BinaryHeapMax {
 
         assertEquals(11, sut.size)
         assertEquals(listOf("C"), sut[3])
-        assertEquals(setOf("I","I2"), sut[9].toSet())
-        assertEquals("M",sut.peekRoot)
+        assertEquals(setOf("I", "I2"), sut[9].toSet())
+        assertEquals("M", sut.peekRoot)
     }
 
     @Test
@@ -385,8 +385,8 @@ class test_BinaryHeapMax {
 
         assertEquals(11, sut.size)
         assertEquals(listOf("C"), sut[3])
-        assertEquals(listOf("M","M2"), sut[13])
-        assertEquals("C",sut.peekRoot)
+        assertEquals(listOf("M", "M2"), sut[13])
+        assertEquals("C", sut.peekRoot)
     }
 
     @Test
@@ -398,7 +398,7 @@ class test_BinaryHeapMax {
         assertEquals(11, sut.size)
         assertEquals(listOf("C"), sut[3])
         assertEquals(listOf("Z"), sut[26])
-        assertEquals("Z",sut.peekRoot)
+        assertEquals("Z", sut.peekRoot)
     }
 
     @Test
@@ -422,7 +422,7 @@ class test_BinaryHeapMax {
 
         assertEquals("M", actual)
         assertEquals(10, sut.size)
-        assertEquals(setOf("C","C2"), sut[3].toSet())
+        assertEquals(setOf("C", "C2"), sut[3].toSet())
         assertEquals("L", sut.peekRoot)
     }
 
@@ -447,7 +447,7 @@ class test_BinaryHeapMax {
 
         assertEquals("C", actual)
         assertEquals(10, sut.size)
-        assertEquals(listOf("I","I2"), sut[9])
+        assertEquals(listOf("I", "I2"), sut[9])
         assertEquals(emptyList(), sut[3])
         assertEquals("D", sut.peekRoot)
     }
@@ -460,7 +460,7 @@ class test_BinaryHeapMax {
 
         assertEquals("C", actual)
         assertEquals(10, sut.size)
-        assertEquals(listOf("M","M2"), sut[13])
+        assertEquals(listOf("M", "M2"), sut[13])
         assertEquals(emptyList(), sut[3])
     }
 
@@ -497,7 +497,7 @@ class test_BinaryHeapMax {
 
         assertEquals("M", actual)
         assertEquals(10, sut.size)
-        assertEquals(setOf("C","C2"), sut[3].toSet())
+        assertEquals(setOf("C", "C2"), sut[3].toSet())
         assertEquals("M", sut.peekRoot)
     }
 
@@ -522,7 +522,7 @@ class test_BinaryHeapMax {
 
         assertEquals("C", actual)
         assertEquals(10, sut.size)
-        assertEquals(setOf("I","I2"), sut[9].toSet())
+        assertEquals(setOf("I", "I2"), sut[9].toSet())
         assertEquals(emptyList(), sut[3])
         assertEquals("D", sut.peekRoot)
     }

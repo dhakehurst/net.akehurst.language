@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.grammar.grammar
+package net.akehurst.language.agl.language.grammar
 
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.automaton.ParseAction
-import net.akehurst.language.api.grammar.*
+import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.processor.GrammarRegistry
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 
 
@@ -133,7 +132,7 @@ class AglGrammarSemanticAnalyser(
                 else -> recordUnusedRule(grammar, it)
             }
         }
-        // first rule is default goal rule //TODO: adjust for 'option defaultRule'
+        // first rule is default goal rule //TODO: adjust for 'option defaultGoalRule'
         this._usedRules[grammar]!!.remove(grammar.grammarRule[0])
 
         grammar.grammarRule.forEach {
@@ -253,7 +252,7 @@ class AglGrammarSemanticAnalyser(
         val conv = ConverterToRuntimeRules(grammar)
         val rrs = conv.runtimeRuleSet
         //TODO: pass in goalRuleName
-        val goalRuleName = grammar.defaultRule.name
+        val goalRuleName = grammar.defaultGoalRule.name
         //TODO: optionally do this...as it builds the automaton..we don't always want to build it!
         // and if built want to  reuse the build
         val automaton = rrs.automatonFor(goalRuleName, automatonKind)

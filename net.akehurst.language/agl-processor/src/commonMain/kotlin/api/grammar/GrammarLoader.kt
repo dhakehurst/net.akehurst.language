@@ -15,10 +15,10 @@
  *
  */
 
-package net.akehurst.language.api.grammar
+package net.akehurst.language.api.language.grammar
 
 interface GrammarLoader {
 
-	fun resolve(vararg qualifiedGrammarNames: String): List<Grammar>
+    fun resolve(vararg qualifiedGrammarNames: String): List<Grammar>
 
 }

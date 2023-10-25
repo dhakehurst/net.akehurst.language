@@ -18,7 +18,6 @@
 package net.akehurst.language.agl.syntaxAnalyser
 
 import net.akehurst.language.agl.api.runtime.Rule
-import net.akehurst.language.agl.collections.toSeparatedList
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
@@ -34,6 +33,7 @@ import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.sppt.SpptWalker
 import net.akehurst.language.collections.mutableStackOf
+import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
@@ -201,7 +201,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
         treeData.traverseTreeDepthFirst(walker, false)
     }
 
-    private fun pathFor(parentPath: AsmElementPath, parentType: TypeDefinition, nodeInfo: SpptDataNodeInfo): AsmElementPath {
+    private fun pathFor(parentPath: AsmElementPath, parentType: TypeDeclaration, nodeInfo: SpptDataNodeInfo): AsmElementPath {
         return when (parentType) {
             is PrimitiveType -> parentPath
             is UnnamedSuperTypeType -> parentPath
@@ -577,7 +577,7 @@ abstract class SyntaxAnalyserSimpleStreamPushAbstract<out AsmType : Any>(
         }
     }
 
-    private fun createValueFor(sentence: Sentence, type: TypeDefinition, path: AsmElementPath, childData: ChildData): Any? = when (type) {
+    private fun createValueFor(sentence: Sentence, type: TypeDeclaration, path: AsmElementPath, childData: ChildData): Any? = when (type) {
         is PrimitiveType -> createPrimitiveValue(sentence, SimpleTypeModelStdLib.String.type as PrimitiveType, childData.nodeInfo)
         is UnnamedSuperTypeType -> TODO()
         is CollectionType -> TODO()

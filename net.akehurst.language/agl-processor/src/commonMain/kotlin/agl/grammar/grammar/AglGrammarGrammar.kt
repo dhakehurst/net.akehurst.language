@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.grammar.grammar
+package net.akehurst.language.agl.language.grammar
 
-import net.akehurst.language.agl.grammar.grammar.asm.GrammarAbstract
-import net.akehurst.language.agl.grammar.grammar.asm.GrammarBuilderDefault
-import net.akehurst.language.agl.grammar.grammar.asm.GrammarOptionDefault
-import net.akehurst.language.agl.grammar.grammar.asm.NamespaceDefault
-import net.akehurst.language.api.grammar.GrammarRule
+import net.akehurst.language.agl.language.grammar.asm.GrammarAbstract
+import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
+import net.akehurst.language.agl.language.grammar.asm.GrammarOptionDefault
+import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
+import net.akehurst.language.api.language.grammar.GrammarRule
 
 internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar") {
     //companion object {
+    const val OPTION_defaultGoalRule = "defaultGoalRule"
     const val goalRuleName = "grammarDefinition"
     private fun createRules(): List<GrammarRule> {
         val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglGrammar")
@@ -122,30 +123,14 @@ internal object AglGrammarGrammar : GrammarAbstract(NamespaceDefault("net.akehur
     }
     //}
 
-    override val options = listOf(GrammarOptionDefault("defaultGoal", "grammarDefinition"))
-    override val defaultRule: GrammarRule get() = this.findAllResolvedGrammarRule("grammarDefinition")!!
+    override val options = listOf(GrammarOptionDefault(OPTION_defaultGoalRule, "grammarDefinition"))
+    override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule("grammarDefinition")!!
 
     const val styleStr: String = """'namespace' {
   foreground: darkgreen;
   font-style: bold;
 }
-'grammar' {
-  foreground: darkgreen;
-  font-style: bold;
-}
-'extends' {
-  foreground: darkgreen;
-  font-style: bold;
-}
-'override' {
-  foreground: darkgreen;
-  font-style: bold;
-}
-'skip' {
-  foreground: darkgreen;
-  font-style: bold;
-}
-'leaf' {
+'grammar', 'extends', 'override', 'skip', 'leaf' {
   foreground: darkgreen;
   font-style: bold;
 }
@@ -158,6 +143,9 @@ PATTERN {
 IDENTIFIER {
   foreground: darkred;
   font-style: italic;
+}
+SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT {
+  foreground: LightSlateGrey;
 }"""
 
     init {

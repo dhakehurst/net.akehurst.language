@@ -23,8 +23,8 @@ import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.automaton.ParseAction
-import net.akehurst.language.api.grammar.Grammar
-import net.akehurst.language.api.grammar.RuleItem
+import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser

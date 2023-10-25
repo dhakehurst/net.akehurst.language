@@ -17,12 +17,12 @@
 
 package net.akehurst.language.agl.default
 
-import net.akehurst.language.api.grammar.*
+import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.typemodel.api.*
 
 interface TypeModelFromGrammarConfiguration {
     fun typeNameFor(rule: GrammarRule): String
-    fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDefinition): String
+    fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDeclaration): String
 }
 
 fun String.lower() = when {
@@ -32,7 +32,7 @@ fun String.lower() = when {
 
 class TypeModelFromGrammarConfigurationDefault() : TypeModelFromGrammarConfiguration {
     override fun typeNameFor(rule: GrammarRule): String = rule.name.replaceFirstChar { it.titlecase() }
-    override fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDefinition): String {
+    override fun propertyNameFor(context: Grammar, ruleItem: RuleItem, ruleItemType: TypeDeclaration): String {
         val prefix = when (context) {
             ruleItem.owningRule.grammar -> ""
             else -> "${ruleItem.owningRule.grammar.name.lower()}_"

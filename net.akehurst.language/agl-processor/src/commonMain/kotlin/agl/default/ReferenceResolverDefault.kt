@@ -17,15 +17,15 @@
 
 package net.akehurst.language.agl.default
 
-import net.akehurst.language.agl.grammar.scopes.CollectionReferenceExpression
-import net.akehurst.language.agl.grammar.scopes.PropertyReferenceExpression
-import net.akehurst.language.agl.grammar.scopes.ReferenceExpression
+import net.akehurst.language.agl.language.scopes.CollectionReferenceExpressionDefault
+import net.akehurst.language.agl.language.scopes.PropertyReferenceExpressionDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
 import net.akehurst.language.agl.semanticAnalyser.evaluateFor
 import net.akehurst.language.agl.semanticAnalyser.propertyFor
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.semanticAnalyser.ReferenceExpression
 import net.akehurst.language.api.semanticAnalyser.Scope
 import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.collections.mutableStackOf
@@ -86,13 +86,13 @@ class ReferenceResolverDefault(
 
     private fun handleReferenceExpression(refExpr: ReferenceExpression, context: ReferenceExpressionContext, self: AsmElementSimple) {
         when (refExpr) {
-            is PropertyReferenceExpression -> handlePropertyReferenceExpression(refExpr, context, self)
-            is CollectionReferenceExpression -> handleCollectionReferenceExpression(refExpr, context, self)
+            is PropertyReferenceExpressionDefault -> handlePropertyReferenceExpression(refExpr, context, self)
+            is CollectionReferenceExpressionDefault -> handleCollectionReferenceExpression(refExpr, context, self)
             else -> error("subtype of 'ReferenceExpression' not handled: '${refExpr::class.simpleName}'")
         }
     }
 
-    private fun handlePropertyReferenceExpression(refExpr: PropertyReferenceExpression, context: ReferenceExpressionContext, self: AsmElementSimple) {
+    private fun handlePropertyReferenceExpression(refExpr: PropertyReferenceExpressionDefault, context: ReferenceExpressionContext, self: AsmElementSimple) {
         // 'in' typeReference '{' referenceExpression* '}'
         // 'property' navigation 'refers-to' typeReferences from? ;
         //check referred to item exists
@@ -156,7 +156,7 @@ class ReferenceResolverDefault(
 
     }
 
-    private fun handleCollectionReferenceExpression(refExpr: CollectionReferenceExpression, context: ReferenceExpressionContext, self: AsmElementSimple) {
+    private fun handleCollectionReferenceExpression(refExpr: CollectionReferenceExpressionDefault, context: ReferenceExpressionContext, self: AsmElementSimple) {
         val coll = refExpr.navigation.evaluateFor(self)
         for (re in refExpr.referenceExpressionList) {
             when (coll) {

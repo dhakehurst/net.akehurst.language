@@ -15,9 +15,8 @@
  *
  */
 
-package net.akehurst.language.agl.agl.grammar.scopes
+package net.akehurst.language.agl.language.scopes
 
-import net.akehurst.language.agl.grammar.scopes.*
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
@@ -32,7 +31,7 @@ import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.typemodel.api.CollectionType
 import net.akehurst.language.typemodel.api.DataType
-import net.akehurst.language.typemodel.api.TypeDefinition
+import net.akehurst.language.typemodel.api.TypeDeclaration
 
 class AglScopesSemanticAnalyser(
 ) : SemanticAnalyser<ScopeModelAgl, SentenceContext<String>> {
@@ -57,49 +56,13 @@ class AglScopesSemanticAnalyser(
         this._locationMap = locationMap ?: mapOf()
         if (null != context) {
             _grammarNamespace = (context as ContextFromTypeModel).targetNamespace as GrammarTypeNamespace
-            asm.scopes.forEach { (_, scope) ->
-                val msgStart = if (ScopeModelAgl.ROOT_SCOPE_TYPE_NAME == scope.scopeFor) {
-                    //do nothing
-                    "In root scope"
-                } else {
-                    val scopedType = _grammarNamespace?.findTypeNamed(scope.scopeFor)
-                    if (null == scopedType) {
-                        //if (context.rootScope.isMissing(scope.scopeFor, ContextFromTypeModel.TYPE_NAME_FOR_TYPES)) {
-                        raiseError(AglScopesSyntaxAnalyser.PropertyValue(scope, "typeReference"), "Type '${scope.scopeFor}' not found")
-                    } else {
-                        //OK
-                    }
-                    "In scope for '${scope.scopeFor}'"
+            asm.declarationsForNamespace.values.forEach {
+                it.scopes.values.forEach {
+                    checkScopeDefinition(it as ScopeDefinitionDefault)
                 }
-                scope.identifiables.forEach { identifiable ->
-                    val identifiedType = _grammarNamespace?.findTypeNamed(identifiable.typeName)
-                    //val typeScope = context.rootScope.childScopes[identifiable.typeName]
-                    when {
-                        null == identifiedType -> {
-                            raiseError(AglScopesSyntaxAnalyser.PropertyValue(identifiable, "typeReference"), "Type '${identifiable.typeName}' not found")
-                        }
-
-                        identifiable.navigation.isNothing -> Unit
-                        else -> {
-                            // only check this if the typeName is valid - else it is always invalid
-                            //TODO: check this in context of typeName GrammarRule
-                            val identifyingProperty = identifiable.navigation.propertyDeclarationFor(identifiedType)
-                            if (null == identifyingProperty) {
-                                //if (typeScope.isMissing(part, ContextFromTypeModel.TYPE_NAME_FOR_PROPERTIES)) {
-                                raiseError(
-                                    AglScopesSyntaxAnalyser.PropertyValue(identifiable, "propertyName"),
-                                    "$msgStart, '${identifiable.navigation}' not found for identifying property of '${identifiable.typeName}'"
-                                )
-                            } else {
-                                //OK
-                            }
-                        }
-                    }
+                it.references.forEach { ref ->
+                    checkReferenceDefinition(ref as ReferenceDefinitionDefault)
                 }
-            }
-
-            asm.references.forEach { ref ->
-                checkReferenceDefinition(ref)
             }
         } else {
             issues.raise(
@@ -118,7 +81,49 @@ class AglScopesSemanticAnalyser(
         issues.error(loc, message)
     }
 
-    private fun checkReferenceDefinition(ref: ReferenceDefinition) {
+    private fun checkScopeDefinition(scopeDef: ScopeDefinitionDefault) {
+        val msgStart = if (ScopeModelAgl.ROOT_SCOPE_TYPE_NAME == scopeDef.scopeForTypeName) {
+            //do nothing
+            "In root scope"
+        } else {
+            val scopedType = _grammarNamespace?.findTypeNamed(scopeDef.scopeForTypeName)
+            if (null == scopedType) {
+                //if (context.rootScope.isMissing(scope.scopeFor, ContextFromTypeModel.TYPE_NAME_FOR_TYPES)) {
+                raiseError(AglScopesSyntaxAnalyser.PropertyValue(scopeDef, "typeReference"), "Type '${scopeDef.scopeForTypeName}' not found")
+            } else {
+                //OK
+            }
+            "In scope for '${scopeDef.scopeForTypeName}'"
+        }
+
+        scopeDef.identifiables.forEach { identifiable ->
+            val identifiedType = _grammarNamespace?.findTypeNamed(identifiable.typeName)
+            //val typeScope = context.rootScope.childScopes[identifiable.typeName]
+            when {
+                null == identifiedType -> {
+                    raiseError(AglScopesSyntaxAnalyser.PropertyValue(identifiable, "typeReference"), "Type '${identifiable.typeName}' not found")
+                }
+
+                identifiable.identifiedBy.isNothing -> Unit
+                else -> {
+                    // only check this if the typeName is valid - else it is always invalid
+                    //TODO: check this in context of typeName GrammarRule
+                    val identifyingProperty = identifiable.identifiedBy.propertyDeclarationFor(identifiedType)
+                    if (null == identifyingProperty) {
+                        //if (typeScope.isMissing(part, ContextFromTypeModel.TYPE_NAME_FOR_PROPERTIES)) {
+                        raiseError(
+                            AglScopesSyntaxAnalyser.PropertyValue(identifiable, "propertyName"),
+                            "$msgStart, '${identifiable.identifiedBy}' not found for identifying property of '${identifiable.typeName}'"
+                        )
+                    } else {
+                        //OK
+                    }
+                }
+            }
+        }
+    }
+
+    private fun checkReferenceDefinition(ref: ReferenceDefinitionDefault) {
         val contextType = _grammarNamespace?.findOwnedTypeNamed(ref.inTypeName)
         when {
             (null == contextType) -> {
@@ -145,16 +150,16 @@ class AglScopesSemanticAnalyser(
         }
     }
 
-    private fun checkReferenceExpression(contextType: TypeDefinition, ref: ReferenceDefinition, refExpr: ReferenceExpression) = when (refExpr) {
-        is PropertyReferenceExpression -> checkPropertyReferenceExpression(contextType, ref, refExpr)
-        is CollectionReferenceExpression -> checkCollectionReferenceExpression(contextType, ref, refExpr)
+    private fun checkReferenceExpression(contextType: TypeDeclaration, ref: ReferenceDefinitionDefault, refExpr: ReferenceExpressionAbstract) = when (refExpr) {
+        is PropertyReferenceExpressionDefault -> checkPropertyReferenceExpression(contextType, ref, refExpr)
+        is CollectionReferenceExpressionDefault -> checkCollectionReferenceExpression(contextType, ref, refExpr)
         else -> error("subtype of 'ReferenceExpression' not handled: '${refExpr::class.simpleName}'")
     }
 
     private fun checkCollectionReferenceExpression(
-        contextType: TypeDefinition,
-        ref: ReferenceDefinition,
-        refExpr: CollectionReferenceExpression
+        contextType: TypeDeclaration,
+        ref: ReferenceDefinitionDefault,
+        refExpr: CollectionReferenceExpressionDefault
     ) {
         refExpr.ofType?.let {
             val type = _grammarNamespace?.findTypeNamed(it)
@@ -194,7 +199,7 @@ class AglScopesSemanticAnalyser(
         }
     }
 
-    private fun checkPropertyReferenceExpression(contextType: TypeDefinition, ref: ReferenceDefinition, refExpr: PropertyReferenceExpression) {
+    private fun checkPropertyReferenceExpression(contextType: TypeDeclaration, ref: ReferenceDefinitionDefault, refExpr: PropertyReferenceExpressionDefault) {
         //propertyReferenceExpression = 'property' navigation 'refers-to' typeReferences from? ;
         //from = 'from' navigation ;
         val x = refExpr.referringPropertyNavigation.propertyDeclarationFor(contextType)

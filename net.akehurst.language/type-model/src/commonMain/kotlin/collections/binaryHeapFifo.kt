@@ -1,20 +1,21 @@
-/**
- * Copyright (C) 2021 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+/*
+ * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ *          http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package net.akehurst.language.agl.collections
+package net.akehurst.language.collections
 
 fun <K : Comparable<K>, V> binaryHeapFifoMin(): BinaryHeapFifo<K, V> = binaryHeapFifo { parent, child ->
     when {
@@ -104,6 +105,7 @@ class BinaryHeapFifoComparable<K, V>(
             this._elements.containsKey(key) -> {
                 this._elements[key]!!.addFront(value)
             }
+
             else -> {
                 this.addElement(key, value)
                 this._keys.add(key)
@@ -113,7 +115,7 @@ class BinaryHeapFifoComparable<K, V>(
     }
 
     override fun extractRoot(): V? {
-        return when(this._keys.size) {
+        return when (this._keys.size) {
             0 -> null
             else -> {
                 val rootKey = this._keys[0]
@@ -126,6 +128,7 @@ class BinaryHeapFifoComparable<K, V>(
                         this.downHeap(0)
                         q.removeBack()
                     }
+
                     else -> {
                         q.removeBack()
                     }
@@ -194,7 +197,7 @@ class BinaryHeapFifoComparable<K, V>(
 
     private fun addElement(key: K, value: V) {
         var q = this._elements[key]
-        if (null==q) {
+        if (null == q) {
             q = FifoQueue()
             this._elements[key] = q
         }
@@ -258,6 +261,6 @@ class BinaryHeapFifoComparable<K, V>(
 
     override fun toString(): String = when (this.size) {
         0 -> "{}"
-        else -> this._keys.map { Pair(it,_elements[it]) }.joinToString(separator = "\n") { it.toString() }
+        else -> this._keys.map { Pair(it, _elements[it]) }.joinToString(separator = "\n") { it.toString() }
     }
 }
