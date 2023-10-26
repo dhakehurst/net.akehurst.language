@@ -34,6 +34,8 @@ interface TypeModel {
 
     fun resolveImports()
 
+    fun findOrCreateNamespace(qualifiedName: String):TypeNamespace
+
     fun findFirstByNameOrNull(typeName: String): TypeDeclaration?
 
     fun findByQualifiedNameOrNull(qualifiedName: String): TypeDeclaration?

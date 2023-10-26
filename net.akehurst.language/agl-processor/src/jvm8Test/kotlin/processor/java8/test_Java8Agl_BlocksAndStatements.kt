@@ -103,7 +103,7 @@ class test_Java8Agl_BlocksAndStatements(val data: Data) {
         val result = processor.process(this.data.text)
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty())
-        val resultStr = result.asm!!.asString(" ", "")
+        val resultStr = result.asm!!.asString("", " ")
         //assertEquals(this.data.text, resultStr)
         assertEquals(1, result.asm?.rootElements?.size)
     }

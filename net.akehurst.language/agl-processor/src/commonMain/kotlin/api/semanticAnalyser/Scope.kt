@@ -48,12 +48,12 @@ interface DeclarationsForNamespace {
 
     /**
      *
-     * Find the navigation that identifies the given type in the given scope
+     * Find the expression that identifies the given type in the given scope
      *
-     * @param inTypeName name of the asm type in which the property is a reference
-     * @param referringPropertyName name of the property that is a reference
+     * @param scopeForTypeName name of the type whoe scope to look in
+     * @param typeName name of the type to get an expression for
      */
-    fun identifyingNavigationFor(scopeForTypeName: String, typeName: String): Navigation?
+    fun identifyingExpressionFor(scopeForTypeName: String, typeName: String): Expression?
 
 }
 
@@ -68,14 +68,22 @@ interface ScopeDefinition {
 
 interface Identifiable {
     val typeName: String
-    val identifiedBy: Navigation
+    val identifiedBy: Expression
 }
 
 interface ReferenceExpression {
 
 }
 
-interface Navigation
+interface Expression
+interface Navigation : Expression {
+    val value: List<String>
+}
+
+interface RootExpression : Expression {
+    val isNothing: Boolean
+    val isSelf: Boolean
+}
 
 /**
  * E - type of elements in the scope
@@ -98,5 +106,5 @@ interface Scope<AsmElementIdType> {
 
     fun addToScope(referableName: String, typeName: String, asmElementId: AsmElementIdType)
 
-    fun asString(currentIndent: String = "", indentIncrement: String = " "): String
+    fun asString(currentIndent: String = "", indentIncrement: String = "  "): String
 }

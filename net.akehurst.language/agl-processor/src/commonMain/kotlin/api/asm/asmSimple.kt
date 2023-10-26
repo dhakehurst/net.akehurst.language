@@ -47,7 +47,7 @@ open class AsmSimple() {
                 }
             }
 
-            is AsmElementSimple -> this.asString(indent, currentIndent)
+            is AsmElementSimple -> this.asString(currentIndent, indent)
             else -> error("property value type not handled '${this::class}'")
         }
     }
@@ -102,8 +102,8 @@ open class AsmSimple() {
         }
     }
 
-    fun asString(indent: String, currentIndent: String = ""): String = this.rootElements.joinToString(separator = "\n") {
-        it.asStringAny(indent, currentIndent)
+    fun asString(currentIndent: String = "", indentIncrement: String = "  "): String = this.rootElements.joinToString(separator = "\n") {
+        it.asStringAny(indentIncrement, currentIndent)
     }
 
 }
@@ -182,8 +182,8 @@ class AsmElementSimple(
         }
     }
 
-    fun asString(indent: String, currentIndent: String = ""): String {
-        val newIndent = currentIndent + indent
+    fun asString(currentIndent: String = "", indentIncrement: String = "  "): String {
+        val newIndent = currentIndent + indentIncrement
         val propsStr = this.properties.values.joinToString(separator = "\n$newIndent", prefix = "{\n$newIndent", postfix = "\n$currentIndent}") {
             if (it.isReference) {
                 val ref = it.value as AsmElementReference
@@ -196,7 +196,7 @@ class AsmElementSimple(
             } else if (null == it.value) {
                 "${it.name} = null"
             } else {
-                "${it.name} = ${it.value!!.asStringAny(indent, newIndent)}"
+                "${it.name} = ${it.value!!.asStringAny(indentIncrement, newIndent)}"
             }
         }
         return ":$typeName $propsStr"

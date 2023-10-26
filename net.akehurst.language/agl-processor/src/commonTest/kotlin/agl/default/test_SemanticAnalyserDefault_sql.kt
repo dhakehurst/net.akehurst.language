@@ -182,7 +182,7 @@ grammar SQL {
         }
 
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
+        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
     }
 
     @Test
@@ -247,7 +247,7 @@ grammar SQL {
         }
 
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
+        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
     }
 
     @Test
@@ -323,7 +323,7 @@ grammar SQL {
         )
 
         assertEquals(expIssues, result.issues.toSet())
-        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
+        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
     }
 
     @Test
@@ -412,7 +412,7 @@ grammar SQL {
         }
 
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
-        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
+        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
     }
 
 }

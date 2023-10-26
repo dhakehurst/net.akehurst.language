@@ -63,7 +63,7 @@ class test_SyntaxAnalyserSimple {
             assertNotNull(result.asm)
             val actual = result.asm!!
 
-            assertEquals(data.expected.asString("  "), actual.asString("  "))
+            assertEquals(data.expected.asString(indentIncrement = "  "), actual.asString(indentIncrement = "  "))
         }
 
         fun testAll(proc: LanguageProcessor<AsmSimple, ContextSimple>, tests: List<TestData>) {

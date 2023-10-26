@@ -8,7 +8,7 @@
  * 	committers of YAKINDU - initial API and implementation
  *
  */
-namespace org.yakindu.statecharts
+namespace com.itemis.create
 
 grammar Expressions {
 
@@ -55,10 +55,10 @@ grammar Expressions {
     ArrayIndexExpression = ID ArrayIndex+ ;
     NavigationExpression = [ FeatureCall / NavigationOperator ]2+ ;
 
-    ArgumentList = '(' Arguments? ')' ;
-    Arguments = [Argument / ',']+ ;
+    ArgumentList = '(' Arguments ')' ;
+    Arguments = [Argument / ',']* ;
     ArrayIndex = '[' Expression ']' ;
-    Argument = ArgumentId?  Expression ;
+    Argument = ArgumentId? Expression ;
     ArgumentId = ID '=' ;
 
     ParenthesizedExpression = '(' Expression ')' ;
@@ -120,11 +120,11 @@ grammar Expressions {
 
 grammar Global extends Expressions {
 
-    StatechartSpecification = Namespace? Annotation* StatechartScope* ;
+    StatechartSpecification = Namespace? Annotation* StatechartDeclaration* ;
     Namespace = 'namespace' FQN ;
-    StatechartScope = InterfaceScope | InternalScope | ImportScope ;
-    InterfaceScope = 'interface' ID? ':' ScopeDeclaration* ;
-    ScopeDeclaration = Annotation* MemberDeclaration ;
+    StatechartDeclaration = Interface | InternalDeclarations | ImportDeclarations ;
+    Interface = 'interface' ID? ':' AnnotatedDeclaration* ;
+    AnnotatedDeclaration = Annotation* MemberDeclaration ;
     MemberDeclaration
         = VariableDeclaration
         | EventDeclaration
@@ -135,18 +135,20 @@ grammar Global extends Expressions {
     VariableDeclarationKind = 'const' | 'var' ;
     EventDeclaration = Direction? 'event' ID (':' TypeSpecifier)? ;
     AliasDeclaration = 'alias' ID ':' TypeSpecifier ;
-    OperationDeclaration = 'operation' ID '(' (Parameter (',' Parameter)*)? ')' (':' TypeSpecifier)? ;
-
-    InternalScope = 'internal' ':' (ScopeDeclaration | LocalReaction)*;
-    ImportScope = 'import' ':' STRING* ;
+    OperationDeclaration = 'operation' ID '(' ParameterList ')' (':' TypeSpecifier)? ;
+    ParameterList = [Parameter / ',']* ;
+    InternalDeclarations = 'internal' ':' InternalDeclaration*;
+    InternalDeclaration = AnnotatedDeclaration | LocalReaction ;
+    ImportDeclarations = 'import' ':' ImportedName* ;
+    ImportedName = STRING ;
 
     Direction = 'in' | 'out' ;
 
     Annotation = '@' FQN ('(' (Expression (',' Expression)*)? ')')?;
     Parameter = ID ('...')? ':' TypeSpecifier;
-    LocalReaction = ReactionTrigger ('/' ReactionEffect);
+    LocalReaction = ReactionTrigger '/' ReactionEffect ;
 
-    ReactionTrigger = EventSpecList? Guard? ;
+    ReactionTrigger = EventSpecList Guard? | Guard ;
     EventSpecList = [EventSpec / ',']+ ;
 
     Guard = '[' GuardExpression ']' ;
@@ -240,8 +242,8 @@ grammar Transitions extends Expressions {
 
     // Use SimpleFeatureCall for eventSpec to avoid guard ambiguity with array access
     RegularEventSpec = FeatureCall; //SimpleFeatureCall;
-    SimpleFeatureCall = [SimpleElementReferenceExpression / SimpleFeatureCallNavigation ]+ ;
-    SimpleFeatureCallNavigation = '.' | '.@' ;
+    SimpleFeatureCall = [SimpleElementReferenceExpression / SimpleFeatureCallNavigationOperator ]+ ;
+    SimpleFeatureCallNavigationOperator = '.' | '.@' ;
     SimpleElementReferenceExpression = ID ArgumentList? ;
     TimeEventSpec = TimeEventType Expression TimeUnit ;
     TimeEventType =	'after' | 'every';

@@ -43,7 +43,7 @@ internal object AglScopesGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
         b.rule("scopes").multi(0, -1, b.nonTerminal("scope"))
         b.rule("scope").concatenation(b.terminalLiteral("scope"), b.nonTerminal("typeReference"), b.terminalLiteral("{"), b.nonTerminal("identifiables"), b.terminalLiteral("}"))
         b.rule("identifiables").multi(0, -1, b.nonTerminal("identifiable"))
-        b.rule("identifiable").concatenation(b.terminalLiteral("identify"), b.nonTerminal("typeReference"), b.terminalLiteral("by"), b.nonTerminal("navigationOrNothing"))
+        b.rule("identifiable").concatenation(b.terminalLiteral("identify"), b.nonTerminal("typeReference"), b.terminalLiteral("by"), b.nonTerminal("expression"))
         b.rule("referencesOpt").optional(b.nonTerminal("references"))
         b.rule("references").concatenation(b.terminalLiteral("references"), b.terminalLiteral("{"), b.nonTerminal("referenceDefinitions"), b.terminalLiteral("}"))
         b.rule("referenceDefinitions").multi(0, -1, b.nonTerminal("referenceDefinition"))
@@ -81,10 +81,19 @@ internal object AglScopesGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
         )
         b.rule("ofTypeOpt").optional(b.nonTerminal("ofType"))
         b.rule("ofType").concatenation(b.terminalLiteral("of-type"), b.nonTerminal("typeReference"))
+        b.rule("expression").choiceLongestFromConcatenationItem(
+            b.nonTerminal("rootExpression"),
+            b.nonTerminal("navigation")
+        )
+        b.rule("rootExpression").choiceLongestFromConcatenationItem(
+            b.nonTerminal("nothing"),
+            b.nonTerminal("self")
+        )
+        b.rule("nothing").concatenation(b.terminalLiteral("§nothing"))
+        b.rule("self").concatenation(b.terminalLiteral("§self"))
         b.rule("navigation").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("propertyReference"))
         b.rule("typeReferences").separatedList(1, -1, b.terminalLiteral("|"), b.nonTerminal("typeReference"))
         b.rule("typeReference").concatenation(b.nonTerminal("IDENTIFIER"))
-        b.rule("navigationOrNothing").choiceLongestFromConcatenationItem(b.terminalLiteral("§nothing"), b.nonTerminal("navigation"))
         b.rule("propertyReference").concatenation(b.nonTerminal("IDENTIFIER"))
         b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"))
         b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
@@ -110,7 +119,7 @@ grammar AglScopes {
     scopes = scope* ;
     scope = 'scope' typeReference '{' identifiables '}' ;
     identifiables = identifiable* ;
-    identifiable = 'identify' typeReference 'by' navigationOrNothing ;
+    identifiable = 'identify' typeReference 'by' expression ;
 
     references = 'references' '{' referenceDefinitions '}' ;
     referenceDefinitions = referenceDefinition* ;
@@ -120,7 +129,14 @@ grammar AglScopes {
     from = 'from' navigation ;
     collectionReferenceExpression = 'forall' navigation ofType? '{' referenceExpressionList '}' ;
     ofType = 'of-type' typeReference ;
-    navigationOrNothing = '§nothing' | navigation ;
+    
+    expression
+      = rootExpression
+      | navigation
+      ;
+    rootExpression = nothing | self ;
+    nothing = '§nothing' ;
+    self = '§self' ;
     navigation = [propertyReference / '.']+ ;
     typeReferences = [typeReference / '|']+ ;
 

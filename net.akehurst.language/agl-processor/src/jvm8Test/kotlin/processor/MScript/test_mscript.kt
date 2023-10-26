@@ -706,7 +706,7 @@ class test_mscript {
 
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty())
-        assertEquals(expected.asString(" "), result.asm?.asString(" "))
+        assertEquals(expected.asString(indentIncrement = " "), result.asm?.asString(indentIncrement = " "))
     }
 
     @Test
@@ -730,7 +730,7 @@ class test_mscript {
             }
         }
 
-        assertEquals(expected.asString("  ", ""), actual.asString("  ", ""))
+        assertEquals(expected.asString("", "  "), actual.asString("", "  "))
     }
 
     @Test
@@ -767,7 +767,7 @@ class test_mscript {
             }
         }
 
-        assertEquals(expected.asString("  ", ""), actual.asString("  ", ""))
+        assertEquals(expected.asString("", "  "), actual.asString("", "  "))
     }
 
     @Test

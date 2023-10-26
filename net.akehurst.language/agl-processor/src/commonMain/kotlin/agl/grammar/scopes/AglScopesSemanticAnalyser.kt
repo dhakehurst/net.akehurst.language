@@ -27,6 +27,7 @@ import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
+import net.akehurst.language.api.semanticAnalyser.RootExpression
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.typemodel.api.CollectionType
@@ -55,13 +56,25 @@ class AglScopesSemanticAnalyser(
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: mapOf()
         if (null != context) {
-            _grammarNamespace = (context as ContextFromTypeModel).targetNamespace as GrammarTypeNamespace
             asm.declarationsForNamespace.values.forEach {
-                it.scopes.values.forEach {
-                    checkScopeDefinition(it as ScopeDefinitionDefault)
-                }
-                it.references.forEach { ref ->
-                    checkReferenceDefinition(ref as ReferenceDefinitionDefault)
+                val ns = (context as ContextFromTypeModel).typeModel.namespace[it.qualifiedName]
+                when (ns) {
+                    null -> issues.raise(
+                        LanguageIssueKind.ERROR,
+                        LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                        null,
+                        "Namespace '${it.qualifiedName}' not found in typeModel."
+                    )
+
+                    else -> {
+                        _grammarNamespace = ns as GrammarTypeNamespace
+                        it.scopes.values.forEach {
+                            checkScopeDefinition(it as ScopeDefinitionDefault)
+                        }
+                        it.references.forEach { ref ->
+                            checkReferenceDefinition(ref as ReferenceDefinitionDefault)
+                        }
+                    }
                 }
             }
         } else {
@@ -99,16 +112,17 @@ class AglScopesSemanticAnalyser(
         scopeDef.identifiables.forEach { identifiable ->
             val identifiedType = _grammarNamespace?.findTypeNamed(identifiable.typeName)
             //val typeScope = context.rootScope.childScopes[identifiable.typeName]
+            val identifiedBy = identifiable.identifiedBy
             when {
                 null == identifiedType -> {
                     raiseError(AglScopesSyntaxAnalyser.PropertyValue(identifiable, "typeReference"), "Type '${identifiable.typeName}' not found")
                 }
 
-                identifiable.identifiedBy.isNothing -> Unit
-                else -> {
+                identifiedBy is RootExpression && identifiedBy.isNothing -> Unit
+                identifiedBy is NavigationDefault -> {
                     // only check this if the typeName is valid - else it is always invalid
                     //TODO: check this in context of typeName GrammarRule
-                    val identifyingProperty = identifiable.identifiedBy.propertyDeclarationFor(identifiedType)
+                    val identifyingProperty = identifiedBy.propertyDeclarationFor(identifiedType)
                     if (null == identifyingProperty) {
                         //if (typeScope.isMissing(part, ContextFromTypeModel.TYPE_NAME_FOR_PROPERTIES)) {
                         raiseError(
@@ -164,7 +178,7 @@ class AglScopesSemanticAnalyser(
         refExpr.ofType?.let {
             val type = _grammarNamespace?.findTypeNamed(it)
             when (type) {
-                null -> raiseError(it, "For reference in '${ref.inTypeName}' referred to type '$it' not found")
+                null -> raiseError(it, "For references in '${ref.inTypeName}', referred to type '$it' not found")
             }
         }
 

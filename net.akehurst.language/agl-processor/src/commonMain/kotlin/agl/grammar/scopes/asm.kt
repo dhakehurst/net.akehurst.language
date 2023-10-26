@@ -73,18 +73,18 @@ class ScopeModelAgl
         }
     }
 
-    fun identifyingNavigationFor(scopeForTypeName: String, possiblyQualifiedTypeName: String): Navigation? {
+    fun identifyingExpressionFor(scopeForTypeName: String, possiblyQualifiedTypeName: String): Expression? {
         return when {
             possiblyQualifiedTypeName.contains(".") -> {
                 val qName = possiblyQualifiedTypeName.substringBeforeLast(".")
                 val tName = possiblyQualifiedTypeName.substringAfterLast(".")
                 val ns = this.declarationsForNamespace[qName]
-                return ns?.identifyingNavigationFor(scopeForTypeName, tName)
+                return ns?.identifyingExpressionFor(scopeForTypeName, tName)
             }
 
             else -> {
                 declarationsForNamespace.values.firstNotNullOfOrNull {
-                    it.identifyingNavigationFor(scopeForTypeName, possiblyQualifiedTypeName)
+                    it.identifyingExpressionFor(scopeForTypeName, possiblyQualifiedTypeName)
                 }
             }
         }
@@ -113,7 +113,7 @@ data class DeclarationsForNamespaceDefault(
         }
     }
 
-    override fun identifyingNavigationFor(scopeForTypeName: String, typeName: String): NavigationDefault? {
+    override fun identifyingExpressionFor(scopeForTypeName: String, typeName: String): Expression? {
         val scope = scopes[scopeForTypeName]
         val identifiable = scope?.identifiables?.firstOrNull { it.typeName == typeName }
         return identifiable?.identifiedBy
@@ -128,17 +128,30 @@ data class ScopeDefinitionDefault(
 
 data class IdentifiableDefault(
     override val typeName: String,
-    override val identifiedBy: NavigationDefault
+    override val identifiedBy: ExpressionAbstract
 ) : Identifiable
 
+abstract class ExpressionAbstract : Expression {
+}
+
 data class NavigationDefault(
-    val value: List<String>
-) : Navigation {
+    override val value: List<String>
+) : ExpressionAbstract(), Navigation {
     constructor(vararg values: String) : this(values.toList())
 
-    val isNothing: Boolean get() = 1 == value.size && ScopeModelAgl.IDENTIFY_BY_NOTHING == value.first()
-
     override fun toString(): String = value.joinToString(separator = ".")
+}
+
+data class RootExpressionDefault(
+    val value: String
+) : ExpressionAbstract(), RootExpression {
+    companion object {
+        const val NOTHING = "§nothing"
+        const val SELF = "§self"
+    }
+
+    override val isNothing: Boolean get() = NOTHING == this.value
+    override val isSelf: Boolean get() = SELF == this.value
 }
 
 data class ReferenceDefinitionDefault(

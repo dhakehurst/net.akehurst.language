@@ -111,7 +111,7 @@ class test_SemanticAnalyserDefault_datatypes {
             }
         }
 
-        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
+        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
     }
 
     @Test
@@ -144,7 +144,7 @@ class test_SemanticAnalyserDefault_datatypes {
             }
         }
 
-        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
+        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
     }
 
     @Test
@@ -193,7 +193,7 @@ class test_SemanticAnalyserDefault_datatypes {
         )
 
         assertEquals(expItems, result.issues.errors)
-        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
+        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
     }
 
     @Test
@@ -238,7 +238,7 @@ class test_SemanticAnalyserDefault_datatypes {
             }
         }
 
-        assertEquals(expected.asString("  ", ""), result.asm!!.asString("  ", ""))
+        assertEquals(expected.asString("", "  "), result.asm!!.asString("", "  "))
 
     }
 }

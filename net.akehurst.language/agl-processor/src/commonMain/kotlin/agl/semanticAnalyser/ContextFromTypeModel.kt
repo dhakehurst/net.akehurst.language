@@ -36,7 +36,7 @@ class ContextFromTypeModel(
             createScopeFrom(targetNamespaceQualifiedName, typeModel)
         }*/
 
-    val targetNamespace get() = typeModel.namespace[targetNamespaceQualifiedName]!!
+    //val targetNamespace get() = typeModel.namespace[targetNamespaceQualifiedName]!!
 
     override val rootScope = ScopeSimple<String>(null, "", "")
 

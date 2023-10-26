@@ -36,6 +36,7 @@ annotation class AsmSimpleBuilderMarker
 fun asmSimple(
     scopeModel: ScopeModelAgl = ScopeModelAgl(),
     context: ContextSimple? = null,
+    /** need to pass in a context if you want to resolveReferences */
     resolveReferences: Boolean = true,
     failIfIssues: Boolean = true,
     init: AsmSimpleBuilder.() -> Unit
@@ -97,7 +98,7 @@ class AsmSimpleBuilder(
             }
             _asm.traverseDepthFirst(ReferenceResolverDefault(_scopeModel, _context.rootScope, resolveFunction, emptyMap(), issues))
         }
-        if (failIfIssues && issues.isNotEmpty()) {
+        if (failIfIssues && issues.errors.isNotEmpty()) {
             error("Issues building asm:\n${issues.all.joinToString(separator = "\n") { "$it" }}")
 
         } else {
@@ -122,9 +123,9 @@ class AsmElementSimpleBuilder(
     private val _elementScope by lazy {
         _parentScope?.let {
             if (_scopeModel.isScopeDefinedFor(_element.typeName)) {
-                val nav = _scopeModel.identifyingNavigationFor(_parentScope.forTypeName, _element.typeName) as NavigationDefault
-                val refInParent = nav.createReferenceLocalToScope(_parentScope, _element)
-                    ?: error("Trying to create child scope but cannot create a reference for $_element")
+                val expr = _scopeModel.identifyingExpressionFor(_parentScope.forTypeName, _element.typeName)
+                val refInParent = expr?.createReferenceLocalToScope(_parentScope, _element)
+                    ?: _element.typeName //error("Trying to create child scope but cannot create a reference for $_element")
                 val newScope = _parentScope.createOrGetChildScope(refInParent, _element.typeName, _element.asmPath)
                 _scopeMap[_asmPath] = newScope
                 newScope
@@ -178,7 +179,7 @@ class AsmElementSimpleBuilder(
             //do nothing
         } else {
             val scopeFor = es.forTypeName
-            val nav = _scopeModel.identifyingNavigationFor(scopeFor, _element.typeName) as NavigationDefault?
+            val nav = _scopeModel.identifyingExpressionFor(scopeFor, _element.typeName) as NavigationDefault?
             val res = nav?.evaluateFor(_element)
             val referableName = when (res) {
                 null -> null

@@ -429,6 +429,6 @@ class test_LanguageDefinitionDefault {
 
         assertNotNull(result.asm)
         assertTrue(result.issues.isEmpty())
-        assertEquals(expected.asString("  "), result.asm!!.asString("  "))
+        assertEquals(expected.asString(indentIncrement = "  "), result.asm!!.asString(indentIncrement = "  "))
     }
 }

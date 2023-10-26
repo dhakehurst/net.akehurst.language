@@ -18,6 +18,8 @@ package net.akehurst.language.agl.language.scopes
 
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.semanticAnalyser.DeclarationsForNamespace
+import net.akehurst.language.api.semanticAnalyser.Expression
+import net.akehurst.language.api.semanticAnalyser.RootExpression
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -45,7 +47,10 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
         super.register(this::navigation)
         super.register(this::ofType)
         super.register(this::typeReferences)
-        super.register(this::navigationOrNothing)
+        super.register(this::expression)
+        super.register(this::rootExpression)
+        super.register(this::nothing)
+        super.register(this::self)
         super.register(this::typeReference)
         super.register(this::propertyReference)
         super.register(this::qualifiedName)
@@ -114,13 +119,13 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
     private fun identifiables(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<IdentifiableDefault> =
         (children as List<IdentifiableDefault>?) ?: emptyList()
 
-    // identifiable = 'identify' typeReference 'by' navigationOrNothing
+    // identifiable = 'identify' typeReference 'by' expression
     private fun identifiable(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): IdentifiableDefault {
         val typeReference = children[1] as String
-        val navigation = children[3] as NavigationDefault
-        val identifiable = IdentifiableDefault(typeReference, navigation)
+        val expression = children[3] as ExpressionAbstract
+        val identifiable = IdentifiableDefault(typeReference, expression)
         locationMap[PropertyValue(identifiable, "typeReference")] = locationMap[typeReference]!!
-        locationMap[PropertyValue(identifiable, "navigation")] = locationMap[navigation]!!
+        locationMap[PropertyValue(identifiable, "expression")] = locationMap[expression]!!
         return identifiable
     }
 
@@ -194,15 +199,22 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
 //        }
     }
 
-    // navigationOrNothing = '§nothing' | navigation
-    private fun navigationOrNothing(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationDefault {
-        val res = children[0] as Any
-        return when (res) {
-            is NavigationDefault -> res
-            is String -> NavigationDefault(ScopeModelAgl.IDENTIFY_BY_NOTHING)
-            else -> error("type '${res::class.simpleName}' not handled")
-        }
-    }
+    // expression = root | navigation
+    private fun expression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
+        children[0] as Expression
+
+    // rootExpression = nothing | self
+    private fun rootExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RootExpression =
+        children[0] as RootExpression
+
+    // nothing = '§nothing'
+    private fun nothing(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
+        RootExpressionDefault(RootExpressionDefault.NOTHING)
+
+    // self = '§self'
+    private fun self(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
+        RootExpressionDefault(RootExpressionDefault.SELF)
+
 
     // typeReference = IDENTIFIER
     private fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {

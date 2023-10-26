@@ -17,7 +17,6 @@
 
 package net.akehurst.language.agl.agl.default
 
-import net.akehurst.language.agl.language.scopes.NavigationDefault
 import net.akehurst.language.agl.language.scopes.ScopeModelAgl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.createReferenceLocalToScope
@@ -58,19 +57,21 @@ class ScopeCreator(
     }
 
     private fun createScope(scope: Scope<AsmElementPath>, el: AsmElementSimple): Scope<AsmElementPath> {
-        val nav = scopeModel.identifyingNavigationFor(scope.forTypeName, el.typeName) as NavigationDefault?
-        return if (null != nav && scopeModel.isScopeDefinedFor(el.typeName)) {
-            val refInParent = nav.createReferenceLocalToScope(scope, el)
+        val exp = scopeModel.identifyingExpressionFor(scope.forTypeName, el.typeName)
+        return if (null != exp && scopeModel.isScopeDefinedFor(el.typeName)) {
+            val refInParent = exp.createReferenceLocalToScope(scope, el)
             if (null != refInParent) {
                 val newScope = scope.createOrGetChildScope(refInParent, el.typeName, el.asmPath)
                 //_scopeMap[el.asmPath] = newScope
                 newScope
             } else {
-                issues.error(
+                issues.warn(
                     this.locationMap[el],
-                    "Trying to create child scope but cannot create a reference for $el"
+                    "Trying to create child scope but cannot create a reference for '$el' because its identifying expression evaluates to null. Using type name as identifier."
                 )
-                scope
+                val newScope = scope.createOrGetChildScope(el.typeName, el.typeName, el.asmPath)
+                //_scopeMap[el.asmPath] = newScope
+                newScope
             }
         } else {
             scope
@@ -78,15 +79,20 @@ class ScopeCreator(
     }
 
     private fun addToScope(scope: Scope<AsmElementPath>, el: AsmElementSimple) {
-        val nav = scopeModel.identifyingNavigationFor(scope.forTypeName, el.typeName) as NavigationDefault?
-        if (null != nav) {
+        val exp = scopeModel.identifyingExpressionFor(scope.forTypeName, el.typeName)
+        if (null != exp) {
             //val reference = _scopeModel!!.createReferenceFromRoot(scope, el)
-            val scopeLocalReference = nav.createReferenceLocalToScope(scope, el)
+            val scopeLocalReference = exp.createReferenceLocalToScope(scope, el)
             if (null != scopeLocalReference) {
                 val contextRef = el.asmPath
                 scope.addToScope(scopeLocalReference, el.typeName, contextRef)
             } else {
-                issues.error(this.locationMap[el], "Cannot create a local reference in '$scope' for $el")
+                issues.warn(
+                    this.locationMap[el],
+                    "Cannot create a local reference in '$scope' for '$el' because its identifying expression evaluates to null. Using type name as identifier."
+                )
+                val contextRef = el.asmPath
+                scope.addToScope(el.typeName, el.typeName, contextRef)
             }
         } else {
             // no need to add it to scope

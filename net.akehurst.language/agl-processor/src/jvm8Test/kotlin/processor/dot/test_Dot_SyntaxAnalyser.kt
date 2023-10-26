@@ -206,7 +206,7 @@ class test_Dot_SyntaxAnalyser {
                 }
             }
         }
-        assertEquals(expected.asString(" "), result.asm?.asString(" "))
+        assertEquals(expected.asString(indentIncrement = " "), result.asm?.asString(indentIncrement = " "))
     }
 
     @Test

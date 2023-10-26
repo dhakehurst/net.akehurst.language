@@ -15,20 +15,34 @@
  */
 package net.akehurst.language.agl.processor.statecharttools
 
+import net.akehurst.language.agl.default.CompletionProviderDefault
+import net.akehurst.language.agl.default.SemanticAnalyserDefault
+import net.akehurst.language.agl.default.SyntaxAnalyserDefault
+import net.akehurst.language.agl.default.TypeModelFromGrammar
+import net.akehurst.language.agl.language.format.AglFormatterModelDefault
+import net.akehurst.language.agl.language.grammar.ContextFromGrammar
+import net.akehurst.language.agl.language.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.agl.processor.ProcessResultDefault
+import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.collections.lazyMutableMapNonNull
+import net.akehurst.language.typemodel.api.TypeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class test_StatechartTools_Singles {
 
     companion object {
         private val grammarStr = this::class.java.getResource("/itemis-create/version_/grammar.agl")?.readText() ?: error("File not found")
+
+        private val scopeModelStr = this::class.java.getResource("/itemis-create/version_/references.agl")?.readText() ?: error("File not found")
 
         private val formatterStr = """
            AssignmentExpression -> "§expression §assignmentOperator §expression2"
@@ -40,11 +54,26 @@ class test_StatechartTools_Singles {
         private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr)
         private val processors = lazyMutableMapNonNull<String, LanguageProcessor<AsmSimple, ContextSimple>> { grmName ->
             val grm = grammarList.asm?.firstOrNull { it.name == grmName } ?: error("Can't find grammar for '$grmName'")
-            val cfg = Agl.configurationDefault()
+            val cfg = Agl.configuration {
+                targetGrammarName(null) //use default
+                defaultGoalRuleName(null) //use default
+                typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+                scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel), scopeModelStr) }
+                syntaxAnalyserResolver { p ->
+                    ProcessResultDefault(
+                        SyntaxAnalyserDefault(p.grammar!!.qualifiedName, p.typeModel, p.scopeModel),
+                        IssueHolder(LanguageProcessorPhase.ALL)
+                    )
+                }
+                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserDefault(p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+                styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
+                formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel), "") }
+                completionProvider { p -> ProcessResultDefault(CompletionProviderDefault(p.grammar!!, p.typeModel, p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+            }
             Agl.processorFromGrammar(grm, cfg)
         }
 
-        fun test(grammar: String, goal: String, sentence: String) {
+        fun test_process_format(grammar: String, goal: String, sentence: String) {
             val result = processors[grammar].process(sentence, Agl.options {
                 parse { goalRuleName(goal) }
                 semanticAnalysis { context(ContextSimple()) }
@@ -55,108 +84,107 @@ class test_StatechartTools_Singles {
         }
     }
 
-    @org.junit.Test
-    fun parse() {
+    @Test
+    fun parse_Expressions_Expression_true_OR_false_parse() {
         val grammar = "Expressions"
         val goal = "Expression"
         val sentence = "true || false"
         val result = processors[grammar].parse(sentence, Agl.parseOptions { goalRuleName(goal) })
-        assertNotNull(result.sppt, result.issues.toString())
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
         val resultStr = result.sppt!!.asSentence
         assertEquals(sentence, resultStr)
     }
 
     @Test
-    fun Expression_integer() {
+    fun process_Expressions_Expression_integer() {
         val grammar = "Expressions"
         val goal = "Expression"
         val sentence = "integer"
-        test(grammar, goal, sentence)
+        test_process_format(grammar, goal, sentence)
     }
 
     @Test
-    fun ConditionalExpression_97() {
+    fun process_Expressions_Expressions_97() {
         val grammar = "Expressions"
-        val goal = "Expression"
+        val goal = "Expressions"
         val sentence = "97"
-        test(grammar, goal, sentence)
+        test_process_format(grammar, goal, sentence)
     }
 
     @Test
-    fun AssignmentExpression_integer_AS_97() {
+    fun process_Expressions_Expression_integer_ASS_97() {
         val grammar = "Expressions"
         val goal = "Expression"
         val sentence = "integer = 97"
-        test(grammar, goal, sentence)
+        test_process_format(grammar, goal, sentence)
     }
 
     @Test
-    fun ReactionEffect_integer_AS_97() {
+    fun process_States_ReactionEffect_integer_ASS_97() {
         val grammar = "States"
         val goal = "ReactionEffect"
         val sentence = "integer = 97"
-        test(grammar, goal, sentence)
+        test_process_format(grammar, goal, sentence)
     }
 
     @Test
-    fun ScopeDeclaration_var_MyVar_integer() {
+    fun process_Global_ScopeDeclaration_var_MyVar_integer() {
         val grammar = "Global"
         val goal = "ScopeDeclaration"
         val sentence = "var MyVar : integer"
-        test(grammar, goal, sentence)
+        test_process_format(grammar, goal, sentence)
     }
 
     @Test
-    fun ScopeDeclaration_var_MyVar_integer_AS_97() {
+    fun process_Global_ScopeDeclaration_var_MyVar_integer_ASS_97() {
         val grammar = "Global"
         val goal = "ScopeDeclaration"
         val sentence = "var MyVar : integer = 97"
-        test(grammar, goal, sentence)
+        test_process_format(grammar, goal, sentence)
     }
 
     @Test
-    fun Expression_a_bF() {
+    fun process_Expressions_Expression_a_bF() {
         val grammar = "Expressions"
         val goal = "Expression"
         val sentence = "a.b()"
-        test(grammar, goal, sentence)
+        test_process_format(grammar, goal, sentence)
     }
 
     @Test
-    fun Expression_a_bA() {
+    fun process_Expressions_Expression_a_bA() {
         val grammar = "Expressions"
         val goal = "Expression"
         val sentence = "a.b[1]"
-        test(grammar, goal, sentence)
+        test_process_format(grammar, goal, sentence)
     }
 
     @Test
-    fun ReactionTrigger_exit() {
+    fun process_Transitions_ReactionTrigger_exit() {
         val grammar = "Transitions"
         val goal = "ReactionTrigger"
         val sentence = "exit"
-        test(grammar, goal, sentence)
+        test_process_format(grammar, goal, sentence)
     }
 
     @Test
-    fun TransitionReaction_xxx() {
+    fun process_Transitions_TransitionReaction_after_10_s__raise_ABD_intEvent() {
         val grammar = "Transitions"
         val goal = "TransitionReaction"
         val sentence = "after 10 s / raise ABC.intEvent"
-        test(grammar, goal, sentence)
+        test_process_format(grammar, goal, sentence)
     }
 
     @Test
-    fun StextTrigger_else() {
+    fun process_Transitions_StextTrigger_else() {
         val grammar = "Transitions"
         val goal = "StextTrigger"
         val sentence = "else"
-        test(grammar, goal, sentence)
+        test_process_format(grammar, goal, sentence)
     }
 
     @Test
-    fun expectedAt_TransitionSpecification_0() {
+    fun expectedTerminalsAt_Transitions_TransitionSpecification_0() {
         val grammar = "Transitions"
         val goal = "TransitionSpecification"
         val sentence = ""
@@ -172,7 +200,7 @@ class test_StatechartTools_Singles {
     }
 
     @Test
-    fun expectedTerminalsAt_TransitionSpecification_after() {
+    fun expectedTerminalsAt_Transitions_TransitionSpecification_after() {
         val grammar = "Transitions"
         val goal = "TransitionSpecification"
         val sentence = "after "
@@ -191,7 +219,7 @@ class test_StatechartTools_Singles {
     }
 
     @Test
-    fun expectedItemsAt_TransitionSpecification_after() {
+    fun expectedItemsAt_Transitions_TransitionSpecification_after() {
         val grammar = "Transitions"
         val goal = "TransitionSpecification"
         val sentence = "after "
@@ -208,4 +236,6 @@ class test_StatechartTools_Singles {
         val expected = setOf("").sorted()
         assertEquals(expected, actual)
     }
+
+
 }

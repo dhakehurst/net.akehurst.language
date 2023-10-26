@@ -33,14 +33,21 @@ object TypeModelFromGrammar {
     fun create(
         grammar: Grammar,
         defaultGoalRuleName: String? = null,
-        configuration: TypeModelFromGrammarConfiguration = TypeModelFromGrammar.defaultConfiguration
+        configuration: TypeModelFromGrammarConfiguration = defaultConfiguration
+    ): TypeModel = createFromGrammarList(listOf(grammar), configuration)
+
+    fun createFromGrammarList(
+        grammarList: List<Grammar>,
+        configuration: TypeModelFromGrammarConfiguration = defaultConfiguration
     ): TypeModel {
-        val grmrTypeModel = TypeModelSimple(grammar.name)
-        grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
-        val goalRuleName = defaultGoalRuleName ?: grammar.grammarRule.first { it.isSkip.not() }.name
-        val goalRule = grammar.findAllResolvedGrammarRule(goalRuleName) ?: error("Cannot find grammar rule '$goalRuleName'")
-        val ns = GrammarTypeNamespaceFromGrammar(grammar).build(grmrTypeModel, grammar)
-        grmrTypeModel.addNamespace(ns)
+        val grmrTypeModel = TypeModelSimple(grammarList.last().name)
+        for (grammar in grammarList) {
+            grmrTypeModel.addNamespace(SimpleTypeModelStdLib)
+            //val goalRuleName = defaultGoalRuleName ?: grammar.grammarRule.first { it.isSkip.not() }.name
+            //val goalRule = grammar.findAllResolvedGrammarRule(goalRuleName) ?: error("Cannot find grammar rule '$goalRuleName'")
+            val ns = GrammarTypeNamespaceFromGrammar(grammar).build(grmrTypeModel, grammar)
+            grmrTypeModel.addNamespace(ns)
+        }
         grmrTypeModel.resolveImports()
         return grmrTypeModel
     }

@@ -17,14 +17,11 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
-import net.akehurst.language.agl.language.scopes.NavigationDefault
 import net.akehurst.language.agl.language.scopes.ScopeModelAgl
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.AsmElementProperty
 import net.akehurst.language.api.asm.AsmElementSimple
-
-import net.akehurst.language.api.semanticAnalyser.Scope
-import net.akehurst.language.api.semanticAnalyser.SentenceContext
+import net.akehurst.language.api.semanticAnalyser.*
 import net.akehurst.language.typemodel.api.*
 
 class ContextSimple() : SentenceContext<AsmElementPath> {
@@ -33,6 +30,8 @@ class ContextSimple() : SentenceContext<AsmElementPath> {
      * The items in the scope contain a ScopePath to an element in an AsmSimple model
      */
     override var rootScope = ScopeSimple<AsmElementPath>(null, "", ScopeModelAgl.ROOT_SCOPE_TYPE_NAME)
+
+    fun asString(): String = "contextSimple scope §root ${rootScope.asString()}"
 
     override fun hashCode(): Int = rootScope.hashCode()
 
@@ -45,18 +44,39 @@ class ContextSimple() : SentenceContext<AsmElementPath> {
     override fun toString(): String = "ContextSimple"
 }
 
-fun NavigationDefault.evaluateFor(root: AsmElementSimple?) = when {
-    this.isNothing -> null
-    else -> this.value.fold(root as Any?) { acc, it ->
-        when (acc) {
-            null -> null
-            is AsmElementSimple -> acc.getProperty(it)
-            else -> error("Cannot evaluate $this on object of type '${acc::class.simpleName}'")
-        }
-    }
+fun Expression.evaluateFor(self: Any?) = when (this) {
+    is RootExpression -> this.evaluateFor(self)
+    is Navigation -> this.evaluateFor(self)
+    else -> error("Subtype of Expression not handled in 'evaluateFor'")
 }
 
-fun NavigationDefault.propertyFor(root: AsmElementSimple?): AsmElementProperty {
+fun RootExpression.evaluateFor(self: Any?): String? = when {
+    this.isNothing -> null
+    this.isSelf -> when (self) {
+        null -> null
+        is String -> self
+        else -> error("evaluation of 'self' only works if self is a String, got an object of type '${self::class.simpleName}'")
+    }
+
+    else -> error("evaluateFor RootExpression not handled")
+}
+
+fun Navigation.evaluateFor(self: Any?) = when (self) {
+    null -> error("Cannot navigate from 'null'")
+    is AsmElementSimple -> {
+        this.value.fold(self as Any?) { acc, it ->
+            when (acc) {
+                null -> null
+                is AsmElementSimple -> acc.getProperty(it)
+                else -> error("Cannot evaluate $this on object of type '${acc::class.simpleName}'")
+            }
+        }
+    }
+
+    else -> error("evaluateFor Navigation from object of type '${self::class.simpleName}' not handled")
+}
+
+fun Navigation.propertyFor(root: AsmElementSimple?): AsmElementProperty {
     return when {
         null == root -> error("Cannot navigate '$this' from null value")
         else -> {
@@ -75,7 +95,7 @@ fun NavigationDefault.propertyFor(root: AsmElementSimple?): AsmElementProperty {
     }
 }
 
-fun NavigationDefault.propertyDeclarationFor(root: TypeDeclaration?): PropertyDeclaration? {
+fun Navigation.propertyDeclarationFor(root: TypeDeclaration?): PropertyDeclaration? {
     var type = root
     var pd: PropertyDeclaration? = null
     for (pn in this.value) {
@@ -92,17 +112,21 @@ fun NavigationDefault.propertyDeclarationFor(root: TypeDeclaration?): PropertyDe
     return pd
 }
 
-fun NavigationDefault.createReferenceLocalToScope(scope: Scope<AsmElementPath>, element: AsmElementSimple): String? {
-    return when {
-        this.isNothing -> ""
-        else -> {
-            val res = this.evaluateFor(element)
-            when (res) {
-                null -> null
-                is String -> res
-                else -> error("Evaluation of navigation '$this' on '$element' should result in a String, but it does not!")
-            }
-        }
+fun Expression.createReferenceLocalToScope(scope: Scope<AsmElementPath>, element: AsmElementSimple) = when (this) {
+    is RootExpression -> this.createReferenceLocalToScope(scope, element)
+    is Navigation -> this.createReferenceLocalToScope(scope, element)
+    else -> error("Subtype of Expression not handled in 'createReferenceLocalToScope'")
+}
+
+fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmElementPath>, element: AsmElementSimple) =
+    this.evaluateFor(element)
+
+fun Navigation.createReferenceLocalToScope(scope: Scope<AsmElementPath>, element: AsmElementSimple): String? {
+    val res = this.evaluateFor(element)
+    return when (res) {
+        null -> null
+        is String -> res
+        else -> error("Evaluation of navigation '$this' on '$element' should result in a String, but it does not!")
     }
 }
 
@@ -160,14 +184,27 @@ class ScopeSimple<AsmElementIdType>(
     override fun isMissing(referableName: String, typeName: String): Boolean = null == this.findOrNull(referableName, typeName)
 
     override fun asString(currentIndent: String, indentIncrement: String): String {
-        val newIndent = currentIndent + indentIncrement
-        val content = items.entries.joinToString {
-            val itemContent = it.value.entries.joinToString {
-                "${it.key} -> ${it.value.toString()}"
+        val scopeIndent = currentIndent + indentIncrement
+        val content = items.entries.joinToString(separator = "\n") {
+            val itemTypeIndent = scopeIndent + indentIncrement
+            val itemContent = it.value.entries.joinToString(separator = "\n") {
+                val scope = when {
+                    this.childScopes.containsKey(it.key) -> {
+                        val chScope = this.childScopes[it.key]!!
+                        " ${chScope.asString(itemTypeIndent, indentIncrement)}"
+                    }
+
+                    else -> ""
+                }
+                "$itemTypeIndent${it.key} -> ${it.value.toString()}$scope"
             }
-            "${newIndent}item ${it.key} {\n$itemContent\n${newIndent}}"
+
+            "${scopeIndent}item ${it.key} {\n$itemContent\n$scopeIndent}"
         }
-        return """scope $forTypeName {$content\n}"""
+        return when {
+            items.entries.isEmpty() -> "{ }"
+            else -> "{\n$content\n$currentIndent}"
+        }
     }
 
     override fun hashCode(): Int = arrayOf(parent, forReferenceInParent, forTypeName).contentHashCode()
