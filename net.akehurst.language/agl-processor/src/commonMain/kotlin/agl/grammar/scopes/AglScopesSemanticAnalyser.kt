@@ -178,7 +178,7 @@ class AglScopesSemanticAnalyser(
         refExpr.ofType?.let {
             val type = _grammarNamespace?.findTypeNamed(it)
             when (type) {
-                null -> raiseError(it, "For references in '${ref.inTypeName}', referred to type '$it' not found")
+                null -> raiseError(it, "For references in '${ref.inTypeName}', forall '${refExpr.navigation}', the of-type '$it' is not found")
             }
         }
 
@@ -220,15 +220,15 @@ class AglScopesSemanticAnalyser(
         if (null == x) {
             raiseError(
                 AglScopesSyntaxAnalyser.PropertyValue(refExpr, "propertyReference"),
-                "For reference in '${ref.inTypeName}' referring property '${refExpr.referringPropertyNavigation}' not found"
+                "For references in '${ref.inTypeName}' referring property '${refExpr.referringPropertyNavigation}' not found"
             )
         }
 
         refExpr.refersToTypeName.forEachIndexed { i, n ->
-            if (null == _grammarNamespace?.findOwnedTypeNamed(n)) {
+            if (null == _grammarNamespace?.findTypeNamed(n)) {
                 raiseError(
                     AglScopesSyntaxAnalyser.PropertyValue(ref, "typeReferences[$i]"),
-                    "For reference in '${ref.inTypeName}' referred to type '$n' not found"
+                    "For references in '${ref.inTypeName}', referred to type '$n' not found"
                 )
             }
         }

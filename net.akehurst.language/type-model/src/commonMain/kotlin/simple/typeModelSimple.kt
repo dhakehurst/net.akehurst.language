@@ -53,6 +53,16 @@ abstract class TypeModelSimpleAbstract(
         }
     }
 
+    override fun findOrCreateNamespace(qualifiedName: String, imports: List<String>): TypeNamespace {
+        return if (namespace.containsKey(qualifiedName)) {
+            namespace[qualifiedName]!!
+        } else {
+            val ns = TypeNamespaceSimple(qualifiedName, imports)
+            addNamespace(ns)
+            ns
+        }
+    }
+
     override fun findFirstByNameOrNull(typeName: String): TypeDeclaration? {
         for (ns in allNamespace) {
             val t = ns.findOwnedTypeNamed(typeName)
@@ -230,7 +240,7 @@ abstract class TypeNamespaceAbstract(
 
     override fun isImported(qualifiedNamespaceName: String): Boolean = imports.contains(qualifiedNamespaceName)
 
-    fun addImport(qualifiedName: String) {
+    override fun addImport(qualifiedName: String) {
         (this.imports as MutableList).add(qualifiedName)
     }
 

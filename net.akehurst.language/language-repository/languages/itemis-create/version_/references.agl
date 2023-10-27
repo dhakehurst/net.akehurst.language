@@ -52,14 +52,26 @@ namespace com.itemis.create.States {
 }
 
 namespace com.itemis.create.Transitions {
+
+
+
 }
 
 namespace com.itemis.create.Statechart {
-    identify Region by name
-    scope Region {
-        identify State by name
-    }
-    scope State {
-        identify Region by name
+    //identify Region by name
+    identify State by name
+    //scope Region {
+    //    identify State by name
+    //}
+    //scope State {
+    //    identify Region by name
+   // }
+    references {
+        in Statechart {
+            forall transitions.transition {
+                property name refers-to State //from regions->{name=='main region'}
+                property name2 refers-to State
+            }
+        }
     }
 }

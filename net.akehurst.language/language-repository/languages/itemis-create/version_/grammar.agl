@@ -120,9 +120,9 @@ grammar Expressions {
 
 grammar Global extends Expressions {
 
-    StatechartSpecification = Namespace? Annotation* StatechartDeclaration* ;
+    StatechartSpecification = Namespace? Annotation* StatechartLevelDeclaration* ;
     Namespace = 'namespace' FQN ;
-    StatechartDeclaration = Interface | InternalDeclarations | ImportDeclarations ;
+    StatechartLevelDeclaration = Interface | InternalDeclarations | ImportDeclarations ;
     Interface = 'interface' ID? ':' AnnotatedDeclaration* ;
     AnnotatedDeclaration = Annotation* MemberDeclaration ;
     MemberDeclaration

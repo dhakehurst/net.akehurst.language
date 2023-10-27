@@ -81,7 +81,7 @@ class test_SemanticAnalyserDefault_datatypes {
 
     @Test
     fun check_scopeModel() {
-        val context = ContextFromTypeModel(processor.grammar!!.qualifiedName, processor.typeModel)
+        val context = ContextFromTypeModel(processor.typeModel)
         val res = ScopeModelAgl.fromString(context, scopeModelStr)
         assertTrue(res.issues.isEmpty(), res.issues.toString())
     }

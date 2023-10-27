@@ -83,11 +83,22 @@ class test_StatechartTools_References {
     }
 
     @Test
+    fun typeModel() {
+        val typeModel = TypeModelFromGrammar.createFromGrammarList(grammarList)
+        println(typeModel.asString())
+    }
+
+    @Test
     fun crossReferenceModel() {
         val typeModel = TypeModelFromGrammar.createFromGrammarList(grammarList)
-        val extNs = typeModel.createNamespace("")
+        val extNs = typeModel.findOrCreateNamespace("external", listOf("std"))
         extNs.findOwnedOrCreateDataTypeNamed("AnnotationType")
-        typeModel.addNamesapce(extNs)
+        extNs.findOwnedOrCreateDataTypeNamed("Type")
+        extNs.findOwnedOrCreateDataTypeNamed("RegularState")
+
+        typeModel.namespace["com.itemis.create.Global"]!!.addImport("external")
+        typeModel.resolveImports()
+
         val result = Agl.registry.agl.scopes.processor!!.process(
             scopeModelStr,
             Agl.options {
@@ -108,10 +119,13 @@ class test_StatechartTools_References {
             }
         """.trimIndent()
 
+//        val expected = contextSimple {
+//            item("'Root'", "Region", "/0/regions/0")
+//            scope("'Root'", "Region", "/0/regions/0") {
+//            }
+//        }
         val expected = contextSimple {
-            item("'Root'", "Region", "/0/regions/0")
-            scope("'Root'", "Region", "/0/regions/0") {
-            }
+            // only states are recorded, there are none
         }
 
         test(grammar, goal, sentence, ContextSimple(), expected)
@@ -131,10 +145,8 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextSimple {
-            scopedItem("'Root'", "Region", "/0/regions/0") {
-                scopedItem("'A'", "State", "/0/regions/0/states/0")
-                scopedItem("'B'", "State", "/0/regions/0/states/1")
-            }
+            item("'A'", "State", "/0/regions/0/states/0")
+            item("'B'", "State", "/0/regions/0/states/1")
         }
 
         test(grammar, goal, sentence, ContextSimple(), expected)
@@ -156,13 +168,7 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextSimple {
-            item("'Root'", "Region", "/0/regions/0")
-            scope("'Root'", "Region", "/0/regions/0") {
-                scopedItem("'A'", "State", "/0/regions/0/states/0") {
-                    scopedItem("'R1'", "Region", "/0/regions/0/states/0/regions/0")
-                    scopedItem("'R2'", "Region", "/0/regions/0/states/0/regions/1")
-                }
-            }
+            item("'A'", "State", "/0/regions/0/states/0")
         }
 
         test(grammar, goal, sentence, ContextSimple(), expected)
@@ -188,23 +194,76 @@ class test_StatechartTools_References {
             }
         """.trimIndent()
 
+        // TODO: missing state because of repeated state id - need to identify by qualified name !
         val expected = contextSimple {
-            item("'Root'", "Region", "/0/regions/0")
-            scope("'Root'", "Region", "/0/regions/0") {
-                scopedItem("'A'", "State", "/0/regions/0/states/0") {
-                    scopedItem("'R1'", "Region", "/0/regions/0/states/0/regions/0") {
-                        scopedItem("'C'", "State", "/0/regions/0/states/0/regions/0/states/0")
+            item("'A'", "State", "/0/regions/0/states/0")
+            item("'C'", "State", "/0/regions/0/states/0/regions/1/states/0")
+            item("'D'", "State", "/0/regions/0/states/0/regions/1/states/1")
+        }
+
+        test(grammar, goal, sentence, ContextSimple(), expected)
+    }
+
+    @Test
+    fun Statechart_transition_reference_states() {
+        val grammar = "Statechart"
+        val goal = "statechart"
+        val sentence = """
+            statechart 'Test' {
+                region 'main region' {
+                    state 'S1' {}
+                    state 'S2' {}
+                }
+                transitions {
+                    'S1' -- { } --> 'S2'
+                }
+            }
+        """.trimIndent()
+
+        val expectedContext = contextSimple {
+            item("'S1'", "State", "/0/regions/0/states/0")
+            item("'S2'", "State", "/0/regions/0/states/1")
+        }
+
+        val expectedAsm = asmSimple(
+            scopeModel = processors[grammar]!!.scopeModel as ScopeModelAgl,
+            context = ContextSimple()
+        ) {
+            element("Statechart") {
+                propertyString("name", "'Test'")
+                propertyNull("specification")
+                propertyListOfElement("regions") {
+                    element("Region") {
+                        propertyString("name", "'main region'")
+                        propertyListOfElement("states") {
+                            element("State") {
+                                propertyString("name", "'S1'")
+                                propertyNull("stateSpec")
+                                propertyListOfElement("regions") {}
+                            }
+                            element("State") {
+                                propertyString("name", "'S2'")
+                                propertyNull("stateSpec")
+                                propertyListOfElement("regions") {}
+                            }
+                        }
                     }
-                    scopedItem("'R2'", "Region", "/0/regions/0/states/0/regions/1") {
-                        scopedItem("'C'", "State", "/0/regions/0/states/0/regions/1/states/0")
-                        scopedItem("'D'", "State", "/0/regions/0/states/0/regions/1/states/1")
+                }
+                propertyElementExplicitType("transitions", "Transitions") {
+                    propertyListOfElement("transition") {
+                        element("Transition") {
+                            reference("name", "'S1'")
+                            propertyNull("transitionSpecification")
+                            reference("name2", "'S2'")
+                        }
                     }
                 }
             }
         }
 
-        test(grammar, goal, sentence, ContextSimple(), expected)
+        test(grammar, goal, sentence, ContextSimple(), expectedContext, expectedAsm)
     }
+
 
     @Test
     fun Global_identify_interface() {

@@ -34,7 +34,7 @@ interface TypeModel {
 
     fun resolveImports()
 
-    fun findOrCreateNamespace(qualifiedName: String):TypeNamespace
+    fun findOrCreateNamespace(qualifiedName: String, imports: List<String>): TypeNamespace
 
     fun findFirstByNameOrNull(typeName: String): TypeDeclaration?
 
@@ -67,6 +67,8 @@ interface TypeNamespace {
     val collectionType: Set<CollectionType>
 
     val elementType: Set<DataType>
+
+    fun addImport(qualifiedName: String)
 
     fun resolveImports(model: TypeModel)
 

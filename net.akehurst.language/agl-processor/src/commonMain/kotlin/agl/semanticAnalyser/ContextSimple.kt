@@ -67,7 +67,7 @@ fun Navigation.evaluateFor(self: Any?) = when (self) {
         this.value.fold(self as Any?) { acc, it ->
             when (acc) {
                 null -> null
-                is AsmElementSimple -> acc.getProperty(it)
+                is AsmElementSimple -> acc.getPropertyOrNull(it)
                 else -> error("Cannot evaluate $this on object of type '${acc::class.simpleName}'")
             }
         }

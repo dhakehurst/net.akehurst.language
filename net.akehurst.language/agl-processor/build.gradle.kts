@@ -46,7 +46,7 @@ exportPublic {
             "net.akehurst.language.api.**",
             "net.akehurst.language.agl.regex.**",
             "net.akehurst.language.agl.processor.**",
-            "net.akehurst.language.agl.grammar.**",
+            "net.akehurst.language.agl.language.**",
             "net.akehurst.language.agl.syntaxAnalyser.**",
             "net.akehurst.language.agl.semanticAnalyser.**",
             "net.akehurst.language.agl.sppt.**",

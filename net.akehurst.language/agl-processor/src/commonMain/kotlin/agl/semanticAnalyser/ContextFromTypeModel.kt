@@ -23,7 +23,6 @@ import net.akehurst.language.typemodel.api.TypeModel
 // used by other languages that reference rules  in a grammar
 
 class ContextFromTypeModel(
-    val targetNamespaceQualifiedName: String,
     val typeModel: TypeModel
 ) : SentenceContext<String> {
 
@@ -76,14 +75,13 @@ class ContextFromTypeModel(
         }
     */
 
-    override fun hashCode(): Int = targetNamespaceQualifiedName.hashCode()
+    override fun hashCode(): Int = typeModel.hashCode()
 
     override fun equals(other: Any?): Boolean = when {
         other !is ContextFromTypeModel -> false
-        this.targetNamespaceQualifiedName != other.targetNamespaceQualifiedName -> false
         this.typeModel != other.typeModel -> false
         else -> true
     }
 
-    override fun toString(): String = "ContextFromTypeModel($targetNamespaceQualifiedName)"
+    override fun toString(): String = "ContextFromTypeModel($typeModel)"
 }
