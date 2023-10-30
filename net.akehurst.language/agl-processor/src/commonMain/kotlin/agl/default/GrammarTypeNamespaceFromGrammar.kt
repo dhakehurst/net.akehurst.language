@@ -341,10 +341,10 @@ class GrammarTypeNamespaceFromGrammar(
                     }
                 }
 
-                else -> _namespace.createUnnamedSuperTypeType(subtypes.map { it }).instance()
+                else -> _namespace.createUnnamedSupertypeType(subtypes.map { it }).instance()
             }
 
-            else -> _namespace.createUnnamedSuperTypeType(subtypes.map { it }).instance()
+            else -> _namespace.createUnnamedSupertypeType(subtypes.map { it }).instance()
         }
     }
 
@@ -353,7 +353,7 @@ class GrammarTypeNamespaceFromGrammar(
         return when {
             subtypes.all { it.type == SimpleTypeModelStdLib.NothingType } -> SimpleTypeModelStdLib.NothingType.instance(emptyList(), subtypes.any { it.isNullable })
             subtypes.all { it.type is PrimitiveType } -> SimpleTypeModelStdLib.String
-            subtypes.all { it.type is DataType } -> _namespace.createUnnamedSuperTypeType(subtypes.map { it }).instance()
+            subtypes.all { it.type is DataType } -> _namespace.createUnnamedSupertypeType(subtypes.map { it }).instance()
             subtypes.all { it.type == SimpleTypeModelStdLib.List } -> { //=== PrimitiveType.LIST } -> {
                 val itemType = SimpleTypeModelStdLib.AnyType.instance()//TODO: compute better elementType ?
                 val choiceType = SimpleTypeModelStdLib.List.instance(listOf(itemType))
@@ -369,10 +369,10 @@ class GrammarTypeNamespaceFromGrammar(
                     }
                 }
 
-                else -> _namespace.createUnnamedSuperTypeType(subtypes.map { it }).instance()
+                else -> _namespace.createUnnamedSupertypeType(subtypes.map { it }).instance()
             }
 
-            else -> _namespace.createUnnamedSuperTypeType(subtypes.map { it }).instance()
+            else -> _namespace.createUnnamedSupertypeType(subtypes.map { it }).instance()
         }
     }
 

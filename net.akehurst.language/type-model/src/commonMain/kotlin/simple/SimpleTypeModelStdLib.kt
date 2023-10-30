@@ -37,22 +37,22 @@ object SimpleTypeModelStdLib : TypeNamespaceAbstract(emptyList()) {
 
     val List = super.findOwnedOrCreateCollectionTypeNamed("List").also {
         (it.typeParameters as MutableList).add("E")
-        it.appendDerivedProperty("size", this.createTypeInstance("Integer"), "BuiltIn: size of the list")
-        it.appendDerivedProperty("first", this.createTypeInstance("E"), "BuiltIn: first element of the list")
-        it.appendDerivedProperty("last", this.createTypeInstance("E"), "BuiltIn: last element of the list")
-        it.appendDerivedProperty("tail", this.createTypeInstance("E"), "BuiltIn: all but the first element of the list")
-        it.appendDerivedProperty("front", this.createTypeInstance("E"), "BuiltIn: all but the last element of the list")
-        it.appendDerivedProperty("join", this.createTypeInstance("String"), "BuiltIn: all elements concatenated into a String")
+        it.appendDerivedProperty("size", this.createTypeInstance(it, "Integer"), "BuiltIn: size of the list")
+        it.appendDerivedProperty("first", this.createTypeInstance(it, "E"), "BuiltIn: first element of the list")
+        it.appendDerivedProperty("last", this.createTypeInstance(it, "E"), "BuiltIn: last element of the list")
+        it.appendDerivedProperty("tail", this.createTypeInstance(it, "E"), "BuiltIn: all but the first element of the list")
+        it.appendDerivedProperty("front", this.createTypeInstance(it, "E"), "BuiltIn: all but the last element of the list")
+        it.appendDerivedProperty("join", this.createTypeInstance(it, "String"), "BuiltIn: all elements concatenated into a String")
         it.appendMethod(
             "get",
-            listOf(ParameterDefinitionSimple("index", this.createTypeInstance("Integer"), null)),
-            this.createTypeInstance("E"),
+            listOf(ParameterDefinitionSimple("index", this.createTypeInstance(it, "Integer"), null)),
+            this.createTypeInstance(it, "E"),
             "BuiltIn: the element at the given index"
         )
     }
     val ListSeparated = super.findOwnedOrCreateCollectionTypeNamed("ListSeparated").also {
         (it.typeParameters as MutableList).addAll(listOf("E", "I"))
-        it.appendDerivedProperty("join", this.createTypeInstance("String"), "BuiltIn: all elements concatenated into a String")
+        it.appendDerivedProperty("join", this.createTypeInstance(it, "String"), "BuiltIn: all elements concatenated into a String")
     }
     val Set = super.findOwnedOrCreateCollectionTypeNamed("Set").also { (it.typeParameters as MutableList).add("E") }
     val OrderedSet = super.findOwnedOrCreateCollectionTypeNamed("OrderedSet").also { (it.typeParameters as MutableList).add("E") }

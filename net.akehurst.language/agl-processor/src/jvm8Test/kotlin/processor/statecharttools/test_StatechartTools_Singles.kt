@@ -58,7 +58,7 @@ class test_StatechartTools_Singles {
                 targetGrammarName(null) //use default
                 defaultGoalRuleName(null) //use default
                 typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel), scopeModelStr) }
+                scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
                     ProcessResultDefault(
                         SyntaxAnalyserDefault(p.grammar!!.qualifiedName, p.typeModel, p.scopeModel),
@@ -67,7 +67,7 @@ class test_StatechartTools_Singles {
                 }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserDefault(p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
                 styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel), "") }
+                formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.typeModel), "") }
                 completionProvider { p -> ProcessResultDefault(CompletionProviderDefault(p.grammar!!, p.typeModel, p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
             }
             Agl.processorFromGrammar(grm, cfg)
@@ -106,7 +106,7 @@ class test_StatechartTools_Singles {
     @Test
     fun process_Expressions_Expressions_97() {
         val grammar = "Expressions"
-        val goal = "Expressions"
+        val goal = "Expression"
         val sentence = "97"
         test_process_format(grammar, goal, sentence)
     }
@@ -128,17 +128,17 @@ class test_StatechartTools_Singles {
     }
 
     @Test
-    fun process_Global_ScopeDeclaration_var_MyVar_integer() {
+    fun process_Global_StatechartLevelDeclaration_var_MyVar_integer() {
         val grammar = "Global"
-        val goal = "ScopeDeclaration"
+        val goal = "StatechartLevelDeclaration"
         val sentence = "var MyVar : integer"
         test_process_format(grammar, goal, sentence)
     }
 
     @Test
-    fun process_Global_ScopeDeclaration_var_MyVar_integer_ASS_97() {
+    fun process_Global_StatechartLevelDeclaration_var_MyVar_integer_ASS_97() {
         val grammar = "Global"
-        val goal = "ScopeDeclaration"
+        val goal = "StatechartLevelDeclaration"
         val sentence = "var MyVar : integer = 97"
         test_process_format(grammar, goal, sentence)
     }

@@ -94,7 +94,7 @@ class GrammarTypeModelBuilder(
         return et
     }
 
-    fun unnamedSuperTypeTypeOf(name: String, subtypes: List<Any>): UnnamedSuperTypeType {
+    fun unnamedSuperTypeTypeOf(name: String, subtypes: List<Any>): UnnamedSupertypeType {
         val sts = subtypes.map {
             when (it) {
                 is String -> _namespace.findOwnedOrCreateDataTypeNamed(it)!!
@@ -102,16 +102,16 @@ class GrammarTypeModelBuilder(
                 else -> error("Cannot map to TypeDefinition: $it")
             }
         }
-        val t = _namespace.createUnnamedSuperTypeType(sts.map { it.instance() })
+        val t = _namespace.createUnnamedSupertypeType(sts.map { it.instance() })
         _namespace.addTypeFor(name, t.instance())
         return t
     }
 
-    fun unnamedSuperTypeType(name: String, init: SubtypeListBuilder.() -> Unit): UnnamedSuperTypeType {
+    fun unnamedSuperTypeType(name: String, init: SubtypeListBuilder.() -> Unit): UnnamedSupertypeType {
         val b = SubtypeListBuilder(_namespace, _typeReferences)
         b.init()
         val stu = b.build()
-        val t = _namespace.createUnnamedSuperTypeType(stu)
+        val t = _namespace.createUnnamedSupertypeType(stu)
         _namespace.addTypeFor(name, t.instance())
         return t
     }

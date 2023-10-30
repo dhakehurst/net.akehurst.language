@@ -38,7 +38,7 @@ class test_AglScopes {
             val result = aglProc.process(
                 sentence = sentence,
                 Agl.options {
-                    semanticAnalysis { context(ContextFromTypeModel(grammar.qualifiedName, TypeModelFromGrammar.create(grammar))) }
+                    semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar.create(grammar))) }
                 }
             )
 

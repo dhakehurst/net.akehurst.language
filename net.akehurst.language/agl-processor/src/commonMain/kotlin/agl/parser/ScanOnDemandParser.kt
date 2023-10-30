@@ -78,6 +78,7 @@ internal class ScanOnDemandParser(
             false,
             reportErrors,
             reportGrammarAmbiguities,
+            false,
             false
         )
         rp.start(0, possibleEndOfText, parseArgs)

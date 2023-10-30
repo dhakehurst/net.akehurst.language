@@ -64,7 +64,7 @@ object TypeModelTest {
             null == expected || null == actual -> fail("${source}.TypeUsage do not match")
             else -> {
                 assertEquals(expected.isNullable, actual.isNullable, "Different nullable for ${source}.${expected}")
-                assertEquals(expected.type.qualifiedName, actual.type.qualifiedName, "Different type for ${source}.${expected}")
+                assertEquals(expected.qualifiedTypeName, actual.qualifiedTypeName, "Different type for ${source}.${expected}")
                 assertEquals(expected.typeArguments.size, actual.typeArguments.size, "Different number of arguments for ${source}.${expected}")
                 for (i in expected.typeArguments.indices) {
                     val exp = expected.typeArguments[i]
@@ -79,7 +79,7 @@ object TypeModelTest {
         when {
             null == expected || null == actual -> fail("should never be null")
             expected is PrimitiveType && actual is PrimitiveType -> tmAssertEquals(expected, actual)
-            expected is UnnamedSuperTypeType && actual is UnnamedSuperTypeType -> tmAssertEquals(expected, actual)
+            expected is UnnamedSupertypeType && actual is UnnamedSupertypeType -> tmAssertEquals(expected, actual)
             expected is DataType && actual is DataType -> tmAssertEquals(expected, actual)
             expected is CollectionType && actual is CollectionType -> tmAssertEquals(expected, actual)
             expected is TupleType && actual is TupleType -> tmAssertEquals(expected, actual)
@@ -92,7 +92,7 @@ object TypeModelTest {
         assertEquals(expected.name, actual.name)
     }
 
-    private fun tmAssertEquals(expected: UnnamedSuperTypeType, actual: UnnamedSuperTypeType) {
+    private fun tmAssertEquals(expected: UnnamedSupertypeType, actual: UnnamedSupertypeType) {
         assertEquals(expected.subtypes.size, actual.subtypes.size, "Number of subTypes do not match for '${expected.name}'")
         for (i in 0 until expected.subtypes.size) {
             val exp = expected.subtypes[i]

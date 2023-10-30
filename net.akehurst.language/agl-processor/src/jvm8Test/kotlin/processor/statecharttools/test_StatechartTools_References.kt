@@ -53,7 +53,7 @@ class test_StatechartTools_References {
                 targetGrammarName(null) //use default
                 defaultGoalRuleName(null) //use default
                 typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel), scopeModelStr) }
+                scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
                     ProcessResultDefault(
                         SyntaxAnalyserDefault(p.grammar!!.qualifiedName, p.typeModel, p.scopeModel),
@@ -62,7 +62,7 @@ class test_StatechartTools_References {
                 }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserDefault(p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
                 styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
-                formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.grammar!!.qualifiedName, p.typeModel), "") }
+                formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.typeModel), "") }
                 completionProvider { p -> ProcessResultDefault(CompletionProviderDefault(p.grammar!!, p.typeModel, p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
             }
             Agl.processorFromGrammar(grm, cfg)
@@ -102,7 +102,7 @@ class test_StatechartTools_References {
         val result = Agl.registry.agl.scopes.processor!!.process(
             scopeModelStr,
             Agl.options {
-                semanticAnalysis { context(ContextFromTypeModel(grammarList.last().qualifiedName, typeModel)) }
+                semanticAnalysis { context(ContextFromTypeModel(typeModel)) }
             }
         )
         assertTrue(result.issues.isEmpty(), result.issues.joinToString("\n") { it.toString() })
@@ -274,7 +274,7 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextSimple {
-            scopedItem("I", "Interface", "/0/statechartDeclaration/0") {
+            scopedItem("I", "Interface", "/0/statechartLevelDeclaration/0") {
             }
         }
 
@@ -291,8 +291,8 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextSimple {
-            scopedItem("I", "Interface", "/0/statechartDeclaration/0") {
-                item("v", "VariableDeclaration", "/0/statechartDeclaration/0/annotatedDeclaration/0/memberDeclaration")
+            scopedItem("I", "Interface", "/0/statechartLevelDeclaration/0") {
+                item("v", "VariableDeclaration", "/0/statechartLevelDeclaration/0/annotatedDeclaration/0/memberDeclaration")
             }
         }
 
@@ -311,10 +311,10 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextSimple {
-            scopedItem("ImportDeclarations", "ImportDeclarations", "/0/statechartDeclaration/0") {
-                item("\"x\"", "ImportedName", "/0/statechartDeclaration/0/importedName/0")
-                item("\"y\"", "ImportedName", "/0/statechartDeclaration/0/importedName/1")
-                item("\"z\"", "ImportedName", "/0/statechartDeclaration/0/importedName/2")
+            scopedItem("ImportDeclarations", "ImportDeclarations", "/0/statechartLevelDeclaration/0") {
+                item("\"x\"", "ImportedName", "/0/statechartLevelDeclaration/0/importedName/0")
+                item("\"y\"", "ImportedName", "/0/statechartLevelDeclaration/0/importedName/1")
+                item("\"z\"", "ImportedName", "/0/statechartLevelDeclaration/0/importedName/2")
             }
         }
 
@@ -331,8 +331,8 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextSimple {
-            scopedItem("InternalDeclarations", "InternalDeclarations", "/0/statechartDeclaration/0") {
-                item("O", "OperationDeclaration", "/0/statechartDeclaration/0/internalDeclaration/0/memberDeclaration")
+            scopedItem("InternalDeclarations", "InternalDeclarations", "/0/statechartLevelDeclaration/0") {
+                item("O", "OperationDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration")
             }
         }
 
@@ -410,7 +410,7 @@ StatechartSpecification {
             element("StatechartSpecification") {
                 propertyNull("namespace")
                 propertyListOfElement("annotation") {}
-                propertyListOfElement("statechartDeclaration") {
+                propertyListOfElement("statechartLevelDeclaration") {
                     element("InternalDeclarations") {
                         propertyListOfElement("internalDeclaration") {
                             element("AnnotatedDeclaration") {

@@ -88,11 +88,17 @@ interface TypeNamespace {
     fun findOwnedOrCreateDataTypeNamed(typeName: String): DataType
     fun findOwnedOrCreateCollectionTypeNamed(typeName: String): CollectionType
 
-    fun createTypeInstance(qualifiedOrImportedTypeName: String, typeArguments: List<TypeInstance> = emptyList(), isNullable: Boolean = false): TypeInstance
-    fun createTupleTypeInstance(type: TupleType, arguments: List<TypeInstance>, nullable: Boolean): TypeInstance
-    fun createUnnamedSuperTypeTypeInstance(type: UnnamedSuperTypeType, arguments: List<TypeInstance>, nullable: Boolean): TypeInstance
+    fun createTypeInstance(
+        context: TypeDeclaration?,
+        qualifiedOrImportedTypeName: String,
+        typeArguments: Map<String, TypeInstance> = emptyMap(),
+        isNullable: Boolean = false
+    ): TypeInstance
 
-    fun createUnnamedSuperTypeType(subtypes: List<TypeInstance>): UnnamedSuperTypeType
+    fun createTupleTypeInstance(type: TupleType, typeArguments: Map<String, TypeInstance>, nullable: Boolean): TypeInstance
+    fun createUnnamedSupertypeTypeInstance(type: UnnamedSupertypeType, typeArguments: Map<String, TypeInstance>, nullable: Boolean): TypeInstance
+
+    fun createUnnamedSupertypeType(subtypes: List<TypeInstance>): UnnamedSupertypeType
 
     fun createTupleType(): TupleType
 
@@ -102,9 +108,28 @@ interface TypeNamespace {
 
 interface TypeInstance {
     val namespace: TypeNamespace
-    val type: TypeDeclaration
-    val typeArguments: List<TypeInstance>
+    val typeArguments: Map<String, TypeInstance>
     val isNullable: Boolean
+
+    /**
+     * the name of the type, if it is resolvable,
+     * or the name the instance refers to (e.g. a type parameter)
+     */
+    val typeName: String
+
+    val qualifiedTypeName: String
+
+    /**
+     * {derived} type is resolved via the namespace
+     */
+    val type: TypeDeclaration
+
+    /**
+     * properties from the type, with type parameters resolved
+     */
+    val resolvedProperty: Map<String, PropertyDeclaration>
+
+    fun resolved(resolvingTypeArguments: Map<String, TypeInstance>): TypeInstance
 
     fun notNullable(): TypeInstance
     fun nullable(): TypeInstance
@@ -130,10 +155,10 @@ interface TypeDeclaration {
 
     fun signature(context: TypeNamespace?, currentDepth: Int = 0): String
 
-    fun instance(arguments: List<TypeInstance> = emptyList(), nullable: Boolean = false): TypeInstance
+    fun instance(arguments: Map<String, TypeInstance> = emptyMap(), nullable: Boolean = false): TypeInstance
 
-    fun appendDerivedProperty(name: String, type: TypeInstance, expression: String)
-    fun appendMethod(name: String, parameters: List<ParameterDefinition>, type: TypeInstance, expression: String)
+    fun appendDerivedProperty(name: String, typeInstance: TypeInstance, expression: String)
+    fun appendMethod(name: String, parameters: List<ParameterDefinition>, typeInstance: TypeInstance, body: String)
 
     fun asString(context: TypeNamespace): String
 }
@@ -154,7 +179,7 @@ interface StructuredType : TypeDeclaration {
     /**
      * append property at the next index
      */
-    fun appendStoredProperty(name: String, type: TypeInstance, characteristics: Set<PropertyCharacteristic>, index: Int = -1): PropertyDeclaration
+    fun appendStoredProperty(name: String, typeInstance: TypeInstance, characteristics: Set<PropertyCharacteristic>, index: Int = -1): PropertyDeclaration
 
 }
 
@@ -189,7 +214,7 @@ interface DataType : StructuredType {
     fun addSubtype(qualifiedTypeName: String)
 }
 
-interface UnnamedSuperTypeType : TypeDeclaration {
+interface UnnamedSupertypeType : TypeDeclaration {
 
     // identifier, needs a number else can't implement equals without a recursive loop
     val id: Int
@@ -229,6 +254,8 @@ interface PropertyDeclaration {
     val isConstructor: Boolean
     val isMember: Boolean
     val isDerived: Boolean
+
+    fun resolved(typeArguments: Map<String, TypeInstance>): PropertyDeclaration
 }
 
 enum class PropertyCharacteristic {

@@ -54,7 +54,7 @@ class TypeModelFromGrammarConfigurationDefault() : TypeModelFromGrammarConfigura
         }.replaceFirstChar { it.lowercase() }
         val name = when (ruleItemType) {
             is PrimitiveType -> baseName
-            is UnnamedSuperTypeType -> baseName
+            is UnnamedSupertypeType -> baseName
             is CollectionType -> when (ruleItem) {
                 is NonTerminal -> ruleItem.name.lower()
                 is Terminal -> GrammarTypeNamespaceFromGrammar.UNNAMED_LIST_PROPERTY_NAME

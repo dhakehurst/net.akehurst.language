@@ -103,8 +103,8 @@ fun Navigation.propertyDeclarationFor(root: TypeDeclaration?): PropertyDeclarati
             null -> null
             is DataType -> type.allProperty[pn]
             is TupleType -> type.property[pn]
-            is CollectionType -> TODO()
-            is UnnamedSuperTypeType -> TODO()
+            is CollectionType -> type.property[pn]
+            is UnnamedSupertypeType -> type.property[pn]
             else -> error("subtype of TypeDefinition not handled: '${type::class.simpleName}'")
         }
         type = pd?.typeInstance?.type

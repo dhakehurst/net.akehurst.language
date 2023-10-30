@@ -19,6 +19,7 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.collections.BinaryHeap
+import net.akehurst.language.collections.deepClone
 
 class GraphStructuredStack<E>(
     val _growingHeadHeap: BinaryHeap<E, E>,
@@ -159,6 +160,15 @@ class GraphStructuredStack<E>(
                 if (Debug.CHECK) check()
                 prev
             }
+        }
+    }
+
+    fun snapshotFor(head: E): Map<E, Set<E>>? {
+        val prev = _previous[head]
+        return when {
+            null == prev -> null
+            //return a clone of whole previous graph, because its quicker than copying just the wanted bits - I think
+            else -> _previous.deepClone()
         }
     }
 

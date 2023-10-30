@@ -18,32 +18,38 @@ package net.akehurst.language.agl.parser
 
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.Transition
+import net.akehurst.language.agl.runtime.graph.GrowingNodeIndex
 
 internal sealed class FailedParseReason(
     val position: Int,
-    val transition: Transition
+    val transition: Transition,
+    val gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>?
 )
 
 internal class FailedParseReasonLookahead(
     position: Int,
     transition: Transition,
+    gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>?,
     val runtimeLhs: Set<LookaheadSet>,
     val possibleEndOfText: Set<LookaheadSet>
-) : FailedParseReason(position, transition)
+) : FailedParseReason(position, transition, gssSnapshot)
 
 internal class FailedParseReasonWidthTo(
     position: Int,
     transition: Transition,
-) : FailedParseReason(position, transition)
+    gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>?
+) : FailedParseReason(position, transition, gssSnapshot)
 
 internal class FailedParseReasonGraftRTG(
     position: Int,
     transition: Transition,
+    gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>?,
     val prevNumNonSkipChildren: Int
-) : FailedParseReason(position, transition)
+) : FailedParseReason(position, transition, gssSnapshot)
 
 internal class FailedParseReasonEmbedded(
     position: Int,
     transition: Transition,
+    gssSnapshot: Map<GrowingNodeIndex, Set<GrowingNodeIndex>>?,
     val embededFailedParseReasons: Map<Int, MutableList<FailedParseReason>>
-) : FailedParseReason(position, transition)
+) : FailedParseReason(position, transition, gssSnapshot)

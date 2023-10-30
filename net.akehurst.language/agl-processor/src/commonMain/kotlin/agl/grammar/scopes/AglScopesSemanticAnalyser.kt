@@ -33,6 +33,7 @@ import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.typemodel.api.CollectionType
 import net.akehurst.language.typemodel.api.DataType
 import net.akehurst.language.typemodel.api.TypeDeclaration
+import net.akehurst.language.typemodel.api.UnnamedSupertypeType
 
 class AglScopesSemanticAnalyser(
 ) : SemanticAnalyser<ScopeModelAgl, SentenceContext<String>> {
@@ -189,11 +190,13 @@ class AglScopesSemanticAnalyser(
                     null -> TODO()
                     is CollectionType -> {
                         val loopVarType = collTypeInstance.typeArguments[0].type
-                        val filteredLoopVarType = refExpr.ofType?.let {
-                            val ofType = _grammarNamespace?.findTypeNamed(it)
+                        val filteredLoopVarType = refExpr.ofType?.let { ofTypeName ->
+                            val ofType = _grammarNamespace?.findTypeNamed(ofTypeName)
                             when {
                                 null == ofType -> error("Should not happen, checked above.")
+                                //TODO: needs a conforms to to check transitive closure of supertypes
                                 loopVarType is DataType && ofType is DataType && ofType.allSuperTypes.any { it.type == loopVarType } -> ofType //no error
+                                loopVarType is UnnamedSupertypeType && loopVarType.subtypes.any { it.type == ofType } -> ofType
                                 else -> {
                                     raiseError(ref, "The of-type '${ofType.name}' is not a subtype of the loop variable type '${loopVarType.name}'")
                                     null

@@ -56,13 +56,14 @@ internal class RuntimeParser(
             val nonEmptyWidthOnly: Boolean,
             val reportErrors: Boolean,
             val reportGrammarAmbiguities: Boolean,
-            val allowEOTAfterSkip: Boolean
+            val allowEOTAfterSkip: Boolean,
+            val snapshoGss: Boolean
         )
 
         //val normalArgs = GrowArgs(true, false, false, false, true)
         //val forPossErrors = GrowArgs(false, true, false, true, true, true)
         //val heightGraftOnly = GrowArgs(false, true, true, false, false, true)
-        val forExpectedAt = GrowArgs(false, false, false, false, true, false, true)
+        val forExpectedAt = GrowArgs(false, false, false, false, true, false, true, true)
 
     }
 
@@ -396,9 +397,9 @@ internal class RuntimeParser(
         }
         transitions.minus(transWithValidLookahead.map { it.first }).forEach {
             when (it.action) {
-                ParseAction.HEIGHT -> recordFailedHeightLh(parseArgs, head.nextInputPositionAfterSkip, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
-                ParseAction.GRAFT -> recordFailedGraftLH(parseArgs, head.nextInputPositionAfterSkip, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
-                ParseAction.GOAL -> recordFailedGraftLH(parseArgs, head.nextInputPositionAfterSkip, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
+                ParseAction.HEIGHT -> recordFailedHeightLh(parseArgs, head, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
+                ParseAction.GRAFT -> recordFailedGraftLH(parseArgs, head, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
+                ParseAction.GOAL -> recordFailedGraftLH(parseArgs, head, it, previous.runtimeState.runtimeLookaheadSet, possibleEndOfText)
                 else -> error("Internal Error: should never happen")
             }
         }
@@ -898,11 +899,11 @@ internal class RuntimeParser(
                         } else {
                             nextInputPositionAfterSkip
                         }
-                        recordFailedWidthLH(parseArgs, pos, transition, runtimeLhs, possibleEndOfText)
+                        recordFailedWidthLH(parseArgs, head, pos, transition, runtimeLhs, possibleEndOfText)
                         false
                     }
                 } else {
-                    recordFailedWidthTo(parseArgs, head.nextInputPositionAfterSkip, transition)
+                    recordFailedWidthTo(parseArgs, head, transition)
                     false
                 }
             }
@@ -963,7 +964,7 @@ internal class RuntimeParser(
                         buildSPPT = parseArgs.buildTree
                     )
                 } else {
-                    recordFailedHeightLh(parseArgs, head.nextInputPositionAfterSkip, transition, runtimeLhs, possibleEndOfText)
+                    recordFailedHeightLh(parseArgs, head, transition, runtimeLhs, possibleEndOfText)
                     false
                 }
             }
@@ -993,11 +994,11 @@ internal class RuntimeParser(
                             buildSPPT = parseArgs.buildTree
                         )
                     } else {
-                        recordFailedGraftLH(parseArgs, head.nextInputPositionAfterSkip, transition, runtimeLhs, possibleEndOfText)
+                        recordFailedGraftLH(parseArgs, head, transition, runtimeLhs, possibleEndOfText)
                         false
                     }
                 } else {
-                    recordFailedGraftRTG(parseArgs, head.nextInputPositionAfterSkip, transition, previous.numNonSkipChildren)
+                    recordFailedGraftRTG(parseArgs, head, transition, previous.numNonSkipChildren)
                     false
                 }
             }
@@ -1138,7 +1139,7 @@ internal class RuntimeParser(
                 } else {
                     //  could not parse embedded
                     //this.embeddedLastDropped[transition] = embeddedParser.lastDropped
-                    recordFailedEmbedded(parseArgs, head.nextInputPositionAfterSkip, transition, embeddedParser.failedReasons)
+                    recordFailedEmbedded(parseArgs, head, transition, embeddedParser.failedReasons)
                     false
                 }
             }
@@ -1180,39 +1181,75 @@ internal class RuntimeParser(
         }
     }
 
-    private fun recordFailedWidthTo(parseArgs: GrowArgs, position: Int, transition: Transition) {
+    private fun recordFailedWidthTo(parseArgs: GrowArgs, head: GrowingNodeIndex, transition: Transition) {
         if (parseArgs.reportErrors) {
-            failedReasonsAdd(FailedParseReasonWidthTo(position, transition))
+            val position = head.nextInputPositionAfterSkip
+            val gssSnapshot = when {
+                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head)
+                else -> null
+            }
+            failedReasonsAdd(FailedParseReasonWidthTo(position, transition, gssSnapshot))
         }
     }
 
-    private fun recordFailedWidthLH(parseArgs: GrowArgs, position: Int, transition: Transition, runtimeLhs: Set<LookaheadSet>, possibleEndOfText: Set<LookaheadSet>) {
+    private fun recordFailedWidthLH(
+        parseArgs: GrowArgs,
+        head: GrowingNodeIndex,
+        position: Int,
+        transition: Transition,
+        runtimeLhs: Set<LookaheadSet>,
+        possibleEndOfText: Set<LookaheadSet>
+    ) {
         if (parseArgs.reportErrors) {
-            failedReasonsAdd(FailedParseReasonLookahead(position, transition, runtimeLhs, possibleEndOfText))
+            val gssSnapshot = when {
+                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head)
+                else -> null
+            }
+            failedReasonsAdd(FailedParseReasonLookahead(position, transition, gssSnapshot, runtimeLhs, possibleEndOfText))
         }
     }
 
-    private fun recordFailedEmbedded(parseArgs: GrowArgs, position: Int, transition: Transition, failedEmbeddedReasons: Map<Int, MutableList<FailedParseReason>>) {
+    private fun recordFailedEmbedded(parseArgs: GrowArgs, head: GrowingNodeIndex, transition: Transition, failedEmbeddedReasons: Map<Int, MutableList<FailedParseReason>>) {
         if (parseArgs.reportErrors) {
-            failedReasonsAdd(FailedParseReasonEmbedded(position, transition, failedEmbeddedReasons))
+            val position = head.nextInputPositionAfterSkip
+            val gssSnapshot = when {
+                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head)
+                else -> null
+            }
+            failedReasonsAdd(FailedParseReasonEmbedded(position, transition, gssSnapshot, failedEmbeddedReasons))
         }
     }
 
-    private fun recordFailedHeightLh(parseArgs: GrowArgs, position: Int, transition: Transition, runtimeLhs: Set<LookaheadSet>, possibleEndOfText: Set<LookaheadSet>) {
+    private fun recordFailedHeightLh(parseArgs: GrowArgs, head: GrowingNodeIndex, transition: Transition, runtimeLhs: Set<LookaheadSet>, possibleEndOfText: Set<LookaheadSet>) {
         if (parseArgs.reportErrors) {
-            failedReasonsAdd(FailedParseReasonLookahead(position, transition, runtimeLhs, possibleEndOfText))
+            val position = head.nextInputPositionAfterSkip
+            val gssSnapshot = when {
+                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head)
+                else -> null
+            }
+            failedReasonsAdd(FailedParseReasonLookahead(position, transition, gssSnapshot, runtimeLhs, possibleEndOfText))
         }
     }
 
-    private fun recordFailedGraftRTG(parseArgs: GrowArgs, position: Int, transition: Transition, prevNumNonSkipChildren: Int) {
+    private fun recordFailedGraftRTG(parseArgs: GrowArgs, head: GrowingNodeIndex, transition: Transition, prevNumNonSkipChildren: Int) {
         if (parseArgs.reportErrors) {
-            failedReasonsAdd(FailedParseReasonGraftRTG(position, transition, prevNumNonSkipChildren))
+            val position = head.nextInputPositionAfterSkip
+            val gssSnapshot = when {
+                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head)
+                else -> null
+            }
+            failedReasonsAdd(FailedParseReasonGraftRTG(position, transition, gssSnapshot, prevNumNonSkipChildren))
         }
     }
 
-    private fun recordFailedGraftLH(parseArgs: GrowArgs, position: Int, transition: Transition, runtimeLhs: Set<LookaheadSet>, possibleEndOfText: Set<LookaheadSet>) {
+    private fun recordFailedGraftLH(parseArgs: GrowArgs, head: GrowingNodeIndex, transition: Transition, runtimeLhs: Set<LookaheadSet>, possibleEndOfText: Set<LookaheadSet>) {
         if (parseArgs.reportErrors) {
-            failedReasonsAdd(FailedParseReasonLookahead(position, transition, runtimeLhs, possibleEndOfText))
+            val position = head.nextInputPositionAfterSkip
+            val gssSnapshot = when {
+                parseArgs.snapshoGss -> this.graph._gss.snapshotFor(head)
+                else -> null
+            }
+            failedReasonsAdd(FailedParseReasonLookahead(position, transition, gssSnapshot, runtimeLhs, possibleEndOfText))
         }
     }
 }
