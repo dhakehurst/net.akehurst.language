@@ -191,14 +191,14 @@ class GrammarTypeNamespaceFromGrammar(
             type
         } else {
             val ruleType: TypeInstance = when (ruleItem) {
-                is EmptyRule -> SimpleTypeModelStdLib.NothingType.instance()
-                is Terminal -> if (forProperty) SimpleTypeModelStdLib.NothingType.instance() else SimpleTypeModelStdLib.String
+                is EmptyRule -> SimpleTypeModelStdLib.NothingType
+                is Terminal -> if (forProperty) SimpleTypeModelStdLib.NothingType else SimpleTypeModelStdLib.String
                 is NonTerminal -> {
                     val refRule = ruleItem.referencedRuleOrNull(this.grammar)
                     when {
-                        null == refRule -> SimpleTypeModelStdLib.NothingType.instance()
+                        null == refRule -> SimpleTypeModelStdLib.NothingType
                         refRule.isLeaf -> SimpleTypeModelStdLib.String
-                        refRule.rhs is EmptyRule -> SimpleTypeModelStdLib.NothingType.instance()
+                        refRule.rhs is EmptyRule -> SimpleTypeModelStdLib.NothingType
                         else -> typeForGrammarRule(refRule)
                     }
                 }
@@ -215,7 +215,7 @@ class GrammarTypeNamespaceFromGrammar(
                 is OptionalItem -> {
                     val itemType = typeForRuleItem(ruleItem.item, forProperty) //TODO: could cause recursion overflow
                     when (itemType.type) {
-                        SimpleTypeModelStdLib.NothingType -> SimpleTypeModelStdLib.NothingType.instance()
+                        SimpleTypeModelStdLib.NothingType.type -> SimpleTypeModelStdLib.NothingType
 
                         else -> {
                             val t = itemType.type.instance(emptyList(), true)
@@ -232,9 +232,9 @@ class GrammarTypeNamespaceFromGrammar(
                     _typeForRuleItem[ruleItem] = t
                     val itemType = typeForRuleItem(ruleItem.item, forProperty)
                     when (itemType.type) {
-                        SimpleTypeModelStdLib.NothingType -> {
+                        SimpleTypeModelStdLib.NothingType.type -> {
                             _typeForRuleItem.remove(ruleItem)
-                            SimpleTypeModelStdLib.NothingType.instance()
+                            SimpleTypeModelStdLib.NothingType
                         }
 
                         else -> {
@@ -252,12 +252,12 @@ class GrammarTypeNamespaceFromGrammar(
                     val itemType = typeForRuleItem(ruleItem.item, forProperty)
                     val sepType = typeForRuleItem(ruleItem.separator, forProperty)
                     when {
-                        itemType.type == SimpleTypeModelStdLib.NothingType -> {
+                        itemType.type == SimpleTypeModelStdLib.NothingType.type -> {
                             _typeForRuleItem.remove(ruleItem)
-                            SimpleTypeModelStdLib.NothingType.instance()
+                            SimpleTypeModelStdLib.NothingType
                         }
 
-                        sepType.type == SimpleTypeModelStdLib.NothingType -> {
+                        sepType.type == SimpleTypeModelStdLib.NothingType.type -> {
                             val lt = SimpleTypeModelStdLib.List.instance(listOf(itemType))
                             _typeForRuleItem[ruleItem] = lt
                             lt
@@ -292,8 +292,8 @@ class GrammarTypeNamespaceFromGrammar(
         items.forEachIndexed { idx, it -> createPropertyDeclaration(tt, it, idx) }
         return when {
             tt.property.isEmpty() -> {
-                this._typeForRuleItem[ruleItem] = SimpleTypeModelStdLib.NothingType.instance()
-                SimpleTypeModelStdLib.NothingType.instance()
+                this._typeForRuleItem[ruleItem] = SimpleTypeModelStdLib.NothingType
+                SimpleTypeModelStdLib.NothingType
             }
 
             else -> ti
@@ -317,7 +317,7 @@ class GrammarTypeNamespaceFromGrammar(
     private fun typeForChoiceRule(choice: Choice, choiceRule: GrammarRule): TypeInstance {
         val subtypes = choice.alternative.map { typeForRuleItem(it, false) }
         return when {
-            subtypes.all { it.type == SimpleTypeModelStdLib.NothingType } -> SimpleTypeModelStdLib.NothingType.instance(emptyList(), subtypes.any { it.isNullable })
+            subtypes.all { it.type == SimpleTypeModelStdLib.NothingType.type } -> SimpleTypeModelStdLib.NothingType.type.instance(emptyList(), subtypes.any { it.isNullable })
             subtypes.all { it.type is PrimitiveType } -> SimpleTypeModelStdLib.String
             subtypes.all { it.type is DataType } -> findOrCreateElementType(choiceRule) { newType ->
                 subtypes.forEach {
@@ -327,7 +327,7 @@ class GrammarTypeNamespaceFromGrammar(
             }
 
             subtypes.all { it.type == SimpleTypeModelStdLib.List } -> { //=== PrimitiveType.LIST } -> {
-                val itemType = SimpleTypeModelStdLib.AnyType.instance()//TODO: compute better elementType ?
+                val itemType = SimpleTypeModelStdLib.AnyType//TODO: compute better elementType ?
                 val choiceType = SimpleTypeModelStdLib.List.instance(listOf(itemType))
                 choiceType
             }
@@ -336,7 +336,7 @@ class GrammarTypeNamespaceFromGrammar(
                 1 == subtypes.map { (it.type as TupleType).property.values.map { Pair(it.name, it) }.toSet() }.toSet().size -> {
                     val t = subtypes.first()
                     when {
-                        t.type is TupleType && (t.type as TupleType).properties.isEmpty() -> SimpleTypeModelStdLib.NothingType.instance()
+                        t.type is TupleType && (t.type as TupleType).properties.isEmpty() -> SimpleTypeModelStdLib.NothingType
                         else -> t
                     }
                 }
@@ -351,11 +351,11 @@ class GrammarTypeNamespaceFromGrammar(
     private fun typeForChoiceRuleItem(choice: Choice, forProperty: Boolean): TypeInstance {
         val subtypes = choice.alternative.map { typeForRuleItem(it, forProperty) }
         return when {
-            subtypes.all { it.type == SimpleTypeModelStdLib.NothingType } -> SimpleTypeModelStdLib.NothingType.instance(emptyList(), subtypes.any { it.isNullable })
+            subtypes.all { it.type == SimpleTypeModelStdLib.NothingType.type } -> SimpleTypeModelStdLib.NothingType.type.instance(emptyList(), subtypes.any { it.isNullable })
             subtypes.all { it.type is PrimitiveType } -> SimpleTypeModelStdLib.String
             subtypes.all { it.type is DataType } -> _namespace.createUnnamedSupertypeType(subtypes.map { it }).instance()
             subtypes.all { it.type == SimpleTypeModelStdLib.List } -> { //=== PrimitiveType.LIST } -> {
-                val itemType = SimpleTypeModelStdLib.AnyType.instance()//TODO: compute better elementType ?
+                val itemType = SimpleTypeModelStdLib.AnyType//TODO: compute better elementType ?
                 val choiceType = SimpleTypeModelStdLib.List.instance(listOf(itemType))
                 choiceType
             }
@@ -364,7 +364,7 @@ class GrammarTypeNamespaceFromGrammar(
                 1 == subtypes.map { (it.type as TupleType).property.values.map { Pair(it.name, it) }.toSet() }.toSet().size -> {
                     val t = subtypes.first()
                     when {
-                        t.type is TupleType && (t.type as TupleType).properties.isEmpty() -> SimpleTypeModelStdLib.NothingType.instance()
+                        t.type is TupleType && (t.type as TupleType).properties.isEmpty() -> SimpleTypeModelStdLib.NothingType
                         else -> t
                     }
                 }
@@ -393,7 +393,7 @@ class GrammarTypeNamespaceFromGrammar(
             is Choice -> {
                 val tu = typeForRuleItem(ruleItem, true)
                 when (tu.type) {
-                    SimpleTypeModelStdLib.NothingType -> Unit
+                    SimpleTypeModelStdLib.NothingType.type -> Unit
                     else -> {
                         val n = propertyNameFor(et, ruleItem, tu.type)
                         createUniquePropertyDeclaration(et, n, tu, childIndex)
@@ -404,7 +404,7 @@ class GrammarTypeNamespaceFromGrammar(
             is OptionalItem -> {
                 val t = typeForRuleItem(ruleItem, true)
                 when {
-                    t.type == SimpleTypeModelStdLib.NothingType -> Unit
+                    t.type == SimpleTypeModelStdLib.NothingType.type -> Unit
                     else -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item, t.type), t, childIndex)
                 }
             }
@@ -412,7 +412,7 @@ class GrammarTypeNamespaceFromGrammar(
             is SimpleList -> {
                 val t = typeForRuleItem(ruleItem, true)
                 when {
-                    t.type == SimpleTypeModelStdLib.NothingType -> Unit
+                    t.type == SimpleTypeModelStdLib.NothingType.type -> Unit
                     else -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item, t.type), t, childIndex)
                 }
             }
@@ -420,7 +420,7 @@ class GrammarTypeNamespaceFromGrammar(
             is SeparatedList -> {
                 val t = typeForRuleItem(ruleItem, true)
                 when {
-                    t.type == SimpleTypeModelStdLib.NothingType -> Unit
+                    t.type == SimpleTypeModelStdLib.NothingType.type -> Unit
                     else -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item, t.type), t, childIndex)
                 }
             }
@@ -428,7 +428,7 @@ class GrammarTypeNamespaceFromGrammar(
             is Group -> {
                 val gt = typeForGroup(ruleItem, true)
                 when (gt.type) {
-                    SimpleTypeModelStdLib.NothingType -> Unit
+                    SimpleTypeModelStdLib.NothingType.type -> Unit
                     else -> {
                         val content = ruleItem.groupedContent
                         val pName = when (content) {

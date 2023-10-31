@@ -24,8 +24,8 @@ object SimpleTypeModelStdLib : TypeNamespaceAbstract(emptyList()) {
     override val qualifiedName: String = "std"
 
     //TODO: need some other kinds of type for these really
-    val AnyType = super.findOrCreateSpecialTypeNamed("\$Any")
-    val NothingType = super.findOrCreateSpecialTypeNamed("\$Nothing")
+    val AnyType = super.findOrCreateSpecialTypeNamed("Any").instance()
+    val NothingType = super.findOrCreateSpecialTypeNamed("Nothing").instance()
     //val TupleType = super.findOrCreateSpecialTypeNamed("\$Tuple")
     //val UnnamedSuperTypeType = super.findOrCreateSpecialTypeNamed("\$UnnamedSuperType")
 

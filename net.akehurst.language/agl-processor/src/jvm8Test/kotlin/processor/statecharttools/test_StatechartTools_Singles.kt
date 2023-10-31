@@ -131,7 +131,7 @@ class test_StatechartTools_Singles {
     fun process_Global_StatechartLevelDeclaration_var_MyVar_integer() {
         val grammar = "Global"
         val goal = "StatechartLevelDeclaration"
-        val sentence = "var MyVar : integer"
+        val sentence = "internal: var MyVar : integer"
         test_process_format(grammar, goal, sentence)
     }
 
@@ -139,7 +139,7 @@ class test_StatechartTools_Singles {
     fun process_Global_StatechartLevelDeclaration_var_MyVar_integer_ASS_97() {
         val grammar = "Global"
         val goal = "StatechartLevelDeclaration"
-        val sentence = "var MyVar : integer = 97"
+        val sentence = "internal: var MyVar : integer = 97"
         test_process_format(grammar, goal, sentence)
     }
 

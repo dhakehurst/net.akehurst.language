@@ -19,7 +19,6 @@ package test;
 
 import kotlin.Unit;
 import net.akehurst.language.agl.processor.Agl;
-import net.akehurst.language.agl.syntaxAnalyser.ContextSimple;
 import net.akehurst.language.api.asm.AsmSimple;
 import net.akehurst.language.api.processor.*;
 import net.akehurst.language.api.sppt.LeafData;

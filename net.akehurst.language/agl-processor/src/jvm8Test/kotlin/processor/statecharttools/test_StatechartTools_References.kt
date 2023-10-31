@@ -332,7 +332,7 @@ class test_StatechartTools_References {
 
         val expected = contextSimple {
             scopedItem("InternalDeclarations", "InternalDeclarations", "/0/statechartLevelDeclaration/0") {
-                item("O", "OperationDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration")
+                scopedItem("O", "OperationDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration") {}
             }
         }
 
@@ -398,8 +398,8 @@ StatechartSpecification {
         """.trimIndent()
 
         val expectedContext = contextSimple {
-            scopedItem("InternalDeclarations", "InternalDeclarations", "/0/statechartDeclaration/0") {
-                item("func", "OperationDeclaration", "/0/statechartDeclaration/0/internalDeclaration/0/memberDeclaration")
+            scopedItem("InternalDeclarations", "InternalDeclarations", "/0/statechartLevelDeclaration/0") {
+                item("func", "OperationDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration")
             }
         }
 

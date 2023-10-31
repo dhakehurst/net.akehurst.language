@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.runtime.structure
 
-import net.akehurst.language.agl.collections.CollectionsTest.matches
+import net.akehurst.language.collections.CollectionsTest.matches
 
 internal object RuntimeRuleSetTest {
 

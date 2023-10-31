@@ -89,14 +89,11 @@ interface TypeNamespace {
     fun findOwnedOrCreateCollectionTypeNamed(typeName: String): CollectionType
 
     fun createTypeInstance(
-        context: TypeDeclaration?,
-        qualifiedOrImportedTypeName: String,
-        typeArguments: Map<String, TypeInstance> = emptyMap(),
-        isNullable: Boolean = false
+        context: TypeDeclaration?, qualifiedOrImportedTypeName: String, typeArguments: List<TypeInstance> = emptyList(), isNullable: Boolean = false
     ): TypeInstance
 
-    fun createTupleTypeInstance(type: TupleType, typeArguments: Map<String, TypeInstance>, nullable: Boolean): TypeInstance
-    fun createUnnamedSupertypeTypeInstance(type: UnnamedSupertypeType, typeArguments: Map<String, TypeInstance>, nullable: Boolean): TypeInstance
+    fun createTupleTypeInstance(type: TupleType, typeArguments: List<TypeInstance>, nullable: Boolean): TypeInstance
+    fun createUnnamedSupertypeTypeInstance(type: UnnamedSupertypeType, typeArguments: List<TypeInstance>, nullable: Boolean): TypeInstance
 
     fun createUnnamedSupertypeType(subtypes: List<TypeInstance>): UnnamedSupertypeType
 
@@ -108,7 +105,7 @@ interface TypeNamespace {
 
 interface TypeInstance {
     val namespace: TypeNamespace
-    val typeArguments: Map<String, TypeInstance>
+    val typeArguments: List<TypeInstance>
     val isNullable: Boolean
 
     /**
@@ -155,7 +152,7 @@ interface TypeDeclaration {
 
     fun signature(context: TypeNamespace?, currentDepth: Int = 0): String
 
-    fun instance(arguments: Map<String, TypeInstance> = emptyMap(), nullable: Boolean = false): TypeInstance
+    fun instance(arguments: List<TypeInstance> = emptyList(), nullable: Boolean = false): TypeInstance
 
     fun appendDerivedProperty(name: String, typeInstance: TypeInstance, expression: String)
     fun appendMethod(name: String, parameters: List<ParameterDefinition>, typeInstance: TypeInstance, body: String)

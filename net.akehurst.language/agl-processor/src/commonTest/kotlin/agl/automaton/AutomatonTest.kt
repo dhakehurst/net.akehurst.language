@@ -16,12 +16,11 @@
 
 package net.akehurst.language.agl.automaton
 
-
-import net.akehurst.language.agl.collections.CollectionsTest.matches
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSetTest.matches
 import net.akehurst.language.api.automaton.Automaton
+import net.akehurst.language.collections.CollectionsTest.matches
 
 internal object AutomatonTest {
 
