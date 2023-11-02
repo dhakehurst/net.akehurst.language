@@ -140,10 +140,13 @@ interface TypeDeclaration {
     val qualifiedName: String
     val typeParameters: List<String>
 
-    val property: Map<String, PropertyDeclaration>
-    val properties: Map<Int, PropertyDeclaration>
+    val property: List<PropertyDeclaration>
+    val method: List<MethodDeclaration>
 
-    val method: Map<String, MethodDeclaration>
+    /**
+     * all properties from this and transitive closure of supertypes
+     */
+    val allProperty: Map<String, PropertyDeclaration>
 
     /**
      * information about this type
@@ -154,8 +157,14 @@ interface TypeDeclaration {
 
     fun instance(arguments: List<TypeInstance> = emptyList(), nullable: Boolean = false): TypeInstance
 
-    fun appendDerivedProperty(name: String, typeInstance: TypeInstance, expression: String)
-    fun appendMethod(name: String, parameters: List<ParameterDefinition>, typeInstance: TypeInstance, body: String)
+    fun getPropertyByIndexOrNull(i: Int): PropertyDeclaration?
+    fun findPropertyOrNull(name: String): PropertyDeclaration?
+    fun findMethodOrNull(name: String): MethodDeclaration?
+
+    fun appendPropertyPrimitive(name: String, typeInstance: TypeInstance, description: String, expression: (self: Any) -> Any)
+    fun appendPropertyDerived(name: String, typeInstance: TypeInstance, description: String, expression: String)
+    fun appendMethodPrimitive(name: String, parameters: List<ParameterDefinition>, typeInstance: TypeInstance, description: String, body: (self: Any, arguments: List<Any>) -> Any)
+    fun appendMethodDerived(name: String, parameters: List<ParameterDefinition>, typeInstance: TypeInstance, description: String, body: String)
 
     fun asString(context: TypeNamespace): String
 }
@@ -171,12 +180,10 @@ interface StructuredType : TypeDeclaration {
 
     fun propertiesWithCharacteristic(chr: PropertyCharacteristic): List<PropertyDeclaration>
 
-    fun getPropertyByIndex(i: Int): PropertyDeclaration?
-
     /**
      * append property at the next index
      */
-    fun appendStoredProperty(name: String, typeInstance: TypeInstance, characteristics: Set<PropertyCharacteristic>, index: Int = -1): PropertyDeclaration
+    fun appendPropertyStored(name: String, typeInstance: TypeInstance, characteristics: Set<PropertyCharacteristic>, index: Int = -1): PropertyDeclaration
 
 }
 
@@ -201,11 +208,6 @@ interface DataType : StructuredType {
      * transitive closure of supertypes
      */
     val allSuperTypes: List<TypeInstance>
-
-    /**
-     * all properties from this and transitive closure of supertypes
-     */
-    val allProperty: Map<String, PropertyDeclaration>
 
     fun addSupertype(qualifiedTypeName: String)
     fun addSubtype(qualifiedTypeName: String)
@@ -234,6 +236,7 @@ interface PropertyDeclaration {
     val name: String
     val typeInstance: TypeInstance
     val characteristics: Set<PropertyCharacteristic>
+    val description: String
 
     // Important: indicates the child number in an SPPT,
     // assists SimpleAST generation,
@@ -285,16 +288,21 @@ enum class PropertyCharacteristic {
     MEMBER,
 
     /**
-     * property is derived, calculated, not stored
+     * property is derived, calculated by given expression, not stored
      */
-    DERIVED
+    DERIVED,
+
+    /**
+     * property is primitive, with built-in calculation, not stored
+     */
+    PRIMITIVE
 }
 
 interface MethodDeclaration {
     val owner: TypeDeclaration
     val name: String
     val parameters: List<ParameterDefinition>
-    val body: String
+    val description: String
 }
 
 interface ParameterDefinition {

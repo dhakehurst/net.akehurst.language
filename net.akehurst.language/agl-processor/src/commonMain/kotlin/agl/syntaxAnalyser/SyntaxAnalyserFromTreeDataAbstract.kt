@@ -31,8 +31,6 @@ import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
 val SpptDataNode.isEmptyMatch get() = this.startPosition == this.nextInputPosition
-//fun SpptDataNode.locationIn(sentence: Sentence) = sentence.locationFor(this)
-//fun SpptDataNode.matchedTextNoSkip(sentence: Sentence) = sentence.matchedTextNoSkip(this)
 
 abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAnalyser<AsmType> {
 
@@ -40,6 +38,9 @@ abstract class SyntaxAnalyserFromTreeDataAbstract<out AsmType : Any> : SyntaxAna
     val issues = IssueHolder(LanguageProcessorPhase.SYNTAX_ANALYSIS)
 
     abstract val asm: AsmType
+
+    override val extendsSyntaxAnalyser: Map<String, SyntaxAnalyser<*>> = emptyMap()
+    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<*>> = emptyMap()
 
     override fun clear() {
         this.locationMap.clear()

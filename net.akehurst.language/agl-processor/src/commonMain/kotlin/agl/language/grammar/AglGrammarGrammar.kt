@@ -199,10 +199,10 @@ grammar AglGrammar {
     embedded = qualifiedName '::' nonTerminal ;
     terminal = LITERAL | PATTERN ;
     qualifiedName = [IDENTIFIER / '.']+ ;
-    IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*";
-    LITERAL = "'([^'\\]|\\'|\\\\)*'" ;
-    PATTERN = "\"(\\\"|[^\"])*\"" ;
-    POSITIVE_INTEGER = "[0-9]+" ;
+    leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9]*";
+    leaf LITERAL = "'([^'\\]|\\'|\\\\)*'" ;
+    leaf PATTERN = "\"(\\\"|[^\"])*\"" ;
+    leaf POSITIVE_INTEGER = "[0-9]+" ;
     
     preferenceRule = 'preference' simpleItem '{' preferenceOptionList '}' ;
     preferenceOptionList = preferenceOption* ;

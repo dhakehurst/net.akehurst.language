@@ -24,6 +24,7 @@ import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNode
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.sppt.SpptWalker
+import net.akehurst.language.collections.MutableStack
 import net.akehurst.language.collections.mutableStackOf
 import kotlin.reflect.KFunction3
 
@@ -36,7 +37,7 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
     override val asm: AsmType get() = _root ?: error("Root of asm not set, walk must have failed")
 
     override fun walkTree(sentence: Sentence, treeData: TreeDataComplete<out SpptDataNode>, skipDataAsTree: Boolean) {
-        val syntaxAnalyserStack = mutableStackOf(this)
+        val syntaxAnalyserStack: MutableStack<SyntaxAnalyserByMethodRegistrationAbstract<Any>> = mutableStackOf(this)
         val stack = mutableStackOf<Any?>()
         val walker = object : SpptWalker {
             override fun beginTree() {}
@@ -92,12 +93,6 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
                         obj?.let { locationMap[obj] = sentence.locationForNode(nodeInfo.node) }
                         stack.push(obj)
                     }
-
-//                    nodeInfo.node.rule.isListOptional && 1 == children.size && null == children[0] -> {
-//                        val obj = emptyList<Any>()
-//                        obj.let { locationMap[obj] = sentence.locationFor(nodeInfo.node) }
-//                        stack.push(obj)
-//                    }
 
                     else -> {
                         val branchName = nodeInfo.node.rule.tag
@@ -178,10 +173,16 @@ abstract class SyntaxAnalyserByMethodRegistrationAbstract<out AsmType : Any> : S
         if (branchHandlers.isEmpty()) {
             registerHandlers()
         }
-        return when {
+        //try to find handler in this SyntaxAnalyser
+        val selfHandler = when {
             begin -> this.branchHandlers_begin[branchName] as BranchHandler<T>?
             else -> this.branchHandlers[branchName] as BranchHandler<T>?
         }
+        // if not found then try extended SyntaxAnalysers
+        val handler = selfHandler ?: extendsSyntaxAnalyser.firstNotNullOfOrNull {
+            (it.value as SyntaxAnalyserByMethodRegistrationAbstract<Any>).findBranchHandler(branchName, begin)
+        }
+        return handler
     }
 
     private var _root: AsmType? = null

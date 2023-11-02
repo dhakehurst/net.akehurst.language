@@ -18,8 +18,8 @@ package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -61,7 +61,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
 
     abstract override var scopeModelStr: String?
 
-    override var scopeModel: ScopeModel?
+    override var scopeModel: CrossReferenceModel?
         get() = this.processor?.scopeModel
         set(value) {
             val oldValue = this.processor?.scopeModel
@@ -130,7 +130,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     override val grammarStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
     override val grammarObservers = mutableListOf<(oldValue: Grammar?, newValue: Grammar?) -> Unit>()
     override val scopeStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
-    override val scopeModelObservers = mutableListOf<(oldValue: ScopeModel?, newValue: ScopeModel?) -> Unit>()
+    override val scopeModelObservers = mutableListOf<(oldValue: CrossReferenceModel?, newValue: CrossReferenceModel?) -> Unit>()
     override val formatterStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
     override val formatterObservers = mutableListOf<(oldValue: AglFormatterModel?, newValue: AglFormatterModel?) -> Unit>()
     override val styleStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
@@ -161,7 +161,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     protected var _issues = IssueHolder(LanguageProcessorPhase.ALL)
     protected val _style: AglStyleModel? = null
 
-    protected var _scopeModelResolver: ScopeModelResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.scopeModelResolver) { _, oldValue, newValue ->
+    protected var _scopeModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.scopeModelResolver) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }

@@ -36,9 +36,14 @@ interface SyntaxAnalyser<out AsmType : Any> { //TODO: make transform type argume
     val locationMap: Map<Any, InputLocation>
 
     /**
-     * map of Embedded GrammarName -> SyntaxAnalyser for Embedded Language
+     * map of Extends GrammarName -> SyntaxAnalyser for extended Language
      */
-    val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<AsmType>>
+    val extendsSyntaxAnalyser: Map<String, SyntaxAnalyser<*>>
+
+    /**
+     * map of Embedded GrammarName -> SyntaxAnalyser for embedded Language
+     */
+    val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<*>>
 
     /**
      * reset the sppt2ast, clearing any cached values

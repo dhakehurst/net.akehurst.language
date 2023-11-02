@@ -22,14 +22,14 @@ import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.formatter.FormatterSimple
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
-import net.akehurst.language.agl.language.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.language.grammar.RuleItem
+import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
@@ -65,8 +65,8 @@ object GeneratedGrammar_Simple : GeneratedLanguageProcessorAbstract<AsmSimple, C
 
     override val defaultGoalRuleName: String = "S"
     override val mapToGrammar: (Int, Int) -> RuleItem get() = { _, _ -> TODO() }
-    override val scopeModel: ScopeModel by lazy {
-        val res = ScopeModelAgl.fromString(ContextFromGrammar.createContextFrom(listOf(grammar)), scopeModelString)
+    override val scopeModel: CrossReferenceModel by lazy {
+        val res = CrossReferenceModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(grammar)), scopeModelString)
         val asm = res.asm ?: error("Error creating ScopeModel.\n${res.issues}")
         asm
     }

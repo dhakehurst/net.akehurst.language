@@ -15,9 +15,11 @@
  *
  */
 
-package net.akehurst.language.api.semanticAnalyser
+package net.akehurst.language.api.language.reference
 
-interface ScopeModel {
+import net.akehurst.language.api.language.expressions.Expression
+
+interface CrossReferenceModel {
 
     val declarationsForNamespace: Map<String, DeclarationsForNamespace>
 
@@ -29,6 +31,7 @@ interface DeclarationsForNamespace {
 
     val qualifiedName: String
     val scopes: Map<String, ScopeDefinition>
+    val externalTypes: List<String>
     val references: List<ReferenceDefinition>
 
     fun isScopeDefinedFor(typeName: String): Boolean
@@ -73,16 +76,6 @@ interface Identifiable {
 
 interface ReferenceExpression {
 
-}
-
-interface Expression
-interface Navigation : Expression {
-    val value: List<String>
-}
-
-interface RootExpression : Expression {
-    val isNothing: Boolean
-    val isSelf: Boolean
 }
 
 /**

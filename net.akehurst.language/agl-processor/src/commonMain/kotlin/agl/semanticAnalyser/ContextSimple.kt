@@ -17,19 +17,23 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
-import net.akehurst.language.agl.language.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.expressions.evaluateFor
+import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.AsmElementProperty
 import net.akehurst.language.api.asm.AsmElementSimple
-import net.akehurst.language.api.semanticAnalyser.*
-import net.akehurst.language.typemodel.api.*
+import net.akehurst.language.api.language.expressions.Expression
+import net.akehurst.language.api.language.expressions.Navigation
+import net.akehurst.language.api.language.expressions.RootExpression
+import net.akehurst.language.api.language.reference.Scope
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
 class ContextSimple() : SentenceContext<AsmElementPath> {
 
     /**
      * The items in the scope contain a ScopePath to an element in an AsmSimple model
      */
-    override var rootScope = ScopeSimple<AsmElementPath>(null, "", ScopeModelAgl.ROOT_SCOPE_TYPE_NAME)
+    override var rootScope = ScopeSimple<AsmElementPath>(null, "", CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
 
     fun asString(): String = "contextSimple scope §root ${rootScope.asString()}"
 
@@ -42,38 +46,6 @@ class ContextSimple() : SentenceContext<AsmElementPath> {
     }
 
     override fun toString(): String = "ContextSimple"
-}
-
-fun Expression.evaluateFor(self: Any?) = when (this) {
-    is RootExpression -> this.evaluateFor(self)
-    is Navigation -> this.evaluateFor(self)
-    else -> error("Subtype of Expression not handled in 'evaluateFor'")
-}
-
-fun RootExpression.evaluateFor(self: Any?): String? = when {
-    this.isNothing -> null
-    this.isSelf -> when (self) {
-        null -> null
-        is String -> self
-        else -> error("evaluation of 'self' only works if self is a String, got an object of type '${self::class.simpleName}'")
-    }
-
-    else -> error("evaluateFor RootExpression not handled")
-}
-
-fun Navigation.evaluateFor(self: Any?) = when (self) {
-    null -> error("Cannot navigate from 'null'")
-    is AsmElementSimple -> {
-        this.value.fold(self as Any?) { acc, it ->
-            when (acc) {
-                null -> null
-                is AsmElementSimple -> acc.getPropertyOrNull(it)
-                else -> error("Cannot evaluate $this on object of type '${acc::class.simpleName}'")
-            }
-        }
-    }
-
-    else -> error("evaluateFor Navigation from object of type '${self::class.simpleName}' not handled")
 }
 
 fun Navigation.propertyFor(root: AsmElementSimple?): AsmElementProperty {
@@ -93,23 +65,6 @@ fun Navigation.propertyFor(root: AsmElementSimple?): AsmElementProperty {
             el?.properties?.get(this.value.last()) ?: error("Cannot navigate '$this' from null value")
         }
     }
-}
-
-fun Navigation.propertyDeclarationFor(root: TypeDeclaration?): PropertyDeclaration? {
-    var type = root
-    var pd: PropertyDeclaration? = null
-    for (pn in this.value) {
-        pd = when (type) {
-            null -> null
-            is DataType -> type.allProperty[pn]
-            is TupleType -> type.property[pn]
-            is CollectionType -> type.property[pn]
-            is UnnamedSupertypeType -> type.property[pn]
-            else -> error("subtype of TypeDefinition not handled: '${type::class.simpleName}'")
-        }
-        type = pd?.typeInstance?.type
-    }
-    return pd
 }
 
 fun Expression.createReferenceLocalToScope(scope: Scope<AsmElementPath>, element: AsmElementSimple) = when (this) {

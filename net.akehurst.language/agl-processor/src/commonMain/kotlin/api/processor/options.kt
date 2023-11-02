@@ -17,8 +17,8 @@
 package net.akehurst.language.api.processor
 
 import net.akehurst.language.api.formatter.AglFormatterModel
+import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -34,7 +34,7 @@ import net.akehurst.language.typemodel.api.TypeModel
  */
 
 //typealias GrammarResolver = () -> ProcessResult<Grammar>
-typealias ScopeModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<ScopeModel>
+typealias CrossReferenceModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<CrossReferenceModel>
 typealias TypeModelResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<TypeModel>
 typealias SyntaxAnalyserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<SyntaxAnalyser<AsmType>>
 typealias SemanticAnalyserResolver<AsmType, ContextType> = (LanguageProcessor<AsmType, ContextType>) -> ProcessResult<SemanticAnalyser<AsmType, ContextType>>
@@ -47,7 +47,7 @@ interface LanguageProcessorConfiguration<AsmType : Any, ContextType : Any> {
     val targetGrammarName: String?
     val defaultGoalRuleName: String?
     val typeModelResolver: TypeModelResolver<AsmType, ContextType>?
-    val scopeModelResolver: ScopeModelResolver<AsmType, ContextType>?
+    val scopeModelResolver: CrossReferenceModelResolver<AsmType, ContextType>?
     val syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
     val semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
     val formatterResolver: FormatterResolver<AsmType, ContextType>?

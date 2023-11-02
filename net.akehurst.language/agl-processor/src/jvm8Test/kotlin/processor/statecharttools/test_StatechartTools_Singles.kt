@@ -21,7 +21,7 @@ import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.language.format.AglFormatterModelDefault
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
-import net.akehurst.language.agl.language.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
@@ -40,9 +40,9 @@ import kotlin.test.assertTrue
 class test_StatechartTools_Singles {
 
     companion object {
-        private val grammarStr = this::class.java.getResource("/itemis-create/version_/grammar.agl")?.readText() ?: error("File not found")
+        private val grammarStr = this::class.java.getResource("/Statecharts/version_/grammar.agl")?.readText() ?: error("File not found")
 
-        private val scopeModelStr = this::class.java.getResource("/itemis-create/version_/references.agl")?.readText() ?: error("File not found")
+        private val scopeModelStr = this::class.java.getResource("/Statecharts/version_/references.agl")?.readText() ?: error("File not found")
 
         private val formatterStr = """
            AssignmentExpression -> "§expression §assignmentOperator §expression2"
@@ -58,7 +58,7 @@ class test_StatechartTools_Singles {
                 targetGrammarName(null) //use default
                 defaultGoalRuleName(null) //use default
                 typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
+                scopeModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
                     ProcessResultDefault(
                         SyntaxAnalyserDefault(p.grammar!!.qualifiedName, p.typeModel, p.scopeModel),

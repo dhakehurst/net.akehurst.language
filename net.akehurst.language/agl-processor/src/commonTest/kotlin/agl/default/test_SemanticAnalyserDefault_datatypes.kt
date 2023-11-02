@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl.default
 
-import net.akehurst.language.agl.language.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
@@ -59,12 +59,10 @@ class test_SemanticAnalyserDefault_datatypes {
         """.trimIndent()
         val scopeModelStr = """
             namespace test.Test {
-                identify Unit by §nothing
-                scope Unit {
-                    identify Primitive by id
-                    identify Datatype by id
-                    identify Collection by id
-                }
+                identify Primitive by id
+                identify Datatype by id
+                identify Collection by id
+
                 references {
                     in TypeReference {
                       property type refers-to Primitive|Datatype|Collection
@@ -72,7 +70,7 @@ class test_SemanticAnalyserDefault_datatypes {
                 }
             }
         """.trimIndent()
-        val scopeModel = ScopeModelAgl.fromString(null, scopeModelStr).let { it.asm ?: error(it.issues.toString()) }
+        val scopeModel = CrossReferenceModelDefault.fromString(null, scopeModelStr).let { it.asm ?: error(it.issues.toString()) }
         val processor = Agl.processorFromStringDefault(
             grammarStr,
             scopeModelStr
@@ -82,7 +80,7 @@ class test_SemanticAnalyserDefault_datatypes {
     @Test
     fun check_scopeModel() {
         val context = ContextFromTypeModel(processor.typeModel)
-        val res = ScopeModelAgl.fromString(context, scopeModelStr)
+        val res = CrossReferenceModelDefault.fromString(context, scopeModelStr)
         assertTrue(res.issues.isEmpty(), res.issues.toString())
     }
 

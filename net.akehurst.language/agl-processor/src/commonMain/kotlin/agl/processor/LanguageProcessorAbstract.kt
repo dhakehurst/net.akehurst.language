@@ -22,7 +22,7 @@ import net.akehurst.language.agl.formatter.FormatterSimple
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
 import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
-import net.akehurst.language.agl.language.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
@@ -33,9 +33,9 @@ import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.grammar.RuleItem
+import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.sppt.LeafData
 import net.akehurst.language.api.sppt.SPPTParser
@@ -86,10 +86,10 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         }
     }
 
-    override val scopeModel: ScopeModel by lazy {
+    override val scopeModel: CrossReferenceModel by lazy {
         val res = configuration.scopeModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
-        res?.asm ?: ScopeModelAgl()
+        res?.asm ?: CrossReferenceModelDefault()
     }
 
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? by lazy {

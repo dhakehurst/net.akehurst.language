@@ -18,26 +18,26 @@
 package net.akehurst.language.agl.default
 
 import net.akehurst.language.agl.agl.default.ScopeCreator
-import net.akehurst.language.agl.language.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
-import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 
 class SemanticAnalyserDefault(
-    val scopeModel: ScopeModel
+    val scopeModel: CrossReferenceModel
 ) : SemanticAnalyser<AsmSimple, ContextSimple> {
 
     private val _issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
-    private val _scopeModel = scopeModel as ScopeModelAgl?
+    private val _scopeModel = scopeModel as CrossReferenceModelDefault?
     private lateinit var _locationMap: Map<Any, InputLocation>
 
     override fun clear() {
@@ -84,7 +84,7 @@ class SemanticAnalyserDefault(
     }
 
     private fun buildScope(asm: AsmSimple, rootScope: ScopeSimple<AsmElementPath>) {
-        val scopeCreator = ScopeCreator(scopeModel as ScopeModelAgl, rootScope, _locationMap, _issues)
+        val scopeCreator = ScopeCreator(scopeModel as CrossReferenceModelDefault, rootScope, _locationMap, _issues)
         asm.traverseDepthFirst(scopeCreator)
     }
 

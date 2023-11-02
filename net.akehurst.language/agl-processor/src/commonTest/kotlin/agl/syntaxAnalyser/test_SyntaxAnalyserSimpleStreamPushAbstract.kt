@@ -24,12 +24,12 @@ import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmElementPath
+import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
-import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.typemodel.api.DataType
@@ -46,7 +46,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
     private companion object {
         class SyntaxAnalyserToString(
             typeModel: TypeModel,
-            scopeModel: ScopeModel
+            scopeModel: CrossReferenceModel
         ) : SyntaxAnalyserSimpleStreamPushAbstract<String>("ns", typeModel, scopeModel) {
 
             private val sb = StringBuilder()

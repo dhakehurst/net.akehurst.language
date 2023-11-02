@@ -15,13 +15,14 @@
  *
  */
 
-package net.akehurst.language.api.semanticAnalyser
+package net.akehurst.language.api.language.expressions
 
-import net.akehurst.language.api.language.reference.Scope
+interface Expression
+interface Navigation : Expression {
+    val value: List<String>
+}
 
-/**
- * E - type of elements in the scope
- */
-interface SentenceContext<E> {
-    val rootScope: Scope<E>
+interface RootExpression : Expression {
+    val isNothing: Boolean
+    val isSelf: Boolean
 }

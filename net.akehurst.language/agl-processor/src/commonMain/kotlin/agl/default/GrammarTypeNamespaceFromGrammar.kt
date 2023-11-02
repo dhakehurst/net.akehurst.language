@@ -291,7 +291,7 @@ class GrammarTypeNamespaceFromGrammar(
         this._typeForRuleItem[ruleItem] = ti
         items.forEachIndexed { idx, it -> createPropertyDeclaration(tt, it, idx) }
         return when {
-            tt.property.isEmpty() -> {
+            tt.allProperty.isEmpty() -> {
                 this._typeForRuleItem[ruleItem] = SimpleTypeModelStdLib.NothingType
                 SimpleTypeModelStdLib.NothingType
             }
@@ -333,10 +333,10 @@ class GrammarTypeNamespaceFromGrammar(
             }
 
             subtypes.all { it.type is TupleType } -> when {
-                1 == subtypes.map { (it.type as TupleType).property.values.map { Pair(it.name, it) }.toSet() }.toSet().size -> {
+                1 == subtypes.map { (it.type as TupleType).property.map { Pair(it.name, it) }.toSet() }.toSet().size -> {
                     val t = subtypes.first()
                     when {
-                        t.type is TupleType && (t.type as TupleType).properties.isEmpty() -> SimpleTypeModelStdLib.NothingType
+                        t.type is TupleType && (t.type as TupleType).property.isEmpty() -> SimpleTypeModelStdLib.NothingType
                         else -> t
                     }
                 }
@@ -361,10 +361,10 @@ class GrammarTypeNamespaceFromGrammar(
             }
 
             subtypes.all { it.type is TupleType } -> when {
-                1 == subtypes.map { (it.type as TupleType).property.values.map { Pair(it.name, it) }.toSet() }.toSet().size -> {
+                1 == subtypes.map { (it.type as TupleType).property.map { Pair(it.name, it) }.toSet() }.toSet().size -> {
                     val t = subtypes.first()
                     when {
-                        t.type is TupleType && (t.type as TupleType).properties.isEmpty() -> SimpleTypeModelStdLib.NothingType
+                        t.type is TupleType && (t.type as TupleType).property.isEmpty() -> SimpleTypeModelStdLib.NothingType
                         else -> t
                     }
                 }
@@ -563,7 +563,7 @@ class GrammarTypeNamespaceFromGrammar(
     private fun createUniquePropertyDeclaration(et: StructuredType, name: String, type: TypeInstance, childIndex: Int): PropertyDeclaration {
         val uniqueName = createUniquePropertyNameFor(et, name)
         val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
-        return et.appendStoredProperty(uniqueName, type, characteristics, childIndex)
+        return et.appendPropertyStored(uniqueName, type, characteristics, childIndex)
     }
 
     private fun createUniquePropertyNameFor(et: StructuredType, name: String): String {

@@ -35,24 +35,66 @@ object SimpleTypeModelStdLib : TypeNamespaceAbstract(emptyList()) {
     val Real = super.findOwnedOrCreatePrimitiveTypeNamed("Real").instance()
     val Timestamp = super.findOwnedOrCreatePrimitiveTypeNamed("Timestamp").instance()
 
-    val List = super.findOwnedOrCreateCollectionTypeNamed("List").also {
-        (it.typeParameters as MutableList).add("E")
-        it.appendDerivedProperty("size", this.createTypeInstance(it, "Integer"), "BuiltIn: size of the list")
-        it.appendDerivedProperty("first", this.createTypeInstance(it, "E"), "BuiltIn: first element of the list")
-        it.appendDerivedProperty("last", this.createTypeInstance(it, "E"), "BuiltIn: last element of the list")
-        it.appendDerivedProperty("tail", this.createTypeInstance(it, "E"), "BuiltIn: all but the first element of the list")
-        it.appendDerivedProperty("front", this.createTypeInstance(it, "E"), "BuiltIn: all but the last element of the list")
-        it.appendDerivedProperty("join", this.createTypeInstance(it, "String"), "BuiltIn: all elements concatenated into a String")
-        it.appendMethod(
+    val List = super.findOwnedOrCreateCollectionTypeNamed("List").also { typeDecl ->
+        (typeDecl.typeParameters as MutableList).add("E")
+        typeDecl.appendPropertyPrimitive("size", this.createTypeInstance(typeDecl, "Integer"), "Number of elements in the List.") { it ->
+            check(it is List<*>) { "Property 'size' is not applicable to '${it::class.simpleName}' objects." }
+            val self = it as List<Any>
+            self.size
+        }
+        typeDecl.appendPropertyPrimitive("first", this.createTypeInstance(typeDecl, "E"), "First element in the List.") { it ->
+            check(it is List<*>) { "Property 'first' is not applicable to '${it::class.simpleName}' objects." }
+            val self = it as List<Any>
+            self.first()
+        }
+        typeDecl.appendPropertyPrimitive("last", this.createTypeInstance(typeDecl, "E"), "Last element in the list.") { it ->
+            check(it is List<*>) { "Property 'last' is not applicable to '${it::class.simpleName}' objects." }
+            val self = it as List<Any>
+            self.last()
+        }
+        typeDecl.appendPropertyPrimitive(
+            "back",
+            this.createTypeInstance(typeDecl, "List", listOf(this.createTypeInstance(typeDecl, "E"))),
+            "All elements in the List except the first one."
+        ) { it ->
+            check(it is List<*>) { "Property 'back' is not applicable to '${it::class.simpleName}' objects." }
+            val self = it as List<Any>
+            self.drop(1)
+        }
+        typeDecl.appendPropertyPrimitive(
+            "front",
+            this.createTypeInstance(typeDecl, "List", listOf(this.createTypeInstance(typeDecl, "E"))),
+            "All elements in the List except the last one."
+        ) { it ->
+            check(it is List<*>) { "Property 'front' is not applicable to '${it::class.simpleName}' objects." }
+            val self = it as List<Any>
+            self.dropLast(1)
+        }
+        typeDecl.appendPropertyPrimitive("join", this.createTypeInstance(typeDecl, "String"), "The String value of all elements concatenated.") { it ->
+            check(it is List<*>) { "Property 'join' is not applicable to '${it::class.simpleName}' objects." }
+            val self = it as List<Any>
+            self.joinToString(separator = "")
+        }
+        typeDecl.appendMethodPrimitive(
             "get",
-            listOf(ParameterDefinitionSimple("index", this.createTypeInstance(it, "Integer"), null)),
-            this.createTypeInstance(it, "E"),
-            "BuiltIn: the element at the given index"
-        )
+            listOf(ParameterDefinitionSimple("index", this.createTypeInstance(typeDecl, "Integer"), null)),
+            this.createTypeInstance(typeDecl, "E"), "The element at the given index."
+        ) { it, arguments ->
+            check(it is List<*>) { "Method 'get' is only applicably to List objects." }
+            check(1 == arguments.size) { "Method 'get' should only have 1 (Integer) argument." }
+            check(arguments[0] is Int)
+            val self = it as List<Any>
+            val arg1 = arguments[0] as Int
+            self[arg1]
+        }
     }
-    val ListSeparated = super.findOwnedOrCreateCollectionTypeNamed("ListSeparated").also {
-        (it.typeParameters as MutableList).addAll(listOf("E", "I"))
-        it.appendDerivedProperty("join", this.createTypeInstance(it, "String"), "BuiltIn: all elements concatenated into a String")
+    val ListSeparated = super.findOwnedOrCreateCollectionTypeNamed("ListSeparated").also { typeDecl ->
+        (typeDecl.typeParameters as MutableList).addAll(listOf("E", "I"))
+        typeDecl.appendPropertyPrimitive("join", this.createTypeInstance(typeDecl, "String"), "The String value of all elements (items & separators) concatenated.") { it ->
+            check(it is ListSeparated<*, *>) { "Property 'join' is not applicable to '${it::class.simpleName}' objects." }
+            val self = it as ListSeparated<Any, Any>
+            self.joinToString(separator = "")
+        }
     }
     val Set = super.findOwnedOrCreateCollectionTypeNamed("Set").also { (it.typeParameters as MutableList).add("E") }
     val OrderedSet = super.findOwnedOrCreateCollectionTypeNamed("OrderedSet").also { (it.typeParameters as MutableList).add("E") }

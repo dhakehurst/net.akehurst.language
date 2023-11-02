@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
-import net.akehurst.language.agl.language.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
@@ -122,7 +122,7 @@ grammar SQL {
                 }
             }
         """.trimIndent()
-        val scopeModel = ScopeModelAgl.fromString(null, scopeModelStr).let { it.asm ?: error(it.issues.toString()) }
+        val scopeModel = CrossReferenceModelDefault.fromString(null, scopeModelStr).let { it.asm ?: error(it.issues.toString()) }
         val processor = Agl.processorFromStringDefault(
             grammarStr,
             scopeModelStr
@@ -132,7 +132,7 @@ grammar SQL {
     @Test
     fun check_scopeModel() {
         val context = ContextFromTypeModel(processor.typeModel)
-        val res = ScopeModelAgl.fromString(context, scopeModelStr)
+        val res = CrossReferenceModelDefault.fromString(context, scopeModelStr)
         assertTrue(res.issues.isEmpty(), res.issues.toString())
     }
 

@@ -17,19 +17,19 @@
 
 package net.akehurst.language.agl.agl.default
 
-import net.akehurst.language.agl.language.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.createReferenceLocalToScope
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.AsmElementProperty
 import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.AsmSimpleTreeWalker
+import net.akehurst.language.api.language.reference.Scope
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.semanticAnalyser.Scope
 import net.akehurst.language.collections.mutableStackOf
 
 class ScopeCreator(
-    val scopeModel: ScopeModelAgl,
+    val crossReferenceModel: CrossReferenceModelDefault,
     val rootScope: Scope<AsmElementPath>,
     val locationMap: Map<Any, InputLocation>,
     val issues: IssueHolder
@@ -57,8 +57,8 @@ class ScopeCreator(
     }
 
     private fun createScope(scope: Scope<AsmElementPath>, el: AsmElementSimple): Scope<AsmElementPath> {
-        val exp = scopeModel.identifyingExpressionFor(scope.forTypeName, el.typeName)
-        return if (null != exp && scopeModel.isScopeDefinedFor(el.typeName)) {
+        val exp = crossReferenceModel.identifyingExpressionFor(scope.forTypeName, el.typeName)
+        return if (null != exp && crossReferenceModel.isScopeDefinedFor(el.typeName)) {
             val refInParent = exp.createReferenceLocalToScope(scope, el)
             if (null != refInParent) {
                 val newScope = scope.createOrGetChildScope(refInParent, el.typeName, el.asmPath)
@@ -79,7 +79,7 @@ class ScopeCreator(
     }
 
     private fun addToScope(scope: Scope<AsmElementPath>, el: AsmElementSimple) {
-        val exp = scopeModel.identifyingExpressionFor(scope.forTypeName, el.typeName)
+        val exp = crossReferenceModel.identifyingExpressionFor(scope.forTypeName, el.typeName)
         if (null != exp) {
             //val reference = _scopeModel!!.createReferenceFromRoot(scope, el)
             val scopeLocalReference = exp.createReferenceLocalToScope(scope, el)

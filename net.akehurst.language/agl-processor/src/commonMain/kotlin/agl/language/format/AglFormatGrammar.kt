@@ -20,7 +20,6 @@ import net.akehurst.language.agl.language.grammar.asm.GrammarAbstract
 import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
 import net.akehurst.language.agl.language.grammar.asm.GrammarOptionDefault
 import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
-import net.akehurst.language.agl.language.scopes.AglScopesGrammar
 import net.akehurst.language.api.language.grammar.GrammarRule
 
 
@@ -124,5 +123,5 @@ internal object AglFormatGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
     }
 
     //TODO: gen this from the ASM
-    override fun toString(): String = AglScopesGrammar.grammarStr.trimIndent()
+    override fun toString(): String = grammarStr.trimIndent()
 }

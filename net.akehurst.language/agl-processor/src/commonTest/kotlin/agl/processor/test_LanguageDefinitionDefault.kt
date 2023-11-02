@@ -22,9 +22,9 @@ import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.language.grammar.Grammar
+import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.api.style.AglStyleModel
 import kotlin.test.*
 
@@ -38,8 +38,8 @@ class test_LanguageDefinitionDefault {
     val grammarObserver: (Grammar?, Grammar?) -> Unit = { old, new -> grammarObserverCalled.add(Pair(old, new)) }
     val scopeStrObserverCalled = mutableListOf<Pair<String?, String?>>()
     val scopeStrObserver: (String?, String?) -> Unit = { old, new -> scopeStrObserverCalled.add(Pair(old, new)) }
-    val scopeModelObserverCalled = mutableListOf<Pair<ScopeModel?, ScopeModel?>>()
-    val scopeModelObserver: (ScopeModel?, ScopeModel?) -> Unit = { old, new -> scopeModelObserverCalled.add(Pair(old, new)) }
+    val scopeModelObserverCalled = mutableListOf<Pair<CrossReferenceModel?, CrossReferenceModel?>>()
+    val scopeModelObserver: (CrossReferenceModel?, CrossReferenceModel?) -> Unit = { old, new -> scopeModelObserverCalled.add(Pair(old, new)) }
     val processorObserverCalled = mutableListOf<Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>>()
     val processorObserver: (LanguageProcessor<*, *>?, LanguageProcessor<*, *>?) -> Unit = { old, new -> processorObserverCalled.add(Pair(old, new)) }
     val styleStrObserverCalled = mutableListOf<Pair<String?, String?>>()

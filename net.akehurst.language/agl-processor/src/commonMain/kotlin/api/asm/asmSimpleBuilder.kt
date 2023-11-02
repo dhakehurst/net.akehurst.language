@@ -20,13 +20,13 @@ import net.akehurst.language.agl.agl.default.ScopeCreator
 import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.agl.default.ReferenceResolverDefault
 import net.akehurst.language.agl.default.ResolveFunction
-import net.akehurst.language.agl.language.scopes.NavigationDefault
-import net.akehurst.language.agl.language.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.expressions.evaluateFor
+import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
 import net.akehurst.language.agl.semanticAnalyser.createReferenceLocalToScope
-import net.akehurst.language.agl.semanticAnalyser.evaluateFor
+import net.akehurst.language.api.language.expressions.Navigation
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.simple.TupleTypeSimple
 
@@ -34,7 +34,7 @@ import net.akehurst.language.typemodel.simple.TupleTypeSimple
 annotation class AsmSimpleBuilderMarker
 
 fun asmSimple(
-    scopeModel: ScopeModelAgl = ScopeModelAgl(),
+    scopeModel: CrossReferenceModelDefault = CrossReferenceModelDefault(),
     context: ContextSimple? = null,
     /** need to pass in a context if you want to resolveReferences */
     resolveReferences: Boolean = true,
@@ -48,7 +48,7 @@ fun asmSimple(
 
 @AsmSimpleBuilderMarker
 class AsmSimpleBuilder(
-    private val _scopeModel: ScopeModelAgl,
+    private val _scopeModel: CrossReferenceModelDefault,
     private val _context: ContextSimple?,
     private val resolveReferences: Boolean,
     private val failIfIssues: Boolean
@@ -90,7 +90,7 @@ class AsmSimpleBuilder(
     fun build(): AsmSimple {
         val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
         if (resolveReferences && null != _context) {
-            val scopeCreator = ScopeCreator(_scopeModel as ScopeModelAgl, _context.rootScope, emptyMap(), issues)
+            val scopeCreator = ScopeCreator(_scopeModel as CrossReferenceModelDefault, _context.rootScope, emptyMap(), issues)
             _asm.traverseDepthFirst(scopeCreator)
 
             val resolveFunction: ResolveFunction = { ref ->
@@ -109,7 +109,7 @@ class AsmSimpleBuilder(
 
 @AsmSimpleBuilderMarker
 class AsmElementSimpleBuilder(
-    private val _scopeModel: ScopeModelAgl,
+    private val _scopeModel: CrossReferenceModelDefault,
     private val _scopeMap: MutableMap<AsmElementPath, ScopeSimple<AsmElementPath>>,
     private val _asm: AsmSimple,
     _asmPath: AsmElementPath,
@@ -179,7 +179,7 @@ class AsmElementSimpleBuilder(
             //do nothing
         } else {
             val scopeFor = es.forTypeName
-            val nav = _scopeModel.identifyingExpressionFor(scopeFor, _element.typeName) as NavigationDefault?
+            val nav = _scopeModel.identifyingExpressionFor(scopeFor, _element.typeName) as Navigation?
             val res = nav?.evaluateFor(_element)
             val referableName = when (res) {
                 null -> null
@@ -196,7 +196,7 @@ class AsmElementSimpleBuilder(
 
 @AsmSimpleBuilderMarker
 class ListAsmElementSimpleBuilder(
-    private val _scopeModel: ScopeModelAgl,
+    private val _scopeModel: CrossReferenceModelDefault,
     private val _scopeMap: MutableMap<AsmElementPath, ScopeSimple<AsmElementPath>>,
     private val _asm: AsmSimple,
     private val _asmPath: AsmElementPath,

@@ -39,6 +39,18 @@ class GrammarBuilderDefault(val namespace: Namespace, val name: String) {
         }
     }
 
+    fun extends(nameOrQName: String) {
+        grammar.extends.add(GrammarReferenceDefault(grammar.namespace, nameOrQName))
+    }
+
+    fun extendsGrammar(extended: Grammar) {
+        grammar.extends.add(
+            GrammarReferenceDefault(grammar.namespace, extended.qualifiedName).also {
+                it.resolveAs(extended)
+            }
+        )
+    }
+
     fun rule(name: String): RuleBuilder {
         return RuleBuilder(NormalRuleDefault(grammar, name, false, false).also {
             this.grammar.grammarRule.add(it)

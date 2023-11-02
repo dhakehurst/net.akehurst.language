@@ -19,8 +19,8 @@ package net.akehurst.language.agl.default
 import net.akehurst.language.agl.runtime.structure.*
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserSimpleAbstract
 import net.akehurst.language.api.asm.*
+import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.processor.*
-import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.collections.lazyMap
 import net.akehurst.language.typemodel.api.*
@@ -34,7 +34,7 @@ import net.akehurst.language.typemodel.api.*
 class SyntaxAnalyserDefault(
     grammarNamespaceQualifiedName: String,
     typeModel: TypeModel,
-    scopeModel: ScopeModel
+    scopeModel: CrossReferenceModel
 ) : SyntaxAnalyserSimpleAbstract<AsmSimple>(grammarNamespaceQualifiedName, typeModel, scopeModel) {
 
     companion object {

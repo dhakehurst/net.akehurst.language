@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.language.scopes
+package net.akehurst.language.agl.language.reference
 
+import net.akehurst.language.agl.language.expressions.ExpressionsSyntaxAnalyser
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
-import net.akehurst.language.api.semanticAnalyser.DeclarationsForNamespace
-import net.akehurst.language.api.semanticAnalyser.Expression
-import net.akehurst.language.api.semanticAnalyser.RootExpression
+import net.akehurst.language.api.language.expressions.Expression
+import net.akehurst.language.api.language.expressions.Navigation
+import net.akehurst.language.api.language.reference.DeclarationsForNamespace
 import net.akehurst.language.api.sppt.Sentence
 import net.akehurst.language.api.sppt.SpptDataNodeInfo
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.collections.toSeparatedList
 
-class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<ScopeModelAgl>() {
+class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<CrossReferenceModelDefault>() {
 
     override fun registerHandlers() {
         super.register(this::unit)
@@ -38,22 +39,17 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
         super.register(this::identifiable)
         super.register(this::referencesOpt)
         super.register(this::references)
+        super.register(this::externalTypes)
         super.register(this::referenceDefinitions)
         super.register(this::referenceDefinition)
         super.register(this::referenceExpression)
         super.register(this::propertyReferenceExpression)
         super.register(this::from)
         super.register(this::collectionReferenceExpression)
-        super.register(this::navigation)
         super.register(this::ofType)
         super.register(this::typeReferences)
-        super.register(this::expression)
-        super.register(this::rootExpression)
-        super.register(this::nothing)
-        super.register(this::self)
         super.register(this::typeReference)
-        super.register(this::propertyReference)
-        super.register(this::qualifiedName)
+
     }
 
     data class PropertyValue(
@@ -61,16 +57,14 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
         val value: String
     )
 
-    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<ScopeModelAgl>> = emptyMap()
-
-//    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
-//        return emptyList()
-//    }
+    override val extendsSyntaxAnalyser: Map<String, SyntaxAnalyser<*>> = mapOf(
+        "Expressions" to ExpressionsSyntaxAnalyser()
+    )
 
     // unit = namespace* ;
-    private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): ScopeModelAgl {
+    private fun unit(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CrossReferenceModelDefault {
         val namespace = children as List<DeclarationsForNamespace>
-        val result = ScopeModelAgl()
+        val result = CrossReferenceModelDefault()
         namespace.forEach { result.declarationsForNamespace[it.qualifiedName] = it }
         return result
     }
@@ -84,16 +78,18 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
         return result
     }
 
-
     // declarations = rootIdentifiables scopes referencesOpt
     private fun declarations(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (DeclarationsForNamespaceDefault) -> Unit {
         val rootIdentifiables = children[0] as List<IdentifiableDefault>
         val scopes = children[1] as List<ScopeDefinitionDefault>
-        val referencesOpt = children[2] as List<ReferenceDefinitionDefault>?
+        val referencesOpt = children[2] as Pair<List<String>, List<ReferenceDefinitionDefault>>?
         return { decl ->
-            decl.scopes[ScopeModelAgl.ROOT_SCOPE_TYPE_NAME]?.identifiables?.addAll(rootIdentifiables)
+            decl.scopes[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME]?.identifiables?.addAll(rootIdentifiables)
             scopes.forEach { decl.scopes[it.scopeForTypeName] = it }
-            referencesOpt?.let { decl.references.addAll(referencesOpt) }
+            referencesOpt?.let {
+                decl.externalTypes.addAll(referencesOpt.first)
+                decl.references.addAll(referencesOpt.second)
+            }
         }
     }
 
@@ -122,7 +118,7 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
     // identifiable = 'identify' typeReference 'by' expression
     private fun identifiable(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): IdentifiableDefault {
         val typeReference = children[1] as String
-        val expression = children[3] as ExpressionAbstract
+        val expression = children[3] as Expression
         val identifiable = IdentifiableDefault(typeReference, expression)
         locationMap[PropertyValue(identifiable, "typeReference")] = locationMap[typeReference]!!
         locationMap[PropertyValue(identifiable, "expression")] = locationMap[expression]!!
@@ -133,9 +129,13 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
     private fun referencesOpt(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ReferenceDefinitionDefault>? =
         children[0] as List<ReferenceDefinitionDefault>?
 
-    // references = 'references' '{' referenceDefinitions '}'
-    private fun references(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ReferenceDefinitionDefault> =
-        children[2] as List<ReferenceDefinitionDefault>
+    // references = 'references' '{' externalTypes? referenceDefinitions '}' ;
+    private fun references(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<List<String>?, List<ReferenceDefinitionDefault>> =
+        Pair(children[2] as List<String>? ?: emptyList(), children[3] as List<ReferenceDefinitionDefault>)
+
+    // externalTypes = 'external-types' [typeReference / ',']+ ;
+    private fun externalTypes(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> =
+        (children[1] as List<Any>).toSeparatedList<String, String>().items
 
     // referenceDefinitions = referenceDefinition*
     private fun referenceDefinitions(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ReferenceDefinitionDefault> =
@@ -164,19 +164,19 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
 
     //propertyReferenceExpression = 'property' navigation 'refers-to' typeReferences from? ;
     private fun propertyReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): PropertyReferenceExpressionDefault {
-        val navigation = children[1] as NavigationDefault
+        val navigation = children[1] as Navigation
         val typeReferences = children[3] as List<String>
-        val from = children[4] as NavigationDefault?
+        val from = children[4] as Navigation?
         return PropertyReferenceExpressionDefault(navigation, typeReferences, from)
     }
 
     // from = 'from' navigation
-    private fun from(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationDefault =
-        children[1] as NavigationDefault
+    private fun from(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Navigation =
+        children[1] as Navigation
 
     // collectionReferenceExpression = 'forall' navigation ofType? '{' referenceExpressionList '}' ;
     private fun collectionReferenceExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): CollectionReferenceExpressionDefault {
-        val navigation = children[1] as NavigationDefault
+        val navigation = children[1] as Navigation
         val referenceExpression = children[4] as List<ReferenceExpressionAbstract>
         val ofType = children[2] as String?
         return CollectionReferenceExpressionDefault(navigation, ofType, referenceExpression)
@@ -186,9 +186,6 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
     private fun ofType(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
         children[1] as String
 
-    //navigation = [propertyReference / '.']+ ;
-    private fun navigation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationDefault =
-        NavigationDefault(children.toSeparatedList<String, String>().items)
 
     // typeReferences = [typeReferences / ',']+
     private fun typeReferences(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> { //List<Pair<String, InputLocation>> {
@@ -199,30 +196,8 @@ class AglScopesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Scope
 //        }
     }
 
-    // expression = root | navigation
-    private fun expression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Expression =
-        children[0] as Expression
-
-    // rootExpression = nothing | self
-    private fun rootExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RootExpression =
-        children[0] as RootExpression
-
-    // nothing = '§nothing'
-    private fun nothing(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
-        RootExpressionDefault(RootExpressionDefault.NOTHING)
-
-    // self = '§self'
-    private fun self(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence) =
-        RootExpressionDefault(RootExpressionDefault.SELF)
-
-
     // typeReference = IDENTIFIER
     private fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
-        return children[0] as String
-    }
-
-    // propertyReference = IDENTIFIER
-    private fun propertyReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
         return children[0] as String
     }
 

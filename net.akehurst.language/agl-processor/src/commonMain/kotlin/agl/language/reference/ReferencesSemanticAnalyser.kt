@@ -15,19 +15,20 @@
  *
  */
 
-package net.akehurst.language.agl.language.scopes
+package net.akehurst.language.agl.language.reference
 
+import net.akehurst.language.agl.language.expressions.propertyDeclarationFor
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
-import net.akehurst.language.agl.semanticAnalyser.propertyDeclarationFor
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
+import net.akehurst.language.api.language.expressions.Navigation
+import net.akehurst.language.api.language.expressions.RootExpression
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
-import net.akehurst.language.api.semanticAnalyser.RootExpression
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.typemodel.api.CollectionType
@@ -35,8 +36,8 @@ import net.akehurst.language.typemodel.api.DataType
 import net.akehurst.language.typemodel.api.TypeDeclaration
 import net.akehurst.language.typemodel.api.UnnamedSupertypeType
 
-class AglScopesSemanticAnalyser(
-) : SemanticAnalyser<ScopeModelAgl, SentenceContext<String>> {
+class ReferencesSemanticAnalyser(
+) : SemanticAnalyser<CrossReferenceModelDefault, SentenceContext<String>> {
 
     private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private var _locationMap: Map<Any, InputLocation> = emptyMap()
@@ -50,10 +51,10 @@ class AglScopesSemanticAnalyser(
     }
 
     override fun analyse(
-        asm: ScopeModelAgl,
+        asm: CrossReferenceModelDefault,
         locationMap: Map<Any, InputLocation>?,
         context: SentenceContext<String>?,
-        options: SemanticAnalysisOptions<ScopeModelAgl, SentenceContext<String>>
+        options: SemanticAnalysisOptions<CrossReferenceModelDefault, SentenceContext<String>>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: mapOf()
         if (null != context) {
@@ -73,7 +74,7 @@ class AglScopesSemanticAnalyser(
                             checkScopeDefinition(it as ScopeDefinitionDefault)
                         }
                         it.references.forEach { ref ->
-                            checkReferenceDefinition(ref as ReferenceDefinitionDefault)
+                            checkReferenceDefinition(it.externalTypes, ref as ReferenceDefinitionDefault)
                         }
                     }
                 }
@@ -96,14 +97,14 @@ class AglScopesSemanticAnalyser(
     }
 
     private fun checkScopeDefinition(scopeDef: ScopeDefinitionDefault) {
-        val msgStart = if (ScopeModelAgl.ROOT_SCOPE_TYPE_NAME == scopeDef.scopeForTypeName) {
+        val msgStart = if (CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME == scopeDef.scopeForTypeName) {
             //do nothing
             "In root scope"
         } else {
             val scopedType = _grammarNamespace?.findTypeNamed(scopeDef.scopeForTypeName)
             if (null == scopedType) {
                 //if (context.rootScope.isMissing(scope.scopeFor, ContextFromTypeModel.TYPE_NAME_FOR_TYPES)) {
-                raiseError(AglScopesSyntaxAnalyser.PropertyValue(scopeDef, "typeReference"), "Type '${scopeDef.scopeForTypeName}' not found")
+                raiseError(ReferencesSyntaxAnalyser.PropertyValue(scopeDef, "typeReference"), "Type '${scopeDef.scopeForTypeName}' not found")
             } else {
                 //OK
             }
@@ -116,18 +117,18 @@ class AglScopesSemanticAnalyser(
             val identifiedBy = identifiable.identifiedBy
             when {
                 null == identifiedType -> {
-                    raiseError(AglScopesSyntaxAnalyser.PropertyValue(identifiable, "typeReference"), "Type '${identifiable.typeName}' not found")
+                    raiseError(ReferencesSyntaxAnalyser.PropertyValue(identifiable, "typeReference"), "Type '${identifiable.typeName}' not found")
                 }
 
                 identifiedBy is RootExpression && identifiedBy.isNothing -> Unit
-                identifiedBy is NavigationDefault -> {
+                identifiedBy is Navigation -> {
                     // only check this if the typeName is valid - else it is always invalid
                     //TODO: check this in context of typeName GrammarRule
-                    val identifyingProperty = identifiedBy.propertyDeclarationFor(identifiedType)
+                    val identifyingProperty = identifiedBy.propertyDeclarationFor(identifiedType.instance())
                     if (null == identifyingProperty) {
                         //if (typeScope.isMissing(part, ContextFromTypeModel.TYPE_NAME_FOR_PROPERTIES)) {
                         raiseError(
-                            AglScopesSyntaxAnalyser.PropertyValue(identifiable, "propertyName"),
+                            ReferencesSyntaxAnalyser.PropertyValue(identifiable, "propertyName"),
                             "$msgStart, '${identifiable.identifiedBy}' not found for identifying property of '${identifiable.typeName}'"
                         )
                     } else {
@@ -138,13 +139,13 @@ class AglScopesSemanticAnalyser(
         }
     }
 
-    private fun checkReferenceDefinition(ref: ReferenceDefinitionDefault) {
+    private fun checkReferenceDefinition(externalTypes: List<String>, ref: ReferenceDefinitionDefault) {
         val contextType = _grammarNamespace?.findOwnedTypeNamed(ref.inTypeName)
         when {
             (null == contextType) -> {
                 //if (context.rootScope.isMissing(ref.inTypeName, ContextFromTypeModel.TYPE_NAME_FOR_TYPES)) {
                 raiseError(
-                    AglScopesSyntaxAnalyser.PropertyValue(ref, "in"),
+                    ReferencesSyntaxAnalyser.PropertyValue(ref, "in"),
                     "Referring type '${ref.inTypeName}' not found"
                 )
             }
@@ -158,20 +159,22 @@ class AglScopesSemanticAnalyser(
 //                )
 //            } else {
                 for (refExpr in ref.referenceExpressionList) {
-                    checkReferenceExpression(contextType, ref, refExpr)
+                    checkReferenceExpression(externalTypes, contextType, ref, refExpr)
                 }
 //            }
             }
         }
     }
 
-    private fun checkReferenceExpression(contextType: TypeDeclaration, ref: ReferenceDefinitionDefault, refExpr: ReferenceExpressionAbstract) = when (refExpr) {
-        is PropertyReferenceExpressionDefault -> checkPropertyReferenceExpression(contextType, ref, refExpr)
-        is CollectionReferenceExpressionDefault -> checkCollectionReferenceExpression(contextType, ref, refExpr)
-        else -> error("subtype of 'ReferenceExpression' not handled: '${refExpr::class.simpleName}'")
-    }
+    private fun checkReferenceExpression(externalTypes: List<String>, contextType: TypeDeclaration, ref: ReferenceDefinitionDefault, refExpr: ReferenceExpressionAbstract) =
+        when (refExpr) {
+            is PropertyReferenceExpressionDefault -> checkPropertyReferenceExpression(externalTypes, contextType, ref, refExpr)
+            is CollectionReferenceExpressionDefault -> checkCollectionReferenceExpression(externalTypes, contextType, ref, refExpr)
+            else -> error("subtype of 'ReferenceExpression' not handled: '${refExpr::class.simpleName}'")
+        }
 
     private fun checkCollectionReferenceExpression(
+        externalTypes: List<String>,
         contextType: TypeDeclaration,
         ref: ReferenceDefinitionDefault,
         refExpr: CollectionReferenceExpressionDefault
@@ -185,7 +188,7 @@ class AglScopesSemanticAnalyser(
 
         when (contextType) {
             is DataType -> {
-                val collTypeInstance = refExpr.navigation.propertyDeclarationFor(contextType)?.typeInstance
+                val collTypeInstance = refExpr.navigation.propertyDeclarationFor(contextType.instance())?.typeInstance
                 when (collTypeInstance?.type) {
                     null -> TODO()
                     is CollectionType -> {
@@ -204,7 +207,7 @@ class AglScopesSemanticAnalyser(
                             }
                         } ?: loopVarType
                         for (re in refExpr.referenceExpressionList) {
-                            checkReferenceExpression(filteredLoopVarType, ref, re)
+                            checkReferenceExpression(externalTypes, filteredLoopVarType, ref, re)
                         }
                     }
 
@@ -216,23 +219,30 @@ class AglScopesSemanticAnalyser(
         }
     }
 
-    private fun checkPropertyReferenceExpression(contextType: TypeDeclaration, ref: ReferenceDefinitionDefault, refExpr: PropertyReferenceExpressionDefault) {
+    private fun checkPropertyReferenceExpression(
+        externalTypes: List<String>,
+        contextType: TypeDeclaration,
+        ref: ReferenceDefinitionDefault,
+        refExpr: PropertyReferenceExpressionDefault
+    ) {
         //propertyReferenceExpression = 'property' navigation 'refers-to' typeReferences from? ;
         //from = 'from' navigation ;
-        val x = refExpr.referringPropertyNavigation.propertyDeclarationFor(contextType)
+        val x = refExpr.referringPropertyNavigation.propertyDeclarationFor(contextType.instance())
         if (null == x) {
             raiseError(
-                AglScopesSyntaxAnalyser.PropertyValue(refExpr, "propertyReference"),
+                ReferencesSyntaxAnalyser.PropertyValue(refExpr, "propertyReference"),
                 "For references in '${ref.inTypeName}' referring property '${refExpr.referringPropertyNavigation}' not found"
             )
         }
 
         refExpr.refersToTypeName.forEachIndexed { i, n ->
-            if (null == _grammarNamespace?.findTypeNamed(n)) {
+            if (null == _grammarNamespace?.findTypeNamed(n) && externalTypes.contains(n).not()) {
                 raiseError(
-                    AglScopesSyntaxAnalyser.PropertyValue(ref, "typeReferences[$i]"),
+                    ReferencesSyntaxAnalyser.PropertyValue(ref, "typeReferences[$i]"),
                     "For references in '${ref.inTypeName}', referred to type '$n' not found"
                 )
+            } else {
+                //OK
             }
         }
     }

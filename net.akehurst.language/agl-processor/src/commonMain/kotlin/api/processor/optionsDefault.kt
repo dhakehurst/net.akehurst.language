@@ -22,7 +22,7 @@ internal class LanguageProcessorConfigurationDefault<AsmType : Any, ContextType 
     override var targetGrammarName: String?,
     override var defaultGoalRuleName: String?,
     override var typeModelResolver: TypeModelResolver<AsmType, ContextType>?,
-    override var scopeModelResolver: ScopeModelResolver<AsmType, ContextType>?,
+    override var scopeModelResolver: CrossReferenceModelResolver<AsmType, ContextType>?,
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?,
     override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?,
     override var formatterResolver: FormatterResolver<AsmType, ContextType>?,
@@ -74,7 +74,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
     private var _targetGrammarName: String? = null
     private var _defaultGoalRuleName: String? = null
     private var _typeModelResolver: TypeModelResolver<AsmType, ContextType>? = null
-    private var _scopeModelResolver: ScopeModelResolver<AsmType, ContextType>? = null
+    private var _scopeModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? = null
     private var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null
     private var _semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null
     private var _formatterResolver: FormatterResolver<AsmType, ContextType>? = null
@@ -93,7 +93,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
         this._typeModelResolver = func
     }
 
-    fun scopeModelResolver(func: ScopeModelResolver<AsmType, ContextType>?) {
+    fun scopeModelResolver(func: CrossReferenceModelResolver<AsmType, ContextType>?) {
         _scopeModelResolver = func
     }
 

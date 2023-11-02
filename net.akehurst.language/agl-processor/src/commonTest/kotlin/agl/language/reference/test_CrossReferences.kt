@@ -18,6 +18,8 @@ package net.akehurst.language.agl.language.scopes
 import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
+import net.akehurst.language.agl.language.expressions.NavigationDefault
+import net.akehurst.language.agl.language.reference.*
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.parser.InputLocation
@@ -28,12 +30,12 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class test_AglScopes {
+class test_CrossReferences {
 
     private companion object {
         val aglProc = Agl.registry.agl.scopes.processor!!
 
-        fun test(grammarStr: String, sentence: String, expected: ScopeModelAgl, expIssues: Set<LanguageIssue>) {
+        fun test(grammarStr: String, sentence: String, expected: CrossReferenceModelDefault, expIssues: Set<LanguageIssue>) {
             val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!![0]
             val result = aglProc.process(
                 sentence = sentence,
@@ -131,7 +133,7 @@ class test_AglScopes {
 
         val result = aglProc.process(text)
 
-        val expected = ScopeModelAgl()
+        val expected = CrossReferenceModelDefault()
 
         assertEquals(expected.declarationsForNamespace, result.asm?.declarationsForNamespace)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
@@ -149,7 +151,7 @@ class test_AglScopes {
 
         val result = aglProc.process(text)
 
-        val expected = ScopeModelAgl()
+        val expected = CrossReferenceModelDefault()
 
         assertEquals(expected.declarationsForNamespace, result.asm?.declarationsForNamespace)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
@@ -170,7 +172,7 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val expected = ScopeModelAgl().apply {
+        val expected = CrossReferenceModelDefault().apply {
             declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
                 scopes["Rule1"] = (ScopeDefinitionDefault("Rule1"))
             }
@@ -194,7 +196,7 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val expected = ScopeModelAgl().apply {
+        val expected = CrossReferenceModelDefault().apply {
             declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
                 scopes["RuleX"] = (ScopeDefinitionDefault("RuleX"))
             }
@@ -229,7 +231,7 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val expected = ScopeModelAgl().apply {
+        val expected = CrossReferenceModelDefault().apply {
             declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
                 scopes["Rule1"] = (ScopeDefinitionDefault("Rule1").apply {
                     identifiables.add(IdentifiableDefault("Rule2", NavigationDefault("rule3")))
@@ -259,7 +261,7 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val expected = ScopeModelAgl().apply {
+        val expected = CrossReferenceModelDefault().apply {
             declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
                 scopes["Rule1"] = (ScopeDefinitionDefault("Rule1").apply {
                     identifiables.add(IdentifiableDefault("RuleX", NavigationDefault("rule3")))
@@ -299,7 +301,7 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val expected = ScopeModelAgl().apply {
+        val expected = CrossReferenceModelDefault().apply {
             declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
                 scopes["Rule1"] = (ScopeDefinitionDefault("Rule1").apply {
                     identifiables.add(IdentifiableDefault("Rule2", NavigationDefault("ruleX")))
@@ -340,7 +342,7 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val expected = ScopeModelAgl().apply {
+        val expected = CrossReferenceModelDefault().apply {
             declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
                 references.add(
                     ReferenceDefinitionDefault(
@@ -378,7 +380,7 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val expected = ScopeModelAgl().apply {
+        val expected = CrossReferenceModelDefault().apply {
             declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
                 references.add(ReferenceDefinitionDefault("RuleX", listOf(PropertyReferenceExpressionDefault(NavigationDefault("ruleY"), listOf("RuleZ", "RuleW"), null))))
             }
@@ -429,7 +431,7 @@ class test_AglScopes {
             }
         """.trimIndent()
 
-        val expected = ScopeModelAgl().apply {
+        val expected = CrossReferenceModelDefault().apply {
             declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
                 references.add(ReferenceDefinitionDefault("Type1", listOf(PropertyReferenceExpressionDefault(NavigationDefault("prop"), listOf("Type2", "Type3", "Type4"), null))))
 
@@ -448,5 +450,95 @@ class test_AglScopes {
 
     }
 
+    @Test
+    fun reference_to_external_type_fails() {
+        val grammarStr = """
+                namespace test
+                grammar Test {
+                    rule1 = 'X' rule2 'Y' ;
+                    rule2 = 'a' rule3 ;
+                    rule3 = "[a-z]" ;
+                }
+            """.trimIndent()
+
+        val sentence = """
+            namespace test.Test {
+                references {
+                    in Rule2 {
+                        property rule3 refers-to AnExternalType1 | AnExternalType2
+                    }
+                }
+            }
+        """.trimIndent()
+
+        val expected = CrossReferenceModelDefault().apply {
+            declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
+                references.add(
+                    ReferenceDefinitionDefault(
+                        "Rule2", listOf(
+                            PropertyReferenceExpressionDefault(NavigationDefault("rule3"), listOf("Rule1"), null)
+                        )
+                    )
+                )
+            }
+        }
+        val expIssues = setOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(0, 0, 0, 0),
+                "For references in 'Rule2', referred to type 'AnExternalType1' not found"
+            ),
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(0, 0, 0, 0),
+                "For references in 'Rule2', referred to type 'AnExternalType2' not found"
+            )
+        )
+
+        test(grammarStr, sentence, expected, expIssues)
+
+    }
+
+    @Test
+    fun reference_to_external_type() {
+        val grammarStr = """
+                namespace test
+                grammar Test {
+                    rule1 = 'X' rule2 'Y' ;
+                    rule2 = 'a' rule3 ;
+                    rule3 = "[a-z]" ;
+                }
+            """.trimIndent()
+
+        val sentence = """
+            namespace test.Test {
+                references {
+                    external-types AnExternalType1, AnExternalType2
+                    in Rule2 {
+                        property rule3 refers-to AnExternalType1 | AnExternalType2
+                    }
+                }
+            }
+        """.trimIndent()
+
+        val expected = CrossReferenceModelDefault().apply {
+            declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
+                references.add(
+                    ReferenceDefinitionDefault(
+                        "Rule2", listOf(
+                            PropertyReferenceExpressionDefault(NavigationDefault("rule3"), listOf("AnExternalType1", "AnExternalType2"), null)
+                        )
+                    )
+                )
+            }
+        }
+        val expIssues = setOf<LanguageIssue>()
+
+        test(grammarStr, sentence, expected, expIssues)
+
+    }
+
     //TODO more checks + check rules (types/properties) exist in context of grammar
+
+
 }

@@ -25,8 +25,8 @@ import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.grammar.RuleItem
+import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.processor.Formatter
-import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
@@ -49,7 +49,7 @@ abstract class GeneratedLanguageProcessorAbstract<AsmType : Any, ContextType : A
     abstract val defaultGoalRuleName: String
     abstract val ruleSet: RuleSet
     abstract val mapToGrammar: (Int, Int) -> RuleItem
-    abstract val scopeModel: ScopeModel?
+    abstract val scopeModel: CrossReferenceModel?
     abstract val syntaxAnalyser: SyntaxAnalyser<AsmType>?
     abstract val formatter: Formatter<AsmType>?
     abstract val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?

@@ -21,7 +21,7 @@ import net.akehurst.language.agl.processor.AglLanguages
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.grammar.Namespace
-import net.akehurst.language.api.semanticAnalyser.ScopeModel
+import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -68,7 +68,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     var defaultGoalRule: String?
 
     var scopeModelStr: String?
-    var scopeModel: ScopeModel?
+    var scopeModel: CrossReferenceModel?
 
     var configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 
@@ -92,7 +92,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val grammarStrObservers: MutableList<(String?, String?) -> Unit>
     val grammarObservers: MutableList<(Grammar?, Grammar?) -> Unit>
     val scopeStrObservers: MutableList<(String?, String?) -> Unit>
-    val scopeModelObservers: MutableList<(ScopeModel?, ScopeModel?) -> Unit>
+    val scopeModelObservers: MutableList<(CrossReferenceModel?, CrossReferenceModel?) -> Unit>
     val formatterStrObservers: MutableList<(String?, String?) -> Unit>
     val formatterObservers: MutableList<(AglFormatterModel?, AglFormatterModel?) -> Unit>
     val styleStrObservers: MutableList<(String?, String?) -> Unit>

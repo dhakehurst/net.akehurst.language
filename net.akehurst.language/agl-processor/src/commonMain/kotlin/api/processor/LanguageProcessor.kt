@@ -19,7 +19,7 @@ package net.akehurst.language.api.processor
 import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.language.grammar.Grammar
-import net.akehurst.language.api.semanticAnalyser.ScopeModel
+import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.sppt.LeafData
 import net.akehurst.language.api.sppt.SPPTParser
@@ -56,7 +56,7 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     /*
      * model of the scopes and references for the LanguageDefinition of this LanguageProcessor
      */
-    val scopeModel: ScopeModel
+    val scopeModel: CrossReferenceModel
 
     val formatterModel: AglFormatterModel?
 

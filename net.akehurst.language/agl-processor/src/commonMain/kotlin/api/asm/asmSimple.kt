@@ -110,12 +110,8 @@ open class AsmSimple() {
 
 class AsmElementSimple(
     val asmPath: AsmElementPath,
-//    val asm: AsmSimple,
     val typeName: String
 ) {
-    init {
-//        this.asm.elementIndex[asmPath] = this
-    }
 
     private var _properties = mutableMapOf<String, AsmElementProperty>()
 
@@ -147,11 +143,6 @@ class AsmElementSimple(
     fun getPropertyAsList(name: String): List<Any> = getProperty(name) as List<Any>
     fun getPropertyAsListOfElement(name: String): List<AsmElementSimple> = getProperty(name) as List<AsmElementSimple>
 
-    /*
-        fun setPropertyAsString(name: String, value: String?) = setProperty(name, value, false)
-        fun setPropertyAsListOfString(name: String, value: List<String>?) = setProperty(name, value, false)
-        fun setPropertyAsAsmElement(name: String, value: AsmElementSimple?, isReference: Boolean) = setProperty(name, value, isReference)
-    */
     fun setProperty(name: String, value: Any?, childIndex: Int) {
         _properties[name] = AsmElementProperty(name, childIndex, value)
     }

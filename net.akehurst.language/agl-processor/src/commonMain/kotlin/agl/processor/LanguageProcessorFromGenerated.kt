@@ -17,13 +17,13 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.api.generator.GeneratedLanguageProcessorAbstract
-import net.akehurst.language.agl.language.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.grammar.RuleItem
+import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.processor.Formatter
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
-import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 
@@ -36,7 +36,7 @@ internal class LanguageProcessorFromGenerated<AsmType : Any, ContextType : Any>(
 
     override val runtimeRuleSet: RuntimeRuleSet = generated.ruleSet as RuntimeRuleSet
     override val mapToGrammar: (Int, Int) -> RuleItem = generated.mapToGrammar
-    override val scopeModel: ScopeModel = generated.scopeModel ?: ScopeModelAgl()
+    override val scopeModel: CrossReferenceModel = generated.scopeModel ?: CrossReferenceModelDefault()
     override val syntaxAnalyser: SyntaxAnalyser<AsmType>? = generated.syntaxAnalyser
     override val formatter: Formatter<AsmType>? = generated.formatter
     override val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>? = generated.semanticAnalyser

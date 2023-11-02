@@ -17,11 +17,11 @@
 
 package net.akehurst.language.api.scopes.test
 
-import net.akehurst.language.agl.language.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 
 object ScopeModelTest {
 
-    fun assertEqual(expected: ScopeModelAgl, actual: ScopeModelAgl) {
+    fun assertEqual(expected: CrossReferenceModelDefault, actual: CrossReferenceModelDefault) {
 
     }
 

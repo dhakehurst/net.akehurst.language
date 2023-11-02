@@ -157,7 +157,7 @@ abstract class StructuredTypeBuilder(
         val atargs = typeArgs.map { _namespace.createTypeInstance(_structuredType, it, emptyList(), false) }
         val targs = if (btargs.isEmpty()) atargs else btargs
         val ti = _namespace.createTypeInstance(_structuredType, typeName, targs, isNullable)
-        return _structuredType.appendStoredProperty(propertyName, ti, characteristics)
+        return _structuredType.appendPropertyStored(propertyName, ti, characteristics)
     }
 
     fun propertyPrimitiveType(propertyName: String, typeName: String, isNullable: Boolean, childIndex: Int): PropertyDeclaration =
@@ -233,7 +233,7 @@ abstract class StructuredTypeBuilder(
     fun property(propertyName: String, typeUse: TypeInstance, childIndex: Int): PropertyDeclaration {
         check(childIndex >= _structuredType.property.size) { "Incorrect property index" }
         val characteristics = setOf(PropertyCharacteristic.COMPOSITE)
-        return _structuredType.appendStoredProperty(propertyName, typeUse, characteristics, childIndex)
+        return _structuredType.appendPropertyStored(propertyName, typeUse, characteristics, childIndex)
     }
 }
 

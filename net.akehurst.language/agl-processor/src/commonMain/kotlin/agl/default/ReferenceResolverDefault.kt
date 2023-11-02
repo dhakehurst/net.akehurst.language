@@ -17,17 +17,17 @@
 
 package net.akehurst.language.agl.default
 
-import net.akehurst.language.agl.language.scopes.CollectionReferenceExpressionDefault
-import net.akehurst.language.agl.language.scopes.PropertyReferenceExpressionDefault
+import net.akehurst.language.agl.language.expressions.evaluateFor
+import net.akehurst.language.agl.language.reference.CollectionReferenceExpressionDefault
+import net.akehurst.language.agl.language.reference.PropertyReferenceExpressionDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
-import net.akehurst.language.agl.semanticAnalyser.evaluateFor
 import net.akehurst.language.agl.semanticAnalyser.propertyFor
 import net.akehurst.language.api.asm.*
+import net.akehurst.language.api.language.reference.CrossReferenceModel
+import net.akehurst.language.api.language.reference.ReferenceExpression
+import net.akehurst.language.api.language.reference.Scope
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.semanticAnalyser.ReferenceExpression
-import net.akehurst.language.api.semanticAnalyser.Scope
-import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.collections.mutableStackOf
 
 typealias ResolveFunction = (ref: AsmElementPath) -> AsmElementSimple?
@@ -42,7 +42,7 @@ data class ReferenceExpressionContext(
  * Properties in the asm that are references
  */
 class ReferenceResolverDefault(
-    val scopeModel: ScopeModel,
+    val scopeModel: CrossReferenceModel,
     val rootScope: ScopeSimple<AsmElementPath>,
     val resolveFunction: ResolveFunction?,
     private val _locationMap: Map<Any, InputLocation>,

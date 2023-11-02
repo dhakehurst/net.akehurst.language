@@ -21,7 +21,7 @@ import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.language.format.AglFormatterModelDefault
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
-import net.akehurst.language.agl.language.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
@@ -43,8 +43,8 @@ import kotlin.test.assertTrue
 class test_StatechartTools_References {
 
     companion object {
-        private val grammarStr = this::class.java.getResource("/itemis-create/version_/grammar.agl")?.readText() ?: error("File not found")
-        private val scopeModelStr = this::class.java.getResource("/itemis-create/version_/references.agl")?.readText() ?: error("File not found")
+        private val grammarStr = this::class.java.getResource("/Statecharts/version_/grammar.agl")?.readText() ?: error("File not found")
+        private val scopeModelStr = this::class.java.getResource("/Statecharts/version_/references.agl")?.readText() ?: error("File not found")
 
         private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!
         private val processors = lazyMutableMapNonNull<String, LanguageProcessor<AsmSimple, ContextSimple>> { grmName ->
@@ -53,7 +53,7 @@ class test_StatechartTools_References {
                 targetGrammarName(null) //use default
                 defaultGoalRuleName(null) //use default
                 typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
+                scopeModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
                     ProcessResultDefault(
                         SyntaxAnalyserDefault(p.grammar!!.qualifiedName, p.typeModel, p.scopeModel),
@@ -226,7 +226,7 @@ class test_StatechartTools_References {
         }
 
         val expectedAsm = asmSimple(
-            scopeModel = processors[grammar]!!.scopeModel as ScopeModelAgl,
+            scopeModel = processors[grammar]!!.scopeModel as CrossReferenceModelDefault,
             context = ContextSimple()
         ) {
             element("Statechart") {
@@ -263,7 +263,6 @@ class test_StatechartTools_References {
 
         test(grammar, goal, sentence, ContextSimple(), expectedContext, expectedAsm)
     }
-
 
     @Test
     fun Global_identify_interface() {
@@ -399,12 +398,12 @@ StatechartSpecification {
 
         val expectedContext = contextSimple {
             scopedItem("InternalDeclarations", "InternalDeclarations", "/0/statechartLevelDeclaration/0") {
-                item("func", "OperationDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration")
+                scopedItem("func", "OperationDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration") {}
             }
         }
 
         val expectedAsm = asmSimple(
-            scopeModel = processors[grammar]!!.scopeModel as ScopeModelAgl,
+            scopeModel = processors[grammar]!!.scopeModel as CrossReferenceModelDefault,
             context = ContextSimple()
         ) {
             element("StatechartSpecification") {

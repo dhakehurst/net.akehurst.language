@@ -15,34 +15,124 @@
  *
  */
 
-package net.akehurst.language.api.asm
+package net.akehurst.language.agl.language.expressions
 
+import net.akehurst.language.api.asm.AsmElementSimple
+import net.akehurst.language.api.asm.asmSimple
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class test_SimpleTypeModelStdLib_eval {
 
     @Test
-    fun collection_List_size__1() {
+    fun collection_List_size__empty() {
         val asm = asmSimple {
-
+            element("Test") {
+                propertyListOfString("list", listOf())
+            }
         }
-        assertEquals(0, asm.rootElements.size)
+        assertEquals(1, asm.rootElements.size)
 
         val root = asm.rootElements[0] as AsmElementSimple
 
-        assertEquals(1, root.evaluate("list.size") )
+        assertEquals(0, root.evaluateStr("list.size"))
     }
 
     @Test
-    fun collection_List_first__a() {
+    fun collection_List_size() {
         val asm = asmSimple {
-
+            element("Test") {
+                propertyListOfString("list", listOf("A", "B", "C", "D"))
+            }
         }
-        assertEquals(0, asm.rootElements.size)
+        assertEquals(1, asm.rootElements.size)
 
         val root = asm.rootElements[0] as AsmElementSimple
 
-        assertEquals("a", root.evaluate("list.first") )
+        assertEquals(4, root.evaluateStr("list.size"))
+    }
+
+    @Test
+    fun collection_List_size__missing_prop_name() {
+        val asm = asmSimple {
+            element("Test") {
+                propertyListOfString("list", listOf())
+            }
+        }
+        assertEquals(1, asm.rootElements.size)
+
+        val root = asm.rootElements[0] as AsmElementSimple
+
+        assertEquals(null, root.evaluateStr("list2.size"))
+    }
+
+    @Test
+    fun collection_List_first() {
+        val asm = asmSimple {
+            element("Test") {
+                propertyListOfString("list", listOf("A", "B", "C", "D"))
+            }
+        }
+        assertEquals(1, asm.rootElements.size)
+
+        val root = asm.rootElements[0] as AsmElementSimple
+
+        assertEquals("A", root.evaluateStr("list.first"))
+    }
+
+    @Test
+    fun collection_List_last() {
+        val asm = asmSimple {
+            element("Test") {
+                propertyListOfString("list", listOf("A", "B", "C", "D"))
+            }
+        }
+        assertEquals(1, asm.rootElements.size)
+
+        val root = asm.rootElements[0] as AsmElementSimple
+
+        assertEquals("D", root.evaluateStr("list.last"))
+    }
+
+    @Test
+    fun collection_List_back() {
+        val asm = asmSimple {
+            element("Test") {
+                propertyListOfString("list", listOf("A", "B", "C", "D"))
+            }
+        }
+        assertEquals(1, asm.rootElements.size)
+
+        val root = asm.rootElements[0] as AsmElementSimple
+
+        assertEquals(listOf("B", "C", "D"), root.evaluateStr("list.back"))
+    }
+
+    @Test
+    fun collection_List_front() {
+        val asm = asmSimple {
+            element("Test") {
+                propertyListOfString("list", listOf("A", "B", "C", "D"))
+            }
+        }
+        assertEquals(1, asm.rootElements.size)
+
+        val root = asm.rootElements[0] as AsmElementSimple
+
+        assertEquals(listOf("A", "B", "C"), root.evaluateStr("list.front"))
+    }
+
+    @Test
+    fun collection_List_join() {
+        val asm = asmSimple {
+            element("Test") {
+                propertyListOfString("list", listOf("A", "B", "C", "D"))
+            }
+        }
+        assertEquals(1, asm.rootElements.size)
+
+        val root = asm.rootElements[0] as AsmElementSimple
+
+        assertEquals("ABCD", root.evaluateStr("list.join"))
     }
 }

@@ -14,26 +14,21 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.language.scopes
+package net.akehurst.language.agl.language.reference
 
+import net.akehurst.language.agl.language.expressions.ExpressionsGrammar
 import net.akehurst.language.agl.language.grammar.AglGrammarGrammar
-import net.akehurst.language.agl.language.grammar.asm.GrammarAbstract
-import net.akehurst.language.agl.language.grammar.asm.GrammarBuilderDefault
-import net.akehurst.language.agl.language.grammar.asm.GrammarOptionDefault
-import net.akehurst.language.agl.language.grammar.asm.NamespaceDefault
+import net.akehurst.language.agl.language.grammar.asm.*
 import net.akehurst.language.api.language.grammar.GrammarRule
 
 /**
 
  */
-internal object AglScopesGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl"), "AglScopes") {
-    //companion object {
+internal object ReferencesGrammar : GrammarAbstract(NamespaceDefault("net.akehurst.language.agl.language"), "References") {
     const val goalRuleName = "unit"
     private fun createRules(): List<GrammarRule> {
-        val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl"), "AglStyle");
-        b.skip("WHITESPACE", true).concatenation(b.terminalPattern("\\s+"));
-        b.skip("MULTI_LINE_COMMENT", true).concatenation(b.terminalPattern("/\\*[^*]*\\*+([^*/][^*]*\\*+)*/"));
-        b.skip("SINGLE_LINE_COMMENT", true).concatenation(b.terminalPattern("//[^\\n\\r]*"));
+        val b: GrammarBuilderDefault = GrammarBuilderDefault(NamespaceDefault("net.akehurst.language.agl.language"), "References");
+        b.extendsGrammar(ExpressionsGrammar)
 
         b.rule("unit").multi(0, -1, b.nonTerminal("namespace"))
         b.rule("namespace")
@@ -45,7 +40,16 @@ internal object AglScopesGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
         b.rule("identifiables").multi(0, -1, b.nonTerminal("identifiable"))
         b.rule("identifiable").concatenation(b.terminalLiteral("identify"), b.nonTerminal("typeReference"), b.terminalLiteral("by"), b.nonTerminal("expression"))
         b.rule("referencesOpt").optional(b.nonTerminal("references"))
-        b.rule("references").concatenation(b.terminalLiteral("references"), b.terminalLiteral("{"), b.nonTerminal("referenceDefinitions"), b.terminalLiteral("}"))
+        b.rule("references").concatenation(
+            b.terminalLiteral("references"),
+            b.terminalLiteral("{"),
+            b.nonTerminal("externalTypesOpt"),
+            b.nonTerminal("referenceDefinitions"),
+            b.terminalLiteral("}")
+        )
+        b.rule("externalTypesOpt").optional(b.nonTerminal("externalTypes"))
+        b.rule("externalTypes").concatenation(b.terminalLiteral("external-types"), b.nonTerminal("externalTypeList"))
+        b.rule("externalTypeList").separatedList(1, -1, b.terminalLiteral(","), b.nonTerminal("typeReference"))
         b.rule("referenceDefinitions").multi(0, -1, b.nonTerminal("referenceDefinition"))
         b.rule("referenceDefinition").concatenation(
             b.terminalLiteral("in"),
@@ -81,22 +85,9 @@ internal object AglScopesGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
         )
         b.rule("ofTypeOpt").optional(b.nonTerminal("ofType"))
         b.rule("ofType").concatenation(b.terminalLiteral("of-type"), b.nonTerminal("typeReference"))
-        b.rule("expression").choiceLongestFromConcatenationItem(
-            b.nonTerminal("rootExpression"),
-            b.nonTerminal("navigation")
-        )
-        b.rule("rootExpression").choiceLongestFromConcatenationItem(
-            b.nonTerminal("nothing"),
-            b.nonTerminal("self")
-        )
-        b.rule("nothing").concatenation(b.terminalLiteral("§nothing"))
-        b.rule("self").concatenation(b.terminalLiteral("§self"))
-        b.rule("navigation").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("propertyReference"))
+
         b.rule("typeReferences").separatedList(1, -1, b.terminalLiteral("|"), b.nonTerminal("typeReference"))
         b.rule("typeReference").concatenation(b.nonTerminal("IDENTIFIER"))
-        b.rule("propertyReference").concatenation(b.nonTerminal("IDENTIFIER"))
-        b.rule("qualifiedName").separatedList(1, -1, b.terminalLiteral("."), b.nonTerminal("IDENTIFIER"))
-        b.leaf("IDENTIFIER").concatenation(b.terminalPattern("[a-zA-Z_][a-zA-Z_0-9-]*"));
 
         return b.grammar.grammarRule
     }
@@ -105,12 +96,9 @@ internal object AglScopesGrammar : GrammarAbstract(NamespaceDefault("net.akehurs
     override val defaultGoalRule: GrammarRule get() = this.findAllResolvedGrammarRule(goalRuleName)!!
 
     const val grammarStr = """
-namespace net.akehurst.language.agl
-grammar AglScopes {
+namespace net.akehurst.language.agl.language
 
-    skip WHITESPACE = "\s+" ;
-    skip MULTI_LINE_COMMENT = "/\*[^*]*\*+(?:[^*`/`][^*]*\*+)*`/`" ;
-    skip SINGLE_LINE_COMMENT = "//[\n\r]*?" ;
+grammar References extends Expressions {
 
     unit = namespace* ;
     namespace = 'namespace' qualifiedName '{' declarations '}' ;
@@ -121,7 +109,8 @@ grammar AglScopes {
     identifiables = identifiable* ;
     identifiable = 'identify' typeReference 'by' expression ;
 
-    references = 'references' '{' referenceDefinitions '}' ;
+    references = 'references' '{' externalTypes? referenceDefinitions '}' ;
+    externalTypes = 'external-types' [typeReference / ',']+ ;
     referenceDefinitions = referenceDefinition* ;
     referenceDefinition = 'in' typeReference '{' referenceExpression* '}' ;
     referenceExpression = propertyReferenceExpression | collectionReferenceExpression ;
@@ -130,20 +119,9 @@ grammar AglScopes {
     collectionReferenceExpression = 'forall' navigation ofType? '{' referenceExpressionList '}' ;
     ofType = 'of-type' typeReference ;
     
-    expression
-      = rootExpression
-      | navigation
-      ;
-    rootExpression = nothing | self ;
-    nothing = '§nothing' ;
-    self = '§self' ;
-    navigation = [propertyReference / '.']+ ;
     typeReferences = [typeReference / '|']+ ;
-
     typeReference = IDENTIFIER ;
-    propertyReference = IDENTIFIER ;
-    qualifiedName = [IDENTIFIER / '.']+ ;
-    leaf IDENTIFIER = "[a-zA-Z_][a-zA-Z_0-9-]*" ;
+
 }
 """
 
@@ -167,6 +145,11 @@ ReferenceDefinition -> "in §typeReference property §propertyReference refers-t
     """
 
     init {
+        super.extends.add(
+            GrammarReferenceDefault(ExpressionsGrammar.namespace, ExpressionsGrammar.qualifiedName).also {
+                it.resolveAs(ExpressionsGrammar)
+            }
+        )
         super.grammarRule.addAll(createRules())
     }
 

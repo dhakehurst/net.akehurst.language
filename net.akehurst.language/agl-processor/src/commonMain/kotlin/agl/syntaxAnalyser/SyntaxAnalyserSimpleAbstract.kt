@@ -27,8 +27,9 @@ import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.AsmSimple
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
-import net.akehurst.language.api.semanticAnalyser.ScopeModel
+import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.sppt.*
+import net.akehurst.language.collections.MutableStack
 import net.akehurst.language.collections.mutableStackOf
 import net.akehurst.language.collections.toSeparatedList
 import net.akehurst.language.typemodel.api.*
@@ -60,7 +61,7 @@ data class ChildData(
 abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
     val grammarNamespaceQualifiedName: String,
     val typeModel: TypeModel,
-    val scopeModel: ScopeModel
+    val scopeModel: CrossReferenceModel
 ) : SyntaxAnalyserFromTreeDataAbstract<A>() {
 
     companion object {
@@ -90,7 +91,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
 //    }
 
     override fun walkTree(sentence: Sentence, treeData: TreeDataComplete<out SpptDataNode>, skipDataAsTree: Boolean) {
-        val syntaxAnalyserStack = mutableStackOf(this)
+        val syntaxAnalyserStack: MutableStack<SyntaxAnalyserSimpleAbstract<A>> = mutableStackOf(this)
         val downStack = mutableStackOf<DownData>() //when null don't use branch
         val stack = mutableStackOf<ChildData>()
         val walker = object : SpptWalker {
@@ -158,7 +159,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
                 val embGrmName = embeddedRhs.embeddedRuntimeRuleSet.qualifiedName
                 val embSyntaxAnalyser = embeddedSyntaxAnalyser[embGrmName] as SyntaxAnalyserSimpleAbstract?
                     ?: error("Embedded SyntaxAnalyser not found for '$embGrmName' in SyntaxAnalyser for '${grammarNamespaceQualifiedName}'")
-                syntaxAnalyserStack.push(embSyntaxAnalyser)
+                syntaxAnalyserStack.push(embSyntaxAnalyser as SyntaxAnalyserSimpleAbstract<A>)
                 val parentDownData = downStack.peek()!!
                 val p = syntaxAnalyserStack.peek().pathFor(parentDownData.path, parentDownData.typeUse.forChildren.type, nodeInfo)
                 val tu = syntaxAnalyserStack.peek().findTypeUsageForRule(embRuleName)
@@ -210,7 +211,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
             is UnnamedSupertypeType -> parentPath
             is CollectionType -> parentPath.plus(nodeInfo.child.index.toString())
             is TupleType -> {
-                val prop = parentType.getPropertyByIndex(nodeInfo.child.propertyIndex)
+                val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
                 prop?.let { parentPath.plus(prop.name) } ?: parentPath.plus("<error>")
             }
 
@@ -218,7 +219,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
                 when {
                     parentType.subtypes.isNotEmpty() -> parentPath
                     else -> {
-                        val prop = parentType.getPropertyByIndex(nodeInfo.child.propertyIndex)
+                        val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
                         prop?.let { parentPath.plus(prop.name) } ?: parentPath.plus("<error>")
                     }
                 }
@@ -274,7 +275,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
         val type = parentTypeUsage.type
         return when (type) {
             is DataType -> {
-                val prop = type.getPropertyByIndex(nodeInfo.child.propertyIndex)
+                val prop = type.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
                 prop?.typeInstance ?: typeModel.NothingType.instance()
             }
 
@@ -306,7 +307,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
     }
 
     private fun typeForParentTuple(parentType: TupleType, nodeInfo: SpptDataNodeInfo): TypeInstance {
-        val prop = parentType.getPropertyByIndex(nodeInfo.child.propertyIndex)
+        val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
         return typeForProperty(prop, nodeInfo)
     }
 
@@ -318,7 +319,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
             }
 
             else -> {
-                val prop = parentType.getPropertyByIndex(nodeInfo.child.propertyIndex)
+                val prop = parentType.getPropertyByIndexOrNull(nodeInfo.child.propertyIndex)
                 typeForProperty(prop, nodeInfo)
             }
         }
@@ -377,15 +378,15 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
             type is DataType && type.property.size == 1 -> {
                 // special cases where PT is compressed for lists (and optionals)
                 when {
-                    type.property.values.first().typeInstance.isNullable -> {
-                        val fProp = type.property.values.first()
+                    type.property.first().typeInstance.isNullable -> {
+                        val fProp = type.property.first()
                         val pp = p.plus(fProp.name)
                         DownData(pp, NodeTypes(typeUsage, fProp.typeInstance))
                     }
 
                     nodeInfo.node.rule.isOptional -> DownData(p, NodeTypes(typeUsage))
                     nodeInfo.node.rule.isList -> {
-                        val fProp = type.property.values.first()
+                        val fProp = type.property.first()
                         val pp = p.plus(fProp.name)
                         DownData(pp, NodeTypes(typeUsage, fProp.typeInstance))
                     }
@@ -480,7 +481,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
 
                                         else -> createListSimpleValueFromBranch(target, downData.path, children.map { it.value }, type)
                                     }
-                                    val propDecl = (targetType.type as DataType).property.values.first()
+                                    val propDecl = (targetType.type as DataType).property.first()
                                     val el = createAsmElement(downData.path, targetType.type.name)
                                     setPropertyOrReferenceFromDeclaration(el, propDecl, propValue)
                                     el
@@ -494,7 +495,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
                             when {
                                 null != targetType && targetType.type != SimpleTypeModelStdLib.ListSeparated && targetType.type is DataType -> {
                                     val propValue = createListSeparatedValueFromBranch(target, downData.path, children.map { it.value }, type)
-                                    val propDecl = (targetType.type as DataType).property.values.first()
+                                    val propDecl = (targetType.type as DataType).property.first()
                                     val el = createAsmElement(downData.path, targetType.type.name)
                                     setPropertyOrReferenceFromDeclaration(el, propDecl, propValue)
                                     el
@@ -517,7 +518,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
                             children[0].value
                         } else {
                             val el = createAsmElement(downData.path, type.name)
-                            for (propDecl in type.property.values) {
+                            for (propDecl in type.property) {
                                 val propType = propDecl.typeInstance.type
                                 val propValue: Any? = when (propType) {
                                     is PrimitiveType -> {
@@ -671,7 +672,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
     private fun createTupleFrom(sentence: Sentence, type: TupleType, path: AsmElementPath, childData: ChildData): AsmElementSimple {
         val el = createAsmElement(path, type.name) // TODO: should have a createTuple method
         val v = childData.value
-        for (propDecl in type.property.values) {
+        for (propDecl in type.property) {
             val propType = propDecl.typeInstance
             when (v) {
                 is List<*> -> {
@@ -701,7 +702,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : AsmSimple>(
             children[0].value
         } else {
             val el = createAsmElement(path, type.name)
-            for (propDecl in type.property.values) {
+            for (propDecl in type.property) {
                 val propPath = path + propDecl.name
                 val propType = propDecl.typeInstance.type
                 val childData = children[propDecl.index]

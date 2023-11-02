@@ -110,10 +110,10 @@ object TypeModelTest {
         assertEquals(expected.subtypes.map { it.type.qualifiedName }.toSet(), actual.subtypes.map { it.type.qualifiedName }.toSet())
 
         assertEquals(expected.property.size, actual.property.size, "Wrong number of properties for '${expected.name}'")
-        for (k in expected.property.keys) {
-            val expEl = expected.property[k]
-            val actEl = actual.property[k]
-            assertNotNull(actEl, "expected PropertyDeclaration '$k' not found in actual ElementType '${expected.name}'. [${actual.property.values.joinToString { it.name }}]")
+        for (i in expected.property.indices) {
+            val expEl = expected.property[i]
+            val actEl = actual.property[i]
+            assertNotNull(actEl, "expected PropertyDeclaration '${expEl.name}' not found in actual ElementType '${expected.name}'. [${actual.property.joinToString { it.name }}]")
             tmAssertEquals(expEl, actEl)
         }
     }
@@ -127,20 +127,20 @@ object TypeModelTest {
         // assertEquals(expected.subtypes.map { it.name }.toSet(), actual.subtypes.map { it.name }.toSet())
 
         assertEquals(expected.property.size, actual.property.size, "Wrong number of properties for '${expected.name}'")
-        for (k in expected.property.keys) {
-            val expEl = expected.property[k]
-            val actEl = actual.property[k]
-            assertNotNull(actEl, "expected PropertyDeclaration '$k' not found in actual ElementType '${expected.name}'. [${actual.property.values.joinToString { it.name }}]")
+        for (i in expected.property.indices) {
+            val expEl = expected.property[i]
+            val actEl = actual.property[i]
+            assertNotNull(actEl, "expected PropertyDeclaration '${expEl.name}' not found in actual ElementType '${expected.name}'. [${actual.property.joinToString { it.name }}]")
             tmAssertEquals(expEl, actEl)
         }
     }
 
     private fun tmAssertEquals(expected: TupleType, actual: TupleType) {
         assertEquals(expected.property.size, actual.property.size, "Wrong number of properties for '${expected.name}'")
-        for (k in expected.property.keys) {
-            val expEl = expected.property[k]
-            val actEl = actual.property[k]
-            assertNotNull(actEl, "expected PropertyDeclaration '$k' not found in actual TupleType '${expected.name}'. [${actual.property.values.joinToString { it.name }}]")
+        for (i in expected.property.indices) {
+            val expEl = expected.property[i]
+            val actEl = actual.property[i]
+            assertNotNull(actEl, "expected PropertyDeclaration '${expEl.name}' not found in actual TupleType '${expected.name}'. [${actual.property.joinToString { it.name }}]")
             tmAssertEquals(expEl, actEl)
         }
     }

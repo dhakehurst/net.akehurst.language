@@ -24,7 +24,7 @@ import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.language.format.AglFormatterModelDefault
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.language.grammar.GrammarContext
-import net.akehurst.language.agl.language.scopes.ScopeModelAgl
+import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
@@ -58,7 +58,7 @@ object Agl {
         targetGrammarName(null) //use default
         defaultGoalRuleName(null) //use default
         typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-        scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.typeModel), "") }
+        scopeModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), "") }
         syntaxAnalyserResolver { p ->
             ProcessResultDefault(
                 SyntaxAnalyserDefault(p.grammar!!.qualifiedName, p.typeModel, p.scopeModel),
@@ -133,7 +133,7 @@ object Agl {
     ): LanguageProcessorResult<AsmSimple, ContextSimple> {
         val config = Agl.configuration(Agl.configurationDefault()) {
             if (null != scopeModelStr) {
-                scopeModelResolver { p -> ScopeModelAgl.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
+                scopeModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
             }
             if (null != styleModelStr) {
                 styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), styleModelStr) }

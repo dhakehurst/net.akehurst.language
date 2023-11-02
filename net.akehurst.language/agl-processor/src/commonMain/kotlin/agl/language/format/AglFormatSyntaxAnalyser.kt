@@ -19,9 +19,9 @@ import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.processor.SyntaxAnalysisResultDefault
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.language.grammar.RuleItem
+import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.SyntaxAnalysisResult
-import net.akehurst.language.api.semanticAnalyser.ScopeModel
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
 import net.akehurst.language.typemodel.api.TypeModel
@@ -29,23 +29,18 @@ import net.akehurst.language.typemodel.api.TypeModel
 internal class AglFormatSyntaxAnalyser(
     grammarNamespaceQualifiedName: String,
     val typeModel: TypeModel,
-    val scopeModel: ScopeModel
+    val scopeModel: CrossReferenceModel
 ) : SyntaxAnalyser<AglFormatterModel> {
 
     private val _sa = SyntaxAnalyserDefault(grammarNamespaceQualifiedName, typeModel, scopeModel)
 
     override val locationMap: Map<Any, InputLocation> get() = _sa.locationMap
 
+    override val extendsSyntaxAnalyser: Map<String, SyntaxAnalyser<*>> = emptyMap()
     override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<AglFormatterModel>> = emptyMap()
 
     override fun clear() {
-        //TODO("not implemented")
     }
-
-//    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
-//        //TODO("not implemented")
-//        return emptyList()
-//    }
 
     override fun transform(sppt: SharedPackedParseTree, mapToGrammar: (Int, Int) -> RuleItem?): SyntaxAnalysisResult<AglFormatterModel> {
         val res = _sa.transform(sppt, mapToGrammar)

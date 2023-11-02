@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.language.scopes
+package net.akehurst.language.agl.language.reference
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.language.expressions.Expression
+import net.akehurst.language.api.language.expressions.Navigation
+import net.akehurst.language.api.language.reference.*
 import net.akehurst.language.api.processor.ProcessResult
-import net.akehurst.language.api.semanticAnalyser.*
+import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
-class ScopeModelAgl
-    : ScopeModel {
+class CrossReferenceModelDefault
+    : CrossReferenceModel {
     companion object {
         val ROOT_SCOPE_TYPE_NAME = "§root"
         val IDENTIFY_BY_NOTHING = "§nothing"
 
-        fun fromString(context: SentenceContext<String>?, aglScopeModelSentence: String): ProcessResult<ScopeModelAgl> {
+        fun fromString(context: SentenceContext<String>?, aglScopeModelSentence: String): ProcessResult<CrossReferenceModelDefault> {
             val proc = Agl.registry.agl.scopes.processor ?: error("Scopes language not found!")
             return proc.process(
                 sentence = aglScopeModelSentence,
@@ -95,10 +98,11 @@ data class DeclarationsForNamespaceDefault(
     override val qualifiedName: String
 ) : DeclarationsForNamespace {
     override val scopes = mutableMapOf<String, ScopeDefinitionDefault>()
+    override val externalTypes = mutableListOf<String>()
     override val references = mutableListOf<ReferenceDefinitionDefault>()
 
     init {
-        scopes[ScopeModelAgl.ROOT_SCOPE_TYPE_NAME] = ScopeDefinitionDefault(ScopeModelAgl.ROOT_SCOPE_TYPE_NAME)
+        scopes[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME] = ScopeDefinitionDefault(CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
     }
 
     override fun isScopeDefinedFor(typeName: String): Boolean {
@@ -128,31 +132,8 @@ data class ScopeDefinitionDefault(
 
 data class IdentifiableDefault(
     override val typeName: String,
-    override val identifiedBy: ExpressionAbstract
+    override val identifiedBy: Expression
 ) : Identifiable
-
-abstract class ExpressionAbstract : Expression {
-}
-
-data class NavigationDefault(
-    override val value: List<String>
-) : ExpressionAbstract(), Navigation {
-    constructor(vararg values: String) : this(values.toList())
-
-    override fun toString(): String = value.joinToString(separator = ".")
-}
-
-data class RootExpressionDefault(
-    val value: String
-) : ExpressionAbstract(), RootExpression {
-    companion object {
-        const val NOTHING = "§nothing"
-        const val SELF = "§self"
-    }
-
-    override val isNothing: Boolean get() = NOTHING == this.value
-    override val isSelf: Boolean get() = SELF == this.value
-}
 
 data class ReferenceDefinitionDefault(
     /**
@@ -170,14 +151,14 @@ data class PropertyReferenceExpressionDefault(
     /**
      * navigation to the property that is a reference
      */
-    val referringPropertyNavigation: NavigationDefault,
+    val referringPropertyNavigation: Navigation,
 
     /**
      * type of the asm element referred to
      */
     val refersToTypeName: List<String>,
 
-    val fromNavigation: NavigationDefault?
+    val fromNavigation: Navigation?
 ) : ReferenceExpressionAbstract() {
 
     /*    override fun isReference(propertyName: String): Boolean {
@@ -191,7 +172,7 @@ data class PropertyReferenceExpressionDefault(
 }
 
 data class CollectionReferenceExpressionDefault(
-    val navigation: NavigationDefault,
+    val navigation: Navigation,
     val ofType: String?,
     val referenceExpressionList: List<ReferenceExpressionAbstract>
 ) : ReferenceExpressionAbstract() {

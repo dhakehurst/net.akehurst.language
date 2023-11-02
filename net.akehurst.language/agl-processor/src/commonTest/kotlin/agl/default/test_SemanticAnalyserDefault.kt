@@ -21,7 +21,7 @@ import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.AsmElementPath
 import net.akehurst.language.api.asm.asmSimple
-import net.akehurst.language.api.semanticAnalyser.Scope
+import net.akehurst.language.api.language.reference.Scope
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
