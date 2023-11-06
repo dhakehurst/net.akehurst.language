@@ -17,8 +17,11 @@
 
 package net.akehurst.language.typemodel.api
 
+import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.test.TypeModelTest
 import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class test_typeModel {
 
@@ -47,5 +50,55 @@ class test_typeModel {
             }
 
         }*/
+
+    @Test
+    fun conformsTo() {
+        val tm = typeModel("test", true) {
+            namespace("ns") {
+                dataType("A")
+                dataType("B") {
+                    supertypes("A")
+                }
+                dataType("C") {
+                    supertypes("B")
+                }
+                dataType("D")
+            }
+        }
+
+        assertTrue(SimpleTypeModelStdLib.NothingType.conformsTo(SimpleTypeModelStdLib.NothingType))
+        assertFalse(SimpleTypeModelStdLib.NothingType.conformsTo(SimpleTypeModelStdLib.AnyType))
+        assertFalse(SimpleTypeModelStdLib.AnyType.conformsTo(SimpleTypeModelStdLib.NothingType))
+        assertTrue(SimpleTypeModelStdLib.String.conformsTo(SimpleTypeModelStdLib.AnyType))
+        assertTrue(SimpleTypeModelStdLib.List.instance(listOf(SimpleTypeModelStdLib.String)).conformsTo(SimpleTypeModelStdLib.AnyType))
+
+        val A = tm.findFirstByNameOrNull("A")!!
+        val B = tm.findFirstByNameOrNull("B")!!
+        val C = tm.findFirstByNameOrNull("C")!!
+        val D = tm.findFirstByNameOrNull("D")!!
+
+        assertTrue(A.conformsTo(SimpleTypeModelStdLib.AnyType.type))
+        assertFalse(SimpleTypeModelStdLib.AnyType.type.conformsTo(A))
+        assertTrue(A.conformsTo(A))
+        assertFalse(A.conformsTo(B))
+        assertFalse(A.conformsTo(C))
+        assertFalse(A.conformsTo(D))
+
+        assertTrue(B.conformsTo(SimpleTypeModelStdLib.AnyType.type))
+        assertFalse(SimpleTypeModelStdLib.AnyType.type.conformsTo(B))
+        assertTrue(B.conformsTo(A))
+        assertTrue(B.conformsTo(B))
+        assertFalse(B.conformsTo(C))
+        assertFalse(B.conformsTo(D))
+
+        assertTrue(C.conformsTo(SimpleTypeModelStdLib.AnyType.type))
+        assertFalse(SimpleTypeModelStdLib.AnyType.type.conformsTo(C))
+        assertTrue(C.conformsTo(A))
+        assertTrue(C.conformsTo(B))
+        assertTrue(C.conformsTo(C))
+        assertFalse(C.conformsTo(D))
+
+        TODO("Tuples, UnnamedSuperType, Lists, Primitives")
+    }
 
 }

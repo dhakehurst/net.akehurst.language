@@ -56,7 +56,7 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     /*
      * model of the scopes and references for the LanguageDefinition of this LanguageProcessor
      */
-    val scopeModel: CrossReferenceModel
+    val crossReferenceModel: CrossReferenceModel
 
     val formatterModel: AglFormatterModel?
 

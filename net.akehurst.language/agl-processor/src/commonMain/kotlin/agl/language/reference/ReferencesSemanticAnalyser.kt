@@ -30,14 +30,13 @@ import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.typemodel.api.CollectionType
 import net.akehurst.language.typemodel.api.DataType
 import net.akehurst.language.typemodel.api.TypeDeclaration
 import net.akehurst.language.typemodel.api.UnnamedSupertypeType
 
 class ReferencesSemanticAnalyser(
-) : SemanticAnalyser<CrossReferenceModelDefault, SentenceContext<String>> {
+) : SemanticAnalyser<CrossReferenceModelDefault, ContextFromTypeModel> {
 
     private val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
     private var _locationMap: Map<Any, InputLocation> = emptyMap()
@@ -53,13 +52,13 @@ class ReferencesSemanticAnalyser(
     override fun analyse(
         asm: CrossReferenceModelDefault,
         locationMap: Map<Any, InputLocation>?,
-        context: SentenceContext<String>?,
-        options: SemanticAnalysisOptions<CrossReferenceModelDefault, SentenceContext<String>>
+        context: ContextFromTypeModel?,
+        options: SemanticAnalysisOptions<CrossReferenceModelDefault, ContextFromTypeModel>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: mapOf()
         if (null != context) {
             asm.declarationsForNamespace.values.forEach {
-                val ns = (context as ContextFromTypeModel).typeModel.namespace[it.qualifiedName]
+                val ns = context.typeModel.namespace[it.qualifiedName]
                 when (ns) {
                     null -> issues.raise(
                         LanguageIssueKind.ERROR,

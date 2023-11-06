@@ -24,6 +24,11 @@ package net.akehurst.language.collections
 interface ListSeparated<I, S> : List<Any?> {
     val items: List<I>
     val separators: List<S>
+
+    /**
+     * all elements (items and separators)
+     */
+    val elements: List<Any?>
 }
 
 interface MutableListSeparated<I, S> : ListSeparated<I, S>, MutableList<Any?> {
@@ -37,7 +42,9 @@ inline fun <reified I, reified S> mutableListSeparated(): MutableListSeparated<I
 
 inline fun <reified I, reified S> List<*>.toSeparatedList(): ListSeparated<I, S> = ListSeparatedArrayList<I, S>(this)
 
-class ListSeparatedArrayList<I, S>(val elements: List<Any?>) : AbstractList<Any?>(), ListSeparated<I, S> {
+class ListSeparatedArrayList<I, S>(
+    override val elements: List<Any?>
+) : AbstractList<Any?>(), ListSeparated<I, S> {
 
     override val size: Int get() = elements.size
 
@@ -52,7 +59,7 @@ class ListSeparatedArrayList<I, S>(val elements: List<Any?>) : AbstractList<Any?
 
 class MutableListSeparatedArrayList<I, S> : AbstractMutableList<Any?>(), MutableListSeparated<I, S> {
 
-    val elements = mutableListOf<Any?>()
+    override val elements = mutableListOf<Any?>()
 
     override val size: Int get() = elements.size
 

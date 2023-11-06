@@ -16,6 +16,10 @@
 
 package net.akehurst.language.agl.language.grammar
 
-class GrammarContext {
-    //TODO: should provide other registered grammars
+import net.akehurst.language.api.processor.GrammarRegistry
+
+class ContextFromGrammarRegistry(
+    val grammarRegistry: GrammarRegistry
+) {
+
 }

@@ -1,0 +1,384 @@
+/*
+ * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *          http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+package net.akehurst.language.agl.asm
+
+import net.akehurst.language.api.asm.*
+import net.akehurst.language.collections.ListSeparated
+import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
+
+class AsmPathSimple(
+    override val value: String
+) : AsmPath {
+
+    companion object {
+        const val SEPARATOR = "/"
+        val ROOT = AsmPathSimple(SEPARATOR)
+    }
+
+    override val segments: List<String> get() = this.value.split(SEPARATOR)
+
+    override val parent: AsmPath?
+        get() = when {
+            ROOT == this -> null
+            else -> AsmPathSimple(this.value.substringBeforeLast("/"))
+        }
+
+    override operator fun plus(segment: String) = if (this == ROOT) AsmPathSimple("/$segment") else AsmPathSimple("$value/$segment")
+
+    override fun hashCode(): Int = this.value.hashCode()
+    override fun equals(other: Any?): Boolean = when {
+        other !is AsmPath -> false
+        this.value != other.value -> false
+        else -> true
+    }
+
+    override fun toString(): String = this.value
+}
+
+open class AsmSimple() : Asm {
+
+    companion object {
+        internal fun Any.asStringAny(indent: String, currentIndent: String = ""): String = when (this) {
+            is String -> "'$this'"
+            is List<*> -> when (this.size) {
+                0 -> "[]"
+                1 -> "[${this[0]?.asStringAny(indent, currentIndent)}]"
+                else -> {
+                    val newIndent = currentIndent + indent
+                    this.joinToString(separator = "\n$newIndent", prefix = "[\n$newIndent", postfix = "\n$currentIndent]") { it?.asStringAny(indent, newIndent) ?: "null" }
+                }
+            }
+
+            is AsmElementSimple -> this.asString(currentIndent, indent)
+            else -> error("property value type not handled '${this::class}'")
+        }
+    }
+
+    private var _nextElementId = 0
+
+    override val root: List<AsmValue> = mutableListOf()
+    override val elementIndex = mutableMapOf<AsmPath, AsmStructure>()
+
+    fun addRoot(root: AsmValue) {
+        (this.root as MutableList).add(root)
+    }
+
+    fun removeRoot(root: Any) {
+        (this.root as MutableList).remove(root)
+    }
+
+    fun createElement(asmPath: AsmPath, typeName: String): AsmElementSimple {
+        val el = AsmElementSimple(asmPath, typeName)// this, typeName)
+        this.elementIndex[asmPath] = el
+        return el
+    }
+
+    override fun traverseDepthFirst(callback: AsmTreeWalker) {
+        fun traverse(owningProperty: AsmStructureProperty?, value: AsmValue) {
+            when (value) {
+                is AsmNothing -> callback.onNothing(owningProperty, value)
+                is AsmPrimitive -> callback.onPrimitive(owningProperty, value)
+                is AsmStructure -> {
+                    callback.beforeStructure(owningProperty, value)
+                    for (prop in value.propertyOrdered) {
+                        callback.onProperty(value, prop)
+                        val pv = prop.value
+                        traverse(prop, pv)
+                    }
+                    callback.afterStructure(owningProperty, value)
+                }
+
+                is AsmList -> {
+                    callback.beforeList(owningProperty, value)
+                    value.elements.forEach { el -> traverse(owningProperty, el) }
+                    callback.afterList(owningProperty, value)
+                }
+
+                else -> Unit
+            }
+        }
+        this.root.forEach {
+            traverse(null, it)
+        }
+    }
+
+    override fun asString(currentIndent: String, indentIncrement: String): String = this.root.joinToString(separator = "\n") {
+        it.asStringAny(indentIncrement, currentIndent)
+    }
+
+}
+
+abstract class AsmValueAbstract() : AsmValue {
+    override val typeName: String get() = qualifiedTypeName.split(".").last()
+}
+
+object AsmNothingSimple : AsmValueAbstract() {
+    override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.NothingType.qualifiedTypeName
+    override fun asString(currentIndent: String, indentIncrement: String): String = "Nothing"
+    override fun equalTo(other: AsmValue): Boolean = when {
+        other !is AsmNothing -> false
+        else -> true
+    }
+}
+
+class AsmPrimitiveSimple(
+    override val qualifiedTypeName: String,
+    override val value: Any
+) : AsmValueAbstract(), AsmPrimitive {
+
+    override fun asString(currentIndent: String, indentIncrement: String): String = "'$value'"
+    override fun equalTo(other: AsmValue): Boolean = when {
+        other !is AsmPrimitive -> false
+        other.value != this.value -> false
+        else -> true
+    }
+
+}
+
+class AsmReferenceSimple(
+    override val reference: String,
+    override var value: AsmStructure?
+) : AsmValueAbstract(), AsmReference {
+
+    override val qualifiedTypeName: String
+        get() = when (value) {
+            null -> SimpleTypeModelStdLib.NothingType.qualifiedTypeName
+            else -> value!!.qualifiedTypeName
+        }
+
+    fun equalTo(other: AsmReferenceSimple): Boolean {
+        return when {
+            this.reference != other.reference -> false
+            else -> true
+        }
+    }
+
+    override fun asString(currentIndent: String, indentIncrement: String): String = when (value) {
+        null -> "<unresolved> &$reference"
+        else -> "&{'${value!!.path.value}' : ${value!!.typeName}}"
+    }
+
+    override fun equalTo(other: AsmValue): Boolean = when {
+        other !is AsmReference -> false
+        other.reference != this.reference -> false
+        else -> true
+    }
+
+    override fun hashCode(): Int = reference.hashCode()
+    override fun equals(other: Any?): Boolean = when {
+        other !is AsmReference -> false
+        other.reference != this.reference -> false
+        else -> true
+    }
+
+    override fun toString(): String = when (value) {
+        null -> "<unresolved> &$reference"
+        else -> "&{'${value!!.path.value}' : ${value!!.typeName}}"
+    }
+}
+
+class AsmElementSimple(
+    override val path: AsmPath,
+    override val qualifiedTypeName: String
+) : AsmValueAbstract(), AsmStructure {
+
+    private var _properties = mutableMapOf<String, AsmStructurePropertySimple>()
+
+    override val property: Map<String, AsmStructureProperty> = _properties
+    override val propertyOrdered
+        get() = property.values.sortedWith { a, b ->
+            val aIdx = a.index
+            val bIdx = b.index
+            when {
+                aIdx > bIdx -> 1
+                aIdx < bIdx -> -1
+                else -> 0
+            }
+        }
+
+    /**
+     * 'contained' elements's. i.e.
+     * value of non reference, AsmElementSimple type, properties
+     */
+    override val children: List<AsmElementSimple>
+        get() = this.property.values
+            .filterNot { it.isReference }
+            .flatMap { if (it.value is List<*>) it.value as List<*> else listOf(it.value) }
+            .filterIsInstance<AsmElementSimple>()
+
+    override fun hasProperty(name: String): Boolean = property.containsKey(name)
+
+    override fun getPropertyOrNull(name: String): AsmValue? = property[name]?.value
+    fun getPropertyAsStringOrNull(name: String): String? = getPropertyOrNull(name) as String?
+    fun getPropertyAsAsmElementOrNull(name: String): AsmElementSimple? = getPropertyOrNull(name) as AsmElementSimple?
+    fun getPropertyAsReferenceOrNull(name: String): AsmReferenceSimple? = getPropertyOrNull(name) as AsmReferenceSimple?
+    fun getPropertyAsListOrNull(name: String): List<Any>? = getPropertyOrNull(name) as List<Any>?
+
+    override fun getProperty(name: String): AsmValue = property[name]?.value ?: error("Cannot find property '$name' in element type '$typeName' with path '$path' ")
+    fun getPropertyAsString(name: String): String = getProperty(name) as String
+    fun getPropertyAsAsmElement(name: String): AsmElementSimple = getProperty(name) as AsmElementSimple
+    fun getPropertyAsReference(name: String): AsmReferenceSimple = getProperty(name) as AsmReferenceSimple
+    fun getPropertyAsList(name: String): List<Any> = getProperty(name) as List<Any>
+    fun getPropertyAsListOfElement(name: String): List<AsmElementSimple> = getProperty(name) as List<AsmElementSimple>
+
+    override fun setProperty(name: String, value: AsmValue, childIndex: Int) {
+        _properties[name] = AsmStructurePropertySimple(name, childIndex, value)
+    }
+
+    fun addAllProperty(value: List<AsmStructurePropertySimple>) {
+        value.forEach { this._properties[it.name] = it }
+    }
+
+    override fun asString(currentIndent: String, indentIncrement: String): String {
+        val newIndent = currentIndent + indentIncrement
+        val propsStr = this.property.values.joinToString(separator = "\n$newIndent", prefix = "{\n$newIndent", postfix = "\n$currentIndent}") {
+            if (it.isReference) {
+                val ref = it.value as AsmReferenceSimple
+                "${it.name} = $ref"
+            } else {
+                "${it.name} = ${it.value.asString(indentIncrement, newIndent)}"
+            }
+        }
+        return ":$typeName $propsStr"
+    }
+
+    override fun equalTo(other: AsmValue): Boolean = when {
+        other !is AsmStructure -> false
+        this.path != other.path -> false
+        this.qualifiedTypeName != other.qualifiedTypeName -> false
+        this.property.size != other.property.size -> false
+        else -> {
+            this.property.all { (k, v) ->
+                val o = other.property[k]
+                if (null == o) {
+                    false
+                } else {
+                    v.equalTo(o)
+                }
+            }
+        }
+    }
+
+    override fun hashCode(): Int = path.hashCode()
+
+    override fun equals(other: Any?): Boolean = when (other) {
+        is AsmElementSimple -> this.path == other.path //&& this.asm == other.asm
+        else -> false
+    }
+
+    override fun toString(): String = ":$typeName[${path.value}]"
+
+}
+
+class AsmStructurePropertySimple(
+    override val name: String,
+    override val index: Int,
+    value: AsmValue
+) : AsmStructureProperty {
+
+    override var value: AsmValue = value; private set
+
+    override val isReference: Boolean get() = this.value is AsmReferenceSimple
+
+    override fun convertToReferenceTo(referredValue: AsmStructure?) {
+        val v = this.value
+        when (v) {
+            is AsmNothing -> error("Cannot convert property '$this' a reference, it has value $AsmNothingSimple")
+            is AsmReferenceSimple -> v.value = referredValue
+            is AsmPrimitive -> {
+                check(v.value is String) { "Cannot convert non String value to reference, got '${v.value::class.simpleName}'" }
+                val ref = AsmReferenceSimple(v.value as String, referredValue)
+                this.value = ref
+            }
+
+            else -> error("Cannot convert property '$this' a reference, it has value of type '${v::class.simpleName}'")
+        }
+    }
+
+    override fun equalTo(other: AsmStructureProperty): Boolean {
+        return when {
+            this.name != other.name -> false
+            this.isReference != other.isReference -> false
+            else -> {
+                val t = this.value
+                val o = other.value
+                if (this.isReference) {
+                    if (t is AsmReferenceSimple && o is AsmReferenceSimple) {
+                        t.equalTo(o)
+                    } else {
+                        error("Cannot compare property values: ${t} and ${o}")
+                    }
+                } else {
+                    if (t is AsmElementSimple && o is AsmElementSimple) {
+                        t.equalTo(o)
+                    } else {
+                        t == o
+                    }
+                }
+            }
+        }
+    }
+
+    override fun toString(): String {
+        val v = this.value
+        return when (v) {
+            is AsmElementSimple -> "$name = :${v.typeName}"
+            is AsmList -> "$name = [...]"
+            is AsmPrimitive -> if (isReference) "$name = &${v}" else "$name = ${v}"
+            else -> "$name = ${v}"
+        }
+    }
+}
+
+class AsmListSimple(
+    override val elements: List<AsmValue>
+) : AsmValueAbstract(), AsmList {
+    override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.List.qualifiedName
+
+    override fun asString(currentIndent: String, indentIncrement: String): String =
+        this.elements.joinToString { it.asString(currentIndent, indentIncrement) }
+
+    override fun equalTo(other: AsmValue): Boolean = when {
+        other !is AsmList -> false
+        other.elements.size != this.elements.size -> false
+        else -> {
+            (0..this.elements.size).all {
+                this.elements[it].equalTo(other.elements[it])
+            }
+        }
+    }
+}
+
+class AsmListSeparatedSimple(
+    override val elements: ListSeparated<AsmValue, AsmValue>
+) : AsmValueAbstract(), AsmListSeparated {
+    override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.ListSeparated.qualifiedName
+
+    override fun asString(currentIndent: String, indentIncrement: String): String =
+        this.elements.elements.joinToString { (it as AsmValue).asString(currentIndent, indentIncrement) }
+
+    override fun equalTo(other: AsmValue): Boolean = when {
+        other !is AsmList -> false
+        other.elements.size != this.elements.size -> false
+        else -> {
+            (0..this.elements.size).all {
+                (this.elements[it] as AsmValue).equalTo(other.elements[it] as AsmValue)
+            }
+        }
+    }
+}

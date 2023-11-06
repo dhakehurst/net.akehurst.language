@@ -64,7 +64,6 @@ class test_AglStyle {
             })
     }
 
-
     @Test
     fun single_line_comment() {
 

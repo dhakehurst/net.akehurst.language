@@ -19,8 +19,10 @@ package net.akehurst.language.agl.formatter
 import net.akehurst.language.agl.language.format.AglFormatExpressionDefault
 import net.akehurst.language.agl.processor.FormatResultDefault
 import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.api.asm.AsmElementSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.asm.Asm
+import net.akehurst.language.api.asm.AsmList
+import net.akehurst.language.api.asm.AsmPrimitive
+import net.akehurst.language.api.asm.AsmStructure
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
@@ -33,7 +35,7 @@ class FormatterSimple<AsmType>(
     override fun format(asm: AsmType): FormatResult {
         val sb = StringBuilder()
 
-        for (root in (asm as AsmSimple).rootElements) {
+        for (root in (asm as Asm).root) {
             val str = formatAny(root)
             sb.append(str)
         }
@@ -45,20 +47,20 @@ class FormatterSimple<AsmType>(
         return when (o) {
             null -> ""
             is String -> o
-            is AsmElementSimple -> o.format(model)
+            is AsmStructure -> o.format(model)
             is List<*> -> o.joinToString(separator = "") { formatAny(it) }
             else -> error("Internal Error: type '${o::class.simpleName}' not supported")
         }
     }
 
-    fun AsmElementSimple.format(model: AglFormatterModel?): String {
+    fun AsmStructure.format(model: AglFormatterModel?): String {
         val formatRule = model?.rules?.get(this.typeName)
         return when (formatRule) {
             null -> {
-                this.propertiesOrdered.map {
+                this.propertyOrdered.map {
                     val propValue = it.value
                     when (propValue) {
-                        is String -> propValue + (model?.defaultWhiteSpace ?: "")
+                        is AsmPrimitive -> propValue.toString() + (model?.defaultWhiteSpace ?: "")
                         else -> formatAny(propValue)
                     }
                 }.joinToString(separator = "") { it }
@@ -68,20 +70,20 @@ class FormatterSimple<AsmType>(
         }
     }
 
-    fun AglFormatExpressionDefault.execute(model: AglFormatterModel?, el: AsmElementSimple): String {
+    fun AglFormatExpressionDefault.execute(model: AglFormatterModel?, el: AsmStructure): String {
         return when (this.asm.typeName) {
-            "LiteralString" -> el.getPropertyAsString("literal_string")
+            "LiteralString" -> (el.getProperty("literal_string") as AsmPrimitive).toString()
             "TemplateString" -> {
-                val templateContentList = this.asm.getPropertyAsListOfElement("templateContentList")
+                val templateContentList = (this.asm.getProperty("templateContentList") as AsmList).elements
                 templateContentList.joinToString(separator = model?.defaultWhiteSpace ?: "") {
                     when (it.typeName) {
-                        "Text" -> it.getPropertyAsString("raw_text")
+                        "Text" -> (it as AsmStructure).getProperty("raw_text").toString()
                         "TemplateExpressionSimple" -> {
-                            val id = it.getPropertyAsString("dollar_identifier").substringAfter("\$")
+                            val id = (it as AsmStructure).getProperty("dollar_identifier").toString().substringAfter("\$")
                             val pv = el.getProperty(id)
                             when (pv) {
-                                is String -> pv
-                                is AsmElementSimple -> pv.format(model)
+                                is AsmPrimitive -> pv.toString()
+                                is AsmStructure -> pv.format(model)
                                 else -> error("property ${pv} not handled")
                             }
                         }

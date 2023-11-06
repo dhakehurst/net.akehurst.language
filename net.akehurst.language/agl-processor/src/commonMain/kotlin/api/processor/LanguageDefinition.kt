@@ -16,7 +16,7 @@
 
 package net.akehurst.language.api.processor
 
-import net.akehurst.language.agl.language.grammar.GrammarContext
+import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.processor.AglLanguages
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.language.grammar.Grammar
@@ -41,7 +41,7 @@ interface LanguageRegistry : GrammarRegistry {
     fun <AsmType : Any, ContextType : Any> register(
         identity: String,
         grammarStr: String?,
-        aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
+        aglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>?,
         buildForDefaultGoal: Boolean,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>
     ): LanguageDefinition<AsmType, ContextType>
@@ -52,7 +52,7 @@ interface LanguageRegistry : GrammarRegistry {
 
     fun <AsmType : Any, ContextType : Any> findOrPlaceholder(
         identity: String,
-        aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
+        aglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>?,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>?
     ): LanguageDefinition<AsmType, ContextType>
 }
@@ -67,8 +67,8 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     var targetGrammarName: String?
     var defaultGoalRule: String?
 
-    var scopeModelStr: String?
-    var scopeModel: CrossReferenceModel?
+    var crossReferenceModelStr: String?
+    var crossReferenceModel: CrossReferenceModel?
 
     var configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 
@@ -92,7 +92,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val grammarStrObservers: MutableList<(String?, String?) -> Unit>
     val grammarObservers: MutableList<(Grammar?, Grammar?) -> Unit>
     val scopeStrObservers: MutableList<(String?, String?) -> Unit>
-    val scopeModelObservers: MutableList<(CrossReferenceModel?, CrossReferenceModel?) -> Unit>
+    val crossReferenceModelObservers: MutableList<(CrossReferenceModel?, CrossReferenceModel?) -> Unit>
     val formatterStrObservers: MutableList<(String?, String?) -> Unit>
     val formatterObservers: MutableList<(AglFormatterModel?, AglFormatterModel?) -> Unit>
     val styleStrObservers: MutableList<(String?, String?) -> Unit>

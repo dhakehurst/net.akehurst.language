@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.language.style
 
+import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
@@ -26,11 +27,10 @@ import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.style.AglStyleSelectorKind
 
-class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, SentenceContext<String>> {
+class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextFromGrammar> {
 
     companion object {
         private val aglGrammarQualifiedName = Agl.registry.agl.grammar.processor!!.grammar!!.qualifiedName
@@ -38,36 +38,18 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, SentenceConte
         private val aglGrammarNamespace: GrammarTypeNamespace
             get() = aglGrammarTypeModel.namespace[aglGrammarQualifiedName] as GrammarTypeNamespace? ?: error("Internal error")
 
-//        private val aglStyleQualifiedName = Agl.registry.agl.style.processor!!.grammar!!.qualifiedName
-//        private val aglStyleTypeModel = Agl.registry.agl.style.processor!!.typeModel
-//        private val aglStyleNamespace: GrammarTypeNamespace
-//            get() = aglStyleTypeModel.namespace[aglStyleQualifiedName] as GrammarTypeNamespace? ?: error("")
-
-
-        //        private val terminal = aglGrammarNamespace.findTypeUsageForRule("terminal") ?: error("Internal error: type for 'terminal' not found")
         private val grammarRule = aglGrammarNamespace.findTypeUsageForRule("grammarRule") ?: error("Internal error: type for 'grammarRule' not found")
-
-//        private val LITERAL = aglStyleNamespace.findTypeUsageForRule("LITERAL") ?: error("Internal error: type for 'LITERAL' not found")
-//        private val PATTERN = aglStyleNamespace.findTypeUsageForRule("PATTERN") ?: error("Internal error: type for 'PATTERN' not found")
-//        private val IDENTIFIER = aglStyleNamespace.findTypeUsageForRule("IDENTIFIER") ?: error("Internal error: type for 'IDENTIFIER' not found")
-//        private val META_IDENTIFIER = aglStyleNamespace.findTypeUsageForRule("META_IDENTIFIER") ?: error("Internal error: type for 'META_IDENTIFIER' not found")
-//        private val STYLE_ID = aglStyleNamespace.findTypeUsageForRule("STYLE_ID") ?: error("Internal error: type for 'STYLE_ID' not found")
-//        private val STYLE_VALUE = aglStyleNamespace.findTypeUsageForRule("STYLE_VALUE") ?: error("Internal error: type for 'STYLE_VALUE' not found")
     }
 
     override fun clear() {
 
     }
 
-//    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
-//        return emptyList()
-//    }
-
     override fun analyse(
         asm: AglStyleModel,
         locationMap: Map<Any, InputLocation>?,
-        context: SentenceContext<String>?,
-        options: SemanticAnalysisOptions<AglStyleModel, SentenceContext<String>>
+        context: ContextFromGrammar?,
+        options: SemanticAnalysisOptions<AglStyleModel, ContextFromGrammar>
     ): SemanticAnalysisResult {
         val locMap = locationMap ?: mapOf()
         val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
@@ -101,7 +83,6 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, SentenceConte
 
                         AglStyleSelectorKind.META -> Unit // nothing to check
                     }
-
                 }
             }
         }

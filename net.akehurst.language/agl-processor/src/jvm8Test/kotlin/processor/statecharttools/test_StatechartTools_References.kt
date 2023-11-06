@@ -30,7 +30,7 @@ import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
 import net.akehurst.language.agl.semanticAnalyser.contextSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.api.processor.LanguageProcessorPhase
@@ -47,28 +47,33 @@ class test_StatechartTools_References {
         private val scopeModelStr = this::class.java.getResource("/Statecharts/version_/references.agl")?.readText() ?: error("File not found")
 
         private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!
-        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<AsmSimple, ContextSimple>> { grmName ->
+        private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextSimple>> { grmName ->
             val grm = grammarList.firstOrNull { it.name == grmName } ?: error("Can't find grammar for '$grmName'")
             val cfg = Agl.configuration {
                 targetGrammarName(null) //use default
                 defaultGoalRuleName(null) //use default
                 typeModelResolver { p -> ProcessResultDefault<TypeModel>(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                scopeModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
+                crossReferenceModelResolver { p -> CrossReferenceModelDefault.fromString(ContextFromTypeModel(p.typeModel), scopeModelStr) }
                 syntaxAnalyserResolver { p ->
                     ProcessResultDefault(
-                        SyntaxAnalyserDefault(p.grammar!!.qualifiedName, p.typeModel, p.scopeModel),
+                        SyntaxAnalyserDefault(p.grammar!!.qualifiedName, p.typeModel, p.crossReferenceModel),
                         IssueHolder(LanguageProcessorPhase.ALL)
                     )
                 }
-                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserDefault(p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+                semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserDefault(p.typeModel, p.crossReferenceModel), IssueHolder(LanguageProcessorPhase.ALL)) }
                 styleResolver { p -> AglStyleModelDefault.fromString(ContextFromGrammar.createContextFrom(listOf(p.grammar!!)), "") }
                 formatterResolver { p -> AglFormatterModelDefault.fromString(ContextFromTypeModel(p.typeModel), "") }
-                completionProvider { p -> ProcessResultDefault(CompletionProviderDefault(p.grammar!!, p.typeModel, p.scopeModel), IssueHolder(LanguageProcessorPhase.ALL)) }
+                completionProvider { p ->
+                    ProcessResultDefault(
+                        CompletionProviderDefault(p.grammar!!, p.typeModel, p.crossReferenceModel),
+                        IssueHolder(LanguageProcessorPhase.ALL)
+                    )
+                }
             }
             Agl.processorFromGrammar(grm, cfg)
         }
 
-        fun test(grammar: String, goal: String, sentence: String, context: ContextSimple, expectedContext: ContextSimple, expectedAsm: AsmSimple? = null) {
+        fun test(grammar: String, goal: String, sentence: String, context: ContextSimple, expectedContext: ContextSimple, expectedAsm: Asm? = null) {
             val result = processors[grammar].process(sentence, Agl.options {
                 parse { goalRuleName(goal) }
                 semanticAnalysis { context(context) }
@@ -99,7 +104,7 @@ class test_StatechartTools_References {
         typeModel.namespace["com.itemis.create.Global"]!!.addImport("external")
         typeModel.resolveImports()
 
-        val result = Agl.registry.agl.scopes.processor!!.process(
+        val result = Agl.registry.agl.crossReference.processor!!.process(
             scopeModelStr,
             Agl.options {
                 semanticAnalysis { context(ContextFromTypeModel(typeModel)) }
@@ -226,7 +231,7 @@ class test_StatechartTools_References {
         }
 
         val expectedAsm = asmSimple(
-            scopeModel = processors[grammar]!!.scopeModel as CrossReferenceModelDefault,
+            crossReferenceModel = processors[grammar]!!.crossReferenceModel as CrossReferenceModelDefault,
             context = ContextSimple()
         ) {
             element("Statechart") {
@@ -403,7 +408,7 @@ StatechartSpecification {
         }
 
         val expectedAsm = asmSimple(
-            scopeModel = processors[grammar]!!.scopeModel as CrossReferenceModelDefault,
+            crossReferenceModel = processors[grammar]!!.crossReferenceModel as CrossReferenceModelDefault,
             context = ContextSimple()
         ) {
             element("StatechartSpecification") {

@@ -86,8 +86,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         }
     }
 
-    override val scopeModel: CrossReferenceModel by lazy {
-        val res = configuration.scopeModelResolver?.invoke(this)
+    override val crossReferenceModel: CrossReferenceModel by lazy {
+        val res = configuration.crossReferenceModelResolver?.invoke(this)
         res?.let { this.issues.addAll(res.issues) }
         res?.asm ?: CrossReferenceModelDefault()
     }

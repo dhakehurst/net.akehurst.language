@@ -23,9 +23,9 @@ import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.language.grammar.Terminal
 import net.akehurst.language.api.processor.CompletionItem
 
-class AglGrammarCompletionProvider : CompletionProviderAbstract<List<Grammar>, GrammarContext>() {
+class AglGrammarCompletionProvider : CompletionProviderAbstract<List<Grammar>, ContextFromGrammarRegistry>() {
 
-    override fun provide(nextExpected: Set<RuleItem>, context: GrammarContext?, options: Map<String, Any>): List<CompletionItem> {
+    override fun provide(nextExpected: Set<RuleItem>, context: ContextFromGrammarRegistry?, options: Map<String, Any>): List<CompletionItem> {
         //TODO
         return nextExpected.flatMap {
             when (it) {

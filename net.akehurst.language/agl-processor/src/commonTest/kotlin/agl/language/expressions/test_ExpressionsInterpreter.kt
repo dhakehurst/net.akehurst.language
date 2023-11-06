@@ -17,7 +17,6 @@
 
 package net.akehurst.language.agl.language.expressions
 
-import net.akehurst.language.api.asm.AsmElementSimple
 import net.akehurst.language.api.asm.asmSimple
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -32,13 +31,16 @@ class test_ExpressionsInterpreter {
                 propertyListOfString("list", listOf("A", "B", "C", "D"))
             }
         }
-        val root = asm.rootElements[0] as AsmElementSimple
+        val root = asm.root[0]
 
         val expression = "list"
 
-        val actual = root.evaluateStr(expression)
+        val actual = ExpressionsInterpreterOverAsmSimple().evaluateStr(root, expression)
 
-        assertEquals(listOf("A", "B", "C", "D"), actual)
+        val exp = asmSimple {
+            list { string("A"); string("B"); string("C"); string("D"); }
+        }
+        assertEquals(exp.root[0], actual)
     }
 
     @Test
@@ -49,13 +51,16 @@ class test_ExpressionsInterpreter {
                 propertyListOfString("list", listOf("A", "B", "C", "D"))
             }
         }
-        val root = asm.rootElements[0] as AsmElementSimple
+        val root = asm.root[0]
 
         val expression = "list.front"
 
-        val actual = root.evaluateStr(expression)
+        val actual = ExpressionsInterpreterOverAsmSimple().evaluateStr(root, expression)
 
-        assertEquals(listOf("A", "B", "C"), actual)
+        val exp = asmSimple {
+            list { string("A"); string("B"); string("C") }
+        }
+        assertEquals(exp.root[0], actual)
     }
 
     @Test
@@ -66,13 +71,16 @@ class test_ExpressionsInterpreter {
                 propertyListOfString("list", listOf("A", "B", "C", "D"))
             }
         }
-        val root = asm.rootElements[0] as AsmElementSimple
+        val root = asm.root[0]
 
         val expression = "list.front.join"
 
-        val actual = root.evaluateStr(expression)
+        val actual = ExpressionsInterpreterOverAsmSimple().evaluateStr(root, expression)
 
-        assertEquals("ABC", actual)
+        val exp = asmSimple {
+            string("ABC")
+        }
+        assertEquals(exp.root[0], actual)
     }
 
 }

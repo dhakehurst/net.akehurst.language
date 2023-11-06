@@ -17,24 +17,28 @@
 
 package net.akehurst.language.agl.default
 
-import net.akehurst.language.agl.language.expressions.evaluateFor
+import net.akehurst.language.agl.asm.AsmNothingSimple
+import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverAsmSimple
 import net.akehurst.language.agl.language.reference.CollectionReferenceExpressionDefault
 import net.akehurst.language.agl.language.reference.PropertyReferenceExpressionDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
-import net.akehurst.language.agl.semanticAnalyser.propertyFor
 import net.akehurst.language.api.asm.*
+import net.akehurst.language.api.language.expressions.Navigation
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.language.reference.ReferenceExpression
 import net.akehurst.language.api.language.reference.Scope
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.collections.mutableStackOf
+import net.akehurst.language.typemodel.api.TypeDeclaration
+import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
-typealias ResolveFunction = (ref: AsmElementPath) -> AsmElementSimple?
+typealias ResolveFunction = (ref: AsmPath) -> AsmValue?
 
 data class ReferenceExpressionContext(
-    val element: AsmElementSimple,
-    val scope: Scope<AsmElementPath>
+    val element: AsmValue,
+    val scope: Scope<AsmPath>
 )
 
 /**
@@ -42,49 +46,66 @@ data class ReferenceExpressionContext(
  * Properties in the asm that are references
  */
 class ReferenceResolverDefault(
+    val typeModel: TypeModel,
     val scopeModel: CrossReferenceModel,
-    val rootScope: ScopeSimple<AsmElementPath>,
+    val rootScope: ScopeSimple<AsmPath>,
     val resolveFunction: ResolveFunction?,
     private val _locationMap: Map<Any, InputLocation>,
     private val _issues: IssueHolder
-) : AsmSimpleTreeWalker {
+) : AsmTreeWalker {
 
     private val scopeStack = mutableStackOf(rootScope)
-    private val scopeForElement = mutableMapOf<AsmElementSimple, Scope<AsmElementPath>>()
-    private fun raiseError(element: AsmElementSimple, message: String) {
+    private val scopeForElement = mutableMapOf<AsmStructure, Scope<AsmPath>>()
+    private val _interpreter = ExpressionsInterpreterOverAsmSimple()
+
+    private fun raiseError(element: Any, message: String) {
         _issues.error(
             _locationMap.get(element),//TODO: should be property location
             message
         )
     }
 
-    override fun root(root: AsmElementSimple) {
-        val elScope = rootScope.rootScope.scopeMap[root.asmPath] ?: rootScope
-        scopeStack.push(elScope)
-        scopeForElement[root] = elScope
-    }
+    override fun root(root: AsmValue) {
+        when (root) {
+            is AsmStructure -> {
+                val elScope = rootScope.rootScope.scopeMap[root.path] ?: rootScope
+                scopeStack.push(elScope)
+                scopeForElement[root] = elScope
+            }
 
-    override fun beforeElement(propertyName: String?, element: AsmElementSimple) {
-        val parentScope = scopeStack.peek()
-        val elScope = parentScope.rootScope.scopeMap[element.asmPath] ?: parentScope
-        scopeStack.push(elScope)
-        scopeForElement[element] = elScope
-
-        val references = scopeModel.referencesFor(element.typeName)
-        for (refExpr in references) {
-            handleReferenceExpression(refExpr, ReferenceExpressionContext(element, elScope), element)
+            else -> Unit // do nothing
         }
     }
 
-    override fun afterElement(propertyName: String?, element: AsmElementSimple) {
+    override fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing) {}
+
+    override fun onPrimitive(owningProperty: AsmStructureProperty?, value: AsmPrimitive) {}
+
+    override fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
+        val parentScope = scopeStack.peek()
+        val elScope = parentScope.rootScope.scopeMap[value.path] ?: parentScope
+        scopeStack.push(elScope)
+        scopeForElement[value] = elScope
+
+        val references = scopeModel.referencesFor(value.typeName)
+        for (refExpr in references) {
+            handleReferenceExpression(refExpr, ReferenceExpressionContext(value, elScope), value)
+        }
+    }
+
+    override fun onProperty(owner: AsmStructure, property: AsmStructureProperty) {
+
+    }
+
+    override fun afterStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
         scopeStack.pop()
     }
 
-    override fun property(element: AsmElementSimple, property: AsmElementProperty) {
+    override fun beforeList(owningProperty: AsmStructureProperty?, value: AsmList) {}
 
-    }
+    override fun afterList(owningProperty: AsmStructureProperty?, value: AsmList) {}
 
-    private fun handleReferenceExpression(refExpr: ReferenceExpression, context: ReferenceExpressionContext, self: AsmElementSimple) {
+    private fun handleReferenceExpression(refExpr: ReferenceExpression, context: ReferenceExpressionContext, self: AsmValue) {
         when (refExpr) {
             is PropertyReferenceExpressionDefault -> handlePropertyReferenceExpression(refExpr, context, self)
             is CollectionReferenceExpressionDefault -> handleCollectionReferenceExpression(refExpr, context, self)
@@ -92,7 +113,7 @@ class ReferenceResolverDefault(
         }
     }
 
-    private fun handlePropertyReferenceExpression(refExpr: PropertyReferenceExpressionDefault, context: ReferenceExpressionContext, self: AsmElementSimple) {
+    private fun handlePropertyReferenceExpression(refExpr: PropertyReferenceExpressionDefault, context: ReferenceExpressionContext, self: AsmValue) {
         // 'in' typeReference '{' referenceExpression* '}'
         // 'property' navigation 'refers-to' typeReferences from? ;
         //check referred to item exists
@@ -101,11 +122,11 @@ class ReferenceResolverDefault(
             null -> scopeStack.peek()
             else -> {
                 //scope for result of navigation
-                val fromEl = refExpr.fromNavigation.evaluateFor(context.element)
+                val fromEl = _interpreter.evaluateExpression(context.element, refExpr.fromNavigation)
                 when (fromEl) {
-                    null -> error("Cannot get scope for result of '${context.element}.${refExpr.fromNavigation}' in is null")
-                    is AsmElementSimple -> scopeForElement[fromEl]!!
-                    is AsmElementReference -> {
+                    is AsmNothing -> error("Cannot get scope for result of '${context.element}.${refExpr.fromNavigation}' in is ${AsmNothingSimple}")
+                    is AsmStructure -> scopeForElement[fromEl]!!
+                    is AsmReference -> {
                         val v = fromEl.value ?: error("'${fromEl.reference}' not resolved, can't get its scope")
                         scopeForElement[v] ?: error("Scope for '${v}' not found !")
                     }
@@ -114,13 +135,13 @@ class ReferenceResolverDefault(
                 }
             }
         }
-        var referringValue = refExpr.referringPropertyNavigation.evaluateFor(self)
-        if (referringValue is AsmElementReference) {
-            referringValue = referringValue.reference
+        var referringValue = _interpreter.evaluateExpression(self, refExpr.referringPropertyNavigation)
+        if (referringValue is AsmReference) {
+            referringValue = referringValue.value!!
         }
         when (referringValue) {
-            is String -> {
-                val targets = refExpr.refersToTypeName.mapNotNull { scope.findOrNull(referringValue, it) }
+            is AsmPrimitive -> {
+                val targets = refExpr.refersToTypeName.mapNotNull { scope.findOrNull(referringValue.value as String, it) }
                 when {
                     targets.isEmpty() -> {
                         raiseError(self, "No target of type(s) ${refExpr.refersToTypeName} found for referring value '$referringValue' in scope of element '$self'")
@@ -138,12 +159,16 @@ class ReferenceResolverDefault(
                     else -> {
                         val referred = targets.first() // already checked for empty and > 1, so must be only one
                         if (null != resolveFunction) {
-                            val rel = resolveFunction.invoke(referred)
-                            if (null == rel) {
-                                this.raiseError(self, "Asm does not contain element '$referred' as reference for '${self.typeName}.${refExpr.referringPropertyNavigation}'")
+                            val ref = resolveFunction.invoke(referred)
+                            when (ref) {
+                                null -> this.raiseError(self, "Asm does not contain element '$referred' as reference for '${self.typeName}.${refExpr.referringPropertyNavigation}'")
+                                is AsmStructure -> {
+                                    val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
+                                    referringProperty.convertToReferenceTo(ref)
+                                }
+
+                                else -> this.raiseError(self, "Asm element '$referred' is not a reference to a structured element of the asm")
                             }
-                            val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
-                            referringProperty.convertToReferenceTo(rel)
                         } else {
                             // no resolve function so do not resolve, maybe intentional so do not warn or error
                         }
@@ -153,34 +178,60 @@ class ReferenceResolverDefault(
 
             else -> raiseError(self, "Referring value '${self.typeName}.${refExpr.referringPropertyNavigation}=$referringValue' on element $self is not a String")
         }
-
     }
 
-    private fun handleCollectionReferenceExpression(refExpr: CollectionReferenceExpressionDefault, context: ReferenceExpressionContext, self: AsmElementSimple) {
-        val coll = refExpr.navigation.evaluateFor(self)
+    private fun handleCollectionReferenceExpression(refExpr: CollectionReferenceExpressionDefault, context: ReferenceExpressionContext, self: AsmValue) {
+        val coll = _interpreter.evaluateExpression(self, refExpr.navigation)
         for (re in refExpr.referenceExpressionList) {
             when (coll) {
-                null -> Unit //do nothing
-                is Iterable<*> -> {
-                    for (lv in coll) {
-                        when (lv) {
-                            null -> Unit //do nothing
-                            is AsmElementSimple -> {
-                                //TODO: val ofType = _grammarNamespace?.findTypeNamed(it)
-                                //TODO: need type model to check for subtypes, just check type name for now
-                                val isCorrectType = null == refExpr.ofType || refExpr.ofType == lv.typeName
-                                when {
-                                    isCorrectType -> handleReferenceExpression(re, context, lv)
-                                    else -> Unit
-                                }
-                            }
-
-                            else -> error("list element of navigation should be an AsmElementSimple, got '${lv::class.simpleName}'")
+                is AsmNothing -> Unit //do nothing
+                is AsmList -> {
+                    for (el in coll.elements) {
+                        when {
+                            el is AsmNothing -> Unit //do nothing
+                            null == refExpr.ofType -> handleReferenceExpression(re, context, el)
+                            el.conformsToType(refExpr.ofType) -> handleReferenceExpression(re, context, el)
+                            else -> Unit // el is filtered out by the 'ofType'
                         }
                     }
                 }
 
                 else -> error("result of navigation should be a List<AsmElementSimple>, got '${coll::class.simpleName}'")
+            }
+        }
+    }
+
+    private fun AsmValue.conformsToType(typeName: String): Boolean {
+        val type = typeModel.findFirstByNameOrNull(typeName) ?: SimpleTypeModelStdLib.NothingType.type
+        val selfType = typeModel.typeOf(this)
+        return selfType.conformsTo(type)
+    }
+
+    private fun TypeModel.typeOf(self: AsmValue): TypeDeclaration =
+        typeModel.findByQualifiedNameOrNull(self.qualifiedTypeName)
+            ?: error("Type '${self.qualifiedTypeName}' not found in type model '${this.name}'")
+
+    private fun Navigation.propertyFor(root: AsmValue): AsmStructureProperty {
+        return when {
+            root is AsmNothing -> error("Cannot navigate '$this' from '$root' value")
+            else -> {
+                val front = this.value.dropLast(1)
+                var v = root
+                for (pn in front) {
+                    val pd = typeModel.typeOf(v).findPropertyOrNull(pn)
+                    v = when (pd) {
+                        null -> error("Cannot navigate '$pn' from null value")
+                        else -> _interpreter.evaluatePropertyDeclaration(v, pd)
+                    }
+                }
+                val lastProp = this.value.last()
+                when (v) {
+                    is AsmStructure -> {
+                        v.property[lastProp] ?: error("Cannot navigate '$this' from null value")
+                    }
+
+                    else -> error("Cannot navigate '$this' from null value")
+                }
             }
         }
     }

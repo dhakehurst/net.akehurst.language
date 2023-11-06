@@ -35,14 +35,14 @@ class SyntaxAnalyserDefault(
     grammarNamespaceQualifiedName: String,
     typeModel: TypeModel,
     scopeModel: CrossReferenceModel
-) : SyntaxAnalyserSimpleAbstract<AsmSimple>(grammarNamespaceQualifiedName, typeModel, scopeModel) {
+) : SyntaxAnalyserSimpleAbstract<Asm>(grammarNamespaceQualifiedName, typeModel, scopeModel) {
 
     companion object {
         private const val ns = "net.akehurst.language.agl.syntaxAnalyser"
         const val CONFIGURATION_KEY_AGL_SCOPE_MODEL = "$ns.scope.model"
     }
 
-    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<AsmSimple>> = lazyMap { embGramName ->
+    override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<Asm>> = lazyMap { embGramName ->
         SyntaxAnalyserDefault(embGramName, typeModel, this.scopeModel)
     }
 

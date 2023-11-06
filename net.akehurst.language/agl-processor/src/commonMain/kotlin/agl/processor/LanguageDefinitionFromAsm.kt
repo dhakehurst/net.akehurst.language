@@ -44,8 +44,8 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
         }
     override val isModifiable: Boolean = false
 
-    override var scopeModelStr: String?
-        get() = this.scopeModel.toString() //TODO:
+    override var crossReferenceModelStr: String?
+        get() = this.crossReferenceModel.toString() //TODO:
         set(value) {
             error("Cannot set the scopeModel of a LanguageDefinitionFromAsm using a String")
         }

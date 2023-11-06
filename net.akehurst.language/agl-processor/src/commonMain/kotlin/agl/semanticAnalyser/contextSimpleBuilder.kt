@@ -17,7 +17,8 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
-import net.akehurst.language.api.asm.AsmElementPath
+import net.akehurst.language.agl.asm.AsmPathSimple
+import net.akehurst.language.api.asm.AsmPath
 
 fun contextSimple(init: ScopeBuilder.() -> Unit): ContextSimple {
     val context = ContextSimple()
@@ -31,23 +32,23 @@ annotation class ContextSimpleDslMarker
 
 @ContextSimpleDslMarker
 class ScopeBuilder(
-    private val _scope: ScopeSimple<AsmElementPath>
+    private val _scope: ScopeSimple<AsmPath>
 ) {
 
     fun item(id: String, typeName: String, pathStr: String) {
-        val path = AsmElementPath(pathStr)
+        val path = AsmPathSimple(pathStr)
         _scope.addToScope(id, typeName, path)
     }
 
     fun scope(forReferenceInParent: String, typeName: String, pathStr: String, init: ScopeBuilder.() -> Unit = {}) {
-        val path = AsmElementPath(pathStr)
+        val path = AsmPathSimple(pathStr)
         val chScope = _scope.createOrGetChildScope(forReferenceInParent, typeName, path)
         val b = ScopeBuilder(chScope)
         b.init()
     }
 
     fun scopedItem(id: String, typeName: String, pathStr: String, init: ScopeBuilder.() -> Unit = {}) {
-        val path = AsmElementPath(pathStr)
+        val path = AsmPathSimple(pathStr)
         _scope.addToScope(id, typeName, path)
         val chScope = _scope.createOrGetChildScope(id, typeName, path)
         val b = ScopeBuilder(chScope)

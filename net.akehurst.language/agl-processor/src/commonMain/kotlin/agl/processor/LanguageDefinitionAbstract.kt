@@ -59,15 +59,15 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
         }
     }
 
-    abstract override var scopeModelStr: String?
+    abstract override var crossReferenceModelStr: String?
 
-    override var scopeModel: CrossReferenceModel?
-        get() = this.processor?.scopeModel
+    override var crossReferenceModel: CrossReferenceModel?
+        get() = this.processor?.crossReferenceModel
         set(value) {
-            val oldValue = this.processor?.scopeModel
+            val oldValue = this.processor?.crossReferenceModel
             if (oldValue != value) {
-                _scopeModelResolver = { ProcessResultDefault(value, IssueHolder(LanguageProcessorPhase.ALL)) }
-                scopeModelObservers.forEach { it(oldValue, value) }
+                _crossReferenceModelResolver = { ProcessResultDefault(value, IssueHolder(LanguageProcessorPhase.ALL)) }
+                crossReferenceModelObservers.forEach { it(oldValue, value) }
             }
         }
 
@@ -130,7 +130,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     override val grammarStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
     override val grammarObservers = mutableListOf<(oldValue: Grammar?, newValue: Grammar?) -> Unit>()
     override val scopeStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
-    override val scopeModelObservers = mutableListOf<(oldValue: CrossReferenceModel?, newValue: CrossReferenceModel?) -> Unit>()
+    override val crossReferenceModelObservers = mutableListOf<(oldValue: CrossReferenceModel?, newValue: CrossReferenceModel?) -> Unit>()
     override val formatterStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
     override val formatterObservers = mutableListOf<(oldValue: AglFormatterModel?, newValue: AglFormatterModel?) -> Unit>()
     override val styleStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
@@ -161,7 +161,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     protected var _issues = IssueHolder(LanguageProcessorPhase.ALL)
     protected val _style: AglStyleModel? = null
 
-    protected var _scopeModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.scopeModelResolver) { _, oldValue, newValue ->
+    protected var _crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? by Delegates.observable(initialConfiguration.crossReferenceModelResolver) { _, oldValue, newValue ->
         if (oldValue != newValue) {
             this._processor_cache.reset()
         }

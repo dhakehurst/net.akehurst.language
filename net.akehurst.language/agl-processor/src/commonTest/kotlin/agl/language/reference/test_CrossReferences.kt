@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.akehurst.language.agl.language.scopes
+
+package net.akehurst.language.agl.language.reference
 
 import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.language.expressions.NavigationDefault
-import net.akehurst.language.agl.language.reference.*
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.parser.InputLocation
@@ -33,7 +33,7 @@ import kotlin.test.assertTrue
 class test_CrossReferences {
 
     private companion object {
-        val aglProc = Agl.registry.agl.scopes.processor!!
+        val aglProc = Agl.registry.agl.crossReference.processor!!
 
         fun test(grammarStr: String, sentence: String, expected: CrossReferenceModelDefault, expIssues: Set<LanguageIssue>) {
             val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!![0]

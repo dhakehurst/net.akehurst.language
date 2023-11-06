@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.language.grammar.GrammarContext
+import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.processor.LanguageProcessorConfiguration
 import net.akehurst.language.api.processor.LanguageProcessorConfigurationDefault
@@ -28,7 +28,7 @@ import kotlin.properties.Delegates
 internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     override val identity: String,
     grammarStrArg: String?,
-    private val aglOptions: ProcessOptions<List<Grammar>, GrammarContext>?,
+    private val aglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>?,
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
@@ -46,7 +46,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
             targetGrammarName = this.targetGrammarName,
             defaultGoalRuleName = this.defaultGoalRule,
             typeModelResolver = this._typeModelResolver,
-            scopeModelResolver = this._scopeModelResolver,
+            crossReferenceModelResolver = this._crossReferenceModelResolver,
             syntaxAnalyserResolver = this._syntaxAnalyserResolver,
             semanticAnalyserResolver = this._semanticAnalyserResolver,
             formatterResolver = this._formatterResolver,
@@ -64,7 +64,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         }
     }
 
-    override var scopeModelStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
+    override var crossReferenceModelStr: String? by Delegates.observable(null) { _, oldValue, newValue ->
         if (_doObservableUpdates) {
             updateScopeModelStr(oldValue, newValue)
         }
@@ -96,10 +96,10 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     override fun update(grammarStr: String?, scopeModelStr: String?, styleStr: String?) {
         this._doObservableUpdates = false
         val oldGrammarStr = this.grammarStr
-        val oldScopeModelStr = this.scopeModelStr
+        val oldScopeModelStr = this.crossReferenceModelStr
         val oldStyleStr = this.styleStr
         this.grammarStr = grammarStr
-        this.scopeModelStr = scopeModelStr
+        this.crossReferenceModelStr = scopeModelStr
         this.styleStr = styleStr
         updateGrammarStr(oldGrammarStr, grammarStr)
         updateScopeModelStr(oldScopeModelStr, scopeModelStr)
@@ -112,7 +112,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         this.targetGrammarName = configuration.targetGrammarName
         this.defaultGoalRule = configuration.defaultGoalRuleName
         this._typeModelResolver = configuration.typeModelResolver
-        this._scopeModelResolver = configuration.scopeModelResolver
+        this._crossReferenceModelResolver = configuration.crossReferenceModelResolver
         this._syntaxAnalyserResolver = configuration.syntaxAnalyserResolver
         this._semanticAnalyserResolver = configuration.semanticAnalyserResolver
         this._formatterResolver = configuration.formatterResolver
@@ -123,7 +123,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
 
     private fun updateGrammarStr(oldValue: String?, newValue: String?) {
         if (oldValue != newValue) {
-            val res = Agl.grammarFromString<List<Grammar>, GrammarContext>(newValue, aglOptions)
+            val res = Agl.grammarFromString<List<Grammar>, ContextFromGrammarRegistry>(newValue, aglOptions)
             this._issues.addAll(res.issues)
             this.grammar = when {
                 res.issues.errors.isNotEmpty() -> null
@@ -136,11 +136,11 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
 
     private fun updateScopeModelStr(oldValue: String?, newValue: String?) {
         if (oldValue != newValue) {
-            super._scopeModelResolver = {
+            super._crossReferenceModelResolver = {
                 if (null == newValue) {
                     ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
                 } else {
-                    Agl.registry.agl.scopes.processor!!.process(newValue)
+                    Agl.registry.agl.crossReference.processor!!.process(newValue)
                 }
             }
         }

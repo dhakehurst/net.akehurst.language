@@ -64,7 +64,7 @@ class test_LanguageDefinitionDefault {
         sut.grammarStrObservers.add(grammarStrObserver)
         sut.grammarObservers.add(grammarObserver)
         sut.scopeStrObservers.add(scopeStrObserver)
-        sut.scopeModelObservers.add(scopeModelObserver)
+        sut.crossReferenceModelObservers.add(scopeModelObserver)
         sut.processorObservers.add(processorObserver)
         sut.styleStrObservers.add(styleStrObserver)
         sut.styleObservers.add(styleObserver)
@@ -96,7 +96,7 @@ class test_LanguageDefinitionDefault {
                 targetGrammarName(null)
                 defaultGoalRuleName(null)
                 typeModelResolver { ProcessResultDefault(TypeModelFromGrammar.create(it.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                scopeModelResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
+                crossReferenceModelResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                 syntaxAnalyserResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                 semanticAnalyserResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
                 formatterResolver { ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -402,7 +402,7 @@ class test_LanguageDefinitionDefault {
         """.trimIndent()
 
         sut.grammarStr = grammarStr
-        sut.scopeModelStr = scopeStr
+        sut.crossReferenceModelStr = scopeStr
         val result = sut.processor!!.process(sentence)
 
         val expected = asmSimple {

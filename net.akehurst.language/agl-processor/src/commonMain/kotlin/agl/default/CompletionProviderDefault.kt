@@ -19,7 +19,7 @@ package net.akehurst.language.agl.default
 
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.processor.CompletionItem
@@ -30,7 +30,7 @@ class CompletionProviderDefault(
     val targetGrammar: Grammar,
     val typeModel: TypeModel,
     val scopeModel: CrossReferenceModel
-) : CompletionProviderAbstract<AsmSimple, ContextSimple>() {
+) : CompletionProviderAbstract<Asm, ContextSimple>() {
 
     override fun provide(nextExpected: Set<RuleItem>, context: ContextSimple?, options: Map<String, Any>): List<CompletionItem> {
         return if (null == context) {

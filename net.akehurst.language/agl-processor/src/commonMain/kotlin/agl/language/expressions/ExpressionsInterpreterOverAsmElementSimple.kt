@@ -17,64 +17,103 @@
 
 package net.akehurst.language.agl.language.expressions
 
+import net.akehurst.language.agl.asm.AsmNothingSimple
 import net.akehurst.language.agl.processor.Agl
-import net.akehurst.language.api.asm.AsmElementSimple
+import net.akehurst.language.agl.processor.IssueHolder
+import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.expressions.Navigation
 import net.akehurst.language.api.language.expressions.RootExpression
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.PropertyDeclaration
+import net.akehurst.language.typemodel.api.TypeInstance
+import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.simple.PropertyDeclarationDerived
 import net.akehurst.language.typemodel.simple.PropertyDeclarationPrimitive
 import net.akehurst.language.typemodel.simple.PropertyDeclarationStored
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
-fun AsmElementSimple.evaluateStr(expression: String): Any? {
-    val result = Agl.registry.agl.expressions.processor!!.process(expression)
-    check(result.issues.errors.isEmpty()) { result.issues.toString() }
-    val asm = result.asm!!
-    return asm.evaluateFor(this)
-}
+class ExpressionsInterpreterOverAsmSimple(
+    //val typeModel: TypeModel
+) {
 
-fun Expression.evaluateFor(self: Any?) = when (this) {
-    is RootExpression -> this.evaluateFor(self)
-    is Navigation -> this.evaluateFor(self)
-    else -> error("Subtype of Expression not handled in 'evaluateFor'")
-}
+    private val _issues = IssueHolder(LanguageProcessorPhase.INTERPRETER)
 
-fun RootExpression.evaluateFor(self: Any?): String? = when {
-    this.isNothing -> null
-    this.isSelf -> when (self) {
-        null -> null
-        is String -> self
-        else -> error("evaluation of 'self' only works if self is a String, got an object of type '${self::class.simpleName}'")
+    fun evaluateStr(self: AsmValue, expression: String): AsmValue {
+        val result = Agl.registry.agl.expressions.processor!!.process(expression)
+        check(result.issues.errors.isEmpty()) { result.issues.toString() }
+        val asm = result.asm!!
+        return this.evaluateExpression(self, asm)
     }
 
-    else -> error("evaluateFor RootExpression not handled")
-}
+    fun evaluateExpression(self: AsmValue, expression: Expression): AsmValue = when (expression) {
+        is RootExpression -> this.evaluateRootExpression(self, expression)
+        is Navigation -> this.evaluateNavigation(self, expression)
+        else -> error("Subtype of Expression not handled in 'evaluateFor'")
+    }
 
-fun Navigation.evaluateFor(self: Any?) = when (self) {
-    null -> error("Cannot navigate from 'null'")
-    is AsmElementSimple -> {
-        this.value.fold(self as Any?) { acc, it ->
-            when (acc) {
-                null -> null
-                is AsmElementSimple -> acc.getPropertyOrNull(it)
-                is List<*> -> SimpleTypeModelStdLib.List.findPropertyOrNull(it)?.evaluateFor(acc)
-                else -> error("Cannot evaluate $this on object of type '${acc::class.simpleName}'")
+    private fun evaluateRootExpression(self: AsmValue, expression: RootExpression): AsmValue = when {
+        expression.isNothing -> AsmNothingSimple
+        expression.isSelf -> when (self) {
+            is AsmNothing -> self
+            is AsmPrimitive -> self
+            else -> {
+                _issues.error(null, "evaluation of 'self' only works if self is a String, got an object of type '${self::class.simpleName}'")
+                AsmNothingSimple
             }
+        }
+
+        else -> {
+            _issues.error(null, "evaluateFor RootExpression not handled")
+            AsmNothingSimple
         }
     }
 
-    else -> error("evaluateFor Navigation from object of type '${self::class.simpleName}' not handled")
-}
+    private fun evaluateNavigation(self: AsmValue, expression: Navigation): AsmValue = when (self) {
+        is AsmNothing -> {
+            _issues.error(null, "Cannot navigate from '$AsmNothingSimple'")
+            AsmNothingSimple
+        }
 
-fun PropertyDeclaration.evaluateFor(self: Any): Any? = when (this) {
-    is PropertyDeclarationDerived -> TODO()
-    is PropertyDeclarationPrimitive -> this.expression.invoke(self)
-    is PropertyDeclarationStored -> when (self) {
-        is AsmElementSimple -> self.properties[this.name]?.value
-        else -> error("Cannot evaluate property '${this.name}' on object of type '${self::class.simpleName}'")
+        is AsmStructure -> {
+            expression.value.fold(self as AsmValue) { acc, it ->
+                when (acc) {
+                    is AsmNothing -> acc
+                    is AsmStructure -> acc.getProperty(it)
+                    is AsmList -> {
+                        val pd = SimpleTypeModelStdLib.List.findPropertyOrNull(it)
+                        pd?.let { evaluatePropertyDeclaration(acc, it) } ?: AsmNothingSimple
+                    }
+
+                    is AsmListSeparated -> {
+                        val pd = SimpleTypeModelStdLib.List.findPropertyOrNull(it)
+                        pd?.let { evaluatePropertyDeclaration(acc, it) } ?: AsmNothingSimple
+                    }
+
+                    else -> error("Cannot evaluate $this on object of type '${acc::class.simpleName}'")
+                }
+            }
+        }
+
+        else -> {
+            _issues.error(null, "evaluateFor Navigation from object of type '${self::class.simpleName}' not handled")
+            AsmNothingSimple
+        }
     }
 
-    else -> error("Subtype of PropertyDeclaration not handled: '${this::class.simpleName}'")
+    fun evaluatePropertyDeclaration(self: AsmValue, propertyDeclaration: PropertyDeclaration): AsmValue = when (propertyDeclaration) {
+        is PropertyDeclarationDerived -> TODO()
+        is PropertyDeclarationPrimitive -> propertyDeclaration.expression.invoke(self) as AsmValue
+        is PropertyDeclarationStored -> when (self) {
+            is AsmStructure -> self.getProperty(propertyDeclaration.name)
+            else -> error("Cannot evaluate property '${propertyDeclaration.name}' on object of type '${self::class.simpleName}'")
+        }
+
+        else -> error("Subtype of PropertyDeclaration not handled: '${this::class.simpleName}'")
+    }
+
+    private fun TypeModel.typeOf(self: AsmValue): TypeInstance =
+        this.findByQualifiedNameOrNull(self.qualifiedTypeName)?.instance()
+            ?: SimpleTypeModelStdLib.AnyType
+
 }

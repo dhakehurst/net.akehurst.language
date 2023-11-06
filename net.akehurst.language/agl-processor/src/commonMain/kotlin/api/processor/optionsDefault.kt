@@ -22,7 +22,7 @@ internal class LanguageProcessorConfigurationDefault<AsmType : Any, ContextType 
     override var targetGrammarName: String?,
     override var defaultGoalRuleName: String?,
     override var typeModelResolver: TypeModelResolver<AsmType, ContextType>?,
-    override var scopeModelResolver: CrossReferenceModelResolver<AsmType, ContextType>?,
+    override var crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>?,
     override var syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?,
     override var semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?,
     override var formatterResolver: FormatterResolver<AsmType, ContextType>?,
@@ -32,7 +32,7 @@ internal class LanguageProcessorConfigurationDefault<AsmType : Any, ContextType 
 
 internal class ProcessOptionsDefault<AsmType : Any, ContextType : Any>(
     override val parse: ParseOptions = ParseOptionsDefault(),
-    override val syntaxAnalysis: SyntaxAnalysisOptions<AsmType, ContextType> = SyntaxAnalysisOptionsDefault(),
+    override val syntaxAnalysis: SyntaxAnalysisOptions<AsmType> = SyntaxAnalysisOptionsDefault(),
     override val semanticAnalysis: SemanticAnalysisOptions<AsmType, ContextType> = SemanticAnalysisOptionsDefault(),
     override val completionProvider: CompletionProviderOptions<AsmType, ContextType> = CompletionProviderOptionsDefault()
 ) : ProcessOptions<AsmType, ContextType>
@@ -45,9 +45,9 @@ internal class ParseOptionsDefault(
     override var cacheSkip: Boolean = true
 ) : ParseOptions
 
-internal class SyntaxAnalysisOptionsDefault<AsmType : Any, ContextType : Any>(
+internal class SyntaxAnalysisOptionsDefault<AsmType : Any>(
     override var active: Boolean = true
-) : SyntaxAnalysisOptions<AsmType, ContextType>
+) : SyntaxAnalysisOptions<AsmType>
 
 internal class SemanticAnalysisOptionsDefault<AsmType : Any, ContextType : Any>(
     override var active: Boolean = true,
@@ -74,7 +74,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
     private var _targetGrammarName: String? = null
     private var _defaultGoalRuleName: String? = null
     private var _typeModelResolver: TypeModelResolver<AsmType, ContextType>? = null
-    private var _scopeModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? = null
+    private var _crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>? = null
     private var _syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>? = null
     private var _semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>? = null
     private var _formatterResolver: FormatterResolver<AsmType, ContextType>? = null
@@ -93,8 +93,8 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
         this._typeModelResolver = func
     }
 
-    fun scopeModelResolver(func: CrossReferenceModelResolver<AsmType, ContextType>?) {
-        _scopeModelResolver = func
+    fun crossReferenceModelResolver(func: CrossReferenceModelResolver<AsmType, ContextType>?) {
+        _crossReferenceModelResolver = func
     }
 
     fun syntaxAnalyserResolver(func: SyntaxAnalyserResolver<AsmType, ContextType>?) {
@@ -123,7 +123,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
                 _targetGrammarName,
                 _defaultGoalRuleName,
                 _typeModelResolver,
-                _scopeModelResolver,
+                _crossReferenceModelResolver,
                 _syntaxAnalyserResolver,
                 _semanticAnalyserResolver,
                 _formatterResolver,
@@ -135,7 +135,7 @@ class LanguageProcessorConfigurationBuilder<AsmType : Any, ContextType : Any>(
                 targetGrammarName = _targetGrammarName ?: base.targetGrammarName,
                 defaultGoalRuleName = _defaultGoalRuleName ?: base.defaultGoalRuleName,
                 typeModelResolver = _typeModelResolver ?: base.typeModelResolver,
-                scopeModelResolver = _scopeModelResolver ?: base.scopeModelResolver,
+                crossReferenceModelResolver = _crossReferenceModelResolver ?: base.crossReferenceModelResolver,
                 syntaxAnalyserResolver = _syntaxAnalyserResolver ?: base.syntaxAnalyserResolver,
                 semanticAnalyserResolver = _semanticAnalyserResolver ?: base.semanticAnalyserResolver,
                 formatterResolver = _formatterResolver ?: base.formatterResolver,
@@ -155,9 +155,9 @@ annotation class ProcessOptionsDslMarker
 class ProcessOptionsBuilder<AsmType : Any, ContextType : Any> {
 
     private var _parser: ParseOptions = ParseOptionsDefault()
-    private var _syntaxAnalyser: SyntaxAnalysisOptions<AsmType, ContextType> = SyntaxAnalysisOptionsDefault<AsmType, ContextType>()
-    private var _semanticAnalyser: SemanticAnalysisOptions<AsmType, ContextType> = SemanticAnalysisOptionsDefault<AsmType, ContextType>()
-    private var _completionProvider: CompletionProviderOptions<AsmType, ContextType> = CompletionProviderOptionsDefault<AsmType, ContextType>()
+    private var _syntaxAnalyser: SyntaxAnalysisOptions<AsmType> = SyntaxAnalysisOptionsDefault()
+    private var _semanticAnalyser: SemanticAnalysisOptions<AsmType, ContextType> = SemanticAnalysisOptionsDefault()
+    private var _completionProvider: CompletionProviderOptions<AsmType, ContextType> = CompletionProviderOptionsDefault()
 
     fun parse(init: ParseOptionsBuilder.() -> Unit) {
         val b = ParseOptionsBuilder()
@@ -230,8 +230,8 @@ class SyntaxAnalysisOptionsBuilder<AsmType : Any, ContextType : Any>() {
         _active = value
     }
 
-    fun build(): SyntaxAnalysisOptions<AsmType, ContextType> {
-        return SyntaxAnalysisOptionsDefault<AsmType, ContextType>(_active)
+    fun build(): SyntaxAnalysisOptions<AsmType> {
+        return SyntaxAnalysisOptionsDefault<AsmType>(_active)
     }
 }
 

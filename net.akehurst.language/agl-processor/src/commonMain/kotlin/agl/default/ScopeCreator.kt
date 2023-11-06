@@ -17,51 +17,62 @@
 
 package net.akehurst.language.agl.agl.default
 
+import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverAsmSimple
 import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.agl.semanticAnalyser.createReferenceLocalToScope
-import net.akehurst.language.api.asm.AsmElementPath
-import net.akehurst.language.api.asm.AsmElementProperty
-import net.akehurst.language.api.asm.AsmElementSimple
-import net.akehurst.language.api.asm.AsmSimpleTreeWalker
+import net.akehurst.language.api.asm.*
+import net.akehurst.language.api.language.expressions.Expression
+import net.akehurst.language.api.language.expressions.Navigation
+import net.akehurst.language.api.language.expressions.RootExpression
 import net.akehurst.language.api.language.reference.Scope
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.collections.mutableStackOf
 
 class ScopeCreator(
     val crossReferenceModel: CrossReferenceModelDefault,
-    val rootScope: Scope<AsmElementPath>,
+    val rootScope: Scope<AsmPath>,
     val locationMap: Map<Any, InputLocation>,
     val issues: IssueHolder
-) : AsmSimpleTreeWalker {
+) : AsmTreeWalker {
+
+    private val _interpreter = ExpressionsInterpreterOverAsmSimple()
 
     val currentScope = mutableStackOf(rootScope)
 
-    override fun root(root: AsmElementSimple) {
-        addToScope(currentScope.peek(), root)
+    override fun root(root: AsmValue) {
+        when (root) {
+            is AsmStructure -> addToScope(currentScope.peek(), root)
+            else -> Unit
+        }
     }
 
-    override fun beforeElement(propertyName: String?, element: AsmElementSimple) {
+    override fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing) {}
+
+    override fun onPrimitive(owningProperty: AsmStructureProperty?, value: AsmPrimitive) {}
+
+    override fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
         val scope = currentScope.peek()
-        addToScope(scope, element)
-        val chScope = createScope(scope, element)
+        addToScope(scope, value)
+        val chScope = createScope(scope, value)
         currentScope.push(chScope)
     }
 
-    override fun afterElement(propertyName: String?, element: AsmElementSimple) {
+    override fun onProperty(owner: AsmStructure, property: AsmStructureProperty) {}
+
+    override fun afterStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
         currentScope.pop()
     }
 
-    override fun property(element: AsmElementSimple, property: AsmElementProperty) {
-        // do nothing
-    }
+    override fun beforeList(owningProperty: AsmStructureProperty?, value: AsmList) {}
 
-    private fun createScope(scope: Scope<AsmElementPath>, el: AsmElementSimple): Scope<AsmElementPath> {
+    override fun afterList(owningProperty: AsmStructureProperty?, value: AsmList) {}
+
+    private fun createScope(scope: Scope<AsmPath>, el: AsmStructure): Scope<AsmPath> {
         val exp = crossReferenceModel.identifyingExpressionFor(scope.forTypeName, el.typeName)
         return if (null != exp && crossReferenceModel.isScopeDefinedFor(el.typeName)) {
             val refInParent = exp.createReferenceLocalToScope(scope, el)
             if (null != refInParent) {
-                val newScope = scope.createOrGetChildScope(refInParent, el.typeName, el.asmPath)
+                val newScope = scope.createOrGetChildScope(refInParent, el.typeName, el.path)
                 //_scopeMap[el.asmPath] = newScope
                 newScope
             } else {
@@ -69,7 +80,7 @@ class ScopeCreator(
                     this.locationMap[el],
                     "Trying to create child scope but cannot create a reference for '$el' because its identifying expression evaluates to null. Using type name as identifier."
                 )
-                val newScope = scope.createOrGetChildScope(el.typeName, el.typeName, el.asmPath)
+                val newScope = scope.createOrGetChildScope(el.typeName, el.typeName, el.path)
                 //_scopeMap[el.asmPath] = newScope
                 newScope
             }
@@ -78,24 +89,42 @@ class ScopeCreator(
         }
     }
 
-    private fun addToScope(scope: Scope<AsmElementPath>, el: AsmElementSimple) {
+    private fun addToScope(scope: Scope<AsmPath>, el: AsmStructure) {
         val exp = crossReferenceModel.identifyingExpressionFor(scope.forTypeName, el.typeName)
         if (null != exp) {
             //val reference = _scopeModel!!.createReferenceFromRoot(scope, el)
             val scopeLocalReference = exp.createReferenceLocalToScope(scope, el)
             if (null != scopeLocalReference) {
-                val contextRef = el.asmPath
+                val contextRef = el.path
                 scope.addToScope(scopeLocalReference, el.typeName, contextRef)
             } else {
                 issues.warn(
                     this.locationMap[el],
                     "Cannot create a local reference in '$scope' for '$el' because its identifying expression evaluates to null. Using type name as identifier."
                 )
-                val contextRef = el.asmPath
+                val contextRef = el.path
                 scope.addToScope(el.typeName, el.typeName, contextRef)
             }
         } else {
             // no need to add it to scope
+        }
+    }
+
+    private fun Expression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? = when (this) {
+        is RootExpression -> this.createReferenceLocalToScope(scope, element)
+        is Navigation -> this.createReferenceLocalToScope(scope, element)
+        else -> error("Subtype of Expression not handled in 'createReferenceLocalToScope'")
+    }
+
+    private fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String =
+        (_interpreter.evaluateExpression(element, this) as AsmPrimitive).value as String
+
+    private fun Navigation.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? {
+        val res = _interpreter.evaluateExpression(element, this)
+        return when (res) {
+            is AsmNothing -> null
+            is AsmPrimitive -> res.value as String
+            else -> error("Evaluation of navigation '$this' on '$element' should result in a String, but it does not!")
         }
     }
 

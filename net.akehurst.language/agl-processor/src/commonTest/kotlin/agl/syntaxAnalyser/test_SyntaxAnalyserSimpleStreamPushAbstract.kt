@@ -151,7 +151,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
             grammarDefinitionStr = grammarStr,
             configuration = Agl.configuration {
                 typeModelResolver { p -> ProcessResultDefault(TypeModelFromGrammar.create(p.grammar!!), IssueHolder(LanguageProcessorPhase.ALL)) }
-                syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserToString(p.typeModel!!, p.scopeModel!!), IssueHolder(LanguageProcessorPhase.ALL)) }
+                syntaxAnalyserResolver { p -> ProcessResultDefault(SyntaxAnalyserToString(p.typeModel!!, p.crossReferenceModel!!), IssueHolder(LanguageProcessorPhase.ALL)) }
                 semanticAnalyserResolver { p -> ProcessResultDefault(SemanticAnalyserToString(), IssueHolder(LanguageProcessorPhase.ALL)) }
             }
         )

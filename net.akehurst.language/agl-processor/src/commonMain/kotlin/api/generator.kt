@@ -49,7 +49,7 @@ abstract class GeneratedLanguageProcessorAbstract<AsmType : Any, ContextType : A
     abstract val defaultGoalRuleName: String
     abstract val ruleSet: RuleSet
     abstract val mapToGrammar: (Int, Int) -> RuleItem
-    abstract val scopeModel: CrossReferenceModel?
+    abstract val crossReferenceModel: CrossReferenceModel?
     abstract val syntaxAnalyser: SyntaxAnalyser<AsmType>?
     abstract val formatter: Formatter<AsmType>?
     abstract val semanticAnalyser: SemanticAnalyser<AsmType, ContextType>?

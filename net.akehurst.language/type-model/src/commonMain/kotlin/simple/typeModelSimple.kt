@@ -139,6 +139,27 @@ abstract class TypeInstanceAbstract() : TypeInstance {
         }
     }
 
+    override fun conformsTo(other: TypeInstance): Boolean = when {
+        other === this -> true // fast option
+        this == SimpleTypeModelStdLib.NothingType -> false
+        other == SimpleTypeModelStdLib.NothingType -> false
+        other == SimpleTypeModelStdLib.AnyType -> true
+        this.type.conformsTo(other.type).not() -> false
+        this.typeArguments.size != other.typeArguments.size -> false
+        else -> {
+            var result = true
+            for (i in this.typeArguments.indices) {
+                if (this.typeArguments[i].conformsTo(other.typeArguments[i])) {
+                    continue
+                } else {
+                    result = false
+                    break
+                }
+            }
+            result
+        }
+    }
+
     abstract override fun hashCode(): Int
 
     abstract override fun equals(other: Any?): Boolean
@@ -482,6 +503,8 @@ abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
 
     override val qualifiedName: String get() = "${namespace.qualifiedName}.$name"
 
+    override val supertypes: List<TypeInstance> = mutableListOf()
+
     override val typeParameters: List<String> = mutableListOf() //make implementation mutable for serialisation
 
     // store properties by map(index) rather than list(index), because when constructing from grammar, not every index is used
@@ -491,6 +514,8 @@ abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
     //protected val properties = mutableListOf<PropertyDeclaration>()
 
     override val method = mutableListOf<MethodDeclaration>()
+
+    override val allSuperTypes: List<TypeInstance> get() = supertypes + supertypes.flatMap { (it.type as DataType).allSuperTypes }
 
     override val allProperty: Map<String, PropertyDeclaration> get() = property.associateBy { it.name }
 
@@ -504,6 +529,16 @@ abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
     override fun instance(arguments: List<TypeInstance>, nullable: Boolean): TypeInstance =
         namespace.createTypeInstance(this, this.name, arguments, nullable)
 
+    override fun conformsTo(other: TypeDeclaration): Boolean = when {
+        other === this -> true // fast option
+        this == SimpleTypeModelStdLib.NothingType.type -> false
+        other == SimpleTypeModelStdLib.NothingType.type -> false
+        other == SimpleTypeModelStdLib.AnyType.type -> true
+        other == this -> true
+        other is UnnamedSupertypeType -> other.subtypes.any { this.conformsTo(it.type) }
+        else -> this.supertypes.any { it.type.conformsTo(other) }
+    }
+
     override fun getPropertyByIndexOrNull(i: Int): PropertyDeclaration? = propertyByIndex[i]
 
     override fun findPropertyOrNull(name: String): PropertyDeclaration? =
@@ -511,6 +546,14 @@ abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
 
     override fun findMethodOrNull(name: String): MethodDeclaration? =
         this.allMethod[name]
+
+    // --- mutable ---
+    override fun addSupertype(qualifiedTypeName: String) {
+        val ti = namespace.createTypeInstance(this, qualifiedTypeName, emptyList(), false)
+        //TODO: check if create loop of supertypes - pre namespace resolving!
+        (this.supertypes as MutableList).add(ti)
+        //(type.subtypes as MutableList).add(this) //TODO: can we somehow add the reverse!
+    }
 
     /**
      * append a derived property, with the expression that derived it
@@ -662,6 +705,14 @@ class UnnamedSupertypeTypeSimple(
             .joinToString(prefix = "(", postfix = ")", separator = " | ") { it.signature(context, currentDepth + 1) }
     }
 
+    override fun conformsTo(other: TypeDeclaration): Boolean = when {
+        this === other -> true
+        other == SimpleTypeModelStdLib.NothingType.type -> false
+        other == SimpleTypeModelStdLib.AnyType.type -> true
+        other is UnnamedSupertypeType -> this.subtypes == other.subtypes
+        else -> false
+    }
+
     override fun asString(context: TypeNamespace): String = "unnamed ${signature(context)}"
 
     override fun hashCode(): Int = id
@@ -712,6 +763,14 @@ class TupleTypeSimple(
         else -> "${name}<${this.property.joinToString { it.name + ":" + it.typeInstance.signature(context, currentDepth + 1) }}>"
     }
 
+    override fun conformsTo(other: TypeDeclaration): Boolean = when {
+        this === other -> true
+        other == SimpleTypeModelStdLib.NothingType.type -> false
+        other == SimpleTypeModelStdLib.AnyType.type -> true
+        other is TupleType -> other.entries.containsAll(this.entries) //TODO: this should check conformance of property types! - could cause recursive loop!
+        else -> false
+    }
+
     override fun equalTo(other: TupleType): Boolean =
         this.entries == other.entries
 
@@ -735,13 +794,8 @@ class DataTypeSimple(
 
     override var typeParameters = mutableListOf<String>()
 
-    override val supertypes: List<TypeInstance> = mutableListOf()
-
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     override val subtypes: MutableList<TypeInstance> = mutableListOf()
-
-    override val allSuperTypes: List<TypeInstance>
-        get() = supertypes + supertypes.flatMap { (it.type as DataType).allSuperTypes }
 
     override val allProperty: Map<String, PropertyDeclaration>
         get() = supertypes.flatMap {
@@ -753,13 +807,6 @@ class DataTypeSimple(
         context == this.namespace -> name
         context.isImported(this.namespace.qualifiedName) -> name
         else -> qualifiedName
-    }
-
-    override fun addSupertype(qualifiedTypeName: String) {
-        val ti = namespace.createTypeInstance(this, qualifiedTypeName, emptyList(), false)
-        //TODO: check if create loop of supertypes - pre namespace resolving!
-        (this.supertypes as MutableList).add(ti)
-        //(type.subtypes as MutableList).add(this) //TODO: can we somehow add the reverse!
     }
 
     override fun addSubtype(qualifiedTypeName: String) {
@@ -804,12 +851,10 @@ class CollectionTypeSimple(
     override var typeParameters: List<String> = mutableListOf<String>()
 ) : StructuredTypeSimpleAbstract(), CollectionType {
 
-    override val supertypes: Set<CollectionType> = mutableSetOf<CollectionType>()
-
-    override val isArray: Boolean get() = name == "Array"
-    override val isList: Boolean get() = name == "List"
-    override val isSet: Boolean get() = name == "Set"
-    override val isMap: Boolean get() = name == "Map"
+//    override val isArray: Boolean get() = name == "Array"
+//    override val isList: Boolean get() = name == "List"
+//    override val isSet: Boolean get() = name == "Set"
+//    override val isMap: Boolean get() = name == "Map"
 
     override fun signature(context: TypeNamespace?, currentDepth: Int): String = when {
         null == context -> qualifiedName
@@ -939,7 +984,6 @@ class MethodDeclarationDerived(
 ) : MethodDeclaration {
 
 }
-
 
 class ParameterDefinitionSimple(
     override val name: String,

@@ -18,11 +18,12 @@
 package net.akehurst.language.agl.completionProvider
 
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.asm.Asm
+
 import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.processor.CompletionItem
 
-class CompletionProviderSimple : CompletionProviderAbstract<AsmSimple, ContextSimple>() {
+class CompletionProviderSimple : CompletionProviderAbstract<Asm, ContextSimple>() {
 
     override fun provide(nextExpected: Set<RuleItem>, context: ContextSimple?, options: Map<String, Any>): List<CompletionItem> {
         TODO("not implemented")

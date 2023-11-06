@@ -21,13 +21,14 @@ import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.api.language.grammar.*
 import net.akehurst.language.api.parser.InputLocation
-import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.processor.AutomatonKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.processor.SemanticAnalysisOptions
+import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 
 
-class AglGrammarSemanticAnalyser(
-    val languageRegistry: GrammarRegistry
-) : SemanticAnalyser<List<Grammar>, GrammarContext> {
+class AglGrammarSemanticAnalyser() : SemanticAnalyser<List<Grammar>, ContextFromGrammarRegistry> {
 
     companion object {
         private const val ns = "net.akehurst.language.agl.grammar.grammar"
@@ -57,30 +58,25 @@ class AglGrammarSemanticAnalyser(
         _locationMap = null
     }
 
-//    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
-//        //TODO
-//        return emptyList()
-//    }
-
     override fun analyse(
         asm: List<Grammar>,
         locationMap: Map<Any, InputLocation>?,
-        context: GrammarContext?,
-        options: SemanticAnalysisOptions<List<Grammar>, GrammarContext>
+        context: ContextFromGrammarRegistry?,
+        options: SemanticAnalysisOptions<List<Grammar>, ContextFromGrammarRegistry>
     ): SemanticAnalysisResult {
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
         this._analyseAmbiguities = options.other[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? ?: false
 
-        asm.forEach { languageRegistry.registerGrammar(it) }
+        asm.forEach { context?.grammarRegistry?.registerGrammar(it) }
 
-        checkGrammar(asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
+        checkGrammar(context, asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?
         return SemanticAnalysisResultDefault(issues)
     }
 
-    private fun checkGrammar(grammarList: List<Grammar>, automatonKind: AutomatonKind) {
+    private fun checkGrammar(context: ContextFromGrammarRegistry?, grammarList: List<Grammar>, automatonKind: AutomatonKind) {
         grammarList.forEach { grammar ->
-            this.resolveGrammarRefs(grammar)
-            this.analyseGrammar(grammar)
+            this.resolveGrammarRefs(context, grammar)
+            this.analyseGrammar(context, grammar)
             this.checkRuleUsage(grammar)
             this.checkForDuplicates(grammar)
             if (issues.errors.isEmpty() && _analyseAmbiguities) {
@@ -89,19 +85,19 @@ class AglGrammarSemanticAnalyser(
         }
     }
 
-    private fun resolveGrammarRefs(grammar: Grammar) {
-        checkGrammarExistsAndResolve(grammar.extends)
-        checkGrammarExistsAndResolve(grammar.allGrammarReferencesInRules)
+    private fun resolveGrammarRefs(context: ContextFromGrammarRegistry?, grammar: Grammar) {
+        checkGrammarExistsAndResolve(context, grammar.extends)
+        checkGrammarExistsAndResolve(context, grammar.allGrammarReferencesInRules)
     }
 
-    private fun checkGrammarExistsAndResolve(refs: List<GrammarReference>) {
+    private fun checkGrammarExistsAndResolve(context: ContextFromGrammarRegistry?, refs: List<GrammarReference>) {
         for (it in refs) {
-            checkGrammarExistsAndResolve(it)
+            checkGrammarExistsAndResolve(context, it)
         }
     }
 
-    private fun checkGrammarExistsAndResolve(ref: GrammarReference) {
-        val g = languageRegistry.findGrammarOrNull(ref.localNamespace, ref.nameOrQName)
+    private fun checkGrammarExistsAndResolve(context: ContextFromGrammarRegistry?, ref: GrammarReference) {
+        val g = context?.grammarRegistry?.findGrammarOrNull(ref.localNamespace, ref.nameOrQName)
         if (null == g) {
             this.issueError(ref, "Grammar '${ref.nameOrQName}' not found", null)
         } else {
@@ -123,7 +119,7 @@ class AglGrammarSemanticAnalyser(
         set.add(rule)
     }
 
-    private fun analyseGrammar(grammar: Grammar) {
+    private fun analyseGrammar(context: ContextFromGrammarRegistry?, grammar: Grammar) {
         _usedRules[grammar] = mutableSetOf()
         // default usage is unused for all rules in this grammar
         grammar.grammarRule.forEach {
@@ -137,7 +133,7 @@ class AglGrammarSemanticAnalyser(
 
         grammar.grammarRule.forEach {
             when (it) {
-                is NormalRule -> this.analyseRuleItem(grammar, it.rhs)
+                is NormalRule -> this.analyseRuleItem(context, grammar, it.rhs)
                 is OverrideRule -> {
                     //need to check what is overridden exists, before analysing the rule
                     val overridden = grammar.findAllSuperGrammarRule(it.name)
@@ -148,7 +144,7 @@ class AglGrammarSemanticAnalyser(
                             null
                         )
 
-                        else -> this.analyseRuleItem(grammar, it.rhs)
+                        else -> this.analyseRuleItem(context, grammar, it.rhs)
                     }
                 }
             }
@@ -214,23 +210,23 @@ class AglGrammarSemanticAnalyser(
         }
     }
 
-    private fun analyseRuleItem(grammar: Grammar, rhs: RuleItem) {
+    private fun analyseRuleItem(context: ContextFromGrammarRegistry?, grammar: Grammar, rhs: RuleItem) {
         when (rhs) {
             is EmptyRule -> Unit
             is Terminal -> Unit
-            is Embedded -> checkGrammarExistsAndResolve(rhs.embeddedGrammarReference)
-            is Concatenation -> rhs.items.forEach { analyseRuleItem(grammar, it) }
-            is Choice -> rhs.alternative.forEach { analyseRuleItem(grammar, it) }
-            is Group -> analyseRuleItem(grammar, rhs.groupedContent)
-            is OptionalItem -> analyseRuleItem(grammar, rhs.item)
-            is SimpleList -> analyseRuleItem(grammar, rhs.item)
+            is Embedded -> checkGrammarExistsAndResolve(context, rhs.embeddedGrammarReference)
+            is Concatenation -> rhs.items.forEach { analyseRuleItem(context, grammar, it) }
+            is Choice -> rhs.alternative.forEach { analyseRuleItem(context, grammar, it) }
+            is Group -> analyseRuleItem(context, grammar, rhs.groupedContent)
+            is OptionalItem -> analyseRuleItem(context, grammar, rhs.item)
+            is SimpleList -> analyseRuleItem(context, grammar, rhs.item)
             is SeparatedList -> {
-                analyseRuleItem(grammar, rhs.item)
-                analyseRuleItem(grammar, rhs.separator)
+                analyseRuleItem(context, grammar, rhs.item)
+                analyseRuleItem(context, grammar, rhs.separator)
             }
 
             is NonTerminal -> {
-                rhs.targetGrammar?.let { checkGrammarExistsAndResolve(it) }
+                rhs.targetGrammar?.let { checkGrammarExistsAndResolve(context, it) }
                 val rule = grammar.findAllResolvedGrammarRule(rhs.name)
                 //    .toSet() //convert result to set so that same rule from same grammar is not repeated
                 when {

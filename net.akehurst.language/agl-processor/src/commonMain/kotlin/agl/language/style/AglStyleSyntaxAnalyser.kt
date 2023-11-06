@@ -43,10 +43,6 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
 
     override val embeddedSyntaxAnalyser: Map<String, SyntaxAnalyser<AglStyleModel>> = emptyMap()
 
-//    override fun configure(configurationContext: SentenceContext<GrammarItem>, configuration: Map<String, Any>): List<LanguageIssue> {
-//        return emptyList()
-//    }
-
     // rules : rule* ;
     fun rules(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleModelDefault =
         AglStyleModelDefault(children as List<AglStyleRule>)

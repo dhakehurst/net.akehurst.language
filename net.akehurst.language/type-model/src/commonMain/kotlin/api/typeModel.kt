@@ -132,16 +132,25 @@ interface TypeInstance {
     fun nullable(): TypeInstance
 
     fun signature(context: TypeNamespace?, currentDepth: Int): String
+
+    fun conformsTo(other: TypeInstance): Boolean
 }
 
 interface TypeDeclaration {
     val namespace: TypeNamespace
     val name: String
     val qualifiedName: String
+
+    val supertypes: List<TypeInstance>
     val typeParameters: List<String>
 
     val property: List<PropertyDeclaration>
     val method: List<MethodDeclaration>
+
+    /**
+     * transitive closure of supertypes
+     */
+    val allSuperTypes: List<TypeInstance>
 
     /**
      * all properties from this and transitive closure of supertypes
@@ -157,16 +166,19 @@ interface TypeDeclaration {
 
     fun instance(arguments: List<TypeInstance> = emptyList(), nullable: Boolean = false): TypeInstance
 
+    fun conformsTo(other: TypeDeclaration): Boolean
+
     fun getPropertyByIndexOrNull(i: Int): PropertyDeclaration?
     fun findPropertyOrNull(name: String): PropertyDeclaration?
     fun findMethodOrNull(name: String): MethodDeclaration?
 
+    fun asString(context: TypeNamespace): String
+
+    fun addSupertype(qualifiedTypeName: String)
     fun appendPropertyPrimitive(name: String, typeInstance: TypeInstance, description: String, expression: (self: Any) -> Any)
     fun appendPropertyDerived(name: String, typeInstance: TypeInstance, description: String, expression: String)
     fun appendMethodPrimitive(name: String, parameters: List<ParameterDefinition>, typeInstance: TypeInstance, description: String, body: (self: Any, arguments: List<Any>) -> Any)
     fun appendMethodDerived(name: String, parameters: List<ParameterDefinition>, typeInstance: TypeInstance, description: String, body: String)
-
-    fun asString(context: TypeNamespace): String
 }
 
 interface PrimitiveType : TypeDeclaration {
@@ -199,17 +211,9 @@ interface TupleType : StructuredType {
 
 interface DataType : StructuredType {
 
-    val supertypes: List<TypeInstance>
-
     // List rather than Set or OrderedSet because same type can appear more than once, and the 'option' index in the SPPT indicates which
     val subtypes: MutableList<TypeInstance>
 
-    /**
-     * transitive closure of supertypes
-     */
-    val allSuperTypes: List<TypeInstance>
-
-    fun addSupertype(qualifiedTypeName: String)
     fun addSubtype(qualifiedTypeName: String)
 }
 
@@ -223,12 +227,11 @@ interface UnnamedSupertypeType : TypeDeclaration {
 }
 
 interface CollectionType : StructuredType {
-    val supertypes: Set<CollectionType>
 
-    val isArray: Boolean
-    val isList: Boolean
-    val isSet: Boolean
-    val isMap: Boolean
+//    val isArray: Boolean
+//    val isList: Boolean
+//    val isSet: Boolean
+//    val isMap: Boolean
 }
 
 interface PropertyDeclaration {

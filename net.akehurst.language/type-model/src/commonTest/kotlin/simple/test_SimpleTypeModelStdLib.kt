@@ -67,8 +67,8 @@ class test_SimpleTypeModelStdLib {
     @Test
     fun collection_List() {
         assertEquals("std.List", SimpleTypeModelStdLib.List.qualifiedName)
-        assertEquals("size", SimpleTypeModelStdLib.List.property["size"]?.name)
-        assertEquals("std.Integer", SimpleTypeModelStdLib.List.property["size"]?.typeInstance?.qualifiedTypeName)
+        assertEquals("size", SimpleTypeModelStdLib.List.findPropertyOrNull("size")?.name)
+        assertEquals("std.Integer", SimpleTypeModelStdLib.List.findPropertyOrNull("size")?.typeInstance?.qualifiedTypeName)
 
 
     }

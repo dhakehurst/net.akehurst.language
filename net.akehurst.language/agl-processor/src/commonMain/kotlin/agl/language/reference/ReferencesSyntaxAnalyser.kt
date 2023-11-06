@@ -49,7 +49,6 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         super.register(this::ofType)
         super.register(this::typeReferences)
         super.register(this::typeReference)
-
     }
 
     data class PropertyValue(

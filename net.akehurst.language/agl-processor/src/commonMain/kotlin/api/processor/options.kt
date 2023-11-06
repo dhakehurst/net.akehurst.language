@@ -47,7 +47,7 @@ interface LanguageProcessorConfiguration<AsmType : Any, ContextType : Any> {
     val targetGrammarName: String?
     val defaultGoalRuleName: String?
     val typeModelResolver: TypeModelResolver<AsmType, ContextType>?
-    val scopeModelResolver: CrossReferenceModelResolver<AsmType, ContextType>?
+    val crossReferenceModelResolver: CrossReferenceModelResolver<AsmType, ContextType>?
     val syntaxAnalyserResolver: SyntaxAnalyserResolver<AsmType, ContextType>?
     val semanticAnalyserResolver: SemanticAnalyserResolver<AsmType, ContextType>?
     val formatterResolver: FormatterResolver<AsmType, ContextType>?
@@ -69,7 +69,7 @@ interface ParseOptions {
 /**
  * Options to configure the syntax analysis of an Shared Packed Parse Tree (SPPT)
  */
-interface SyntaxAnalysisOptions<AsmType : Any, ContextType : Any> {
+interface SyntaxAnalysisOptions<AsmType : Any> {
     var active: Boolean
 }
 
@@ -95,7 +95,7 @@ interface CompletionProviderOptions<AsmType : Any, ContextType : Any> {
  */
 interface ProcessOptions<AsmType : Any, ContextType : Any> {
     val parse: ParseOptions
-    val syntaxAnalysis: SyntaxAnalysisOptions<AsmType, ContextType>
+    val syntaxAnalysis: SyntaxAnalysisOptions<AsmType>
     val semanticAnalysis: SemanticAnalysisOptions<AsmType, ContextType>
     val completionProvider: CompletionProviderOptions<AsmType, ContextType>
 }

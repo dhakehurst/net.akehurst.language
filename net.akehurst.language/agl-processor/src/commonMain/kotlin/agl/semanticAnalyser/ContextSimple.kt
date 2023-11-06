@@ -17,23 +17,17 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
-import net.akehurst.language.agl.language.expressions.evaluateFor
 import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
-import net.akehurst.language.api.asm.AsmElementPath
-import net.akehurst.language.api.asm.AsmElementProperty
-import net.akehurst.language.api.asm.AsmElementSimple
-import net.akehurst.language.api.language.expressions.Expression
-import net.akehurst.language.api.language.expressions.Navigation
-import net.akehurst.language.api.language.expressions.RootExpression
+import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.language.reference.Scope
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
-class ContextSimple() : SentenceContext<AsmElementPath> {
+class ContextSimple() : SentenceContext<AsmPath> {
 
     /**
      * The items in the scope contain a ScopePath to an element in an AsmSimple model
      */
-    override var rootScope = ScopeSimple<AsmElementPath>(null, "", CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
+    override var rootScope = ScopeSimple<AsmPath>(null, "", CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
 
     fun asString(): String = "contextSimple scope §root ${rootScope.asString()}"
 
@@ -46,43 +40,6 @@ class ContextSimple() : SentenceContext<AsmElementPath> {
     }
 
     override fun toString(): String = "ContextSimple"
-}
-
-fun Navigation.propertyFor(root: AsmElementSimple?): AsmElementProperty {
-    return when {
-        null == root -> error("Cannot navigate '$this' from null value")
-        else -> {
-            val front = this.value.dropLast(1)
-            var el = root
-            for (pn in front) {
-                val pv = el?.getProperty(pn)
-                el = when (pv) {
-                    null -> error("Cannot navigate '$pn' from null value")
-                    is AsmElementSimple -> pv
-                    else -> error("Cannot navigate '$pn' from value of type '${pv::class.simpleName}'")
-                }
-            }
-            el?.properties?.get(this.value.last()) ?: error("Cannot navigate '$this' from null value")
-        }
-    }
-}
-
-fun Expression.createReferenceLocalToScope(scope: Scope<AsmElementPath>, element: AsmElementSimple) = when (this) {
-    is RootExpression -> this.createReferenceLocalToScope(scope, element)
-    is Navigation -> this.createReferenceLocalToScope(scope, element)
-    else -> error("Subtype of Expression not handled in 'createReferenceLocalToScope'")
-}
-
-fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmElementPath>, element: AsmElementSimple) =
-    this.evaluateFor(element)
-
-fun Navigation.createReferenceLocalToScope(scope: Scope<AsmElementPath>, element: AsmElementSimple): String? {
-    val res = this.evaluateFor(element)
-    return when (res) {
-        null -> null
-        is String -> res
-        else -> error("Evaluation of navigation '$this' on '$element' should result in a String, but it does not!")
-    }
 }
 
 class ScopeSimple<AsmElementIdType>(
@@ -177,12 +134,3 @@ class ScopeSimple<AsmElementIdType>(
         else -> "$parent/$forTypeName"
     }
 }
-
-
-//fun ScopeModelAgl.createReferenceFromRoot(scope: ScopeSimple<AsmElementPath>, element: AsmElementSimple): AsmElementPath {
-//    return element.asmPath
-//}
-
-//fun ScopeModelAgl.resolveReference(asm:AsmSimple, rootScope: ScopeSimple<AsmElementPath>, reference: AsmElementPath): AsmElementSimple? {
-//    return asm.index[reference]
-//}
