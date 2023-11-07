@@ -18,7 +18,7 @@ package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.language.grammar.Grammar
@@ -30,7 +30,7 @@ import kotlin.test.*
 
 class test_LanguageDefinitionDefault {
 
-    lateinit var sut: LanguageDefinition<AsmSimple, ContextSimple>
+    lateinit var sut: LanguageDefinition<Asm, ContextSimple>
 
     val grammarStrObserverCalled = mutableListOf<Pair<String?, String?>>()
     val grammarStrObserver: (String?, String?) -> Unit = { old, new -> grammarStrObserverCalled.add(Pair(old, new)) }
@@ -54,7 +54,7 @@ class test_LanguageDefinitionDefault {
     @BeforeTest
     fun before() {
         Agl.registry.unregister("ns.test")
-        this.sut = Agl.registry.register<AsmSimple, ContextSimple>(
+        this.sut = Agl.registry.register<Asm, ContextSimple>(
             identity = "ns.test",
             grammarStr = null,
             aglOptions = null,
@@ -87,7 +87,7 @@ class test_LanguageDefinitionDefault {
     @Test
     fun createFromStr() {
         val g = "namespace ns grammar Test1 { S = 'b'; }"
-        val def = Agl.registry.register<AsmSimple, ContextSimple>(
+        val def = Agl.registry.register<Asm, ContextSimple>(
             identity = "ns.Test1",
             grammarStr = g,
             aglOptions = null,

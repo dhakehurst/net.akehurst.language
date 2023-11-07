@@ -21,7 +21,7 @@ package net.akehurst.language.processor.java8
 import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -34,13 +34,13 @@ class test_Java8_Singles_antlrOptm {
 
     private companion object {
 
-        val antlrOptmProcessor: LanguageProcessor<AsmSimple, ContextSimple> by lazy { createJava8Processor("/Java/version_8/grammars/grammar_antlrOptm.agl") }
+        val antlrOptmProcessor: LanguageProcessor<Asm, ContextSimple> by lazy { createJava8Processor("/Java/version_8/grammars/grammar_antlrOptm.agl") }
 
         val proc = antlrOptmProcessor
 
-        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<AsmSimple, ContextSimple> {
+        fun createJava8Processor(path: String, toUpper: Boolean = false): LanguageProcessor<Asm, ContextSimple> {
             val grammarStr = this::class.java.getResource(path).readText()
-            val proc = Agl.processorFromString<AsmSimple, ContextSimple>(
+            val proc = Agl.processorFromString<Asm, ContextSimple>(
                 grammarDefinitionStr = grammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {

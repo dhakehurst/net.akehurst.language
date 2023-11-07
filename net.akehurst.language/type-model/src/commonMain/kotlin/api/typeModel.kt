@@ -92,8 +92,8 @@ interface TypeNamespace {
         context: TypeDeclaration?, qualifiedOrImportedTypeName: String, typeArguments: List<TypeInstance> = emptyList(), isNullable: Boolean = false
     ): TypeInstance
 
-    fun createTupleTypeInstance(type: TupleType, typeArguments: List<TypeInstance>, nullable: Boolean): TypeInstance
-    fun createUnnamedSupertypeTypeInstance(type: UnnamedSupertypeType, typeArguments: List<TypeInstance>, nullable: Boolean): TypeInstance
+    fun createTupleTypeInstance(declaration: TupleType, typeArguments: List<TypeInstance>, nullable: Boolean): TypeInstance
+    fun createUnnamedSupertypeTypeInstance(declaration: UnnamedSupertypeType, typeArguments: List<TypeInstance>, nullable: Boolean): TypeInstance
 
     fun createUnnamedSupertypeType(subtypes: List<TypeInstance>): UnnamedSupertypeType
 
@@ -109,7 +109,7 @@ interface TypeInstance {
     val isNullable: Boolean
 
     /**
-     * the name of the type, if it is resolvable,
+     * the name of the TypeDeclaration, if it is resolvable,
      * or the name the instance refers to (e.g. a type parameter)
      */
     val typeName: String
@@ -119,7 +119,7 @@ interface TypeInstance {
     /**
      * {derived} type is resolved via the namespace
      */
-    val type: TypeDeclaration
+    val declaration: TypeDeclaration
 
     /**
      * properties from the type, with type parameters resolved
@@ -164,7 +164,7 @@ interface TypeDeclaration {
 
     fun signature(context: TypeNamespace?, currentDepth: Int = 0): String
 
-    fun instance(arguments: List<TypeInstance> = emptyList(), nullable: Boolean = false): TypeInstance
+    fun type(arguments: List<TypeInstance> = emptyList(), nullable: Boolean = false): TypeInstance
 
     fun conformsTo(other: TypeDeclaration): Boolean
 
@@ -175,10 +175,10 @@ interface TypeDeclaration {
     fun asString(context: TypeNamespace): String
 
     fun addSupertype(qualifiedTypeName: String)
-    fun appendPropertyPrimitive(name: String, typeInstance: TypeInstance, description: String, expression: (self: Any) -> Any)
+    fun appendPropertyPrimitive(name: String, typeInstance: TypeInstance, description: String)
     fun appendPropertyDerived(name: String, typeInstance: TypeInstance, description: String, expression: String)
-    fun appendMethodPrimitive(name: String, parameters: List<ParameterDefinition>, typeInstance: TypeInstance, description: String, body: (self: Any, arguments: List<Any>) -> Any)
-    fun appendMethodDerived(name: String, parameters: List<ParameterDefinition>, typeInstance: TypeInstance, description: String, body: String)
+    fun appendMethodPrimitive(name: String, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: (self: Any, arguments: List<Any>) -> Any)
+    fun appendMethodDerived(name: String, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: String)
 }
 
 interface PrimitiveType : TypeDeclaration {
@@ -304,11 +304,11 @@ enum class PropertyCharacteristic {
 interface MethodDeclaration {
     val owner: TypeDeclaration
     val name: String
-    val parameters: List<ParameterDefinition>
+    val parameters: List<ParameterDeclaration>
     val description: String
 }
 
-interface ParameterDefinition {
+interface ParameterDeclaration {
     val name: String
     val typeInstance: TypeInstance
     val defaultValue: String?

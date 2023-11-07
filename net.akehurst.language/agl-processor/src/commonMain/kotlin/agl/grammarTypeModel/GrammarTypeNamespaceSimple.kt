@@ -33,8 +33,8 @@ abstract class GrammarTypeNamespaceAbstract(
 
     fun addTypeFor(grammarRuleName: String, typeUse: TypeInstance) {
         this.allRuleNameToType[grammarRuleName] = typeUse
-        if (typeUse.type is DataType) {
-            super.allTypesByName[typeUse.type.name] = typeUse.type
+        if (typeUse.declaration is DataType) {
+            super.allTypesByName[typeUse.declaration.name] = typeUse.declaration
         }
     }
 

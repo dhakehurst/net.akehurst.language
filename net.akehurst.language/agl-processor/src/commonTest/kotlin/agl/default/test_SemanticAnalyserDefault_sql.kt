@@ -94,7 +94,7 @@ grammar SQL {
     leaf VALUES = "values|VALUES"   ;
 }
         """.trimIndent()
-        val scopeModelStr = """
+        val crossReferenceModelStr = """
             namespace net.akehurst.language.SQL {
                 identify TableDefinition by table-id
                 scope TableDefinition {
@@ -122,17 +122,18 @@ grammar SQL {
                 }
             }
         """.trimIndent()
-        val scopeModel = CrossReferenceModelDefault.fromString(null, scopeModelStr).let { it.asm ?: error(it.issues.toString()) }
         val processor = Agl.processorFromStringDefault(
             grammarStr,
-            scopeModelStr
+            crossReferenceModelStr
         ).processor!!
+        val typeModel = processor.typeModel
+        val crossReferenceModel = processor.crossReferenceModel
     }
 
     @Test
     fun check_scopeModel() {
         val context = ContextFromTypeModel(processor.typeModel)
-        val res = CrossReferenceModelDefault.fromString(context, scopeModelStr)
+        val res = CrossReferenceModelDefault.fromString(context, crossReferenceModelStr)
         assertTrue(res.issues.isEmpty(), res.issues.toString())
     }
 
@@ -148,7 +149,7 @@ grammar SQL {
 
         val result = processor.process(sentence)
 
-        val expected = asmSimple(scopeModel, ContextSimple()) {
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextSimple()) {
             element("StatementList") {
                 propertyListOfElement("terminatedStatement") {
                     element("TerminatedStatement") {
@@ -199,7 +200,7 @@ grammar SQL {
 
         val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextSimple()) } })
 
-        val expected = asmSimple(scopeModel, ContextSimple()) {
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextSimple()) {
             element("StatementList") {
                 propertyListOfElement("terminatedStatement") {
                     element("TerminatedStatement") {
@@ -265,8 +266,8 @@ grammar SQL {
         val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextSimple()) } })
 
         val expected = asmSimple(
-            scopeModel,
-            ContextSimple(),
+            typeModel = typeModel,
+            crossReferenceModel = crossReferenceModel, context = ContextSimple(),
             failIfIssues = false //there are failing references expected
         ) {
             element("StatementList") {
@@ -318,7 +319,7 @@ grammar SQL {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(83, 8, 7, 4),
-                "No target of type(s) [ColumnDefinition] found for referring value 'col7' in scope of element ':ColumnRef([/0/terminatedStatement/1/statement/columns/0])'"
+                "No target of type(s) [ColumnDefinition] found for referring value 'col7' in scope of element ':ColumnRef[/0/terminatedStatement/1/statement/columns/0]'"
             )
         )
 
@@ -358,7 +359,7 @@ grammar SQL {
 
         val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextSimple()) } })
 
-        val expected = asmSimple(scopeModel, ContextSimple()) {
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextSimple()) {
             element("StatementList") {
                 propertyListOfElement("terminatedStatement") {
                     element("TerminatedStatement") {

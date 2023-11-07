@@ -170,7 +170,7 @@ internal class AglGrammarSyntaxAnalyser(
     private fun extendsList(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<GrammarReference> {
         val localNamespace = _localStore["namespace"] as Namespace
         val extendNameList = children as List<String>
-        val sl = extendNameList.toSeparatedList<String, String>()
+        val sl = extendNameList.toSeparatedList<String, String, String>()
         val extendedGrammars = sl.items.map {
             // need to manually add the GrammarReference as it is not seen by the super class
             GrammarReferenceDefault(localNamespace, it).also { this.locationMap[it] = sentence.locationForNode(target.node) }
@@ -258,21 +258,21 @@ internal class AglGrammarSyntaxAnalyser(
 
     // simpleChoice : [concatenation, '|']* ;
     private fun simpleChoice(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleItem {
-        val simpleChoice = children.toSeparatedList<Concatenation, String>()
+        val simpleChoice = (children as List<Any>).toSeparatedList<Any, Concatenation, String>()
         val alternative = simpleChoice.items.map { reduceConcatenation(it) }
         return ChoiceLongestDefault(alternative)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
     }
 
     // priorityChoice : [concatenation, '<']* ;
     private fun priorityChoice(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleItem {
-        val priorityChoice = children.toSeparatedList<Concatenation, String>()
+        val priorityChoice = (children as List<Any>).toSeparatedList<Any, Concatenation, String>()
         val alternative = priorityChoice.items.map { reduceConcatenation(it) }
         return ChoicePriorityDefault(alternative)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
     }
 
     // ambiguousChoice : [concatenation, '||']* ;
     private fun ambiguousChoice(target: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RuleItem {
-        val ambiguousChoice = children.toSeparatedList<Concatenation, String>()
+        val ambiguousChoice = (children as List<Any>).toSeparatedList<Any, Concatenation, String>()
         val alternative = ambiguousChoice.items.map { reduceConcatenation(it) }
         return ChoiceAmbiguousDefault(alternative)//.also { this.locationMap[it] = target.node.locationIn(sentence) }
     }

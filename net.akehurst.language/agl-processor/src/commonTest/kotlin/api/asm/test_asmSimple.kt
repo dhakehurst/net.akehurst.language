@@ -26,7 +26,7 @@ class test_asmSimple {
         val asm = asmSimple {
 
         }
-        assertEquals(0, asm.rootElements.size)
+        assertEquals(0, asm.root.size)
     }
 
     @Test
@@ -34,8 +34,8 @@ class test_asmSimple {
         val asm = asmSimple {
             string("Hello")
         }
-        assertEquals(1, asm.rootElements.size)
-        assertEquals("Hello", asm.rootElements[0])
+        assertEquals(1, asm.root.size)
+        assertEquals("Hello", (asm.root[0] as AsmPrimitive).value as String)
     }
 
 }

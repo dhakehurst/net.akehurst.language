@@ -1744,6 +1744,7 @@ class test_AglGrammar {
         """.trimIndent()
 
         val pr = Agl.processorFromString<Any, Any>(grammarStr, Agl.configuration { targetGrammarName("Original"); defaultGoalRuleName("S1") })
+        assertTrue(pr.issues.errors.isEmpty(), pr.issues.toString())
         assertNotNull(pr.processor)
 
         val result1 = pr.processor!!.parse("abc", Agl.parseOptions { goalRuleName("S1") })
@@ -1757,6 +1758,7 @@ class test_AglGrammar {
         assertTrue(result1.issues.isEmpty())
 
         val pr2 = Agl.processorFromString<Any, Any>(grammarStr, Agl.configuration { targetGrammarName("Extended"); defaultGoalRuleName("S1") })
+        assertTrue(pr2.issues.errors.isEmpty(), pr2.issues.toString())
         assertNotNull(pr2.processor)
         val result2 = pr2.processor!!.parse("adc", Agl.parseOptions { goalRuleName("S1") })
         val expected2 = pr2.processor!!.spptParser.parse(

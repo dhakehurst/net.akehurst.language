@@ -34,7 +34,7 @@ class ContextFromGrammar(
             grammars.forEach { g ->
                 g.allResolvedGrammarRule.forEach {
                     val rType = namespace.findTypeUsageForRule("grammarRule") ?: error("Type not found for rule '${it.name}'")
-                    scope.addToScope(it.name, rType.type.qualifiedName, it.name)
+                    scope.addToScope(it.name, rType.declaration.qualifiedName, it.name)
                 }
                 g.allResolvedTerminal.forEach {
                     val rTypeName = when {

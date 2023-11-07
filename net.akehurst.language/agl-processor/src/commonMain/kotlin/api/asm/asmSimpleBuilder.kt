@@ -26,30 +26,37 @@ import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
-import net.akehurst.language.agl.semanticAnalyser.createReferenceLocalToScope
+import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.expressions.Navigation
+import net.akehurst.language.api.language.expressions.RootExpression
+import net.akehurst.language.api.language.reference.CrossReferenceModel
+import net.akehurst.language.api.language.reference.Scope
 import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.api.typeModel
 import net.akehurst.language.typemodel.simple.TupleTypeSimple
 
 @DslMarker
 annotation class AsmSimpleBuilderMarker
 
 fun asmSimple(
-    crossReferenceModel: CrossReferenceModelDefault = CrossReferenceModelDefault(),
+    typeModel: TypeModel = typeModel("StdLib", false) {},
+    crossReferenceModel: CrossReferenceModel = CrossReferenceModelDefault(),
     context: ContextSimple? = null,
     /** need to pass in a context if you want to resolveReferences */
     resolveReferences: Boolean = true,
     failIfIssues: Boolean = true,
     init: AsmSimpleBuilder.() -> Unit
 ): Asm {
-    val b = AsmSimpleBuilder(crossReferenceModel, context, resolveReferences, failIfIssues)
+    val b = AsmSimpleBuilder(typeModel, crossReferenceModel, context, resolveReferences, failIfIssues)
     b.init()
     return b.build()
 }
 
 @AsmSimpleBuilderMarker
 class AsmSimpleBuilder(
-    private val _crossReferenceModel: CrossReferenceModelDefault,
+    private val _typeModel: TypeModel,
+    private val _crossReferenceModel: CrossReferenceModel,
     private val _context: ContextSimple?,
     private val resolveReferences: Boolean,
     private val failIfIssues: Boolean
@@ -64,7 +71,7 @@ class AsmSimpleBuilder(
 
     fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
         val path = AsmPathSimple.ROOT + (_asm.root.size).toString()
-        val b = AsmElementSimpleBuilder(_crossReferenceModel, _scopeMap, this._asm, path, typeName, true, _context?.rootScope)
+        val b = AsmElementSimpleBuilder(_typeModel, _crossReferenceModel, _scopeMap, this._asm, path, typeName, true, _context?.rootScope)
         b.init()
         return b.build()
     }
@@ -82,7 +89,7 @@ class AsmSimpleBuilder(
 
     fun list(init: ListAsmElementSimpleBuilder.() -> Unit): AsmList {
         val path = AsmPathSimple.ROOT + (_asm.root.size).toString()
-        val b = ListAsmElementSimpleBuilder(_crossReferenceModel, _scopeMap, this._asm, path, _context?.rootScope)
+        val b = ListAsmElementSimpleBuilder(_typeModel, _crossReferenceModel, _scopeMap, this._asm, path, _context?.rootScope)
         b.init()
         val list = b.build()
         _asm.addRoot(list)
@@ -92,13 +99,13 @@ class AsmSimpleBuilder(
     fun build(): AsmSimple {
         val issues = IssueHolder(LanguageProcessorPhase.SEMANTIC_ANALYSIS)
         if (resolveReferences && null != _context) {
-            val scopeCreator = ScopeCreator(_crossReferenceModel as CrossReferenceModelDefault, _context.rootScope, emptyMap(), issues)
+            val scopeCreator = ScopeCreator(_typeModel, _crossReferenceModel as CrossReferenceModelDefault, _context.rootScope, emptyMap(), issues)
             _asm.traverseDepthFirst(scopeCreator)
 
             val resolveFunction: ResolveFunction = { ref ->
                 _asm.elementIndex[ref]
             }
-            _asm.traverseDepthFirst(ReferenceResolverDefault(_crossReferenceModel, _context.rootScope, resolveFunction, emptyMap(), issues))
+            _asm.traverseDepthFirst(ReferenceResolverDefault(_typeModel, _crossReferenceModel, _context.rootScope, resolveFunction, emptyMap(), issues))
         }
         if (failIfIssues && issues.errors.isNotEmpty()) {
             error("Issues building asm:\n${issues.all.joinToString(separator = "\n") { "$it" }}")
@@ -111,7 +118,8 @@ class AsmSimpleBuilder(
 
 @AsmSimpleBuilderMarker
 class AsmElementSimpleBuilder(
-    private val _crossReferenceModel: CrossReferenceModelDefault,
+    private val _typeModel: TypeModel,
+    private val _crossReferenceModel: CrossReferenceModel,
     private val _scopeMap: MutableMap<AsmPath, ScopeSimple<AsmPath>>,
     private val _asm: AsmSimple,
     _asmPath: AsmPath,
@@ -125,7 +133,7 @@ class AsmElementSimpleBuilder(
     private val _elementScope by lazy {
         _parentScope?.let {
             if (_crossReferenceModel.isScopeDefinedFor(_element.typeName)) {
-                val expr = _crossReferenceModel.identifyingExpressionFor(_parentScope.forTypeName, _element.typeName)
+                val expr = (_crossReferenceModel as CrossReferenceModelDefault).identifyingExpressionFor(_parentScope.forTypeName, _element.typeName)
                 val refInParent = expr?.createReferenceLocalToScope(_parentScope, _element)
                     ?: _element.typeName //error("Trying to create child scope but cannot create a reference for $_element")
                 val newScope = _parentScope.createOrGetChildScope(refInParent, _element.typeName, _element.path)
@@ -134,6 +142,24 @@ class AsmElementSimpleBuilder(
             } else {
                 _parentScope
             }
+        }
+    }
+    private val _interpreter = ExpressionsInterpreterOverAsmSimple(_typeModel)
+    private fun Expression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? = when (this) {
+        is RootExpression -> this.createReferenceLocalToScope(scope, element)
+        is Navigation -> this.createReferenceLocalToScope(scope, element)
+        else -> error("Subtype of Expression not handled in 'createReferenceLocalToScope'")
+    }
+
+    private fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String =
+        (_interpreter.evaluateExpression(element, this) as AsmPrimitive).value as String
+
+    private fun Navigation.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? {
+        val res = _interpreter.evaluateExpression(element, this)
+        return when (res) {
+            is AsmNothing -> null
+            is AsmPrimitive -> res.value as String
+            else -> error("Evaluation of navigation '$this' on '$element' should result in a String, but it does not!")
         }
     }
 
@@ -151,7 +177,7 @@ class AsmElementSimpleBuilder(
     fun propertyElement(name: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure = propertyElementExplicitType(name, name, init)
     fun propertyElementExplicitType(name: String, typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
         val newPath = _element.path + name
-        val b = AsmElementSimpleBuilder(_crossReferenceModel, _scopeMap, this._asm, newPath, typeName, false, _elementScope)
+        val b = AsmElementSimpleBuilder(_typeModel, _crossReferenceModel, _scopeMap, this._asm, newPath, typeName, false, _elementScope)
         b.init()
         val el = b.build()
         this._element.setProperty(name, el, 0)//TODO childIndex
@@ -163,7 +189,7 @@ class AsmElementSimpleBuilder(
     fun propertyUnnamedListOfElement(init: ListAsmElementSimpleBuilder.() -> Unit) = this.propertyListOfElement(GrammarTypeNamespaceFromGrammar.UNNAMED_LIST_PROPERTY_NAME, init)
     fun propertyListOfElement(name: String, init: ListAsmElementSimpleBuilder.() -> Unit): AsmList {
         val newPath = _element.path + name
-        val b = ListAsmElementSimpleBuilder(_crossReferenceModel, _scopeMap, this._asm, newPath, _elementScope)
+        val b = ListAsmElementSimpleBuilder(_typeModel, _crossReferenceModel, _scopeMap, this._asm, newPath, _elementScope)
         b.init()
         val list = b.build()
         this._element.setProperty(name, list, 0)//TODO childIndex
@@ -181,8 +207,8 @@ class AsmElementSimpleBuilder(
             //do nothing
         } else {
             val scopeFor = es.forTypeName
-            val nav = _crossReferenceModel.identifyingExpressionFor(scopeFor, _element.typeName) as Navigation?
-            val res = nav?.let { ExpressionsInterpreterOverAsmSimple().evaluateExpression(_element, it) }
+            val nav = (_crossReferenceModel as CrossReferenceModelDefault).identifyingExpressionFor(scopeFor, _element.typeName) as Navigation?
+            val res = nav?.let { ExpressionsInterpreterOverAsmSimple(_typeModel).evaluateExpression(_element, it) }
             val referableName = when (res) {
                 null -> null
                 is AsmPrimitive -> res.value as String
@@ -198,7 +224,8 @@ class AsmElementSimpleBuilder(
 
 @AsmSimpleBuilderMarker
 class ListAsmElementSimpleBuilder(
-    private val _scopeModel: CrossReferenceModelDefault,
+    private val _typeModel: TypeModel,
+    private val _scopeModel: CrossReferenceModel,
     private val _scopeMap: MutableMap<AsmPath, ScopeSimple<AsmPath>>,
     private val _asm: AsmSimple,
     private val _asmPath: AsmPath,
@@ -213,7 +240,7 @@ class ListAsmElementSimpleBuilder(
 
     fun list(init: ListAsmElementSimpleBuilder.() -> Unit) {
         val newPath = _asmPath + (_list.size).toString()
-        val b = ListAsmElementSimpleBuilder(_scopeModel, _scopeMap, _asm, newPath, _parentScope)
+        val b = ListAsmElementSimpleBuilder(_typeModel, _scopeModel, _scopeMap, _asm, newPath, _parentScope)
         b.init()
         val list = b.build()
         _list.add(list)
@@ -221,7 +248,7 @@ class ListAsmElementSimpleBuilder(
 
     fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
         val newPath = _asmPath + (_list.size).toString()
-        val b = AsmElementSimpleBuilder(_scopeModel, _scopeMap, this._asm, newPath, typeName, false, _parentScope)
+        val b = AsmElementSimpleBuilder(_typeModel, _scopeModel, _scopeMap, this._asm, newPath, typeName, false, _parentScope)
         b.init()
         val el = b.build()
         _list.add(el)

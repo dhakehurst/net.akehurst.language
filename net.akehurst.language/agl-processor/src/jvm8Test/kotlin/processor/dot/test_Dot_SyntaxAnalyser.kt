@@ -20,7 +20,7 @@ import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.processor.LanguageProcessor
 import net.akehurst.language.typemodel.test.TypeModelTest
@@ -33,7 +33,7 @@ class test_Dot_SyntaxAnalyser {
 
     companion object {
         private val grammarStr = this::class.java.getResource("/dot/version_9.0.0/grammar.agl").readText()
-        var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
+        var processor: LanguageProcessor<Asm, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
     }
 
     @Test
@@ -184,7 +184,7 @@ class test_Dot_SyntaxAnalyser {
         val result = processor.process(sentence, Agl.options {
             semanticAnalysis { context(ContextSimple()) }
         })
-        val actual = result.asm?.rootElements?.firstOrNull()
+        val actual = result.asm?.root?.firstOrNull()
         assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertNotNull(actual)
 
@@ -221,7 +221,7 @@ class test_Dot_SyntaxAnalyser {
         val result = processor.process(sentence, Agl.options {
             semanticAnalysis { context(ContextSimple()) }
         })
-        val actual = result.asm?.rootElements?.firstOrNull()
+        val actual = result.asm?.root?.firstOrNull()
         assertNotNull(actual)
         assertTrue(result.issues.isEmpty(), result.issues.toString())
     }
@@ -234,7 +234,7 @@ graph {
 }
         """.trimIndent()
         val result = processor.process(sentence)
-        val actual = result.asm?.rootElements?.firstOrNull()
+        val actual = result.asm?.root?.firstOrNull()
         assertNotNull(actual)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }
@@ -243,7 +243,7 @@ graph {
     fun ID_html() {
         val sentence = "<<x></x>>"
         val result = processor.process(sentence, Agl.options { parse { goalRuleName("ID") } })
-        val actual = result.asm?.rootElements?.firstOrNull()
+        val actual = result.asm?.root?.firstOrNull()
         assertNotNull(actual)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
     }

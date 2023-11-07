@@ -70,7 +70,7 @@ internal class AglStyleSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstra
 
     // selectorAndComposition = [selectorSingle /',']2+ ;
     fun selectorAndComposition(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<AglStyleSelector> =
-        (children as List<Any>).toSeparatedList<AglStyleSelector, String>().items
+        (children as List<Any>).toSeparatedList<Any, AglStyleSelector, String>().items
 
     // selectorSingle = LITERAL | PATTERN | IDENTIFIER | META_IDENTIFIER ;
     fun selectorSingle(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): AglStyleSelector {

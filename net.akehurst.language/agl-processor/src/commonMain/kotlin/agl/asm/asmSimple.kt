@@ -127,13 +127,21 @@ abstract class AsmValueAbstract() : AsmValue {
     override val typeName: String get() = qualifiedTypeName.split(".").last()
 }
 
-object AsmNothingSimple : AsmValueAbstract() {
+object AsmNothingSimple : AsmValueAbstract(), AsmNothing {
     override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.NothingType.qualifiedTypeName
     override fun asString(currentIndent: String, indentIncrement: String): String = "Nothing"
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmNothing -> false
         else -> true
     }
+
+    override fun hashCode(): Int = 0
+    override fun equals(other: Any?): Boolean = when (other) {
+        !is AsmNothing -> false
+        else -> true
+    }
+
+    override fun toString(): String = "Nothing"
 }
 
 class AsmPrimitiveSimple(
@@ -141,13 +149,22 @@ class AsmPrimitiveSimple(
     override val value: Any
 ) : AsmValueAbstract(), AsmPrimitive {
 
-    override fun asString(currentIndent: String, indentIncrement: String): String = "'$value'"
+    override fun asString(currentIndent: String, indentIncrement: String): String = "$value"
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmPrimitive -> false
         other.value != this.value -> false
         else -> true
     }
 
+    override fun hashCode(): Int = listOf(qualifiedTypeName, value).hashCode()
+    override fun equals(other: Any?): Boolean = when {
+        other !is AsmPrimitive -> false
+        this.qualifiedTypeName != other.qualifiedTypeName -> false
+        this.value != other.value -> false
+        else -> true
+    }
+
+    override fun toString(): String = "$qualifiedTypeName($value)"
 }
 
 class AsmReferenceSimple(
@@ -275,7 +292,6 @@ class AsmElementSimple(
     }
 
     override fun hashCode(): Int = path.hashCode()
-
     override fun equals(other: Any?): Boolean = when (other) {
         is AsmElementSimple -> this.path == other.path //&& this.asm == other.asm
         else -> false
@@ -362,10 +378,18 @@ class AsmListSimple(
             }
         }
     }
+
+    override fun hashCode(): Int = elements.hashCode()
+    override fun equals(other: Any?): Boolean = when (other) {
+        !is AsmList -> false
+        else -> this.elements == other.elements
+    }
+
+    override fun toString(): String = elements.toString()
 }
 
 class AsmListSeparatedSimple(
-    override val elements: ListSeparated<AsmValue, AsmValue>
+    override val elements: ListSeparated<AsmValue, AsmValue, AsmValue>
 ) : AsmValueAbstract(), AsmListSeparated {
     override val qualifiedTypeName: String get() = SimpleTypeModelStdLib.ListSeparated.qualifiedName
 
@@ -381,4 +405,12 @@ class AsmListSeparatedSimple(
             }
         }
     }
+
+    override fun hashCode(): Int = elements.hashCode()
+    override fun equals(other: Any?): Boolean = when (other) {
+        !is AsmList -> false
+        else -> this.elements == other.elements
+    }
+
+    override fun toString(): String = elements.toString()
 }

@@ -80,7 +80,7 @@ class SemanticAnalyserDefault(
     }
 
     private fun buildScope(asm: Asm, rootScope: ScopeSimple<AsmPath>) {
-        val scopeCreator = ScopeCreator(crossReferenceModel as CrossReferenceModelDefault, rootScope, _locationMap, _issues)
+        val scopeCreator = ScopeCreator(typeModel, crossReferenceModel as CrossReferenceModelDefault, rootScope, _locationMap, _issues)
         asm.traverseDepthFirst(scopeCreator)
     }
 

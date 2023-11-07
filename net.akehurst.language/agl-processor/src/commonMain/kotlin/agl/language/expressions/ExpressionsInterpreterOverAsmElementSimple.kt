@@ -17,7 +17,9 @@
 
 package net.akehurst.language.agl.language.expressions
 
+import net.akehurst.language.agl.asm.AsmListSimple
 import net.akehurst.language.agl.asm.AsmNothingSimple
+import net.akehurst.language.agl.asm.AsmPrimitiveSimple
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.*
@@ -26,6 +28,7 @@ import net.akehurst.language.api.language.expressions.Navigation
 import net.akehurst.language.api.language.expressions.RootExpression
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.PropertyDeclaration
+import net.akehurst.language.typemodel.api.TypeDeclaration
 import net.akehurst.language.typemodel.api.TypeInstance
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.simple.PropertyDeclarationDerived
@@ -34,7 +37,7 @@ import net.akehurst.language.typemodel.simple.PropertyDeclarationStored
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
 class ExpressionsInterpreterOverAsmSimple(
-    //val typeModel: TypeModel
+    val typeModel: TypeModel
 ) {
 
     private val _issues = IssueHolder(LanguageProcessorPhase.INTERPRETER)
@@ -69,41 +72,30 @@ class ExpressionsInterpreterOverAsmSimple(
         }
     }
 
-    private fun evaluateNavigation(self: AsmValue, expression: Navigation): AsmValue = when (self) {
-        is AsmNothing -> {
-            _issues.error(null, "Cannot navigate from '$AsmNothingSimple'")
-            AsmNothingSimple
-        }
-
-        is AsmStructure -> {
-            expression.value.fold(self as AsmValue) { acc, it ->
-                when (acc) {
-                    is AsmNothing -> acc
-                    is AsmStructure -> acc.getProperty(it)
-                    is AsmList -> {
-                        val pd = SimpleTypeModelStdLib.List.findPropertyOrNull(it)
-                        pd?.let { evaluatePropertyDeclaration(acc, it) } ?: AsmNothingSimple
-                    }
-
-                    is AsmListSeparated -> {
-                        val pd = SimpleTypeModelStdLib.List.findPropertyOrNull(it)
-                        pd?.let { evaluatePropertyDeclaration(acc, it) } ?: AsmNothingSimple
-                    }
-
-                    else -> error("Cannot evaluate $this on object of type '${acc::class.simpleName}'")
+    private fun evaluateNavigation(self: AsmValue, expression: Navigation): AsmValue =
+        expression.value.fold(self) { acc, it ->
+            val type = typeModel.typeOf(acc)
+            val pd = type.declaration.findPropertyOrNull(it)
+            when (pd) {
+                null -> {
+                    _issues.error(null, "evaluateFor Navigation from object of type '${self::class.simpleName}' not handled")
+                    AsmNothingSimple
                 }
+
+                else -> evaluatePropertyDeclaration(acc, pd)
             }
         }
 
-        else -> {
-            _issues.error(null, "evaluateFor Navigation from object of type '${self::class.simpleName}' not handled")
-            AsmNothingSimple
-        }
-    }
-
     fun evaluatePropertyDeclaration(self: AsmValue, propertyDeclaration: PropertyDeclaration): AsmValue = when (propertyDeclaration) {
         is PropertyDeclarationDerived -> TODO()
-        is PropertyDeclarationPrimitive -> propertyDeclaration.expression.invoke(self) as AsmValue
+        is PropertyDeclarationPrimitive -> {
+            val type = typeModel.typeOf(self).declaration
+            val typeProps = StdLibPrimitiveExecutions.property[type] ?: error("StdLibPrimitiveExecutions not found for TypeDeclaration '${type.qualifiedName}'")
+            val propExec = typeProps[propertyDeclaration]
+                ?: error("StdLibPrimitiveExecutions not found for property '${propertyDeclaration.name}' of TypeDeclaration '${type.qualifiedName}'")
+            propExec.invoke(self, propertyDeclaration)
+        }
+
         is PropertyDeclarationStored -> when (self) {
             is AsmStructure -> self.getProperty(propertyDeclaration.name)
             else -> error("Cannot evaluate property '${propertyDeclaration.name}' on object of type '${self::class.simpleName}'")
@@ -113,7 +105,58 @@ class ExpressionsInterpreterOverAsmSimple(
     }
 
     private fun TypeModel.typeOf(self: AsmValue): TypeInstance =
-        this.findByQualifiedNameOrNull(self.qualifiedTypeName)?.instance()
+        this.findByQualifiedNameOrNull(self.qualifiedTypeName)?.type()
             ?: SimpleTypeModelStdLib.AnyType
+
+}
+
+object StdLibPrimitiveExecutions {
+
+    val property = mapOf<TypeDeclaration, Map<PropertyDeclaration, ((AsmValue, PropertyDeclaration) -> AsmValue)>>(
+        SimpleTypeModelStdLib.List to mapOf(
+            SimpleTypeModelStdLib.List.findPropertyOrNull("size")!! to { self, prop ->
+                check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                AsmPrimitiveSimple("Integer", self.elements.size)
+            },
+            SimpleTypeModelStdLib.List.findPropertyOrNull("first")!! to { self, prop ->
+                check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.elements.first()
+            },
+            SimpleTypeModelStdLib.List.findPropertyOrNull("last")!! to { self, prop ->
+                check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                self.elements.last()
+            },
+            SimpleTypeModelStdLib.List.findPropertyOrNull("back")!! to { self, prop ->
+                check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                AsmListSimple(self.elements.drop(1))
+            },
+            SimpleTypeModelStdLib.List.findPropertyOrNull("front")!! to { self, prop ->
+                check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                AsmListSimple(self.elements.dropLast(1))
+            },
+            SimpleTypeModelStdLib.List.findPropertyOrNull("join")!! to { self, prop ->
+                check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                AsmPrimitiveSimple("String", self.elements.joinToString(separator = "") { it.asString() })
+            }
+        ),
+        SimpleTypeModelStdLib.ListSeparated to mapOf(
+            SimpleTypeModelStdLib.ListSeparated.findPropertyOrNull("size")!! to { self, prop ->
+                check(self is AsmListSeparated) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                AsmPrimitiveSimple("Integer", self.elements.size)
+            },
+            SimpleTypeModelStdLib.ListSeparated.findPropertyOrNull("elements")!! to { self, prop ->
+                check(self is AsmListSeparated) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                AsmListSimple(self.elements.elements as List<AsmValue>)
+            },
+            SimpleTypeModelStdLib.ListSeparated.findPropertyOrNull("items")!! to { self, prop ->
+                check(self is AsmListSeparated) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                AsmListSimple(self.elements.items)
+            },
+            SimpleTypeModelStdLib.ListSeparated.findPropertyOrNull("separators")!! to { self, prop ->
+                check(self is AsmListSeparated) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
+                AsmListSimple(self.elements.separators)
+            },
+        )
+    )
 
 }

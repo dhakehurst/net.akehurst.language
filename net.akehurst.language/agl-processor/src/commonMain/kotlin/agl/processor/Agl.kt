@@ -129,7 +129,7 @@ object Agl {
         crossReferenceModelStr: String? = null,
         styleModelStr: String? = null,
         formatterModelStr: String? = null,
-        grammarAglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>? = null
+        grammarAglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>? = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }
     ): LanguageProcessorResult<Asm, ContextSimple> {
         val config = Agl.configuration(Agl.configurationDefault()) {
             if (null != crossReferenceModelStr) {
@@ -156,7 +156,7 @@ object Agl {
     fun <AsmType : Any, ContextType : Any> processorFromString(
         grammarDefinitionStr: String,
         configuration: LanguageProcessorConfiguration<AsmType, ContextType>? = null,
-        aglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>? = null
+        aglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>? = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }
     ): LanguageProcessorResult<AsmType, ContextType> {
         return try {
             val res = Agl.grammarFromString<List<Grammar>, ContextFromGrammarRegistry>(
@@ -199,7 +199,7 @@ object Agl {
 
     fun <AsmType : Any, ContextType : Any> grammarFromString(
         sentence: String?,
-        aglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>? = null
+        aglOptions: ProcessOptions<List<Grammar>, ContextFromGrammarRegistry>? = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }
     ): ProcessResult<List<Grammar>> {
         return if (null == sentence) {
             ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))

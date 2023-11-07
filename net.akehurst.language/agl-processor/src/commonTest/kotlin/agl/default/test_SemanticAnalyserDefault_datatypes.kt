@@ -57,7 +57,7 @@ class test_SemanticAnalyserDefault_datatypes {
                 leaf type = ID;
             }
         """.trimIndent()
-        val scopeModelStr = """
+        val crossReferenceModelStr = """
             namespace test.Test {
                 identify Primitive by id
                 identify Datatype by id
@@ -70,17 +70,19 @@ class test_SemanticAnalyserDefault_datatypes {
                 }
             }
         """.trimIndent()
-        val scopeModel = CrossReferenceModelDefault.fromString(null, scopeModelStr).let { it.asm ?: error(it.issues.toString()) }
         val processor = Agl.processorFromStringDefault(
             grammarStr,
-            scopeModelStr
+            crossReferenceModelStr
         ).processor!!
+        val typeModel = processor.typeModel
+        val crossReferenceModel = processor.crossReferenceModel
+
     }
 
     @Test
     fun check_scopeModel() {
         val context = ContextFromTypeModel(processor.typeModel)
-        val res = CrossReferenceModelDefault.fromString(context, scopeModelStr)
+        val res = CrossReferenceModelDefault.fromString(context, crossReferenceModelStr)
         assertTrue(res.issues.isEmpty(), res.issues.toString())
     }
 
@@ -186,7 +188,7 @@ class test_SemanticAnalyserDefault_datatypes {
                 LanguageIssueKind.ERROR,
                 LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(21, 9, 2, 7),
-                "No target of type(s) [Primitive, Datatype, Collection] found for referring value 'String' in scope of element ':TypeReference([/0/declaration/0/property/0/typeReference])'"
+                "No target of type(s) [Primitive, Datatype, Collection] found for referring value 'String' in scope of element ':TypeReference[/0/declaration/0/property/0/typeReference]'"
             )
         )
 
@@ -214,7 +216,7 @@ class test_SemanticAnalyserDefault_datatypes {
         assertNotNull(result.asm)
         assertTrue(result.issues.isEmpty(), result.issues.toString())
 
-        val expected = asmSimple(scopeModel, ContextSimple()) {
+        val expected = asmSimple(typeModel = typeModel, crossReferenceModel = crossReferenceModel, context = ContextSimple()) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {

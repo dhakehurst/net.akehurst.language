@@ -134,7 +134,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
 
     // externalTypes = 'external-types' [typeReference / ',']+ ;
     private fun externalTypes(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> =
-        (children[1] as List<Any>).toSeparatedList<String, String>().items
+        (children[1] as List<String>).toSeparatedList<String, String, String>().items
 
     // referenceDefinitions = referenceDefinition*
     private fun referenceDefinitions(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ReferenceDefinitionDefault> =
@@ -188,7 +188,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
 
     // typeReferences = [typeReferences / ',']+
     private fun typeReferences(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> { //List<Pair<String, InputLocation>> {
-        return children.toSeparatedList<String, String>().items
+        return (children as List<String>).toSeparatedList<String, String, String>().items
 //            .mapIndexed { i, n ->
 //            val ref = n as String
 //            Pair(ref, sentence.locationFor(nodeInfo.node))
@@ -202,6 +202,6 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
 
     // qualifiedName = [IDENTIFIER / '.']+ ;
     private fun qualifiedName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> {
-        return children.toSeparatedList<String, String>().items
+        return (children as List<String>).toSeparatedList<String, String, String>().items
     }
 }

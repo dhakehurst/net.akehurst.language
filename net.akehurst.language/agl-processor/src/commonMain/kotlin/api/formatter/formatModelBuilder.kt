@@ -16,10 +16,12 @@
 
 package net.akehurst.language.api.formatter
 
+import net.akehurst.language.agl.asm.AsmListSimple
+import net.akehurst.language.agl.asm.AsmPathSimple
+import net.akehurst.language.agl.asm.AsmPrimitiveSimple
+import net.akehurst.language.agl.asm.AsmSimple
 import net.akehurst.language.agl.language.format.AglFormatterModelDefault
-import net.akehurst.language.api.asm.AsmElementPath
-import net.akehurst.language.api.asm.AsmElementSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.asm.AsmStructure
 
 @DslMarker
 annotation class FormatModelDslMarker
@@ -35,19 +37,19 @@ class FormatModelBuilder(
 ) {
 
     private val _asm = AsmSimple()
-    private val _ruleList = mutableListOf<AsmElementSimple>()
-    private val rules = _asm.createElement(AsmElementPath(""), "Unit").also {
+    private val _ruleList = mutableListOf<AsmStructure>()
+    private val rules = _asm.createElement(AsmPathSimple.ROOT, "Unit").also {
         _asm.addRoot(it)
-        it.setProperty("ruleList", _ruleList, 0)//TODO childIndex
+        it.setProperty("ruleList", AsmListSimple(_ruleList), 0)//TODO childIndex
     }
 
     fun rule(forTypeName: String, init: FormatExpressionBuilder.() -> Unit) {
         val b = FormatExpressionBuilder(_asm)
         b.init()
         val expr = b.build()
-        val formatRuleElement = _asm.createElement(AsmElementPath(""), "FormatRule")
-        val typeReference = _asm.createElement(AsmElementPath(""), "TypeReference")
-        typeReference.setProperty("identifier", forTypeName, 0)//TODO childIndex
+        val formatRuleElement = _asm.createElement(AsmPathSimple.ROOT, "FormatRule")
+        val typeReference = _asm.createElement(AsmPathSimple.ROOT, "TypeReference")
+        typeReference.setProperty("identifier", AsmPrimitiveSimple("String", forTypeName), 0)//TODO childIndex
         formatRuleElement.setProperty("typeReference", typeReference, 0)//TODO childIndex
         formatRuleElement.setProperty("formatExpression", expr, 0)//TODO childIndex
         _ruleList.add(formatRuleElement)
@@ -63,16 +65,16 @@ class FormatExpressionBuilder(
     private val _asm: AsmSimple
 ) {
 
-    private lateinit var _exp: AsmElementSimple
+    private lateinit var _exp: AsmStructure
 
     fun literalString(value: String) {
         val el = _asm.createElement(
-            asmPath = AsmElementPath(""),
+            asmPath = AsmPathSimple.ROOT,
             typeName = "LiteralString"
         )
-        el.setProperty("literal_string", value, 0)//TODO childIndex
+        el.setProperty("literal_string", AsmPrimitiveSimple("String", value), 0)//TODO childIndex
         _exp = el
     }
 
-    fun build(): AsmElementSimple = _exp
+    fun build(): AsmStructure = _exp
 }

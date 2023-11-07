@@ -18,7 +18,7 @@ package net.akehurst.language.agl.processor.KerML
 import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.processor.LanguageProcessor
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -30,7 +30,7 @@ class test_KerML_standard_Singles {
     private companion object {
         private val grammarPathStr = "/KerML/v2_2023-08/grammars/standard/grammar.agl"
         private val grammarStr = this::class.java.getResource(grammarPathStr).readText()
-        var processor: LanguageProcessor<AsmSimple, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
+        var processor: LanguageProcessor<Asm, ContextSimple> = Agl.processorFromStringDefault(grammarStr).processor!!
 
     }
 

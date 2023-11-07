@@ -67,6 +67,10 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<List<Grammar>, ContextFrom
         this._locationMap = locationMap ?: emptyMap<Any, InputLocation>()
         this._analyseAmbiguities = options.other[OPTIONS_KEY_AMBIGUITY_ANALYSIS] as Boolean? ?: false
 
+        if (null == context) {
+            issueWarn(null, "No ContextFromGrammarRegistry supplied, grammar references cannot be resolved", null)
+        }
+
         asm.forEach { context?.grammarRegistry?.registerGrammar(it) }
 
         checkGrammar(context, asm, AutomatonKind.LOOKAHEAD_1) //TODO: how to check using user specified AutomatonKind ?

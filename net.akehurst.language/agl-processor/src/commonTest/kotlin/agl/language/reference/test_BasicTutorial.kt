@@ -19,7 +19,12 @@ package net.akehurst.language.agl.language.reference
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class test_BasicTutorial {
@@ -75,24 +80,43 @@ namespace net.akehurst.language.example.BasicTutorial {
     }
 
     @Test
-    fun test() {
+    fun noErrors() {
         val sentence = """
-target Julian
-target George
-
-Hello World !
-Hello Julian !
-Hello Ann !
-Hello George !
+            target Julian
+            target George
+            
+            Hello World !
+            Hello Julian !
+            Hello George !
         """.trimIndent()
 
-        val result = processor.process(
-            sentence,
-            Agl.options {
-                semanticAnalysis { context(ContextSimple()) }
-            }
-        )
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextSimple()) } })
+
         assertTrue(result.issues.isEmpty(), result.issues.toString())
     }
 
+    @Test
+    fun target_not_found() {
+        val sentence = """
+            target Julian
+            target George
+            
+            Hello World !
+            Hello Julian !
+            Hello Ann !
+            Hello George !
+        """.trimIndent()
+
+        val result = processor.process(sentence, Agl.options { semanticAnalysis { context(ContextSimple()) } })
+
+        val expIssues = setOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(64, 7, 6, 3),
+                "No target of type(s) [TargetDef] found for referring value 'String(Ann)' in scope of element ':TargetRef[/0/greeting/2/greetingTargetList/0]'"
+            )
+        )
+
+        assertEquals(expIssues, result.issues.all)
+    }
 }

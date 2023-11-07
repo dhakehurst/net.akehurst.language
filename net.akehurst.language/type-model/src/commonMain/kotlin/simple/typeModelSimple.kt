@@ -29,8 +29,8 @@ abstract class TypeModelSimpleAbstract(
     override val name: String,
 ) : TypeModel {
 
-    override val AnyType: TypeDeclaration get() = SimpleTypeModelStdLib.AnyType.type //TODO: stdLib not necessarily part of model !
-    override val NothingType: TypeDeclaration get() = SimpleTypeModelStdLib.NothingType.type //TODO: stdLib not necessarily part of model !
+    override val AnyType: TypeDeclaration get() = SimpleTypeModelStdLib.AnyType.declaration //TODO: stdLib not necessarily part of model !
+    override val NothingType: TypeDeclaration get() = SimpleTypeModelStdLib.NothingType.declaration //TODO: stdLib not necessarily part of model !
 
     override val namespace: Map<String, TypeNamespace> = mutableMapOf<String, TypeNamespace>()
 
@@ -109,14 +109,14 @@ abstract class TypeInstanceAbstract() : TypeInstance {
     override val resolvedProperty: Map<String, PropertyDeclaration>
         get() {
             val typeArgMap = createTypeArgMap()
-            return type.allProperty.values.associate {
+            return declaration.allProperty.values.associate {
                 val rp = it.resolved(typeArgMap)
                 Pair(it.name, rp)
             }
         }
 
-    override fun notNullable() = this.type.instance(typeArguments, false)
-    override fun nullable() = this.type.instance(typeArguments, true)
+    override fun notNullable() = this.declaration.type(typeArguments, false)
+    override fun nullable() = this.declaration.type(typeArguments, true)
 
     override fun signature(context: TypeNamespace?, currentDepth: Int): String {
         return when {
@@ -131,8 +131,8 @@ abstract class TypeInstanceAbstract() : TypeInstance {
                     else -> ""
                 }
                 val name = when {
-                    typeArguments.isEmpty() -> type.signature(context, currentDepth + 1)
-                    else -> type.name
+                    typeArguments.isEmpty() -> declaration.signature(context, currentDepth + 1)
+                    else -> declaration.name
                 }
                 return "${name}$args$n"
             }
@@ -144,7 +144,7 @@ abstract class TypeInstanceAbstract() : TypeInstance {
         this == SimpleTypeModelStdLib.NothingType -> false
         other == SimpleTypeModelStdLib.NothingType -> false
         other == SimpleTypeModelStdLib.AnyType -> true
-        this.type.conformsTo(other.type).not() -> false
+        this.declaration.conformsTo(other.declaration).not() -> false
         this.typeArguments.size != other.typeArguments.size -> false
         else -> {
             var result = true
@@ -197,23 +197,23 @@ class TypeInstanceSimple(
 
     override val typeName: String
         get() = context?.typeParameters?.indexOfOrNull(qualifiedOrImportedTypeName)?.let {
-            typeArguments.getOrNull(it)?.type?.name
+            typeArguments.getOrNull(it)?.declaration?.name
         } ?: namespace.findTypeNamed(qualifiedOrImportedTypeName)?.name
         ?: qualifiedOrImportedTypeName
 
     override val qualifiedTypeName: String
         get() = context?.typeParameters?.indexOfOrNull(qualifiedOrImportedTypeName)?.let {
-            typeArguments.getOrNull(it)?.type?.qualifiedName
+            typeArguments.getOrNull(it)?.declaration?.qualifiedName
         } ?: namespace.findTypeNamed(qualifiedOrImportedTypeName)?.qualifiedName
         ?: qualifiedOrImportedTypeName
 
     override val typeOrNull: TypeDeclaration? by lazy {
         context?.typeParameters?.indexOfOrNull(qualifiedOrImportedTypeName)?.let {
-            typeArguments.getOrNull(it)?.type
+            typeArguments.getOrNull(it)?.declaration
         } ?: namespace.findTypeNamed(qualifiedOrImportedTypeName)
     }
 
-    override val type: TypeDeclaration
+    override val declaration: TypeDeclaration
         get() = typeOrNull
             ?: error("Cannot resolve TypeDefinition '$qualifiedOrImportedTypeName', not found in namespace '${namespace.qualifiedName}'. Is an import needed?")
 
@@ -244,27 +244,27 @@ class TypeInstanceSimple(
 
 class TupleTypeInstance(
     override val namespace: TypeNamespace,
-    override val type: TupleType,
+    override val declaration: TupleType,
     override val typeArguments: List<TypeInstance>,
     override val isNullable: Boolean
 ) : TypeInstanceAbstract() {
 
     override val typeName: String get() = "TupleType"
     override val qualifiedTypeName: String get() = "TupleType"
-    override val typeOrNull: TypeDeclaration get() = type
+    override val typeOrNull: TypeDeclaration get() = declaration
 
     override fun resolved(resolvingTypeArguments: Map<String, TypeInstance>): TypeInstance {
         val thisTypeArgMap = createTypeArgMap()
         val resolvedTypeArgs = this.typeArguments.map {
             it.resolved(thisTypeArgMap + resolvingTypeArguments)
         }
-        return TupleTypeInstance(this.namespace, this.type, resolvedTypeArgs, this.isNullable)
+        return TupleTypeInstance(this.namespace, this.declaration, resolvedTypeArgs, this.isNullable)
     }
 
-    override fun hashCode(): Int = listOf(type, typeArguments, isNullable).hashCode()
+    override fun hashCode(): Int = listOf(declaration, typeArguments, isNullable).hashCode()
     override fun equals(other: Any?): Boolean = when {
         other !is TypeInstanceSimple -> false
-        this.type != other.type -> false
+        this.declaration != other.declaration -> false
         this.isNullable != other.isNullable -> false
         this.typeArguments != other.typeArguments -> false
         else -> true
@@ -273,7 +273,7 @@ class TupleTypeInstance(
 
 class UnnamedSupertypeTypeInstance(
     override val namespace: TypeNamespace,
-    override val type: UnnamedSupertypeType,
+    override val declaration: UnnamedSupertypeType,
     override val typeArguments: List<TypeInstance>,
     override val isNullable: Boolean
 ) : TypeInstanceAbstract() {
@@ -281,20 +281,20 @@ class UnnamedSupertypeTypeInstance(
     override val typeName: String get() = "UnnamedSupertypeType"
     override val qualifiedTypeName: String get() = "UnnamedSupertypeType"
 
-    override val typeOrNull: TypeDeclaration get() = type
+    override val typeOrNull: TypeDeclaration get() = declaration
 
     override fun resolved(resolvingTypeArguments: Map<String, TypeInstance>): TypeInstance {
         val thisTypeArgMap = createTypeArgMap()
         val resolvedTypeArgs = this.typeArguments.map {
             it.resolved(thisTypeArgMap + resolvingTypeArguments)
         }
-        return UnnamedSupertypeTypeInstance(this.namespace, this.type, resolvedTypeArgs, this.isNullable)
+        return UnnamedSupertypeTypeInstance(this.namespace, this.declaration, resolvedTypeArgs, this.isNullable)
     }
 
-    override fun hashCode(): Int = listOf(type, typeArguments, isNullable).hashCode()
+    override fun hashCode(): Int = listOf(declaration, typeArguments, isNullable).hashCode()
     override fun equals(other: Any?): Boolean = when {
         other !is TypeInstanceSimple -> false
-        this.type != other.type -> false
+        this.declaration != other.declaration -> false
         this.isNullable != other.isNullable -> false
         this.typeArguments != other.typeArguments -> false
         else -> true
@@ -466,12 +466,12 @@ abstract class TypeNamespaceAbstract(
         return TypeInstanceSimple(context, this, qualifiedOrImportedTypeName, typeArguments, isNullable)
     }
 
-    override fun createUnnamedSupertypeTypeInstance(type: UnnamedSupertypeType, typeArguments: List<TypeInstance>, nullable: Boolean): TypeInstance {
-        return UnnamedSupertypeTypeInstance(this, type, typeArguments, nullable)
+    override fun createUnnamedSupertypeTypeInstance(declaration: UnnamedSupertypeType, typeArguments: List<TypeInstance>, nullable: Boolean): TypeInstance {
+        return UnnamedSupertypeTypeInstance(this, declaration, typeArguments, nullable)
     }
 
-    override fun createTupleTypeInstance(type: TupleType, typeArguments: List<TypeInstance>, nullable: Boolean): TypeInstance {
-        return TupleTypeInstance(this, type, typeArguments, nullable)
+    override fun createTupleTypeInstance(declaration: TupleType, typeArguments: List<TypeInstance>, nullable: Boolean): TypeInstance {
+        return TupleTypeInstance(this, declaration, typeArguments, nullable)
     }
 
     override fun asString(): String {
@@ -515,7 +515,7 @@ abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
 
     override val method = mutableListOf<MethodDeclaration>()
 
-    override val allSuperTypes: List<TypeInstance> get() = supertypes + supertypes.flatMap { (it.type as DataType).allSuperTypes }
+    override val allSuperTypes: List<TypeInstance> get() = supertypes + supertypes.flatMap { (it.declaration as DataType).allSuperTypes }
 
     override val allProperty: Map<String, PropertyDeclaration> get() = property.associateBy { it.name }
 
@@ -526,17 +526,17 @@ abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
      */
     override var metaInfo = mutableMapOf<String, String>()
 
-    override fun instance(arguments: List<TypeInstance>, nullable: Boolean): TypeInstance =
+    override fun type(arguments: List<TypeInstance>, nullable: Boolean): TypeInstance =
         namespace.createTypeInstance(this, this.name, arguments, nullable)
 
     override fun conformsTo(other: TypeDeclaration): Boolean = when {
         other === this -> true // fast option
-        this == SimpleTypeModelStdLib.NothingType.type -> false
-        other == SimpleTypeModelStdLib.NothingType.type -> false
-        other == SimpleTypeModelStdLib.AnyType.type -> true
+        this == SimpleTypeModelStdLib.NothingType.declaration -> false
+        other == SimpleTypeModelStdLib.NothingType.declaration -> false
+        other == SimpleTypeModelStdLib.AnyType.declaration -> true
         other == this -> true
-        other is UnnamedSupertypeType -> other.subtypes.any { this.conformsTo(it.type) }
-        else -> this.supertypes.any { it.type.conformsTo(other) }
+        other is UnnamedSupertypeType -> other.subtypes.any { this.conformsTo(it.declaration) }
+        else -> this.supertypes.any { it.declaration.conformsTo(other) }
     }
 
     override fun getPropertyByIndexOrNull(i: Int): PropertyDeclaration? = propertyByIndex[i]
@@ -564,17 +564,15 @@ abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
         this.addProperty(prop)
     }
 
-    override fun appendPropertyPrimitive(name: String, typeInstance: TypeInstance, description: String, expression: (self: Any) -> Any) {
+    override fun appendPropertyPrimitive(name: String, typeInstance: TypeInstance, description: String) {
         val propIndex = property.size
-        val prop = PropertyDeclarationPrimitive(this, name, typeInstance, description, propIndex).also {
-            it.setExpression(expression)
-        }
+        val prop = PropertyDeclarationPrimitive(this, name, typeInstance, description, propIndex)
         this.addProperty(prop)
     }
 
     override fun appendMethodPrimitive(
         name: String,
-        parameters: List<ParameterDefinition>,
+        parameters: List<ParameterDeclaration>,
         typeInstance: TypeInstance,
         description: String,
         body: (self: Any, arguments: List<Any>) -> Any
@@ -585,7 +583,7 @@ abstract class TypeDeclarationSimpleAbstract() : TypeDeclaration {
     /**
      * append a method/function with the expression that should execute
      */
-    override fun appendMethodDerived(name: String, parameters: List<ParameterDefinition>, typeInstance: TypeInstance, description: String, body: String) {
+    override fun appendMethodDerived(name: String, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: String) {
         val meth = MethodDeclarationDerived(this, name, parameters, description, body)
     }
 
@@ -695,7 +693,7 @@ class UnnamedSupertypeTypeSimple(
 
     override val name: String = NAME
 
-    override fun instance(arguments: List<TypeInstance>, nullable: Boolean): TypeInstance {
+    override fun type(arguments: List<TypeInstance>, nullable: Boolean): TypeInstance {
         return namespace.createUnnamedSupertypeTypeInstance(this, arguments, nullable)
     }
 
@@ -707,8 +705,8 @@ class UnnamedSupertypeTypeSimple(
 
     override fun conformsTo(other: TypeDeclaration): Boolean = when {
         this === other -> true
-        other == SimpleTypeModelStdLib.NothingType.type -> false
-        other == SimpleTypeModelStdLib.AnyType.type -> true
+        other == SimpleTypeModelStdLib.NothingType.declaration -> false
+        other == SimpleTypeModelStdLib.AnyType.declaration -> true
         other is UnnamedSupertypeType -> this.subtypes == other.subtypes
         else -> false
     }
@@ -754,7 +752,7 @@ class TupleTypeSimple(
 
     override val entries get() = property.map { Pair(it.name, it.typeInstance) }
 
-    override fun instance(typeArguments: List<TypeInstance>, nullable: Boolean): TypeInstance {
+    override fun type(typeArguments: List<TypeInstance>, nullable: Boolean): TypeInstance {
         return namespace.createTupleTypeInstance(this, typeArguments, nullable)
     }
 
@@ -765,8 +763,8 @@ class TupleTypeSimple(
 
     override fun conformsTo(other: TypeDeclaration): Boolean = when {
         this === other -> true
-        other == SimpleTypeModelStdLib.NothingType.type -> false
-        other == SimpleTypeModelStdLib.AnyType.type -> true
+        other == SimpleTypeModelStdLib.NothingType.declaration -> false
+        other == SimpleTypeModelStdLib.AnyType.declaration -> true
         other is TupleType -> other.entries.containsAll(this.entries) //TODO: this should check conformance of property types! - could cause recursive loop!
         else -> false
     }
@@ -799,7 +797,7 @@ class DataTypeSimple(
 
     override val allProperty: Map<String, PropertyDeclaration>
         get() = supertypes.flatMap {
-            (it.type as DataType).allProperty.values
+            (it.declaration as DataType).allProperty.values
         }.associateBy { it.name } + this.property.associateBy { it.name }
 
     override fun signature(context: TypeNamespace?, currentDepth: Int): String = when {
@@ -933,13 +931,6 @@ class PropertyDeclarationPrimitive(
 
     override val characteristics: Set<PropertyCharacteristic> get() = setOf(PropertyCharacteristic.MEMBER, PropertyCharacteristic.PRIMITIVE)
 
-    // This can't be serialised so don't make it a constructor param
-    lateinit var expression: ((self: Any) -> Any); private set
-
-    fun setExpression(value: (self: Any) -> Any) {
-        this.expression = value
-    }
-
 }
 
 class PropertyDeclarationDerived(
@@ -968,7 +959,7 @@ class PropertyDeclarationResolved(
 class MethodDeclarationPrimitive(
     override val owner: TypeDeclaration,
     override val name: String,
-    override val parameters: List<ParameterDefinition>,
+    override val parameters: List<ParameterDeclaration>,
     override val description: String,
     val body: (self: Any, arguments: List<Any>) -> Any
 ) : MethodDeclaration {
@@ -978,7 +969,7 @@ class MethodDeclarationPrimitive(
 class MethodDeclarationDerived(
     override val owner: TypeDeclaration,
     override val name: String,
-    override val parameters: List<ParameterDefinition>,
+    override val parameters: List<ParameterDeclaration>,
     override val description: String,
     val body: String
 ) : MethodDeclaration {
@@ -989,7 +980,7 @@ class ParameterDefinitionSimple(
     override val name: String,
     override val typeInstance: TypeInstance,
     override val defaultValue: String?
-) : ParameterDefinition {
+) : ParameterDeclaration {
 
     override fun hashCode(): Int = listOf(name).hashCode()
     override fun equals(other: Any?): Boolean = when {

@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
-import net.akehurst.language.api.asm.AsmElementPath
+import net.akehurst.language.api.asm.AsmPath
 import kotlin.test.assertEquals
 
 object TestContextSimple {
@@ -26,14 +26,14 @@ object TestContextSimple {
         assertMatches(expected.rootScope, actual.rootScope)
     }
 
-    fun assertMatches(expected: ScopeSimple<AsmElementPath>, actual: ScopeSimple<AsmElementPath>) {
+    fun assertMatches(expected: ScopeSimple<AsmPath>, actual: ScopeSimple<AsmPath>) {
         assertEquals(expected.path, actual.path)
         assertEquals(expected.items, actual.items)
         assertMatches(expected.childScopes, actual.childScopes)
     }
 
 
-    fun assertMatches(expected: Map<String, ScopeSimple<AsmElementPath>>, actual: Map<String, ScopeSimple<AsmElementPath>>) {
+    fun assertMatches(expected: Map<String, ScopeSimple<AsmPath>>, actual: Map<String, ScopeSimple<AsmPath>>) {
         assertEquals(expected.keys, actual.keys)
         for (k in expected.keys) {
             assertMatches(expected[k]!!, actual[k]!!)

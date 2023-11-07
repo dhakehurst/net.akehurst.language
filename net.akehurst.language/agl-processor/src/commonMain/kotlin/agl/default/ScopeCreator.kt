@@ -27,15 +27,17 @@ import net.akehurst.language.api.language.expressions.RootExpression
 import net.akehurst.language.api.language.reference.Scope
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.collections.mutableStackOf
+import net.akehurst.language.typemodel.api.TypeModel
 
 class ScopeCreator(
+    val typeModel: TypeModel,
     val crossReferenceModel: CrossReferenceModelDefault,
     val rootScope: Scope<AsmPath>,
     val locationMap: Map<Any, InputLocation>,
     val issues: IssueHolder
 ) : AsmTreeWalker {
 
-    private val _interpreter = ExpressionsInterpreterOverAsmSimple()
+    private val _interpreter = ExpressionsInterpreterOverAsmSimple(typeModel)
 
     val currentScope = mutableStackOf(rootScope)
 

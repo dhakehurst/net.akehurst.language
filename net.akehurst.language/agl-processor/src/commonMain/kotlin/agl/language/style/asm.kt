@@ -15,9 +15,9 @@
  */
 package net.akehurst.language.agl.language.style.asm
 
+import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.ProcessResult
-import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.style.AglStyleRule
 
@@ -25,13 +25,11 @@ internal class AglStyleModelDefault(
     override val rules: List<AglStyleRule>
 ) : AglStyleModel {
     companion object {
-        fun fromString(context: SentenceContext<String>, aglStyleModelSentence: String): ProcessResult<AglStyleModel> {
+        fun fromString(context: ContextFromGrammar, aglStyleModelSentence: String): ProcessResult<AglStyleModel> {
             val proc = Agl.registry.agl.style.processor ?: error("Scopes language not found!")
             return proc.process(
                 sentence = aglStyleModelSentence,
-                Agl.options {
-                    semanticAnalysis { context(context) }
-                }
+                options = Agl.options { semanticAnalysis { context(context) } }
             )
         }
     }

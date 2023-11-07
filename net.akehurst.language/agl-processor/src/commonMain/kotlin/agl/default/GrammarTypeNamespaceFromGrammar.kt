@@ -133,7 +133,7 @@ class GrammarTypeNamespaceFromGrammar(
         return if (null == existing) {
             val elTypeName = _configuration?.typeNameFor(rule) ?: ruleName
             val et = _namespace.findOwnedOrCreateDataTypeNamed(elTypeName) // DataTypeSimple(this, elTypeName)
-            val tt = et.instance()
+            val tt = et.type()
             _ruleToType[ruleName] = tt
             ifCreate.invoke(et)
             tt
@@ -214,11 +214,11 @@ class GrammarTypeNamespaceFromGrammar(
                 is Group -> typeForGroup(ruleItem, forProperty)
                 is OptionalItem -> {
                     val itemType = typeForRuleItem(ruleItem.item, forProperty) //TODO: could cause recursion overflow
-                    when (itemType.type) {
-                        SimpleTypeModelStdLib.NothingType.type -> SimpleTypeModelStdLib.NothingType
+                    when (itemType.declaration) {
+                        SimpleTypeModelStdLib.NothingType.declaration -> SimpleTypeModelStdLib.NothingType
 
                         else -> {
-                            val t = itemType.type.instance(emptyList(), true)
+                            val t = itemType.declaration.type(emptyList(), true)
                             _typeForRuleItem[ruleItem] = t
                             t
                         }
@@ -228,11 +228,11 @@ class GrammarTypeNamespaceFromGrammar(
                 is SimpleList -> {
                     // assign type to rule item before getting arg types to avoid recursion overflow
                     val typeArgs = mutableListOf<TypeInstance>()
-                    val t = SimpleTypeModelStdLib.List.instance(typeArgs)
+                    val t = SimpleTypeModelStdLib.List.type(typeArgs)
                     _typeForRuleItem[ruleItem] = t
                     val itemType = typeForRuleItem(ruleItem.item, forProperty)
-                    when (itemType.type) {
-                        SimpleTypeModelStdLib.NothingType.type -> {
+                    when (itemType.declaration) {
+                        SimpleTypeModelStdLib.NothingType.declaration -> {
                             _typeForRuleItem.remove(ruleItem)
                             SimpleTypeModelStdLib.NothingType
                         }
@@ -247,18 +247,18 @@ class GrammarTypeNamespaceFromGrammar(
                 is SeparatedList -> {
                     // assign type to rule item before getting arg types to avoid recursion overflow
                     val typeArgs = mutableListOf<TypeInstance>()
-                    val t = SimpleTypeModelStdLib.ListSeparated.instance(typeArgs)
+                    val t = SimpleTypeModelStdLib.ListSeparated.type(typeArgs)
                     _typeForRuleItem[ruleItem] = t
                     val itemType = typeForRuleItem(ruleItem.item, forProperty)
                     val sepType = typeForRuleItem(ruleItem.separator, forProperty)
                     when {
-                        itemType.type == SimpleTypeModelStdLib.NothingType.type -> {
+                        itemType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> {
                             _typeForRuleItem.remove(ruleItem)
                             SimpleTypeModelStdLib.NothingType
                         }
 
-                        sepType.type == SimpleTypeModelStdLib.NothingType.type -> {
-                            val lt = SimpleTypeModelStdLib.List.instance(listOf(itemType))
+                        sepType.declaration == SimpleTypeModelStdLib.NothingType.declaration -> {
+                            val lt = SimpleTypeModelStdLib.List.type(listOf(itemType))
                             _typeForRuleItem[ruleItem] = lt
                             lt
                         }
@@ -317,62 +317,68 @@ class GrammarTypeNamespaceFromGrammar(
     private fun typeForChoiceRule(choice: Choice, choiceRule: GrammarRule): TypeInstance {
         val subtypes = choice.alternative.map { typeForRuleItem(it, false) }
         return when {
-            subtypes.all { it.type == SimpleTypeModelStdLib.NothingType.type } -> SimpleTypeModelStdLib.NothingType.type.instance(emptyList(), subtypes.any { it.isNullable })
-            subtypes.all { it.type is PrimitiveType } -> SimpleTypeModelStdLib.String
-            subtypes.all { it.type is DataType } -> findOrCreateElementType(choiceRule) { newType ->
+            subtypes.all { it.declaration == SimpleTypeModelStdLib.NothingType.declaration } -> SimpleTypeModelStdLib.NothingType.declaration.type(
+                emptyList(),
+                subtypes.any { it.isNullable })
+
+            subtypes.all { it.declaration is PrimitiveType } -> SimpleTypeModelStdLib.String
+            subtypes.all { it.declaration is DataType } -> findOrCreateElementType(choiceRule) { newType ->
                 subtypes.forEach {
-                    (it.type as DataType).addSupertype(newType.name)
-                    newType.addSubtype(it.type.name)
+                    (it.declaration as DataType).addSupertype(newType.name)
+                    newType.addSubtype(it.declaration.name)
                 }
             }
 
-            subtypes.all { it.type == SimpleTypeModelStdLib.List } -> { //=== PrimitiveType.LIST } -> {
+            subtypes.all { it.declaration == SimpleTypeModelStdLib.List } -> { //=== PrimitiveType.LIST } -> {
                 val itemType = SimpleTypeModelStdLib.AnyType//TODO: compute better elementType ?
-                val choiceType = SimpleTypeModelStdLib.List.instance(listOf(itemType))
+                val choiceType = SimpleTypeModelStdLib.List.type(listOf(itemType))
                 choiceType
             }
 
-            subtypes.all { it.type is TupleType } -> when {
-                1 == subtypes.map { (it.type as TupleType).property.map { Pair(it.name, it) }.toSet() }.toSet().size -> {
+            subtypes.all { it.declaration is TupleType } -> when {
+                1 == subtypes.map { (it.declaration as TupleType).property.map { Pair(it.name, it) }.toSet() }.toSet().size -> {
                     val t = subtypes.first()
                     when {
-                        t.type is TupleType && (t.type as TupleType).property.isEmpty() -> SimpleTypeModelStdLib.NothingType
+                        t.declaration is TupleType && (t.declaration as TupleType).property.isEmpty() -> SimpleTypeModelStdLib.NothingType
                         else -> t
                     }
                 }
 
-                else -> _namespace.createUnnamedSupertypeType(subtypes.map { it }).instance()
+                else -> _namespace.createUnnamedSupertypeType(subtypes.map { it }).type()
             }
 
-            else -> _namespace.createUnnamedSupertypeType(subtypes.map { it }).instance()
+            else -> _namespace.createUnnamedSupertypeType(subtypes.map { it }).type()
         }
     }
 
     private fun typeForChoiceRuleItem(choice: Choice, forProperty: Boolean): TypeInstance {
         val subtypes = choice.alternative.map { typeForRuleItem(it, forProperty) }
         return when {
-            subtypes.all { it.type == SimpleTypeModelStdLib.NothingType.type } -> SimpleTypeModelStdLib.NothingType.type.instance(emptyList(), subtypes.any { it.isNullable })
-            subtypes.all { it.type is PrimitiveType } -> SimpleTypeModelStdLib.String
-            subtypes.all { it.type is DataType } -> _namespace.createUnnamedSupertypeType(subtypes.map { it }).instance()
-            subtypes.all { it.type == SimpleTypeModelStdLib.List } -> { //=== PrimitiveType.LIST } -> {
+            subtypes.all { it.declaration == SimpleTypeModelStdLib.NothingType.declaration } -> SimpleTypeModelStdLib.NothingType.declaration.type(
+                emptyList(),
+                subtypes.any { it.isNullable })
+
+            subtypes.all { it.declaration is PrimitiveType } -> SimpleTypeModelStdLib.String
+            subtypes.all { it.declaration is DataType } -> _namespace.createUnnamedSupertypeType(subtypes.map { it }).type()
+            subtypes.all { it.declaration == SimpleTypeModelStdLib.List } -> { //=== PrimitiveType.LIST } -> {
                 val itemType = SimpleTypeModelStdLib.AnyType//TODO: compute better elementType ?
-                val choiceType = SimpleTypeModelStdLib.List.instance(listOf(itemType))
+                val choiceType = SimpleTypeModelStdLib.List.type(listOf(itemType))
                 choiceType
             }
 
-            subtypes.all { it.type is TupleType } -> when {
-                1 == subtypes.map { (it.type as TupleType).property.map { Pair(it.name, it) }.toSet() }.toSet().size -> {
+            subtypes.all { it.declaration is TupleType } -> when {
+                1 == subtypes.map { (it.declaration as TupleType).property.map { Pair(it.name, it) }.toSet() }.toSet().size -> {
                     val t = subtypes.first()
                     when {
-                        t.type is TupleType && (t.type as TupleType).property.isEmpty() -> SimpleTypeModelStdLib.NothingType
+                        t.declaration is TupleType && (t.declaration as TupleType).property.isEmpty() -> SimpleTypeModelStdLib.NothingType
                         else -> t
                     }
                 }
 
-                else -> _namespace.createUnnamedSupertypeType(subtypes.map { it }).instance()
+                else -> _namespace.createUnnamedSupertypeType(subtypes.map { it }).type()
             }
 
-            else -> _namespace.createUnnamedSupertypeType(subtypes.map { it }).instance()
+            else -> _namespace.createUnnamedSupertypeType(subtypes.map { it }).type()
         }
     }
 
@@ -392,10 +398,10 @@ class GrammarTypeNamespaceFromGrammar(
             is Concatenation -> TODO("Concatenation")
             is Choice -> {
                 val tu = typeForRuleItem(ruleItem, true)
-                when (tu.type) {
-                    SimpleTypeModelStdLib.NothingType.type -> Unit
+                when (tu.declaration) {
+                    SimpleTypeModelStdLib.NothingType.declaration -> Unit
                     else -> {
-                        val n = propertyNameFor(et, ruleItem, tu.type)
+                        val n = propertyNameFor(et, ruleItem, tu.declaration)
                         createUniquePropertyDeclaration(et, n, tu, childIndex)
                     }
                 }
@@ -404,36 +410,36 @@ class GrammarTypeNamespaceFromGrammar(
             is OptionalItem -> {
                 val t = typeForRuleItem(ruleItem, true)
                 when {
-                    t.type == SimpleTypeModelStdLib.NothingType.type -> Unit
-                    else -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item, t.type), t, childIndex)
+                    t.declaration == SimpleTypeModelStdLib.NothingType.declaration -> Unit
+                    else -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item, t.declaration), t, childIndex)
                 }
             }
 
             is SimpleList -> {
                 val t = typeForRuleItem(ruleItem, true)
                 when {
-                    t.type == SimpleTypeModelStdLib.NothingType.type -> Unit
-                    else -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item, t.type), t, childIndex)
+                    t.declaration == SimpleTypeModelStdLib.NothingType.declaration -> Unit
+                    else -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item, t.declaration), t, childIndex)
                 }
             }
 
             is SeparatedList -> {
                 val t = typeForRuleItem(ruleItem, true)
                 when {
-                    t.type == SimpleTypeModelStdLib.NothingType.type -> Unit
-                    else -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item, t.type), t, childIndex)
+                    t.declaration == SimpleTypeModelStdLib.NothingType.declaration -> Unit
+                    else -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem.item, t.declaration), t, childIndex)
                 }
             }
 
             is Group -> {
                 val gt = typeForGroup(ruleItem, true)
-                when (gt.type) {
-                    SimpleTypeModelStdLib.NothingType.type -> Unit
+                when (gt.declaration) {
+                    SimpleTypeModelStdLib.NothingType.declaration -> Unit
                     else -> {
                         val content = ruleItem.groupedContent
                         val pName = when (content) {
-                            is Choice -> propertyNameFor(et, content, gt.type)
-                            else -> propertyNameFor(et, ruleItem, gt.type)
+                            is Choice -> propertyNameFor(et, content, gt.declaration)
+                            else -> propertyNameFor(et, ruleItem, gt.declaration)
                         }
 
                         createUniquePropertyDeclaration(et, pName, gt, childIndex)
@@ -448,11 +454,11 @@ class GrammarTypeNamespaceFromGrammar(
     private fun createPropertyDeclarationForReferencedRule(refRule: GrammarRule?, et: StructuredType, ruleItem: SimpleItem, childIndex: Int) {
         val rhs = refRule?.rhs
         when (rhs) {
-            is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, SimpleTypeModelStdLib.String.type), SimpleTypeModelStdLib.String, childIndex)
+            is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, SimpleTypeModelStdLib.String.declaration), SimpleTypeModelStdLib.String, childIndex)
 
             is Concatenation -> {
                 val t = typeForRuleItem(ruleItem, true)
-                createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, t.type), t, childIndex)
+                createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, t.declaration), t, childIndex)
             }
 
             is ListOfItems -> {
@@ -473,19 +479,19 @@ class GrammarTypeNamespaceFromGrammar(
                     Unit
                 } else {
                     val propType = typeForRuleItem(rhs, true) //to get list type
-                    createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, propType.type), propType, childIndex)
+                    createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, propType.declaration), propType, childIndex)
                 }
             }
 
             is Choice -> {
                 val choiceType = typeForChoiceRule(rhs, refRule) //pName, rhs.alternative)
-                val pName = propertyNameFor(et, ruleItem, choiceType.type)
+                val pName = propertyNameFor(et, ruleItem, choiceType.declaration)
                 createUniquePropertyDeclaration(et, pName, choiceType, childIndex)
             }
 
             else -> {
                 val propType = typeForRuleItem(ruleItem, true)
-                createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, propType.type), propType, childIndex)
+                createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, propType.declaration), propType, childIndex)
             }
         }
     }
@@ -496,11 +502,11 @@ class GrammarTypeNamespaceFromGrammar(
         val refRule = ruleItem.referencedRule(ruleItem.embeddedGrammarReference.resolved!!) //TODO: check for null
         val rhs = refRule.rhs
         when (rhs) {
-            is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, SimpleTypeModelStdLib.String.type), SimpleTypeModelStdLib.String, childIndex)
+            is Terminal -> createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, SimpleTypeModelStdLib.String.declaration), SimpleTypeModelStdLib.String, childIndex)
 
             is Concatenation -> {
                 val t = embBldr.typeForRuleItem(ruleItem, true)
-                createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, t.type), t, childIndex)
+                createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, t.declaration), t, childIndex)
             }
 
             is ListOfItems -> {
@@ -521,19 +527,19 @@ class GrammarTypeNamespaceFromGrammar(
                     Unit
                 } else {
                     val propType = embBldr.typeForRuleItem(rhs, true) //to get list type
-                    createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, propType.type), propType, childIndex)
+                    createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, propType.declaration), propType, childIndex)
                 }
             }
 
             is Choice -> {
                 val choiceType = embBldr.typeForChoiceRule(rhs, refRule) //pName, rhs.alternative)
-                val pName = propertyNameFor(et, ruleItem, choiceType.type)
+                val pName = propertyNameFor(et, ruleItem, choiceType.declaration)
                 createUniquePropertyDeclaration(et, pName, choiceType, childIndex)
             }
 
             else -> {
                 val propType = embBldr.typeForRuleItem(ruleItem, true)
-                createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, propType.type), propType, childIndex)
+                createUniquePropertyDeclaration(et, propertyNameFor(et, ruleItem, propType.declaration), propType, childIndex)
             }
         }
     }

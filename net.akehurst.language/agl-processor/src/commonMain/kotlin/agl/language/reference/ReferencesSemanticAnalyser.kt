@@ -123,7 +123,7 @@ class ReferencesSemanticAnalyser(
                 identifiedBy is Navigation -> {
                     // only check this if the typeName is valid - else it is always invalid
                     //TODO: check this in context of typeName GrammarRule
-                    val identifyingProperty = identifiedBy.propertyDeclarationFor(identifiedType.instance())
+                    val identifyingProperty = identifiedBy.propertyDeclarationFor(identifiedType.type())
                     if (null == identifyingProperty) {
                         //if (typeScope.isMissing(part, ContextFromTypeModel.TYPE_NAME_FOR_PROPERTIES)) {
                         raiseError(
@@ -187,18 +187,18 @@ class ReferencesSemanticAnalyser(
 
         when (contextType) {
             is DataType -> {
-                val collTypeInstance = refExpr.navigation.propertyDeclarationFor(contextType.instance())?.typeInstance
-                when (collTypeInstance?.type) {
+                val collTypeInstance = refExpr.navigation.propertyDeclarationFor(contextType.type())?.typeInstance
+                when (collTypeInstance?.declaration) {
                     null -> TODO()
                     is CollectionType -> {
-                        val loopVarType = collTypeInstance.typeArguments[0].type
+                        val loopVarType = collTypeInstance.typeArguments[0].declaration
                         val filteredLoopVarType = refExpr.ofType?.let { ofTypeName ->
                             val ofType = _grammarNamespace?.findTypeNamed(ofTypeName)
                             when {
                                 null == ofType -> error("Should not happen, checked above.")
                                 //TODO: needs a conforms to to check transitive closure of supertypes
-                                loopVarType is DataType && ofType is DataType && ofType.allSuperTypes.any { it.type == loopVarType } -> ofType //no error
-                                loopVarType is UnnamedSupertypeType && loopVarType.subtypes.any { it.type == ofType } -> ofType
+                                loopVarType is DataType && ofType is DataType && ofType.allSuperTypes.any { it.declaration == loopVarType } -> ofType //no error
+                                loopVarType is UnnamedSupertypeType && loopVarType.subtypes.any { it.declaration == ofType } -> ofType
                                 else -> {
                                     raiseError(ref, "The of-type '${ofType.name}' is not a subtype of the loop variable type '${loopVarType.name}'")
                                     null
@@ -226,7 +226,7 @@ class ReferencesSemanticAnalyser(
     ) {
         //propertyReferenceExpression = 'property' navigation 'refers-to' typeReferences from? ;
         //from = 'from' navigation ;
-        val x = refExpr.referringPropertyNavigation.propertyDeclarationFor(contextType.instance())
+        val x = refExpr.referringPropertyNavigation.propertyDeclarationFor(contextType.type())
         if (null == x) {
             raiseError(
                 ReferencesSyntaxAnalyser.PropertyValue(refExpr, "propertyReference"),

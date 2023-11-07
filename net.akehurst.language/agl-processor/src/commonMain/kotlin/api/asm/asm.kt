@@ -105,7 +105,7 @@ interface AsmList : AsmValue {
 }
 
 interface AsmListSeparated : AsmValue {
-    val elements: ListSeparated<AsmValue, AsmValue>
+    val elements: ListSeparated<AsmValue, AsmValue, AsmValue>
 }
 
 interface AsmTreeWalker {

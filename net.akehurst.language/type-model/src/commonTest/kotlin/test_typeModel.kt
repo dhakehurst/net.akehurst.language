@@ -70,29 +70,29 @@ class test_typeModel {
         assertFalse(SimpleTypeModelStdLib.NothingType.conformsTo(SimpleTypeModelStdLib.AnyType))
         assertFalse(SimpleTypeModelStdLib.AnyType.conformsTo(SimpleTypeModelStdLib.NothingType))
         assertTrue(SimpleTypeModelStdLib.String.conformsTo(SimpleTypeModelStdLib.AnyType))
-        assertTrue(SimpleTypeModelStdLib.List.instance(listOf(SimpleTypeModelStdLib.String)).conformsTo(SimpleTypeModelStdLib.AnyType))
+        assertTrue(SimpleTypeModelStdLib.List.type(listOf(SimpleTypeModelStdLib.String)).conformsTo(SimpleTypeModelStdLib.AnyType))
 
         val A = tm.findFirstByNameOrNull("A")!!
         val B = tm.findFirstByNameOrNull("B")!!
         val C = tm.findFirstByNameOrNull("C")!!
         val D = tm.findFirstByNameOrNull("D")!!
 
-        assertTrue(A.conformsTo(SimpleTypeModelStdLib.AnyType.type))
-        assertFalse(SimpleTypeModelStdLib.AnyType.type.conformsTo(A))
+        assertTrue(A.conformsTo(SimpleTypeModelStdLib.AnyType.declaration))
+        assertFalse(SimpleTypeModelStdLib.AnyType.declaration.conformsTo(A))
         assertTrue(A.conformsTo(A))
         assertFalse(A.conformsTo(B))
         assertFalse(A.conformsTo(C))
         assertFalse(A.conformsTo(D))
 
-        assertTrue(B.conformsTo(SimpleTypeModelStdLib.AnyType.type))
-        assertFalse(SimpleTypeModelStdLib.AnyType.type.conformsTo(B))
+        assertTrue(B.conformsTo(SimpleTypeModelStdLib.AnyType.declaration))
+        assertFalse(SimpleTypeModelStdLib.AnyType.declaration.conformsTo(B))
         assertTrue(B.conformsTo(A))
         assertTrue(B.conformsTo(B))
         assertFalse(B.conformsTo(C))
         assertFalse(B.conformsTo(D))
 
-        assertTrue(C.conformsTo(SimpleTypeModelStdLib.AnyType.type))
-        assertFalse(SimpleTypeModelStdLib.AnyType.type.conformsTo(C))
+        assertTrue(C.conformsTo(SimpleTypeModelStdLib.AnyType.declaration))
+        assertFalse(SimpleTypeModelStdLib.AnyType.declaration.conformsTo(C))
         assertTrue(C.conformsTo(A))
         assertTrue(C.conformsTo(B))
         assertTrue(C.conformsTo(C))

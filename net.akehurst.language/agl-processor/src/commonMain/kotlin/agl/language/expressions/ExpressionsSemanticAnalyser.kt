@@ -39,7 +39,7 @@ fun TypeDeclaration.typeOfExpressionStr(expression: String): TypeInstance {
     val result = Agl.registry.agl.expressions.processor!!.process(expression)
     check(result.issues.errors.isEmpty()) { result.issues.toString() }
     val asm = result.asm!!
-    return asm.typeOfExpressionFor(this.instance())
+    return asm.typeOfExpressionFor(this.type())
 }
 
 fun Expression.typeOfExpressionFor(self: TypeInstance): TypeInstance = when (this) {

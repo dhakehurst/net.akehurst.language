@@ -18,37 +18,38 @@
 package net.akehurst.language.collections
 
 /**
+ * E - type of elements
  * I - type of list Items
  * S - type of list Separators
  */
-interface ListSeparated<I, S> : List<Any?> {
+interface ListSeparated<E, I : E, S : E> : List<E> {
     val items: List<I>
     val separators: List<S>
 
     /**
      * all elements (items and separators)
      */
-    val elements: List<Any?>
+    val elements: List<E>
 }
 
-interface MutableListSeparated<I, S> : ListSeparated<I, S>, MutableList<Any?> {
+interface MutableListSeparated<E, I : E, S : E> : ListSeparated<E, I, S>, MutableList<E> {
     override val items: MutableList<I>
     override val separators: MutableList<S>
 }
 
-inline fun <reified I, reified S> emptyListSeparated(): ListSeparated<I, S> = listSeparatedOf() //TODO: maybe create EmptyListSeparated
-inline fun <reified I, reified S> listSeparatedOf(vararg elements: Any?): ListSeparated<I, S> = ListSeparatedArrayList(elements.toList())
-inline fun <reified I, reified S> mutableListSeparated(): MutableListSeparated<I, S> = MutableListSeparatedArrayList()
+inline fun <reified E, reified I : E, reified S : E> emptyListSeparated(): ListSeparated<E, I, S> = listSeparatedOf() //TODO: maybe create EmptyListSeparated
+inline fun <reified E, reified I : E, reified S : E> listSeparatedOf(vararg elements: E): ListSeparated<E, I, S> = ListSeparatedArrayList(elements.toList())
+inline fun <reified E, reified I : E, reified S : E> mutableListSeparated(): MutableListSeparated<E, I, S> = MutableListSeparatedArrayList()
 
-inline fun <reified I, reified S> List<*>.toSeparatedList(): ListSeparated<I, S> = ListSeparatedArrayList<I, S>(this)
+inline fun <reified E, reified I : E, reified S : E> List<E>.toSeparatedList(): ListSeparated<E, I, S> = ListSeparatedArrayList<E, I, S>(this)
 
-class ListSeparatedArrayList<I, S>(
-    override val elements: List<Any?>
-) : AbstractList<Any?>(), ListSeparated<I, S> {
+class ListSeparatedArrayList<E, I : E, S : E>(
+    override val elements: List<E>
+) : AbstractList<E>(), ListSeparated<E, I, S> {
 
     override val size: Int get() = elements.size
 
-    override fun get(index: Int): Any? = elements[index]
+    override fun get(index: Int): E = elements[index]
 
     override val items: List<I>
         get() = elements.filterIndexed { index, _ -> index % 2 == 0 } as List<I>
@@ -57,22 +58,22 @@ class ListSeparatedArrayList<I, S>(
         get() = elements.filterIndexed { index, _ -> index % 2 == 1 } as List<S>
 }
 
-class MutableListSeparatedArrayList<I, S> : AbstractMutableList<Any?>(), MutableListSeparated<I, S> {
+class MutableListSeparatedArrayList<E, I : E, S : E> : AbstractMutableList<E>(), MutableListSeparated<E, I, S> {
 
-    override val elements = mutableListOf<Any?>()
+    override val elements = mutableListOf<E>()
 
     override val size: Int get() = elements.size
 
-    override fun get(index: Int): Any? = elements[index]
+    override fun get(index: Int): E = elements[index]
 
-    override fun set(index: Int, element: Any?): Any? = elements.set(index, element)
+    override fun set(index: Int, element: E): E = elements.set(index, element)
 
 
-    override fun add(index: Int, element: Any?) {
+    override fun add(index: Int, element: E) {
         elements.add(index, element)
     }
 
-    override fun removeAt(index: Int): Any? = elements.removeAt(index)
+    override fun removeAt(index: Int): E = elements.removeAt(index)
 
     override val items: MutableList<I>
         get() = TODO("not implemented")

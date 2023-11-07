@@ -46,7 +46,7 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     //navigation = [propertyReference / '.']+ ;
     private fun navigation(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): NavigationDefault =
-        NavigationDefault(children.toSeparatedList<String, String>().items)
+        NavigationDefault((children as List<String>).toSeparatedList<String, String, String>().items)
 
     // rootExpression = nothing | self
     private fun rootExpression(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): RootExpression =
@@ -67,6 +67,6 @@ class ExpressionsSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Exp
 
     // qualifiedName = [IDENTIFIER / '.']+ ;
     private fun qualifiedName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> {
-        return children.toSeparatedList<String, String>().items
+        return (children as List<String>).toSeparatedList<String, String, String>().items
     }
 }

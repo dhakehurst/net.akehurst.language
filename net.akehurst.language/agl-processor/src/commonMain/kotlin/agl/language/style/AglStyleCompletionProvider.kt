@@ -97,9 +97,9 @@ class AglStyleCompletionProvider() : CompletionProvider<AglStyleModel, SentenceC
     }
 
     private fun IDENTIFIER(nextExpected: RuleItem, ti: TypeInstance, context: SentenceContext<String>): List<CompletionItem> {
-        val scopeItems = context.rootScope.items[grammarRule.type.qualifiedName]?.values ?: emptyList()
+        val scopeItems = context.rootScope.items[grammarRule.declaration.qualifiedName]?.values ?: emptyList()
         return scopeItems.map {
-            CompletionItem(CompletionItemKind.LITERAL, it, grammarRule.type.name)
+            CompletionItem(CompletionItemKind.LITERAL, it, grammarRule.declaration.name)
         }
     }
 

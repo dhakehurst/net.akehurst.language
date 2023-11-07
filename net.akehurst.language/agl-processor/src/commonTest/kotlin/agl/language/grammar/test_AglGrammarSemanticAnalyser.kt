@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.grammar.grammar
 
 import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
+import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.language.grammar.Choice
 import net.akehurst.language.api.language.grammar.ChoiceLongest
@@ -46,7 +47,7 @@ class test_AglGrammarSemanticAnalyser {
                 a = b ;
             }
         """.trimIndent()
-        val result = aglProc.process(grammarStr)
+        val result = aglProc.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         val expected = setOf(
             LanguageIssue(LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(38, 9, 3, 1), "Rule 'b' not found in grammar 'Test'")
         )
@@ -64,7 +65,7 @@ class test_AglGrammarSemanticAnalyser {
               S = Base.A ;
             }
         """.trimIndent()
-        val res = aglProc.process(grammarStr)
+        val res = aglProc.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         val gBase = res.asm!![0]
         val gTest = res.asm!![1]
         assertTrue(gTest.findAllResolvedGrammarRule("S") != null)
@@ -83,7 +84,7 @@ class test_AglGrammarSemanticAnalyser {
                 b = 'b' ;
             }
         """.trimIndent()
-        val result = aglProc.process(grammarStr)
+        val result = aglProc.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         val expected = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR,
@@ -111,7 +112,7 @@ class test_AglGrammarSemanticAnalyser {
                 c = 'd' ;
             }
         """.trimIndent()
-        val result = aglProc.process(grammarStr)
+        val result = aglProc.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         val expected = setOf(
             LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(48, 5, 4, 9), "Rule 'c' is not used in grammar Test.")
         )
@@ -132,11 +133,22 @@ class test_AglGrammarSemanticAnalyser {
         val result = aglProc.process(grammarStr, Agl.options {
             semanticAnalysis {
                 option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, true)
+                context(ContextFromGrammarRegistry(Agl.registry))
             }
         })
         val expected = setOf(
-            LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(57, 10, 4, 3), "Ambiguity on [<EOT>] with b2"),
-            LanguageIssue(LanguageIssueKind.WARNING, LanguageProcessorPhase.SEMANTIC_ANALYSIS, InputLocation(72, 10, 5, 3), "Ambiguity on [<EOT>] with b1")
+            LanguageIssue(
+                LanguageIssueKind.WARNING,
+                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(57, 10, 4, 3),
+                "Ambiguity: [HEIGHT/HEIGHT] conflict from 'b1' into 'b1/b2' on [<EOT>]"
+            ),
+            LanguageIssue(
+                LanguageIssueKind.WARNING,
+                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(72, 10, 5, 3),
+                "Ambiguity: [HEIGHT/HEIGHT] conflict from 'b1' into 'b2/b1' on [<EOT>]"
+            ),
         )
         result.issues.forEach {
             println(it)
@@ -156,7 +168,7 @@ class test_AglGrammarSemanticAnalyser {
               S = A ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence)
+        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
         val asm = res.asm!!
         assertEquals(2, asm.size)
@@ -186,7 +198,7 @@ class test_AglGrammarSemanticAnalyser {
               S = A B ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence)
+        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
         val asm = res.asm!!
         assertEquals(3, asm.size)
@@ -218,7 +230,7 @@ class test_AglGrammarSemanticAnalyser {
               A = 'aa' ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence)
+        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         val expIssues = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR,
@@ -249,7 +261,7 @@ class test_AglGrammarSemanticAnalyser {
               override A = 'aa' ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence)
+        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
         val asm = res.asm!!
         assertEquals(2, asm.size)
@@ -281,7 +293,7 @@ class test_AglGrammarSemanticAnalyser {
               override leaf B = 'bb' ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence)
+        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
         val asm = res.asm!!
         assertEquals(3, asm.size)
@@ -314,7 +326,7 @@ class test_AglGrammarSemanticAnalyser {
               S = A ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence)
+        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         val expIssues = setOf(
             LanguageIssue(
                 LanguageIssueKind.ERROR,
@@ -349,7 +361,7 @@ class test_AglGrammarSemanticAnalyser {
               S = A B C;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence)
+        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
         val asm = res.asm!!
         assertEquals(4, asm.size)
@@ -388,7 +400,7 @@ class test_AglGrammarSemanticAnalyser {
               override C +=| 'c' ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence)
+        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
         val asm = res.asm!!
         assertEquals(2, asm.size)
@@ -427,7 +439,7 @@ class test_AglGrammarSemanticAnalyser {
               S = A B;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence)
+        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
 
         val expIssues = setOf(
             LanguageIssue(
@@ -472,7 +484,7 @@ class test_AglGrammarSemanticAnalyser {
               override B = 'd' ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence)
+        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
 
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }
@@ -494,7 +506,7 @@ class test_AglGrammarSemanticAnalyser {
               S = B;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence)
+        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
 
         val expIssues = setOf(
             LanguageIssue(
@@ -538,7 +550,7 @@ class test_AglGrammarSemanticAnalyser {
               S = A B;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence)
+        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
 
         val expIssues = setOf(
             LanguageIssue(
@@ -573,7 +585,7 @@ class test_AglGrammarSemanticAnalyser {
                 S = A B;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence)
+        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
 
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }
@@ -596,7 +608,7 @@ class test_AglGrammarSemanticAnalyser {
                 S = A B;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence)
+        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
 
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }
@@ -650,7 +662,7 @@ class test_AglGrammarSemanticAnalyser {
                 override FunctionBodyPart = Behaviors.FunctionBodyPart ;
             }
         """.trimIndent()
-        val res = aglProc.process(sentence)
+        val res = aglProc.process(sentence, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
 
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }

@@ -50,14 +50,14 @@ class GrammarTypeModelBuilder(
     }
     private val _typeReferences = mutableListOf<TypeUsageReferenceBuilder>()
 
-    val StringType: PrimitiveType get() = SimpleTypeModelStdLib.String.type as PrimitiveType
+    val StringType: PrimitiveType get() = SimpleTypeModelStdLib.String.declaration as PrimitiveType
 
     fun stringTypeFor(name: String, isNullable: Boolean = false) {
         _namespace.addTypeFor(name, if (isNullable) SimpleTypeModelStdLib.String.nullable() else SimpleTypeModelStdLib.String)
     }
 
     fun listTypeFor(name: String, elementType: TypeDeclaration): TypeInstance {
-        val t = SimpleTypeModelStdLib.List.instance(listOf(elementType.instance()))
+        val t = SimpleTypeModelStdLib.List.type(listOf(elementType.type()))
         _namespace.addTypeFor(name, t)
         return t
     }
@@ -68,12 +68,12 @@ class GrammarTypeModelBuilder(
     }
 
     fun listSeparatedTypeFor(name: String, itemType: TypeInstance, separatorType: TypeInstance) {
-        val t = SimpleTypeModelStdLib.ListSeparated.instance(listOf(itemType, separatorType))
+        val t = SimpleTypeModelStdLib.ListSeparated.type(listOf(itemType, separatorType))
         _namespace.addTypeFor(name, t)
     }
 
     fun listSeparatedTypeFor(name: String, itemType: TypeDeclaration, separatorType: TypeDeclaration) =
-        listSeparatedTypeFor(name, itemType.instance(), separatorType.instance())
+        listSeparatedTypeFor(name, itemType.type(), separatorType.type())
 
     fun listSeparatedTypeOf(name: String, itemTypeName: String, separatorType: TypeDeclaration) {
         val itemType = _namespace.findOwnedOrCreateDataTypeNamed(itemTypeName)!!
@@ -90,7 +90,7 @@ class GrammarTypeModelBuilder(
         val b = DataTypeBuilder(_namespace, _typeReferences, typeName)
         b.init()
         val et = b.build()
-        _namespace.addTypeFor(grammarRuleName, et.instance())
+        _namespace.addTypeFor(grammarRuleName, et.type())
         return et
     }
 
@@ -102,8 +102,8 @@ class GrammarTypeModelBuilder(
                 else -> error("Cannot map to TypeDefinition: $it")
             }
         }
-        val t = _namespace.createUnnamedSupertypeType(sts.map { it.instance() })
-        _namespace.addTypeFor(name, t.instance())
+        val t = _namespace.createUnnamedSupertypeType(sts.map { it.type() })
+        _namespace.addTypeFor(name, t.type())
         return t
     }
 
@@ -112,7 +112,7 @@ class GrammarTypeModelBuilder(
         b.init()
         val stu = b.build()
         val t = _namespace.createUnnamedSupertypeType(stu)
-        _namespace.addTypeFor(name, t.instance())
+        _namespace.addTypeFor(name, t.type())
         return t
     }
 

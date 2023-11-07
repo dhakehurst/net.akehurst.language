@@ -19,7 +19,7 @@ package net.akehurst.language.agl.default
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmElementPath
+import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.language.reference.Scope
 import kotlin.test.Test
@@ -31,7 +31,7 @@ class test_SemanticAnalyserDefault {
 
     private companion object {
 
-        fun test(grammarStr: String, scopeModelStr: String, sentence: String, expected: Scope<AsmElementPath>) {
+        fun test(grammarStr: String, scopeModelStr: String, sentence: String, expected: Scope<AsmPath>) {
             val processor = Agl.processorFromStringDefault(
                 grammarStr,
                 scopeModelStr

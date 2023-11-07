@@ -18,6 +18,7 @@
 package net.akehurst.language.agl.default
 
 import net.akehurst.language.agl.asm.AsmNothingSimple
+import net.akehurst.language.agl.asm.AsmPrimitiveSimple
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverAsmSimple
 import net.akehurst.language.agl.language.reference.CollectionReferenceExpressionDefault
 import net.akehurst.language.agl.language.reference.PropertyReferenceExpressionDefault
@@ -56,7 +57,7 @@ class ReferenceResolverDefault(
 
     private val scopeStack = mutableStackOf(rootScope)
     private val scopeForElement = mutableMapOf<AsmStructure, Scope<AsmPath>>()
-    private val _interpreter = ExpressionsInterpreterOverAsmSimple()
+    private val _interpreter = ExpressionsInterpreterOverAsmSimple(typeModel)
 
     private fun raiseError(element: Any, message: String) {
         _issues.error(
@@ -137,20 +138,20 @@ class ReferenceResolverDefault(
         }
         var referringValue = _interpreter.evaluateExpression(self, refExpr.referringPropertyNavigation)
         if (referringValue is AsmReference) {
-            referringValue = referringValue.value!!
+            referringValue = AsmPrimitiveSimple("String", referringValue.reference)
         }
         when (referringValue) {
             is AsmPrimitive -> {
                 val targets = refExpr.refersToTypeName.mapNotNull { scope.findOrNull(referringValue.value as String, it) }
                 when {
                     targets.isEmpty() -> {
-                        raiseError(self, "No target of type(s) ${refExpr.refersToTypeName} found for referring value '$referringValue' in scope of element '$self'")
+                        raiseError(self, "No target of type(s) ${refExpr.refersToTypeName} found for referring value '${referringValue.value}' in scope of element '$self'")
                         val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
                         referringProperty.convertToReferenceTo(null)
                     }
 
                     1 < targets.size -> {
-                        val msg = "Multiple target of type(s) ${refExpr.refersToTypeName} found for referring value '$referringValue' in scope of element '$self': $targets"
+                        val msg = "Multiple target of type(s) ${refExpr.refersToTypeName} found for referring value '${referringValue.value}' in scope of element '$self': $targets"
                         raiseError(self, msg)
                         val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
                         referringProperty.convertToReferenceTo(null)
@@ -202,7 +203,7 @@ class ReferenceResolverDefault(
     }
 
     private fun AsmValue.conformsToType(typeName: String): Boolean {
-        val type = typeModel.findFirstByNameOrNull(typeName) ?: SimpleTypeModelStdLib.NothingType.type
+        val type = typeModel.findFirstByNameOrNull(typeName) ?: SimpleTypeModelStdLib.NothingType.declaration
         val selfType = typeModel.typeOf(this)
         return selfType.conformsTo(type)
     }

@@ -23,7 +23,7 @@ import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmElementPath
+import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageProcessor
@@ -102,12 +102,12 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
                 TODO("not implemented")
             }
 
-            override fun startAsmElement(path: AsmElementPath, type: DataType) {
+            override fun startAsmElement(path: AsmPath, type: DataType) {
                 sb.append("${type.name} {$eol")
                 indentInc()
             }
 
-            override fun finishAsmElement(path: AsmElementPath, type: DataType) {
+            override fun finishAsmElement(path: AsmPath, type: DataType) {
                 indentDec()
                 sb.append(indent)
                 sb.append("}$eol")
@@ -117,7 +117,7 @@ class test_SyntaxAnalyserSimpleStreamPushAbstract {
                 sb.append("Tuple {$eol")
             }
 
-            override fun finishTuple(path: AsmElementPath) {
+            override fun finishTuple(path: AsmPath) {
                 sb.append("}$eol")
             }
 

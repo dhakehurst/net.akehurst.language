@@ -25,7 +25,7 @@ import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.ProcessResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
-import net.akehurst.language.api.asm.AsmSimple
+import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -68,7 +68,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         }
         val scopeModel = CrossReferenceModelDefault()
         val syntaxAnalyser = SyntaxAnalyserDefault(grammar.qualifiedName, typeModel, scopeModel)
-        val processor = Agl.processorFromString<AsmSimple, ContextSimple>(
+        val processor = Agl.processorFromString<Asm, ContextSimple>(
             grammarStr,
             Agl.configuration {
                 crossReferenceModelResolver { ProcessResultDefault(scopeModel, IssueHolder(LanguageProcessorPhase.ALL)) }
@@ -236,7 +236,7 @@ class test_SyntaxAnalyserSimple_datatypes {
         assertNotNull(result.asm)
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
 
-        val expected = asmSimple(scopeModel, ContextSimple()) {
+        val expected = asmSimple(crossReferenceModel = scopeModel, context = ContextSimple()) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {
