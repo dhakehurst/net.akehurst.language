@@ -17,7 +17,6 @@
 
 package net.akehurst.language.typemodel.api
 
-import net.akehurst.language.typemodel.simple.EnumTypeSimple
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 import net.akehurst.language.typemodel.simple.TypeModelSimple
 import net.akehurst.language.typemodel.simple.TypeNamespaceSimple
@@ -75,11 +74,7 @@ class TypeNamespaceBuilder(
 
     fun primitiveType(typeName: String): PrimitiveType = _namespace.findOwnedOrCreatePrimitiveTypeNamed(typeName)
 
-    fun enumType(typeName: String, literals: List<String>): EnumType {
-        val et = EnumTypeSimple(_namespace, typeName, literals)
-        _namespace.addDeclaration(et)
-        return et
-    }
+    fun enumType(typeName: String, literals: List<String>): EnumType = _namespace.findOwnedOrCreateEnumTypeNamed(typeName, literals)
 
     fun collectionType(typeName: String, typeParams: List<String>): CollectionType =
         _namespace.findOwnedOrCreateCollectionTypeNamed(typeName).also { (it.typeParameters as MutableList).addAll(typeParams) }
@@ -124,6 +119,8 @@ class TypeNamespaceBuilder(
         val t = _namespace.createUnnamedSupertypeType(sts.map { it.type() })
         return t
     }
+
+    fun singleton(typeName: String) = _namespace.findOwnedOrCreateSingletonTypeNamed(typeName)
 
     fun build(): TypeNamespace {
         return _namespace

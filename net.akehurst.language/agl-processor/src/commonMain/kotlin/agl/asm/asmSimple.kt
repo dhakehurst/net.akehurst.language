@@ -82,8 +82,8 @@ open class AsmSimple() : Asm {
         (this.root as MutableList).remove(root)
     }
 
-    fun createElement(asmPath: AsmPath, typeName: String): AsmElementSimple {
-        val el = AsmElementSimple(asmPath, typeName)// this, typeName)
+    fun createElement(asmPath: AsmPath, typeName: String): AsmStructureSimple {
+        val el = AsmStructureSimple(asmPath, typeName)// this, typeName)
         this.elementIndex[asmPath] = el
         return el
     }
@@ -211,7 +211,7 @@ class AsmReferenceSimple(
     }
 }
 
-class AsmElementSimple(
+class AsmStructureSimple(
     override val path: AsmPath,
     override val qualifiedTypeName: String
 ) : AsmValueAbstract(), AsmStructure {
@@ -234,26 +234,26 @@ class AsmElementSimple(
      * 'contained' elements's. i.e.
      * value of non reference, AsmElementSimple type, properties
      */
-    override val children: List<AsmElementSimple>
+    override val children: List<AsmStructureSimple>
         get() = this.property.values
             .filterNot { it.isReference }
             .flatMap { if (it.value is List<*>) it.value as List<*> else listOf(it.value) }
-            .filterIsInstance<AsmElementSimple>()
+            .filterIsInstance<AsmStructureSimple>()
 
     override fun hasProperty(name: String): Boolean = property.containsKey(name)
 
     override fun getPropertyOrNull(name: String): AsmValue? = property[name]?.value
     fun getPropertyAsStringOrNull(name: String): String? = getPropertyOrNull(name) as String?
-    fun getPropertyAsAsmElementOrNull(name: String): AsmElementSimple? = getPropertyOrNull(name) as AsmElementSimple?
+    fun getPropertyAsAsmElementOrNull(name: String): AsmStructureSimple? = getPropertyOrNull(name) as AsmStructureSimple?
     fun getPropertyAsReferenceOrNull(name: String): AsmReferenceSimple? = getPropertyOrNull(name) as AsmReferenceSimple?
     fun getPropertyAsListOrNull(name: String): List<Any>? = getPropertyOrNull(name) as List<Any>?
 
     override fun getProperty(name: String): AsmValue = property[name]?.value ?: error("Cannot find property '$name' in element type '$typeName' with path '$path' ")
     fun getPropertyAsString(name: String): String = getProperty(name) as String
-    fun getPropertyAsAsmElement(name: String): AsmElementSimple = getProperty(name) as AsmElementSimple
+    fun getPropertyAsAsmElement(name: String): AsmStructureSimple = getProperty(name) as AsmStructureSimple
     fun getPropertyAsReference(name: String): AsmReferenceSimple = getProperty(name) as AsmReferenceSimple
     fun getPropertyAsList(name: String): List<Any> = getProperty(name) as List<Any>
-    fun getPropertyAsListOfElement(name: String): List<AsmElementSimple> = getProperty(name) as List<AsmElementSimple>
+    fun getPropertyAsListOfElement(name: String): List<AsmStructureSimple> = getProperty(name) as List<AsmStructureSimple>
 
     override fun setProperty(name: String, value: AsmValue, childIndex: Int) {
         _properties[name] = AsmStructurePropertySimple(name, childIndex, value)
@@ -295,7 +295,7 @@ class AsmElementSimple(
 
     override fun hashCode(): Int = path.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {
-        is AsmElementSimple -> this.path == other.path //&& this.asm == other.asm
+        is AsmStructureSimple -> this.path == other.path //&& this.asm == other.asm
         else -> false
     }
 
@@ -342,7 +342,7 @@ class AsmStructurePropertySimple(
                         error("Cannot compare property values: ${t} and ${o}")
                     }
                 } else {
-                    if (t is AsmElementSimple && o is AsmElementSimple) {
+                    if (t is AsmStructureSimple && o is AsmStructureSimple) {
                         t.equalTo(o)
                     } else {
                         t == o
@@ -355,7 +355,7 @@ class AsmStructurePropertySimple(
     override fun toString(): String {
         val v = this.value
         return when (v) {
-            is AsmElementSimple -> "$name = :${v.typeName}"
+            is AsmStructureSimple -> "$name = :${v.typeName}"
             is AsmList -> "$name = [...]"
             is AsmPrimitive -> if (isReference) "$name = &${v}" else "$name = ${v}"
             else -> "$name = ${v}"

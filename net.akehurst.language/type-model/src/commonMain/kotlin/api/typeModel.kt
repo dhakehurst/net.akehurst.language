@@ -56,9 +56,9 @@ interface TypeNamespace {
     /**
      * TypeDefinition.name --> TypeDefinition
      */
-    val allTypesByName: Map<String, TypeDeclaration>
+    val ownedTypesByName: Map<String, TypeDeclaration>
 
-    val allTypes: Collection<TypeDeclaration>
+    val ownedTypes: Collection<TypeDeclaration>
 
     val primitiveType: Set<PrimitiveType>
 
@@ -84,7 +84,9 @@ interface TypeNamespace {
      */
     fun findTypeNamed(qualifiedOrImportedTypeName: String): TypeDeclaration?
 
+    fun findOwnedOrCreateSingletonTypeNamed(typeName: String): SingletonType
     fun findOwnedOrCreatePrimitiveTypeNamed(typeName: String): PrimitiveType
+    fun findOwnedOrCreateEnumTypeNamed(typeName: String, literals: List<String>): EnumType
     fun findOwnedOrCreateDataTypeNamed(typeName: String): DataType
     fun findOwnedOrCreateCollectionTypeNamed(typeName: String): CollectionType
 
@@ -179,6 +181,9 @@ interface TypeDeclaration {
     fun appendPropertyDerived(name: String, typeInstance: TypeInstance, description: String, expression: String)
     fun appendMethodPrimitive(name: String, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: (self: Any, arguments: List<Any>) -> Any)
     fun appendMethodDerived(name: String, parameters: List<ParameterDeclaration>, typeInstance: TypeInstance, description: String, body: String)
+}
+
+interface SingletonType : TypeDeclaration {
 }
 
 interface PrimitiveType : TypeDeclaration {

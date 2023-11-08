@@ -188,12 +188,14 @@ abstract class TypeInstanceAbstract() : TypeInstance {
 }
 
 class TypeInstanceSimple(
-    val context: TypeDeclaration?,
+    val contextQualifiedTypeName: String?,
     override val namespace: TypeNamespace,
     val qualifiedOrImportedTypeName: String,
     override val typeArguments: List<TypeInstance>,
     override val isNullable: Boolean
 ) : TypeInstanceAbstract() {
+
+    val context: TypeDeclaration? get() = contextQualifiedTypeName?.let { namespace.findTypeNamed(it) }
 
     override val typeName: String
         get() = context?.typeParameters?.indexOfOrNull(qualifiedOrImportedTypeName)?.let {
@@ -324,17 +326,21 @@ abstract class TypeNamespaceAbstract(
 
     override val imports: List<String> = imports.toMutableList()
 
-    override val allTypesByName = mutableMapOf<String, TypeDeclaration>()
+    override val ownedTypesByName = mutableMapOf<String, TypeDeclaration>()
 
-    override val allTypes: Collection<TypeDeclaration> get() = allTypesByName.values
+    override val ownedTypes: Collection<TypeDeclaration> get() = ownedTypesByName.values
 
-    override val primitiveType: Set<PrimitiveType> get() = allTypesByName.values.filterIsInstance<PrimitiveType>().toSet()
+    val ownedUnnamedSupertypeType = mutableListOf<UnnamedSupertypeType>()
 
-    override val enumType: Set<EnumType> get() = allTypesByName.values.filterIsInstance<EnumType>().toSet()
+    val ownedTupleTypes = mutableListOf<TupleType>()
 
-    override val collectionType: Set<CollectionType> get() = allTypesByName.values.filterIsInstance<CollectionType>().toSet()
+    override val primitiveType: Set<PrimitiveType> get() = ownedTypesByName.values.filterIsInstance<PrimitiveType>().toSet()
 
-    override val elementType: Set<DataType> get() = allTypesByName.values.filterIsInstance<DataType>().toSet()
+    override val enumType: Set<EnumType> get() = ownedTypesByName.values.filterIsInstance<EnumType>().toSet()
+
+    override val collectionType: Set<CollectionType> get() = ownedTypesByName.values.filterIsInstance<CollectionType>().toSet()
+
+    override val elementType: Set<DataType> get() = ownedTypesByName.values.filterIsInstance<DataType>().toSet()
 
     override fun resolveImports(model: TypeModel) {
         // check explicit imports
@@ -356,17 +362,17 @@ abstract class TypeNamespaceAbstract(
     }
 
     fun addDeclaration(decl: TypeDeclaration) {
-        if (allTypesByName.containsKey(decl.name)) {
+        if (ownedTypesByName.containsKey(decl.name)) {
             error("namespace '$qualifiedName' already contains a declaration named '${decl.name}', cannot add another")
         } else {
             when (decl) {
-                is PrimitiveType -> allTypesByName[decl.name] = decl
-                is EnumType -> allTypesByName[decl.name] = decl
+                is PrimitiveType -> ownedTypesByName[decl.name] = decl
+                is EnumType -> ownedTypesByName[decl.name] = decl
                 is UnnamedSupertypeType -> Unit
                 is StructuredType -> when (decl) {
                     is TupleType -> Unit
-                    is DataType -> allTypesByName[decl.name] = decl
-                    is CollectionType -> allTypesByName[decl.name] = decl
+                    is DataType -> ownedTypesByName[decl.name] = decl
+                    is CollectionType -> ownedTypesByName[decl.name] = decl
                 }
 
                 else -> error("Cannot add declaration '$decl'")
@@ -374,7 +380,7 @@ abstract class TypeNamespaceAbstract(
         }
     }
 
-    override fun findOwnedTypeNamed(typeName: String): TypeDeclaration? = allTypesByName[typeName]
+    override fun findOwnedTypeNamed(typeName: String): TypeDeclaration? = ownedTypesByName[typeName]
 
     override fun findTypeNamed(qualifiedOrImportedTypeName: String): TypeDeclaration? {
         val ns = qualifiedOrImportedTypeName.substringBeforeLast(delimiter = ".", missingDelimiterValue = "")
@@ -389,6 +395,7 @@ abstract class TypeNamespaceAbstract(
                     }
             }
 
+            this.qualifiedName -> findOwnedTypeNamed(tn)
             else -> {
                 val tns = _requiredNamespaces[ns]
                     ?: error("namespace '$ns' not resolved in namespace '$qualifiedName', have you called resolveImports() on the TypeModel and does it contain the required namespace?")
@@ -401,10 +408,21 @@ abstract class TypeNamespaceAbstract(
         val existing = findOwnedTypeNamed(typeName)
         return if (null == existing) {
             val t = SpecialTypeSimple(this, typeName)
-            this.allTypesByName[typeName] = t
+            this.ownedTypesByName[typeName] = t
             t
         } else {
             existing as SpecialTypeSimple
+        }
+    }
+
+    override fun findOwnedOrCreateSingletonTypeNamed(typeName: String): SingletonType {
+        val existing = findOwnedTypeNamed(typeName)
+        return if (null == existing) {
+            val t = SingletonTypeSimple(this, typeName)
+            this.ownedTypesByName[typeName] = t
+            t
+        } else {
+            existing as SingletonType
         }
     }
 
@@ -412,10 +430,21 @@ abstract class TypeNamespaceAbstract(
         val existing = findOwnedTypeNamed(typeName)
         return if (null == existing) {
             val t = PrimitiveTypeSimple(this, typeName)
-            this.allTypesByName[typeName] = t
+            this.ownedTypesByName[typeName] = t
             t
         } else {
             existing as PrimitiveType
+        }
+    }
+
+    override fun findOwnedOrCreateEnumTypeNamed(typeName: String, literals: List<String>): EnumType {
+        val existing = findOwnedTypeNamed(typeName)
+        return if (null == existing) {
+            val t = EnumTypeSimple(this, typeName, literals)
+            this.ownedTypesByName[typeName] = t
+            t
+        } else {
+            existing as EnumType
         }
     }
 
@@ -423,7 +452,7 @@ abstract class TypeNamespaceAbstract(
         val existing = findOwnedTypeNamed(typeName)
         return if (null == existing) {
             val t = CollectionTypeSimple(this, typeName)
-            this.allTypesByName[typeName] = t
+            this.ownedTypesByName[typeName] = t
             t
         } else {
             existing as CollectionType
@@ -434,7 +463,7 @@ abstract class TypeNamespaceAbstract(
         val existing = findOwnedTypeNamed(typeName)
         return if (null == existing) {
             val t = DataTypeSimple(this, typeName)
-            this.allTypesByName[typeName] = t
+            this.ownedTypesByName[typeName] = t
             t
         } else {
             existing as DataType
@@ -446,6 +475,7 @@ abstract class TypeNamespaceAbstract(
         return if (null == existing) {
             val t = UnnamedSupertypeTypeSimple(this, _nextUnnamedSuperTypeTypeId++, subtypes)
             _unnamedSuperTypes[subtypes] = t
+            ownedUnnamedSupertypeType.add(t)
             t
         } else {
             existing
@@ -453,7 +483,9 @@ abstract class TypeNamespaceAbstract(
     }
 
     override fun createTupleType(): TupleType {
-        return TupleTypeSimple(this, _nextTupleTypeTypeId++)
+        val td = TupleTypeSimple(this, _nextTupleTypeTypeId++)
+        ownedTupleTypes.add(td)
+        return td
     }
 
     override fun createTypeInstance(context: TypeDeclaration?, qualifiedOrImportedTypeName: String, typeArguments: List<TypeInstance>, isNullable: Boolean): TypeInstance {
@@ -463,7 +495,7 @@ abstract class TypeNamespaceAbstract(
             "" -> Unit
             else -> this._requiredNamespaces[ns] = null
         }
-        return TypeInstanceSimple(context, this, qualifiedOrImportedTypeName, typeArguments, isNullable)
+        return TypeInstanceSimple(context?.qualifiedName, this, qualifiedOrImportedTypeName, typeArguments, isNullable)
     }
 
     override fun createUnnamedSupertypeTypeInstance(declaration: UnnamedSupertypeType, typeArguments: List<TypeInstance>, nullable: Boolean): TypeInstance {
@@ -475,7 +507,7 @@ abstract class TypeNamespaceAbstract(
     }
 
     override fun asString(): String {
-        val types = this.allTypesByName.entries.sortedBy { it.key }
+        val types = this.ownedTypesByName.entries.sortedBy { it.key }
             .joinToString(prefix = "  ", separator = "\n  ") { it.value.asString(this) }
         val importstr = this.imports.joinToString(prefix = "  ", separator = "\n  ") { "import ${it}.*" }
         val s = """
@@ -619,8 +651,30 @@ class SpecialTypeSimple(
         else -> qualifiedName
     }
 
-
     override fun asString(context: TypeNamespace): String = "special ${signature(context)}"
+
+    override fun hashCode(): Int = qualifiedName.hashCode()
+    override fun equals(other: Any?): Boolean = when {
+        other !is SpecialTypeSimple -> false
+        this.qualifiedName != other.qualifiedName -> false
+        else -> true
+    }
+
+    override fun toString(): String = qualifiedName
+}
+
+class SingletonTypeSimple(
+    override val namespace: TypeNamespace,
+    override val name: String
+) : TypeDeclarationSimpleAbstract(), SingletonType {
+    override fun signature(context: TypeNamespace?, currentDepth: Int): String = when {
+        null == context -> qualifiedName
+        context == this.namespace -> name
+        context.isImported(this.namespace.qualifiedName) -> name
+        else -> qualifiedName
+    }
+
+    override fun asString(context: TypeNamespace): String = "singleton ${signature(context)}"
 
     override fun hashCode(): Int = qualifiedName.hashCode()
     override fun equals(other: Any?): Boolean = when {

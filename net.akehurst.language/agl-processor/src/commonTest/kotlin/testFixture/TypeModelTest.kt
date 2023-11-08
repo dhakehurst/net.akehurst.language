@@ -48,10 +48,10 @@ object TypeModelTest {
             expected == null -> fail()
             actual == null -> fail()
             else -> {
-                assertEquals(expected.allTypesByName.size, actual.allTypesByName.size, "number of types in model is different")
-                for (k in expected.allTypesByName.keys) {
-                    val expEl = expected.allTypesByName[k]
-                    val actEl = actual.allTypesByName[k]
+                assertEquals(expected.ownedTypesByName.size, actual.ownedTypesByName.size, "number of types in model is different")
+                for (k in expected.ownedTypesByName.keys) {
+                    val expEl = expected.ownedTypesByName[k]
+                    val actEl = actual.ownedTypesByName[k]
                     tmAssertEquals(expEl, actEl, "TypeModel")
                 }
             }
