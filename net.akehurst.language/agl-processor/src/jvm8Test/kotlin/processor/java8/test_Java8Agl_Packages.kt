@@ -22,6 +22,7 @@ package net.akehurst.language.agl.processor.java8
 //import java.io.InputStreamReader
 
 import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
+import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.api.processor.LanguageProcessor
 import org.junit.Test
@@ -48,6 +49,7 @@ class test_Java8Agl_Packages(val data: Data) {
                 Agl.configuration { targetGrammarName("Packages"); defaultGoalRuleName("CompilationUnit") },
                 aglOptions = Agl.options {
                     semanticAnalysis {
+                        context(ContextFromGrammarRegistry(Agl.registry))
                         // switch off ambiguity analysis for performance
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }

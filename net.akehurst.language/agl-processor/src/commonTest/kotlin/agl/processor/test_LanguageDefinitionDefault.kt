@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.processor
 
 import net.akehurst.language.agl.default.TypeModelFromGrammar
+import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.Asm
 import net.akehurst.language.api.asm.asmSimple
@@ -57,7 +58,7 @@ class test_LanguageDefinitionDefault {
         this.sut = Agl.registry.register<Asm, ContextSimple>(
             identity = "ns.test",
             grammarStr = null,
-            aglOptions = null,
+            aglOptions = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
             buildForDefaultGoal = false,
             configuration = Agl.configurationDefault()
         )
@@ -70,6 +71,8 @@ class test_LanguageDefinitionDefault {
         sut.styleObservers.add(styleObserver)
         sut.formatterStrObservers.add(formatterStrObserver)
         sut.formatterObservers.add(formatterObserver)
+
+        assertTrue(sut.issues.errors.isEmpty(), sut.issues.toString())
     }
 
     private fun reset() {
@@ -90,7 +93,7 @@ class test_LanguageDefinitionDefault {
         val def = Agl.registry.register<Asm, ContextSimple>(
             identity = "ns.Test1",
             grammarStr = g,
-            aglOptions = null,
+            aglOptions = Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } },
             buildForDefaultGoal = false,
             Agl.configuration {
                 targetGrammarName(null)
@@ -221,7 +224,7 @@ class test_LanguageDefinitionDefault {
         assertEquals(g, sut.grammarStr)
         assertNotNull(sut.grammar)
         assertNotNull(sut.processor)
-        assertTrue(sut.issues.isEmpty())
+        assertTrue(sut.issues.isEmpty(), sut.issues.toString())
 
         assertEquals(listOf(Pair<String?, String?>(null, g)), grammarStrObserverCalled)
         assertEquals(listOf(Pair<Grammar?, Grammar?>(null, sut.grammar)), grammarObserverCalled)
@@ -384,15 +387,16 @@ class test_LanguageDefinitionDefault {
             }
         """
         val scopeStr = """
-                identify Unit by §nothing
-                scope Unit {
-                    identify Primitive by id
-                    identify Datatype by id
-                    identify Collection by id
-                }
+            namespace test.Test {
+                identify Primitive by id
+                identify Datatype by id
+                identify Collection by id
                 references {
-                    in TypeReference property type refers-to Primitive|Datatype|Collection
+                    in TypeReference {
+                        property type refers-to Primitive|Datatype|Collection
+                    }
                 }
+            }
             """
         val sentence = """
             primitive String
@@ -403,9 +407,13 @@ class test_LanguageDefinitionDefault {
 
         sut.grammarStr = grammarStr
         sut.crossReferenceModelStr = scopeStr
-        val result = sut.processor!!.process(sentence)
+        val typeModel = sut.typeModel
+        val crossReferenceModel = sut.crossReferenceModel
+        assertTrue(sut.issues.errors.isEmpty(), sut.issues.toString())
 
-        val expected = asmSimple {
+        val result = sut.processor!!.process(sentence, Agl.options { semanticAnalysis { context(ContextSimple()) } })
+
+        val expected = asmSimple(typeModel = typeModel!!, crossReferenceModel = crossReferenceModel!!, context = ContextSimple()) {
             element("Unit") {
                 propertyListOfElement("declaration") {
                     element("Primitive") {
@@ -428,7 +436,7 @@ class test_LanguageDefinitionDefault {
         }
 
         assertNotNull(result.asm)
-        assertTrue(result.issues.isEmpty())
+        assertTrue(result.issues.isEmpty(), result.issues.toString())
         assertEquals(expected.asString(indentIncrement = "  "), result.asm!!.asString(indentIncrement = "  "))
     }
 }

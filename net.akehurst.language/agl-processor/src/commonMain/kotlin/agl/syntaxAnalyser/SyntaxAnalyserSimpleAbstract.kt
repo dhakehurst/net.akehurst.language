@@ -28,10 +28,7 @@ import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.sppt.*
-import net.akehurst.language.collections.MutableStack
-import net.akehurst.language.collections.emptyListSeparated
-import net.akehurst.language.collections.mutableStackOf
-import net.akehurst.language.collections.toSeparatedList
+import net.akehurst.language.collections.*
 import net.akehurst.language.typemodel.api.*
 import net.akehurst.language.typemodel.simple.SimpleTypeModelStdLib
 
@@ -422,8 +419,8 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
         }
     }
 
-    private fun createValueFromLeaf(sentence: Sentence, target: SpptDataNodeInfo): AsmValue = when {
-        target.node.rule.isEmptyTerminal -> AsmNothingSimple
+    private fun createValueFromLeaf(sentence: Sentence, target: SpptDataNodeInfo): AsmValue? = when {
+        target.node.rule.isEmptyTerminal -> null
         else -> {
             val v = sentence.matchedTextNoSkip(target.node)
             AsmPrimitiveSimple("String", v)
@@ -471,14 +468,14 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                                             val alist = createListSimpleValueFromBranch(
                                                 target,
                                                 downData.path,
-                                                children.map { it.value as AsmValue },
+                                                children.map { it.value as AsmValue? },
                                                 type
                                             )
                                             val els = alist.elements.toSeparatedList<AsmValue, AsmValue, AsmValue>().items
                                             AsmListSimple(els)
                                         }
 
-                                        else -> createListSimpleValueFromBranch(target, downData.path, children.map { it.value as AsmValue }, type)
+                                        else -> createListSimpleValueFromBranch(target, downData.path, children.map { it.value as AsmValue? }, type)
                                     }
                                     val propDecl = (targetType.declaration as DataType).property.first()
                                     val el = createAsmElement(downData.path, targetType.declaration.name)
@@ -486,7 +483,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                                     el
                                 }
 
-                                else -> createListSimpleValueFromBranch(target, downData.path, children.map { it.value as AsmValue }, type)
+                                else -> createListSimpleValueFromBranch(target, downData.path, children.map { it.value as AsmValue? }, type)
                             }
                         }
 
@@ -519,7 +516,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                             val el = createAsmElement(downData.path, type.name)
                             for (propDecl in type.property) {
                                 val propType = propDecl.typeInstance.declaration
-                                val propValue: AsmValue = when (propType) {
+                                val propValue: AsmValue? = when (propType) {
                                     is PrimitiveType -> {
                                         val childData = children[propDecl.index]
                                         createStringValueFromBranch(sentence, childData.nodeInfo)
@@ -535,7 +532,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                                                     when {
                                                         childData.nodeInfo.node.rule.isList -> when {
                                                             null == childData.value -> AsmListSimple(emptyList())
-                                                            childData.value is List<*> -> createList(childData.nodeInfo, childData.value as List<AsmValue>)
+                                                            childData.value is AsmList -> createList(childData.nodeInfo, childData.value.elements)
                                                             childData.value is AsmStructure -> childData.value.property.values.first().value as AsmList
                                                             else -> AsmListSimple(listOf(childData.value as AsmValue))
                                                         }
@@ -547,17 +544,29 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                                         }
 
                                         SimpleTypeModelStdLib.ListSeparated -> {
-                                            val childData = children[propDecl.index]
                                             when {
-                                                childData.nodeInfo.node.rule.isEmptyTerminal -> AsmListSimple(emptyList())
-                                                target.node.rule.isList -> TODO() // children.map { it.value }.toSeparatedList<Any, Any>()
-                                                childData.nodeInfo.node.rule.isList -> when {
-                                                    childData.value is List<*> -> childData.value as AsmValue
-                                                    childData.value is AsmStructure -> childData.value.property.values.first().value as AsmList
-                                                    else -> TODO()
-                                                }
+                                                //childData.nodeInfo.node.rule.isEmptyTerminal -> AsmListSeparatedSimple(emptyList())
+                                                target.node.rule.isListSeparated && target.node.option == RulePosition.OPTION_MULTI_EMPTY -> AsmListSeparatedSimple(
+                                                    emptyListSeparated()
+                                                )
 
-                                                else -> error("Internal Error: cannot create a ListSeparated from '$childData'")
+                                                target.node.rule.isList -> AsmListSeparatedSimple(children.map { it.value as AsmValue }
+                                                    .toSeparatedList<AsmValue, AsmValue, AsmValue>())
+
+                                                else -> {
+                                                    val childData = children[propDecl.index]
+                                                    when {
+                                                        childData.nodeInfo.node.rule.isList -> when {
+                                                            null == childData.value -> AsmListSeparatedSimple(emptyListSeparated())
+                                                            childData.value is AsmListSeparated -> childData.value
+                                                            childData.value is AsmList -> AsmListSeparatedSimple(childData.value.elements.toSeparatedList<AsmValue, AsmValue, AsmValue>())
+                                                            childData.value is AsmStructure -> childData.value.property.values.first().value as AsmListSeparated
+                                                            else -> AsmListSeparatedSimple(listOf(childData.value as AsmValue).toSeparatedList())
+                                                        }
+
+                                                        else -> error("Internal Error: cannot create a ListSeparated from '$childData'")
+                                                    }
+                                                }
                                             }
                                         }
 
@@ -566,7 +575,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
 
                                     else -> {
                                         val childData = children[propDecl.index]
-                                        childData.value as AsmValue
+                                        childData.value as AsmValue?
                                     }
                                 }
                                 setPropertyFromDeclaration(el, propDecl, propValue)
@@ -606,7 +615,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                      */
                         }
 
-                        else -> error("Shold not happen")
+                        else -> error("Should not happen")
                     }
                 }
             }
@@ -680,7 +689,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                 is List<*> -> {
                     val propChildData = (childData.value as List<ChildData>)[propDecl.index]
                     val propValue = propChildData.value //createValueFor(sentence, propType.type, path, propChildData)
-                    setPropertyFromDeclaration(el, propDecl, propValue as AsmValue)
+                    setPropertyFromDeclaration(el, propDecl, propValue as AsmValue?)
                 }
 
                 else -> TODO()

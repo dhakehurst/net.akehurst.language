@@ -109,7 +109,8 @@ interface AsmListSeparated : AsmValue {
 }
 
 interface AsmTreeWalker {
-    fun root(root: AsmValue)
+    fun beforeRoot(root: AsmValue)
+    fun afterRoot(root: AsmValue)
     fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing)
     fun onPrimitive(owningProperty: AsmStructureProperty?, value: AsmPrimitive)
     fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure)

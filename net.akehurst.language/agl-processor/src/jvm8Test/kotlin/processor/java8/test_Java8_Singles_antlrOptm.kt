@@ -19,6 +19,7 @@ package net.akehurst.language.processor.java8
 //import com.soywiz.korio.async.runBlockingNoSuspensions
 //import com.soywiz.korio.file.std.resourcesVfs
 import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
+import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.Asm
@@ -44,6 +45,7 @@ class test_Java8_Singles_antlrOptm {
                 grammarDefinitionStr = grammarStr,
                 aglOptions = Agl.options {
                     semanticAnalysis {
+                        context(ContextFromGrammarRegistry(Agl.registry))
                         // switch off ambiguity analysis for performance
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }

@@ -21,6 +21,7 @@ import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.language.format.AglFormatterModelDefault
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
+import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.processor.Agl
@@ -46,7 +47,8 @@ class test_StatechartTools_References {
         private val grammarStr = this::class.java.getResource("/Statecharts/version_/grammar.agl")?.readText() ?: error("File not found")
         private val scopeModelStr = this::class.java.getResource("/Statecharts/version_/references.agl")?.readText() ?: error("File not found")
 
-        private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!!
+        private val grammarList =
+            Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } }).asm!!
         private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextSimple>> { grmName ->
             val grm = grammarList.firstOrNull { it.name == grmName } ?: error("Can't find grammar for '$grmName'")
             val cfg = Agl.configuration {
@@ -231,6 +233,7 @@ class test_StatechartTools_References {
         }
 
         val expectedAsm = asmSimple(
+            typeModel = processors[grammar]!!.typeModel,
             crossReferenceModel = processors[grammar]!!.crossReferenceModel as CrossReferenceModelDefault,
             context = ContextSimple()
         ) {
@@ -408,6 +411,7 @@ StatechartSpecification {
         }
 
         val expectedAsm = asmSimple(
+            typeModel = processors[grammar]!!.typeModel,
             crossReferenceModel = processors[grammar]!!.crossReferenceModel as CrossReferenceModelDefault,
             context = ContextSimple()
         ) {

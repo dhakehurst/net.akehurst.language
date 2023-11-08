@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.agl.processor.SysML
 
+import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.Asm
@@ -43,7 +44,7 @@ class test_SysML_Singles {
     @Test
     fun process_grammar() {
         val grammarStr = this::class.java.getResource("/SysML/v2_2023-08/grammar.agl").readText()
-        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr)
+        val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }
 

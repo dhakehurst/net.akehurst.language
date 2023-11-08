@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.processor.java8
 
 import net.akehurst.language.agl.language.grammar.AglGrammarSemanticAnalyser
+import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.processor.Agl
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -42,6 +43,7 @@ class test_Java8Agl_BlocksAndStatements(val data: Data) {
                 Agl.configuration(Agl.configurationDefault()) { targetGrammarName("BlocksAndStatements"); defaultGoalRuleName("Block") },
                 aglOptions = Agl.options {
                     semanticAnalysis {
+                        context(ContextFromGrammarRegistry(Agl.registry))
                         // switch off ambiguity analysis for performance
                         option(AglGrammarSemanticAnalyser.OPTIONS_KEY_AMBIGUITY_ANALYSIS, false)
                     }

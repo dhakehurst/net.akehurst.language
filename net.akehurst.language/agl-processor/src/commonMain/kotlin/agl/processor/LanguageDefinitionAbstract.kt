@@ -23,6 +23,7 @@ import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.util.CachedValue
 import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
@@ -60,6 +61,9 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     }
 
     abstract override var crossReferenceModelStr: String?
+
+    override val typeModel: TypeModel?
+        get() = this.processor?.typeModel
 
     override var crossReferenceModel: CrossReferenceModel?
         get() = this.processor?.crossReferenceModel

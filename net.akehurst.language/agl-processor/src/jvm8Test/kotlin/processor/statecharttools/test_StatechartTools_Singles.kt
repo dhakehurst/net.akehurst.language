@@ -21,6 +21,7 @@ import net.akehurst.language.agl.default.SyntaxAnalyserDefault
 import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.language.format.AglFormatterModelDefault
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
+import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.processor.Agl
@@ -51,7 +52,7 @@ class test_StatechartTools_Singles {
            PrimitiveValueExpression -> "§literal"
         """.replace("§", "\$")
 
-        private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr)
+        private val grammarList = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         private val processors = lazyMutableMapNonNull<String, LanguageProcessor<Asm, ContextSimple>> { grmName ->
             val grm = grammarList.asm?.firstOrNull { it.name == grmName } ?: error("Can't find grammar for '$grmName'")
             val cfg = Agl.configuration {

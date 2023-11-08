@@ -140,7 +140,14 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                 if (null == newValue) {
                     ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
                 } else {
-                    Agl.registry.agl.crossReference.processor!!.process(newValue)
+                    val res = Agl.registry.agl.crossReference.processor!!.process(newValue)
+                    when {
+                        res.issues.errors.isEmpty() && null != res.asm -> _issues.addAll(res.issues) //add non-errors if any
+                        res.issues.errors.isNotEmpty() -> _issues.addAll(res.issues)
+                        null == res.asm -> error("Internal error: no CrossReferenceModel, but no errors reported")
+                        else -> error("Internal error: situation not handled")
+                    }
+                    res
                 }
             }
         }
@@ -152,7 +159,14 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
                 if (null == newValue) {
                     ProcessResultDefault(null, IssueHolder(LanguageProcessorPhase.ALL))
                 } else {
-                    Agl.registry.agl.style.processor!!.process(newValue)
+                    val res = Agl.registry.agl.style.processor!!.process(newValue)
+                    when {
+                        res.issues.errors.isEmpty() && null != res.asm -> _issues.addAll(res.issues) //add non-errors if any
+                        res.issues.errors.isNotEmpty() -> _issues.addAll(res.issues)
+                        null == res.asm -> error("Internal error: no StyleModel, but no errors reported")
+                        else -> error("Internal error: situation not handled")
+                    }
+                    res
                 }
             }
         }

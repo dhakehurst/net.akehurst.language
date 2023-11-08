@@ -235,7 +235,7 @@ class AglGrammarSemanticAnalyser() : SemanticAnalyser<List<Grammar>, ContextFrom
                 //    .toSet() //convert result to set so that same rule from same grammar is not repeated
                 when {
                     null == rule -> {
-                        issueError(rhs, "Rule '${rhs.name}' not found in grammar '${grammar.name}'", null)
+                        issueError(rhs, "GrammarRule '${rhs.name}' not found in grammar '${grammar.name}'", null)
                     }
 
                     else -> {

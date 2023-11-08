@@ -25,6 +25,7 @@ import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
 import net.akehurst.language.api.style.AglStyleModel
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
+import net.akehurst.language.typemodel.api.TypeModel
 
 interface GrammarRegistry {
     fun registerGrammar(grammar: Grammar)
@@ -66,6 +67,8 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     var grammar: Grammar?
     var targetGrammarName: String?
     var defaultGoalRule: String?
+
+    val typeModel: TypeModel?
 
     var crossReferenceModelStr: String?
     var crossReferenceModel: CrossReferenceModel?

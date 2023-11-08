@@ -113,7 +113,7 @@ namespace net.akehurst.language.example.BasicTutorial {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(64, 7, 6, 3),
-                "No target of type(s) [TargetDef] found for referring value 'String(Ann)' in scope of element ':TargetRef[/0/greeting/2/greetingTargetList/0]'"
+                "No target of type(s) [TargetDef] found for referring value 'Ann' in scope of element ':TargetRef[/0/greeting/2/greetingTargetList/0]'"
             )
         )
 

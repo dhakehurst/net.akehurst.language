@@ -66,7 +66,7 @@ class ReferenceResolverDefault(
         )
     }
 
-    override fun root(root: AsmValue) {
+    override fun beforeRoot(root: AsmValue) {
         when (root) {
             is AsmStructure -> {
                 val elScope = rootScope.rootScope.scopeMap[root.path] ?: rootScope
@@ -76,6 +76,10 @@ class ReferenceResolverDefault(
 
             else -> Unit // do nothing
         }
+    }
+
+    override fun afterRoot(root: AsmValue) {
+
     }
 
     override fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing) {}

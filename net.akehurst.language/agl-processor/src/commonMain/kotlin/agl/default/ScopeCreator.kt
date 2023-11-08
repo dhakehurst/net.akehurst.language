@@ -41,11 +41,15 @@ class ScopeCreator(
 
     val currentScope = mutableStackOf(rootScope)
 
-    override fun root(root: AsmValue) {
+    override fun beforeRoot(root: AsmValue) {
         when (root) {
             is AsmStructure -> addToScope(currentScope.peek(), root)
             else -> Unit
         }
+    }
+
+    override fun afterRoot(root: AsmValue) {
+
     }
 
     override fun onNothing(owningProperty: AsmStructureProperty?, value: AsmNothing) {}
@@ -118,8 +122,14 @@ class ScopeCreator(
         else -> error("Subtype of Expression not handled in 'createReferenceLocalToScope'")
     }
 
-    private fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String =
-        (_interpreter.evaluateExpression(element, this) as AsmPrimitive).value as String
+    private fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? {
+        val v = _interpreter.evaluateExpression(element, this)
+        return when (v) {
+            is AsmNothing -> null
+            is AsmPrimitive -> v.value as String
+            else -> TODO()
+        }
+    }
 
     private fun Navigation.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? {
         val res = _interpreter.evaluateExpression(element, this)

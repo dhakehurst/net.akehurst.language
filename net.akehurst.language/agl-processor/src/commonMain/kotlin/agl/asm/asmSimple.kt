@@ -52,22 +52,22 @@ class AsmPathSimple(
 
 open class AsmSimple() : Asm {
 
-    companion object {
-        internal fun Any.asStringAny(indent: String, currentIndent: String = ""): String = when (this) {
-            is String -> "'$this'"
-            is List<*> -> when (this.size) {
-                0 -> "[]"
-                1 -> "[${this[0]?.asStringAny(indent, currentIndent)}]"
-                else -> {
-                    val newIndent = currentIndent + indent
-                    this.joinToString(separator = "\n$newIndent", prefix = "[\n$newIndent", postfix = "\n$currentIndent]") { it?.asStringAny(indent, newIndent) ?: "null" }
+    /*    companion object {
+            internal fun Any.asStringAny(indent: String, currentIndent: String = ""): String = when (this) {
+                is String -> "'$this'"
+                is List<*> -> when (this.size) {
+                    0 -> "[]"
+                    1 -> "[${this[0]?.asStringAny(indent, currentIndent)}]"
+                    else -> {
+                        val newIndent = currentIndent + indent
+                        this.joinToString(separator = "\n$newIndent", prefix = "[\n$newIndent", postfix = "\n$currentIndent]") { it?.asStringAny(indent, newIndent) ?: "null" }
+                    }
                 }
-            }
 
-            is AsmElementSimple -> this.asString(currentIndent, indent)
-            else -> error("property value type not handled '${this::class}'")
-        }
-    }
+                is AsmElementSimple -> this.asString(currentIndent, indent)
+                else -> error("property value type not handled '${this::class.simpleName}'")
+            }
+        }*/
 
     private var _nextElementId = 0
 
@@ -113,12 +113,14 @@ open class AsmSimple() : Asm {
             }
         }
         this.root.forEach {
+            callback.beforeRoot(it)
             traverse(null, it)
+            callback.afterRoot(it)
         }
     }
 
     override fun asString(currentIndent: String, indentIncrement: String): String = this.root.joinToString(separator = "\n") {
-        it.asStringAny(indentIncrement, currentIndent)
+        it.asString(indentIncrement, currentIndent)
     }
 
 }
