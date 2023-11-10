@@ -18,12 +18,18 @@ package net.akehurst.language.agl.processor
 
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
+import net.akehurst.language.api.sppt.LeafData
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 class LanguageProcessorResult<AsmType : Any, ContextType : Any>(
     val processor: LanguageProcessor<AsmType, ContextType>?,
     val issues: IssueCollection<LanguageIssue>
 )
+
+data class ScanResultDefault(
+    override val tokens: List<LeafData>,
+    override val issues: IssueCollection<LanguageIssue>
+) : ScanResult
 
 data class ParseResultDefault(
     override val sppt: SharedPackedParseTree?,

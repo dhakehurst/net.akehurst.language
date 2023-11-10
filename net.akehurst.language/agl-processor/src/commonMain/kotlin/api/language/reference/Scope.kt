@@ -95,6 +95,8 @@ interface Scope<AsmElementIdType> {
 
     fun findOrNull(referableName: String, typeName: String): AsmElementIdType?
 
+    fun findQualifiedOrNull(nameList: List<String>, typeName: String): AsmElementIdType?
+
     fun createOrGetChildScope(forReferenceInParent: String, forTypeName: String, elementId: AsmElementIdType): Scope<AsmElementIdType>
 
     fun addToScope(referableName: String, typeName: String, asmElementId: AsmElementIdType)

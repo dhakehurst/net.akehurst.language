@@ -96,11 +96,8 @@ class GrammarTypeNamespaceFromGrammar(
         this._configuration = configuration
         this.model = model
         _namespace.resolveImports(model) //need to resolve std lib
-        val nonSkipRules = grammar.allResolvedGrammarRule.filter { it.isSkip.not() }
-        //create DataType for each Rule
-        nonSkipRules.forEach {
-            //findOrCreateElementType(it) {}
-        }
+        val nonSkipRules = grammar.allResolvedGrammarRule.filter { it.isSkip.not() } //TODO: use only owned rules (.resolvedGrammarRule) and import other namespaces
+
         //populate rule type content
         nonSkipRules.forEach {
             typeForGrammarRule(it)
@@ -109,9 +106,6 @@ class GrammarTypeNamespaceFromGrammar(
             val key = it.key
             val value = it.value
             _namespace.allRuleNameToType[key] = value
-            //if (value.type is DataType) {
-            // super.allTypesByName[value.type.name] = value.type
-            //}
         }
         return this._namespace
     }

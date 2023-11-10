@@ -87,15 +87,6 @@ internal class InputFromString(
         this.leaves.clear()
     }
 
-    // used by SPPTParserDefault to build up the sentence
-//    internal fun append(value: String) {
-//        this.text += value
-//    }
-
-//    operator fun get(startPosition: Int, nextInputPosition: Int): String {
-//        return sentence.text.substring(startPosition, nextInputPosition)
-//    }
-
     internal fun isStart(position: Int): Boolean {
         // TODO what if we want t0 parse part of the text?, e.g. sub grammar
         return 0 == position
@@ -111,13 +102,14 @@ internal class InputFromString(
         return if (null != r) {
             r
         } else {
-            val rhs = terminalRule.rhs
-            val matched = when {
-                this.isEnd(position) -> if (terminalRule == RuntimeRuleSet.END_OF_TEXT) true else false //TODO: do we need this
-                rhs is RuntimeRuleRhsPattern -> rhs.regex.matchesAt(this.sentence.text, position)
-                rhs is RuntimeRuleRhsLiteral -> this.sentence.text.regionMatches(position, rhs.literalUnescaped, 0, rhs.literalUnescaped.length)
-                else -> error("Internal Error: not handled")
-            }
+            val rhs = terminalRule.rhs as RuntimeRuleRhsTerminal
+            val matched = rhs.matchable?.isLookingAt(this.sentence.text, position) ?: false
+//            val matched = when {
+//                this.isEnd(position) -> if (terminalRule == RuntimeRuleSet.END_OF_TEXT) true else false //TODO: do we need this
+//                rhs is RuntimeRuleRhsPattern -> rhs.regex.matchesAt(this.sentence.text, position)
+//                rhs is RuntimeRuleRhsLiteral -> this.sentence.text.regionMatches(position, rhs.literalUnescaped, 0, rhs.literalUnescaped.length)
+//                else -> error("Internal Error: not handled")
+//            }
             isLookingAt_cache[Pair(position, terminalRule)] = matched
             matched
         }
@@ -196,15 +188,16 @@ internal class InputFromString(
         }
     }
 
-    internal fun tryMatchText(position: Int, terminalRule: RuntimeRule): RegexMatcher.MatchResult? {
-        val rhs = terminalRule.rhs
-        val matched = when {
-            this.isEnd(position) -> if (terminalRule == RuntimeRuleSet.END_OF_TEXT) RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
-            rhs is RuntimeRuleRhsPattern -> this.matchRegEx2(position, rhs.regex)
-            rhs is RuntimeRuleRhsLiteral -> this.matchLiteral(position, terminalRule)
-            else -> error("Internal Error: not handled")
-        }
-        return matched
+    internal fun tryMatchText(position: Int, terminalRule: RuntimeRule): Int {
+        val rhs = terminalRule.rhs as RuntimeRuleRhsTerminal
+        val matchable = rhs.matchable
+//        val matched = when {
+//            this.isEnd(position) -> if (terminalRule == RuntimeRuleSet.END_OF_TEXT) RegexMatcher.MatchResult(END_OF_TEXT, emptyList()) else null// TODO: should we need to do this?
+//            rhs is RuntimeRuleRhsPattern -> this.matchRegEx2(position, rhs.regex)
+//            rhs is RuntimeRuleRhsLiteral -> this.matchLiteral(position, terminalRule)
+//            else -> error("Internal Error: not handled")
+//        }
+        return matchable?.matchedLength(this.sentence.text, position) ?: -1
     }
 
     /*
@@ -241,13 +234,13 @@ internal class InputFromString(
             //this.completeNodes[cindex] = leaf //TODO: maybe search leaves in 'findCompleteNode' so leaf is not cached twice
             leaf
         } else {
-            val match = this.tryMatchText(atInputPosition, terminalRuntimeRule)
-            if (null == match) {
+            val matchLength = this.tryMatchText(atInputPosition, terminalRuntimeRule)
+            if (-1 == matchLength) {
                 this.leaves[terminalRuntimeRule, atInputPosition] = LEAF_NONE
                 LEAF_NONE
             } else {
                 //val location = this.nextLocation(lastLocation, match.length)//match.matchedText.length)
-                val nextInputPosition = atInputPosition + match.matchedText.length
+                val nextInputPosition = atInputPosition + matchLength
                 val leaf = CompleteTreeDataNode(terminalRuntimeRule, atInputPosition, nextInputPosition, nextInputPosition, 0)
                 this.leaves[terminalRuntimeRule, atInputPosition] = leaf
                 //val cindex = CompleteNodeIndex(terminalRuntimeRule.number, inputPosition)//0, index.startPosition)

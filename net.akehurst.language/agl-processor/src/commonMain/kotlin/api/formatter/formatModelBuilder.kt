@@ -49,7 +49,7 @@ class FormatModelBuilder(
         val expr = b.build()
         val formatRuleElement = _asm.createElement(AsmPathSimple.ROOT, "FormatRule")
         val typeReference = _asm.createElement(AsmPathSimple.ROOT, "TypeReference")
-        typeReference.setProperty("identifier", AsmPrimitiveSimple("String", forTypeName), 0)//TODO childIndex
+        typeReference.setProperty("identifier", AsmPrimitiveSimple.stdString(forTypeName), 0)//TODO childIndex
         formatRuleElement.setProperty("typeReference", typeReference, 0)//TODO childIndex
         formatRuleElement.setProperty("formatExpression", expr, 0)//TODO childIndex
         _ruleList.add(formatRuleElement)
@@ -72,7 +72,7 @@ class FormatExpressionBuilder(
             asmPath = AsmPathSimple.ROOT,
             typeName = "LiteralString"
         )
-        el.setProperty("literal_string", AsmPrimitiveSimple("String", value), 0)//TODO childIndex
+        el.setProperty("literal_string", AsmPrimitiveSimple.stdString(value), 0)//TODO childIndex
         _exp = el
     }
 

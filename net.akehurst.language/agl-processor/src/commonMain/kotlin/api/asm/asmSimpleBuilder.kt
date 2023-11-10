@@ -66,7 +66,7 @@ class AsmSimpleBuilder(
     private val _scopeMap = mutableMapOf<AsmPath, ScopeSimple<AsmPath>>()
 
     fun string(value: String) {
-        _asm.addRoot(AsmPrimitiveSimple("String", value))
+        _asm.addRoot(AsmPrimitiveSimple.stdString(value))
     }
 
     fun element(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure {
@@ -81,7 +81,7 @@ class AsmSimpleBuilder(
 
     fun listOfString(vararg items: String): AsmList {
         val path = AsmPathSimple.ROOT + (_asm.root.size).toString()
-        val l = items.asList().map { AsmPrimitiveSimple("String", it) }
+        val l = items.asList().map { AsmPrimitiveSimple.stdString(it) }
         val list = AsmListSimple(l)
         _asm.addRoot(list)
         return list
@@ -174,7 +174,7 @@ class AsmElementSimpleBuilder(
     }
 
     fun propertyUnnamedString(value: String?) = this.propertyString(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, value)
-    fun propertyString(name: String, value: String?) = this._property(name, value?.let { AsmPrimitiveSimple("String", it) } ?: AsmNothingSimple)
+    fun propertyString(name: String, value: String?) = this._property(name, value?.let { AsmPrimitiveSimple.stdString(it) } ?: AsmNothingSimple)
     fun propertyNull(name: String) = this._property(name, AsmNothingSimple)
     fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure =
         propertyElementExplicitType(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, typeName, init)
@@ -191,7 +191,7 @@ class AsmElementSimpleBuilder(
     }
 
     fun propertyUnnamedListOfString(list: List<String>) = this.propertyListOfString(GrammarTypeNamespaceFromGrammar.UNNAMED_LIST_PROPERTY_NAME, list)
-    fun propertyListOfString(name: String, list: List<String>) = this._property(name, AsmListSimple(list.map { AsmPrimitiveSimple("String", it) }))
+    fun propertyListOfString(name: String, list: List<String>) = this._property(name, AsmListSimple(list.map { AsmPrimitiveSimple.stdString(it) }))
     fun propertyUnnamedListOfElement(init: ListAsmElementSimpleBuilder.() -> Unit) = this.propertyListOfElement(GrammarTypeNamespaceFromGrammar.UNNAMED_LIST_PROPERTY_NAME, init)
     fun propertyListOfElement(name: String, init: ListAsmElementSimpleBuilder.() -> Unit): AsmList {
         val newPath = _element.path + name
@@ -241,7 +241,7 @@ class ListAsmElementSimpleBuilder(
     private val _list = mutableListOf<AsmValue>()
 
     fun string(value: String) {
-        _list.add(AsmPrimitiveSimple("String", value))
+        _list.add(AsmPrimitiveSimple.stdString(value))
     }
 
     fun list(init: ListAsmElementSimpleBuilder.() -> Unit) {

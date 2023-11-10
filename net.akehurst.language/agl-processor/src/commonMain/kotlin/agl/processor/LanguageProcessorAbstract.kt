@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.processor
 
-import net.akehurst.language.agl.agl.parser.Scanner
 import net.akehurst.language.agl.automaton.ParserStateSet
 import net.akehurst.language.agl.formatter.FormatterSimple
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
@@ -25,10 +24,9 @@ import net.akehurst.language.agl.language.grammar.ConverterToRuntimeRules
 import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.agl.parser.Parser
 import net.akehurst.language.agl.parser.ScanOnDemandParser
-import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.scanner.AglScanner
+import net.akehurst.language.agl.scanner.Matchable
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.language.grammar.Grammar
@@ -37,7 +35,6 @@ import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.*
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.sppt.LeafData
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -55,8 +52,11 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
     abstract override val grammar: Grammar
     protected abstract val configuration: LanguageProcessorConfiguration<AsmType, ContextType>
 
-    private val _scanner by lazy { Scanner(this.runtimeRuleSet) }
     internal val parser: Parser by lazy { ScanOnDemandParser(this.runtimeRuleSet) }
+
+    override val scannerMatchables: List<Matchable> by lazy {
+        this.runtimeRuleSet.terminalRules.mapNotNull { (it.rhs as RuntimeRuleRhsTerminal).matchable }
+    }
 
     override val spptParser: SPPTParser by lazy {
         val embeddedRuntimeRuleSets = grammar.allResolvedEmbeddedGrammars.map {
@@ -143,8 +143,8 @@ internal abstract class LanguageProcessorAbstract<AsmType : Any, ContextType : A
         return this
     }
 
-    override fun scan(sentence: String): List<LeafData> {
-        return this._scanner.scan(sentence, false)
+    override fun scan(sentence: String): ScanResult {
+        return AglScanner().scan(sentence, this.scannerMatchables)
     }
 
     override fun parse(sentence: String, options: ParseOptions?): ParseResult {//Pair<SharedPackedParseTree?, List<LanguageIssue>> {

@@ -40,15 +40,15 @@ class FormatterSimple<AsmType>(
             sb.append(str)
         }
 
-        return FormatResultDefault(sb.toString(), IssueHolder(LanguageProcessorPhase.FORMATTER))
+        return FormatResultDefault(sb.toString(), IssueHolder(LanguageProcessorPhase.FORMAT))
     }
 
     private fun formatAny(o: Any?): String {
         return when (o) {
             null -> ""
-            is String -> o
+            is AsmPrimitive -> o.value.toString()
             is AsmStructure -> o.format(model)
-            is List<*> -> o.joinToString(separator = "") { formatAny(it) }
+            is AsmList -> o.elements.joinToString(separator = "") { formatAny(it) }
             else -> error("Internal Error: type '${o::class.simpleName}' not supported")
         }
     }

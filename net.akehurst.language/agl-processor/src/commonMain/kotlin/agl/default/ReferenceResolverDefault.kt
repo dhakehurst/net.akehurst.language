@@ -19,6 +19,7 @@ package net.akehurst.language.agl.default
 
 import net.akehurst.language.agl.asm.AsmNothingSimple
 import net.akehurst.language.agl.asm.AsmPrimitiveSimple
+import net.akehurst.language.agl.asm.isStdString
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverAsmSimple
 import net.akehurst.language.agl.language.reference.CollectionReferenceExpressionDefault
 import net.akehurst.language.agl.language.reference.PropertyReferenceExpressionDefault
@@ -142,10 +143,10 @@ class ReferenceResolverDefault(
         }
         var referringValue = _interpreter.evaluateExpression(self, refExpr.referringPropertyNavigation)
         if (referringValue is AsmReference) {
-            referringValue = AsmPrimitiveSimple("String", referringValue.reference)
+            referringValue = AsmPrimitiveSimple.stdString(referringValue.reference)
         }
-        when (referringValue) {
-            is AsmPrimitive -> {
+        when {
+            referringValue is AsmPrimitive -> {
                 val targets = refExpr.refersToTypeName.mapNotNull { scope.findOrNull(referringValue.value as String, it) }
                 when {
                     targets.isEmpty() -> {
@@ -181,7 +182,58 @@ class ReferenceResolverDefault(
                 }
             }
 
-            else -> raiseError(self, "Referring value '${self.typeName}.${refExpr.referringPropertyNavigation}=$referringValue' on element $self is not a String")
+            referringValue is AsmList && referringValue.elements.all { (it is AsmPrimitive) && it.isStdString } -> {
+                val list = referringValue.elements.map { (it as AsmPrimitive).value as String }
+                val targets = refExpr.refersToTypeName.mapNotNull {
+                    scope.rootScope.findQualifiedOrNull(list, it)
+                }
+                when {
+                    targets.isEmpty() -> {
+                        raiseError(self, "No target of type(s) ${refExpr.refersToTypeName} found for referring value '${list}' in scope of element '$self'")
+                        val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
+                        referringProperty.convertToReferenceTo(null)
+                    }
+
+                    1 < targets.size -> {
+                        val msg = "Multiple target of type(s) ${refExpr.refersToTypeName} found for referring value '${list}' in scope of element '$self': $targets"
+                        raiseError(self, msg)
+                        val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
+                        referringProperty.convertToReferenceTo(null)
+                    }
+
+                    else -> {
+                        val referred = targets.first() // already checked for empty and > 1, so must be only one
+                        when {
+                            referred.isExternal -> {
+                                // cannot resolve, intentionally external, refer to null
+                                val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
+                                referringProperty.convertToReferenceTo(null)
+                            }
+
+                            null != resolveFunction -> {
+                                val ref = resolveFunction.invoke(referred)
+                                when (ref) {
+                                    null -> this.raiseError(
+                                        self,
+                                        "Asm does not contain element '$referred' as reference for '${self.typeName}.${refExpr.referringPropertyNavigation}'"
+                                    )
+
+                                    is AsmStructure -> {
+                                        val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
+                                        referringProperty.convertToReferenceTo(ref)
+                                    }
+
+                                    else -> this.raiseError(self, "Asm element '$referred' is not a reference to a structured element of the asm")
+                                }
+                            }
+
+                            else -> Unit // no resolve function so do not resolve, maybe intentional so do not warn or error
+                        }
+                    }
+                }
+            }
+
+            else -> raiseError(self, "Referring value '${self.typeName}.${refExpr.referringPropertyNavigation}=$referringValue' on element $self is not a String or List<String>")
         }
     }
 

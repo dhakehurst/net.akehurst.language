@@ -15,6 +15,7 @@
  */
 package net.akehurst.language.agl.processor.statecharttools
 
+import net.akehurst.language.agl.asm.AsmPathSimple
 import net.akehurst.language.agl.default.CompletionProviderDefault
 import net.akehurst.language.agl.default.SemanticAnalyserDefault
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
@@ -75,14 +76,17 @@ class test_StatechartTools_References {
             Agl.processorFromGrammar(grm, cfg)
         }
 
-        fun test(grammar: String, goal: String, sentence: String, context: ContextSimple, expectedContext: ContextSimple, expectedAsm: Asm? = null) {
+        fun test(grammar: String, goal: String, sentence: String, context: ContextSimple, resolveReferences: Boolean, expectedContext: ContextSimple, expectedAsm: Asm? = null) {
             val result = processors[grammar].process(sentence, Agl.options {
                 parse { goalRuleName(goal) }
-                semanticAnalysis { context(context) }
+                semanticAnalysis {
+                    context(context)
+                    resolveReferences(resolveReferences)
+                }
             })
-            assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString("\n") { it.toString() })
-            println(result.asm!!.asString())
             println(context.asString())
+            println(result.asm?.asString())
+            assertTrue(result.issues.errors.isEmpty(), result.issues.joinToString("\n") { it.toString() })
             assertEquals(expectedContext.asString(), context.asString())
             expectedAsm?.let { assertEquals(expectedAsm.asString(), result.asm!!.asString()) }
             TestContextSimple.assertMatches(expectedContext, context)
@@ -135,7 +139,7 @@ class test_StatechartTools_References {
             // only states are recorded, there are none
         }
 
-        test(grammar, goal, sentence, ContextSimple(), expected)
+        test(grammar, goal, sentence, ContextSimple(), true, expected)
     }
 
     @Test
@@ -156,7 +160,7 @@ class test_StatechartTools_References {
             item("'B'", "State", "/0/regions/0/states/1")
         }
 
-        test(grammar, goal, sentence, ContextSimple(), expected)
+        test(grammar, goal, sentence, ContextSimple(), true, expected)
     }
 
     @Test
@@ -178,7 +182,7 @@ class test_StatechartTools_References {
             item("'A'", "State", "/0/regions/0/states/0")
         }
 
-        test(grammar, goal, sentence, ContextSimple(), expected)
+        test(grammar, goal, sentence, ContextSimple(), true, expected)
     }
 
     @Test
@@ -208,7 +212,7 @@ class test_StatechartTools_References {
             item("'D'", "State", "/0/regions/0/states/0/regions/1/states/1")
         }
 
-        test(grammar, goal, sentence, ContextSimple(), expected)
+        test(grammar, goal, sentence, ContextSimple(), true, expected)
     }
 
     @Test
@@ -269,7 +273,7 @@ class test_StatechartTools_References {
             }
         }
 
-        test(grammar, goal, sentence, ContextSimple(), expectedContext, expectedAsm)
+        test(grammar, goal, sentence, ContextSimple(), true, expectedContext, expectedAsm)
     }
 
     @Test
@@ -285,7 +289,7 @@ class test_StatechartTools_References {
             }
         }
 
-        test(grammar, goal, sentence, ContextSimple(), expected)
+        test(grammar, goal, sentence, ContextSimple(), true, expected)
     }
 
     @Test
@@ -303,7 +307,7 @@ class test_StatechartTools_References {
             }
         }
 
-        test(grammar, goal, sentence, ContextSimple(), expected)
+        test(grammar, goal, sentence, ContextSimple(), true, expected)
     }
 
     @Test
@@ -325,7 +329,7 @@ class test_StatechartTools_References {
             }
         }
 
-        test(grammar, goal, sentence, ContextSimple(), expected)
+        test(grammar, goal, sentence, ContextSimple(), true, expected)
     }
 
     @Test
@@ -343,7 +347,7 @@ class test_StatechartTools_References {
             }
         }
 
-        test(grammar, goal, sentence, ContextSimple(), expected)
+        test(grammar, goal, sentence, ContextSimple(), true, expected)
     }
 
     @Test
@@ -460,7 +464,126 @@ StatechartSpecification {
             }
         }
 
-        test(grammar, goal, sentence, ContextSimple(), expectedContext, expectedAsm)
+        test(grammar, goal, sentence, ContextSimple(), true, expectedContext, expectedAsm)
     }
+
+    @Test
+    fun Global_variable_builtIn_type() {
+        val grammar = "Global"
+        val goal = "StatechartSpecification"
+        val sentence = """
+            internal :
+                var v:integer
+        """.trimIndent()
+
+        val expSPPT = """
+StatechartSpecification {
+  §StatechartSpecification§opt1 { <EMPTY> }
+  §StatechartSpecification§multi2 { <EMPTY> }
+  §StatechartSpecification§multi3 { StatechartDeclaration { InternalDeclarations {
+    'internal'  WS : ' '
+    ':' WS : '⏎    '
+    §InternalDeclarations§multi1 {
+      InternalDeclaration { AnnotatedDeclaration {
+        §AnnotatedDeclaration§multi1 { <EMPTY> }
+        MemberDeclaration { OperationDeclaration {
+          'operation' WS : ' '
+          ID : 'func'
+          '('
+          ParameterList { <EMPTY> }
+          ')' WS : '⏎    '
+          §OperationDeclaration§opt1 { <EMPTY> }
+        } }
+      } }
+      InternalDeclaration { LocalReaction {
+        ReactionTrigger {
+          EventSpecList { EventSpec { TimeEventSpec {
+            TimeEventType {
+              'every' WS : ' '
+            }
+            Expression { PrimaryExpression { PrimitiveValueExpression { Literal { IntLiteral : '1' } } } }
+            TimeUnit : 's' WS : ' '
+          } } }
+          §ReactionTrigger§opt1 { <EMPTY> }
+        }
+        '/' WS : ' '
+        ReactionEffect {
+          §ReactionEffect§choice1 { Expression { PrimaryExpression { FeatureCall { FunctionCall {
+            ID : 'func'
+            ArgumentList {
+              '('
+              §ArgumentList§opt1 { <EMPTY> }
+              ')'
+            }
+          } } } } }
+          §ReactionEffect§multi1 { <EMPTY> }
+        }
+      } }
+    }
+  } } }
+}
+        """.trimIndent()
+
+        val expectedContext = contextSimple {
+            scopedItem("InternalDeclarations", "InternalDeclarations", "/0/statechartLevelDeclaration/0") {
+                scopedItem("v", "VariableDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration") {}
+            }
+        }
+
+        val expectedAsm = asmSimple(
+            typeModel = processors[grammar]!!.typeModel,
+            crossReferenceModel = processors[grammar]!!.crossReferenceModel as CrossReferenceModelDefault,
+            context = ContextSimple()
+        ) {
+            element("StatechartSpecification") {
+                propertyNull("namespace")
+                propertyListOfElement("annotation") {}
+                propertyListOfElement("statechartLevelDeclaration") {
+                    element("InternalDeclarations") {
+                        propertyListOfElement("internalDeclaration") {
+                            element("AnnotatedDeclaration") {
+                                propertyListOfElement("annotation") {}
+                                propertyElementExplicitType("memberDeclaration", "OperationDeclaration") {
+                                    propertyString("id", "func")
+                                    propertyListOfElement("parameterList") {}
+                                    propertyNull("\$group")
+                                }
+                            }
+                            element("LocalReaction") {
+                                propertyTuple("reactionTrigger") {
+                                    propertyElementExplicitType("eventSpecList", "EventSpecList") {
+                                        propertyListOfElement("eventSpec") {
+                                            element("TimeEventSpec") {
+                                                propertyString("timeEventType", "every")
+                                                propertyElementExplicitType("expression", "PrimitiveValueExpression") {
+                                                    propertyString("literal", "1")
+                                                }
+                                                propertyString("timeUnit", "s")
+                                            }
+                                        }
+                                    }
+                                    propertyNull("guard")
+                                }
+                                propertyElementExplicitType("reactionEffect", "ReactionEffect") {
+                                    propertyElementExplicitType("\$choice", "FunctionCall") {
+                                        reference("id", "func")
+                                        propertyElementExplicitType("argumentList", "ArgumentList") {
+                                            propertyListOfElement("arguments") {}
+                                        }
+                                    }
+                                    propertyListOfElement("\$list") {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        val context = ContextSimple()
+        context.rootScope.addToScope("integer", "Type", AsmPathSimple.EXTERNAL)
+        test(grammar, goal, sentence, context, true, expectedContext, expectedAsm)
+    }
+
 
 }

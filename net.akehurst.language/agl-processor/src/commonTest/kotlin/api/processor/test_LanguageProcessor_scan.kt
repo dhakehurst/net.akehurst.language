@@ -28,7 +28,7 @@ internal class test_LanguageProcessor_scan {
 
         fun test(grammarStr: String, sentence: String, expectedNumTokens: Int): List<LeafData> {
             val pr = Agl.processorFromString<Any, Any>(grammarStr)
-            val tokens = pr.processor!!.scan(sentence)
+            val tokens = pr.processor!!.scan(sentence).tokens
             assertNotNull(tokens)
             val tokenStr = tokens.joinToString("") { it.matchedText }
             assertEquals(sentence, tokenStr)
@@ -51,7 +51,7 @@ internal class test_LanguageProcessor_scan {
     @Test
     fun scan_pattern_empty_a() {
         val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = \"[x]*\"; }")
-        val tokens = pr.processor!!.scan("ab")
+        val tokens = pr.processor!!.scan("ab").tokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
@@ -67,7 +67,7 @@ internal class test_LanguageProcessor_scan {
     @Test
     fun scan_a_a() {
         val pr = Agl.processorFromStringDefault("namespace test grammar Test { a = 'a';}")
-        val tokens = pr.processor!!.scan("a")
+        val tokens = pr.processor!!.scan("a").tokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
@@ -83,7 +83,7 @@ internal class test_LanguageProcessor_scan {
     @Test
     fun scan_a_aa() {
         val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = 'a';}")
-        val tokens = pr.processor!!.scan("aa")
+        val tokens = pr.processor!!.scan("aa").tokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
@@ -94,7 +94,7 @@ internal class test_LanguageProcessor_scan {
     @Test
     fun scan_a_aaa() {
         val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = 'a';}")
-        val tokens = pr.processor!!.scan("aaa")
+        val tokens = pr.processor!!.scan("aaa").tokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
@@ -105,7 +105,7 @@ internal class test_LanguageProcessor_scan {
     @Test
     fun scan_ab_aba() {
         val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = 'a'; b = 'b'; }")
-        val tokens = pr.processor!!.scan("aba")
+        val tokens = pr.processor!!.scan("aba").tokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
 
@@ -129,12 +129,12 @@ internal class test_LanguageProcessor_scan {
             }
         """.trimIndent()
         )
-        var tokens = pr.processor!!.scan("a")
+        var tokens = pr.processor!!.scan("a").tokens
         var tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
         assertEquals(1, tokens.size)
 
-        tokens = pr.processor!!.scan("a b")
+        tokens = pr.processor!!.scan("a b").tokens
         tokenStr = tokens.map { it.toString() }.joinToString(", ")
         println("tokens = ${tokenStr}")
         assertEquals(3, tokens.size)

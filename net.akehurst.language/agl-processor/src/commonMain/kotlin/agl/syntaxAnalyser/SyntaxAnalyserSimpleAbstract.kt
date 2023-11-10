@@ -423,7 +423,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
         target.node.rule.isEmptyTerminal -> null
         else -> {
             val v = sentence.matchedTextNoSkip(target.node)
-            AsmPrimitiveSimple("String", v)
+            AsmPrimitiveSimple.stdString(v)
         }
     }
 
@@ -639,7 +639,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
         target.node.startPosition == target.node.nextInputNoSkip -> AsmNothingSimple
         else -> {
             val str = sentence.matchedTextNoSkip(target.node)
-            AsmPrimitiveSimple("String", str)
+            AsmPrimitiveSimple.stdString(str)
         }
     }
 

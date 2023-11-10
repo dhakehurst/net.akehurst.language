@@ -93,6 +93,16 @@ class ScopeSimple<AsmElementIdType>(
 
     override fun findOrNull(referableName: String, typeName: String): AsmElementIdType? = this.items[typeName]?.get(referableName)
 
+    override fun findQualifiedOrNull(nameList: List<String>, typeName: String): AsmElementIdType? = when (nameList.size) {
+        0 -> null
+        1 -> this.findOrNull(nameList.first(), typeName)
+        else -> {
+            val child = childScopes[nameList.first()]
+            child?.findQualifiedOrNull(nameList.drop(1), typeName)
+        }
+    }
+
+
     override fun isMissing(referableName: String, typeName: String): Boolean = null == this.findOrNull(referableName, typeName)
 
     override fun asString(currentIndent: String, indentIncrement: String): String {

@@ -16,12 +16,12 @@
 
 package net.akehurst.language.api.processor
 
+import net.akehurst.language.agl.scanner.Matchable
 import net.akehurst.language.api.automaton.Automaton
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.language.grammar.Grammar
 import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.api.sppt.LeafData
 import net.akehurst.language.api.sppt.SPPTParser
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 import net.akehurst.language.api.syntaxAnalyser.SyntaxAnalyser
@@ -40,6 +40,8 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     val issues: IssueCollection<LanguageIssue>
 
     val grammar: Grammar?
+
+    val scannerMatchables: List<Matchable>
 
     /**
      * An SPPT parser for this language,
@@ -93,7 +95,7 @@ interface LanguageProcessor<AsmType : Any, ContextType : Any> {
     /**
      * Specifically scan the sentence using the terminal rules found in the grammar
      */
-    fun scan(sentence: String): List<LeafData>
+    fun scan(sentence: String): ScanResult
 
     /**
      * Parse the sentence using the grammar for this language and output a SharedPackedParseTree.

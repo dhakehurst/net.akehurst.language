@@ -27,6 +27,7 @@ namespace com.itemis.create.Global {
         identify Parameter by id
     }
     references {
+        external-types AnnotationType, RegularState, Type
         in Annotation {
             property fqn refers-to AnnotationType
         }
@@ -44,6 +45,9 @@ namespace com.itemis.create.Global {
             forall argumentList.arguments {
                 property argumentId.id refers-to Parameter from id  // id should be a reference to an OperationDeclaration at this point
             }
+        }
+        in TypeSpecifier {
+            property fqn refers-to Type
         }
     }
 }

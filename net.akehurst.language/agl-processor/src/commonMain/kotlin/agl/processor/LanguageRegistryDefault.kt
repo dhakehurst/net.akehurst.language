@@ -43,15 +43,15 @@ import net.akehurst.language.api.style.AglStyleModel
 interface AglLanguages {
     val expressionsLanguageIdentity: String
     val grammarLanguageIdentity: String
+    val crossReferenceLanguageIdentity: String
     val styleLanguageIdentity: String
     val formatLanguageIdentity: String
-    val scopesLanguageIdentity: String
 
     val expressions: LanguageDefinition<Expression, SentenceContext<String>>
     val grammar: LanguageDefinition<List<Grammar>, ContextFromGrammarRegistry>
+    val crossReference: LanguageDefinition<CrossReferenceModelDefault, ContextFromTypeModel>
     val style: LanguageDefinition<AglStyleModel, ContextFromGrammar>
     val formatter: LanguageDefinition<AglFormatterModel, SentenceContext<String>>
-    val crossReference: LanguageDefinition<CrossReferenceModelDefault, ContextFromTypeModel>
 }
 
 class LanguageRegistryDefault : LanguageRegistry {
@@ -64,7 +64,7 @@ class LanguageRegistryDefault : LanguageRegistry {
         override val grammarLanguageIdentity: String = AglGrammarGrammar.qualifiedName
         override val styleLanguageIdentity: String = AglStyleGrammar.qualifiedName
         override val formatLanguageIdentity: String = AglFormatGrammar.qualifiedName
-        override val scopesLanguageIdentity: String = ReferencesGrammar.qualifiedName
+        override val crossReferenceLanguageIdentity: String = ReferencesGrammar.qualifiedName
 
         override val expressions: LanguageDefinition<Expression, SentenceContext<String>> = this@LanguageRegistryDefault.registerFromDefinition(
             LanguageDefinitionFromAsm<Expression, SentenceContext<String>>(
@@ -118,7 +118,7 @@ class LanguageRegistryDefault : LanguageRegistry {
 
         override val crossReference: LanguageDefinition<CrossReferenceModelDefault, ContextFromTypeModel> = this@LanguageRegistryDefault.registerFromDefinition(
             LanguageDefinitionFromAsm<CrossReferenceModelDefault, ContextFromTypeModel>(
-                identity = scopesLanguageIdentity,
+                identity = crossReferenceLanguageIdentity,
                 ReferencesGrammar,
                 buildForDefaultGoal = false,
                 initialConfiguration = Agl.configuration {

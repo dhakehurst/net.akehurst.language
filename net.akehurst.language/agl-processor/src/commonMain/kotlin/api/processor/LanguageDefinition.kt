@@ -64,7 +64,8 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
     val isModifiable: Boolean
 
     var grammarStr: String?
-    var grammar: Grammar?
+    var grammarList: List<Grammar>
+    val targetGrammar: Grammar?
     var targetGrammarName: String?
     var defaultGoalRule: String?
 
@@ -93,7 +94,7 @@ interface LanguageDefinition<AsmType : Any, ContextType : Any> {
 
     val processorObservers: MutableList<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>
     val grammarStrObservers: MutableList<(String?, String?) -> Unit>
-    val grammarObservers: MutableList<(Grammar?, Grammar?) -> Unit>
+    val grammarObservers: MutableList<(List<Grammar>, List<Grammar>) -> Unit>
     val scopeStrObservers: MutableList<(String?, String?) -> Unit>
     val crossReferenceModelObservers: MutableList<(CrossReferenceModel?, CrossReferenceModel?) -> Unit>
     val formatterStrObservers: MutableList<(String?, String?) -> Unit>

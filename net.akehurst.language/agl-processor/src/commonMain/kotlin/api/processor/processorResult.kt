@@ -17,6 +17,7 @@
 package net.akehurst.language.api.processor
 
 import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.sppt.LeafData
 import net.akehurst.language.api.sppt.SharedPackedParseTree
 
 interface IssueCollection<T : Any> : Collection<T> {
@@ -24,6 +25,11 @@ interface IssueCollection<T : Any> : Collection<T> {
     val errors: List<T>
     val warnings: List<T>
     val informations: List<T>
+}
+
+interface ScanResult {
+    val tokens: List<LeafData>
+    val issues: IssueCollection<LanguageIssue>
 }
 
 interface ParseResult {

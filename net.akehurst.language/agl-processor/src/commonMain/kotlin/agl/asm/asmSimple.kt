@@ -27,6 +27,7 @@ class AsmPathSimple(
 
     companion object {
         const val SEPARATOR = "/"
+        val EXTERNAL = AsmPathSimple("§external")
         val ROOT = AsmPathSimple(SEPARATOR)
     }
 
@@ -37,6 +38,8 @@ class AsmPathSimple(
             ROOT == this -> null
             else -> AsmPathSimple(this.value.substringBeforeLast("/"))
         }
+
+    override val isExternal: Boolean get() = EXTERNAL.value == this.value
 
     override operator fun plus(segment: String) = if (this == ROOT) AsmPathSimple("/$segment") else AsmPathSimple("$value/$segment")
 
@@ -151,6 +154,11 @@ class AsmPrimitiveSimple(
     override val value: Any
 ) : AsmValueAbstract(), AsmPrimitive {
 
+    companion object {
+        fun stdString(value: String) = AsmPrimitiveSimple(SimpleTypeModelStdLib.String.qualifiedTypeName, value)
+        fun stdInteger(value: Int) = AsmPrimitiveSimple(SimpleTypeModelStdLib.Integer.qualifiedTypeName, value)
+    }
+
     override fun asString(currentIndent: String, indentIncrement: String): String = "$value"
     override fun equalTo(other: AsmValue): Boolean = when {
         other !is AsmPrimitive -> false
@@ -168,6 +176,8 @@ class AsmPrimitiveSimple(
 
     override fun toString(): String = "$qualifiedTypeName($value)"
 }
+
+val AsmPrimitive.isStdString get() = this.qualifiedTypeName == SimpleTypeModelStdLib.String.qualifiedTypeName
 
 class AsmReferenceSimple(
     override val reference: String,
@@ -315,12 +325,17 @@ class AsmStructurePropertySimple(
 
     override fun convertToReferenceTo(referredValue: AsmStructure?) {
         val v = this.value
-        when (v) {
-            is AsmNothing -> error("Cannot convert property '$this' a reference, it has value $AsmNothingSimple")
-            is AsmReferenceSimple -> v.value = referredValue
-            is AsmPrimitive -> {
-                check(v.value is String) { "Cannot convert non String value to reference, got '${v.value::class.simpleName}'" }
+        when {
+            v is AsmNothing -> error("Cannot convert property '$this' a reference, it has value $AsmNothingSimple")
+            v is AsmReferenceSimple -> v.value = referredValue
+            v is AsmPrimitive && v.value is String -> {
                 val ref = AsmReferenceSimple(v.value as String, referredValue)
+                this.value = ref
+            }
+
+            v is AsmList && v.elements.all { (it is AsmPrimitive) && it.isStdString } -> {
+                val refValue = v.elements.joinToString(separator = ".") { (it as AsmPrimitive).value as String }
+                val ref = AsmReferenceSimple(refValue, referredValue)
                 this.value = ref
             }
 

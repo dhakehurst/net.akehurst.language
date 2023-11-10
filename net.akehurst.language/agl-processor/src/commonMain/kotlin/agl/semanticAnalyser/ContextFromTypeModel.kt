@@ -17,10 +17,26 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
+import net.akehurst.language.agl.default.TypeModelFromGrammar
+import net.akehurst.language.api.processor.LanguageRegistry
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 import net.akehurst.language.typemodel.api.TypeModel
 
 // used by other languages that reference rules  in a grammar
+
+class ContextFromTypeModelReference(
+    val languageDefinitionId: String
+) : SentenceContext<String> {
+    override val rootScope = ScopeSimple<String>(null, "", "")
+
+    fun dereference(reg: LanguageRegistry): ContextFromTypeModel? {
+        val langDef = reg.findOrNull<Any, Any>(this.languageDefinitionId)
+        return langDef?.let {
+            val tm = TypeModelFromGrammar.createFromGrammarList(it.grammarList)
+            ContextFromTypeModel(tm)
+        }
+    }
+}
 
 class ContextFromTypeModel(
     val typeModel: TypeModel
@@ -30,12 +46,6 @@ class ContextFromTypeModel(
         const val TYPE_NAME_FOR_TYPES = "\$Type"
         const val TYPE_NAME_FOR_PROPERTIES = "\$Property"
     }
-
-    /*    init {
-            createScopeFrom(targetNamespaceQualifiedName, typeModel)
-        }*/
-
-    //val targetNamespace get() = typeModel.namespace[targetNamespaceQualifiedName]!!
 
     override val rootScope = ScopeSimple<String>(null, "", "")
 

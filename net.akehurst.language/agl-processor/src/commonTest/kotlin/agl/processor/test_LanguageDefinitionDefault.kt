@@ -35,8 +35,8 @@ class test_LanguageDefinitionDefault {
 
     val grammarStrObserverCalled = mutableListOf<Pair<String?, String?>>()
     val grammarStrObserver: (String?, String?) -> Unit = { old, new -> grammarStrObserverCalled.add(Pair(old, new)) }
-    val grammarObserverCalled = mutableListOf<Pair<Grammar?, Grammar?>>()
-    val grammarObserver: (Grammar?, Grammar?) -> Unit = { old, new -> grammarObserverCalled.add(Pair(old, new)) }
+    val grammarObserverCalled = mutableListOf<Pair<List<Grammar>, List<Grammar>>>()
+    val grammarObserver: (List<Grammar>, List<Grammar>) -> Unit = { old, new -> grammarObserverCalled.add(Pair(old, new)) }
     val scopeStrObserverCalled = mutableListOf<Pair<String?, String?>>()
     val scopeStrObserver: (String?, String?) -> Unit = { old, new -> scopeStrObserverCalled.add(Pair(old, new)) }
     val scopeModelObserverCalled = mutableListOf<Pair<CrossReferenceModel?, CrossReferenceModel?>>()
@@ -108,7 +108,7 @@ class test_LanguageDefinitionDefault {
         )
 
         assertEquals(g, def.grammarStr)
-        assertNotNull(def.grammar)
+        assertNotNull(def.targetGrammar)
         assertNotNull(def.processor)
         assertTrue(sut.issues.isEmpty())
     }
@@ -126,7 +126,7 @@ class test_LanguageDefinitionDefault {
     fun grammarStr_change_null_to_null() {
         sut.grammarStr = null
         assertNull(sut.grammarStr)
-        assertNull(sut.grammar)
+        assertNull(sut.targetGrammar)
         assertNull(sut.processor)
         assertTrue(sut.issues.isEmpty())
         assertTrue(grammarStrObserverCalled.isEmpty())
@@ -145,7 +145,7 @@ class test_LanguageDefinitionDefault {
         val g = "xxxxx"
         sut.grammarStr = g
         assertEquals(g, sut.grammarStr)
-        assertNull(sut.grammar)
+        assertNull(sut.targetGrammar)
         assertNull(sut.processor)
         assertEquals(
             setOf(
@@ -168,7 +168,7 @@ class test_LanguageDefinitionDefault {
         val g = "namespace ns grammar Test extends XX { S = 'b'; }"
         sut.grammarStr = g
         assertEquals(g, sut.grammarStr)
-        assertNull(sut.grammar) // should be a grammar...though it is invalid
+        assertNull(sut.targetGrammar) // should be a grammar...though it is invalid
         assertNull(sut.processor)
         assertEquals(
             setOf(
@@ -198,7 +198,7 @@ class test_LanguageDefinitionDefault {
         val g = "namespace ns grammar Test { S = b; }"
         sut.grammarStr = g
         assertEquals(g, sut.grammarStr)
-        assertNull(sut.grammar)
+        assertNull(sut.targetGrammar)
         assertNull(sut.processor)
         assertEquals(
             setOf(
@@ -222,12 +222,12 @@ class test_LanguageDefinitionDefault {
         sut.grammarStr = g
 
         assertEquals(g, sut.grammarStr)
-        assertNotNull(sut.grammar)
+        assertNotNull(sut.targetGrammar)
         assertNotNull(sut.processor)
         assertTrue(sut.issues.isEmpty(), sut.issues.toString())
 
         assertEquals(listOf(Pair<String?, String?>(null, g)), grammarStrObserverCalled)
-        assertEquals(listOf(Pair<Grammar?, Grammar?>(null, sut.grammar)), grammarObserverCalled)
+        assertEquals(listOf(Pair<List<Grammar>, List<Grammar>>(emptyList(), sut.grammarList)), grammarObserverCalled)
         assertEquals(emptyList(), scopeStrObserverCalled)
         assertEquals(emptyList(), scopeModelObserverCalled)
         assertEquals(listOf(Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(null, sut.processor)), processorObserverCalled)
@@ -241,18 +241,18 @@ class test_LanguageDefinitionDefault {
     fun grammarStr_change_value_to_null() {
         val g = "namespace ns grammar Test { S = 'b'; }"
         sut.grammarStr = g
-        val oldGrammar = sut.grammar
+        val oldGrammar = sut.grammarList
         val oldProc = sut.processor
         this.reset()
         sut.grammarStr = null
 
         assertNull(sut.grammarStr)
-        assertNull(sut.grammar)
+        assertNull(sut.targetGrammar)
         assertNull(sut.processor)
         assertTrue(sut.issues.isEmpty())
 
         assertEquals(listOf(Pair<String?, String?>(g, null)), grammarStrObserverCalled)
-        assertEquals(listOf(Pair<Grammar?, Grammar?>(oldGrammar, null)), grammarObserverCalled)
+        assertEquals(listOf(Pair<List<Grammar>, List<Grammar>>(oldGrammar, emptyList())), grammarObserverCalled)
         assertEquals(emptyList(), scopeStrObserverCalled)
         assertEquals(emptyList(), scopeModelObserverCalled)
         assertEquals(listOf(Pair<LanguageProcessor<*, *>?, LanguageProcessor<*, *>?>(oldProc, null)), processorObserverCalled)
@@ -266,14 +266,14 @@ class test_LanguageDefinitionDefault {
     fun grammarStr_change_value_to_same_value() {
         val g1 = "namespace ns grammar Test { S = 'b'; }"
         sut.grammarStr = g1
-        val oldGrammar = sut.grammar
+        val oldGrammar = sut.targetGrammar
         val oldProc = sut.processor
         this.reset()
         val g2 = "namespace ns grammar Test { S = 'b'; }"
         sut.grammarStr = g2
 
         assertEquals(g2, sut.grammarStr)
-        assertNotNull(sut.grammar)
+        assertNotNull(sut.targetGrammar)
         assertNotNull(sut.processor)
         assertTrue(sut.issues.isEmpty())
 
@@ -292,19 +292,19 @@ class test_LanguageDefinitionDefault {
     fun grammarStr_change_value_to_diff_value() {
         val g1 = "namespace ns grammar Test { S = 'b'; }"
         sut.grammarStr = g1
-        val oldGrammar = sut.grammar
+        val oldGrammar = sut.grammarList
         val oldProc = sut.processor
         this.reset()
         val g2 = "namespace ns grammar Test { S = 'c'; }"
         sut.grammarStr = g2
 
         assertEquals(g2, sut.grammarStr)
-        assertNotNull(sut.grammar)
+        assertNotNull(sut.targetGrammar)
         assertNotNull(sut.processor)
         assertTrue(sut.issues.isEmpty())
 
         assertEquals(listOf(Pair<String?, String?>(g1, g2)), grammarStrObserverCalled)
-        assertEquals(listOf(Pair<Grammar?, Grammar?>(oldGrammar, sut.grammar)), grammarObserverCalled)
+        assertEquals(listOf(Pair<List<Grammar>, List<Grammar>>(oldGrammar, sut.grammarList)), grammarObserverCalled)
         assertEquals(emptyList(), scopeStrObserverCalled)
         assertEquals(emptyList(), scopeModelObserverCalled)
         assertEquals(

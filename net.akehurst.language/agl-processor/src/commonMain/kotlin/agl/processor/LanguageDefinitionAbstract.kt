@@ -29,7 +29,7 @@ import net.akehurst.language.util.cached
 import kotlin.properties.Delegates
 
 abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
-    grammar: Grammar?,
+    grammarList: List<Grammar>,
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinition<AsmType, ContextType> {
@@ -37,7 +37,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     abstract override val identity: String
     abstract override var grammarStr: String?
 
-    override var grammar: Grammar? by Delegates.observable(grammar) { _, oldValue, newValue ->
+    override var grammarList: List<Grammar> by Delegates.observable(grammarList) { _, oldValue, newValue ->
         // check not same Grammar object,
         // the qname of the grammar might be the same but a different object with different rules
         if (oldValue !== newValue) {
@@ -45,6 +45,8 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
             this.grammarObservers.forEach { it(oldValue, newValue) }
         }
     }
+
+    override val targetGrammar: Grammar? get() = this.grammarList.lastOrNull { it.name == this.targetGrammarName } ?: this.grammarList.lastOrNull()
 
     abstract override val isModifiable: Boolean
 
@@ -132,7 +134,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
 
     override val processorObservers = mutableListOf<(LanguageProcessor<AsmType, ContextType>?, LanguageProcessor<AsmType, ContextType>?) -> Unit>()
     override val grammarStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
-    override val grammarObservers = mutableListOf<(oldValue: Grammar?, newValue: Grammar?) -> Unit>()
+    override val grammarObservers = mutableListOf<(oldValue: List<Grammar>, newValue: List<Grammar>) -> Unit>()
     override val scopeStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
     override val crossReferenceModelObservers = mutableListOf<(oldValue: CrossReferenceModel?, newValue: CrossReferenceModel?) -> Unit>()
     override val formatterStrObservers = mutableListOf<(oldValue: String?, newValue: String?) -> Unit>()
@@ -145,7 +147,7 @@ abstract class LanguageDefinitionAbstract<AsmType : Any, ContextType : Any>(
     // --- implementation ---
 
     protected val _processor_cache: CachedValue<LanguageProcessor<AsmType, ContextType>?> = cached {
-        val g = this.grammar
+        val g = this.targetGrammar
         if (null == g) {
             null
         } else {

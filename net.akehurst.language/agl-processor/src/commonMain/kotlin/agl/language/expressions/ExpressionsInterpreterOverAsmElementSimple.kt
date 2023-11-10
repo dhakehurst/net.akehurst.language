@@ -40,7 +40,7 @@ class ExpressionsInterpreterOverAsmSimple(
     val typeModel: TypeModel
 ) {
 
-    private val _issues = IssueHolder(LanguageProcessorPhase.INTERPRETER)
+    private val _issues = IssueHolder(LanguageProcessorPhase.INTERPRET)
 
     fun evaluateStr(self: AsmValue, expression: String): AsmValue {
         val result = Agl.registry.agl.expressions.processor!!.process(expression)
@@ -116,7 +116,7 @@ object StdLibPrimitiveExecutions {
         SimpleTypeModelStdLib.List to mapOf(
             SimpleTypeModelStdLib.List.findPropertyOrNull("size")!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                AsmPrimitiveSimple("Integer", self.elements.size)
+                AsmPrimitiveSimple.stdInteger(self.elements.size)
             },
             SimpleTypeModelStdLib.List.findPropertyOrNull("first")!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
@@ -136,13 +136,13 @@ object StdLibPrimitiveExecutions {
             },
             SimpleTypeModelStdLib.List.findPropertyOrNull("join")!! to { self, prop ->
                 check(self is AsmList) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                AsmPrimitiveSimple("String", self.elements.joinToString(separator = "") { it.asString() })
+                AsmPrimitiveSimple.stdString(self.elements.joinToString(separator = "") { it.asString() })
             }
         ),
         SimpleTypeModelStdLib.ListSeparated to mapOf(
             SimpleTypeModelStdLib.ListSeparated.findPropertyOrNull("size")!! to { self, prop ->
                 check(self is AsmListSeparated) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                AsmPrimitiveSimple("Integer", self.elements.size)
+                AsmPrimitiveSimple.stdInteger(self.elements.size)
             },
             SimpleTypeModelStdLib.ListSeparated.findPropertyOrNull("elements")!! to { self, prop ->
                 check(self is AsmListSeparated) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }

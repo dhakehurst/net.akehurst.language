@@ -32,7 +32,7 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
-    null,
+    emptyList(),
     buildForDefaultGoal,
     initialConfiguration
 ) {
@@ -125,10 +125,9 @@ internal class LanguageDefinitionDefault<AsmType : Any, ContextType : Any>(
         if (oldValue != newValue) {
             val res = Agl.grammarFromString<List<Grammar>, ContextFromGrammarRegistry>(newValue, aglOptions)
             this._issues.addAll(res.issues)
-            this.grammar = when {
-                res.issues.errors.isNotEmpty() -> null
-                null == targetGrammarName -> res.asm?.lastOrNull()
-                else -> res.asm?.lastOrNull { it.name == this.targetGrammarName }
+            this.grammarList = when {
+                res.issues.errors.isNotEmpty() -> emptyList()
+                else -> res.asm ?: emptyList()
             }
             grammarStrObservers.forEach { it.invoke(oldValue, newValue) }
         }

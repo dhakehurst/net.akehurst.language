@@ -17,7 +17,6 @@
 package net.akehurst.language.agl.parser
 
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleKind
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
 import net.akehurst.language.api.parser.InputLocation
@@ -30,7 +29,7 @@ internal class test_InputFromString {
     @Test
     fun construct() {
         val inputText = ""
-        val sut = InputFromString(0,inputText)
+        val sut = InputFromString(0, inputText)
 
         assertNotNull(sut)
     }
@@ -38,7 +37,7 @@ internal class test_InputFromString {
     @Test
     fun isStart_empty_at_start() {
         val inputText = ""
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
         val actual = sut.isStart(0)
 
@@ -48,7 +47,7 @@ internal class test_InputFromString {
     @Test
     fun isStart_empty_after_start() {
         val inputText = ""
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
         val actual = sut.isStart(1)
 
@@ -58,7 +57,7 @@ internal class test_InputFromString {
     @Test
     fun isStart_full_at_start() {
         val inputText = "abcdefg"
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
         val actual = sut.isStart(0)
 
@@ -68,7 +67,7 @@ internal class test_InputFromString {
     @Test
     fun isStart_full_after_start() {
         val inputText = "abcdefg"
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
         val actual = sut.isStart(1)
 
@@ -78,7 +77,7 @@ internal class test_InputFromString {
     @Test
     fun isStart_full_before_end() {
         val inputText = "abcdefg"
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
         val actual = sut.isStart(5)
 
@@ -88,7 +87,7 @@ internal class test_InputFromString {
     @Test
     fun isStart_full_at_end() {
         val inputText = "abcdefg"
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
         val actual = sut.isStart(6)
 
@@ -98,7 +97,7 @@ internal class test_InputFromString {
     @Test
     fun isStart_full_after_end() {
         val inputText = "abcdefg"
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
         val actual = sut.isStart(7)
 
@@ -108,7 +107,7 @@ internal class test_InputFromString {
     @Test
     fun isEnd_empty_at_start() {
         val inputText = ""
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
         val actual = sut.isEnd(0)
 
@@ -118,7 +117,7 @@ internal class test_InputFromString {
     @Test
     fun isEnd_empty_after_start() {
         val inputText = ""
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
         val actual = sut.isEnd(1)
 
@@ -128,7 +127,7 @@ internal class test_InputFromString {
     @Test
     fun isEnd_full_at_start() {
         val inputText = "abcdefg"
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
         val actual = sut.isEnd(0)
 
@@ -138,7 +137,7 @@ internal class test_InputFromString {
     @Test
     fun isEnd_full_after_start() {
         val inputText = "abcdefg"
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
         val actual = sut.isEnd(1)
 
@@ -148,7 +147,7 @@ internal class test_InputFromString {
     @Test
     fun isEnd_full_before_end() {
         val inputText = "abcdefg"
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
         val actual = sut.isEnd(5)
 
@@ -158,7 +157,7 @@ internal class test_InputFromString {
     @Test
     fun isEnd_full_at_end() {
         val inputText = "abcdefg"
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
         val actual = sut.isEnd(6)
 
@@ -168,7 +167,7 @@ internal class test_InputFromString {
     @Test
     fun isEnd_full_after_end() {
         val inputText = "abcdefg"
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
         val actual = sut.isEnd(7)
 
@@ -178,116 +177,116 @@ internal class test_InputFromString {
     @Test
     fun tryMatchText_empty_at_start_literal_empty() {
         val inputText = ""
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
-        val rr = RuntimeRule(0,1,"",false).also {
-            it.setRhs(RuntimeRuleRhsLiteral(it,""))
+        val rr = RuntimeRule(0, 1, "", false).also {
+            it.setRhs(RuntimeRuleRhsLiteral(it, ""))
         }
         val actual = sut.tryMatchText(0, rr)
 
-        assertEquals(null, actual)
+        assertEquals(-1, actual)
     }
 
     @Test
     fun tryMatchText_empty_at_start_literal_abc() {
         val inputText = ""
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
-        val rr = RuntimeRule(0,1,"'abc'",false).also {
-            it.setRhs(RuntimeRuleRhsLiteral(it,"abc"))
+        val rr = RuntimeRule(0, 1, "'abc'", false).also {
+            it.setRhs(RuntimeRuleRhsLiteral(it, "abc"))
         }
         val actual = sut.tryMatchText(0, rr)
 
-        assertEquals(null, actual)
+        assertEquals(-1, actual)
     }
 
     @Test
     fun tryMatchText_empty_at_start_pattern_empty() {
         val inputText = ""
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
-        val rr = RuntimeRule(0,1,"",false).also {
-            it.setRhs(RuntimeRuleRhsPattern(it,""))
+        val rr = RuntimeRule(0, 1, "", false).also {
+            it.setRhs(RuntimeRuleRhsPattern(it, ""))
         }
         val actual = sut.tryMatchText(0, rr)
 
-        assertEquals(null, actual)
+        assertEquals(-1, actual)
     }
 
     @Test
     fun tryMatchText_empty_at_start_pattern_abc() {
         val inputText = ""
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
-        val rr = RuntimeRule(0,1,"'abc'",false).also {
-            it.setRhs(RuntimeRuleRhsPattern(it,"abc"))
+        val rr = RuntimeRule(0, 1, "'abc'", false).also {
+            it.setRhs(RuntimeRuleRhsPattern(it, "abc"))
         }
         val actual = sut.tryMatchText(0, rr)
 
-        assertEquals(null, actual)
+        assertEquals(-1, actual)
     }
 
     @Test
     fun tryMatchText_empty_at_start_pattern_a_to_c() {
         val inputText = ""
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
-        val rr = RuntimeRule(0,1,"'[a-c]'",false).also {
-            it.setRhs(RuntimeRuleRhsPattern(it,"[a-c]"))
+        val rr = RuntimeRule(0, 1, "'[a-c]'", false).also {
+            it.setRhs(RuntimeRuleRhsPattern(it, "[a-c]"))
         }
         val actual = sut.tryMatchText(0, rr)
 
-        assertEquals(null, actual)
+        assertEquals(-1, actual)
     }
 
     @Test
     fun tryMatchText_abc_at_start_pattern_abc() {
         val inputText = "abc"
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
-        val rr = RuntimeRule(0,1,"'abc'",false).also {
-            it.setRhs(RuntimeRuleRhsPattern(it,"abc"))
+        val rr = RuntimeRule(0, 1, "'abc'", false).also {
+            it.setRhs(RuntimeRuleRhsPattern(it, "abc"))
         }
         val actual = sut.tryMatchText(0, rr)
 
-        assertEquals("abc", actual?.matchedText)
+        assertEquals(3, actual)
     }
 
     @Test
     fun tryMatchText_abc_at_start_pattern_a_to_c() {
         val inputText = "abc"
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
-        val rr = RuntimeRule(0,1,"'[a-c]'",false).also {
-            it.setRhs(RuntimeRuleRhsPattern(it,"[a-c]"))
+        val rr = RuntimeRule(0, 1, "'[a-c]'", false).also {
+            it.setRhs(RuntimeRuleRhsPattern(it, "[a-c]"))
         }
         val actual = sut.tryMatchText(0, rr)
 
-        assertEquals("a", actual?.matchedText)
+        assertEquals(1, actual)
     }
 
     @Test
     fun tryMatchText_abc_at_1_pattern_a_to_c() {
         val inputText = "abc"
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
-        val rr = RuntimeRule(0,1,"'[a-c]'",false).also {
-            it.setRhs(RuntimeRuleRhsPattern(it,"[a-c]"))
+        val rr = RuntimeRule(0, 1, "'[a-c]'", false).also {
+            it.setRhs(RuntimeRuleRhsPattern(it, "[a-c]"))
         }
         val actual = sut.tryMatchText(1, rr)
 
-        assertEquals("b", actual?.matchedText)
+        assertEquals(1, actual)
     }
     //TODO:....tryMatchText
 
     @Test
     fun locationFor_singleLine() {
         val inputText = "abc"
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
-        for(p in inputText.indices) {
+        for (p in inputText.indices) {
             val actual = sut.locationFor(p, 1)
-            val col = p+1
+            val col = p + 1
             val line = 1
             val expected = InputLocation(p, col, line, 1)
             assertEquals(expected, actual)
@@ -301,12 +300,12 @@ internal class test_InputFromString {
             def
             ghi
         """.trimIndent()
-        val sut = InputFromString(10,inputText)
+        val sut = InputFromString(10, inputText)
 
-        for(p in inputText.indices) {
+        for (p in inputText.indices) {
             val actual = sut.locationFor(p, 1)
-            val col = (p % 4)+1
-            val line = (p / 4)+1
+            val col = (p % 4) + 1
+            val line = (p / 4) + 1
             val expected = InputLocation(p, col, line, 1)
             assertEquals(expected, actual)
         }

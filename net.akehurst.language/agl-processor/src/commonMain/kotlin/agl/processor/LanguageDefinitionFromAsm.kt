@@ -26,7 +26,7 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
     buildForDefaultGoal: Boolean,
     initialConfiguration: LanguageProcessorConfiguration<AsmType, ContextType>
 ) : LanguageDefinitionAbstract<AsmType, ContextType>(
-    grammar,
+    listOf(grammar),
     buildForDefaultGoal,
     initialConfiguration
 ) {
@@ -38,7 +38,7 @@ internal class LanguageDefinitionFromAsm<AsmType : Any, ContextType : Any>(
         }
 
     override var grammarStr: String?
-        get() = this.grammar.toString() //TODO:
+        get() = this.grammarList.joinToString(separator = "\n") { it.toString() } //TODO:
         set(value) {
             error("Cannot set the grammar of a LanguageDefinitionFromAsm using a String")
         }
