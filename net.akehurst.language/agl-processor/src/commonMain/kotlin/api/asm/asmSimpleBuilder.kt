@@ -127,7 +127,7 @@ class AsmElementSimpleBuilder(
     _isRoot: Boolean,
     _parentScope: ScopeSimple<AsmPath>?
 ) {
-    private val _element = _asm.createElement(_asmPath, _typeName).also {
+    private val _element = _asm.createStructure(_asmPath, _typeName).also {
         if (_isRoot) _asm.addRoot(it)
     }
     private val _elementScope by lazy {

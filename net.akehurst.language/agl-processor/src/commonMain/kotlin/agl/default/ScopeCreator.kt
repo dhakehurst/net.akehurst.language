@@ -59,6 +59,7 @@ class ScopeCreator(
 
     override fun beforeStructure(owningProperty: AsmStructureProperty?, value: AsmStructure) {
         val scope = currentScope.peek()
+
         addToScope(scope, value)
         val chScope = createScope(scope, value)
         currentScope.push(chScope)
@@ -75,7 +76,7 @@ class ScopeCreator(
     override fun afterList(owningProperty: AsmStructureProperty?, value: AsmList) {}
 
     private fun createScope(scope: Scope<AsmPath>, el: AsmStructure): Scope<AsmPath> {
-        val exp = crossReferenceModel.identifyingExpressionFor(scope.forTypeName, el.typeName)
+        val exp = crossReferenceModel.identifyingExpressionFor(scope.forTypeName, el.qualifiedTypeName)
         return if (null != exp && crossReferenceModel.isScopeDefinedFor(el.typeName)) {
             val refInParent = exp.createReferenceLocalToScope(scope, el)
             when {
@@ -92,7 +93,7 @@ class ScopeCreator(
     }
 
     private fun addToScope(scope: Scope<AsmPath>, el: AsmStructure) {
-        val exp = crossReferenceModel.identifyingExpressionFor(scope.forTypeName, el.typeName)
+        val exp = crossReferenceModel.identifyingExpressionFor(scope.forTypeName, el.qualifiedTypeName)
         if (null != exp) {
             //val reference = _scopeModel!!.createReferenceFromRoot(scope, el)
             val scopeLocalReference = exp.createReferenceLocalToScope(scope, el)
@@ -103,12 +104,21 @@ class ScopeCreator(
 //                    "Cannot create a local reference in '$scope' for '$el' because its identifying expression evaluates to Nothing. Using type name as identifier."
 //                )
                     val contextRef = el.path
-                    scope.addToScope(el.typeName, el.qualifiedTypeName, contextRef)
+                    val added = scope.addToScope(el.typeName, el.qualifiedTypeName, contextRef).not()
+                    when (added) {
+                        true -> Unit
+                        else -> issues.error(this.locationMap[el], "(${el.typeName},${el.qualifiedTypeName}) already exists in scope $scope")
+                    }
                 }
 
                 scopeLocalReference is AsmPrimitive && scopeLocalReference.isStdString -> {
                     val contextRef = el.path
-                    scope.addToScope((scopeLocalReference.value) as String, el.qualifiedTypeName, contextRef)
+                    val ref = (scopeLocalReference.value) as String
+                    val added = scope.addToScope(ref, el.qualifiedTypeName, contextRef)
+                    when (added) {
+                        true -> Unit
+                        else -> issues.error(this.locationMap[el], "($ref,${el.qualifiedTypeName}) already exists in scope $scope")
+                    }
                 }
 
                 else -> {

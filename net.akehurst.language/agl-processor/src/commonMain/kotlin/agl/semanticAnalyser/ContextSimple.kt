@@ -54,7 +54,7 @@ class ScopeSimple<ItemType>(
     private val _childScopes = mutableMapOf<String, ScopeSimple<ItemType>>()
 
     // referableName -> (item, typeName)
-    private val _items: MutableMap<String, MutableSet<Pair<ItemType, String>>> = mutableMapOf()
+    private val _items: MutableMap<String, MutableMap<String, ItemType>> = mutableMapOf()
 
     override val rootScope: ScopeSimple<ItemType> by lazy {
         var s = this
@@ -66,14 +66,14 @@ class ScopeSimple<ItemType>(
     override val childScopes: Map<String, ScopeSimple<ItemType>> = _childScopes
 
     // accessor needed for serialisation which assumes mutableMap for deserialisation
-    override val items: Map<String, Set<Pair<ItemType, String>>> get() = _items
+    override val items: Map<String, Map<String, ItemType>> get() = _items
 
     val path: List<String> by lazy {
         if (null == parent) emptyList() else parent.path + forReferenceInParent
     }
 
     override fun contains(referableName: String, typeName: String, conformsToFunc: (typeName1: String, typeName2: String) -> Boolean): Boolean =
-        this.items[referableName]?.any { conformsToFunc.invoke(it.second, typeName) } ?: false
+        this.items[referableName]?.entries?.any { conformsToFunc.invoke(it.key, typeName) } ?: false
 
     override fun createOrGetChildScope(forReferenceInParent: String, forTypeName: String, item: ItemType): ScopeSimple<ItemType> {
         var child = this._childScopes[forReferenceInParent]
@@ -85,32 +85,39 @@ class ScopeSimple<ItemType>(
         return child
     }
 
-    override fun addToScope(referableName: String, typeName: String, item: ItemType) {
-        val set = this._items[referableName]
-        when (set) {
+    override fun addToScope(referableName: String, typeName: String, item: ItemType): Boolean {
+        val map = this._items[referableName]
+        return when (map) {
             null -> {
-                val s = mutableSetOf(Pair(item, typeName))
-                this._items[referableName] = s
+                val m = mutableMapOf(typeName to item)
+                this._items[referableName] = m
+                true
             }
 
-            else -> set.add(Pair(item, typeName))
+            else -> when {
+                map.containsKey(typeName) -> false
+                else -> {
+                    map[typeName] = item
+                    true
+                }
+            }
         }
     }
 
     override fun findItemsNamed(name: String): Set<Pair<ItemType, String>> =
-        this.items[name] ?: emptySet()
+        this.items[name]?.map { Pair(it.value, it.key) }?.toSet() ?: emptySet()
 
     override fun findItemsConformingTo(conformsToFunc: (itemTypeName: String) -> Boolean) =
         items.values.flatMap {
             it.filter {
-                conformsToFunc.invoke(it.second)
-            }.map { it.first }
+                conformsToFunc.invoke(it.key)
+            }.map { it.value }
         }
 
     override fun findItemsNamedConformingTo(name: String, conformsToFunc: (itemTypeName: String) -> Boolean): List<ItemType> =
         items[name]?.filter {
-            conformsToFunc.invoke(it.second)
-        }?.map { it.first } ?: emptyList()
+            conformsToFunc.invoke(it.key)
+        }?.map { it.value } ?: emptyList()
 
 
     override fun findQualified(qualifiedName: List<String>): Set<Pair<ItemType, String>> = when (qualifiedName.size) {
@@ -135,11 +142,11 @@ class ScopeSimple<ItemType>(
         val scopeIndent = currentIndent + indentIncrement
         val content = items.entries.joinToString(separator = "\n") { me ->
             val itemName = me.key
-            val itemTypePairs = me.value
+            val itemTypeMap = me.value
             val itemTypeIndent = scopeIndent + indentIncrement
-            val itemContent = itemTypePairs.joinToString(separator = "\n") {
-                val item = it.first
-                val itemType = it.second
+            val itemContent = itemTypeMap.entries.joinToString(separator = "\n") {
+                val item = it.value
+                val itemType = it.key
                 val scope = when {
                     this.childScopes.containsKey(itemName) -> {
                         val chScope = this.childScopes[itemName]!!

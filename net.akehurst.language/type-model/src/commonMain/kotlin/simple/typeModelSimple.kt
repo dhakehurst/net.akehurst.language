@@ -78,8 +78,8 @@ abstract class TypeModelSimpleAbstract(
         return when {
             qualifiedName.contains(".").not() -> findFirstByNameOrNull(qualifiedName)
             else -> {
-                val nsn = qualifiedName.substringBefore(".")
-                val tn = qualifiedName.substringAfter(".")
+                val nsn = qualifiedName.substringBeforeLast(".")
+                val tn = qualifiedName.substringAfterLast(".")
                 namespace[nsn]?.findOwnedTypeNamed(tn)
             }
         }

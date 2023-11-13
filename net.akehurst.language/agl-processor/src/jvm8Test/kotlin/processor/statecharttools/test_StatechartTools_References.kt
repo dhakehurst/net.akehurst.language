@@ -156,8 +156,8 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextSimple {
-            item("'A'", "State", "/0/regions/0/states/0")
-            item("'B'", "State", "/0/regions/0/states/1")
+            item("'A'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
+            item("'B'", "com.itemis.create.Statechart.State", "/0/regions/0/states/1")
         }
 
         test(grammar, goal, sentence, ContextSimple(), true, expected)
@@ -179,7 +179,7 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextSimple {
-            item("'A'", "State", "/0/regions/0/states/0")
+            item("'A'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
         }
 
         test(grammar, goal, sentence, ContextSimple(), true, expected)
@@ -187,6 +187,37 @@ class test_StatechartTools_References {
 
     @Test
     fun Statechart_identify_states_in_nested_region_scope() {
+        val grammar = "Statechart"
+        val goal = "statechart"
+        val sentence = """
+            statechart 'Test' {
+                region 'Root' {
+                    state 'A' {
+                        region 'R1' { 
+                            state 'C' {}
+                        }
+                        region 'R2' {
+                            state 'D' {}
+                            state 'E' {}
+                        }
+                    }
+                }
+            }
+        """.trimIndent()
+
+        // TODO: missing state because of repeated state id - need to identify by qualified name !
+        val expected = contextSimple {
+            item("'A'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
+            item("'C'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/0/states/0")
+            item("'D'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/1/states/0")
+            item("'E'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/1/states/1")
+        }
+
+        test(grammar, goal, sentence, ContextSimple(), true, expected)
+    }
+
+    @Test
+    fun Statechart_identify_states_in_nested_region_scope_fail() {
         val grammar = "Statechart"
         val goal = "statechart"
         val sentence = """
@@ -207,9 +238,9 @@ class test_StatechartTools_References {
 
         // TODO: missing state because of repeated state id - need to identify by qualified name !
         val expected = contextSimple {
-            item("'A'", "State", "/0/regions/0/states/0")
-            item("'C'", "State", "/0/regions/0/states/0/regions/1/states/0")
-            item("'D'", "State", "/0/regions/0/states/0/regions/1/states/1")
+            item("'A'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
+            item("'C'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/1/states/0")
+            item("'D'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/1/states/1")
         }
 
         test(grammar, goal, sentence, ContextSimple(), true, expected)
@@ -232,8 +263,8 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expectedContext = contextSimple {
-            item("'S1'", "State", "/0/regions/0/states/0")
-            item("'S2'", "State", "/0/regions/0/states/1")
+            item("'S1'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
+            item("'S2'", "com.itemis.create.Statechart.State", "/0/regions/0/states/1")
         }
 
         val expectedAsm = asmSimple(
@@ -285,7 +316,7 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextSimple {
-            scopedItem("I", "Interface", "/0/statechartLevelDeclaration/0") {
+            scopedItem("I", "com.itemis.create.Global.Interface", "/0/statechartLevelDeclaration/0") {
             }
         }
 
@@ -302,8 +333,8 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextSimple {
-            scopedItem("I", "Interface", "/0/statechartLevelDeclaration/0") {
-                item("v", "VariableDeclaration", "/0/statechartLevelDeclaration/0/annotatedDeclaration/0/memberDeclaration")
+            scopedItem("I", "com.itemis.create.Global.Interface", "/0/statechartLevelDeclaration/0") {
+                item("v", "com.itemis.create.Global.VariableDeclaration", "/0/statechartLevelDeclaration/0/annotatedDeclaration/0/memberDeclaration")
             }
         }
 

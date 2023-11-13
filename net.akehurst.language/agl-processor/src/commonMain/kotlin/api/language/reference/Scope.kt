@@ -86,7 +86,10 @@ interface Scope<ItemType> {
 
     val forTypeName: String
 
-    val items: Map<String, Set<Pair<ItemType, String>>>
+    /**
+     * item.name -> item.type -> item
+     */
+    val items: Map<String, Map<String, ItemType>>
 
     val childScopes: Map<String, Scope<ItemType>>
 
@@ -113,7 +116,11 @@ interface Scope<ItemType> {
 
     fun createOrGetChildScope(forReferenceInParent: String, forTypeName: String, item: ItemType): Scope<ItemType>
 
-    fun addToScope(referableName: String, typeName: String, item: ItemType)
+    /**
+     * adds Pair(item, typeName) to this scope
+     * return true if added, false if the pair is already in the scope
+     */
+    fun addToScope(referableName: String, typeName: String, item: ItemType): Boolean
 
     fun asString(currentIndent: String = "", indentIncrement: String = "  "): String
 }

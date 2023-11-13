@@ -20,7 +20,11 @@ import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.api.asm.Asm
+import net.akehurst.language.api.parser.InputLocation
+import net.akehurst.language.api.processor.LanguageIssue
+import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessor
+import net.akehurst.language.api.processor.LanguageProcessorPhase
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -37,13 +41,13 @@ class test_KerML_agl_Singles {
             Agl.processorFromStringDefault(grammarStr, crossReferenceModelStr).processor!!
         }
 
-        fun test_process(sentence: String, context: ContextSimple) {
+        fun test_process(sentence: String, context: ContextSimple, expIssues: Set<LanguageIssue>) {
             val result = processor.process(sentence, Agl.options {
                 semanticAnalysis {
                     context(context)
                 }
             })
-            assertTrue(result.issues.isEmpty(), result.issues.toString())
+            assertEquals(result.issues.all, expIssues, result.issues.toString())
         }
     }
 
@@ -77,7 +81,7 @@ class test_KerML_agl_Singles {
     }
 
     @Test
-    fun SINGLE_LINE_NOTE() {
+    fun parse_SINGLE_LINE_NOTE() {
         val sentence = """
           // a note
         """.trimIndent()
@@ -88,7 +92,7 @@ class test_KerML_agl_Singles {
     }
 
     @Test
-    fun MULTI_LINE_NOTE() {
+    fun parse_MULTI_LINE_NOTE() {
         val sentence = """
           //* a note
             * that covers
@@ -103,7 +107,7 @@ class test_KerML_agl_Singles {
     }
 
     @Test
-    fun MULTI_LINE_COMMENT() {
+    fun parse_MULTI_LINE_COMMENT() {
         val sentence = """
           /* a comment
            * over multiple
@@ -116,7 +120,7 @@ class test_KerML_agl_Singles {
     }
 
     @Test
-    fun package_empty() {
+    fun parse_package_empty() {
         //val goal = "Package"
         val sentence = """
           package ;
@@ -127,7 +131,7 @@ class test_KerML_agl_Singles {
     }
 
     @Test
-    fun package_body_empty() {
+    fun parse_package_body_empty() {
         //val goal = "Package"
         val sentence = """
           package Pkg {
@@ -143,7 +147,7 @@ class test_KerML_agl_Singles {
         val sentence = """
         """.trimIndent()
 
-        test_process(sentence, ContextSimple())
+        test_process(sentence, ContextSimple(), emptySet())
     }
 
     @Test
@@ -156,7 +160,7 @@ class test_KerML_agl_Singles {
             }
         """.trimIndent()
 
-        test_process(sentence, ContextSimple())
+        test_process(sentence, ContextSimple(), emptySet())
     }
 
     @Test
@@ -170,7 +174,15 @@ class test_KerML_agl_Singles {
             }
         """.trimIndent()
 
-        test_process(sentence, ContextSimple())
+        val expIssues = setOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(17, 1, 2, 16),
+                "(String,com.itemis.sysml.kerml.cst.KerML.DataType) already exists in scope /§root", null
+            )
+        )
+
+        test_process(sentence, ContextSimple(), expIssues)
     }
 
 }

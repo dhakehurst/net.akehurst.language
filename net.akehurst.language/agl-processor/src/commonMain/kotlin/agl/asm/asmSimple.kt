@@ -85,7 +85,7 @@ open class AsmSimple() : Asm {
         (this.root as MutableList).remove(root)
     }
 
-    fun createElement(asmPath: AsmPath, typeName: String): AsmStructureSimple {
+    fun createStructure(asmPath: AsmPath, typeName: String): AsmStructureSimple {
         val el = AsmStructureSimple(asmPath, typeName)// this, typeName)
         this.elementIndex[asmPath] = el
         return el

@@ -197,7 +197,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
     }
 
     private fun createAsmElement(path: AsmPath, name: String): AsmStructure =
-        this._asm!!.createElement(path, name)
+        this._asm!!.createStructure(path, name)
 
     private fun pathFor(parentPath: AsmPath, parentType: TypeDeclaration, nodeInfo: SpptDataNodeInfo): AsmPath {
         return when (parentType) {
@@ -478,7 +478,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                                         else -> createListSimpleValueFromBranch(target, downData.path, children.map { it.value as AsmValue? }, type)
                                     }
                                     val propDecl = (targetType.declaration as DataType).property.first()
-                                    val el = createAsmElement(downData.path, targetType.declaration.name)
+                                    val el = createAsmElement(downData.path, targetType.declaration.qualifiedName)
                                     setPropertyFromDeclaration(el, propDecl, propValue)
                                     el
                                 }
@@ -492,7 +492,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                                 null != targetType && targetType.declaration != SimpleTypeModelStdLib.ListSeparated && targetType.declaration is DataType -> {
                                     val propValue = createListSeparatedValueFromBranch(target, downData.path, children.map { it.value }, type)
                                     val propDecl = (targetType.declaration as DataType).property.first()
-                                    val el = createAsmElement(downData.path, targetType.declaration.name)
+                                    val el = createAsmElement(downData.path, targetType.declaration.qualifiedName)
                                     setPropertyFromDeclaration(el, propDecl, propValue)
                                     el
                                 }
@@ -513,7 +513,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
                             if (Debug.CHECK) check(1 == children.size)
                             children[0].value as AsmValue
                         } else {
-                            val el = createAsmElement(downData.path, type.name)
+                            val el = createAsmElement(downData.path, type.qualifiedName)
                             for (propDecl in type.property) {
                                 val propType = propDecl.typeInstance.declaration
                                 val propValue: AsmValue? = when (propType) {
@@ -681,7 +681,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
     }
 
     private fun createTupleFrom(sentence: Sentence, type: TupleType, path: AsmPath, childData: ChildData): AsmStructure {
-        val el = createAsmElement(path, type.name) // TODO: should have a createTuple method
+        val el = createAsmElement(path, type.qualifiedName) // TODO: should have a createTuple method
         val v = childData.value
         for (propDecl in type.property) {
             val propType = propDecl.typeInstance
@@ -705,7 +705,7 @@ abstract class SyntaxAnalyserSimpleAbstract<A : Asm>(
             if (Debug.CHECK) check(1 == children.size)
             children[0].value as AsmStructure
         } else {
-            val el = createAsmElement(path, type.name)
+            val el = createAsmElement(path, type.qualifiedName)
             for (propDecl in type.property) {
                 val propPath = path + propDecl.name
                 val propType = propDecl.typeInstance.declaration
