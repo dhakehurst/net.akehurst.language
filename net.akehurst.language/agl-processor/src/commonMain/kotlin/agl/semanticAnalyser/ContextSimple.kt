@@ -27,7 +27,7 @@ class ContextSimple() : SentenceContext<AsmPath> {
     /**
      * The items in the scope contain a ScopePath to an element in an AsmSimple model
      */
-    override var rootScope = ScopeSimple<AsmPath>(null, "", CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
+    var rootScope = ScopeSimple<AsmPath>(null, "", CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
 
     fun asString(): String = "contextSimple scope §root ${rootScope.asString()}"
 
@@ -42,86 +42,116 @@ class ContextSimple() : SentenceContext<AsmPath> {
     override fun toString(): String = "ContextSimple"
 }
 
-class ScopeSimple<AsmElementIdType>(
-    val parent: ScopeSimple<AsmElementIdType>?,
+class ScopeSimple<ItemType>(
+    val parent: ScopeSimple<ItemType>?,
     val forReferenceInParent: String,
     override val forTypeName: String
-) : Scope<AsmElementIdType> {
+) : Scope<ItemType> {
 
     //should only be used for rootScope
-    val scopeMap = mutableMapOf<AsmElementIdType, ScopeSimple<AsmElementIdType>>()
+    val scopeMap = mutableMapOf<ItemType, ScopeSimple<ItemType>>()
 
-    private val _childScopes = mutableMapOf<String, ScopeSimple<AsmElementIdType>>()
+    private val _childScopes = mutableMapOf<String, ScopeSimple<ItemType>>()
 
-    // typeName -> referableName -> item
-    private val _items: MutableMap<String, MutableMap<String, AsmElementIdType>> = mutableMapOf()
+    // referableName -> (item, typeName)
+    private val _items: MutableMap<String, MutableSet<Pair<ItemType, String>>> = mutableMapOf()
 
-    override val rootScope: ScopeSimple<AsmElementIdType> by lazy {
+    override val rootScope: ScopeSimple<ItemType> by lazy {
         var s = this
         while (null != s.parent) s = s.parent!!
         s
     }
 
     // accessor needed for serialisation which assumes mutableMap for deserialisation
-    override val childScopes: Map<String, ScopeSimple<AsmElementIdType>> = _childScopes
+    override val childScopes: Map<String, ScopeSimple<ItemType>> = _childScopes
 
     // accessor needed for serialisation which assumes mutableMap for deserialisation
-    override val items: Map<String, Map<String, AsmElementIdType>> get() = _items
+    override val items: Map<String, Set<Pair<ItemType, String>>> get() = _items
 
     val path: List<String> by lazy {
         if (null == parent) emptyList() else parent.path + forReferenceInParent
     }
 
-    override fun createOrGetChildScope(forReferenceInParent: String, forTypeName: String, elementId: AsmElementIdType): ScopeSimple<AsmElementIdType> {
+    override fun contains(referableName: String, typeName: String, conformsToFunc: (typeName1: String, typeName2: String) -> Boolean): Boolean =
+        this.items[referableName]?.any { conformsToFunc.invoke(it.second, typeName) } ?: false
+
+    override fun createOrGetChildScope(forReferenceInParent: String, forTypeName: String, item: ItemType): ScopeSimple<ItemType> {
         var child = this._childScopes[forReferenceInParent]
         if (null == child) {
-            child = ScopeSimple<AsmElementIdType>(this, forReferenceInParent, forTypeName)
+            child = ScopeSimple<ItemType>(this, forReferenceInParent, forTypeName)
             this._childScopes[forReferenceInParent] = child
         }
-        this.rootScope.scopeMap[elementId] = child
+        this.rootScope.scopeMap[item] = child
         return child
     }
 
-    override fun addToScope(referableName: String, typeName: String, asmElementId: AsmElementIdType) {
-        var m = this._items[typeName]
-        if (null == m) {
-            m = mutableMapOf()
-            this._items[typeName] = m
+    override fun addToScope(referableName: String, typeName: String, item: ItemType) {
+        val set = this._items[referableName]
+        when (set) {
+            null -> {
+                val s = mutableSetOf(Pair(item, typeName))
+                this._items[referableName] = s
+            }
+
+            else -> set.add(Pair(item, typeName))
         }
-        m[referableName] = asmElementId
     }
 
-    override fun findOrNull(referableName: String, typeName: String): AsmElementIdType? = this.items[typeName]?.get(referableName)
+    override fun findItemsNamed(name: String): Set<Pair<ItemType, String>> =
+        this.items[name] ?: emptySet()
 
-    override fun findQualifiedOrNull(nameList: List<String>, typeName: String): AsmElementIdType? = when (nameList.size) {
-        0 -> null
-        1 -> this.findOrNull(nameList.first(), typeName)
+    override fun findItemsConformingTo(conformsToFunc: (itemTypeName: String) -> Boolean) =
+        items.values.flatMap {
+            it.filter {
+                conformsToFunc.invoke(it.second)
+            }.map { it.first }
+        }
+
+    override fun findItemsNamedConformingTo(name: String, conformsToFunc: (itemTypeName: String) -> Boolean): List<ItemType> =
+        items[name]?.filter {
+            conformsToFunc.invoke(it.second)
+        }?.map { it.first } ?: emptyList()
+
+
+    override fun findQualified(qualifiedName: List<String>): Set<Pair<ItemType, String>> = when (qualifiedName.size) {
+        0 -> emptySet()
+        1 -> this.findItemsNamed(qualifiedName.first())
         else -> {
-            val child = childScopes[nameList.first()]
-            child?.findQualifiedOrNull(nameList.drop(1), typeName)
+            val child = childScopes[qualifiedName.first()]
+            child?.findQualified(qualifiedName.drop(1)) ?: emptySet()
         }
     }
 
-
-    override fun isMissing(referableName: String, typeName: String): Boolean = null == this.findOrNull(referableName, typeName)
+    override fun findQualifiedConformingTo(qualifiedName: List<String>, conformsToFunc: (itemTypeName: String) -> Boolean): List<ItemType> = when (qualifiedName.size) {
+        0 -> emptyList()
+        1 -> this.findItemsNamedConformingTo(qualifiedName.first(), conformsToFunc)
+        else -> {
+            val child = childScopes[qualifiedName.first()]
+            child?.findQualifiedConformingTo(qualifiedName.drop(1), conformsToFunc) ?: emptyList()
+        }
+    }
 
     override fun asString(currentIndent: String, indentIncrement: String): String {
         val scopeIndent = currentIndent + indentIncrement
-        val content = items.entries.joinToString(separator = "\n") {
+        val content = items.entries.joinToString(separator = "\n") { me ->
+            val itemName = me.key
+            val itemTypePairs = me.value
             val itemTypeIndent = scopeIndent + indentIncrement
-            val itemContent = it.value.entries.joinToString(separator = "\n") {
+            val itemContent = itemTypePairs.joinToString(separator = "\n") {
+                val item = it.first
+                val itemType = it.second
                 val scope = when {
-                    this.childScopes.containsKey(it.key) -> {
-                        val chScope = this.childScopes[it.key]!!
+                    this.childScopes.containsKey(itemName) -> {
+                        val chScope = this.childScopes[itemName]!!
                         " ${chScope.asString(itemTypeIndent, indentIncrement)}"
                     }
 
                     else -> ""
                 }
-                "$itemTypeIndent${it.key} -> ${it.value.toString()}$scope"
+                "$itemTypeIndent${itemName}: $itemType -> $item$scope"
             }
 
-            "${scopeIndent}item ${it.key} {\n$itemContent\n$scopeIndent}"
+            "${scopeIndent}item $itemName {\n$itemContent\n$scopeIndent}"
         }
         return when {
             items.entries.isEmpty() -> "{ }"

@@ -17,6 +17,7 @@
 
 package net.akehurst.language.agl.agl.default
 
+import net.akehurst.language.agl.asm.isStdString
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverAsmSimple
 import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.IssueHolder
@@ -77,18 +78,13 @@ class ScopeCreator(
         val exp = crossReferenceModel.identifyingExpressionFor(scope.forTypeName, el.typeName)
         return if (null != exp && crossReferenceModel.isScopeDefinedFor(el.typeName)) {
             val refInParent = exp.createReferenceLocalToScope(scope, el)
-            if (null != refInParent) {
-                val newScope = scope.createOrGetChildScope(refInParent, el.typeName, el.path)
-                //_scopeMap[el.asmPath] = newScope
-                newScope
-            } else {
-                issues.warn(
-                    this.locationMap[el],
-                    "Trying to create child scope but cannot create a reference for '$el' because its identifying expression evaluates to null. Using type name as identifier."
-                )
-                val newScope = scope.createOrGetChildScope(el.typeName, el.typeName, el.path)
-                //_scopeMap[el.asmPath] = newScope
-                newScope
+            when {
+                refInParent is AsmNothing -> scope.createOrGetChildScope(el.typeName, el.typeName, el.path)
+                refInParent is AsmPrimitive && refInParent.isStdString -> scope.createOrGetChildScope((refInParent.value as String), el.typeName, el.path)
+                else -> {
+                    issues.error(this.locationMap[el], "Cannot create a local reference in '$scope' for '$el' because its identifying expression evaluates to $refInParent")
+                    scope
+                }
             }
         } else {
             scope
@@ -100,44 +96,43 @@ class ScopeCreator(
         if (null != exp) {
             //val reference = _scopeModel!!.createReferenceFromRoot(scope, el)
             val scopeLocalReference = exp.createReferenceLocalToScope(scope, el)
-            if (null != scopeLocalReference) {
-                val contextRef = el.path
-                scope.addToScope(scopeLocalReference, el.typeName, contextRef)
-            } else {
-                issues.warn(
-                    this.locationMap[el],
-                    "Cannot create a local reference in '$scope' for '$el' because its identifying expression evaluates to null. Using type name as identifier."
-                )
-                val contextRef = el.path
-                scope.addToScope(el.typeName, el.typeName, contextRef)
+            when {
+                scopeLocalReference is AsmNothing -> {
+//                issues.warn(
+//                    this.locationMap[el],
+//                    "Cannot create a local reference in '$scope' for '$el' because its identifying expression evaluates to Nothing. Using type name as identifier."
+//                )
+                    val contextRef = el.path
+                    scope.addToScope(el.typeName, el.qualifiedTypeName, contextRef)
+                }
+
+                scopeLocalReference is AsmPrimitive && scopeLocalReference.isStdString -> {
+                    val contextRef = el.path
+                    scope.addToScope((scopeLocalReference.value) as String, el.qualifiedTypeName, contextRef)
+                }
+
+                else -> {
+                    issues.error(this.locationMap[el], "Cannot create a local reference in '$scope' for '$el' because its identifying expression evaluates to $scopeLocalReference")
+                }
             }
+
         } else {
             // no need to add it to scope
         }
     }
 
-    private fun Expression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? = when (this) {
+    private fun Expression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue = when (this) {
         is RootExpression -> this.createReferenceLocalToScope(scope, element)
         is Navigation -> this.createReferenceLocalToScope(scope, element)
         else -> error("Subtype of Expression not handled in 'createReferenceLocalToScope'")
     }
 
-    private fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? {
-        val v = _interpreter.evaluateExpression(element, this)
-        return when (v) {
-            is AsmNothing -> null
-            is AsmPrimitive -> v.value as String
-            else -> TODO()
-        }
-    }
+    private fun RootExpression.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue =
+        _interpreter.evaluateExpression(element, this)
 
-    private fun Navigation.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): String? {
-        val res = _interpreter.evaluateExpression(element, this)
-        return when (res) {
-            is AsmNothing -> null
-            is AsmPrimitive -> res.value as String
-            else -> error("Evaluation of navigation '$this' on '$element' should result in a String, but it does not!")
-        }
-    }
+
+    private fun Navigation.createReferenceLocalToScope(scope: Scope<AsmPath>, element: AsmStructure): AsmValue =
+        _interpreter.evaluateExpression(element, this)
+
 
 }

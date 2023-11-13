@@ -27,7 +27,7 @@ import net.akehurst.language.typemodel.api.TypeModel
 class ContextFromTypeModelReference(
     val languageDefinitionId: String
 ) : SentenceContext<String> {
-    override val rootScope = ScopeSimple<String>(null, "", "")
+    val rootScope = ScopeSimple<String>(null, "", "")
 
     fun dereference(reg: LanguageRegistry): ContextFromTypeModel? {
         val langDef = reg.findOrNull<Any, Any>(this.languageDefinitionId)
@@ -41,49 +41,6 @@ class ContextFromTypeModelReference(
 class ContextFromTypeModel(
     val typeModel: TypeModel
 ) : SentenceContext<String> {
-
-    companion object {
-        const val TYPE_NAME_FOR_TYPES = "\$Type"
-        const val TYPE_NAME_FOR_PROPERTIES = "\$Property"
-    }
-
-    override val rootScope = ScopeSimple<String>(null, "", "")
-
-    fun clear() {
-        //this.rootScope = ScopeSimple<String>(null, "", "")
-    }
-
-    /*
-        fun createScopeFrom(grammarNamespaceQualifiedName: String, typeModel: TypeModel) {
-            val ns = typeModel.namespace[grammarNamespaceQualifiedName] as GrammarTypeNamespace
-                ?: error("TypeNamespace '$grammarNamespaceQualifiedName' not found")
-            val scope = ScopeSimple<String>(null, "", grammarNamespaceQualifiedName)
-            ns.allRuleNameToType.forEach {
-                scope.addToScope(it.value.type.name, TYPE_NAME_FOR_TYPES, it.value.type.name)
-                val type = it.value.type
-                when (type) {
-                    is PrimitiveType -> Unit
-                    is CollectionType -> Unit
-                    is UnnamedSuperTypeType -> Unit
-                    is TupleType -> {
-                    }
-
-                    is DataType -> {
-                        val chs = scope.createOrGetChildScope(type.name, type.name, type.name)
-                        type.property.values.forEach {
-                            chs.addToScope(it.name, TYPE_NAME_FOR_PROPERTIES, it.name)
-                        }
-                    }
-
-                    else -> when (type) {
-                        typeModel.NothingType -> Unit
-                        typeModel.AnyType -> Unit
-                    }
-                }
-            }
-            this.rootScope = scope
-        }
-    */
 
     override fun hashCode(): Int = typeModel.hashCode()
 

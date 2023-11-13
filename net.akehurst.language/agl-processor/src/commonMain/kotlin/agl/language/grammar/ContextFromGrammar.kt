@@ -49,7 +49,7 @@ class ContextFromGrammar(
         }
     }
 
-    override var rootScope = ScopeSimple<String>(null, "", "")
+    var rootScope = ScopeSimple<String>(null, "", "")
 
     fun clear() {
         this.rootScope = ScopeSimple<String>(null, "", "")

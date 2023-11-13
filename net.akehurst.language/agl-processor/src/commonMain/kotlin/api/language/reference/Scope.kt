@@ -79,27 +79,41 @@ interface ReferenceExpression {
 }
 
 /**
- * E - type of elements in the scope
+ * ItemType - type of elements in the scope
+ * TypeNames are specifically passed as Strings so that A Scope is easily serialised
  */
-interface Scope<AsmElementIdType> {
+interface Scope<ItemType> {
 
     val forTypeName: String
 
-    val items: Map<String, Map<String, AsmElementIdType>>
+    val items: Map<String, Set<Pair<ItemType, String>>>
 
-    val childScopes: Map<String, Scope<AsmElementIdType>>
+    val childScopes: Map<String, Scope<ItemType>>
 
-    val rootScope: Scope<AsmElementIdType>
+    val rootScope: Scope<ItemType>
 
-    fun isMissing(referableName: String, typeName: String): Boolean
+    fun contains(referableName: String, typeName: String, conformsToFunc: (typeName1: String, typeName2: String) -> Boolean): Boolean
 
-    fun findOrNull(referableName: String, typeName: String): AsmElementIdType?
+    /**
+     * find all items in this scope with the given <name>, return list of pairs (item,its-typeName)
+     */
+    fun findItemsNamed(name: String): Set<Pair<ItemType, String>>
 
-    fun findQualifiedOrNull(nameList: List<String>, typeName: String): AsmElementIdType?
+    fun findItemsConformingTo(conformsToFunc: (itemTypeName: String) -> Boolean): List<ItemType>
 
-    fun createOrGetChildScope(forReferenceInParent: String, forTypeName: String, elementId: AsmElementIdType): Scope<AsmElementIdType>
+    fun findItemsNamedConformingTo(name: String, conformsToFunc: (itemTypeName: String) -> Boolean): List<ItemType>
 
-    fun addToScope(referableName: String, typeName: String, asmElementId: AsmElementIdType)
+    /**
+     * find all items with the given qualified name, return list of pairs (item,its-typeName)
+     * if qualifiedName contains only one name, first try to find it
+     */
+    fun findQualified(qualifiedName: List<String>): Set<Pair<ItemType, String>>
+
+    fun findQualifiedConformingTo(qualifiedName: List<String>, conformsToFunc: (itemTypeName: String) -> Boolean): List<ItemType>
+
+    fun createOrGetChildScope(forReferenceInParent: String, forTypeName: String, item: ItemType): Scope<ItemType>
+
+    fun addToScope(referableName: String, typeName: String, item: ItemType)
 
     fun asString(currentIndent: String = "", indentIncrement: String = "  "): String
 }

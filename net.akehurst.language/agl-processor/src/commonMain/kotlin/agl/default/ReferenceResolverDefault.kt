@@ -147,7 +147,14 @@ class ReferenceResolverDefault(
         }
         when {
             referringValue is AsmPrimitive -> {
-                val targets = refExpr.refersToTypeName.mapNotNull { scope.findOrNull(referringValue.value as String, it) }
+                val referringStr = referringValue.value as String
+                val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typeModel.findFirstByNameOrNull(it) }
+                val targets = referredToTypes.flatMap { td ->
+                    scope.findItemsNamedConformingTo(referringStr) {
+                        val itemType = typeModel.findByQualifiedNameOrNull(it) ?: SimpleTypeModelStdLib.NothingType.declaration
+                        itemType.conformsTo(td)
+                    }
+                }
                 when {
                     targets.isEmpty() -> {
                         raiseError(self, "No target of type(s) ${refExpr.refersToTypeName} found for referring value '${referringValue.value}' in scope of element '$self'")
@@ -184,8 +191,12 @@ class ReferenceResolverDefault(
 
             referringValue is AsmList && referringValue.elements.all { (it is AsmPrimitive) && it.isStdString } -> {
                 val list = referringValue.elements.map { (it as AsmPrimitive).value as String }
-                val targets = refExpr.refersToTypeName.mapNotNull {
-                    scope.rootScope.findQualifiedOrNull(list, it)
+                val referredToTypes = refExpr.refersToTypeName.mapNotNull { this.typeModel.findFirstByNameOrNull(it) }
+                val targets = referredToTypes.flatMap { td ->
+                    scope.rootScope.findQualifiedConformingTo(list) {
+                        val itemType = typeModel.findByQualifiedNameOrNull(it) ?: SimpleTypeModelStdLib.NothingType.declaration
+                        itemType.conformsTo(td)
+                    }
                 }
                 when {
                     targets.isEmpty() -> {

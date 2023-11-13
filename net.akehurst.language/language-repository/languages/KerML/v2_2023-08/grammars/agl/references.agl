@@ -1,0 +1,32 @@
+namespace com.itemis.sysml.kerml.cst.KerML {
+
+    identify AliasMember by name
+    identify SimpleClassifier by classifierDeclaration.identification.name
+    identify DataType by classifierDeclaration.identification.name
+    identify Class by classifierDeclaration.identification.name
+    identify Structure by classifierDeclaration.identification.name
+    identify Association by classifierDeclaration.identification.name
+    identify AssociationStructure by classifierDeclaration.identification.name
+
+    identify Package by packageDeclaration.qualifiedName
+
+
+    scope Package {
+        identify AliasMember by name
+        identify SimpleClassifier by classifierDeclaration.identification.name
+        identify DataType by classifierDeclaration.identification.name
+        identify Class by classifierDeclaration.identification.name
+        identify Structure by classifierDeclaration.identification.name
+        identify Association by classifierDeclaration.identification.name
+        identify AssociationStructure by classifierDeclaration.identification.name
+
+        identify Package by packageDeclaration.qualifiedName
+
+    }
+
+    references {
+        in FeatureReference {
+            property qualifiedName refers-to Classifier
+        }
+    }
+}

@@ -29,30 +29,41 @@ import kotlin.test.assertTrue
 class test_KerML_agl_Singles {
 
     private companion object {
-        private val grammarPathStr = "/KerML/v2_2023-08/grammars/agl/grammar.agl"
-        private val grammarStr = this::class.java.getResource(grammarPathStr).readText()
+        private val languagePathStr = "/KerML/v2_2023-08/grammars/agl"
+        private val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
+        private val crossReferenceModelStr = this::class.java.getResource("$languagePathStr/references.agl").readText()
+
         val processor: LanguageProcessor<Asm, ContextSimple> by lazy {
-            Agl.processorFromStringDefault(grammarStr).processor!!
+            Agl.processorFromStringDefault(grammarStr, crossReferenceModelStr).processor!!
+        }
+
+        fun test_process(sentence: String, context: ContextSimple) {
+            val result = processor.process(sentence, Agl.options {
+                semanticAnalysis {
+                    context(context)
+                }
+            })
+            assertTrue(result.issues.isEmpty(), result.issues.toString())
         }
     }
 
     @Test
     fun parse_grammar() {
-        val grammarStr = this::class.java.getResource(grammarPathStr).readText()
+        val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
         val res = Agl.registry.agl.grammar.processor!!.parse(grammarStr)
         assertTrue(res.issues.isEmpty(), res.issues.toString())
     }
 
     @Test
     fun process_grammar() {
-        val grammarStr = this::class.java.getResource(grammarPathStr).readText()
+        val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
         val res = Agl.registry.agl.grammar.processor!!.process(grammarStr, Agl.options { semanticAnalysis { context(ContextFromGrammarRegistry(Agl.registry)) } })
         assertTrue(res.issues.errors.isEmpty(), res.issues.toString())
     }
 
     @Test
     fun check_grammar() {
-        val grammarStr = this::class.java.getResource(grammarPathStr).readText()
+        val grammarStr = this::class.java.getResource("$languagePathStr/grammar.agl").readText()
         val res = Agl.registry.agl.grammar.processor!!.process(
             grammarStr,
             Agl.options {
@@ -125,6 +136,41 @@ class test_KerML_agl_Singles {
         val result = processor.parse(sentence)
         assertNotNull(result.sppt)
         assertTrue(result.issues.isEmpty())
+    }
+
+    @Test
+    fun semanticAnalysis_RootNamespace_empty() {
+        val sentence = """
+        """.trimIndent()
+
+        test_process(sentence, ContextSimple())
+    }
+
+    @Test
+    fun semanticAnalysis_RootNamespace() {
+        val sentence = """
+            datatype String;
+            
+            class AClass {			
+                feature f: String;
+            }
+        """.trimIndent()
+
+        test_process(sentence, ContextSimple())
+    }
+
+    @Test
+    fun semanticAnalysis_RootNamespace_name_clash() {
+        val sentence = """
+            datatype String;
+            datatype String;
+            
+            class AClass {			
+                feature f: String;
+            }
+        """.trimIndent()
+
+        test_process(sentence, ContextSimple())
     }
 
 }

@@ -60,13 +60,13 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextFromGr
                     // TODO: user types
                     when (sel.kind) {
                         AglStyleSelectorKind.LITERAL -> {
-                            if (context.rootScope.isMissing(sel.value, "LITERAL")) {
+                            if (context.rootScope.findItemsNamedConformingTo(sel.value) { it == "LITERAL" }.isEmpty()) {
                                 issues.error(loc, "Terminal Literal ${sel.value} not found for style rule")
                             }
                         }
 
                         AglStyleSelectorKind.PATTERN -> {
-                            if (context.rootScope.isMissing(sel.value, "PATTERN")) {
+                            if (context.rootScope.findItemsNamedConformingTo(sel.value) { it == "PATTERN" }.isEmpty()) {
                                 issues.error(loc, "Terminal Pattern ${sel.value} not found for style rule")
                             }
                         }
@@ -75,7 +75,7 @@ class AglStyleSemanticAnalyser() : SemanticAnalyser<AglStyleModel, ContextFromGr
                             if (AglStyleSyntaxAnalyser.KEYWORD_STYLE_ID == sel.value) {
                                 // its OK
                             } else {
-                                if (context.rootScope.isMissing(sel.value, grammarRule.declaration.qualifiedName)) {
+                                if (context.rootScope.findItemsNamedConformingTo(sel.value) { it == grammarRule.declaration.qualifiedName }.isEmpty()) {
                                     issues.error(loc, "Grammar Rule '${sel.value}' not found for style rule")
                                 }
                             }
