@@ -1,17 +1,18 @@
-/**
- * Copyright (C) 2021 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+/*
+ * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ *          http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
 package net.akehurst.language.api.asm
@@ -22,7 +23,7 @@ import net.akehurst.language.agl.default.GrammarTypeNamespaceFromGrammar
 import net.akehurst.language.agl.default.ReferenceResolverDefault
 import net.akehurst.language.agl.default.ResolveFunction
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverAsmSimple
-import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
+import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
@@ -35,6 +36,7 @@ import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.typemodel.api.TypeModel
 import net.akehurst.language.typemodel.api.typeModel
 import net.akehurst.language.typemodel.simple.TupleTypeSimple
+import net.akehurst.language.typemodel.simple.UnnamedSupertypeTypeSimple
 
 @DslMarker
 annotation class AsmSimpleBuilderMarker
@@ -127,7 +129,14 @@ class AsmElementSimpleBuilder(
     _isRoot: Boolean,
     _parentScope: ScopeSimple<AsmPath>?
 ) {
-    private val _element = _asm.createStructure(_asmPath, _typeName).also {
+    private val _elementQualifiedTypeName = _typeName.let {
+        when (it) {
+            TupleTypeSimple.NAME -> it
+            UnnamedSupertypeTypeSimple.NAME -> it
+            else -> _typeModel.findFirstByNameOrNull(_typeName)?.qualifiedName ?: error("Cannot find type for name '$it'")
+        }
+    }
+    private val _element = _asm.createStructure(_asmPath, _elementQualifiedTypeName).also {
         if (_isRoot) _asm.addRoot(it)
     }
     private val _elementScope by lazy {
@@ -136,7 +145,7 @@ class AsmElementSimpleBuilder(
                 val expr = (_crossReferenceModel as CrossReferenceModelDefault).identifyingExpressionFor(_parentScope.forTypeName, _element.typeName)
                 val refInParent = expr?.createReferenceLocalToScope(_parentScope, _element)
                     ?: _element.typeName //error("Trying to create child scope but cannot create a reference for $_element")
-                val newScope = _parentScope.createOrGetChildScope(refInParent, _element.typeName, _element.path)
+                val newScope = _parentScope.createOrGetChildScope(refInParent, _element.qualifiedTypeName, _element.path)
                 _scopeMap[_asmPath] = newScope
                 newScope
             } else {
@@ -175,7 +184,7 @@ class AsmElementSimpleBuilder(
 
     fun propertyUnnamedString(value: String?) = this.propertyString(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, value)
     fun propertyString(name: String, value: String?) = this._property(name, value?.let { AsmPrimitiveSimple.stdString(it) } ?: AsmNothingSimple)
-    fun propertyNull(name: String) = this._property(name, AsmNothingSimple)
+    fun propertyNothing(name: String) = this._property(name, AsmNothingSimple)
     fun propertyUnnamedElement(typeName: String, init: AsmElementSimpleBuilder.() -> Unit): AsmStructure =
         propertyElementExplicitType(GrammarTypeNamespaceFromGrammar.UNNAMED_PRIMITIVE_PROPERTY_NAME, typeName, init)
 
@@ -221,7 +230,7 @@ class AsmElementSimpleBuilder(
                 else -> error("Evaluation of navigation '$nav' on '$_element' should result in a String, but it does not!")
             }
             if (null != referableName) {
-                es.addToScope(referableName, _element.typeName, _element.path)
+//                es.addToScope(referableName, _element.typeName, _element.path)
             }
         }
         return _element

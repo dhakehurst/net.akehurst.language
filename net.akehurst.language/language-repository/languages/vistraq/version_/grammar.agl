@@ -1,7 +1,6 @@
 namespace vistraq.query
 
 grammar Base {
-
     skip leaf WHITE_SPACE = "\s+" ;
     skip leaf MULTI_LINE_COMMENT = "/\*[^*]*\*+([^*/][^*]*\*+)*/" ;
     skip leaf SINGLE_LINE_COMMENT = "//[^\n\r]*" ;
@@ -10,11 +9,9 @@ grammar Base {
 	leaf POSITIVE_INT = "[0-9]+" ;
 	leaf UNLIMITED_POSITIVE_INT = "[0-9]+" | '*' ;
     leaf logicalOperator = 'AND' | 'OR' | 'XOR' ;
-
 }
 
 grammar Expressions extends Base {
-
     expression
 		= root
 		| literalValue
@@ -60,7 +57,6 @@ grammar Expressions extends Base {
 }
 
 grammar GraphConstruction extends Base {
-
 	subgraphConstruction = nodeSrc linkedSubGraphConstruction? whereConstructionClause?;
     nodeSrc = nodeConstruction | nodeReference ;
     nodeReference = NAME ;
@@ -85,11 +81,9 @@ grammar GraphConstruction extends Base {
     propertyNavigation = [NAME / '.']+ ;
 
     aliasDefinition = 'AS' NAME ;
-
 }
 
 grammar GraphPathExpressions extends Base {
-
     pathExpression =  nodeSelector linkedNodeSelectorPath? ;
 
 	nodeSelector = nodeTypeReferenceExpression aliasDefinition? ;
@@ -138,7 +132,6 @@ grammar GraphPathExpressions extends Base {
 }
 
 grammar Queries extends Base {
-
     query = singleQuery | compositeQuery | letInQuery;
     singleQuery = timespanDefinition? querySource? returnDefinition? ;
     compositeQuery = [ singleQuery / compositionOperator ]2+ ;
@@ -181,4 +174,20 @@ grammar Queries extends Base {
 
 	leaf STORED_QUERY_ID = "([a-zA-Z_][a-zA-Z0-9_]*)([.][a-zA-Z_][a-zA-Z0-9_]*)?" ; // project metricDef OR metricSet.metricDef
     leaf QUOTED_TIMESTAMP = "'([^']|\\')*'" ; //TODO: better regex for timestamps
+}
+
+grammar Unit extends Base {
+
+    unit = query model? ;
+    query = Queries::query ;
+    model = 'typed-graph-model' '{'
+        nodeList
+        linkList
+    '}'
+    ;
+
+    nodeList = nodeType* ;
+    linkList = linkType* ;
+    nodeType = 'node-type' NAME ;
+    linkType = 'edge-type' NAME ':' NAME '-->' NAME ;
 }

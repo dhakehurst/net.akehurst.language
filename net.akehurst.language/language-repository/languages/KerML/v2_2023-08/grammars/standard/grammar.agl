@@ -23,7 +23,7 @@ namespace com.itemis.sysml.kerml.cst
 
 grammar KerML {
 
-    @defaultGoal: RootNamespace
+    @defaultGoalRule: RootNamespace
 
     // 8.2.2 Root
     // 8.2.2.1 Line Terminators and White Space

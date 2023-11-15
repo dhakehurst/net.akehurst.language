@@ -19,9 +19,11 @@ package net.akehurst.language.agl.language.reference
 import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.grammarTypeModel.GrammarTypeModelTest
 import net.akehurst.language.agl.grammarTypeModel.grammarTypeModel
-import net.akehurst.language.agl.language.expressions.NavigationDefault
+import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
+import net.akehurst.language.agl.language.reference.asm.builder.crossReferenceModel
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
+import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -35,7 +37,7 @@ class test_CrossReferences {
     private companion object {
         val aglProc = Agl.registry.agl.crossReference.processor!!
 
-        fun test(grammarStr: String, sentence: String, expected: CrossReferenceModelDefault, expIssues: Set<LanguageIssue>) {
+        fun test(grammarStr: String, sentence: String, expected: CrossReferenceModel, expIssues: Set<LanguageIssue>) {
             val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!![0]
             val result = aglProc.process(
                 sentence = sentence,
@@ -46,7 +48,7 @@ class test_CrossReferences {
 
             assertEquals(expIssues, result.issues.all, result.issues.toString())
             val actual = result.asm!!
-            assertEquals(expected.declarationsForNamespace, result.asm?.declarationsForNamespace)
+            assertEquals(expected.declarationsForNamespace, result.asm?.declarationsForNamespace?.toMap())
             val expNs = expected.declarationsForNamespace["test.Test"]!!
             val actNs = actual.declarationsForNamespace["test.Test"]!!
             assertEquals(expNs.scopes, actNs.scopes)
@@ -172,9 +174,10 @@ class test_CrossReferences {
             }
         """.trimIndent()
 
-        val expected = CrossReferenceModelDefault().apply {
-            declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
-                scopes["Rule1"] = (ScopeDefinitionDefault("Rule1"))
+        val expected = crossReferenceModel {
+            declarationsFor("test.Test") {
+                scope("Rule1") {
+                }
             }
         }
 
@@ -196,9 +199,9 @@ class test_CrossReferences {
             }
         """.trimIndent()
 
-        val expected = CrossReferenceModelDefault().apply {
-            declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
-                scopes["RuleX"] = (ScopeDefinitionDefault("RuleX"))
+        val expected = crossReferenceModel {
+            declarationsFor("test.Test") {
+                scope("RuleX") { }
             }
         }
         val expIssues = setOf(
@@ -231,11 +234,11 @@ class test_CrossReferences {
             }
         """.trimIndent()
 
-        val expected = CrossReferenceModelDefault().apply {
-            declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
-                scopes["Rule1"] = (ScopeDefinitionDefault("Rule1").apply {
-                    identifiables.add(IdentifiableDefault("Rule2", NavigationDefault("rule3")))
-                })
+        val expected = crossReferenceModel {
+            declarationsFor("test.Test") {
+                scope("Rule1") {
+                    identify("Rule2", "rule3")
+                }
             }
         }
 
@@ -261,11 +264,11 @@ class test_CrossReferences {
             }
         """.trimIndent()
 
-        val expected = CrossReferenceModelDefault().apply {
-            declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
-                scopes["Rule1"] = (ScopeDefinitionDefault("Rule1").apply {
-                    identifiables.add(IdentifiableDefault("RuleX", NavigationDefault("rule3")))
-                })
+        val expected = crossReferenceModel {
+            declarationsFor("test.Test") {
+                scope("Rule1") {
+                    identify("RuleX", "rule3")
+                }
             }
         }
         val expIssues = setOf(
@@ -301,11 +304,11 @@ class test_CrossReferences {
             }
         """.trimIndent()
 
-        val expected = CrossReferenceModelDefault().apply {
-            declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
-                scopes["Rule1"] = (ScopeDefinitionDefault("Rule1").apply {
-                    identifiables.add(IdentifiableDefault("Rule2", NavigationDefault("ruleX")))
-                })
+        val expected = crossReferenceModel {
+            declarationsFor("test.Test") {
+                scope("Rule1") {
+                    identify("Rule2", "ruleX")
+                }
             }
         }
         val expIssues = setOf(
@@ -342,15 +345,11 @@ class test_CrossReferences {
             }
         """.trimIndent()
 
-        val expected = CrossReferenceModelDefault().apply {
-            declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
-                references.add(
-                    ReferenceDefinitionDefault(
-                        "Rule2", listOf(
-                            PropertyReferenceExpressionDefault(NavigationDefault("rule3"), listOf("Rule1"), null)
-                        )
-                    )
-                )
+        val expected = crossReferenceModel {
+            declarationsFor("test.Test") {
+                reference("Rule2") {
+                    property("rule3", listOf("Rule1"), null)
+                }
             }
         }
         val expIssues = setOf<LanguageIssue>()
@@ -380,9 +379,11 @@ class test_CrossReferences {
             }
         """.trimIndent()
 
-        val expected = CrossReferenceModelDefault().apply {
-            declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
-                references.add(ReferenceDefinitionDefault("RuleX", listOf(PropertyReferenceExpressionDefault(NavigationDefault("ruleY"), listOf("RuleZ", "RuleW"), null))))
+        val expected = crossReferenceModel {
+            declarationsFor("test.Test") {
+                reference("RuleX") {
+                    property("ruleY", listOf("RuleZ", "RuleW"), null)
+                }
             }
         }
         val expIssues = setOf(
@@ -424,27 +425,21 @@ class test_CrossReferences {
         val sentence = """
             namespace test.Test {
                 references {
-                    in Type1 {
-                        property prop refers-to Type2|Type3|Type4
+                    in Rule1 {
+                        property rule2 refers-to Rule1|Rule2|Rule3
                     }
                 }
             }
         """.trimIndent()
 
-        val expected = CrossReferenceModelDefault().apply {
-            declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
-                references.add(ReferenceDefinitionDefault("Type1", listOf(PropertyReferenceExpressionDefault(NavigationDefault("prop"), listOf("Type2", "Type3", "Type4"), null))))
-
+        val expected = crossReferenceModel {
+            declarationsFor("test.Test") {
+                reference("Rule1") {
+                    property("rule2", listOf("Rule1", "Rule2", "Rule3"), null)
+                }
             }
         }
-        val expIssues = setOf(
-            LanguageIssue(
-                LanguageIssueKind.ERROR,
-                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
-                InputLocation(36, 23, 2, 5),
-                "In scope for 'Rule1', 'ruleX' not found for identifying property of 'Rule2'"
-            )
-        )
+        val expIssues = setOf<LanguageIssue>()
 
         test(grammarStr, sentence, expected, expIssues)
 
@@ -471,15 +466,11 @@ class test_CrossReferences {
             }
         """.trimIndent()
 
-        val expected = CrossReferenceModelDefault().apply {
-            declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
-                references.add(
-                    ReferenceDefinitionDefault(
-                        "Rule2", listOf(
-                            PropertyReferenceExpressionDefault(NavigationDefault("rule3"), listOf("Rule1"), null)
-                        )
-                    )
-                )
+        val expected = crossReferenceModel {
+            declarationsFor("test.Test") {
+                reference("Rule2") {
+                    property("rule3", listOf("AnExternalType1", "AnExternalType2"), null)
+                }
             }
         }
         val expIssues = setOf(
@@ -521,15 +512,12 @@ class test_CrossReferences {
             }
         """.trimIndent()
 
-        val expected = CrossReferenceModelDefault().apply {
-            declarationsForNamespace["test.Test"] = DeclarationsForNamespaceDefault("test.Test").apply {
-                references.add(
-                    ReferenceDefinitionDefault(
-                        "Rule2", listOf(
-                            PropertyReferenceExpressionDefault(NavigationDefault("rule3"), listOf("AnExternalType1", "AnExternalType2"), null)
-                        )
-                    )
-                )
+        val expected = crossReferenceModel {
+            declarationsFor("test.Test") {
+                externalTypes("AnExternalType1", "AnExternalType2")
+                reference("Rule2") {
+                    property("rule3", listOf("AnExternalType1", "AnExternalType2"), null)
+                }
             }
         }
         val expIssues = setOf<LanguageIssue>()

@@ -21,8 +21,8 @@ import net.akehurst.language.agl.asm.AsmNothingSimple
 import net.akehurst.language.agl.asm.AsmPrimitiveSimple
 import net.akehurst.language.agl.asm.isStdString
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverAsmSimple
-import net.akehurst.language.agl.language.reference.CollectionReferenceExpressionDefault
-import net.akehurst.language.agl.language.reference.PropertyReferenceExpressionDefault
+import net.akehurst.language.agl.language.reference.asm.CollectionReferenceExpressionDefault
+import net.akehurst.language.agl.language.reference.asm.PropertyReferenceExpressionDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
 import net.akehurst.language.api.asm.*
@@ -171,19 +171,31 @@ class ReferenceResolverDefault(
 
                     else -> {
                         val referred = targets.first() // already checked for empty and > 1, so must be only one
-                        if (null != resolveFunction) {
-                            val ref = resolveFunction.invoke(referred)
-                            when (ref) {
-                                null -> this.raiseError(self, "Asm does not contain element '$referred' as reference for '${self.typeName}.${refExpr.referringPropertyNavigation}'")
-                                is AsmStructure -> {
-                                    val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
-                                    referringProperty.convertToReferenceTo(ref)
-                                }
-
-                                else -> this.raiseError(self, "Asm element '$referred' is not a reference to a structured element of the asm")
+                        when {
+                            referred.isExternal -> {
+                                // cannot resolve, intentionally external, refer to null
+                                val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
+                                referringProperty.convertToReferenceTo(null)
                             }
-                        } else {
-                            // no resolve function so do not resolve, maybe intentional so do not warn or error
+
+                            null != resolveFunction -> {
+                                val ref = resolveFunction.invoke(referred)
+                                when (ref) {
+                                    null -> this.raiseError(
+                                        self,
+                                        "Asm does not contain element '$referred' as reference for '${self.typeName}.${refExpr.referringPropertyNavigation}'"
+                                    )
+
+                                    is AsmStructure -> {
+                                        val referringProperty = refExpr.referringPropertyNavigation.propertyFor(self)
+                                        referringProperty.convertToReferenceTo(ref)
+                                    }
+
+                                    else -> this.raiseError(self, "Asm element '$referred' is not a reference to a structured element of the asm")
+                                }
+                            }
+
+                            else -> Unit // no resolve function so do not resolve, maybe intentional so do not warn or error
                         }
                     }
                 }

@@ -26,7 +26,11 @@ import net.akehurst.language.agl.language.format.AglFormatGrammar
 import net.akehurst.language.agl.language.format.AglFormatSemanticAnalyser
 import net.akehurst.language.agl.language.format.AglFormatSyntaxAnalyser
 import net.akehurst.language.agl.language.grammar.*
-import net.akehurst.language.agl.language.reference.*
+import net.akehurst.language.agl.language.reference.ReferencesCompletionProvider
+import net.akehurst.language.agl.language.reference.ReferencesGrammar
+import net.akehurst.language.agl.language.reference.ReferencesSemanticAnalyser
+import net.akehurst.language.agl.language.reference.ReferencesSyntaxAnalyser
+import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.language.style.AglStyleCompletionProvider
 import net.akehurst.language.agl.language.style.AglStyleGrammar
 import net.akehurst.language.agl.language.style.AglStyleSemanticAnalyser

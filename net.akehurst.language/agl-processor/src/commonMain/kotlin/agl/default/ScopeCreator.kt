@@ -19,7 +19,7 @@ package net.akehurst.language.agl.agl.default
 
 import net.akehurst.language.agl.asm.isStdString
 import net.akehurst.language.agl.language.expressions.ExpressionsInterpreterOverAsmSimple
-import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
+import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.language.expressions.Expression

@@ -23,7 +23,7 @@ import net.akehurst.language.agl.default.TypeModelFromGrammar
 import net.akehurst.language.agl.language.format.AglFormatterModelDefault
 import net.akehurst.language.agl.language.grammar.ContextFromGrammar
 import net.akehurst.language.agl.language.grammar.ContextFromGrammarRegistry
-import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
+import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.language.style.asm.AglStyleModelDefault
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.processor.IssueHolder
@@ -274,19 +274,19 @@ class test_StatechartTools_References {
         ) {
             element("Statechart") {
                 propertyString("name", "'Test'")
-                propertyNull("specification")
+                propertyNothing("specification")
                 propertyListOfElement("regions") {
                     element("Region") {
                         propertyString("name", "'main region'")
                         propertyListOfElement("states") {
                             element("State") {
                                 propertyString("name", "'S1'")
-                                propertyNull("stateSpec")
+                                propertyNothing("stateSpec")
                                 propertyListOfElement("regions") {}
                             }
                             element("State") {
                                 propertyString("name", "'S2'")
-                                propertyNull("stateSpec")
+                                propertyNothing("stateSpec")
                                 propertyListOfElement("regions") {}
                             }
                         }
@@ -296,7 +296,7 @@ class test_StatechartTools_References {
                     propertyListOfElement("transition") {
                         element("Transition") {
                             reference("name", "'S1'")
-                            propertyNull("transitionSpecification")
+                            propertyNothing("transitionSpecification")
                             reference("name2", "'S2'")
                         }
                     }
@@ -324,7 +324,7 @@ class test_StatechartTools_References {
     }
 
     @Test
-    fun Global_identify_variable_in_interface() {
+    fun identify_Global_variable_in_interface() {
         val grammar = "Global"
         val goal = "StatechartSpecification"
         val sentence = """
@@ -342,7 +342,7 @@ class test_StatechartTools_References {
     }
 
     @Test
-    fun Global_identify_imports() {
+    fun identify_Global_imports() {
         val grammar = "Global"
         val goal = "StatechartSpecification"
         val sentence = """
@@ -353,18 +353,16 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextSimple {
-            scopedItem("ImportDeclarations", "ImportDeclarations", "/0/statechartLevelDeclaration/0") {
-                item("\"x\"", "ImportedName", "/0/statechartLevelDeclaration/0/importedName/0")
-                item("\"y\"", "ImportedName", "/0/statechartLevelDeclaration/0/importedName/1")
-                item("\"z\"", "ImportedName", "/0/statechartLevelDeclaration/0/importedName/2")
-            }
+            item("\"x\"", "com.itemis.create.Global.ImportedName", "/0/statechartLevelDeclaration/0/importedName/0")
+            item("\"y\"", "com.itemis.create.Global.ImportedName", "/0/statechartLevelDeclaration/0/importedName/1")
+            item("\"z\"", "com.itemis.create.Global.ImportedName", "/0/statechartLevelDeclaration/0/importedName/2")
         }
 
         test(grammar, goal, sentence, ContextSimple(), true, expected)
     }
 
     @Test
-    fun Global_identify_operation_in_internal() {
+    fun identify_Global_operation_in_internal() {
         val grammar = "Global"
         val goal = "StatechartSpecification"
         val sentence = """
@@ -373,16 +371,14 @@ class test_StatechartTools_References {
         """.trimIndent()
 
         val expected = contextSimple {
-            scopedItem("InternalDeclarations", "InternalDeclarations", "/0/statechartLevelDeclaration/0") {
-                scopedItem("O", "OperationDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration") {}
-            }
+            scopedItem("O", "com.itemis.create.Global.OperationDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration") {}
         }
 
         test(grammar, goal, sentence, ContextSimple(), true, expected)
     }
 
     @Test
-    fun Global_LocalReaction_call_internal_operation() {
+    fun reference_Global_LocalReaction_call_internal_operation() {
         val grammar = "Global"
         val goal = "StatechartSpecification"
         val sentence = """
@@ -440,9 +436,7 @@ StatechartSpecification {
         """.trimIndent()
 
         val expectedContext = contextSimple {
-            scopedItem("InternalDeclarations", "InternalDeclarations", "/0/statechartLevelDeclaration/0") {
-                scopedItem("func", "OperationDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration") {}
-            }
+            scopedItem("func", "com.itemis.create.Global.OperationDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration") {}
         }
 
         val expectedAsm = asmSimple(
@@ -451,7 +445,7 @@ StatechartSpecification {
             context = ContextSimple()
         ) {
             element("StatechartSpecification") {
-                propertyNull("namespace")
+                propertyNothing("namespace")
                 propertyListOfElement("annotation") {}
                 propertyListOfElement("statechartLevelDeclaration") {
                     element("InternalDeclarations") {
@@ -461,7 +455,7 @@ StatechartSpecification {
                                 propertyElementExplicitType("memberDeclaration", "OperationDeclaration") {
                                     propertyString("id", "func")
                                     propertyListOfElement("parameterList") {}
-                                    propertyNull("\$group")
+                                    propertyNothing("\$group")
                                 }
                             }
                             element("LocalReaction") {
@@ -477,7 +471,7 @@ StatechartSpecification {
                                             }
                                         }
                                     }
-                                    propertyNull("guard")
+                                    propertyNothing("guard")
                                 }
                                 propertyElementExplicitType("reactionEffect", "ReactionEffect") {
                                     propertyElementExplicitType("\$choice", "FunctionCall") {
@@ -507,102 +501,37 @@ StatechartSpecification {
                 var v:integer
         """.trimIndent()
 
-        val expSPPT = """
-StatechartSpecification {
-  §StatechartSpecification§opt1 { <EMPTY> }
-  §StatechartSpecification§multi2 { <EMPTY> }
-  §StatechartSpecification§multi3 { StatechartDeclaration { InternalDeclarations {
-    'internal'  WS : ' '
-    ':' WS : '⏎    '
-    §InternalDeclarations§multi1 {
-      InternalDeclaration { AnnotatedDeclaration {
-        §AnnotatedDeclaration§multi1 { <EMPTY> }
-        MemberDeclaration { OperationDeclaration {
-          'operation' WS : ' '
-          ID : 'func'
-          '('
-          ParameterList { <EMPTY> }
-          ')' WS : '⏎    '
-          §OperationDeclaration§opt1 { <EMPTY> }
-        } }
-      } }
-      InternalDeclaration { LocalReaction {
-        ReactionTrigger {
-          EventSpecList { EventSpec { TimeEventSpec {
-            TimeEventType {
-              'every' WS : ' '
-            }
-            Expression { PrimaryExpression { PrimitiveValueExpression { Literal { IntLiteral : '1' } } } }
-            TimeUnit : 's' WS : ' '
-          } } }
-          §ReactionTrigger§opt1 { <EMPTY> }
-        }
-        '/' WS : ' '
-        ReactionEffect {
-          §ReactionEffect§choice1 { Expression { PrimaryExpression { FeatureCall { FunctionCall {
-            ID : 'func'
-            ArgumentList {
-              '('
-              §ArgumentList§opt1 { <EMPTY> }
-              ')'
-            }
-          } } } } }
-          §ReactionEffect§multi1 { <EMPTY> }
-        }
-      } }
-    }
-  } } }
-}
-        """.trimIndent()
+        // add to type-model for things externally added to context
+        val ns = processors[grammar]!!.typeModel.findOrCreateNamespace("external", emptyList())
+        val bit = ns.findOwnedOrCreatePrimitiveTypeNamed("BuiltInType")
 
         val expectedContext = contextSimple {
-            scopedItem("InternalDeclarations", "InternalDeclarations", "/0/statechartLevelDeclaration/0") {
-                scopedItem("v", "VariableDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration") {}
-            }
+            item("integer", "external.BuiltInType", "§external")
         }
 
         val expectedAsm = asmSimple(
             typeModel = processors[grammar]!!.typeModel,
             crossReferenceModel = processors[grammar]!!.crossReferenceModel as CrossReferenceModelDefault,
-            context = ContextSimple()
+            context = expectedContext
         ) {
             element("StatechartSpecification") {
-                propertyNull("namespace")
+                propertyNothing("namespace")
                 propertyListOfElement("annotation") {}
                 propertyListOfElement("statechartLevelDeclaration") {
                     element("InternalDeclarations") {
                         propertyListOfElement("internalDeclaration") {
                             element("AnnotatedDeclaration") {
                                 propertyListOfElement("annotation") {}
-                                propertyElementExplicitType("memberDeclaration", "OperationDeclaration") {
-                                    propertyString("id", "func")
-                                    propertyListOfElement("parameterList") {}
-                                    propertyNull("\$group")
-                                }
-                            }
-                            element("LocalReaction") {
-                                propertyTuple("reactionTrigger") {
-                                    propertyElementExplicitType("eventSpecList", "EventSpecList") {
-                                        propertyListOfElement("eventSpec") {
-                                            element("TimeEventSpec") {
-                                                propertyString("timeEventType", "every")
-                                                propertyElementExplicitType("expression", "PrimitiveValueExpression") {
-                                                    propertyString("literal", "1")
-                                                }
-                                                propertyString("timeUnit", "s")
-                                            }
+                                propertyElementExplicitType("memberDeclaration", "VariableDeclaration") {
+                                    propertyString("variableDeclarationKind", "var")
+                                    propertyString("id", "v")
+                                    propertyTuple("\$group") {
+                                        propertyElementExplicitType("typeSpecifier", "TypeSpecifier") {
+                                            reference("fqn", "integer")
+                                            propertyNothing("genericTypeArguments")
                                         }
                                     }
-                                    propertyNull("guard")
-                                }
-                                propertyElementExplicitType("reactionEffect", "ReactionEffect") {
-                                    propertyElementExplicitType("\$choice", "FunctionCall") {
-                                        reference("id", "func")
-                                        propertyElementExplicitType("argumentList", "ArgumentList") {
-                                            propertyListOfElement("arguments") {}
-                                        }
-                                    }
-                                    propertyListOfElement("\$list") {}
+                                    propertyNothing("\$group2")
                                 }
                             }
                         }
@@ -612,7 +541,7 @@ StatechartSpecification {
         }
 
         val context = ContextSimple()
-        context.rootScope.addToScope("integer", "Type", AsmPathSimple.EXTERNAL)
+        context.rootScope.addToScope("integer", bit.qualifiedName, AsmPathSimple.EXTERNAL)
         test(grammar, goal, sentence, context, true, expectedContext, expectedAsm)
     }
 

@@ -593,7 +593,7 @@ class test_SyntaxAnalyserSimple {
         tests.define("") {
             asmSimple {
                 element("S") {
-                    propertyNull("a")
+                    propertyNothing("a")
                 }
             }
         }
@@ -668,7 +668,7 @@ class test_SyntaxAnalyserSimple {
         tests.define("") {
             asmSimple {
                 element("S") {
-                    propertyNull("a")
+                    propertyNothing("a")
                 }
             }
         }
@@ -714,7 +714,7 @@ class test_SyntaxAnalyserSimple {
             asmSimple {
                 element("S") {
                     propertyString("b", "b")
-                    propertyNull("a")
+                    propertyNothing("a")
                 }
             }
         }
@@ -762,7 +762,7 @@ class test_SyntaxAnalyserSimple {
             asmSimple {
                 element("S") {
                     propertyElementExplicitType("oA", "OA") {
-                        propertyNull("a")
+                        propertyNothing("a")
                     }
                 }
             }
@@ -1991,7 +1991,7 @@ class test_SyntaxAnalyserSimple {
             asmSimple {
                 element("S") {
                     propertyString("a", "a")
-                    propertyNull("\$choice")
+                    propertyNothing("\$choice")
                     propertyString("f", "f")
                 }
             }
@@ -3188,7 +3188,7 @@ class test_SyntaxAnalyserSimple {
             asmSimple {
                 element("S") {
                     propertyString("a", "a")
-                    propertyNull("x")
+                    propertyNothing("x")
                     propertyString("e", "e")
                 }
             }
@@ -3576,7 +3576,7 @@ class test_SyntaxAnalyserSimple {
                 element("S") {
                     propertyElementExplicitType("type", "Type") {
                         propertyString("name", "A")
-                        propertyNull("typeArgs")
+                        propertyNothing("typeArgs")
                     }
                 }
             }
@@ -3590,7 +3590,7 @@ class test_SyntaxAnalyserSimple {
                             propertyListOfElement("typeArgList") {
                                 element("Type") {
                                     propertyString("name", "B")
-                                    propertyNull("typeArgs")
+                                    propertyNothing("typeArgs")
                                 }
                             }
                         }
@@ -3607,15 +3607,15 @@ class test_SyntaxAnalyserSimple {
                             propertyListOfElement("typeArgList") {
                                 element("Type") {
                                     propertyString("name", "B")
-                                    propertyNull("typeArgs")
+                                    propertyNothing("typeArgs")
                                 }
                                 element("Type") {
                                     propertyString("name", "C")
-                                    propertyNull("typeArgs")
+                                    propertyNothing("typeArgs")
                                 }
                                 element("Type") {
                                     propertyString("name", "D")
-                                    propertyNull("typeArgs")
+                                    propertyNothing("typeArgs")
                                 }
                             }
                         }
@@ -3636,7 +3636,7 @@ class test_SyntaxAnalyserSimple {
                                         propertyListOfElement("typeArgList") {
                                             element("Type") {
                                                 propertyString("name", "C")
-                                                propertyNull("typeArgs")
+                                                propertyNothing("typeArgs")
                                             }
                                             element("Type") {
                                                 propertyString("name", "D")
@@ -3644,15 +3644,15 @@ class test_SyntaxAnalyserSimple {
                                                     propertyListOfElement("typeArgList") {
                                                         element("Type") {
                                                             propertyString("name", "E")
-                                                            propertyNull("typeArgs")
+                                                            propertyNothing("typeArgs")
                                                         }
                                                         element("Type") {
                                                             propertyString("name", "F")
-                                                            propertyNull("typeArgs")
+                                                            propertyNothing("typeArgs")
                                                         }
                                                         element("Type") {
                                                             propertyString("name", "G")
-                                                            propertyNull("typeArgs")
+                                                            propertyNothing("typeArgs")
                                                         }
                                                     }
                                                 }
@@ -3663,11 +3663,11 @@ class test_SyntaxAnalyserSimple {
                                                     propertyListOfElement("typeArgList") {
                                                         element("Type") {
                                                             propertyString("name", "I")
-                                                            propertyNull("typeArgs")
+                                                            propertyNothing("typeArgs")
                                                         }
                                                         element("Type") {
                                                             propertyString("name", "J")
-                                                            propertyNull("typeArgs")
+                                                            propertyNothing("typeArgs")
                                                         }
                                                     }
                                                 }

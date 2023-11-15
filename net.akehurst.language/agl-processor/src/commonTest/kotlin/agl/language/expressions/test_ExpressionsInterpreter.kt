@@ -71,6 +71,6 @@ class test_ExpressionsInterpreter {
         }
         val self = asm.root[0]
 
-        test(tm, self, "prop1", AsmPrimitiveSimple("String", "strValue"))
+        test(tm, self, "prop1", AsmPrimitiveSimple("std.String", "strValue"))
     }
 }

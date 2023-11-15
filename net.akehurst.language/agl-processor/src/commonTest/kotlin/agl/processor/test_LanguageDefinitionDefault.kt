@@ -426,7 +426,7 @@ class test_LanguageDefinitionDefault {
                                 propertyString("id", "a")
                                 propertyElementExplicitType("typeReference", "TypeReference") {
                                     reference("type", "String")
-                                    propertyNull("typeArguments")
+                                    propertyNothing("typeArguments")
                                 }
                             }
                         }

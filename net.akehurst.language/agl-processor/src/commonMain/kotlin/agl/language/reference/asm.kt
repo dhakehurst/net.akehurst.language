@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.akehurst.language.agl.language.reference
+package net.akehurst.language.agl.language.reference.asm
 
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
@@ -95,11 +95,12 @@ class CrossReferenceModelDefault
 }
 
 data class DeclarationsForNamespaceDefault(
-    override val qualifiedName: String
+    override val qualifiedName: String,
+    override val importedNamespaces: List<String>
 ) : DeclarationsForNamespace {
-    override val scopes = mutableMapOf<String, ScopeDefinitionDefault>()
+    override val scopes = mutableMapOf<String, ScopeDefinition>()
     override val externalTypes = mutableListOf<String>()
-    override val references = mutableListOf<ReferenceDefinitionDefault>()
+    override val references = mutableListOf<ReferenceDefinition>()
 
     init {
         scopes[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME] = ScopeDefinitionDefault(CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
@@ -109,7 +110,7 @@ data class DeclarationsForNamespaceDefault(
         return scopes.containsKey(typeName)
     }
 
-    override fun referencesFor(typeName: String): List<ReferenceExpressionAbstract> {
+    override fun referencesFor(typeName: String): List<ReferenceExpression> {
         return references.filter {
             it.inTypeName == typeName
         }.flatMap {
@@ -127,7 +128,7 @@ data class DeclarationsForNamespaceDefault(
 data class ScopeDefinitionDefault(
     override val scopeForTypeName: String
 ) : ScopeDefinition {
-    override val identifiables = mutableListOf<IdentifiableDefault>()
+    override val identifiables = mutableListOf<Identifiable>()
 }
 
 data class IdentifiableDefault(
@@ -139,9 +140,9 @@ data class ReferenceDefinitionDefault(
     /**
      * name of the asm type in which the property is a reference
      */
-    val inTypeName: String,
+    override val inTypeName: String,
 
-    val referenceExpressionList: List<ReferenceExpressionAbstract>
+    override val referenceExpressionList: List<ReferenceExpression>
 ) : ReferenceDefinition {
 }
 

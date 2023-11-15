@@ -5,29 +5,24 @@ namespace com.itemis.create.Expressions {
 }
 
 namespace com.itemis.create.Global {
+    import external  //imports types AnnotationType, RegularState, Type
+
     identify Interface by id
-    identify InternalDeclarations by §nothing
-    identify ImportDeclarations by §nothing
+    identify ImportedName by string
+    identify VariableDeclaration by id
+    identify EventDeclaration by id
+    identify AliasDeclaration by id
+    identify OperationDeclaration by id
     scope Interface {
         identify VariableDeclaration by id
         identify EventDeclaration by id
         identify AliasDeclaration by id
         identify OperationDeclaration by id
     }
-    scope InternalDeclarations {
-        identify VariableDeclaration by id
-        identify EventDeclaration by id
-        identify AliasDeclaration by id
-        identify OperationDeclaration by id
-    }
-    scope ImportDeclarations {
-        identify ImportedName by string
-    }
     scope OperationDeclaration {
         identify Parameter by id
     }
     references {
-        external-types AnnotationType, RegularState, Type
         in Annotation {
             property fqn refers-to AnnotationType
         }
@@ -38,7 +33,7 @@ namespace com.itemis.create.Global {
             property fqn refers-to RegularState
         }
         in TypeCastExpression {
-            property typeSpecifier.fqn refers-to Type
+            property typeSpecifier.fqn refers-to BuiltInType
         }
         in FunctionCall {
             property id refers-to OperationDeclaration
@@ -47,7 +42,7 @@ namespace com.itemis.create.Global {
             }
         }
         in TypeSpecifier {
-            property fqn refers-to Type
+            property fqn refers-to BuiltInType
         }
     }
 }

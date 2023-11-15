@@ -18,22 +18,21 @@
 package net.akehurst.language.agl.language.reference
 
 import net.akehurst.language.agl.language.expressions.propertyDeclarationFor
+import net.akehurst.language.agl.language.reference.asm.*
 import net.akehurst.language.agl.processor.IssueHolder
 import net.akehurst.language.agl.processor.SemanticAnalysisResultDefault
 import net.akehurst.language.agl.semanticAnalyser.ContextFromTypeModel
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
 import net.akehurst.language.api.language.expressions.Navigation
 import net.akehurst.language.api.language.expressions.RootExpression
+import net.akehurst.language.api.language.reference.ReferenceExpression
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
 import net.akehurst.language.api.processor.SemanticAnalysisOptions
 import net.akehurst.language.api.processor.SemanticAnalysisResult
 import net.akehurst.language.api.semanticAnalyser.SemanticAnalyser
-import net.akehurst.language.typemodel.api.CollectionType
-import net.akehurst.language.typemodel.api.DataType
-import net.akehurst.language.typemodel.api.TypeDeclaration
-import net.akehurst.language.typemodel.api.UnnamedSupertypeType
+import net.akehurst.language.typemodel.api.*
 
 class ReferencesSemanticAnalyser(
 ) : SemanticAnalyser<CrossReferenceModelDefault, ContextFromTypeModel> {
@@ -58,6 +57,14 @@ class ReferencesSemanticAnalyser(
         this._locationMap = locationMap ?: mapOf()
         if (null != context) {
             asm.declarationsForNamespace.values.forEach {
+                val importedNamespaces = it.importedNamespaces.mapNotNull {
+                    val impNs = context.typeModel.namespace[it]
+                    when (impNs) {
+                        null -> raiseError(it, "Namespace to import not found")
+                    }
+                    impNs
+                }
+
                 val ns = context.typeModel.namespace[it.qualifiedName]
                 when (ns) {
                     null -> issues.raise(
@@ -73,7 +80,7 @@ class ReferencesSemanticAnalyser(
                             checkScopeDefinition(it as ScopeDefinitionDefault)
                         }
                         it.references.forEach { ref ->
-                            checkReferenceDefinition(it.externalTypes, ref as ReferenceDefinitionDefault)
+                            checkReferenceDefinition(it.externalTypes, ref as ReferenceDefinitionDefault, importedNamespaces)
                         }
                     }
                 }
@@ -107,7 +114,7 @@ class ReferencesSemanticAnalyser(
             } else {
                 //OK
             }
-            "In scope for '${scopeDef.scopeForTypeName}'"
+            "In scope for type '${scopeDef.scopeForTypeName}'"
         }
 
         scopeDef.identifiables.forEach { identifiable ->
@@ -138,7 +145,7 @@ class ReferencesSemanticAnalyser(
         }
     }
 
-    private fun checkReferenceDefinition(externalTypes: List<String>, ref: ReferenceDefinitionDefault) {
+    private fun checkReferenceDefinition(externalTypes: List<String>, ref: ReferenceDefinitionDefault, importedNamespaces: List<TypeNamespace>) {
         val contextType = _grammarNamespace?.findOwnedTypeNamed(ref.inTypeName)
         when {
             (null == contextType) -> {
@@ -158,17 +165,23 @@ class ReferencesSemanticAnalyser(
 //                )
 //            } else {
                 for (refExpr in ref.referenceExpressionList) {
-                    checkReferenceExpression(externalTypes, contextType, ref, refExpr)
+                    checkReferenceExpression(externalTypes, contextType, ref, refExpr, importedNamespaces)
                 }
 //            }
             }
         }
     }
 
-    private fun checkReferenceExpression(externalTypes: List<String>, contextType: TypeDeclaration, ref: ReferenceDefinitionDefault, refExpr: ReferenceExpressionAbstract) =
+    private fun checkReferenceExpression(
+        externalTypes: List<String>,
+        contextType: TypeDeclaration,
+        ref: ReferenceDefinitionDefault,
+        refExpr: ReferenceExpression,
+        importedNamespaces: List<TypeNamespace>
+    ) =
         when (refExpr) {
-            is PropertyReferenceExpressionDefault -> checkPropertyReferenceExpression(externalTypes, contextType, ref, refExpr)
-            is CollectionReferenceExpressionDefault -> checkCollectionReferenceExpression(externalTypes, contextType, ref, refExpr)
+            is PropertyReferenceExpressionDefault -> checkPropertyReferenceExpression(externalTypes, contextType, ref, refExpr, importedNamespaces)
+            is CollectionReferenceExpressionDefault -> checkCollectionReferenceExpression(externalTypes, contextType, ref, refExpr, importedNamespaces)
             else -> error("subtype of 'ReferenceExpression' not handled: '${refExpr::class.simpleName}'")
         }
 
@@ -176,7 +189,8 @@ class ReferencesSemanticAnalyser(
         externalTypes: List<String>,
         contextType: TypeDeclaration,
         ref: ReferenceDefinitionDefault,
-        refExpr: CollectionReferenceExpressionDefault
+        refExpr: CollectionReferenceExpressionDefault,
+        importedNamespaces: List<TypeNamespace>
     ) {
         refExpr.ofType?.let {
             val type = _grammarNamespace?.findTypeNamed(it)
@@ -185,44 +199,40 @@ class ReferencesSemanticAnalyser(
             }
         }
 
-        when (contextType) {
-            is DataType -> {
-                val collTypeInstance = refExpr.navigation.propertyDeclarationFor(contextType.type())?.typeInstance
-                when (collTypeInstance?.declaration) {
-                    null -> TODO()
-                    is CollectionType -> {
-                        val loopVarType = collTypeInstance.typeArguments[0].declaration
-                        val filteredLoopVarType = refExpr.ofType?.let { ofTypeName ->
-                            val ofType = _grammarNamespace?.findTypeNamed(ofTypeName)
-                            when {
-                                null == ofType -> error("Should not happen, checked above.")
-                                //TODO: needs a conforms to to check transitive closure of supertypes
-                                loopVarType is DataType && ofType is DataType && ofType.allSuperTypes.any { it.declaration == loopVarType } -> ofType //no error
-                                loopVarType is UnnamedSupertypeType && loopVarType.subtypes.any { it.declaration == ofType } -> ofType
-                                else -> {
-                                    raiseError(ref, "The of-type '${ofType.name}' is not a subtype of the loop variable type '${loopVarType.name}'")
-                                    null
-                                }
-                            }
-                        } ?: loopVarType
-                        for (re in refExpr.referenceExpressionList) {
-                            checkReferenceExpression(externalTypes, filteredLoopVarType, ref, re)
+        val collTypeInstance = refExpr.navigation.propertyDeclarationFor(contextType.type())?.typeInstance
+        when (collTypeInstance?.declaration) {
+            null -> TODO()
+            is CollectionType -> {
+                val loopVarType = collTypeInstance.typeArguments[0].declaration
+                val filteredLoopVarType = refExpr.ofType?.let { ofTypeName ->
+                    val ofType = _grammarNamespace?.findTypeNamed(ofTypeName)
+                    when {
+                        null == ofType -> error("Should not happen, checked above.")
+                        //TODO: needs a conforms to to check transitive closure of supertypes
+                        loopVarType is DataType && ofType is DataType && ofType.allSuperTypes.any { it.declaration == loopVarType } -> ofType //no error
+                        loopVarType is UnnamedSupertypeType && loopVarType.subtypes.any { it.declaration == ofType } -> ofType
+                        else -> {
+                            raiseError(ref, "The of-type '${ofType.name}' is not a subtype of the loop variable type '${loopVarType.name}'")
+                            null
                         }
                     }
-
-                    else -> TODO()
+                } ?: loopVarType
+                for (re in refExpr.referenceExpressionList) {
+                    checkReferenceExpression(externalTypes, filteredLoopVarType, ref, re, importedNamespaces)
                 }
             }
 
             else -> TODO()
         }
+
     }
 
     private fun checkPropertyReferenceExpression(
         externalTypes: List<String>,
         contextType: TypeDeclaration,
         ref: ReferenceDefinitionDefault,
-        refExpr: PropertyReferenceExpressionDefault
+        refExpr: PropertyReferenceExpressionDefault,
+        importedNamespaces: List<TypeNamespace>
     ) {
         //propertyReferenceExpression = 'property' navigation 'refers-to' typeReferences from? ;
         //from = 'from' navigation ;
@@ -235,7 +245,7 @@ class ReferencesSemanticAnalyser(
         }
 
         refExpr.refersToTypeName.forEachIndexed { i, n ->
-            if (null == _grammarNamespace?.findTypeNamed(n) && externalTypes.contains(n).not()) {
+            if (null == findReferredToType(n, importedNamespaces) && externalTypes.contains(n).not()) {
                 raiseError(
                     ReferencesSyntaxAnalyser.PropertyValue(ref, "typeReferences[$i]"),
                     "For references in '${ref.inTypeName}', referred to type '$n' not found"
@@ -246,5 +256,9 @@ class ReferencesSemanticAnalyser(
         }
     }
 
+    fun findReferredToType(name: String, importedNamespaces: List<TypeNamespace>): TypeDeclaration? {
+        return _grammarNamespace?.findTypeNamed(name)
+            ?: importedNamespaces.firstNotNullOfOrNull { it.findOwnedTypeNamed(name) }
+    }
 
 }

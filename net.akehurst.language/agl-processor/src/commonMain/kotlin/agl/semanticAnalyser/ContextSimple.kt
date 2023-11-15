@@ -17,7 +17,7 @@
 
 package net.akehurst.language.agl.semanticAnalyser
 
-import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
+import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.api.asm.AsmPath
 import net.akehurst.language.api.language.reference.Scope
 import net.akehurst.language.api.semanticAnalyser.SentenceContext

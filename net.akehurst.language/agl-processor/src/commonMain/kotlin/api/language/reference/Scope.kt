@@ -30,6 +30,8 @@ interface CrossReferenceModel {
 interface DeclarationsForNamespace {
 
     val qualifiedName: String
+    val importedNamespaces: List<String>
+
     val scopes: Map<String, ScopeDefinition>
     val externalTypes: List<String>
     val references: List<ReferenceDefinition>
@@ -61,7 +63,8 @@ interface DeclarationsForNamespace {
 }
 
 interface ReferenceDefinition {
-
+    val inTypeName: String
+    val referenceExpressionList: List<ReferenceExpression>
 }
 
 interface ScopeDefinition {

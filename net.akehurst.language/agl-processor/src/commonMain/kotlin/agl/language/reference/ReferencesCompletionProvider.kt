@@ -20,10 +20,11 @@ package net.akehurst.language.agl.language.reference
 import net.akehurst.language.agl.completionProvider.CompletionProviderAbstract
 import net.akehurst.language.api.language.grammar.RuleItem
 import net.akehurst.language.api.language.grammar.Terminal
+import net.akehurst.language.api.language.reference.CrossReferenceModel
 import net.akehurst.language.api.processor.CompletionItem
 import net.akehurst.language.api.semanticAnalyser.SentenceContext
 
-class ReferencesCompletionProvider : CompletionProviderAbstract<CrossReferenceModelDefault, SentenceContext<String>>() {
+class ReferencesCompletionProvider : CompletionProviderAbstract<CrossReferenceModel, SentenceContext<String>>() {
 
     override fun provide(nextExpected: Set<RuleItem>, context: SentenceContext<String>?, options: Map<String, Any>): List<CompletionItem> {
         //TODO

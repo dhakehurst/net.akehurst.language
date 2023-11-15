@@ -17,7 +17,7 @@
 
 package net.akehurst.language.api.scopes.test
 
-import net.akehurst.language.agl.language.reference.CrossReferenceModelDefault
+import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 
 object ScopeModelTest {
 

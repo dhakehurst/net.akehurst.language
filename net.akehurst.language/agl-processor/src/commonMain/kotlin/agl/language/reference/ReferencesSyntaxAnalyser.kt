@@ -17,6 +17,7 @@
 package net.akehurst.language.agl.language.reference
 
 import net.akehurst.language.agl.language.expressions.ExpressionsSyntaxAnalyser
+import net.akehurst.language.agl.language.reference.asm.*
 import net.akehurst.language.agl.syntaxAnalyser.SyntaxAnalyserByMethodRegistrationAbstract
 import net.akehurst.language.api.language.expressions.Expression
 import net.akehurst.language.api.language.expressions.Navigation
@@ -31,6 +32,8 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     override fun registerHandlers() {
         super.register(this::unit)
         super.register(this::namespace)
+        super.register(this::imports)
+        super.register(this::import)
         super.register(this::declarations)
         super.register(this::rootIdentifiables)
         super.register(this::scopes)
@@ -68,14 +71,23 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         return result
     }
 
-    // namespace = 'namespace' qualifiedName '{' declarations '}' ;
+    // namespace = namespace = 'namespace' qualifiedName '{' imports declarations '}' ;
     private fun namespace(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): DeclarationsForNamespace {
         val qualifiedName = children[1] as List<String>
-        val declarations = children[3] as (DeclarationsForNamespace) -> Unit
-        val result = DeclarationsForNamespaceDefault(qualifiedName.joinToString(separator = "."))
+        val imports = children[3] as List<String>
+        val declarations = children[4] as (DeclarationsForNamespace) -> Unit
+        val result = DeclarationsForNamespaceDefault(qualifiedName.joinToString(separator = "."), imports)
         declarations.invoke(result)
         return result
     }
+
+    // imports = import*;
+    private fun imports(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> =
+        children as List<String>
+
+    // import = 'import' qualifiedName ;
+    private fun import(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String =
+        (children[1] as List<String>).joinToString(separator = ".")
 
     // declarations = rootIdentifiables scopes referencesOpt
     private fun declarations(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (DeclarationsForNamespaceDefault) -> Unit {
@@ -83,7 +95,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val scopes = children[1] as List<ScopeDefinitionDefault>
         val referencesOpt = children[2] as Pair<List<String>, List<ReferenceDefinitionDefault>>?
         return { decl ->
-            decl.scopes[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME]?.identifiables?.addAll(rootIdentifiables)
+            (decl.scopes[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME]?.identifiables as MutableList?)?.addAll(rootIdentifiables)
             scopes.forEach { decl.scopes[it.scopeForTypeName] = it }
             referencesOpt?.let {
                 decl.externalTypes.addAll(referencesOpt.first)
@@ -186,7 +198,7 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         children[1] as String
 
 
-    // typeReferences = [typeReferences / ',']+
+    // typeReferences = [typeReference / '|']+
     private fun typeReferences(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> { //List<Pair<String, InputLocation>> {
         return (children as List<String>).toSeparatedList<String, String, String>().items
 //            .mapIndexed { i, n ->
@@ -195,13 +207,9 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
 //        }
     }
 
-    // typeReference = IDENTIFIER
+    // typeReference = qualifiedName
     private fun typeReference(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): String {
-        return children[0] as String
+        return (children[0] as List<String>).joinToString(separator = ".")
     }
 
-    // qualifiedName = [IDENTIFIER / '.']+ ;
-    private fun qualifiedName(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> {
-        return (children as List<String>).toSeparatedList<String, String, String>().items
-    }
 }

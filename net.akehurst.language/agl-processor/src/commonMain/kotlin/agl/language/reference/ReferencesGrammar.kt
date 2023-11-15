@@ -31,8 +31,14 @@ internal object ReferencesGrammar : GrammarAbstract(NamespaceDefault("net.akehur
         b.extendsGrammar(ExpressionsGrammar)
 
         b.rule("unit").multi(0, -1, b.nonTerminal("namespace"))
-        b.rule("namespace")
-            .concatenation(b.terminalLiteral("namespace"), b.nonTerminal("qualifiedName"), b.terminalLiteral("{"), b.nonTerminal("declarations"), b.terminalLiteral("}"))
+        b.rule("namespace").concatenation(
+            b.terminalLiteral("namespace"), b.nonTerminal("qualifiedName"), b.terminalLiteral("{"),
+            b.nonTerminal("imports"),
+            b.nonTerminal("declarations"),
+            b.terminalLiteral("}")
+        )
+        b.rule("imports").multi(0, -1, b.nonTerminal("import"))
+        b.rule("import").concatenation(b.terminalLiteral("import"), b.nonTerminal("qualifiedName"))
         b.rule("declarations").concatenation(b.nonTerminal("rootIdentifiables"), b.nonTerminal("scopes"), b.nonTerminal("referencesOpt"))
         b.rule("rootIdentifiables").multi(0, -1, b.nonTerminal("identifiable"))
         b.rule("scopes").multi(0, -1, b.nonTerminal("scope"))
@@ -87,7 +93,7 @@ internal object ReferencesGrammar : GrammarAbstract(NamespaceDefault("net.akehur
         b.rule("ofType").concatenation(b.terminalLiteral("of-type"), b.nonTerminal("typeReference"))
 
         b.rule("typeReferences").separatedList(1, -1, b.terminalLiteral("|"), b.nonTerminal("typeReference"))
-        b.rule("typeReference").concatenation(b.nonTerminal("IDENTIFIER"))
+        b.rule("typeReference").concatenation(b.nonTerminal("qualifiedName"))
 
         return b.grammar.grammarRule
     }
@@ -101,7 +107,9 @@ namespace net.akehurst.language.agl.language
 grammar References extends Expressions {
 
     unit = namespace* ;
-    namespace = 'namespace' qualifiedName '{' declarations '}' ;
+    namespace = 'namespace' qualifiedName '{' imports declarations '}' ;
+    imports = import*;
+    import = 'import' qualifiedName ;
     declarations = rootIdentifiables scopes references? ;
     rootIdentifiables = identifiable* ;
     scopes = scope* ;
@@ -120,7 +128,7 @@ grammar References extends Expressions {
     ofType = 'of-type' typeReference ;
     
     typeReferences = [typeReference / '|']+ ;
-    typeReference = IDENTIFIER ;
+    typeReference = qualifiedName ;
 
 }
 """
