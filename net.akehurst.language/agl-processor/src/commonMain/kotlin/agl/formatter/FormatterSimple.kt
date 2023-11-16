@@ -19,10 +19,7 @@ package net.akehurst.language.agl.formatter
 import net.akehurst.language.agl.language.format.AglFormatExpressionDefault
 import net.akehurst.language.agl.processor.FormatResultDefault
 import net.akehurst.language.agl.processor.IssueHolder
-import net.akehurst.language.api.asm.Asm
-import net.akehurst.language.api.asm.AsmList
-import net.akehurst.language.api.asm.AsmPrimitive
-import net.akehurst.language.api.asm.AsmStructure
+import net.akehurst.language.api.asm.*
 import net.akehurst.language.api.formatter.AglFormatterModel
 import net.akehurst.language.api.processor.FormatResult
 import net.akehurst.language.api.processor.Formatter
@@ -43,9 +40,9 @@ class FormatterSimple<AsmType>(
         return FormatResultDefault(sb.toString(), IssueHolder(LanguageProcessorPhase.FORMAT))
     }
 
-    private fun formatAny(o: Any?): String {
+    private fun formatAny(o: AsmValue): String {
         return when (o) {
-            null -> ""
+            is AsmNothing -> ""
             is AsmPrimitive -> o.value.toString()
             is AsmStructure -> o.format(model)
             is AsmList -> o.elements.joinToString(separator = "") { formatAny(it) }

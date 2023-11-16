@@ -16,6 +16,7 @@
 
 package net.akehurst.language.agl.language.grammar
 
+import net.akehurst.language.agl.language.reference.asm.CrossReferenceModelDefault
 import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.semanticAnalyser.ScopeSimple
 import net.akehurst.language.api.grammarTypeModel.GrammarTypeNamespace
@@ -30,7 +31,7 @@ class ContextFromGrammar(
             val aglGrammarTypeModel = Agl.registry.agl.grammar.processor!!.typeModel
             val namespace: GrammarTypeNamespace = aglGrammarTypeModel.namespace[Agl.registry.agl.grammar.processor!!.grammar!!.qualifiedName] as GrammarTypeNamespace? ?: error("")
             val context = ContextFromGrammar()
-            val scope = ScopeSimple<String>(null, "", grammars.last().name)
+            val scope = ScopeSimple<String>(null, grammars.last().name, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
             grammars.forEach { g ->
                 g.allResolvedGrammarRule.forEach {
                     val rType = namespace.findTypeUsageForRule("grammarRule") ?: error("Type not found for rule '${it.name}'")
@@ -49,10 +50,10 @@ class ContextFromGrammar(
         }
     }
 
-    var rootScope = ScopeSimple<String>(null, "", "")
+    var rootScope = ScopeSimple<String>(null, ScopeSimple.ROOT_ID, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
 
     fun clear() {
-        this.rootScope = ScopeSimple<String>(null, "", "")
+        this.rootScope = ScopeSimple<String>(null, ScopeSimple.ROOT_ID, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
     }
 
     override fun hashCode(): Int = rootScope.hashCode()

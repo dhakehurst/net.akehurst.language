@@ -51,8 +51,8 @@ class test_CrossReferences {
             assertEquals(expected.declarationsForNamespace, result.asm?.declarationsForNamespace?.toMap())
             val expNs = expected.declarationsForNamespace["test.Test"]!!
             val actNs = actual.declarationsForNamespace["test.Test"]!!
-            assertEquals(expNs.scopes, actNs.scopes)
-            assertEquals(expNs.scopes.flatMap { it.value.identifiables }, actNs.scopes.flatMap { it.value.identifiables })
+            assertEquals(expNs.scopeDefinition, actNs.scopeDefinition)
+            assertEquals(expNs.scopeDefinition.flatMap { it.value.identifiables }, actNs.scopeDefinition.flatMap { it.value.identifiables })
             assertEquals(expNs.references, actNs.references)
         }
     }

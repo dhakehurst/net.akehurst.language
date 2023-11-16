@@ -27,7 +27,7 @@ class ContextSimple() : SentenceContext<AsmPath> {
     /**
      * The items in the scope contain a ScopePath to an element in an AsmSimple model
      */
-    var rootScope = ScopeSimple<AsmPath>(null, "", CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
+    var rootScope = ScopeSimple<AsmPath>(null, ScopeSimple.ROOT_ID, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
 
     fun asString(): String = "contextSimple scope §root ${rootScope.asString()}"
 
@@ -44,11 +44,18 @@ class ContextSimple() : SentenceContext<AsmPath> {
 
 class ScopeSimple<ItemType>(
     val parent: ScopeSimple<ItemType>?,
-    val forReferenceInParent: String,
+    val scopeIdentityInParent: String,
     override val forTypeName: String
 ) : Scope<ItemType> {
 
+    companion object {
+        const val ROOT_ID = ""
+    }
+
+    override val scopeIdentity: String = "${parent?.scopeIdentity ?: ""}/$scopeIdentityInParent"
+
     //should only be used for rootScope
+    //TODO: I don't want to store the 'Items' in the scope!
     val scopeMap = mutableMapOf<ItemType, ScopeSimple<ItemType>>()
 
     private val _childScopes = mutableMapOf<String, ScopeSimple<ItemType>>()
@@ -69,35 +76,35 @@ class ScopeSimple<ItemType>(
     override val items: Map<String, Map<String, ItemType>> get() = _items
 
     val path: List<String> by lazy {
-        if (null == parent) emptyList() else parent.path + forReferenceInParent
+        if (null == parent) emptyList() else parent.path + scopeIdentityInParent
     }
 
     override fun contains(referableName: String, typeName: String, conformsToFunc: (typeName1: String, typeName2: String) -> Boolean): Boolean =
         this.items[referableName]?.entries?.any { conformsToFunc.invoke(it.key, typeName) } ?: false
 
-    override fun createOrGetChildScope(forReferenceInParent: String, forTypeName: String, item: ItemType): ScopeSimple<ItemType> {
-        var child = this._childScopes[forReferenceInParent]
+    override fun createOrGetChildScope(scopeIdentityInParent: String, forTypeName: String, item: ItemType): ScopeSimple<ItemType> {
+        var child = this._childScopes[scopeIdentityInParent]
         if (null == child) {
-            child = ScopeSimple<ItemType>(this, forReferenceInParent, forTypeName)
-            this._childScopes[forReferenceInParent] = child
+            child = ScopeSimple<ItemType>(this, scopeIdentityInParent, forTypeName)
+            this._childScopes[scopeIdentityInParent] = child
         }
         this.rootScope.scopeMap[item] = child
         return child
     }
 
-    override fun addToScope(referableName: String, typeName: String, item: ItemType): Boolean {
+    override fun addToScope(referableName: String, qualifiedTypeName: String, item: ItemType): Boolean {
         val map = this._items[referableName]
         return when (map) {
             null -> {
-                val m = mutableMapOf(typeName to item)
+                val m = mutableMapOf(qualifiedTypeName to item)
                 this._items[referableName] = m
                 true
             }
 
             else -> when {
-                map.containsKey(typeName) -> false
+                map.containsKey(qualifiedTypeName) -> false
                 else -> {
-                    map[typeName] = item
+                    map[qualifiedTypeName] = item
                     true
                 }
             }
@@ -166,18 +173,18 @@ class ScopeSimple<ItemType>(
         }
     }
 
-    override fun hashCode(): Int = arrayOf(parent, forReferenceInParent, forTypeName).contentHashCode()
+    override fun hashCode(): Int = arrayOf(parent, scopeIdentityInParent, scopeIdentity).contentHashCode()
 
     override fun equals(other: Any?): Boolean = when {
         other !is ScopeSimple<*> -> false
         parent != other.parent -> false
-        forReferenceInParent != other.forReferenceInParent -> false
-        forTypeName != other.forTypeName -> false
+        scopeIdentityInParent != other.scopeIdentityInParent -> false
+        scopeIdentity != other.scopeIdentity -> false
         else -> true
     }
 
     override fun toString(): String = when {
-        null == parent -> "/$forTypeName"
-        else -> "$parent/$forTypeName"
+        null == parent -> "/$scopeIdentity"
+        else -> "$parent/$scopeIdentity"
     }
 }

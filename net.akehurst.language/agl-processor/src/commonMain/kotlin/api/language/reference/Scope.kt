@@ -32,7 +32,10 @@ interface DeclarationsForNamespace {
     val qualifiedName: String
     val importedNamespaces: List<String>
 
-    val scopes: Map<String, ScopeDefinition>
+    /**
+     * typeName -> ScopeDefinition
+     */
+    val scopeDefinition: Map<String, ScopeDefinition>
     val externalTypes: List<String>
     val references: List<ReferenceDefinition>
 
@@ -87,7 +90,13 @@ interface ReferenceExpression {
  */
 interface Scope<ItemType> {
 
+    /**
+     * unqualified TypeName from the ScopeDefinition,
+     * i.e., the identity of the ScopeDefinition
+     */
     val forTypeName: String
+
+    val scopeIdentity: String
 
     /**
      * item.name -> item.type -> item
@@ -117,13 +126,13 @@ interface Scope<ItemType> {
 
     fun findQualifiedConformingTo(qualifiedName: List<String>, conformsToFunc: (itemTypeName: String) -> Boolean): List<ItemType>
 
-    fun createOrGetChildScope(forReferenceInParent: String, forTypeName: String, item: ItemType): Scope<ItemType>
+    fun createOrGetChildScope(scopeIdentityInParent: String, forTypeName: String, item: ItemType): Scope<ItemType>
 
     /**
      * adds Pair(item, typeName) to this scope
      * return true if added, false if the pair is already in the scope
      */
-    fun addToScope(referableName: String, typeName: String, item: ItemType): Boolean
+    fun addToScope(referableName: String, qualifiedTypeName: String, item: ItemType): Boolean
 
     fun asString(currentIndent: String = "", indentIncrement: String = "  "): String
 }

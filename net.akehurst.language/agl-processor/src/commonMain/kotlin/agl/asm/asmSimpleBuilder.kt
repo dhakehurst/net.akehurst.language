@@ -133,7 +133,7 @@ class AsmElementSimpleBuilder(
         when (it) {
             TupleTypeSimple.NAME -> it
             UnnamedSupertypeTypeSimple.NAME -> it
-            else -> _typeModel.findFirstByNameOrNull(_typeName)?.qualifiedName ?: error("Cannot find type for name '$it'")
+            else -> _typeModel.findFirstByNameOrNull(_typeName)?.qualifiedName ?: _typeName //?: error("Cannot find type for name '$it'")
         }
     }
     private val _element = _asm.createStructure(_asmPath, _elementQualifiedTypeName).also {
@@ -142,10 +142,10 @@ class AsmElementSimpleBuilder(
     private val _elementScope by lazy {
         _parentScope?.let {
             if (_crossReferenceModel.isScopeDefinedFor(_element.typeName)) {
-                val expr = (_crossReferenceModel as CrossReferenceModelDefault).identifyingExpressionFor(_parentScope.forTypeName, _element.typeName)
+                val expr = (_crossReferenceModel as CrossReferenceModelDefault).identifyingExpressionFor(_parentScope.forTypeName, _element.qualifiedTypeName)
                 val refInParent = expr?.createReferenceLocalToScope(_parentScope, _element)
                     ?: _element.typeName //error("Trying to create child scope but cannot create a reference for $_element")
-                val newScope = _parentScope.createOrGetChildScope(refInParent, _element.qualifiedTypeName, _element.path)
+                val newScope = _parentScope.createOrGetChildScope(refInParent, _element.typeName, _element.path)
                 _scopeMap[_asmPath] = newScope
                 newScope
             } else {

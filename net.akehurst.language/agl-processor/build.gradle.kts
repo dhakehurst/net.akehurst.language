@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    commonMainApi(project(":type-model"))
+    // commonMainApi(project(":type-model"))
 }
 
 kotlin {
@@ -44,10 +44,12 @@ exportPublic {
     exportPatterns.set(
         listOf(
             "net.akehurst.language.api.**",
+            "net.akehurst.language.typemodel.api.**",
             "net.akehurst.language.agl.regex.**",
             "net.akehurst.language.agl.scanner.**",
             "net.akehurst.language.agl.processor.**",
             "net.akehurst.language.agl.language.**",
+            "net.akehurst.language.typemodel.simple.**",
             "net.akehurst.language.agl.asm.**",
             "net.akehurst.language.agl.syntaxAnalyser.**",
             "net.akehurst.language.agl.semanticAnalyser.**",

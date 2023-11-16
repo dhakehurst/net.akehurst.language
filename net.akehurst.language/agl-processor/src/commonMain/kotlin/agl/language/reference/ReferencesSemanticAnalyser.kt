@@ -76,7 +76,7 @@ class ReferencesSemanticAnalyser(
 
                     else -> {
                         _grammarNamespace = ns as GrammarTypeNamespace
-                        it.scopes.values.forEach {
+                        it.scopeDefinition.values.forEach {
                             checkScopeDefinition(it as ScopeDefinitionDefault)
                         }
                         it.references.forEach { ref ->

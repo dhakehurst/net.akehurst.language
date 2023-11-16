@@ -75,20 +75,20 @@ class ScopeCreator(
 
     override fun afterList(owningProperty: AsmStructureProperty?, value: AsmList) {}
 
-    private fun createScope(scope: Scope<AsmPath>, el: AsmStructure): Scope<AsmPath> {
-        val exp = crossReferenceModel.identifyingExpressionFor(scope.forTypeName, el.qualifiedTypeName)
-        return if (null != exp && crossReferenceModel.isScopeDefinedFor(el.typeName)) {
-            val refInParent = exp.createReferenceLocalToScope(scope, el)
+    private fun createScope(parentScope: Scope<AsmPath>, el: AsmStructure): Scope<AsmPath> {
+        val exp = crossReferenceModel.identifyingExpressionFor(parentScope.forTypeName, el.qualifiedTypeName)
+        return if (null != exp && crossReferenceModel.isScopeDefinedFor(el.qualifiedTypeName)) {
+            val refInParent = exp.createReferenceLocalToScope(parentScope, el)
             when {
-                refInParent is AsmNothing -> scope.createOrGetChildScope(el.typeName, el.typeName, el.path)
-                refInParent is AsmPrimitive && refInParent.isStdString -> scope.createOrGetChildScope((refInParent.value as String), el.typeName, el.path)
+                refInParent is AsmNothing -> parentScope.createOrGetChildScope(el.typeName, el.typeName, el.path)
+                refInParent is AsmPrimitive && refInParent.isStdString -> parentScope.createOrGetChildScope((refInParent.value as String), el.typeName, el.path)
                 else -> {
-                    issues.error(this.locationMap[el], "Cannot create a local reference in '$scope' for '$el' because its identifying expression evaluates to $refInParent")
-                    scope
+                    issues.error(this.locationMap[el], "Cannot create a local reference in '$parentScope' for '$el' because its identifying expression evaluates to $refInParent")
+                    parentScope
                 }
             }
         } else {
-            scope
+            parentScope
         }
     }
 
@@ -104,7 +104,7 @@ class ScopeCreator(
 //                    "Cannot create a local reference in '$scope' for '$el' because its identifying expression evaluates to Nothing. Using type name as identifier."
 //                )
                     val contextRef = el.path
-                    val added = scope.addToScope(el.typeName, el.qualifiedTypeName, contextRef).not()
+                    val added = scope.addToScope(el.qualifiedTypeName, el.qualifiedTypeName, contextRef).not()
                     when (added) {
                         true -> Unit
                         else -> issues.error(this.locationMap[el], "(${el.typeName},${el.qualifiedTypeName}) already exists in scope $scope")

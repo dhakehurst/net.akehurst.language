@@ -85,7 +85,7 @@ class DeclarationsForNamespaceBuilder(
     fun build(): DeclarationsForNamespace {
         val result = DeclarationsForNamespaceDefault(_qualifiedName, _importedNamespaces)
         result.externalTypes.addAll(_externalTypes)
-        _scopes.forEach { result.scopes[it.scopeForTypeName] = it }
+        _scopes.forEach { result.scopeDefinition[it.scopeForTypeName] = it }
         result.references.addAll(_references)
         return result
     }

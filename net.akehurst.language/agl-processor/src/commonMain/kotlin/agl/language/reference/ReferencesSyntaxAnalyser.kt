@@ -95,8 +95,8 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         val scopes = children[1] as List<ScopeDefinitionDefault>
         val referencesOpt = children[2] as Pair<List<String>, List<ReferenceDefinitionDefault>>?
         return { decl ->
-            (decl.scopes[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME]?.identifiables as MutableList?)?.addAll(rootIdentifiables)
-            scopes.forEach { decl.scopes[it.scopeForTypeName] = it }
+            (decl.scopeDefinition[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME]?.identifiables as MutableList?)?.addAll(rootIdentifiables)
+            scopes.forEach { decl.scopeDefinition[it.scopeForTypeName] = it }
             referencesOpt?.let {
                 decl.externalTypes.addAll(referencesOpt.first)
                 decl.references.addAll(referencesOpt.second)

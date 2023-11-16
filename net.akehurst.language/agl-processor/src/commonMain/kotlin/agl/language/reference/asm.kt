@@ -98,16 +98,16 @@ data class DeclarationsForNamespaceDefault(
     override val qualifiedName: String,
     override val importedNamespaces: List<String>
 ) : DeclarationsForNamespace {
-    override val scopes = mutableMapOf<String, ScopeDefinition>()
+    override val scopeDefinition = mutableMapOf<String, ScopeDefinition>()
     override val externalTypes = mutableListOf<String>()
     override val references = mutableListOf<ReferenceDefinition>()
 
     init {
-        scopes[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME] = ScopeDefinitionDefault(CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
+        scopeDefinition[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME] = ScopeDefinitionDefault(CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
     }
 
     override fun isScopeDefinedFor(typeName: String): Boolean {
-        return scopes.containsKey(typeName)
+        return scopeDefinition.containsKey(typeName)
     }
 
     override fun referencesFor(typeName: String): List<ReferenceExpression> {
@@ -119,7 +119,7 @@ data class DeclarationsForNamespaceDefault(
     }
 
     override fun identifyingExpressionFor(scopeForTypeName: String, typeName: String): Expression? {
-        val scope = scopes[scopeForTypeName]
+        val scope = scopeDefinition[scopeForTypeName]
         val identifiable = scope?.identifiables?.firstOrNull { it.typeName == typeName }
         return identifiable?.identifiedBy
     }

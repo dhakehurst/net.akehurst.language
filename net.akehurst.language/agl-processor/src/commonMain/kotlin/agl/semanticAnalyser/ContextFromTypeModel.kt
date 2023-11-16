@@ -27,7 +27,7 @@ import net.akehurst.language.typemodel.api.TypeModel
 class ContextFromTypeModelReference(
     val languageDefinitionId: String
 ) : SentenceContext<String> {
-    val rootScope = ScopeSimple<String>(null, "", "")
+    //val rootScope = ScopeSimple<String>(null, ScopeSimple.ROOT_ID, CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME)
 
     fun dereference(reg: LanguageRegistry): ContextFromTypeModel? {
         val langDef = reg.findOrNull<Any, Any>(this.languageDefinitionId)

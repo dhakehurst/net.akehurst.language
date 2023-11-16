@@ -35,22 +35,23 @@ class ScopeBuilder(
     private val _scope: ScopeSimple<AsmPath>
 ) {
 
-    fun item(id: String, typeName: String, pathStr: String) {
+    fun item(id: String, qualifiedTypeName: String, pathStr: String) {
         val path = AsmPathSimple(pathStr)
-        _scope.addToScope(id, typeName, path)
+        _scope.addToScope(id, qualifiedTypeName, path)
     }
 
-    fun scope(forReferenceInParent: String, typeName: String, pathStr: String, init: ScopeBuilder.() -> Unit = {}) {
+    fun scope(forReferenceInParent: String, forTypeName: String, pathStr: String, init: ScopeBuilder.() -> Unit = {}) {
         val path = AsmPathSimple(pathStr)
-        val chScope = _scope.createOrGetChildScope(forReferenceInParent, typeName, path)
+        val chScope = _scope.createOrGetChildScope(forReferenceInParent, forTypeName, path)
         val b = ScopeBuilder(chScope)
         b.init()
     }
 
-    fun scopedItem(id: String, typeName: String, pathStr: String, init: ScopeBuilder.() -> Unit = {}) {
+    fun scopedItem(id: String, qualifiedTypeName: String, pathStr: String, init: ScopeBuilder.() -> Unit = {}) {
         val path = AsmPathSimple(pathStr)
-        _scope.addToScope(id, typeName, path)
-        val chScope = _scope.createOrGetChildScope(id, typeName, path)
+        _scope.addToScope(id, qualifiedTypeName, path)
+        val forTypeName = qualifiedTypeName.substringAfterLast(".")
+        val chScope = _scope.createOrGetChildScope(id, forTypeName, path)
         val b = ScopeBuilder(chScope)
         b.init()
     }

@@ -131,7 +131,7 @@ grammar SQL {
     }
 
     @Test
-    fun check_scopeModel() {
+    fun check_crossReferenceModel() {
         val context = ContextFromTypeModel(processor.typeModel)
         val res = CrossReferenceModelDefault.fromString(context, crossReferenceModelStr)
         assertTrue(res.issues.isEmpty(), res.issues.toString())
