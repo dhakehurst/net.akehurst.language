@@ -190,12 +190,12 @@ class AsmReferenceSimple(
             else -> value!!.qualifiedTypeName
         }
 
-    fun equalTo(other: AsmReferenceSimple): Boolean {
-        return when {
-            this.reference != other.reference -> false
-            else -> true
-        }
-    }
+//    fun equalTo(other: AsmReferenceSimple): Boolean {
+//        return when {
+//            this.reference != other.reference -> false
+//            else -> true
+//        }
+//    }
 
     override fun asString(currentIndent: String, indentIncrement: String): String = when (value) {
         null -> "<unresolved> &$reference"

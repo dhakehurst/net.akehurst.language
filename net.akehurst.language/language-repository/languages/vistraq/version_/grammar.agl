@@ -176,10 +176,8 @@ grammar Queries extends Base {
     leaf QUOTED_TIMESTAMP = "'([^']|\\')*'" ; //TODO: better regex for timestamps
 }
 
-grammar Unit extends Base {
-
-    unit = query model? ;
-    query = Queries::query ;
+// Traceability Information Model
+grammar TIM extends Base {
     model = 'typed-graph-model' '{'
         nodeList
         linkList
@@ -188,6 +186,24 @@ grammar Unit extends Base {
 
     nodeList = nodeType* ;
     linkList = linkType* ;
-    nodeType = 'node-type' NAME ;
-    linkType = 'edge-type' NAME ':' NAME '-->' NAME ;
+    nodeType = 'node-type' NAME '{' propertyList '}' ;
+    propertyList = [property / ',' ]* ;
+    property = NAME ;
+    linkType = 'link-type' linkTypeId? NAME multiplicity? '---' multiplicity? NAME ;
+    linkTypeId = NAME ':' ;
+    multiplicity = '[' range ']' ;
+    range = OPTIONAL | UNLIMITED | INT | minMax ;
+    minMax = INT '..' UNLIMITED_INT ;
+    leaf OPTIONAL = '?' ;
+    leaf UNLIMITED = '*' ;
+    leaf UNLIMITED_INT = INT | UNLIMITED ;
+    leaf INT = "[1-9][0-9]*" ;
+}
+
+grammar Unit extends Base {
+
+    unit = query model? ;
+    query = Queries::query ;
+    model = TIM::model ;
+
 }
