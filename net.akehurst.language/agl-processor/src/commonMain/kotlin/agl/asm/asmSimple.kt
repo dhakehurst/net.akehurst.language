@@ -112,6 +112,12 @@ open class AsmSimple() : Asm {
                     callback.afterList(owningProperty, value)
                 }
 
+                is AsmListSeparated -> {
+                    callback.beforeList(owningProperty, value)
+                    value.elements.forEach { el -> traverse(owningProperty, el) }
+                    callback.afterList(owningProperty, value)
+                }
+
                 else -> Unit
             }
         }
@@ -414,7 +420,7 @@ class AsmListSeparatedSimple(
         this.elements.elements.joinToString { (it as AsmValue).asString(currentIndent, indentIncrement) }
 
     override fun equalTo(other: AsmValue): Boolean = when {
-        other !is AsmList -> false
+        other !is AsmListSeparated -> false
         other.elements.size != this.elements.size -> false
         else -> {
             (0..this.elements.size).all {
@@ -425,7 +431,7 @@ class AsmListSeparatedSimple(
 
     override fun hashCode(): Int = elements.hashCode()
     override fun equals(other: Any?): Boolean = when (other) {
-        !is AsmList -> false
+        !is AsmListSeparated -> false
         else -> this.elements == other.elements
     }
 

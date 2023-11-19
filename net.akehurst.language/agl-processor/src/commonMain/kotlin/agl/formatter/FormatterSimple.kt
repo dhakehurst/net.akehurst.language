@@ -45,6 +45,7 @@ class FormatterSimple<AsmType>(
             is AsmNothing -> ""
             is AsmPrimitive -> o.value.toString()
             is AsmStructure -> o.format(model)
+            is AsmListSeparated -> TODO()
             is AsmList -> o.elements.joinToString(separator = "") { formatAny(it) }
             else -> error("Internal Error: type '${o::class.simpleName}' not supported")
         }

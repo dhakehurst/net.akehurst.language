@@ -63,6 +63,7 @@ object SimpleTypeModelStdLib : TypeNamespaceAbstract(emptyList()) {
         }
     }
     val ListSeparated = super.findOwnedOrCreateCollectionTypeNamed("ListSeparated").also { typeDecl ->
+        typeDecl.addSupertype(List.qualifiedName)
         (typeDecl.typeParameters as MutableList).addAll(listOf("E", "I"))
         typeDecl.appendPropertyPrimitive("size", this.createTypeInstance(typeDecl, "Integer"), "Number of elements in the List.")
         typeDecl.appendPropertyPrimitive(

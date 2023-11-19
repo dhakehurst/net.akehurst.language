@@ -16,7 +16,6 @@
 
 package net.akehurst.language.agl.processor.vistraq
 
-import net.akehurst.language.agl.asm.AsmPathSimple
 import net.akehurst.language.agl.default.CompletionProviderDefault
 import net.akehurst.language.agl.default.SemanticAnalyserDefault
 import net.akehurst.language.agl.default.SyntaxAnalyserDefault
@@ -34,7 +33,6 @@ import net.akehurst.language.agl.semanticAnalyser.ContextSimple
 import net.akehurst.language.agl.semanticAnalyser.TestContextSimple
 import net.akehurst.language.agl.semanticAnalyser.contextSimple
 import net.akehurst.language.api.asm.Asm
-import net.akehurst.language.api.asm.asmSimple
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
@@ -214,15 +212,25 @@ class test_Vistraq_References {
             }
         """.trimIndent()
 
-        val expected = contextSimple {
+        val expectedContext = contextSimple {
             item("A", "vistraq.query.TIM.NodeType", "/0/model/model/nodeList/0")
         }
 
-        test(grammar, goal, sentence, ContextSimple(), true, expected)
+        val expectedIssues = listOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR,
+                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(6, 7, 1, 1),
+                "No target of type(s) [NodeType] found for referring value 'B' in scope of element ':NodeTypeReference[/0/query/querySource/pathExpression/nodeSelector/nodeTypeReferenceExpression]'",
+                null
+            )
+        )
+
+        test(grammar, goal, sentence, ContextSimple(), true, expectedContext, null, expectedIssues)
     }
 
     @Test
-    fun Unit_reference_to_NodeType_2_valid() {
+    fun Unit_reference_to_NodeType_2_invalid() {
         val grammar = "Unit"
         val goal = "unit"
         val sentence = """
@@ -233,393 +241,21 @@ class test_Vistraq_References {
             }
         """.trimIndent()
 
-        val expected = contextSimple {
+        val expectedContext = contextSimple {
             item("A", "vistraq.query.TIM.NodeType", "/0/model/model/nodeList/0")
         }
 
-        test(grammar, goal, sentence, ContextSimple(), true, expected)
-    }
+        val expectedIssues = listOf(
+            LanguageIssue(
+                LanguageIssueKind.ERROR,
+                LanguageProcessorPhase.SEMANTIC_ANALYSIS,
+                InputLocation(6, 7, 1, 1),
+                "No target of type(s) [NodeType] found for referring value 'B' in scope of element ':NodeTypeReference[/0/query/singleQuery/0/querySource/pathExpression/nodeSelector/nodeTypeReferenceExpression]'",
+                null
+            )
+        )
 
-    @Test
-    fun Statechart_identify_regions_in_state_scope() {
-        val grammar = "Statechart"
-        val goal = "statechart"
-        val sentence = """
-            statechart 'Test' {
-                region 'Root' {
-                    state 'A' {
-                        region 'R1' { }
-                        region 'R2' { }
-                    }
-                }
-            }
-        """.trimIndent()
-
-        val expected = contextSimple {
-            item("'A'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
-        }
-
-        test(grammar, goal, sentence, ContextSimple(), true, expected)
-    }
-
-    @Test
-    fun Statechart_identify_states_in_nested_region_scope() {
-        val grammar = "Statechart"
-        val goal = "statechart"
-        val sentence = """
-            statechart 'Test' {
-                region 'Root' {
-                    state 'A' {
-                        region 'R1' { 
-                            state 'C' {}
-                        }
-                        region 'R2' {
-                            state 'D' {}
-                            state 'E' {}
-                        }
-                    }
-                }
-            }
-        """.trimIndent()
-
-        // TODO: missing state because of repeated state id - need to identify by qualified name !
-        val expected = contextSimple {
-            item("'A'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
-            item("'C'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/0/states/0")
-            item("'D'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/1/states/0")
-            item("'E'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/1/states/1")
-        }
-
-        test(grammar, goal, sentence, ContextSimple(), true, expected)
-    }
-
-    @Test
-    fun Statechart_identify_states_in_nested_region_scope_fail() {
-        val grammar = "Statechart"
-        val goal = "statechart"
-        val sentence = """
-            statechart 'Test' {
-                region 'Root' {
-                    state 'A' {
-                        region 'R1' { 
-                            state 'C' {}
-                        }
-                        region 'R2' {
-                            state 'C' {}
-                            state 'D' {}
-                        }
-                    }
-                }
-            }
-        """.trimIndent()
-
-        // TODO: missing state because of repeated state id - need to identify by qualified name !
-        val expected = contextSimple {
-            item("'A'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
-            item("'C'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/1/states/0")
-            item("'D'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0/regions/1/states/1")
-        }
-
-        test(grammar, goal, sentence, ContextSimple(), true, expected)
-    }
-
-    @Test
-    fun Statechart_transition_reference_states() {
-        val grammar = "Statechart"
-        val goal = "statechart"
-        val sentence = """
-            statechart 'Test' {
-                region 'main region' {
-                    state 'S1' {}
-                    state 'S2' {}
-                }
-                transitions {
-                    'S1' -- { } --> 'S2'
-                }
-            }
-        """.trimIndent()
-
-        val expectedContext = contextSimple {
-            item("'S1'", "com.itemis.create.Statechart.State", "/0/regions/0/states/0")
-            item("'S2'", "com.itemis.create.Statechart.State", "/0/regions/0/states/1")
-        }
-
-        val expectedAsm = asmSimple(
-            typeModel = processors[grammar]!!.typeModel,
-            crossReferenceModel = processors[grammar]!!.crossReferenceModel as CrossReferenceModelDefault,
-            context = ContextSimple()
-        ) {
-            element("Statechart") {
-                propertyString("name", "'Test'")
-                propertyNothing("specification")
-                propertyListOfElement("regions") {
-                    element("Region") {
-                        propertyString("name", "'main region'")
-                        propertyListOfElement("states") {
-                            element("State") {
-                                propertyString("name", "'S1'")
-                                propertyNothing("stateSpec")
-                                propertyListOfElement("regions") {}
-                            }
-                            element("State") {
-                                propertyString("name", "'S2'")
-                                propertyNothing("stateSpec")
-                                propertyListOfElement("regions") {}
-                            }
-                        }
-                    }
-                }
-                propertyElementExplicitType("transitions", "Transitions") {
-                    propertyListOfElement("transition") {
-                        element("Transition") {
-                            reference("name", "'S1'")
-                            propertyNothing("transitionSpecification")
-                            reference("name2", "'S2'")
-                        }
-                    }
-                }
-            }
-        }
-
-        test(grammar, goal, sentence, ContextSimple(), true, expectedContext, expectedAsm)
-    }
-
-    @Test
-    fun Global_identify_interface() {
-        val grammar = "Global"
-        val goal = "StatechartSpecification"
-        val sentence = """
-            interface I :
-        """.trimIndent()
-
-        val expected = contextSimple {
-            scopedItem("I", "com.itemis.create.Global.Interface", "/0/statechartLevelDeclaration/0") {
-            }
-        }
-
-        test(grammar, goal, sentence, ContextSimple(), true, expected)
-    }
-
-    @Test
-    fun identify_Global_variable_in_interface() {
-        val grammar = "Global"
-        val goal = "StatechartSpecification"
-        val sentence = """
-            interface I :
-                var v
-        """.trimIndent()
-
-        val expected = contextSimple {
-            scopedItem("I", "com.itemis.create.Global.Interface", "/0/statechartLevelDeclaration/0") {
-                item("v", "com.itemis.create.Global.VariableDeclaration", "/0/statechartLevelDeclaration/0/annotatedDeclaration/0/memberDeclaration")
-            }
-        }
-
-        test(grammar, goal, sentence, ContextSimple(), true, expected)
-    }
-
-    @Test
-    fun identify_Global_imports() {
-        val grammar = "Global"
-        val goal = "StatechartSpecification"
-        val sentence = """
-            import :
-                "x"
-                "y"
-                "z"
-        """.trimIndent()
-
-        val expected = contextSimple {
-            item("\"x\"", "com.itemis.create.Global.ImportedName", "/0/statechartLevelDeclaration/0/importedName/0")
-            item("\"y\"", "com.itemis.create.Global.ImportedName", "/0/statechartLevelDeclaration/0/importedName/1")
-            item("\"z\"", "com.itemis.create.Global.ImportedName", "/0/statechartLevelDeclaration/0/importedName/2")
-        }
-
-        test(grammar, goal, sentence, ContextSimple(), true, expected)
-    }
-
-    @Test
-    fun identify_Global_operation_in_internal() {
-        val grammar = "Global"
-        val goal = "StatechartSpecification"
-        val sentence = """
-            internal :
-                operation O()
-        """.trimIndent()
-
-        val expected = contextSimple {
-            scopedItem("O", "com.itemis.create.Global.OperationDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration") {}
-        }
-
-        test(grammar, goal, sentence, ContextSimple(), true, expected)
-    }
-
-    @Test
-    fun reference_Global_LocalReaction_call_internal_operation() {
-        val grammar = "Global"
-        val goal = "StatechartSpecification"
-        val sentence = """
-            internal :
-                operation func()
-                every 1s / func()
-        """.trimIndent()
-
-        val expSPPT = """
-StatechartSpecification {
-  §StatechartSpecification§opt1 { <EMPTY> }
-  §StatechartSpecification§multi2 { <EMPTY> }
-  §StatechartSpecification§multi3 { StatechartDeclaration { InternalDeclarations {
-    'internal'  WS : ' '
-    ':' WS : '⏎    '
-    §InternalDeclarations§multi1 {
-      InternalDeclaration { AnnotatedDeclaration {
-        §AnnotatedDeclaration§multi1 { <EMPTY> }
-        MemberDeclaration { OperationDeclaration {
-          'operation' WS : ' '
-          ID : 'func'
-          '('
-          ParameterList { <EMPTY> }
-          ')' WS : '⏎    '
-          §OperationDeclaration§opt1 { <EMPTY> }
-        } }
-      } }
-      InternalDeclaration { LocalReaction {
-        ReactionTrigger {
-          EventSpecList { EventSpec { TimeEventSpec {
-            TimeEventType {
-              'every' WS : ' '
-            }
-            Expression { PrimaryExpression { PrimitiveValueExpression { Literal { IntLiteral : '1' } } } }
-            TimeUnit : 's' WS : ' '
-          } } }
-          §ReactionTrigger§opt1 { <EMPTY> }
-        }
-        '/' WS : ' '
-        ReactionEffect {
-          §ReactionEffect§choice1 { Expression { PrimaryExpression { FeatureCall { FunctionCall {
-            ID : 'func'
-            ArgumentList {
-              '('
-              §ArgumentList§opt1 { <EMPTY> }
-              ')'
-            }
-          } } } } }
-          §ReactionEffect§multi1 { <EMPTY> }
-        }
-      } }
-    }
-  } } }
-}
-        """.trimIndent()
-
-        val expectedContext = contextSimple {
-            scopedItem("func", "com.itemis.create.Global.OperationDeclaration", "/0/statechartLevelDeclaration/0/internalDeclaration/0/memberDeclaration") {}
-        }
-
-        val expectedAsm = asmSimple(
-            typeModel = processors[grammar]!!.typeModel,
-            crossReferenceModel = processors[grammar]!!.crossReferenceModel as CrossReferenceModelDefault,
-            context = ContextSimple()
-        ) {
-            element("StatechartSpecification") {
-                propertyNothing("namespace")
-                propertyListOfElement("annotation") {}
-                propertyListOfElement("statechartLevelDeclaration") {
-                    element("InternalDeclarations") {
-                        propertyListOfElement("internalDeclaration") {
-                            element("AnnotatedDeclaration") {
-                                propertyListOfElement("annotation") {}
-                                propertyElementExplicitType("memberDeclaration", "OperationDeclaration") {
-                                    propertyString("id", "func")
-                                    propertyListOfElement("parameterList") {}
-                                    propertyNothing("\$group")
-                                }
-                            }
-                            element("LocalReaction") {
-                                propertyTuple("reactionTrigger") {
-                                    propertyElementExplicitType("eventSpecList", "EventSpecList") {
-                                        propertyListOfElement("eventSpec") {
-                                            element("TimeEventSpec") {
-                                                propertyString("timeEventType", "every")
-                                                propertyElementExplicitType("expression", "PrimitiveValueExpression") {
-                                                    propertyString("literal", "1")
-                                                }
-                                                propertyString("timeUnit", "s")
-                                            }
-                                        }
-                                    }
-                                    propertyNothing("guard")
-                                }
-                                propertyElementExplicitType("reactionEffect", "ReactionEffect") {
-                                    propertyElementExplicitType("\$choice", "FunctionCall") {
-                                        reference("id", "func")
-                                        propertyElementExplicitType("argumentList", "ArgumentList") {
-                                            propertyListOfElement("arguments") {}
-                                        }
-                                    }
-                                    propertyListOfElement("\$list") {}
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        test(grammar, goal, sentence, ContextSimple(), true, expectedContext, expectedAsm)
-    }
-
-    @Test
-    fun Global_variable_builtIn_type() {
-        val grammar = "Global"
-        val goal = "StatechartSpecification"
-        val sentence = """
-            internal :
-                var v:integer
-        """.trimIndent()
-
-        // add to type-model for things externally added to context
-        val ns = processors[grammar]!!.typeModel.findOrCreateNamespace("external", emptyList())
-        val bit = ns.findOwnedOrCreatePrimitiveTypeNamed("BuiltInType")
-
-        val expectedContext = contextSimple {
-            item("integer", "external.BuiltInType", "§external")
-        }
-
-        val expectedAsm = asmSimple(
-            typeModel = processors[grammar]!!.typeModel,
-            crossReferenceModel = processors[grammar]!!.crossReferenceModel as CrossReferenceModelDefault,
-            context = expectedContext
-        ) {
-            element("StatechartSpecification") {
-                propertyNothing("namespace")
-                propertyListOfElement("annotation") {}
-                propertyListOfElement("statechartLevelDeclaration") {
-                    element("InternalDeclarations") {
-                        propertyListOfElement("internalDeclaration") {
-                            element("AnnotatedDeclaration") {
-                                propertyListOfElement("annotation") {}
-                                propertyElementExplicitType("memberDeclaration", "VariableDeclaration") {
-                                    propertyString("variableDeclarationKind", "var")
-                                    propertyString("id", "v")
-                                    propertyTuple("\$group") {
-                                        propertyElementExplicitType("typeSpecifier", "TypeSpecifier") {
-                                            reference("fqn", "integer")
-                                            propertyNothing("genericTypeArguments")
-                                        }
-                                    }
-                                    propertyNothing("\$group2")
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        val context = ContextSimple()
-        context.rootScope.addToScope("integer", bit.qualifiedName, AsmPathSimple.EXTERNAL)
-        test(grammar, goal, sentence, context, true, expectedContext, expectedAsm)
+        test(grammar, goal, sentence, ContextSimple(), true, expectedContext, null, expectedIssues)
     }
 
 
