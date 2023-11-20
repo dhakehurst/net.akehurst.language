@@ -19,15 +19,14 @@ package net.akehurst.language.agl.runtime.graph
 import net.akehurst.language.agl.automaton.LookaheadSet
 import net.akehurst.language.agl.automaton.LookaheadSetPart
 import net.akehurst.language.agl.automaton.ParserState
-
-import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleChoiceKind
 import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.agl.util.Debug
+import net.akehurst.language.api.scanner.Scanner
 import net.akehurst.language.collections.binaryHeap
 
 internal class ParseGraph(
-    val input: InputFromString,
+    val input: Scanner,
     val stateSetNumber: Int
 ) {
 

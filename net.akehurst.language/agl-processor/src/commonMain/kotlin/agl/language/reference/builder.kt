@@ -57,17 +57,12 @@ class DeclarationsForNamespaceBuilder(
     private val _qualifiedName: String
 ) {
     private val _importedNamespaces = mutableListOf<String>()
-    private val _externalTypes = mutableListOf<String>()
     private val _references = mutableListOf<ReferenceDefinition>()
     private val _scopes = mutableListOf<ScopeDefinition>()
 
 
     fun import(namespaceQualifiedName: String) {
         _importedNamespaces.add(namespaceQualifiedName)
-    }
-
-    fun externalTypes(vararg names: String) {
-        _externalTypes.addAll(names.toList())
     }
 
     fun scope(forTypeName: String, init: ScopeDefinitionBuilder.() -> Unit) {
@@ -84,7 +79,6 @@ class DeclarationsForNamespaceBuilder(
 
     fun build(): DeclarationsForNamespace {
         val result = DeclarationsForNamespaceDefault(_qualifiedName, _importedNamespaces)
-        result.externalTypes.addAll(_externalTypes)
         _scopes.forEach { result.scopeDefinition[it.scopeForTypeName] = it }
         result.references.addAll(_references)
         return result

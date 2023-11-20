@@ -18,9 +18,9 @@ package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.agl.parser.SentenceDefault
 import net.akehurst.language.agl.automaton.LookaheadSet
-import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.InputFromString
 import net.akehurst.language.agl.sppt.SPPTFromTreeData
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.agl.sppt.TreeDataComplete

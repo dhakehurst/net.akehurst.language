@@ -27,6 +27,8 @@ import net.akehurst.language.agl.runtime.structure.RulePosition
 import net.akehurst.language.agl.runtime.structure.RuntimePreferenceRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsEmbedded
+import net.akehurst.language.agl.scanner.InputFromString
+import net.akehurst.language.agl.scanner.ScannerClassic
 import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.agl.util.Debug
 import net.akehurst.language.agl.util.debug
@@ -35,6 +37,7 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.parser.ParserTerminatedException
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.api.scanner.Scanner
 import net.akehurst.language.collections.lazyMutableMapNonNull
 import kotlin.math.max
 
@@ -43,7 +46,7 @@ internal class RuntimeParser(
     val skipStateSet: ParserStateSet?, // null if this is a skipParser
     val cacheSkip: Boolean,
     val userGoalRule: RuntimeRule,
-    private val input: InputFromString,
+    private val scanner: Scanner,
     private val _issues: IssueHolder
 ) {
     companion object {
@@ -67,7 +70,7 @@ internal class RuntimeParser(
 
     }
 
-    val graph = ParseGraph(input, this.stateSet.number)
+    val graph = ParseGraph(scanner, this.stateSet.number)
 
     //var lastGrown: Set<ParseGraph.Companion.ToProcessTriple> = mutableSetOf()
     val canGrow: Boolean get() = this.graph.canGrow
@@ -86,7 +89,12 @@ internal class RuntimeParser(
     // must use a different instance of Input, so it can be reset, reset clears cached leaves. //TODO: check this
     private val skipParser = skipStateSet?.let {
         if (this.stateSet.preBuilt) this.skipStateSet.build()
-        RuntimeParser(it, null, false, skipStateSet.userGoalRule, InputFromString(skipStateSet.usedTerminalRules.size, this.input.sentence.text), _issues)
+        val skipScanner = when (scanner) {
+            is InputFromString -> InputFromString(skipStateSet.usedTerminalRules.size, this.scanner.sentence.text)
+            is ScannerClassic -> ScannerClassic(this.scanner.sentence.text, skipStateSet.usedTerminalRules.toList())
+            else -> error("subtype of Scanner unsupported - ${scanner::class.simpleName}")
+        }
+        RuntimeParser(it, null, false, skipStateSet.userGoalRule, skipScanner, _issues)
     }
 
     fun reset() {
@@ -872,7 +880,7 @@ internal class RuntimeParser(
             parseArgs.heightGraftOnly -> false
             parseArgs.nonEmptyWidthOnly && transition.to.firstRule.isEmptyTerminal -> false
             else -> {
-                val l = this.graph.input.findOrTryCreateLeaf(transition.to.firstRule, head.nextInputPositionAfterSkip)
+                val l = this.graph.input.findOrTryCreateLeaf(head.nextInputPositionAfterSkip, transition.to.firstRule)
                 if (null != l) {
                     val lh = transition.lookahead.map { it.guard }.reduce { acc, e -> acc.union(this.stateSet, e) } //TODO:reduce to 1 in SM
                     val runtimeLhs = head.runtimeState.runtimeLookaheadSet
@@ -1081,7 +1089,7 @@ internal class RuntimeParser(
         val embeddedStartRule = embeddedRhs.embeddedStartRule
         val embeddedS0 = embeddedRuntimeRuleSet.fetchStateSetFor(embeddedStartRule.tag, this.stateSet.automatonKind).startState
         val embeddedSkipStateSet = embeddedRuntimeRuleSet.skipParserStateSet
-        val embeddedParser = RuntimeParser(embeddedS0.stateSet, embeddedSkipStateSet, this.cacheSkip, embeddedStartRule, this.input, _issues)
+        val embeddedParser = RuntimeParser(embeddedS0.stateSet, embeddedSkipStateSet, this.cacheSkip, embeddedStartRule, this.scanner, _issues)
         val skipTerms = this.skipStateSet?.firstTerminals ?: emptySet()
         val endingLookahead = transition.lookahead.first().guard //should ony ever be one
         val embeddedPossibleEOT = endingLookahead.unionContent(embeddedS0.stateSet, skipTerms)
@@ -1161,7 +1169,7 @@ internal class RuntimeParser(
             1 -> ambigStr.first()
             else -> ambigStr.joinToString(prefix = "\n    ", separator = "\n    ", postfix = "\n") { it }
         }
-        val loc = input.locationFor(head.nextInputPositionAfterSkip, 1)
+        val loc = scanner.sentence.locationFor(head.nextInputPositionAfterSkip, 1)
         _issues.raise(LanguageIssueKind.WARNING, LanguageProcessorPhase.GRAMMAR, loc, "Ambiguity in parse (on $ambigOnStr):\n  ($from) into $into", ambigOn)
     }
 

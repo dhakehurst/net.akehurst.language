@@ -85,13 +85,9 @@ abstract class TypeModelSimpleAbstract(
         }
     }
 
-    override fun hashCode(): Int = (this.namespace.values.toList() + this.name).hashCode()
-
-    override fun equals(other: Any?): Boolean = when {
-        other !is TypeModel -> false
-        this.name != other.name -> false
-        this.namespace != other.namespace -> false
-        else -> true
+    override fun addAllNamespace(namespaces: Iterable<TypeNamespace>) {
+        namespaces.forEach { this.addNamespace(it) }
+        this.resolveImports()
     }
 
     override fun asString(): String {
@@ -99,6 +95,15 @@ abstract class TypeModelSimpleAbstract(
             .sortedBy { it.qualifiedName }
             .joinToString(separator = "\n") { it.asString() }
         return "typemodel '$name'\n$ns"
+    }
+
+    override fun hashCode(): Int = (this.namespace.values.toList() + this.name).hashCode()
+
+    override fun equals(other: Any?): Boolean = when {
+        other !is TypeModel -> false
+        this.name != other.name -> false
+        this.namespace != other.namespace -> false
+        else -> true
     }
 }
 

@@ -28,6 +28,8 @@ import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.processor.LanguageIssue
 import net.akehurst.language.api.processor.LanguageIssueKind
 import net.akehurst.language.api.processor.LanguageProcessorPhase
+import net.akehurst.language.typemodel.api.TypeModel
+import net.akehurst.language.typemodel.api.typeModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -37,12 +39,15 @@ class test_CrossReferences {
     private companion object {
         val aglProc = Agl.registry.agl.crossReference.processor!!
 
-        fun test(grammarStr: String, sentence: String, expected: CrossReferenceModel, expIssues: Set<LanguageIssue>) {
+        fun test(grammarStr: String, sentence: String, expected: CrossReferenceModel, typemodel: TypeModel? = null, expIssues: Set<LanguageIssue> = emptySet()) {
             val grammar = Agl.registry.agl.grammar.processor!!.process(grammarStr).asm!![0]
+            val tm = TypeModelFromGrammar.create(grammar)
+            typemodel?.let { tm.addAllNamespace(it.namespace.values) }
+            val ctx = ContextFromTypeModel(tm)
             val result = aglProc.process(
                 sentence = sentence,
                 Agl.options {
-                    semanticAnalysis { context(ContextFromTypeModel(TypeModelFromGrammar.create(grammar))) }
+                    semanticAnalysis { context(ctx) }
                 }
             )
 
@@ -58,9 +63,9 @@ class test_CrossReferences {
     }
 
     @Test
-    fun typeModel() {
+    fun check_typeModel() {
         val actual = aglProc.typeModel
-        val expected = grammarTypeModel("net.akehurst.language.agl", "AglScopes", "Declarations") {
+        val expected = grammarTypeModel("net.akehurst.language.agl.language", "References", "Declarations") {
             // declarations = rootIdentifiables scopes references?
             dataType("declarations", "Declarations") {
                 propertyListTypeOf("rootIdentifiables", "Identifiable", false, 0)
@@ -181,7 +186,7 @@ class test_CrossReferences {
             }
         }
 
-        test(grammarStr, sentence, expected, emptySet())
+        test(grammarStr, sentence, expected)
     }
 
     @Test
@@ -212,7 +217,7 @@ class test_CrossReferences {
             )
         )
 
-        test(grammarStr, sentence, expected, expIssues)
+        test(grammarStr, sentence, expected, null, expIssues)
     }
 
     @Test
@@ -242,7 +247,7 @@ class test_CrossReferences {
             }
         }
 
-        test(grammarStr, sentence, expected, emptySet())
+        test(grammarStr, sentence, expected)
     }
 
     @Test
@@ -280,7 +285,7 @@ class test_CrossReferences {
             )
         )
 
-        test(grammarStr, sentence, expected, expIssues)
+        test(grammarStr, sentence, expected, null, expIssues)
 
     }
 
@@ -320,7 +325,7 @@ class test_CrossReferences {
             )
         )
 
-        test(grammarStr, sentence, expected, expIssues)
+        test(grammarStr, sentence, expected, null, expIssues)
 
     }
 
@@ -352,9 +357,8 @@ class test_CrossReferences {
                 }
             }
         }
-        val expIssues = setOf<LanguageIssue>()
 
-        test(grammarStr, sentence, expected, expIssues)
+        test(grammarStr, sentence, expected)
 
     }
 
@@ -407,7 +411,7 @@ class test_CrossReferences {
             )
         )
 
-        test(grammarStr, sentence, expected, expIssues)
+        test(grammarStr, sentence, expected, null, expIssues)
 
     }
 
@@ -439,9 +443,8 @@ class test_CrossReferences {
                 }
             }
         }
-        val expIssues = setOf<LanguageIssue>()
 
-        test(grammarStr, sentence, expected, expIssues)
+        test(grammarStr, sentence, expected)
 
     }
 
@@ -486,7 +489,7 @@ class test_CrossReferences {
             )
         )
 
-        test(grammarStr, sentence, expected, expIssues)
+        test(grammarStr, sentence, expected, null, expIssues)
 
     }
 
@@ -501,10 +504,17 @@ class test_CrossReferences {
                 }
             """.trimIndent()
 
+        val additionalTypeModel = typeModel("externals", true) {
+            namespace("external") {
+                dataType("AnExternalType1")
+                dataType("AnExternalType2")
+            }
+        }
+
         val sentence = """
             namespace test.Test {
+                import external
                 references {
-                    external-types AnExternalType1, AnExternalType2
                     in Rule2 {
                         property rule3 refers-to AnExternalType1 | AnExternalType2
                     }
@@ -514,15 +524,14 @@ class test_CrossReferences {
 
         val expected = crossReferenceModel {
             declarationsFor("test.Test") {
-                externalTypes("AnExternalType1", "AnExternalType2")
+                import("external")
                 reference("Rule2") {
                     property("rule3", listOf("AnExternalType1", "AnExternalType2"), null)
                 }
             }
         }
-        val expIssues = setOf<LanguageIssue>()
 
-        test(grammarStr, sentence, expected, expIssues)
+        test(grammarStr, sentence, expected, additionalTypeModel)
 
     }
 

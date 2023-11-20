@@ -40,6 +40,8 @@ interface TypeModel {
 
     fun findByQualifiedNameOrNull(qualifiedName: String): TypeDeclaration?
 
+    fun addAllNamespace(namespaces: Iterable<TypeNamespace>)
+
     fun asString(): String
 }
 

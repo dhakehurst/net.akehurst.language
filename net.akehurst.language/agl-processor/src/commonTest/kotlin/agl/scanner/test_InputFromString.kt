@@ -1,30 +1,52 @@
-/**
- * Copyright (C) 2018 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
+/*
+ * Copyright (C) 2023 Dr. David H. Akehurst (http://dr.david.h.akehurst.net)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *         http://www.apache.org/licenses/LICENSE-2.0
+ *          http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package net.akehurst.language.agl.parser
+package net.akehurst.language.agl.scanner
 
+import net.akehurst.language.agl.api.runtime.Rule
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsLiteral
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleRhsPattern
+import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.sppt.CompleteTreeDataNode
 import net.akehurst.language.api.parser.InputLocation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 internal class test_InputFromString {
+
+    companion object {
+
+        fun test(sentence: String, rrs: RuntimeRuleSet, position: Int, rule: Rule, expected: CompleteTreeDataNode?) {
+            val terms = rrs.terminalRules.filterNot { it.isEmptyTerminal }
+            val scanners = listOf(
+                InputFromString(terms.size, sentence),
+                ScannerClassic(sentence, terms)
+            )
+
+            for (sc in scanners) {
+                println(sc::class.simpleName)
+                val actual = sc.findOrTryCreateLeaf(position, rule)
+                assertEquals(expected, actual)
+            }
+        }
+
+    }
 
     @Test
     fun construct() {
@@ -35,169 +57,31 @@ internal class test_InputFromString {
     }
 
     @Test
-    fun isStart_empty_at_start() {
-        val inputText = ""
-        val sut = InputFromString(10, inputText)
-
-        val actual = sut.isStart(0)
-
-        assertEquals(true, actual)
-    }
-
-    @Test
-    fun isStart_empty_after_start() {
-        val inputText = ""
-        val sut = InputFromString(10, inputText)
-
-        val actual = sut.isStart(1)
-
-        assertEquals(false, actual)
-    }
-
-    @Test
-    fun isStart_full_at_start() {
-        val inputText = "abcdefg"
-        val sut = InputFromString(10, inputText)
-
-        val actual = sut.isStart(0)
-
-        assertEquals(true, actual)
-    }
-
-    @Test
-    fun isStart_full_after_start() {
-        val inputText = "abcdefg"
-        val sut = InputFromString(10, inputText)
-
-        val actual = sut.isStart(1)
-
-        assertEquals(false, actual)
-    }
-
-    @Test
-    fun isStart_full_before_end() {
-        val inputText = "abcdefg"
-        val sut = InputFromString(10, inputText)
-
-        val actual = sut.isStart(5)
-
-        assertEquals(false, actual)
-    }
-
-    @Test
-    fun isStart_full_at_end() {
-        val inputText = "abcdefg"
-        val sut = InputFromString(10, inputText)
-
-        val actual = sut.isStart(6)
-
-        assertEquals(false, actual)
-    }
-
-    @Test
-    fun isStart_full_after_end() {
-        val inputText = "abcdefg"
-        val sut = InputFromString(10, inputText)
-
-        val actual = sut.isStart(7)
-
-        assertEquals(false, actual)
-    }
-
-    @Test
-    fun isEnd_empty_at_start() {
-        val inputText = ""
-        val sut = InputFromString(10, inputText)
-
-        val actual = sut.isEnd(0)
-
-        assertEquals(true, actual)
-    }
-
-    @Test
-    fun isEnd_empty_after_start() {
-        val inputText = ""
-        val sut = InputFromString(10, inputText)
-
-        val actual = sut.isEnd(1)
-
-        assertEquals(true, actual)
-    }
-
-    @Test
-    fun isEnd_full_at_start() {
-        val inputText = "abcdefg"
-        val sut = InputFromString(10, inputText)
-
-        val actual = sut.isEnd(0)
-
-        assertEquals(false, actual)
-    }
-
-    @Test
-    fun isEnd_full_after_start() {
-        val inputText = "abcdefg"
-        val sut = InputFromString(10, inputText)
-
-        val actual = sut.isEnd(1)
-
-        assertEquals(false, actual)
-    }
-
-    @Test
-    fun isEnd_full_before_end() {
-        val inputText = "abcdefg"
-        val sut = InputFromString(10, inputText)
-
-        val actual = sut.isEnd(5)
-
-        assertEquals(false, actual)
-    }
-
-    @Test
-    fun isEnd_full_at_end() {
-        val inputText = "abcdefg"
-        val sut = InputFromString(10, inputText)
-
-        val actual = sut.isEnd(6)
-
-        assertEquals(false, actual)
-    }
-
-    @Test
-    fun isEnd_full_after_end() {
-        val inputText = "abcdefg"
-        val sut = InputFromString(10, inputText)
-
-        val actual = sut.isEnd(7)
-
-        assertEquals(true, actual)
-    }
-
-    @Test
-    fun tryMatchText_empty_at_start_literal_empty() {
-        val inputText = ""
-        val sut = InputFromString(10, inputText)
-
-        val rr = RuntimeRule(0, 1, "", false).also {
-            it.setRhs(RuntimeRuleRhsLiteral(it, ""))
+    fun blank_literal_a_0_EMPTY() {
+        val sentence = ""
+        val rrs = runtimeRuleSet {
+            concatenation("S") { literal("a") }
         }
-        val actual = sut.tryMatchText(0, rr)
+        val position = 0
+        val rule = RuntimeRuleSet.EMPTY
 
-        assertEquals(-1, actual)
+        val expected = CompleteTreeDataNode(RuntimeRuleSet.EMPTY, 0, 0, 0, 0)
+
+        test(sentence, rrs, position, rule, expected)
     }
 
     @Test
-    fun tryMatchText_empty_at_start_literal_abc() {
-        val inputText = ""
-        val sut = InputFromString(10, inputText)
-
-        val rr = RuntimeRule(0, 1, "'abc'", false).also {
-            it.setRhs(RuntimeRuleRhsLiteral(it, "abc"))
+    fun blank_literal_abc_0_abc__fails() {
+        val sentence = ""
+        val rrs = runtimeRuleSet {
+            concatenation("S") { literal("abc") }
         }
-        val actual = sut.tryMatchText(0, rr)
+        val position = 0
+        val rule = rrs.findRuntimeRule("'abc'")
 
-        assertEquals(-1, actual)
+        val expected = null
+
+        test(sentence, rrs, position, rule, expected)
     }
 
     @Test

@@ -42,7 +42,6 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
         super.register(this::identifiable)
         super.register(this::referencesOpt)
         super.register(this::references)
-        super.register(this::externalTypes)
         super.register(this::referenceDefinitions)
         super.register(this::referenceDefinition)
         super.register(this::referenceExpression)
@@ -93,13 +92,12 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun declarations(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): (DeclarationsForNamespaceDefault) -> Unit {
         val rootIdentifiables = children[0] as List<IdentifiableDefault>
         val scopes = children[1] as List<ScopeDefinitionDefault>
-        val referencesOpt = children[2] as Pair<List<String>, List<ReferenceDefinitionDefault>>?
+        val referencesOpt = children[2] as List<ReferenceDefinitionDefault>?
         return { decl ->
             (decl.scopeDefinition[CrossReferenceModelDefault.ROOT_SCOPE_TYPE_NAME]?.identifiables as MutableList?)?.addAll(rootIdentifiables)
             scopes.forEach { decl.scopeDefinition[it.scopeForTypeName] = it }
             referencesOpt?.let {
-                decl.externalTypes.addAll(referencesOpt.first)
-                decl.references.addAll(referencesOpt.second)
+                decl.references.addAll(referencesOpt)
             }
         }
     }
@@ -140,13 +138,9 @@ class ReferencesSyntaxAnalyser : SyntaxAnalyserByMethodRegistrationAbstract<Cros
     private fun referencesOpt(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ReferenceDefinitionDefault>? =
         children[0] as List<ReferenceDefinitionDefault>?
 
-    // references = 'references' '{' externalTypes? referenceDefinitions '}' ;
-    private fun references(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): Pair<List<String>?, List<ReferenceDefinitionDefault>> =
-        Pair(children[2] as List<String>? ?: emptyList(), children[3] as List<ReferenceDefinitionDefault>)
-
-    // externalTypes = 'external-types' [typeReference / ',']+ ;
-    private fun externalTypes(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<String> =
-        (children[1] as List<String>).toSeparatedList<String, String, String>().items
+    // references = 'references' '{' referenceDefinitions '}' ;
+    private fun references(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ReferenceDefinitionDefault> =
+        children[2] as List<ReferenceDefinitionDefault>
 
     // referenceDefinitions = referenceDefinition*
     private fun referenceDefinitions(nodeInfo: SpptDataNodeInfo, children: List<Any?>, sentence: Sentence): List<ReferenceDefinitionDefault> =

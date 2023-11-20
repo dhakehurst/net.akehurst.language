@@ -70,8 +70,7 @@ data class Matchable(
 class AglScanner {
 
     fun scan(inputText: String, nonEmptyMatchables: List<Matchable>): ScanResult {
-        //TODO: improve this algorithm...it is not efficient I think, also doesn't work!
-
+        //TODO: improve this algorithm...it is not efficient
         val sentence = SentenceDefault(inputText)
         val issues = IssueHolder(LanguageProcessorPhase.SCAN)
         val undefined = RuntimeRuleSet.UNDEFINED_RULE

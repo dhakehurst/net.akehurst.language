@@ -33,20 +33,21 @@ class FormatterSimple<AsmType>(
         val sb = StringBuilder()
 
         for (root in (asm as Asm).root) {
-            val str = formatAny(root)
+            val str = root.format()
             sb.append(str)
         }
 
         return FormatResultDefault(sb.toString(), IssueHolder(LanguageProcessorPhase.FORMAT))
     }
 
-    private fun formatAny(o: AsmValue): String {
+    private fun AsmValue.format(): String {
+        val o = this
         return when (o) {
             is AsmNothing -> ""
             is AsmPrimitive -> o.value.toString()
             is AsmStructure -> o.format(model)
-            is AsmListSeparated -> TODO()
-            is AsmList -> o.elements.joinToString(separator = "") { formatAny(it) }
+            is AsmListSeparated -> o.elements.joinToString(separator = "") { it.format() }
+            is AsmList -> o.elements.joinToString(separator = "") { it.format() }
             else -> error("Internal Error: type '${o::class.simpleName}' not supported")
         }
     }
@@ -59,7 +60,7 @@ class FormatterSimple<AsmType>(
                     val propValue = it.value
                     when (propValue) {
                         is AsmPrimitive -> propValue.toString() + (model?.defaultWhiteSpace ?: "")
-                        else -> formatAny(propValue)
+                        else -> propValue.format()
                     }
                 }.joinToString(separator = "") { it }
             }
@@ -68,7 +69,7 @@ class FormatterSimple<AsmType>(
         }
     }
 
-    fun AglFormatExpressionDefault.execute(model: AglFormatterModel?, el: AsmStructure): String {
+    private fun AglFormatExpressionDefault.execute(model: AglFormatterModel?, el: AsmStructure): String {
         return when (this.asm.typeName) {
             "LiteralString" -> (el.getProperty("literal_string") as AsmPrimitive).toString()
             "TemplateString" -> {

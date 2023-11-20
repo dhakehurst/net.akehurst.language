@@ -17,39 +17,51 @@
 package net.akehurst.language.api.processor
 
 import net.akehurst.language.agl.processor.Agl
+import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.LeafData
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 internal class test_LanguageProcessor_scan {
 
     private companion object {
 
-        fun test(grammarStr: String, sentence: String, expectedNumTokens: Int): List<LeafData> {
-            val pr = Agl.processorFromString<Any, Any>(grammarStr)
-            val tokens = pr.processor!!.scan(sentence).tokens
-            assertNotNull(tokens)
-            val tokenStr = tokens.joinToString("") { it.matchedText }
-            assertEquals(sentence, tokenStr)
-            assertEquals(expectedNumTokens, tokens.size)
-            return tokens
+        fun test(grammarStr: String, sentence: String, expected: List<LeafData>) {
+            val pr = Agl.processorFromString<Any, Any>(grammarStr).also {
+                check(it.issues.errors.isEmpty()) { it.issues.toString() }
+            }
+            val result = pr.processor!!.scan(sentence)
+            assertTrue(result.issues.errors.isEmpty(), result.issues.toString())
+            assertEquals(expected.size, result.tokens.size)
+            for (i in expected.indices) {
+                assertEquals(expected[i], result.tokens[i])
+            }
         }
 
     }
 
     @Test
-    fun scan_literal_empty_a() {
-        val grammarStr = "namespace test grammar Test { a = 'x'; }"
-        val sentence = "ab"
-        val tokens = test(grammarStr, sentence, 1)
+    fun literal_a__blank() {
+        val grammarStr = "namespace test grammar Test { a = 'a' ; }"
+        val sentence = ""
+        val expected = listOf<LeafData>()
+        test(grammarStr, sentence, expected)
 
-        assertEquals(0, tokens[0].location.position)
-        assertEquals(2, tokens[0].matchedText.length)
     }
 
     @Test
-    fun scan_pattern_empty_a() {
+    fun literal_empty__blank() {
+        val grammarStr = "namespace test grammar Test { a = ; }"
+        val sentence = ""
+        val expected = listOf<LeafData>()
+        test(grammarStr, sentence, expected)
+
+    }
+
+    @Test
+    fun pattern_empty_a() {
         val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = \"[x]*\"; }")
         val tokens = pr.processor!!.scan("ab").tokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
@@ -65,7 +77,7 @@ internal class test_LanguageProcessor_scan {
     }
 
     @Test
-    fun scan_a_a() {
+    fun a_a() {
         val pr = Agl.processorFromStringDefault("namespace test grammar Test { a = 'a';}")
         val tokens = pr.processor!!.scan("a").tokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
@@ -81,7 +93,7 @@ internal class test_LanguageProcessor_scan {
     }
 
     @Test
-    fun scan_a_aa() {
+    fun a_aa() {
         val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = 'a';}")
         val tokens = pr.processor!!.scan("aa").tokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
@@ -92,7 +104,7 @@ internal class test_LanguageProcessor_scan {
     }
 
     @Test
-    fun scan_a_aaa() {
+    fun a_aaa() {
         val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = 'a';}")
         val tokens = pr.processor!!.scan("aaa").tokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
@@ -103,7 +115,7 @@ internal class test_LanguageProcessor_scan {
     }
 
     @Test
-    fun scan_ab_aba() {
+    fun ab_aba() {
         val pr = Agl.processorFromString<Any, Any>("namespace test grammar Test { a = 'a'; b = 'b'; }")
         val tokens = pr.processor!!.scan("aba").tokens
         val tokenStr = tokens.map { it.toString() }.joinToString(", ")
@@ -118,7 +130,7 @@ internal class test_LanguageProcessor_scan {
     }
 
     @Test
-    fun scan_end_of_line() {
+    fun end_of_line() {
         val pr = Agl.processorFromString<Any, Any>(
             """
             namespace test
@@ -143,19 +155,66 @@ internal class test_LanguageProcessor_scan {
     }
 
     @Test
-    fun scan_bug() {
+    fun class_A() {
         val grammarStr = """
             namespace test
             grammar Test {
-                skip WHITESPACE = "\s+" ;
-                S = 'prefix' NAME;
-                NAME = "[a-z]+" ;
+                skip leaf WS = "\s+" ;
+                S = 'class' NAME ';' ;
+                leaf NAME = "[a-zA-Z]+" ;
             }
         """.trimIndent()
 
-        //test(grammarStr, "prefix abc", 3)
-        //test(grammarStr, "prefixabc", 2)
-        test(grammarStr, "/prefix abc", 4)
+        val expected = listOf(
+            LeafData("'class'", false, InputLocation(0, 1, 1, 5), "class", emptyList()),
+            LeafData("WS", true, InputLocation(5, 6, 1, 1), " ", emptyList()),
+            LeafData("NAME", true, InputLocation(6, 7, 1, 1), "A", emptyList()),
+            LeafData("';'", false, InputLocation(7, 8, 1, 1), ";", emptyList()),
+        )
+
+        test(grammarStr, "class A;", expected)
+    }
+
+    @Test
+    fun class_class() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip leaf WS = "\s+" ;
+                S = 'class' NAME ';' ;
+                leaf NAME = "[a-zA-Z]+" ;
+            }
+        """.trimIndent()
+
+        val expected = listOf(
+            LeafData("'class'", false, InputLocation(0, 1, 1, 5), "class", emptyList()),
+            LeafData("WS", true, InputLocation(5, 6, 1, 1), " ", emptyList()),
+            LeafData("'class'", false, InputLocation(6, 7, 1, 5), "class", emptyList()),
+            LeafData("';'", false, InputLocation(11, 12, 1, 1), ";", emptyList()),
+        )
+
+        test(grammarStr, "class class;", expected)
+    }
+
+    @Test
+    fun bug1() {
+        val grammarStr = """
+            namespace test
+            grammar Test {
+                skip leaf WHITESPACE = "\s+" ;
+                S = 'prefix' NAME;
+                leaf NAME = "[a-z]+" ;
+            }
+        """.trimIndent()
+
+        val expected = listOf(
+            LeafData("<UNDEFINED>", false, InputLocation(0, 1, 1, 1), "/", emptyList()),
+            LeafData("'prefix'", false, InputLocation(1, 2, 1, 6), "prefix", emptyList()),
+            LeafData("WHITESPACE", true, InputLocation(7, 8, 1, 1), " ", emptyList()),
+            LeafData("NAME", true, InputLocation(8, 9, 1, 3), "abc", emptyList()),
+        )
+
+        test(grammarStr, "/prefix abc", expected)
 
     }
 }

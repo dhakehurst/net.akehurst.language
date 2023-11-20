@@ -49,13 +49,9 @@ internal object ReferencesGrammar : GrammarAbstract(NamespaceDefault("net.akehur
         b.rule("references").concatenation(
             b.terminalLiteral("references"),
             b.terminalLiteral("{"),
-            b.nonTerminal("externalTypesOpt"),
             b.nonTerminal("referenceDefinitions"),
             b.terminalLiteral("}")
         )
-        b.rule("externalTypesOpt").optional(b.nonTerminal("externalTypes"))
-        b.rule("externalTypes").concatenation(b.terminalLiteral("external-types"), b.nonTerminal("externalTypeList"))
-        b.rule("externalTypeList").separatedList(1, -1, b.terminalLiteral(","), b.nonTerminal("typeReference"))
         b.rule("referenceDefinitions").multi(0, -1, b.nonTerminal("referenceDefinition"))
         b.rule("referenceDefinition").concatenation(
             b.terminalLiteral("in"),
@@ -117,8 +113,7 @@ grammar References extends Expressions {
     identifiables = identifiable* ;
     identifiable = 'identify' typeReference 'by' expression ;
 
-    references = 'references' '{' externalTypes? referenceDefinitions '}' ;
-    externalTypes = 'external-types' [typeReference / ',']+ ;
+    references = 'references' '{' referenceDefinitions '}' ;
     referenceDefinitions = referenceDefinition* ;
     referenceDefinition = 'in' typeReference '{' referenceExpression* '}' ;
     referenceExpression = propertyReferenceExpression | collectionReferenceExpression ;

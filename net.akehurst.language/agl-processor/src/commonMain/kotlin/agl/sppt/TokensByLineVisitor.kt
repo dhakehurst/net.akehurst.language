@@ -16,7 +16,7 @@
 
 package net.akehurst.language.agl.sppt
 
-import net.akehurst.language.agl.parser.InputFromString
+import net.akehurst.language.agl.scanner.InputFromString
 import net.akehurst.language.agl.syntaxAnalyser.isEmptyMatch
 import net.akehurst.language.api.parser.InputLocation
 import net.akehurst.language.api.sppt.*

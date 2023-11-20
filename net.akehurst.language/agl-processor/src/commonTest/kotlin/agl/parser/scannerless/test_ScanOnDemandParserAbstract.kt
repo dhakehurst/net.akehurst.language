@@ -18,6 +18,7 @@ package net.akehurst.language.parser.scanondemand
 
 import net.akehurst.language.agl.api.runtime.RuleSet
 import net.akehurst.language.agl.parser.ScanOnDemandParser
+import net.akehurst.language.agl.processor.Agl
 import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
 import net.akehurst.language.agl.sppt.SPPTParserDefault
 import net.akehurst.language.api.parser.InputLocation
@@ -61,15 +62,26 @@ internal abstract class test_ScanOnDemandParserAbstract(val build: Boolean = fal
         expectedNumGSSHeads: Int,
         printAutomaton: Boolean = false,
         vararg expectedTrees: String
+    ): SharedPackedParseTree? =
+        testWithOptions(rrs, embeddedRuntimeRuleSets, sentence, expectedNumGSSHeads, printAutomaton, Agl.parseOptions { goalRuleName(goal) }, *expectedTrees)
+
+    fun testWithOptions(
+        rrs: RuleSet,
+        embeddedRuntimeRuleSets: Map<String, RuntimeRuleSet> = emptyMap(),
+        sentence: String,
+        expectedNumGSSHeads: Int,
+        printAutomaton: Boolean = false,
+        options: ParseOptions = Agl.parseOptions { },
+        vararg expectedTrees: String
     ): SharedPackedParseTree? {
         println("${this::class.simpleName} - '$sentence'")
         val parser = ScanOnDemandParser(rrs as RuntimeRuleSet)
-        if (build) parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
+        if (build) parser.buildFor(options.goalRuleName!!, AutomatonKind.LOOKAHEAD_1)
         val (result, duration) = measureTimedValue {
-            parser.parseForGoal(goal, sentence)
+            parser.parse(sentence, options)
         }
         println("Duration: $duration")
-        if (printAutomaton) println(rrs.usedAutomatonToString(goal))
+        if (printAutomaton) println(rrs.usedAutomatonToString(options.goalRuleName!!))
         assertTrue(result.issues.errors.isEmpty(), result.issues.toString()) //TODO: check all, not error
         assertNotNull(result.sppt, result.issues.joinToString(separator = "\n") { it.toString() })
         val sppt = SPPTParserDefault(rrs, embeddedRuntimeRuleSets)
@@ -84,10 +96,15 @@ internal abstract class test_ScanOnDemandParserAbstract(val build: Boolean = fal
     }
 
     fun testFail(rrs: RuleSet, goal: String, sentence: String, expectedNumGSSHeads: Int): Pair<SharedPackedParseTree?, IssueCollection<LanguageIssue>> {
+        val r = testFailWithOptions(rrs, sentence, expectedNumGSSHeads, Agl.parseOptions { goalRuleName(goal) })
+        return Pair(r.sppt, r.issues)
+    }
+
+    fun testFailWithOptions(rrs: RuleSet, sentence: String, expectedNumGSSHeads: Int, options: ParseOptions): ParseResult {
         val parser = ScanOnDemandParser(rrs as RuntimeRuleSet)
-        if (build) parser.buildFor(goal, AutomatonKind.LOOKAHEAD_1)
-        val p = parser.parseForGoal(goal, sentence)
-        return Pair(p.sppt, p.issues)
+        if (build) parser.buildFor(options.goalRuleName!!, AutomatonKind.LOOKAHEAD_1)
+        val r = parser.parse(sentence, options)
+        return r
     }
 
     protected fun parseError(location: InputLocation, message: String, expected: Set<String>) =

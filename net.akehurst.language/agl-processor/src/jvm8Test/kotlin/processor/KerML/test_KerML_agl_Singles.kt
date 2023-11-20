@@ -178,7 +178,7 @@ class test_KerML_agl_Singles {
             LanguageIssue(
                 LanguageIssueKind.ERROR, LanguageProcessorPhase.SEMANTIC_ANALYSIS,
                 InputLocation(17, 1, 2, 16),
-                "(String,com.itemis.sysml.kerml.cst.KerML.DataType) already exists in scope /§root", null
+                "(String,com.itemis.sysml.kerml.cst.KerML.DataType) already exists in scope //", null
             )
         )
 

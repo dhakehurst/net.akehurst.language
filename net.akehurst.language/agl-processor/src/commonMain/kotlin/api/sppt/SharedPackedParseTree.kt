@@ -33,6 +33,7 @@ interface Sentence {
     fun matchedTextNoSkip(node: SpptDataNode): String
     fun locationFor(position: Int, length: Int): InputLocation
     fun locationForNode(node: SpptDataNode): InputLocation
+    fun contextInText(position: Int): String
 }
 
 data class ChildInfo(

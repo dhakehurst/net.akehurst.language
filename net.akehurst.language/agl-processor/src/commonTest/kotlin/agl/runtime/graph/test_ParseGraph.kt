@@ -16,10 +16,8 @@
 
 package net.akehurst.language.agl.runtime.graph
 
-import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.structure.RuntimeRule
-import net.akehurst.language.agl.runtime.structure.RuntimeRuleSet
-import net.akehurst.language.api.processor.AutomatonKind
+import net.akehurst.language.agl.scanner.InputFromString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -28,9 +26,9 @@ class test_ParseGraph {
 
     @Test
     fun construct() {
-        val goalRule = RuntimeRule(0, 0, "a",  false)
+        val goalRule = RuntimeRule(0, 0, "a", false)
         val text = ""
-        val input = InputFromString(1,text)
+        val input = InputFromString(1, text)
 
         val sut = ParseGraph(input, 0)
 
@@ -39,9 +37,9 @@ class test_ParseGraph {
 
     @Test
     fun canGrow_empty() {
-        val goalRule = RuntimeRule(0, 0, "a",  false)
+        val goalRule = RuntimeRule(0, 0, "a", false)
         val text = ""
-        val input = InputFromString(1,text)
+        val input = InputFromString(1, text)
         val sut = ParseGraph(input, 0)
 
         val actual = sut.canGrow
@@ -51,14 +49,14 @@ class test_ParseGraph {
 
     @Test
     fun start() {
-        val userGoalRule = RuntimeRule(0, 0, "a",  false)
+        val userGoalRule = RuntimeRule(0, 0, "a", false)
         val text = "a"
-        val input = InputFromString(1,text)
+        val input = InputFromString(1, text)
         val sut = ParseGraph(input, 0)
 
-    //    val gr = rrs.goalRuleFor[rrs.findRuntimeRule("a")]
-    //    val startState = rrs.fetchStateSetFor(userGoalRule, AutomatonKind.LOOKAHEAD_1).startState
-    //    sut.start(startState, 0, setOf(startState.stateSet.createLookaheadSet(false,true,false, emptySet())), null)
+        //    val gr = rrs.goalRuleFor[rrs.findRuntimeRule("a")]
+        //    val startState = rrs.fetchStateSetFor(userGoalRule, AutomatonKind.LOOKAHEAD_1).startState
+        //    sut.start(startState, 0, setOf(startState.stateSet.createLookaheadSet(false,true,false, emptySet())), null)
 
         val actual = sut.canGrow
 

@@ -36,7 +36,6 @@ interface DeclarationsForNamespace {
      * typeName -> ScopeDefinition
      */
     val scopeDefinition: Map<String, ScopeDefinition>
-    val externalTypes: List<String>
     val references: List<ReferenceDefinition>
 
     fun isScopeDefinedFor(typeName: String): Boolean

@@ -140,14 +140,6 @@ object StdLibPrimitiveExecutions {
             }
         ),
         SimpleTypeModelStdLib.ListSeparated to mapOf(
-            SimpleTypeModelStdLib.ListSeparated.findPropertyOrNull("size")!! to { self, prop ->
-                check(self is AsmListSeparated) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                AsmPrimitiveSimple.stdInteger(self.elements.size)
-            },
-            SimpleTypeModelStdLib.ListSeparated.findPropertyOrNull("elements")!! to { self, prop ->
-                check(self is AsmListSeparated) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
-                AsmListSimple(self.elements.elements as List<AsmValue>)
-            },
             SimpleTypeModelStdLib.ListSeparated.findPropertyOrNull("items")!! to { self, prop ->
                 check(self is AsmListSeparated) { "Property '${prop.name}' is not applicable to '${self::class.simpleName}' objects." }
                 AsmListSimple(self.elements.items)

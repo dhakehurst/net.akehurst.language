@@ -42,7 +42,8 @@ internal class ParseOptionsDefault(
     override var automatonKind: AutomatonKind = AutomatonKind.LOOKAHEAD_1,
     override var reportErrors: Boolean = true,
     override val reportGrammarAmbiguities: Boolean = false,
-    override var cacheSkip: Boolean = true
+    override var cacheSkip: Boolean = true,
+    override val scanKind: ScanKind = ScanKind.OnDemand
 ) : ParseOptions
 
 internal class SyntaxAnalysisOptionsDefault<AsmType : Any>(
@@ -195,6 +196,7 @@ class ParseOptionsBuilder {
     private var _reportErrors: Boolean = true
     private var _reportGrammarAmbiguities = false
     private var _cacheSkip: Boolean = true
+    private var _scanKind: ScanKind = ScanKind.OnDemand
 
     fun goalRuleName(value: String?) {
         _goalRuleName = value
@@ -216,8 +218,12 @@ class ParseOptionsBuilder {
         _cacheSkip = value
     }
 
+    fun scanKind(value: ScanKind) {
+        _scanKind = value
+    }
+
     fun build(): ParseOptions {
-        return ParseOptionsDefault(_goalRuleName, _automatonKind, _reportErrors, _reportGrammarAmbiguities, _cacheSkip)
+        return ParseOptionsDefault(_goalRuleName, _automatonKind, _reportErrors, _reportGrammarAmbiguities, _cacheSkip, _scanKind)
     }
 }
 

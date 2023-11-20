@@ -104,7 +104,7 @@ class test_StatechartTools_References {
         val typeModel = TypeModelFromGrammar.createFromGrammarList(grammarList)
         val extNs = typeModel.findOrCreateNamespace("external", listOf("std"))
         extNs.findOwnedOrCreateDataTypeNamed("AnnotationType")
-        extNs.findOwnedOrCreateDataTypeNamed("Type")
+        extNs.findOwnedOrCreateDataTypeNamed("BuiltInType")
         extNs.findOwnedOrCreateDataTypeNamed("RegularState")
 
         typeModel.namespace["com.itemis.create.Global"]!!.addImport("external")
@@ -544,6 +544,5 @@ StatechartSpecification {
         context.rootScope.addToScope("integer", bit.qualifiedName, AsmPathSimple.EXTERNAL)
         test(grammar, goal, sentence, context, true, expectedContext, expectedAsm)
     }
-
 
 }

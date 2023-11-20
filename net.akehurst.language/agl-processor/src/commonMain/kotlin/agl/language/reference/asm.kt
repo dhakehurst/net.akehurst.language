@@ -99,7 +99,6 @@ data class DeclarationsForNamespaceDefault(
     override val importedNamespaces: List<String>
 ) : DeclarationsForNamespace {
     override val scopeDefinition = mutableMapOf<String, ScopeDefinition>()
-    override val externalTypes = mutableListOf<String>()
     override val references = mutableListOf<ReferenceDefinition>()
 
     init {

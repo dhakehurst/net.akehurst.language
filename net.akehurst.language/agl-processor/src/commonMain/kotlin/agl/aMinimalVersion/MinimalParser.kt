@@ -19,10 +19,10 @@ package net.akehurst.language.agl.aMinimalVersion
 
 
 import net.akehurst.language.agl.automaton.*
-import net.akehurst.language.agl.parser.InputFromString
 import net.akehurst.language.agl.runtime.graph.GraphStructuredStack
 import net.akehurst.language.agl.runtime.graph.TreeData
 import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.scanner.InputFromString
 import net.akehurst.language.agl.sppt.TreeDataComplete
 import net.akehurst.language.api.automaton.ParseAction
 import net.akehurst.language.api.sppt.SpptDataNode
@@ -554,7 +554,7 @@ internal class MinimalParser private constructor(
     }
 
     private fun doWidth(hd: GSSNode, tr: Transition, peot: LookaheadSetPart): Boolean {
-        val lf = input!!.findOrTryCreateLeaf(tr.target.rp.rule, hd.nip)
+        val lf = input!!.findOrTryCreateLeaf(hd.nip, tr.target.rp.rule)
         return if (null != lf) {
             val slh = tr.lh.resolve(peot, hd.rlh)
             val skipData = tryParseSkip(lf.nextInputPosition, slh)

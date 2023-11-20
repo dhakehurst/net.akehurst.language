@@ -17,8 +17,10 @@
 package net.akehurst.language.agl.runtime.graph
 
 import net.akehurst.language.agl.automaton.LookaheadSet
-import net.akehurst.language.agl.parser.InputFromString
-import net.akehurst.language.agl.runtime.structure.*
+import net.akehurst.language.agl.runtime.structure.RulePosition
+import net.akehurst.language.agl.runtime.structure.RulePositionWithLookahead
+import net.akehurst.language.agl.runtime.structure.runtimeRuleSet
+import net.akehurst.language.agl.scanner.InputFromString
 import net.akehurst.language.api.processor.AutomatonKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -37,13 +39,13 @@ class test_ParseGraph_abc {
     fun start() {
         val rrs = runtimeRuleSet {
             concatenation("S") { ref("A"); ref("B"); ref("C") }
-            concatenation("A") {literal("a")}
-            concatenation("B") {literal("b")}
-            concatenation("C") {literal("c")}
+            concatenation("A") { literal("a") }
+            concatenation("B") { literal("b") }
+            concatenation("C") { literal("c") }
         }
 
         val text = "a"
-        val input = InputFromString(rrs.terminalRules.size,text)
+        val input = InputFromString(rrs.terminalRules.size, text)
         val sut = ParseGraph(input, 0)
 
         val gr = rrs.goalRuleFor[rrs.findRuntimeRule("S")]
@@ -63,16 +65,16 @@ class test_ParseGraph_abc {
     @Test
     fun s1() {
         val rrs = runtimeRuleSet {
-            literal("a","a")
+            literal("a", "a")
         }
         val text = "a"
-        val input = InputFromString(rrs.terminalRules.size,text)
+        val input = InputFromString(rrs.terminalRules.size, text)
         val sut = ParseGraph(input, 0)
 
         val gr = rrs.goalRuleFor[rrs.findRuntimeRule("a")]
-        val startState = RulePositionWithLookahead(RulePosition(gr,0,0), emptySet())
+        val startState = RulePositionWithLookahead(RulePosition(gr, 0, 0), emptySet())
         //sut.start(startState, rrs)
-TODO()
+        TODO()
         val actual = sut.canGrow
 
         assertEquals(true, actual)

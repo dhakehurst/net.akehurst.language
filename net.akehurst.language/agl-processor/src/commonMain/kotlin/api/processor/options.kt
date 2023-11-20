@@ -55,6 +55,10 @@ interface LanguageProcessorConfiguration<AsmType : Any, ContextType : Any> {
     val completionProvider: CompletionProviderResolver<AsmType, ContextType>?
 }
 
+enum class ScanKind {
+    OnDemand, Classic
+}
+
 /**
  * Options to configure the parsing of a sentence
  */
@@ -64,6 +68,7 @@ interface ParseOptions {
     val reportErrors: Boolean
     val reportGrammarAmbiguities: Boolean
     val cacheSkip: Boolean
+    val scanKind: ScanKind
 }
 
 /**
